@@ -116,8 +116,8 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
             backup_data=optional_backup_data,
             backup_uid=backup_uuid,
         )
-        group = table.database.group
-        cls.register_action(user, params, cls.scope(table.id), group)
+        workspace = table.database.workspace
+        cls.register_action(user, params, cls.scope(table.id), workspace)
 
         return field, updated_fields
 
@@ -401,8 +401,8 @@ class CreateFieldActionType(UndoableActionType):
             field.name,
             type_name,
         )
-        group = table.database.group
-        cls.register_action(user, params, cls.scope(table.id), group)
+        workspace = table.database.workspace
+        cls.register_action(user, params, cls.scope(table.id), workspace)
 
         return (field, updated_fields) if return_updated_fields else field
 
@@ -458,7 +458,7 @@ class DeleteFieldActionType(UndoableActionType):
         result = FieldHandler().delete_field(user, field)
 
         table = field.table
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -467,7 +467,7 @@ class DeleteFieldActionType(UndoableActionType):
             field.id,
             field.name,
         )
-        cls.register_action(user, params, cls.scope(table.id), group)
+        cls.register_action(user, params, cls.scope(table.id), workspace)
 
         return result
 
@@ -547,8 +547,8 @@ class DuplicateFieldActionType(UndoableActionType):
             field.id,
             field.name,
         )
-        group = table.database.group
-        cls.register_action(user, params, cls.scope(field.table_id), group)
+        workspace = table.database.workspace
+        cls.register_action(user, params, cls.scope(field.table_id), workspace)
         return new_field_clone, updated_fields
 
     @classmethod

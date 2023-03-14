@@ -15,7 +15,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to_task(
     subject_type_name: str,
     scope_id: int,
     scope_type_name: str,
-    group_id: int,
+    workspace_id: int,
 ):
     """
     Unsubscribes a subject from a table. This can involve unsubscribing one user or
@@ -25,7 +25,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to_task(
     :param subject_type_name: The name of the subject type
     :param scope_id: The id of the scope the subject should be removed from
     :param scope_type_name: The name of the scope type
-    :param group_id: The id of the group in which context this is executed
+    :param workspace_id: The id of the workspace in which context this is executed
     """
 
     from baserow_enterprise.role.permission_manager import RolePermissionManagerType
@@ -35,7 +35,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to_task(
         subject_type_name,
         scope_id,
         scope_type_name,
-        group_id,
+        workspace_id,
         RolePermissionManagerType(),
     )
 

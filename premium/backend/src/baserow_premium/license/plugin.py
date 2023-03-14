@@ -8,7 +8,7 @@ from baserow_premium.license.exceptions import InvalidLicenseError
 from baserow_premium.license.models import License
 from baserow_premium.license.registries import LicenseType, SeatUsageSummary
 
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 
 User = get_user_model()
 
@@ -27,22 +27,24 @@ class LicensePlugin:
         self,
         feature: str,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
     ) -> bool:
         """
-        Returns if the provided user has a feature enabled for a specific group from
+        Returns if the provided user has a feature enabled for a specific workspace from
         an active license or if they have that feature enabled instance wide and hence
-        also for this group.
+        also for this workspace.
 
         :param feature: A string identifying a particular feature or set of features
             a license can grant a user.
         :param user: The user to check to see if they have a license active granting
             them the feature.
-        :param group: The group to check to see if the user has the feature for.
+        :param workspace: The workspace to check to see if the user has the feature for.
         """
 
         return self.user_has_feature_instance_wide(feature, user) or (
-            self._has_license_feature_only_for_specific_group(feature, user, group)
+            self._has_license_feature_only_for_specific_workspace(
+                feature, user, workspace
+            )
         )
 
     def instance_has_feature(
@@ -63,26 +65,26 @@ class LicensePlugin:
             for license_type in self.get_active_instance_wide_license_types(user=None)
         )
 
-    def group_has_feature(self, feature: str, group: Group) -> bool:
+    def workspace_has_feature(self, feature: str, workspace: Workspace) -> bool:
         """
         Checks if the Baserow instance has a particular feature granted by an active
         instance wide license.
 
         :param feature: The feature to check to see if active. Look for features.py
             files for these constant strings to use.
-        :param group: The group to get group wide features for.
+        :param workspace: The workspace to get workspace wide features for.
         :return: True if the feature is enabled globally for all users.
         """
 
         return self.instance_has_feature(feature) or any(
             feature in license_type.features
-            for license_type in self.get_active_group_licenses(group)
+            for license_type in self.get_active_workspace_licenses(workspace)
         )
 
     def user_has_feature_instance_wide(self, feature: str, user: AbstractUser) -> bool:
         """
         Returns if the provided user has a feature enabled for the entire site,
-        and not only for one specific group from an active license.
+        and not only for one specific workspace from an active license.
 
         :param feature: A string identifying a particular feature or set of features
             a license can grant a user.
@@ -95,24 +97,24 @@ class LicensePlugin:
             for license_type in self.get_active_instance_wide_license_types(user)
         )
 
-    def _has_license_feature_only_for_specific_group(
-        self, feature: str, user: AbstractUser, group: Group
+    def _has_license_feature_only_for_specific_workspace(
+        self, feature: str, user: AbstractUser, workspace: Workspace
     ) -> bool:
         """
-        Returns if the provided user has a feature enabled for a specific group from
+        Returns if the provided user has a feature enabled for a specific workspace from
         an active license, but ignoring any instance-wide licenses they might have.
 
         :param feature: A string identifying a particular feature or set of features
             a license can grant a user.
-        :param user: The user to check to see if they have a group level license active
-            granting them the feature.
-        :param group: The group to check to see if the user has the feature for.
+        :param user: The user to check to see if they have a workspace level license
+            active granting them the feature.
+        :param workspace: The workspace to check to see if the user has the feature for.
         """
 
         return any(
             feature in license_type.features
-            for license_type in self.get_active_specific_licenses_only_for_group(
-                user, group
+            for license_type in self.get_active_specific_licenses_only_for_workspace(
+                user, workspace
             )
         )
 
@@ -159,67 +161,70 @@ class LicensePlugin:
         if self.cache_queries:
             self.queried_licenses_per_user[user_id] = available_licenses
 
-    def get_active_specific_licenses_only_for_group(
-        self, user: AbstractUser, group: Group
+    def get_active_specific_licenses_only_for_workspace(
+        self, user: AbstractUser, workspace: Workspace
     ) -> Generator[LicenseType, None, None]:
         """
-        Generates all the licenses for a specific group that a user has. Should not
+        Generates all the licenses for a specific workspace that a user has. Should not
         return any instance-wide licenses the user has.
 
-        Provided as an overridable hook incase querying for only one specific group
-        can be optimized. By default just defers to the `get_per_group_licenses`
+        Provided as an overridable hook incase querying for only one specific workspace
+        can be optimized. By default just defers to the `get_per_workspace_licenses`
         function.
 
-        :param user: The user to get active licenses in the group for.
-        :param group: The group to check to see any specific active licenses are
+        :param user: The user to get active licenses in the workspace for.
+        :param workspace: The workspace to check to see any specific active licenses are
             enabled for.
         :return: A generator which produces the license types that the user has enabled
-            for the group.
+            for the workspace.
         """
 
-        per_group_licenses = self.get_active_per_group_licenses(user)
-        for active_license in per_group_licenses.get(group.id, set()):
+        per_workspace_licenses = self.get_active_per_workspace_licenses(user)
+        for active_license in per_workspace_licenses.get(workspace.id, set()):
             yield active_license
 
-    def get_active_per_group_licenses(
+    def get_active_per_workspace_licenses(
         self, user: AbstractUser
     ) -> Dict[int, Set[LicenseType]]:
         """
-        For the provided user returns the active licenses they have active per group.
-        Does not take into account any instance wide licenses the user might have and
-        only active licenses for specific groups.
+        For the provided user returns the active licenses they have active per
+        workspace. Does not take into account any instance wide licenses the user
+        might have and only active licenses for specific workspaces.
 
-        :param user: The user to lookup active per group licenses for.
+        :param user: The user to lookup active per workspace licenses for.
         """
 
         return {}
 
-    def get_active_group_licenses(
+    def get_active_workspace_licenses(
         self,
-        group: Group,
+        workspace: Workspace,
     ) -> Generator[LicenseType, None, None]:
         """
-        For the provided group returns which licenses are active.
+        For the provided workspace returns which licenses are active.
         """
 
         return
         yield
 
-    def get_groups_to_periodically_update_seats_taken_for(self) -> QuerySet:
+    def get_workspaces_to_periodically_update_seats_taken_for(self) -> QuerySet:
         """
-        Should return a queryset of all the groups that should have their seats_taken
-        attribute periodically updated by the nightly usage job when enabled.
+        Should return a queryset of all the workspaces that should have their
+        seats_taken attribute periodically updated by the nightly usage job when
+        enabled.
         """
 
-        return Group.objects.filter(template__isnull=True)
+        return Workspace.objects.filter(template__isnull=True)
 
-    def get_seat_usage_for_group(self, group: Group) -> Optional[SeatUsageSummary]:
+    def get_seat_usage_for_workspace(
+        self, workspace: Workspace
+    ) -> Optional[SeatUsageSummary]:
         """
         Returns for the most important (the license type with the highest order) active
-        license type on a group the seat usage summary for that group.
+        license type on a workspace the seat usage summary for that workspace.
 
-        If it doesn't make sense for that license type to have usage at the group level
-        None will be returned.
+        If it doesn't make sense for that license type to have usage at the workspace
+        level None will be returned.
         """
 
         sorted_licenses = sorted(
@@ -229,6 +234,8 @@ class LicensePlugin:
         )
         if sorted_licenses:
             most_relevant_license_type = sorted_licenses[0]
-            return most_relevant_license_type.get_seat_usage_summary_for_group(group)
+            return most_relevant_license_type.get_seat_usage_summary_for_workspace(
+                workspace
+            )
         else:
             return None

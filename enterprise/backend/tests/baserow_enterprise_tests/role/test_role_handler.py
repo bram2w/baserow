@@ -8,7 +8,7 @@ import pytest
 from tqdm import tqdm
 
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from baserow.core.registries import subject_type_registry
 from baserow.core.subjects import UserSubjectType
 from baserow_enterprise.exceptions import (
@@ -31,8 +31,8 @@ def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_rol
 def test_create_role_assignment(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     table = data_fixture.create_database_table(user=user, database=database)
 
@@ -44,7 +44,7 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
     assert len(RoleAssignment.objects.all()) == 0
 
     # Assign a first role
-    role_assignment_handler.assign_role(user2, group, builder_role, scope=table)
+    role_assignment_handler.assign_role(user2, workspace, builder_role, scope=table)
 
     role_assignments = list(RoleAssignment.objects.all())
 
@@ -53,24 +53,24 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
     assert role_assignments[0].scope == table
     assert role_assignments[0].subject == user2
     assert role_assignments[0].role == builder_role
-    assert role_assignments[0].group == group
+    assert role_assignments[0].workspace == workspace
 
-    # Check that we don't create new RoleAssignment for the same scope/subject/group
-    role_assignment_handler.assign_role(user2, group, admin_role, scope=table)
+    # Check that we don't create new RoleAssignment for the same scope/subject/workspace
+    role_assignment_handler.assign_role(user2, workspace, admin_role, scope=table)
 
     role_assignments = list(RoleAssignment.objects.all())
     assert len(role_assignments) == 1
 
     # Assign an other role
-    role_assignment_handler.assign_role(user2, group, admin_role, scope=group)
+    role_assignment_handler.assign_role(user2, workspace, admin_role, scope=workspace)
     role_assignments = list(RoleAssignment.objects.all())
-    group_user = GroupUser.objects.get(group=group, user=user2)
+    workspace_user = WorkspaceUser.objects.get(workspace=workspace, user=user2)
 
     assert len(role_assignments) == 1
-    assert group_user.permissions == admin_role.uid
+    assert workspace_user.permissions == admin_role.uid
 
     # Can we remove a role
-    role_assignment_handler.assign_role(user2, group, None, scope=table)
+    role_assignment_handler.assign_role(user2, workspace, None, scope=table)
 
     role_assignments = list(RoleAssignment.objects.all())
     assert len(role_assignments) == 0
@@ -79,15 +79,15 @@ def test_create_role_assignment(data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_create_role_assignment_unique_constraint(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     role = Role.objects.get(uid="ADMIN")
 
     RoleAssignment.objects.create(
         subject_id=user.id,
         subject_type=UserSubjectType().get_content_type(),
         role=role,
-        group=group,
+        workspace=workspace,
         scope_id=database.id,
         scope_type=DatabaseObjectScopeType().get_content_type(),
     )
@@ -97,7 +97,7 @@ def test_create_role_assignment_unique_constraint(data_fixture):
             subject_id=user.id,
             subject_type=UserSubjectType().get_content_type(),
             role=role,
-            group=group,
+            workspace=workspace,
             scope_id=database.id,
             scope_type=DatabaseObjectScopeType().get_content_type(),
         )
@@ -106,28 +106,30 @@ def test_create_role_assignment_unique_constraint(data_fixture):
 @pytest.mark.django_db
 def test_get_current_role_assignment(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     role = Role.objects.get(uid="BUILDER")
 
-    RoleAssignmentHandler().assign_role(user, group, role=role)
-
-    role_assignment = RoleAssignmentHandler().get_current_role_assignment(user, group)
-
-    assert role_assignment is not None
-    assert role_assignment.role == role
-    assert role_assignment.group == group
-
-    RoleAssignmentHandler().assign_role(user, group, role=role, scope=table)
+    RoleAssignmentHandler().assign_role(user, workspace, role=role)
 
     role_assignment = RoleAssignmentHandler().get_current_role_assignment(
-        user, group, scope=table
+        user, workspace
     )
 
     assert role_assignment is not None
     assert role_assignment.role == role
-    assert role_assignment.group == group
+    assert role_assignment.workspace == workspace
+
+    RoleAssignmentHandler().assign_role(user, workspace, role=role, scope=table)
+
+    role_assignment = RoleAssignmentHandler().get_current_role_assignment(
+        user, workspace, scope=table
+    )
+
+    assert role_assignment is not None
+    assert role_assignment.role == role
+    assert role_assignment.workspace == workspace
 
 
 @pytest.mark.django_db
@@ -135,37 +137,37 @@ def test_get_current_role_assignments(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user(email="user@email.com")
     user1 = data_fixture.create_user(email="user1@email.com")
     user2 = data_fixture.create_user(email="user2@email.com")
-    group = data_fixture.create_group(user=user, members=[user1, user2])
+    workspace = data_fixture.create_workspace(user=user, members=[user1, user2])
 
-    database = data_fixture.create_database_application(user=user, group=group)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user2])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace, members=[user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     builder_role = Role.objects.get(uid="BUILDER")
     editor_role = Role.objects.get(uid="EDITOR")
     viewer_role = Role.objects.get(uid="VIEWER")
 
-    RoleAssignmentHandler().assign_role(user, group, role=admin_role)
-    RoleAssignmentHandler().assign_role(user1, group, role=builder_role)
-    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role)
-    RoleAssignmentHandler().assign_role(team1, group, role=editor_role)
+    RoleAssignmentHandler().assign_role(user, workspace, role=admin_role)
+    RoleAssignmentHandler().assign_role(user1, workspace, role=builder_role)
+    RoleAssignmentHandler().assign_role(user2, workspace, role=viewer_role)
+    RoleAssignmentHandler().assign_role(team1, workspace, role=editor_role)
     RoleAssignmentHandler().assign_role(
-        user, group, role=viewer_role, scope=database.application_ptr
+        user, workspace, role=viewer_role, scope=database.application_ptr
     )
     RoleAssignmentHandler().assign_role(
-        user2, group, role=admin_role, scope=database.application_ptr
+        user2, workspace, role=admin_role, scope=database.application_ptr
     )
-    RoleAssignmentHandler().assign_role(user, group, role=builder_role, scope=table)
-    RoleAssignmentHandler().assign_role(user1, group, role=admin_role, scope=table)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=table)
+    RoleAssignmentHandler().assign_role(user, workspace, role=builder_role, scope=table)
+    RoleAssignmentHandler().assign_role(user1, workspace, role=admin_role, scope=table)
+    RoleAssignmentHandler().assign_role(team1, workspace, role=viewer_role, scope=table)
 
     for_subject_scope = [
-        (user, group),
-        (user1, group),
-        (user2, group),
-        (team1, group),
+        (user, workspace),
+        (user1, workspace),
+        (user2, workspace),
+        (team1, workspace),
         (user, database.application_ptr),
         (user1, database.application_ptr),
         (user2, database.application_ptr),
@@ -177,7 +179,7 @@ def test_get_current_role_assignments(data_fixture, enterprise_data_fixture):
     ]
 
     role_assignments = RoleAssignmentHandler().get_current_role_assignments(
-        group, for_subject_scope
+        workspace, for_subject_scope
     )
 
     for (subject, scope), ra in role_assignments.items():
@@ -190,10 +192,10 @@ def test_get_current_role_assignments(data_fixture, enterprise_data_fixture):
     ]
 
     assert role_assignment_tuples == [
-        (user, group, admin_role.uid),
-        (user1, group, builder_role.uid),
-        (user2, group, viewer_role.uid),
-        (team1, group, editor_role.uid),
+        (user, workspace, admin_role.uid),
+        (user1, workspace, builder_role.uid),
+        (user2, workspace, viewer_role.uid),
+        (team1, workspace, editor_role.uid),
         (user, database.application_ptr, viewer_role.uid),
         (user1, database.application_ptr, None),
         (user2, database.application_ptr, admin_role.uid),
@@ -208,25 +210,25 @@ def test_get_current_role_assignments(data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_remove_role(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     role = Role.objects.get(uid="BUILDER")
 
-    RoleAssignmentHandler().assign_role(user, group, role=role)
-    RoleAssignmentHandler().assign_role(user, group, role=role, scope=table)
+    RoleAssignmentHandler().assign_role(user, workspace, role=role)
+    RoleAssignmentHandler().assign_role(user, workspace, role=role, scope=table)
 
-    RoleAssignmentHandler().remove_role(user, group)
-    RoleAssignmentHandler().remove_role(user, group, scope=table)
+    RoleAssignmentHandler().remove_role(user, workspace)
+    RoleAssignmentHandler().remove_role(user, workspace, scope=table)
 
-    role_assignment_group = RoleAssignmentHandler().get_current_role_assignment(
-        user, group
+    role_assignment_workspace = RoleAssignmentHandler().get_current_role_assignment(
+        user, workspace
     )
     role_assignment_table = RoleAssignmentHandler().get_current_role_assignment(
-        user, group, scope=table
+        user, workspace, scope=table
     )
 
-    assert role_assignment_group.role.uid == "NO_ACCESS"
+    assert role_assignment_workspace.role.uid == "NO_ACCESS"
     assert role_assignment_table is None
 
 
@@ -234,28 +236,30 @@ def test_remove_role(data_fixture):
 @patch("baserow.ws.signals.broadcast_to_group")
 def test_assign_role(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     role = Role.objects.get(uid="BUILDER")
 
-    role_assignment_group = RoleAssignmentHandler().assign_role(user, group, role=role)
+    role_assignment_workspace = RoleAssignmentHandler().assign_role(
+        user, workspace, role=role
+    )
 
     mock_broadcast_to_group.delay.assert_called_once()
     args = mock_broadcast_to_group.delay.call_args
-    assert args[0][0] == group.id
+    assert args[0][0] == workspace.id
     assert args[0][1]["type"] == "group_user_updated"
-    group_user = group.groupuser_set.get()
-    assert args[0][1]["id"] == group_user.id
-    assert args[0][1]["group_id"] == group.id
-    assert args[0][1]["group_user"]["user_id"] == group_user.user_id
-    assert args[0][1]["group_user"]["permissions"] == "MEMBER"
+    workspace_user = workspace.workspaceuser_set.get()
+    assert args[0][1]["id"] == workspace_user.id
+    assert args[0][1]["workspace_id"] == workspace.id
+    assert args[0][1]["workspace_user"]["user_id"] == workspace_user.user_id
+    assert args[0][1]["workspace_user"]["permissions"] == "MEMBER"
 
     role_assignment_table = RoleAssignmentHandler().assign_role(
-        user, group, role=role, scope=table
+        user, workspace, role=role, scope=table
     )
 
-    assert role_assignment_group.role == role
+    assert role_assignment_workspace.role == role
     assert role_assignment_table.role == role
 
 
@@ -263,52 +267,54 @@ def test_assign_role(mock_broadcast_to_group, data_fixture):
 def test_get_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=builder_role, scope=group)
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=builder_role, scope=workspace
+    )
 
-    group_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=group
+    workspace_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
+        workspace, scope=workspace
     )
     database_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=database
+        workspace, scope=database
     )
 
-    assert len(group_level_role_assignments) == 2
+    assert len(workspace_level_role_assignments) == 2
     assert len(database_level_role_assignments) == 0
 
     RoleAssignmentHandler().assign_role(
-        user_2, group, role=builder_role, scope=database
+        user_2, workspace, role=builder_role, scope=database
     )
 
-    group_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=group
+    workspace_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
+        workspace, scope=workspace
     )
     database_level_role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=database
+        workspace, scope=database
     )
 
-    assert len(group_level_role_assignments) == 2
+    assert len(workspace_level_role_assignments) == 2
     assert len(database_level_role_assignments) == 1
 
 
 @pytest.mark.django_db
 def test_get_role_assignments_trashed_teams(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team, user)
 
     role = Role.objects.get(uid="ADMIN")
 
-    RoleAssignmentHandler().assign_role(team, group, role, scope=database)
+    RoleAssignmentHandler().assign_role(team, workspace, role, scope=database)
 
     role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=database
+        workspace, scope=database
     )
 
     assert len(role_assignments) == 1
@@ -317,36 +323,38 @@ def test_get_role_assignments_trashed_teams(data_fixture, enterprise_data_fixtur
     team.save()
 
     role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group, scope=database
+        workspace, scope=database
     )
 
     assert len(role_assignments) == 0
 
 
 @pytest.mark.django_db
-def test_get_role_assignments_invalid_group_and_scope_combination(data_fixture):
+def test_get_role_assignments_invalid_workspace_and_scope_combination(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    group_2 = data_fixture.create_group(user=user_2)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    workspace_2 = data_fixture.create_workspace(user=user_2)
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=admin_role, scope=database)
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=admin_role, scope=database
+    )
 
     role_assignments = RoleAssignmentHandler().get_role_assignments(
-        group_2, scope=database
+        workspace_2, scope=database
     )
 
     assert len(role_assignments) == 0
 
 
 @pytest.mark.django_db
-def test_assign_role_batch_group_level(data_fixture):
+def test_assign_role_batch_workspace_level(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
 
     admin_role = Role.objects.get(uid="ADMIN")
 
@@ -354,21 +362,21 @@ def test_assign_role_batch_group_level(data_fixture):
         NewRoleAssignment(
             user_2,
             admin_role,
-            group,
+            workspace,
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
-    assert GroupUser.objects.get(user=user_2).permissions == admin_role.uid
+    assert WorkspaceUser.objects.get(user=user_2).permissions == admin_role.uid
 
 
 @pytest.mark.django_db
 def test_assign_role_batch_create_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
@@ -380,12 +388,12 @@ def test_assign_role_batch_create_role_assignments(data_fixture):
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
     role_assignments = RoleAssignment.objects.all()
 
     # Nothing has changed here
-    assert GroupUser.objects.get(user=user_2).permissions == "MEMBER"
+    assert WorkspaceUser.objects.get(user=user_2).permissions == "MEMBER"
 
     assert len(role_assignments) == 1
     assert role_assignments[0].subject == user_2
@@ -396,14 +404,14 @@ def test_assign_role_batch_create_role_assignments(data_fixture):
 def test_assign_role_batch_update_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
     builder_role = Role.objects.get(uid="BUILDER")
 
     RoleAssignmentHandler().assign_role(
-        user_2, group, admin_role, scope=database.application_ptr
+        user_2, workspace, admin_role, scope=database.application_ptr
     )
 
     values = [
@@ -414,12 +422,12 @@ def test_assign_role_batch_update_role_assignments(data_fixture):
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
     role_assignments = RoleAssignment.objects.all()
 
     # Nothing has changed here
-    assert GroupUser.objects.get(user=user_2).permissions == "MEMBER"
+    assert WorkspaceUser.objects.get(user=user_2).permissions == "MEMBER"
 
     assert len(role_assignments) == 1
     assert role_assignments[0].subject == user_2
@@ -430,8 +438,8 @@ def test_assign_role_batch_update_role_assignments(data_fixture):
 def test_assign_role_batch_delete_role_assignments(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
@@ -443,7 +451,7 @@ def test_assign_role_batch_delete_role_assignments(data_fixture):
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
     role_assignments = RoleAssignment.objects.all()
 
@@ -459,7 +467,7 @@ def test_assign_role_batch_delete_role_assignments(data_fixture):
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
     role_assignments = RoleAssignment.objects.all()
 
@@ -467,10 +475,10 @@ def test_assign_role_batch_delete_role_assignments(data_fixture):
 
 
 @pytest.mark.django_db
-def test_assign_role_batch_delete_group_user(data_fixture):
+def test_assign_role_batch_delete_workspace_user(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     no_access_role = Role.objects.get(uid="NO_ACCESS")
@@ -479,36 +487,36 @@ def test_assign_role_batch_delete_group_user(data_fixture):
         NewRoleAssignment(
             user_2,
             admin_role,
-            group,
+            workspace,
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch(group, values)
+    RoleAssignmentHandler().assign_role_batch(workspace, values)
 
-    group_user_2 = GroupUser.objects.get(group=group, user=user_2)
-    assert group_user_2.permissions == admin_role.uid
+    workspace_user_2 = WorkspaceUser.objects.get(workspace=workspace, user=user_2)
+    assert workspace_user_2.permissions == admin_role.uid
 
     values = [
         NewRoleAssignment(
             user_2,
             None,
-            group,
+            workspace,
         )
     ]
 
-    RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+    RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
-    group_user_2 = GroupUser.objects.get(group=group, user=user_2)
-    assert group_user_2.permissions == no_access_role.uid
+    workspace_user_2 = WorkspaceUser.objects.get(workspace=workspace, user=user_2)
+    assert workspace_user_2.permissions == no_access_role.uid
 
 
 @pytest.mark.django_db
-def test_assign_role_batch_unrelated_group(data_fixture):
+def test_assign_role_batch_unrelated_workspace(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    group_unrelated = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group, user=user)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    workspace_unrelated = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace, user=user)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -522,16 +530,16 @@ def test_assign_role_batch_unrelated_group(data_fixture):
 
     with pytest.raises(ScopeNotExist):
         RoleAssignmentHandler().assign_role_batch_for_user(
-            user, group_unrelated, values
+            user, workspace_unrelated, values
         )
 
 
 @pytest.mark.django_db
-def test_assign_role_batch_subject_not_in_group(data_fixture):
+def test_assign_role_batch_subject_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group, user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace, user=user)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
@@ -544,7 +552,7 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
     ]
 
     with pytest.raises(SubjectNotExist):
-        RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+        RoleAssignmentHandler().assign_role_batch_for_user(user, workspace, values)
 
     for subject_type in subject_type_registry.get_all():
         if subject_type.type not in ALLOWED_SUBJECT_TYPE_BY_PRIORITY:
@@ -553,7 +561,7 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
                 actor = subject_type.model_class()
 
             if subject_type.type == "core.token":
-                actor = subject_type.model_class(group=group)
+                actor = subject_type.model_class(workspace=workspace)
                 actor.save()
 
             values = [
@@ -567,7 +575,9 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
             ]
 
             with pytest.raises(SubjectUnsupported):
-                RoleAssignmentHandler().assign_role_batch_for_user(user, group, values)
+                RoleAssignmentHandler().assign_role_batch_for_user(
+                    user, workspace, values
+                )
 
 
 @pytest.mark.django_db
@@ -578,48 +588,48 @@ def test_assign_role_batch_subject_not_in_group(data_fixture):
 # pytest -k "test_assign_role_batch_performance" -s --run-disabled-in-ci
 def test_assign_role_batch_performance(data_fixture, profiler):
     admin = data_fixture.create_user()
-    group = data_fixture.create_group(user=admin)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=admin)
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     sample_size = 500
 
-    group_level_updates = []
+    workspace_level_updates = []
     for _ in tqdm(range(sample_size), desc="Users creation"):
         try:
             user_new = data_fixture.create_user()
         except IntegrityError:
             continue
         else:
-            GroupUser.objects.create(
-                group=group, user=user_new, order=0, permissions="MEMBER"
+            WorkspaceUser.objects.create(
+                workspace=workspace, user=user_new, order=0, permissions="MEMBER"
             )
-            group_level_updates.append(
+            workspace_level_updates.append(
                 NewRoleAssignment(
                     user_new,
                     admin_role,
-                    group,
+                    workspace,
                 )
             )
 
     print("----------GROUP LEVEL------------")
-    with profiler(html_report_name="enterprise_batch_assign_group_level"):
+    with profiler(html_report_name="enterprise_batch_assign_workspace_level"):
         RoleAssignmentHandler().assign_role_batch_for_user(
-            admin, group, group_level_updates
+            admin, workspace, workspace_level_updates
         )
 
     not_initial_user_filter = Q(user__id=admin.id)
-    group_users = GroupUser.objects.filter(~not_initial_user_filter)
-    assert len(group_users) == sample_size
+    workspace_users = WorkspaceUser.objects.filter(~not_initial_user_filter)
+    assert len(workspace_users) == sample_size
 
-    for group_user in group_users:
-        assert group_user.permissions == admin_role.uid
+    for workspace_user in workspace_users:
+        assert workspace_user.permissions == admin_role.uid
 
-    group_level_deletions = []
-    for (user, _, scope) in group_level_updates:
-        group_level_deletions.append(
+    workspace_level_deletions = []
+    for (user, _, scope) in workspace_level_updates:
+        workspace_level_deletions.append(
             NewRoleAssignment(
                 user,
                 None,
@@ -628,19 +638,19 @@ def test_assign_role_batch_performance(data_fixture, profiler):
         )
 
     print("----------GROUP LEVEL DELETIONS------------")
-    with profiler(html_report_name="enterprise_batch_assign_group_level_deletions"):
+    with profiler(html_report_name="enterprise_batch_assign_workspace_level_deletions"):
         RoleAssignmentHandler().assign_role_batch_for_user(
-            admin, group, group_level_deletions
+            admin, workspace, workspace_level_deletions
         )
 
-    group_users = GroupUser.objects.filter(~not_initial_user_filter)
-    assert len(group_users) == sample_size
+    workspace_users = WorkspaceUser.objects.filter(~not_initial_user_filter)
+    assert len(workspace_users) == sample_size
 
-    for group_user in group_users:
-        assert group_user.permissions == no_access_role.uid
+    for workspace_user in workspace_users:
+        assert workspace_user.permissions == no_access_role.uid
 
     database_level_assignments = []
-    for (user, _, _) in group_level_updates:
+    for (user, _, _) in workspace_level_updates:
         database_level_assignments.append(
             NewRoleAssignment(
                 user,
@@ -652,7 +662,7 @@ def test_assign_role_batch_performance(data_fixture, profiler):
     print("----------Database Level Assignments------------")
     with profiler(html_report_name="enterprise_batch_assign_database_level"):
         RoleAssignmentHandler().assign_role_batch_for_user(
-            admin, group, database_level_assignments
+            admin, workspace, database_level_assignments
         )
 
     role_assignments = RoleAssignment.objects.all()
@@ -674,7 +684,7 @@ def test_assign_role_batch_performance(data_fixture, profiler):
     print("----------Database Level Deletions------------")
     with profiler(html_report_name="enterprise_batch_assign_database_level_deletions"):
         RoleAssignmentHandler().assign_role_batch_for_user(
-            admin, group, database_level_deletions
+            admin, workspace, database_level_deletions
         )
 
     assert RoleAssignment.objects.count() == 0
@@ -684,17 +694,17 @@ def test_assign_role_batch_performance(data_fixture, profiler):
 def test_get_roles_per_scope(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database1 = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, workspace=workspace)
     table11 = data_fixture.create_database_table(user=user, database=database1)
     table12 = data_fixture.create_database_table(user=user, database=database1)
-    database2 = data_fixture.create_database_application(user=user, group=group)
+    database2 = data_fixture.create_database_application(user=user, workspace=workspace)
     table21 = data_fixture.create_database_table(user=user, database=database2)
     table22 = data_fixture.create_database_table(user=user, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user2])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user2])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user2])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace, members=[user2])
+    team2 = enterprise_data_fixture.create_team(workspace=workspace, members=[user2])
+    team3 = enterprise_data_fixture.create_team(workspace=workspace, members=[user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     editor_role = Role.objects.get(uid="EDITOR")
@@ -703,48 +713,42 @@ def test_get_roles_per_scope(data_fixture, enterprise_data_fixture):
     no_role_role = Role.objects.get(uid="NO_ACCESS")
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
-    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=group)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=editor_role, scope=workspace
+    )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role])
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role])
     ]
 
-    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table11)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=viewer_role, scope=table11
+    )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role]),
         (table11, [viewer_role]),
     ]
 
     RoleAssignmentHandler().assign_role(
-        user2, group, role=builder_role, scope=database1
+        user2, workspace, role=builder_role, scope=database1
     )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role]),
         (database1, [builder_role]),
         (table11, [viewer_role]),
     ]
 
-    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database2)
-    RoleAssignmentHandler().assign_role(user2, group, role=builder_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=editor_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=builder_role, scope=table22
+    )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role]),
-        (database1, [builder_role]),
-        (database2, [editor_role]),
-        (table11, [viewer_role]),
-        (table22, [builder_role]),
-    ]
-
-    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=no_role_role, scope=group)
-
-    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=database1)
-
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role]),
         (database1, [builder_role]),
         (database2, [editor_role]),
         (table11, [viewer_role]),
@@ -752,11 +756,21 @@ def test_get_roles_per_scope(data_fixture, enterprise_data_fixture):
     ]
 
     RoleAssignmentHandler().assign_role(
-        team2, group, role=builder_role, scope=database1
+        team1, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=no_role_role, scope=workspace
     )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role]),
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=editor_role, scope=database1
+    )
+
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role]),
         (database1, [builder_role]),
         (database2, [editor_role]),
         (table11, [viewer_role]),
@@ -764,23 +778,41 @@ def test_get_roles_per_scope(data_fixture, enterprise_data_fixture):
     ]
 
     RoleAssignmentHandler().assign_role(
-        user2, group, role=low_priority_role, scope=group
+        team2, workspace, role=builder_role, scope=database1
     )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role, builder_role, no_role_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role]),
         (database1, [builder_role]),
         (database2, [editor_role]),
         (table11, [viewer_role]),
         (table22, [builder_role]),
     ]
 
-    RoleAssignmentHandler().assign_role(team1, group, role=editor_role, scope=table12)
-    RoleAssignmentHandler().assign_role(team2, group, role=builder_role, scope=table12)
-    RoleAssignmentHandler().assign_role(team3, group, role=no_role_role, scope=table12)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=low_priority_role, scope=workspace
+    )
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user2) == [
-        (group, [editor_role, builder_role, no_role_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role, builder_role, no_role_role]),
+        (database1, [builder_role]),
+        (database2, [editor_role]),
+        (table11, [viewer_role]),
+        (table22, [builder_role]),
+    ]
+
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=editor_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=builder_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=no_role_role, scope=table12
+    )
+
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user2) == [
+        (workspace, [editor_role, builder_role, no_role_role]),
         (database1, [builder_role]),
         (database2, [editor_role]),
         (table11, [viewer_role]),
@@ -795,17 +827,25 @@ def test_get_role_per_scope_per_actors(data_fixture, enterprise_data_fixture):
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
-    group = data_fixture.create_group(user=admin, members=[user_2, user_3, user_4])
-    database1 = data_fixture.create_database_application(user=admin, group=group)
+    workspace = data_fixture.create_workspace(
+        user=admin, members=[user_2, user_3, user_4]
+    )
+    database1 = data_fixture.create_database_application(
+        user=admin, workspace=workspace
+    )
     table11 = data_fixture.create_database_table(user=admin, database=database1)
     table12 = data_fixture.create_database_table(user=admin, database=database1)
-    database2 = data_fixture.create_database_application(user=admin, group=group)
+    database2 = data_fixture.create_database_application(
+        user=admin, workspace=workspace
+    )
     table21 = data_fixture.create_database_table(user=admin, database=database2)
     table22 = data_fixture.create_database_table(user=admin, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user_3])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user_4])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user_3, user_4])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace, members=[user_3])
+    team2 = enterprise_data_fixture.create_team(workspace=workspace, members=[user_4])
+    team3 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user_3, user_4]
+    )
 
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
@@ -813,41 +853,65 @@ def test_get_role_per_scope_per_actors(data_fixture, enterprise_data_fixture):
     no_role_role = Role.objects.get(uid="NO_ACCESS")
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(user_3, group, role=no_role_role, scope=group)
     RoleAssignmentHandler().assign_role(
-        user_4, group, role=low_priority_role, scope=group
+        user_2, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        user_3, workspace, role=no_role_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=low_priority_role, scope=workspace
     )
 
     # User 2 assignments
     RoleAssignmentHandler().assign_role(
-        user_2, group, role=editor_role, scope=database1
+        user_2, workspace, role=editor_role, scope=database1
     )
-    RoleAssignmentHandler().assign_role(user_2, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user_2, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=no_role_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=viewer_role, scope=table22
+    )
 
     # User 4 assignments
     RoleAssignmentHandler().assign_role(
-        user_4, group, role=no_role_role, scope=database1
+        user_4, workspace, role=no_role_role, scope=database1
     )
-    RoleAssignmentHandler().assign_role(user_4, group, role=builder_role, scope=table11)
-    RoleAssignmentHandler().assign_role(user_4, group, role=no_role_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=builder_role, scope=table11
+    )
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=no_role_role, scope=table22
+    )
 
     # Team assignments
-    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=viewer_role, scope=database2
+    )
 
     result = RoleAssignmentHandler().get_roles_per_scope_for_actors(
-        group, subject_type_registry.get("auth.User"), [user_2, user_3, user_4]
+        workspace, subject_type_registry.get("auth.User"), [user_2, user_3, user_4]
     )
 
     assert len(result) == 3
     assert len(result[user_2]) == 4
-    assert result[user_2][0] == (group, [builder_role])
+    assert result[user_2][0] == (workspace, [builder_role])
     assert result[user_2][1] == (database1, [editor_role])
     assert result[user_2][2] == (table12, [no_role_role])
     assert result[user_2][3] == (table22, [viewer_role])
@@ -858,24 +922,24 @@ def test_get_role_per_scope_per_actors(data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_get_roles_per_scope_trashed_teams(data_fixture, enterprise_data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     admin_role = Role.objects.get(uid="ADMIN")
 
     enterprise_data_fixture.create_subject(team, user)
-    RoleAssignmentHandler().assign_role(team, group, admin_role, scope=database)
+    RoleAssignmentHandler().assign_role(team, workspace, admin_role, scope=database)
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
-        (group, [admin_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user) == [
+        (workspace, [admin_role]),
         (database, [admin_role]),
     ]
 
     team.trashed = True
     team.save()
 
-    assert RoleAssignmentHandler().get_roles_per_scope(group, user) == [
-        (group, [admin_role]),
+    assert RoleAssignmentHandler().get_roles_per_scope(workspace, user) == [
+        (workspace, [admin_role]),
     ]
 
 
@@ -889,17 +953,23 @@ def test_check_get_role_per_scope_performance(
 ):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database1 = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, workspace=workspace)
     table11 = data_fixture.create_database_table(user=user, database=database1)
     table12 = data_fixture.create_database_table(user=user, database=database1)
-    database2 = data_fixture.create_database_application(user=user, group=group)
+    database2 = data_fixture.create_database_application(user=user, workspace=workspace)
     table21 = data_fixture.create_database_table(user=user, database=database2)
     table22 = data_fixture.create_database_table(user=user, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team1 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team2 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team3 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
 
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
@@ -908,30 +978,48 @@ def test_check_get_role_per_scope_performance(
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=low_priority_role, scope=group
+        user, workspace, role=low_priority_role, scope=workspace
     )
-    RoleAssignmentHandler().assign_role(user, group, role=editor_role, scope=database1)
-    RoleAssignmentHandler().assign_role(user, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user, workspace, role=editor_role, scope=database1
+    )
+    RoleAssignmentHandler().assign_role(
+        user, workspace, role=no_role_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        user, workspace, role=viewer_role, scope=table22
+    )
 
-    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=viewer_role, scope=database2
+    )
 
     role_assignment_handler = RoleAssignmentHandler()
 
     with CaptureQueriesContext(connection) as captured:
-        role_assignment_handler.get_roles_per_scope(group, user)
+        role_assignment_handler.get_roles_per_scope(workspace, user)
 
     for q in captured.captured_queries:
         print(q)
     print(len(captured.captured_queries))
 
     with CaptureQueriesContext(connection) as captured:
-        role_assignment_handler.get_roles_per_scope(group, user)
+        role_assignment_handler.get_roles_per_scope(workspace, user)
 
     print("----------- Second time ---------------")
     for q in captured.captured_queries:
@@ -940,7 +1028,7 @@ def test_check_get_role_per_scope_performance(
 
     with profiler(html_report_name="enterprise_get_roles_per_scope"):
         for i in range(1000):
-            role_assignment_handler.get_roles_per_scope(group, user)
+            role_assignment_handler.get_roles_per_scope(workspace, user)
 
 
 @pytest.mark.disabled_in_ci
@@ -959,11 +1047,13 @@ def test_get_role_per_scope_for_actors_perf(
     for _ in tqdm(range(100), desc="Users creation"):
         users.append(data_fixture.create_user())
 
-    group = data_fixture.create_group(user=admin, members=users)
+    workspace = data_fixture.create_workspace(user=admin, members=users)
 
     data = {}
     for _ in tqdm(range(10), desc="Database"):
-        database = data_fixture.create_database_application(user=admin, group=group)
+        database = data_fixture.create_database_application(
+            user=admin, workspace=workspace
+        )
         data[database] = []
         for _ in range(10):
             data[database].append(
@@ -974,7 +1064,7 @@ def test_get_role_per_scope_for_actors_perf(
     for max in range(10):
         teams.append(
             enterprise_data_fixture.create_team(
-                group=group, members=users[max * 100 : (max + 1) * 100 - 50]
+                workspace=workspace, members=users[max * 100 : (max + 1) * 100 - 50]
             )
         )
 
@@ -1000,29 +1090,31 @@ def test_get_role_per_scope_for_actors_perf(
     role_generator = role_gen()
 
     for user in tqdm(users, "User roles"):
-        group_role = next(role_generator)
-        if group_role is None:
-            group_role = low_priority_role
+        workspace_role = next(role_generator)
+        if workspace_role is None:
+            workspace_role = low_priority_role
 
-        role_assignment_handler.assign_role(user, group, role=group_role, scope=group)
+        role_assignment_handler.assign_role(
+            user, workspace, role=workspace_role, scope=workspace
+        )
 
         for database, tables in data.items():
             role_assignment_handler.assign_role(
-                user, group, role=next(role_generator), scope=database
+                user, workspace, role=next(role_generator), scope=database
             )
             for table in tables:
                 role_assignment_handler.assign_role(
-                    user, group, role=next(role_generator), scope=table
+                    user, workspace, role=next(role_generator), scope=table
                 )
 
     for team in tqdm(teams, "Team roles"):
         for database, tables in data.items():
             role_assignment_handler.assign_role(
-                team, group, role=next(role_generator), scope=database
+                team, workspace, role=next(role_generator), scope=database
             )
             for table in tables:
                 role_assignment_handler.assign_role(
-                    team, group, role=next(role_generator), scope=table
+                    team, workspace, role=next(role_generator), scope=table
                 )
 
     user_subject_type = subject_type_registry.get("auth.User")
@@ -1031,7 +1123,7 @@ def test_get_role_per_scope_for_actors_perf(
 
     with CaptureQueriesContext(connection) as captured:
         role_assignment_handler.get_roles_per_scope_for_actors(
-            group, user_subject_type, users
+            workspace, user_subject_type, users
         )
 
     for q in captured.captured_queries:
@@ -1040,7 +1132,7 @@ def test_get_role_per_scope_for_actors_perf(
 
     with CaptureQueriesContext(connection) as captured:
         role_assignment_handler.get_roles_per_scope_for_actors(
-            group, user_subject_type, users
+            workspace, user_subject_type, users
         )
 
     print("----------- Second time ---------------")
@@ -1051,5 +1143,5 @@ def test_get_role_per_scope_for_actors_perf(
     with profiler(html_report_name="enterprise_get_roles_per_scope_for_actors"):
         for i in range(100):
             role_assignment_handler.get_roles_per_scope_for_actors(
-                group, user_subject_type, users
+                workspace, user_subject_type, users
             )

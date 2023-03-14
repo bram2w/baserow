@@ -44,7 +44,12 @@ from .types import Actor, ContextObject, PermissionCheck, ScopeObject, Subject
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
-    from baserow.core.models import Application, Group, GroupInvitation, Template
+    from baserow.core.models import (
+        Application,
+        Template,
+        Workspace,
+        WorkspaceInvitation,
+    )
 
 
 class Plugin(APIUrlsInstanceMixin, Instance):
@@ -111,22 +116,23 @@ class Plugin(APIUrlsInstanceMixin, Instance):
     def user_created(
         self,
         user: "AbstractUser",
-        group: "Group" = None,
-        group_invitation: "GroupInvitation" = None,
+        workspace: "Workspace" = None,
+        workspace_invitation: "WorkspaceInvitation" = None,
         template: "Template" = None,
     ):
         """
         A hook that is called after a new user has been created. This is the place to
-        create some data the user can start with. A group will most often be created,
-        but won't be if the account has `allow_global_group_creation` set to `False`.
+        create some data the user can start with. A workspace will most often be
+        created, but won't be if the account has `allow_global_workspace_creation`
+        set to `False`.
 
         :param user: The newly created user.
         :type user: User
-        :param group: The newly created group for the user.
-        :type group: Group or None
-        :param group_invitation: Is provided if the user has signed up using a valid
-            group invitation token.
-        :type group_invitation: GroupInvitation or None
+        :param workspace: The newly created workspace for the user.
+        :type workspace: Workspace or None
+        :param workspace_invitation: Is provided if the user has signed up using a valid
+            workspace invitation token.
+        :type workspace_invitation: WorkspaceInvitation or None
         :param template: The template that is installed right after creating the
             account. Is `None` if the template was not created.
         :type template: Template or None
@@ -230,13 +236,13 @@ class ApplicationType(
         )
 
     def create_application(
-        self, user, group: "Group", name: str, init_with_data: bool = False
+        self, user, workspace: "Workspace", name: str, init_with_data: bool = False
     ) -> "Application":
         """
         Creates a new application instance of this type and returns it.
 
         :param user: The user that is creating the application.
-        :param group: The group that the application will be created in.
+        :param workspace: The workspace that the application will be created in.
         :param name: The name of the application.
         :param init_with_data: Whether the application should be created with some
             initial data. Defaults to False.
@@ -244,9 +250,11 @@ class ApplicationType(
         """
 
         model = self.model_class
-        last_order = model.get_last_order(group)
+        last_order = model.get_last_order(workspace)
 
-        instance = model.objects.create(group=group, order=last_order, name=name)
+        instance = model.objects.create(
+            workspace=workspace, order=last_order, name=name
+        )
         if init_with_data:
             self.init_application(user, instance)
         return instance
@@ -290,7 +298,7 @@ class ApplicationType(
 
     def import_serialized(
         self,
-        group: "Group",
+        workspace: "Workspace",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
@@ -299,9 +307,9 @@ class ApplicationType(
     ) -> "Application":
         """
         Imports the exported serialized application by the `export_serialized` as a new
-        application to a group.
+        application to a workspace.
 
-        :param group: The group that the application must be added to.
+        :param workspace: The workspace that the application must be added to.
         :param serialized_values: The exported serialized values by the
             `export_serialized` method.
         :param id_mapping: The map of exported ids to newly created ids that must be
@@ -314,8 +322,8 @@ class ApplicationType(
         :return: The newly created application.
         """
 
-        if "import_group_id" not in id_mapping and group is not None:
-            id_mapping["import_group_id"] = group.id
+        if "import_workspace_id" not in id_mapping and workspace is not None:
+            id_mapping["import_workspace_id"] = workspace.id
 
         if "applications" not in id_mapping:
             id_mapping["applications"] = {}
@@ -323,7 +331,9 @@ class ApplicationType(
         serialized_copy = serialized_values.copy()
         application_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
-        application = self.model_class.objects.create(group=group, **serialized_copy)
+        application = self.model_class.objects.create(
+            workspace=workspace, **serialized_copy
+        )
         id_mapping["applications"][application_id] = application.id
 
         progress = ChildProgressBuilder.build(progress_builder, child_total=1)
@@ -402,7 +412,7 @@ class PermissionManagerType(abc.ABC, Instance):
         self,
         actor: Actor,
         operation_name: str,
-        group: Optional["Group"] = None,
+        workspace: Optional["Workspace"] = None,
         context: Optional[Any] = None,
         include_trash: Boolean = False,
     ) -> Optional[Boolean]:
@@ -420,10 +430,10 @@ class PermissionManagerType(abc.ABC, Instance):
         :param actor: The actor who wants to execute the operation. Generally a `User`,
             but can be a `Token`.
         :param operation_name: The operation name the actor wants to execute.
-        :param group: The optional group in which  the operation takes place.
+        :param workspace: The optional workspace in which  the operation takes place.
         :param context: The optional object affected by the operation. For instance
             if you are updating a `Table` object, the context is this `Table` object.
-        :param include_trash: If true then also checks if the given group has been
+        :param include_trash: If true then also checks if the given workspace has been
             trashed instead of raising a DoesNotExist exception.
         :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted, None if the permission manager
@@ -433,7 +443,7 @@ class PermissionManagerType(abc.ABC, Instance):
         check = PermissionCheck(actor, operation_name, context)
         result = self.check_multiple_permissions(
             [check],
-            group,
+            workspace,
             include_trash=include_trash,
         ).get(check, None)
 
@@ -446,7 +456,7 @@ class PermissionManagerType(abc.ABC, Instance):
     def check_multiple_permissions(
         self,
         checks: List[PermissionCheck],
-        group: "Group" = None,
+        workspace: "Workspace" = None,
         include_trash: bool = False,
     ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
         """
@@ -464,8 +474,8 @@ class PermissionManagerType(abc.ABC, Instance):
 
         :param checks: The list of check to do. Each check is a triplet of
             (actor, permission_name, scope).
-        :param group: The optional group in which the operations take place.
-        :param include_trash: If true then also checks if the given group has been
+        :param workspace: The optional workspace in which the operations take place.
+        :param include_trash: If true then also checks if the given workspace has been
             trashed instead of raising a DoesNotExist exception.
         :return: A dictionary with one entry for each check of the parameter as key and
             whether the operation is allowed or not as value. Check entries can be
@@ -478,7 +488,7 @@ class PermissionManagerType(abc.ABC, Instance):
         )
 
     def get_permissions_object(
-        self, actor: Actor, group: Optional["Group"] = None
+        self, actor: Actor, workspace: Optional["Workspace"] = None
     ) -> Any:
         """
         This method should return the data necessary to easily check a permission from
@@ -490,13 +500,13 @@ class PermissionManagerType(abc.ABC, Instance):
         This method is called when the `CoreHandler().get_permissions()` is called,
         if the permission manager is listed in the `settings.PERMISSION_MANAGERS`.
         It can return `None` if this permission manager is not relevant for the given
-        actor/group for some reason.
+        actor/workspace for some reason.
 
         By default this method returns None.
 
         :param actor: The actor whom we want to compute the permission object for.
-        :param group: The optional group into which we want to compute the permission
-            object.
+        :param workspace: The optional workspace into which we want to compute the
+            permission object.
         :return: The permission object or None.
         """
 
@@ -507,7 +517,7 @@ class PermissionManagerType(abc.ABC, Instance):
         actor: Actor,
         operation_name: str,
         queryset: QuerySet,
-        group: Optional["Group"] = None,
+        workspace: Optional["Workspace"] = None,
         context: Optional[Any] = None,
     ) -> QuerySet:
         """
@@ -520,7 +530,7 @@ class PermissionManagerType(abc.ABC, Instance):
             Generally a `User` but can be a Token.
         :param operation: The operation name for which we want to filter the queryset
             for.
-        :param group: An optional group into which the operation takes place.
+        :param workspace: An optional workspace into which the operation takes place.
         :param context: An optional context object related to the current operation.
         :return: The queryset potentially filtered.
         """
@@ -692,7 +702,7 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         :return: A Q object filter.
         """
 
-        # Group scope by types to use `.get_filter_for_scope_type` later
+        # Workspace scope by types to use `.get_filter_for_scope_type` later
         scope_by_types = defaultdict(set)
         for s in scopes:
             scope_by_types[object_scope_type_registry.get_by_model(s)].add(s)
@@ -878,20 +888,22 @@ class SubjectType(abc.ABC, Instance, ModelInstanceMixin):
     can execute an operation.
     """
 
-    def is_in_group(self, subject: Subject, group: "Group") -> bool:
+    def is_in_workspace(self, subject: Subject, workspace: "Workspace") -> bool:
         """
-        This function checks if a subject belongs to a group
-        :return: If the subject belongs to the group
+        This function checks if a subject belongs to a workspace
+        :return: If the subject belongs to the workspace
         """
 
-        return self.are_in_group([subject], group)[0]
+        return self.are_in_workspace([subject], workspace)[0]
 
     @abc.abstractmethod
-    def are_in_group(self, subjects: List[Subject], group: "Group") -> List[bool]:
+    def are_in_workspace(
+        self, subjects: List[Subject], workspace: "Workspace"
+    ) -> List[bool]:
         """
-        This function checks if the subjects belongs to a group
+        This function checks if the subjects belongs to a workspace
         :return: a list of bool. For each index whether the user at the same index
-            belongs to the group or not
+            belongs to the workspace or not
         """
 
         pass

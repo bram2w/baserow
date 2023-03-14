@@ -1,16 +1,16 @@
-from baserow.core.operations import ApplicationOperationType, GroupCoreOperationType
+from baserow.core.operations import ApplicationOperationType, WorkspaceCoreOperationType
 
 
-class ReadGroupTrashOperationType(GroupCoreOperationType):
-    type = "group.read_trash"
+class ReadWorkspaceTrashOperationType(WorkspaceCoreOperationType):
+    type = "workspace.read_trash"
 
 
 class ReadApplicationTrashOperationType(ApplicationOperationType):
     type = "application.read_trash"
 
 
-class EmptyGroupTrashOperationType(GroupCoreOperationType):
-    type = "group.empty_trash"
+class EmptyWorkspaceTrashOperationType(WorkspaceCoreOperationType):
+    type = "workspace.empty_trash"
 
 
 class EmptyApplicationTrashOperationType(ApplicationOperationType):

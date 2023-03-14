@@ -348,7 +348,7 @@ class AdminRemoveAllUsersFromLicenseView(APIView):
         tags=["Admin"],
         operation_id="admin_remove_all_users_from_license",
         description=(
-            "Removes all the users the users that are on the license. This will "
+            "Removes all the users that are on the license. This will "
             "empty all the seats."
         ),
         request=None,

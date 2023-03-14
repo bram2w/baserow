@@ -61,7 +61,7 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     row_1 = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row_1, parent_id=table.id
+        user, table.database.workspace, table.database, row_1, parent_id=table.id
     )
     assert model.objects.all().count() == 0
     assert model.trash.all().count() == 1
@@ -76,10 +76,10 @@ def test_perm_deleting_many_rows_at_once_only_looks_up_the_model_once(
     row_2 = handler.create_row(user=user, table=table)
     row_3 = handler.create_row(user=user, table=table)
     TrashHandler.trash(
-        user, table.database.group, table.database, row_2, parent_id=table.id
+        user, table.database.workspace, table.database, row_2, parent_id=table.id
     )
     TrashHandler.trash(
-        user, table.database.group, table.database, row_3, parent_id=table.id
+        user, table.database.workspace, table.database, row_3, parent_id=table.id
     )
 
     assert model.objects.all().count() == 0
@@ -120,11 +120,11 @@ def test_can_delete_fields_and_rows_in_the_same_perm_delete_batch(
     row_2 = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row_1, parent_id=table.id
+        user, table.database.workspace, table.database, row_1, parent_id=table.id
     )
-    TrashHandler.trash(user, table.database.group, table.database, field)
+    TrashHandler.trash(user, table.database.workspace, table.database, field)
     TrashHandler.trash(
-        user, table.database.group, table.database, row_2, parent_id=table.id
+        user, table.database.workspace, table.database, row_2, parent_id=table.id
     )
     assert model.objects.all().count() == 0
     assert model.trash.all().count() == 2
@@ -143,9 +143,9 @@ def test_can_delete_fields_and_rows_in_the_same_perm_delete_batch(
     )
     row_3 = handler.create_row(user=user, table=table)
 
-    TrashHandler.trash(user, table.database.group, table.database, field_2)
+    TrashHandler.trash(user, table.database.workspace, table.database, field_2)
     TrashHandler.trash(
-        user, table.database.group, table.database, row_3, parent_id=table.id
+        user, table.database.workspace, table.database, row_3, parent_id=table.id
     )
 
     assert model.objects.all().count() == 0
@@ -177,7 +177,7 @@ def test_can_trash_row_with_blank_primary_single_select(
     row = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     assert TrashEntry.objects.count() == 1
     assert model.objects.count() == 0
@@ -199,7 +199,7 @@ def test_can_trash_row_with_blank_primary_file_field(
     row = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     assert TrashEntry.objects.count() == 1
     assert model.objects.count() == 0
@@ -217,7 +217,7 @@ def test_delete_row_by_id_perm(data_fixture):
     handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     model = table.get_model()
     assert model.objects.all().count() == 1
@@ -239,7 +239,7 @@ def test_cant_delete_row_by_id_perm_without_tableid(data_fixture):
     handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     with pytest.raises(ParentIdMustBeProvidedException):
         TrashHandler.permanently_delete(row)
@@ -248,8 +248,8 @@ def test_cant_delete_row_by_id_perm_without_tableid(data_fixture):
 @pytest.mark.django_db
 def test_perm_delete_table(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
 
     assert Table.objects.all().count() == 1
@@ -384,7 +384,7 @@ def test_trashing_a_table_with_link_fields_pointing_at_it_also_trashes_those_fie
         name="Customer",
         link_row_table=customers_table,
     )
-    TrashHandler.trash(user, database.group, database, customers_table)
+    TrashHandler.trash(user, database.workspace, database, customers_table)
 
     link_field_1.refresh_from_db()
     assert link_field_1.trashed
@@ -413,7 +413,7 @@ def test_trashed_row_entry_includes_the_rows_primary_key_value_as_an_extra_descr
         values={f"field_{customers_primary_field.id}": "John"},
     )
     trash_entry = TrashHandler.trash(
-        user, database.group, database, row, parent_id=customers_table.id
+        user, database.workspace, database, row, parent_id=customers_table.id
     )
 
     assert trash_entry.names == ["John"]
@@ -453,7 +453,7 @@ def test_trashed_rows_entry_includes_includes_the_correct_names(
         table=customers_table, row_ids=[row1.id, row2.id]
     )
     trash_entry = TrashHandler.trash(
-        user, database.group, database, trashed_rows, parent_id=customers_table.id
+        user, database.workspace, database, trashed_rows, parent_id=customers_table.id
     )
 
     assert trash_entry.names == ["Row A", f"unnamed row {row2.id}"]
@@ -494,7 +494,7 @@ def test_trash_and_restore_rows_in_batch(send_mock, data_fixture):
         table=customers_table, row_ids=[row1.id, row2.id]
     )
     TrashHandler.trash(
-        user, database.group, database, trashed_rows, parent_id=customers_table.id
+        user, database.workspace, database, trashed_rows, parent_id=customers_table.id
     )
 
     customers_model = customers_table.get_model()
@@ -543,7 +543,7 @@ def test_permanently_delete_rows_in_batch(data_fixture):
         table=customers_table, row_ids=[row1.id, row2.id]
     )
     TrashHandler.trash(
-        user, database.group, database, trashed_rows, parent_id=customers_table.id
+        user, database.workspace, database, trashed_rows, parent_id=customers_table.id
     )
     TrashHandler.permanently_delete(trashed_rows, parent_id=customers_table.id)
 
@@ -575,7 +575,7 @@ def test_trashed_row_entry_extra_description_is_unnamed_when_no_value_pk(
         values={},
     )
     trash_entry = TrashHandler.trash(
-        user, database.group, database, row, parent_id=customers_table.id
+        user, database.workspace, database, row, parent_id=customers_table.id
     )
 
     assert trash_entry.names == [f"unnamed row {row.id}"]
@@ -696,7 +696,7 @@ def test_trashing_a_row_hides_it_from_a_link_row_field_pointing_at_it(
     ) == [john_row.id]
 
     TrashHandler.trash(
-        user, database.group, database, john_row, parent_id=customers_table.id
+        user, database.workspace, database, john_row, parent_id=customers_table.id
     )
 
     row = RowHandler().get_row(user, cars_table, linked_row_pointing_at_john.id)
@@ -766,13 +766,13 @@ def test_a_trashed_linked_row_pointing_at_a_trashed_row_is_restored_correctly(
 
     TrashHandler.trash(
         user,
-        database.group,
+        database.workspace,
         database,
         linked_row_pointing_at_john,
         parent_id=cars_table.id,
     )
     TrashHandler.trash(
-        user, database.group, database, john_row, parent_id=customers_table.id
+        user, database.workspace, database, john_row, parent_id=customers_table.id
     )
     TrashHandler.restore_item(
         user, "row", linked_row_pointing_at_john.id, parent_trash_item_id=cars_table.id
@@ -817,13 +817,13 @@ def test_a_parent_id_must_be_provided_when_trashing_or_restoring_a_row(
     with pytest.raises(ParentIdMustBeProvidedException):
         TrashHandler.trash(
             user,
-            database.group,
+            database.workspace,
             database,
             john_row,
         )
 
     TrashHandler.trash(
-        user, database.group, database, john_row, parent_id=customers_table.id
+        user, database.workspace, database, john_row, parent_id=customers_table.id
     )
 
     with pytest.raises(ParentIdMustBeProvidedException):
@@ -838,14 +838,18 @@ def test_a_parent_id_must_not_be_provided_when_trashing_or_restoring_an_app(
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     with pytest.raises(ParentIdMustNotBeProvidedException):
         TrashHandler.trash(
-            user, database.group, database, database, parent_id=database.group.id
+            user,
+            database.workspace,
+            database,
+            database,
+            parent_id=database.workspace.id,
         )
 
-    TrashHandler.trash(user, database.group, database, database)
+    TrashHandler.trash(user, database.workspace, database, database)
 
     with pytest.raises(ParentIdMustNotBeProvidedException):
         TrashHandler.restore_item(
-            user, "application", database.id, parent_trash_item_id=database.group.id
+            user, "application", database.id, parent_trash_item_id=database.workspace.id
         )
 
 
@@ -885,7 +889,7 @@ def test_trashing_a_field_with_a_filter_trashes_the_filter(
 
     TrashHandler.trash(
         user,
-        database.group,
+        database.workspace,
         database,
         other_field,
     )
@@ -948,7 +952,7 @@ def test_trashing_a_field_with_a_sort_trashes_the_sort(
 
     TrashHandler.trash(
         user,
-        database.group,
+        database.workspace,
         database,
         other_field,
     )
@@ -983,7 +987,7 @@ def test_can_perm_delete_tables(
     table = data_fixture.create_database_table(name="Car", user=user)
     data_fixture.create_text_field(table=table, name="Name", text_default="Test")
 
-    TrashHandler.trash(user, table.database.group, table.database, table)
+    TrashHandler.trash(user, table.database.workspace, table.database, table)
     assert TrashEntry.objects.count() == 1
     assert f"database_table_{table.id}" in connection.introspection.table_names()
 
@@ -1090,7 +1094,7 @@ def test_a_restored_field_will_have_its_name_changed_to_ensure_it_is_unique(
 
     # Check that a normal trash and restore when there aren't any naming conflicts will
     # return the old names.
-    TrashHandler.trash(user, database.group, database, link_field_1)
+    TrashHandler.trash(user, database.workspace, database, link_field_1)
     TrashHandler.restore_item(user, "field", link_field_1.id)
     link_field_1.refresh_from_db()
     assert link_field_2.name == "Customer"
@@ -1183,9 +1187,9 @@ def test_perm_delete_table_and_related_link_row_field(data_fixture):
         link_row_table=customers_table,
     )
 
-    TrashHandler.trash(user, database.group, database, table)
+    TrashHandler.trash(user, database.workspace, database, table)
     TrashHandler.trash(
-        user, database.group, database, link_field_1.link_row_related_field
+        user, database.workspace, database, link_field_1.link_row_related_field
     )
 
     assert TrashEntry.objects.count() == 2
@@ -1217,11 +1221,11 @@ def test_can_delete_applications_and_rows_in_the_same_perm_delete_batch(
     row_2 = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row_1, parent_id=table.id
+        user, table.database.workspace, table.database, row_1, parent_id=table.id
     )
-    TrashHandler.trash(user, table.database.group, table.database, table.database)
+    TrashHandler.trash(user, table.database.workspace, table.database, table.database)
     TrashHandler.trash(
-        user, table.database.group, table.database, row_2, parent_id=table.id
+        user, table.database.workspace, table.database, row_2, parent_id=table.id
     )
     assert model.objects.all().count() == 0
     assert model.trash.all().count() == 2
@@ -1252,11 +1256,11 @@ def test_can_delete_tables_and_rows_in_the_same_perm_delete_batch(
     row_4 = handler.create_row(user=user, table=table)
 
     TrashHandler.trash(
-        user, table.database.group, table.database, row_1, parent_id=table.id
+        user, table.database.workspace, table.database, row_1, parent_id=table.id
     )
-    TrashHandler.trash(user, table.database.group, table.database, table)
+    TrashHandler.trash(user, table.database.workspace, table.database, table)
     TrashHandler.trash(
-        user, table.database.group, table.database, row_2, parent_id=table.id
+        user, table.database.workspace, table.database, row_2, parent_id=table.id
     )
     RowHandler().delete_rows(user, table, row_ids=[row_3.id, row_4.id])
     assert model.objects.all().count() == 0
@@ -1395,8 +1399,8 @@ def test_trashing_two_linked_tables_and_restoring_one_ignores_link_field(
         name="Customer",
         link_row_table=table_1,
     )
-    TrashHandler.trash(user, database.group, database, table_1)
-    TrashHandler.trash(user, database.group, database, table_2)
+    TrashHandler.trash(user, database.workspace, database, table_1)
+    TrashHandler.trash(user, database.workspace, database, table_2)
 
     TrashHandler.restore_item(user, "table", table_1.id)
 
@@ -1450,10 +1454,10 @@ def test_trashing_two_linked_tables_and_link_field_cant_restore_link_field(
         link_row_table=table_2,
     )
     link_field_trash_entry = TrashHandler.trash(
-        user, database.group, database, link_field_1
+        user, database.workspace, database, link_field_1
     )
-    TrashHandler.trash(user, database.group, database, table_1)
-    TrashHandler.trash(user, database.group, database, table_2)
+    TrashHandler.trash(user, database.workspace, database, table_1)
+    TrashHandler.trash(user, database.workspace, database, table_2)
 
     with pytest.raises(CannotRestoreChildBeforeParent):
         TrashHandler.restore_item(user, "field", link_field_1.id)
@@ -1527,10 +1531,12 @@ def test_trashing_two_linked_tables_after_one_perm_deleted_can_restore(
         link_row_table=table_2,
     )
     link_field_trash_entry = TrashHandler.trash(
-        user, database.group, database, link_field_1
+        user, database.workspace, database, link_field_1
     )
-    TrashHandler.trash(user, database.group, database, table_1)
-    table_2_trash_entry = TrashHandler.trash(user, database.group, database, table_2)
+    TrashHandler.trash(user, database.workspace, database, table_1)
+    table_2_trash_entry = TrashHandler.trash(
+        user, database.workspace, database, table_2
+    )
 
     table_2_trash_entry.should_be_permanently_deleted = True
     table_2_trash_entry.save()
@@ -1552,16 +1558,16 @@ def test_trashing_two_linked_tables_after_one_perm_deleted_can_restore(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_trash_restore_view(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(name="Table 1", database=database)
     view = data_fixture.create_grid_view(name="View 1", table=table)
 
     assert view.trashed is False
 
-    TrashHandler.trash(user, database.group, database, view)
+    TrashHandler.trash(user, database.workspace, database, view)
     view.refresh_from_db()
 
     assert view.trashed is True
@@ -1577,7 +1583,7 @@ def test_trash_restore_view(data_fixture):
     view2.ownership_type = "personal"
     view2.save()
 
-    TrashHandler.trash(user, database.group, database, view2)
+    TrashHandler.trash(user, database.workspace, database, view2)
 
     with pytest.raises(PermissionDenied):
         TrashHandler.restore_item(user, "view", view2.id)
@@ -1602,7 +1608,7 @@ def test_can_perm_delete_application_with_linked_tables(data_fixture):
             user, table_a, "link_row", link_row_table=table_b, name="link_row"
         )
 
-        TrashHandler.trash(user, database.group, database, database)
+        TrashHandler.trash(user, database.workspace, database, database)
 
         TrashEntry.objects.update(should_be_permanently_deleted=True)
 
@@ -1632,7 +1638,7 @@ def test_can_perm_delete_application_which_links_to_self(data_fixture):
         user, table_a, "link_row", link_row_table=table_a, name="link_row"
     )
 
-    TrashHandler.trash(user, database.group, database, database)
+    TrashHandler.trash(user, database.workspace, database, database)
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 

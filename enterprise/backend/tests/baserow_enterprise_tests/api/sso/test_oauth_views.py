@@ -12,7 +12,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.api.user.jwt import get_user_from_token
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser, Settings
+from baserow.core.models import Settings, WorkspaceUser
 from baserow_enterprise.auth_provider.handler import UserInfo
 from baserow_enterprise.sso.exceptions import AuthFlowError
 
@@ -37,7 +37,7 @@ def create_get_user_info_stub(provider):
                 email="testuser@example.com",
                 name="Test User",
                 language=data.get("language", "en"),
-                group_invitation_token=data.get("group_invitation_token", None),
+                workspace_invitation_token=data.get("workspace_invitation_token", None),
             ),
             data.get("original", ""),
         )
@@ -91,7 +91,7 @@ def test_oauth2_login_with_url_param(api_client, enterprise_data_fixture):
             "api:enterprise:sso:oauth2:login",
             kwargs={"provider_id": provider.id},
         )
-        + "?original=templates&group_invitation_token=t&language=en",
+        + "?original=templates&workspace_invitation_token=t&language=en",
         format="json",
     )
 
@@ -105,7 +105,7 @@ def test_oauth2_login_with_url_param(api_client, enterprise_data_fixture):
     session_data = json.loads(api_client.session.pop("oauth_request_data"))
     assert session_data == {
         "original": "templates",
-        "group_invitation_token": "t",
+        "workspace_invitation_token": "t",
         "language": "en",
     }
 
@@ -233,7 +233,7 @@ def test_oauth2_callback_signup_set_language(api_client, enterprise_data_fixture
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_oauth2_callback_signup_group_invitation(
+def test_oauth2_callback_signup_workspace_invitation(
     api_client, data_fixture, enterprise_data_fixture
 ):
     enterprise_data_fixture.enable_enterprise()
@@ -241,10 +241,10 @@ def test_oauth2_callback_signup_group_invitation(
         type="google", client_id="g_client_id", secret="g_secret"
     )
 
-    invitation = data_fixture.create_group_invitation(email="testuser@example.com")
+    invitation = data_fixture.create_workspace_invitation(email="testuser@example.com")
     core_handler = CoreHandler()
-    signer = core_handler.get_group_invitation_signer()
-    group_invitation_token = signer.dumps(invitation.id)
+    signer = core_handler.get_workspace_invitation_signer()
+    workspace_invitation_token = signer.dumps(invitation.id)
 
     with patch(
         GET_USER_INFO,
@@ -254,7 +254,7 @@ def test_oauth2_callback_signup_group_invitation(
         session["oauth_request_data"] = json.dumps(
             {
                 "original": "templates",
-                "group_invitation_token": group_invitation_token,
+                "workspace_invitation_token": workspace_invitation_token,
                 "oauth_state": "generated_oauth_state",
             }
         )
@@ -281,12 +281,12 @@ def test_oauth2_callback_signup_group_invitation(
         assert user.email == "testuser@example.com"
         assert user.first_name == "Test User"
 
-        assert GroupUser.objects.get(user=user, group=invitation.group)
+        assert WorkspaceUser.objects.get(user=user, workspace=invitation.workspace)
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_oauth2_callback_signup_group_invitation_email_mismatch(
+def test_oauth2_callback_signup_workspace_invitation_email_mismatch(
     api_client, data_fixture, enterprise_data_fixture
 ):
     enterprise_data_fixture.enable_enterprise()
@@ -294,12 +294,12 @@ def test_oauth2_callback_signup_group_invitation_email_mismatch(
         type="google", client_id="g_client_id", secret="g_secret"
     )
 
-    invitation = data_fixture.create_group_invitation(
+    invitation = data_fixture.create_workspace_invitation(
         email="differenttestuser@example.com"
     )
     core_handler = CoreHandler()
-    signer = core_handler.get_group_invitation_signer()
-    group_invitation_token = signer.dumps(invitation.id)
+    signer = core_handler.get_workspace_invitation_signer()
+    workspace_invitation_token = signer.dumps(invitation.id)
 
     with patch(
         GET_USER_INFO,
@@ -309,7 +309,7 @@ def test_oauth2_callback_signup_group_invitation_email_mismatch(
         session["oauth_request_data"] = json.dumps(
             {
                 "original": "templates",
-                "group_invitation_token": group_invitation_token,
+                "workspace_invitation_token": workspace_invitation_token,
                 "oauth_state": "generated_oauth_state",
             }
         )
@@ -329,7 +329,7 @@ def test_oauth2_callback_signup_group_invitation_email_mismatch(
         assert response.headers["Location"].startswith(
             (
                 f"{settings.PUBLIC_WEB_FRONTEND_URL}/login/"
-                "error?error=errorGroupInvitationEmailMismatch"
+                "error?error=errorWorkspaceInvitationEmailMismatch"
             )
         )
 

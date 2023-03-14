@@ -46,7 +46,7 @@ from baserow.contrib.database.views.view_ownership_types import (
     CollaborativeViewOwnershipType,
 )
 from baserow.contrib.database.views.view_types import GridViewType
-from baserow.core.exceptions import PermissionDenied, UserNotInGroup
+from baserow.core.exceptions import PermissionDenied, UserNotInWorkspace
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -96,7 +96,9 @@ def test_get_view(data_fixture):
         )
 
     # If the table is trashed the view should not be available.
-    TrashHandler.trash(user, grid.table.database.group, grid.table.database, grid.table)
+    TrashHandler.trash(
+        user, grid.table.database.workspace, grid.table.database, grid.table
+    )
     with pytest.raises(ViewDoesNotExist):
         handler.get_view_as_user(user, view_id=grid.id, view_model=GridView)
 
@@ -171,7 +173,7 @@ def test_create_grid_view(send_mock, data_fixture):
     assert grid.filter_type == "OR"
     assert not grid.filters_disabled
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_view(user=user_2, table=table, type_name="grid", name="")
 
     with pytest.raises(ViewTypeDoesNotExist):
@@ -188,7 +190,7 @@ def test_update_grid_view(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_view(user=user_2, view=grid, name="Test 1")
 
     with pytest.raises(ValueError):
@@ -222,7 +224,7 @@ def test_delete_grid_view(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_view(user=user_2, view=grid)
 
     with pytest.raises(ValueError):
@@ -256,7 +258,7 @@ def test_trashed_fields_are_not_included_in_grid_view_field_options(data_fixture
     options = grid_view.get_field_options()
     assert options.count() == 2
 
-    TrashHandler.trash(user, table.database.group, table.database, field_1)
+    TrashHandler.trash(user, table.database.workspace, table.database, field_1)
 
     options = grid_view.get_field_options()
     assert options.count() == 1
@@ -425,7 +427,7 @@ def test_duplicate_views(reordered_mock, created_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.duplicate_view(user=user_2, original_view=grid)
 
     new_view = handler.duplicate_view(user=user, original_view=grid)
@@ -499,7 +501,7 @@ def test_order_views(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.order_views(user=user_2, table=table, order=[])
 
     with pytest.raises(ViewNotInTable):
@@ -567,7 +569,7 @@ def test_delete_view(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_view(user=user_2, view=grid)
 
     with pytest.raises(ValueError):
@@ -604,7 +606,7 @@ def test_update_field_options(send_mock, data_fixture):
             },
         )
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         ViewHandler().update_field_options(
             user=data_fixture.create_user(),
             view=grid_view,
@@ -924,7 +926,7 @@ def test_get_filter(data_fixture):
     with pytest.raises(ViewFilterDoesNotExist):
         handler.get_filter(user=user, view_filter_id=99999)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.get_filter(user=user_2, view_filter_id=equal_filter.id)
 
     with pytest.raises(AttributeError):
@@ -954,7 +956,7 @@ def test_create_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_filter(
             user=user_2,
             view=grid_view,
@@ -1040,7 +1042,7 @@ def test_update_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_filter(user=user_2, view_filter=equal_filter)
 
     with pytest.raises(ViewFilterTypeDoesNotExist):
@@ -1098,7 +1100,7 @@ def test_delete_filter(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_filter(user=user, view_filter=filter_2)
 
     filter_1_id = filter_1.id
@@ -1276,7 +1278,7 @@ def test_get_sort(data_fixture):
     with pytest.raises(ViewSortDoesNotExist):
         handler.get_sort(user=user, view_sort_id=99999)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.get_sort(user=user_2, view_sort_id=equal_sort.id)
 
     with pytest.raises(AttributeError):
@@ -1307,7 +1309,7 @@ def test_create_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_sort(user=user_2, view=grid_view, field=text_field, order="ASC")
 
     grid_view_type = view_type_registry.get("grid")
@@ -1370,7 +1372,7 @@ def test_update_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_sort(user=user_2, view_sort=view_sort)
 
     with pytest.raises(ViewSortFieldNotSupported):
@@ -1413,7 +1415,7 @@ def test_delete_sort(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_sort(user=user, view_sort=sort_2)
 
     sort_1_id = sort_1.id
@@ -1443,7 +1445,7 @@ def test_rotate_view_slug(send_mock, data_fixture):
 
     handler = ViewHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.rotate_view_slug(user=user_2, view=form)
 
     with patch.dict(view_type_registry.registry, {"grid": UnShareableViewType()}):
@@ -2356,10 +2358,10 @@ def test_update_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_duplicate_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
 
@@ -2387,10 +2389,10 @@ def test_duplicate_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_delete_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
 
@@ -2414,10 +2416,10 @@ def test_delete_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_field_options_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
 
@@ -2447,10 +2449,10 @@ def test_field_options_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_filters_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
 
@@ -2500,10 +2502,10 @@ def test_filters_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_sorts_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
     view = handler.create_view(
@@ -2552,10 +2554,10 @@ def test_sorts_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_decorations_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
     view = handler.create_view(
@@ -2618,10 +2620,10 @@ def test_decorations_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_aggregations_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
     field = data_fixture.create_number_field(user=user, table=table)
@@ -2670,10 +2672,10 @@ def test_aggregations_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_update_view_slug_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
     field = data_fixture.create_number_field(user=user, table=table)
@@ -2697,10 +2699,10 @@ def test_update_view_slug_ownership_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_get_public_view_ownership_type(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
     view = handler.create_view(

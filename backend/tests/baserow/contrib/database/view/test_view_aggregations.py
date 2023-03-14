@@ -445,8 +445,11 @@ def test_aggregation_is_updated_when_view_is_trashed(data_fixture):
     assert field.db_column in aggregations_view_two
 
     # Trash the view and verify that the aggregation is not retrievable anymore
-    TrashHandler().trash(user, application.group, application, trash_item=grid_view_one)
+    TrashHandler().trash(
+        user, application.workspace, application, trash_item=grid_view_one
+    )
     aggregations = view_handler.get_view_field_aggregations(user, grid_view_one)
+
     assert field.db_column not in aggregations
 
     # Update the field and verify that the aggregation is removed from the

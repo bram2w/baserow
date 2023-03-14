@@ -31,7 +31,7 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .errors import (
@@ -98,7 +98,7 @@ class KanbanViewView(APIView):
         description=(
             "Responds with serialized rows grouped by the view's single select field "
             "options if the user is authenticated and has access to the related "
-            "group. Additional query parameters can be provided to control the "
+            "workspace. Additional query parameters can be provided to control the "
             "`limit` and `offset` per select option."
             "\n\nThis is a **premium** feature."
         ),
@@ -117,7 +117,7 @@ class KanbanViewView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_KANBAN_DOES_NOT_EXIST,
             KanbanViewHasNoSingleSelectField: (
                 ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD
@@ -131,19 +131,19 @@ class KanbanViewView(APIView):
 
         view_handler = ViewHandler()
         view = view_handler.get_view_as_user(request.user, view_id, KanbanView)
-        group = view.table.database.group
+        workspace = view.table.database.workspace
 
-        # We don't want to check if there is an active premium license if the group
+        # We don't want to check if there is an active premium license if the workspace
         # is a template because that feature must then be available for demo purposes.
-        if not group.has_template():
+        if not workspace.has_template():
             LicenseHandler.raise_if_user_doesnt_have_feature(
-                PREMIUM, request.user, group
+                PREMIUM, request.user, workspace
             )
 
         CoreHandler().check_permissions(
             request.user,
             ListRowsDatabaseTableOperationType.type,
-            group=group,
+            workspace=workspace,
             context=view.table,
             allow_if_template=True,
         )

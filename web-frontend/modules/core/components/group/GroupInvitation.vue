@@ -82,7 +82,9 @@ export default {
         await this.$store.dispatch('group/fetchPermissions', group)
         await this.$store.dispatch('group/fetchRoles', group)
 
-        if (this.$hasPermission('group.list_applications', group, group.id)) {
+        if (
+          this.$hasPermission('workspace.list_applications', group, group.id)
+        ) {
           // After the invitation is accepted and group is received we can immediately
           // fetch the applications that belong to the group.
           const { data: applications } = await ApplicationService(

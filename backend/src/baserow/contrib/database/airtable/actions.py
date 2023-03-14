@@ -6,8 +6,11 @@ from django.utils.translation import gettext_lazy as _
 
 from baserow.contrib.database.models import Database
 from baserow.core.action.registries import ActionType, ActionTypeDescription
-from baserow.core.action.scopes import GROUP_ACTION_CONTEXT, GroupActionScopeType
-from baserow.core.models import Group
+from baserow.core.action.scopes import (
+    WORKSPACE_ACTION_CONTEXT,
+    WorkspaceActionScopeType,
+)
+from baserow.core.models import Workspace
 from baserow.core.utils import ChildProgressBuilder
 
 from .handler import AirtableHandler
@@ -21,7 +24,7 @@ class ImportDatabaseFromAirtableActionType(ActionType):
             'Imported database "%(installed_application_name)s" (%(installed_application_id)s) '
             'from Airtable share ID "%(airtable_share_id)s"'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -29,41 +32,41 @@ class ImportDatabaseFromAirtableActionType(ActionType):
         airtable_share_id: str
         installed_application_id: int
         installed_application_name: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         airtable_share_id: str,
         progress_builder: Optional[ChildProgressBuilder] = None,
         **kwargs
     ) -> Database:
         """
         Imports a database from an Airtable share ID. The database will be
-        created in the given group. The progress builder can be used to track
+        created in the given workspace. The progress builder can be used to track
         the progress of the import.
-        Look at .handler.AirtableHandler.import_from_airtable_to_group for more
+        Look at .handler.AirtableHandler.import_from_airtable_to_workspace for more
         information.
         """
 
-        database = AirtableHandler.import_from_airtable_to_group(
-            group, airtable_share_id, progress_builder=progress_builder, **kwargs
+        database = AirtableHandler.import_from_airtable_to_workspace(
+            workspace, airtable_share_id, progress_builder=progress_builder, **kwargs
         )
 
         params = cls.Params(
             airtable_share_id,
             database.id,
             database.name,
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
         )
-        cls.register_action(user, params, cls.scope(group.id), group)
+        cls.register_action(user, params, cls.scope(workspace.id), workspace)
 
         return database
 
     @classmethod
-    def scope(cls, group_id):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id):
+        return WorkspaceActionScopeType.value(workspace_id)

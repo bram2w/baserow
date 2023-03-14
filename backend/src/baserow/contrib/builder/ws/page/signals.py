@@ -18,7 +18,7 @@ from baserow.ws.tasks import broadcast_to_group, broadcast_to_permitted_users
 def page_created(sender, page: Page, user: AbstractUser, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            page.builder.group_id,
+            page.builder.workspace_id,
             ReadPageOperationType.type,
             BuilderPageObjectScopeType.type,
             page.id,
@@ -32,7 +32,7 @@ def page_created(sender, page: Page, user: AbstractUser, **kwargs):
 def page_updated(sender, page: Page, user: AbstractUser, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            page.builder.group_id,
+            page.builder.workspace_id,
             ReadPageOperationType.type,
             BuilderPageObjectScopeType.type,
             page.id,
@@ -49,7 +49,7 @@ def page_updated(sender, page: Page, user: AbstractUser, **kwargs):
 def page_deleted(sender, builder: Builder, page_id: int, user: AbstractUser, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            builder.group_id,
+            builder.workspace_id,
             ReadPageOperationType.type,
             BuilderPageObjectScopeType.type,
             page_id,
@@ -68,7 +68,7 @@ def page_reordered(
     order = [generate_hash(o) for o in order]
     transaction.on_commit(
         lambda: broadcast_to_group.delay(
-            builder.group_id,
+            builder.workspace_id,
             {
                 "type": "pages_reordered",
                 # A user might also not have access to the builder itself

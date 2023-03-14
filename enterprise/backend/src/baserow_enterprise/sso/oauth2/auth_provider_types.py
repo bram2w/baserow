@@ -205,7 +205,9 @@ class OAuth2AuthProviderMixin:
             UserInfo(
                 name=name,
                 email=oauth_response_data.get("email"),
-                group_invitation_token=request_data.get("group_invitation_token", None),
+                workspace_invitation_token=request_data.get(
+                    "workspace_invitation_token", None
+                ),
                 language=request_data.get("language", None),
             ),
             request_data.get("original", ""),

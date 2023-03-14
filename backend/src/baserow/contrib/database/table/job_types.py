@@ -12,7 +12,7 @@ from baserow.contrib.database.table.operations import (
     DuplicateDatabaseTableOperationType,
 )
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace, WorkspaceDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 
@@ -23,8 +23,8 @@ class DuplicateTableJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
     }
 
     request_serializer_field_names = ["table_id"]
@@ -51,7 +51,7 @@ class DuplicateTableJobType(JobType):
         CoreHandler().check_permissions(
             user,
             DuplicateDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 

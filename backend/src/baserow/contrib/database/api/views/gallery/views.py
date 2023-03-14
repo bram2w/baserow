@@ -55,7 +55,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .errors import ERROR_GALLERY_DOES_NOT_EXIST
@@ -118,7 +118,7 @@ class GalleryViewView(APIView):
         operation_id="list_database_table_gallery_view_rows",
         description=(
             "Lists the requested rows of the view's table related to the provided "
-            "`view_id` if the authorized user has access to the database's group. "
+            "`view_id` if the authorized user has access to the database's workspace. "
             "The response is paginated by a limit/offset style."
         ),
         responses={
@@ -140,7 +140,7 @@ class GalleryViewView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GALLERY_DOES_NOT_EXIST,
         }
     )
@@ -152,11 +152,11 @@ class GalleryViewView(APIView):
         view = view_handler.get_view_as_user(request.user, view_id, GalleryView)
         view_type = view_type_registry.get_by_model(view)
 
-        group = view.table.database.group
+        workspace = view.table.database.workspace
         CoreHandler().check_permissions(
             request.user,
             ListRowsDatabaseTableOperationType.type,
-            group=group,
+            workspace=workspace,
             context=view.table,
             allow_if_template=True,
         )
@@ -355,7 +355,7 @@ class PublicGalleryViewRowsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GALLERY_DOES_NOT_EXIST,
             OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
             OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,

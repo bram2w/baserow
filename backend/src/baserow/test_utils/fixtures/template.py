@@ -28,8 +28,8 @@ class TemplateFixtures:
         if "icon" not in kwargs:
             kwargs["icon"] = "document"
 
-        if "group" not in kwargs:
-            kwargs["group"] = self.create_group()
+        if "workspace" not in kwargs:
+            kwargs["workspace"] = self.create_workspace()
 
         template = Template.objects.create(**kwargs)
 

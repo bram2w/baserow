@@ -11,7 +11,7 @@
         <li
           v-if="
             member.user_id !== userId &&
-            $hasPermission('group_user.delete', member, group.id)
+            $hasPermission('workspace_user.delete', member, group.id)
           "
         >
           <a class="color-error" @click.prevent="showRemoveModal">

@@ -6,19 +6,25 @@ from rest_framework.status import HTTP_200_OK
 
 @pytest.mark.django_db
 def test_list_views_ownership_type(
-    api_client, data_fixture, alternative_per_group_license_service
+    api_client, data_fixture, alternative_per_workspace_license_service
 ):
     """
     In premium, both collaborative and personal views are returned.
     """
 
-    group = data_fixture.create_group(name="Group 1")
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Group 1")
+    database = data_fixture.create_database_application(workspace=workspace)
     user, token = data_fixture.create_user_and_token(
-        group=group, email="test@test.nl", password="password", first_name="Test1"
+        workspace=workspace,
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
     )
     user2, token2 = data_fixture.create_user_and_token(
-        group=group, email="test2@test.nl", password="password", first_name="Test2"
+        workspace=workspace,
+        email="test2@test.nl",
+        password="password",
+        first_name="Test2",
     )
     table_1 = data_fixture.create_database_table(user=user, database=database)
     view_1 = data_fixture.create_grid_view(
@@ -31,7 +37,9 @@ def test_list_views_ownership_type(
     view_3 = data_fixture.create_grid_view(
         table=table_1, order=3, ownership_type="personal", created_by=user2
     )
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
 
     response = api_client.get(
         reverse("api:database:views:list", kwargs={"table_id": table_1.id}),

@@ -19,10 +19,16 @@ from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.auth_provider.models import AuthProviderModel
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
-    GroupInvitationEmailMismatch,
+    WorkspaceInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GroupUser, Template, UserLogEntry, UserProfile
+from baserow.core.models import (
+    Template,
+    UserLogEntry,
+    UserProfile,
+    Workspace,
+    WorkspaceUser,
+)
 from baserow.core.registries import plugin_registry
 from baserow.core.signals import (
     before_user_deleted,
@@ -104,30 +110,30 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         email: str,
         password: str,
         language: Optional[str] = None,
-        group_invitation_token: Optional[str] = None,
+        workspace_invitation_token: Optional[str] = None,
         template: Template = None,
         auth_provider: Optional[AuthProviderModel] = None,
     ) -> AbstractUser:
         """
-        Creates a new user with the provided information and creates a new group and
-        application for him. If the optional group invitation is provided then the user
-        joins that group without creating a new one.
+        Creates a new user with the provided information and creates a new workspace and
+        application for him. If the optional workspace invitation is provided then the
+        user joins that workspace without creating a new one.
 
         :param name: The name of the new user.
         :param email: The e-mail address of the user, this is also the username.
         :param password: The password of the user.
         :param language: The language selected by the user.
-        :param group_invitation_token: If provided and valid, the invitation will be
-            accepted and initial group will not be created.
+        :param workspace_invitation_token: If provided and valid, the invitation will be
+            accepted and initial workspace will not be created.
         :param template: If provided, that template will be installed into the newly
-            created group.
+            created workspace.
         :param auth_provider: If provided, a reference to the authentication
             provider will be stored in order to be able to provide different options
             for the user to login.
         :raises: UserAlreadyExist: When a user with the provided username (email)
             already exists.
-        :raises GroupInvitationEmailMismatch: If the group invitation email does not
-            match the one of the user.
+        :raises WorkspaceInvitationEmailMismatch: If the workspace invitation email
+            does not match the one of the user.
         :raises SignupDisabledError: If signing up is disabled.
         :raises PasswordDoesNotMatchValidation: When a provided password does not match
             password validation.
@@ -147,16 +153,16 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
                     f"User with email {email} has been deactivated."
                 )
 
-        group_invitation = None
-        group_user = None
+        workspace_invitation = None
+        workspace_user = None
 
-        if group_invitation_token:
-            group_invitation = core_handler.get_group_invitation_by_token(
-                group_invitation_token
+        if workspace_invitation_token:
+            workspace_invitation = core_handler.get_workspace_invitation_by_token(
+                workspace_invitation_token
             )
 
-            if email != group_invitation.email:
-                raise GroupInvitationEmailMismatch(
+            if email != workspace_invitation.email:
+                raise WorkspaceInvitationEmailMismatch(
                     "The email address of the invitation does not match the one of the "
                     "user."
                 )
@@ -164,8 +170,8 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         instance_settings = core_handler.get_settings()
         allow_new_signups = instance_settings.allow_new_signups
         allow_signup_for_invited_user = (
-            instance_settings.allow_signups_via_group_invitations
-            and group_invitation is not None
+            instance_settings.allow_signups_via_workspace_invitations
+            and workspace_invitation is not None
         )
         if not (allow_new_signups or allow_signup_for_invited_user):
             raise DisabledSignupError("Sign up is disabled.")
@@ -196,29 +202,31 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         language = language or settings.LANGUAGE_CODE
         UserProfile.objects.create(user=user, language=language)
 
-        # If we have an invitation to a group, then accept it.
-        if group_invitation_token:
-            group_user = core_handler.accept_group_invitation(user, group_invitation)
+        # If we have an invitation to a workspace, then accept it.
+        if workspace_invitation_token:
+            workspace_user = core_handler.accept_workspace_invitation(
+                user, workspace_invitation
+            )
 
-        # If we still don't have a `GroupUser`, which will be because we weren't invited
-        # to a group, and `allow_global_group_creation` is enabled, we'll create a group
-        # for this new user.
-        if not group_user and instance_settings.allow_global_group_creation:
+        # If we still don't have a `WorkspaceUser`, which will be because we weren't
+        # invited to a workspace, and `allow_global_workspace_creation` is enabled,
+        # we'll create a workspace for this new user.
+        if not workspace_user and instance_settings.allow_global_workspace_creation:
             with translation.override(language):
-                group_user = core_handler.create_group(
-                    user=user, name=_("%(name)s's group") % {"name": name}
+                workspace_user = core_handler.create_workspace(
+                    user=user, name=_("%(name)s's workspace") % {"name": name}
                 )
 
-        # If we've created a `GroupUser` at some point, pluck out the `Group`.
-        group = getattr(group_user, "group", None)
-        user.default_group = group
+        # If we've created a `WorkspaceUser` at some point, pluck out the `Workspace`.
+        workspace = getattr(workspace_user, "workspace", None)
+        user.default_workspace = workspace
 
-        if not group_invitation_token and template and group:
-            core_handler.install_template(user, group, template)
+        if not workspace_invitation_token and template and workspace:
+            core_handler.install_template(user, workspace, template)
 
         # Call the user_created method for each plugin that is in the registry.
         for plugin in plugin_registry.registry.values():
-            plugin.user_created(user, group, group_invitation, template)
+            plugin.user_created(user, workspace, workspace_invitation, template)
 
         # register the authentication provider used to create the user
         if auth_provider is None:
@@ -450,14 +458,14 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         user_restored.send(self, performed_by=user, user=user)
 
-    def delete_expired_users_and_related_groups_if_last_admin(
+    def delete_expired_users_and_related_workspaces_if_last_admin(
         self, grace_delay: Optional[timedelta] = None
     ):
         """
         Executes all previously scheduled user account deletions for which
         the `last_login` date is earlier than the defined grace delay. If the users
-        are the last admin of some groups, these groups are also deleted. An email
-        is sent to confirm the user account deletion. This task is periodically
+        are the last admin of some workspaces, these workspaces are also deleted. An
+        email is sent to confirm the user account deletion. This task is periodically
         executed.
 
         :param grace_delay: A timedelta that indicate the delay before permanently
@@ -479,39 +487,41 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             profile__to_be_deleted=True, last_login__lt=limit_date
         )
 
-        group_users = GroupUser.objects.filter(user__in=users_to_delete)
+        workspace_users = WorkspaceUser.objects.filter(user__in=users_to_delete)
 
         deleted_user_info = []
         for u in users_to_delete.all():
-            group_ids = [gu.group_id for gu in group_users if gu.user_id == u.id]
+            workspace_ids = [
+                gu.workspace_id for gu in workspace_users if gu.user_id == u.id
+            ]
             deleted_user_info.append(
-                (u.id, u.username, u.email, u.profile.language, group_ids)
+                (u.id, u.username, u.email, u.profile.language, workspace_ids)
             )
 
-        # A group need to be deleted if there was an admin before and there is no
+        # A workspace need to be deleted if there was an admin before and there is no
         # *active* admin after the users deletion.
-        groups_to_be_deleted = Group.objects.annotate(
+        workspaces_to_be_deleted = Workspace.objects.annotate(
             admin_count_after=Count(
-                "groupuser",
+                "workspaceuser",
                 filter=(
-                    Q(groupuser__permissions="ADMIN")
-                    & ~Q(groupuser__user__in=users_to_delete)
+                    Q(workspaceuser__permissions="ADMIN")
+                    & ~Q(workspaceuser__user__in=users_to_delete)
                 ),
             ),
         ).filter(template=None, admin_count_after=0)
 
         with transaction.atomic():
-            for group in groups_to_be_deleted:
+            for workspace in workspaces_to_be_deleted:
                 # Here we use the trash handler to be sure that we delete every thing
-                # related the groups like
-                TrashHandler.permanently_delete(group)
+                # related the workspaces like
+                TrashHandler.permanently_delete(workspace)
             users_to_delete.delete()
 
-        for (id, username, email, language, group_ids) in deleted_user_info:
+        for (id, username, email, language, workspace_ids) in deleted_user_info:
             with translation.override(language):
                 email = AccountDeleted(username, to=[email])
                 email.send()
-            user_permanently_deleted.send(self, user_id=id, group_ids=group_ids)
+            user_permanently_deleted.send(self, user_id=id, workspace_ids=workspace_ids)
 
     def get_all_active_users_qs(self) -> QuerySet:
         """

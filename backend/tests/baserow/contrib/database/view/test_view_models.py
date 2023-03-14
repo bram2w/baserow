@@ -264,31 +264,31 @@ def test_public_view_password(data_fixture):
 @pytest.mark.django_db
 def test_view_hierarchy(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    app = data_fixture.create_database_application(group=group, name="Test 1")
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
     table = data_fixture.create_database_table(name="Cars", database=app)
     grid_view = data_fixture.create_grid_view(table=table)
     assert grid_view.get_parent() == table
-    assert grid_view.get_root() == group
+    assert grid_view.get_root() == workspace
 
     field = data_fixture.create_text_field(table=grid_view.table)
     grid_view_field_options = data_fixture.create_grid_view_field_option(
         grid_view, field
     )
     assert grid_view_field_options.get_parent() == grid_view
-    assert grid_view_field_options.get_root() == group
+    assert grid_view_field_options.get_root() == workspace
 
     view_filter = data_fixture.create_view_filter(view=grid_view)
     assert view_filter.get_parent() == grid_view
-    assert view_filter.get_root() == group
+    assert view_filter.get_root() == workspace
 
     view_sort = data_fixture.create_view_sort(view=grid_view)
     assert view_sort.get_parent() == grid_view
-    assert view_sort.get_root() == group
+    assert view_sort.get_root() == workspace
 
     form_view = data_fixture.create_form_view(table=table)
     form_view_field_options = data_fixture.create_form_view_field_option(
         form_view, field
     )
     assert form_view_field_options.get_parent() == form_view
-    assert form_view_field_options.get_root() == group
+    assert form_view_field_options.get_root() == workspace

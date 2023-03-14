@@ -7,13 +7,15 @@ from baserow.contrib.database.views.handler import ViewHandler
 
 @pytest.mark.django_db(transaction=True)
 def test_view_signals_not_collaborative(
-    data_fixture, alternative_per_group_license_service
+    data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Group 1")
+    user = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
     field = data_fixture.create_text_field(table=table)
     field2 = data_fixture.create_text_field(table=table)
     view = data_fixture.create_grid_view(user=user, table=table)

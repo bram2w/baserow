@@ -91,9 +91,9 @@ def test_exporting_missing_view_returns_error(data_fixture, api_client, tmpdir):
 def test_exporting_view_which_isnt_for_table_returns_error(
     data_fixture, api_client, tmpdir
 ):
-    group = data_fixture.create_group()
-    user, token = data_fixture.create_user_and_token(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    user, token = data_fixture.create_user_and_token(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     table2 = data_fixture.create_database_table(user=user, database=database)
     grid_view_for_other_table = data_fixture.create_grid_view(table=table2)

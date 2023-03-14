@@ -5264,11 +5264,11 @@ def test_link_row_contains_filter_type_performance(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_empty_filter_type(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
 
-    database = data_fixture.create_database_application(user=user, group=group)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
@@ -5326,11 +5326,11 @@ def test_multiple_collaborators_empty_filter_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_not_empty_filter_type(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
 
-    database = data_fixture.create_database_application(user=user, group=group)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
@@ -5389,11 +5389,11 @@ def test_multiple_collaborators_not_empty_filter_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_has_filter_type(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
@@ -5516,11 +5516,11 @@ def test_multiple_collaborators_has_filter_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_has_not_filter_type(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
@@ -5646,16 +5646,16 @@ def test_multiple_collaborators_has_not_filter_type(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_has_filter_type_export_import(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
     view_filter_type = view_filter_type_registry.get("multiple_collaborators_has")
     assert (
         view_filter_type.get_export_serialized_value(
-            f"{user.id}", {"group_id": group.id}
+            f"{user.id}", {"workspace_id": workspace.id}
         )
         == f"{user.email}"
     )
-    id_mapping = {"group_id": group.id}
+    id_mapping = {"workspace_id": workspace.id}
     assert view_filter_type.set_import_serialized_value(user.email, id_mapping) == str(
         user.id
     )

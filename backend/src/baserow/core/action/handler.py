@@ -64,7 +64,7 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
                 user,
                 action.params,
                 action.scope,
-                action.group,
+                action.workspace,
                 action.updated_on,
                 action_command_type,
             )

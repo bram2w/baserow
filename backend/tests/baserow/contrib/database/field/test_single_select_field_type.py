@@ -959,9 +959,9 @@ def test_import_export_single_select_field(data_fixture):
 @pytest.mark.django_db(transaction=True)
 def test_get_set_export_serialized_value_single_select_field(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    imported_group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field = data_fixture.create_single_select_field(table=table)
     option_a = data_fixture.create_select_option(field=field, value="A", color="green")
@@ -974,9 +974,11 @@ def test_get_set_export_serialized_value_single_select_field(data_fixture):
     model.objects.create(**{f"field_{field.id}_id": option_a.id})
     model.objects.create(**{f"field_{field.id}_id": option_b.id})
 
-    exported_applications = core_handler.export_group_applications(group, BytesIO())
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    exported_applications = core_handler.export_workspace_applications(
+        workspace, BytesIO()
+    )
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]
@@ -1006,9 +1008,9 @@ def test_get_set_export_serialized_value_single_select_field_with_deleted_option
     data_fixture,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    imported_group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field = data_fixture.create_single_select_field(table=table)
     option_a = data_fixture.create_select_option(field=field, value="A", color="green")
@@ -1021,9 +1023,11 @@ def test_get_set_export_serialized_value_single_select_field_with_deleted_option
     # Deleting the option doesn't set the row value to None.
     option_a.delete()
 
-    exported_applications = core_handler.export_group_applications(group, BytesIO())
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    exported_applications = core_handler.export_workspace_applications(
+        workspace, BytesIO()
+    )
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]

@@ -2,78 +2,84 @@ import pytest
 
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
-    AcceptGroupInvitationActionType,
-    CreateGroupInvitationActionType,
-    DeleteGroupInvitationActionType,
-    RejectGroupInvitationActionType,
-    UpdateGroupInvitationActionType,
+    AcceptWorkspaceInvitationActionType,
+    CreateWorkspaceInvitationActionType,
+    DeleteWorkspaceInvitationActionType,
+    RejectWorkspaceInvitationActionType,
+    UpdateWorkspaceInvitationActionType,
 )
-from baserow.core.models import GroupInvitation
+from baserow.core.models import WorkspaceInvitation
 
 
 @pytest.mark.django_db
-def test_create_group_invitation_action_type(data_fixture):
+def test_create_workspace_invitation_action_type(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    invitation = action_type_registry.get(CreateGroupInvitationActionType.type).do(
+    workspace = data_fixture.create_workspace(user=user)
+    invitation = action_type_registry.get(CreateWorkspaceInvitationActionType.type).do(
         user=user,
-        group=group,
+        workspace=workspace,
         email="user@test.com",
         permissions="ADMIN",
         base_url="http://localhost:3000/",
         message="hello!",
     )
 
-    assert invitation.group == group
+    assert invitation.workspace == workspace
     assert invitation.email == "user@test.com"
     assert invitation.permissions == "ADMIN"
     assert invitation.invited_by == user
 
 
 @pytest.mark.django_db
-def test_update_group_invitation_action_type(data_fixture):
+def test_update_workspace_invitation_action_type(data_fixture):
     user = data_fixture.create_user()
-    invitation = data_fixture.create_group_invitation(invited_by=user)
+    invitation = data_fixture.create_workspace_invitation(invited_by=user)
 
     assert invitation.permissions == "ADMIN"
-    action_type_registry.get(UpdateGroupInvitationActionType.type).do(
+    action_type_registry.get(UpdateWorkspaceInvitationActionType.type).do(
         user, invitation, permissions="MEMBER"
     )
     assert invitation.permissions == "MEMBER"
 
 
 @pytest.mark.django_db
-def test_delete_group_invitation_action_type(data_fixture):
+def test_delete_workspace_invitation_action_type(data_fixture):
 
     user = data_fixture.create_user()
-    invitation = data_fixture.create_group_invitation(invited_by=user)
+    invitation = data_fixture.create_workspace_invitation(invited_by=user)
 
-    assert GroupInvitation.objects.count() == 1
-    action_type_registry.get(DeleteGroupInvitationActionType.type).do(user, invitation)
-    assert GroupInvitation.objects.count() == 0
+    assert WorkspaceInvitation.objects.count() == 1
+    action_type_registry.get(DeleteWorkspaceInvitationActionType.type).do(
+        user, invitation
+    )
+    assert WorkspaceInvitation.objects.count() == 0
 
 
 @pytest.mark.django_db
-def test_accept_group_invitation_action_type(data_fixture):
+def test_accept_workspace_invitation_action_type(data_fixture):
     sender = data_fixture.create_user()
-    group = data_fixture.create_group(user=sender)
+    workspace = data_fixture.create_workspace(user=sender)
     user = data_fixture.create_user()
-    invitation = data_fixture.create_group_invitation(
-        invited_by=sender, group=group, email=user.email
+    invitation = data_fixture.create_workspace_invitation(
+        invited_by=sender, workspace=workspace, email=user.email
     )
 
-    action_type_registry.get(AcceptGroupInvitationActionType.type).do(user, invitation)
-    assert group.users.filter(id=user.id).exists()
+    action_type_registry.get(AcceptWorkspaceInvitationActionType.type).do(
+        user, invitation
+    )
+    assert workspace.users.filter(id=user.id).exists()
 
 
 @pytest.mark.django_db
-def test_reject_group_invitation_action_type(data_fixture):
+def test_reject_workspace_invitation_action_type(data_fixture):
     sender = data_fixture.create_user()
-    group = data_fixture.create_group(user=sender)
+    workspace = data_fixture.create_workspace(user=sender)
     user = data_fixture.create_user()
-    invitation = data_fixture.create_group_invitation(
-        invited_by=sender, group=group, email=user.email
+    invitation = data_fixture.create_workspace_invitation(
+        invited_by=sender, workspace=workspace, email=user.email
     )
 
-    action_type_registry.get(RejectGroupInvitationActionType.type).do(user, invitation)
-    assert group.users.filter(id=user.id).exists() is False
+    action_type_registry.get(RejectWorkspaceInvitationActionType.type).do(
+        user, invitation
+    )
+    assert workspace.users.filter(id=user.id).exists() is False

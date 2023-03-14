@@ -36,13 +36,13 @@ class PageService:
         :return: The model instance of the Page
         """
 
-        base_queryset = Page.objects.select_related("builder", "builder__group")
+        base_queryset = Page.objects.select_related("builder", "builder__workspace")
         page = self.handler.get_page(page_id, base_queryset=base_queryset)
 
         CoreHandler().check_permissions(
             user,
             ReadPageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
@@ -61,7 +61,7 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             CreatePageOperationType.type,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
@@ -82,7 +82,7 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             DeletePageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
@@ -103,7 +103,7 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             UpdatePageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
@@ -130,7 +130,7 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             OrderPagesBuilderOperationType.type,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
@@ -139,7 +139,7 @@ class PageService:
             user,
             OrderPagesBuilderOperationType.type,
             all_pages,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
@@ -166,7 +166,7 @@ class PageService:
         """
 
         CoreHandler().check_permissions(
-            user, DuplicatePageOperationType.type, page.builder.group, context=page
+            user, DuplicatePageOperationType.type, page.builder.workspace, context=page
         )
 
         page_clone = PageHandler().duplicate_page(page, progress_builder)

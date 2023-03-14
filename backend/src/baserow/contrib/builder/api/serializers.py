@@ -44,7 +44,7 @@ class BuilderSerializer(ApplicationSerializer):
                 user,
                 ListPagesBuilderOperationType.type,
                 pages,
-                group=instance.group,
+                workspace=instance.workspace,
                 context=instance,
                 allow_if_template=True,
             )

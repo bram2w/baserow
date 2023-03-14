@@ -42,7 +42,7 @@ class AuditLogExportJobType(JobType):
         "csv_first_row_header",
         "export_charset",
         "filter_user_id",
-        "filter_group_id",
+        "filter_workspace_id",
         "filter_action_type",
         "filter_from_timestamp",
         "filter_to_timestamp",
@@ -53,7 +53,7 @@ class AuditLogExportJobType(JobType):
         "csv_first_row_header",
         "export_charset",
         "filter_user_id",
-        "filter_group_id",
+        "filter_workspace_id",
         "filter_action_type",
         "filter_from_timestamp",
         "filter_to_timestamp",
@@ -87,10 +87,10 @@ class AuditLogExportJobType(JobType):
             required=False,
             help_text="Optional: The user to filter the audit log by.",
         ),
-        "filter_group_id": serializers.IntegerField(
+        "filter_workspace_id": serializers.IntegerField(
             min_value=0,
             required=False,
-            help_text="Optional: The group to filter the audit log by.",
+            help_text="Optional: The workspace to filter the audit log by.",
         ),
         "filter_action_type": serializers.ChoiceField(
             choices=lazy(action_type_registry.get_types, list)(),
@@ -140,8 +140,8 @@ class AuditLogExportJobType(JobType):
             {
                 "user_email": _("User Email"),
                 "user_id": _("User ID"),
-                "group_name": _("Group Name"),
-                "group_id": _("Group ID"),
+                "workspace_name": _("Group Name"),  # GroupDeprecation
+                "workspace_id": _("Group ID"),
                 "type": _("Action Type"),
                 "description": _("Description"),
                 "action_timestamp": _("Timestamp"),
@@ -178,7 +178,7 @@ class AuditLogExportJobType(JobType):
         queryset = AuditLogEntry.objects.order_by("-action_timestamp")
         filters_field_mapping: Dict[str, str] = {
             "filter_user_id": "user_id",
-            "filter_group_id": "group_id",
+            "filter_workspace_id": "workspace_id",
             "filter_action_type": "action_type",
             "filter_from_timestamp": "action_timestamp__gte",
             "filter_to_timestamp": "action_timestamp__lte",

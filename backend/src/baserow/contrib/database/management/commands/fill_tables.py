@@ -68,7 +68,7 @@ class Command(BaseCommand):
 def fill_database_with_tables(limit: int, database: Database):
     process_id = os.getpid()
     print(f"Starting making tables in sub process {process_id}")
-    user = database.group.users.first()
+    user = database.workspace.users.first()
     for i in tqdm(range(limit), desc=f"Worker {process_id}"):
         TableHandler().create_table(
             user, database, name=f"Table {i} from process {process_id}"

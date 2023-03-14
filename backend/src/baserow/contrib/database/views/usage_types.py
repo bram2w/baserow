@@ -1,16 +1,16 @@
 from django.db.models import Q, Sum
 
 from baserow.contrib.database.views.models import FormView
-from baserow.core.usage.registries import GroupStorageUsageItemType, UsageInBytes
+from baserow.core.usage.registries import UsageInBytes, WorkspaceStorageUsageItemType
 from baserow.core.user_files.models import UserFile
 
 
-class FormViewGroupStorageUsageItem(GroupStorageUsageItemType):
+class FormViewWorkspaceStorageUsageItem(WorkspaceStorageUsageItemType):
     type = "form_view"
 
-    def calculate_storage_usage(self, group_id: int) -> UsageInBytes:
+    def calculate_storage_usage(self, workspace_id: int) -> UsageInBytes:
         form_views = FormView.objects.filter(
-            table__database__group_id=group_id,
+            table__database__workspace_id=workspace_id,
             table__trashed=False,
             table__database__trashed=False,
         )

@@ -5,25 +5,25 @@ from baserow.core.registry import Instance, Registry
 UsageInBytes = int
 
 
-class GroupStorageUsageItemType(Instance, ABC):
+class WorkspaceStorageUsageItemType(Instance, ABC):
     """
     A GroupStorageUsageItemType defines an item that can calculate
     the usage of a group in a specific part of the application
     """
 
     @abstractmethod
-    def calculate_storage_usage(self, group_id: int) -> UsageInBytes:
+    def calculate_storage_usage(self, workspace_id: int) -> UsageInBytes:
         """
         Calculates the storage usage for a group
         in a specific part of the application
-        :param group_id: the group that the usage is calculated for
+        :param workspace_id: the group that the usage is calculated for
         :return: the total usage
         """
 
         pass
 
 
-class GroupStorageUsageItemTypeRegistry(Registry):
+class WorkspaceStorageUsageItemTypeRegistry(Registry):
     """
     A trash_item_type_registry contains all the different usage calculations
     that should be called when the total usage of a group is
@@ -33,4 +33,4 @@ class GroupStorageUsageItemTypeRegistry(Registry):
     name = "usage"
 
 
-group_storage_usage_item_registry = GroupStorageUsageItemTypeRegistry()
+workspace_storage_usage_item_registry = WorkspaceStorageUsageItemTypeRegistry()

@@ -79,20 +79,20 @@ You can simply provide an `Authorization` header containing `JWT {TOKEN}` to aut
 The token will be valid for 60 minutes and can be refreshed before that time using the
 https://api.baserow.io/api/redoc/#operation/token_refresh endpoint.
 
-The following example will list all the groups that belong to your account. When you 
-just have created an account an example group has been created automatically. More 
+The following example will list all the workspaces that belong to your account. When you 
+just have created an account an example workspace has been created automatically. More 
 information about this endpoint can be found in the API spec at 
-https://api.baserow.io/api/redoc/#operation/list_groups.
+https://api.baserow.io/api/redoc/#operation/list_workspaces.
 
 ```
-GET /api/groups/
+GET /api/workspaces/
 Host: api.baserow.io
 Content-Type: application/json
 Authorization: JWT {YOUR_TOKEN}
 ```
 or
 ```
-curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOKEN}' -i https://api.baserow.io/api/groups/'
+curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOKEN}' -i https://api.baserow.io/api/workspaces/'
 ```
 
 ## Common issues

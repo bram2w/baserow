@@ -1,28 +1,28 @@
 from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 
 from .exceptions import (
     IsNotAdminError,
     PermissionDenied,
-    UserInvalidGroupPermissionsError,
-    UserNotInGroup,
+    UserInvalidWorkspacePermissionsError,
+    UserNotInWorkspace,
 )
 from .operations import (
-    CreateGroupOperationType,
-    CreateInvitationsGroupOperationType,
-    DeleteGroupInvitationOperationType,
-    DeleteGroupOperationType,
-    DeleteGroupUserOperationType,
-    ListGroupsOperationType,
-    ListGroupUsersGroupOperationType,
-    ListInvitationsGroupOperationType,
-    ReadInvitationGroupOperationType,
-    UpdateGroupInvitationType,
-    UpdateGroupOperationType,
-    UpdateGroupUserOperationType,
+    CreateInvitationsWorkspaceOperationType,
+    CreateWorkspaceOperationType,
+    DeleteWorkspaceInvitationOperationType,
+    DeleteWorkspaceOperationType,
+    DeleteWorkspaceUserOperationType,
+    ListInvitationsWorkspaceOperationType,
+    ListWorkspacesOperationType,
+    ListWorkspaceUsersWorkspaceOperationType,
+    ReadInvitationWorkspaceOperationType,
     UpdateSettingsOperationType,
+    UpdateWorkspaceInvitationType,
+    UpdateWorkspaceOperationType,
+    UpdateWorkspaceUserOperationType,
 )
 from .registries import PermissionManagerType
 from .subjects import UserSubjectType
@@ -39,10 +39,10 @@ class CorePermissionManagerType(PermissionManagerType):
     supported_actor_types = [UserSubjectType.type]
 
     ALWAYS_ALLOWED_OPERATIONS = [
-        ListGroupsOperationType.type,
+        ListWorkspacesOperationType.type,
     ]
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
 
         result = {}
         for check in checks:
@@ -51,7 +51,7 @@ class CorePermissionManagerType(PermissionManagerType):
 
         return result
 
-    def get_permissions_object(self, actor, group=None):
+    def get_permissions_object(self, actor, workspace=None):
         return self.ALWAYS_ALLOWED_OPERATIONS
 
 
@@ -65,7 +65,7 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
 
     STAFF_ONLY_OPERATIONS = [UpdateSettingsOperationType.type]
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
 
         result = {}
         for check in checks:
@@ -77,46 +77,49 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
 
         return result
 
-    def get_permissions_object(self, actor, group=None):
+    def get_permissions_object(self, actor, workspace=None):
         return {
             "staff_only_operations": self.STAFF_ONLY_OPERATIONS,
             "is_staff": actor.is_staff,
         }
 
 
-class GroupMemberOnlyPermissionManagerType(PermissionManagerType):
+class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
     """
-    To be able to operate on a group, the user must at least belongs to that group.
+    To be able to operate on a workspace, the user must at least belongs
+    to that workspace.
     """
 
     type = "member"
     supported_actor_types = [UserSubjectType.type]
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
 
-        if group is None:
+        if workspace is None:
             return {}
 
         users_to_query = {c.actor for c in checks}
 
-        user_ids_in_group = set(
+        user_ids_in_workspace = set(
             CoreHandler()
-            .get_group_users(group, users_to_query, include_trash=include_trash)
+            .get_workspace_users(workspace, users_to_query, include_trash=include_trash)
             .values_list("user_id", flat=True)
         )
 
         permission_by_check = {}
         for check in checks:
-            if check.actor.id not in user_ids_in_group:
-                permission_by_check[check] = UserNotInGroup(check.actor, group)
+            if check.actor.id not in user_ids_in_workspace:
+                permission_by_check[check] = UserNotInWorkspace(check.actor, workspace)
 
         return permission_by_check
 
-    def get_permissions_object(self, actor, group=None):
-        # Check if the user is a member of this group
+    def get_permissions_object(self, actor, workspace=None):
+        # Check if the user is a member of this workspace
         if (
-            group
-            and GroupUser.objects.filter(user_id=actor.id, group_id=group.id).exists()
+            workspace
+            and WorkspaceUser.objects.filter(
+                user_id=actor.id, workspace_id=workspace.id
+            ).exists()
         ):
             return None
         return False
@@ -132,21 +135,21 @@ class BasicPermissionManagerType(PermissionManagerType):
     supported_actor_types = [UserSubjectType.type]
 
     ADMIN_ONLY_OPERATIONS = [
-        ListInvitationsGroupOperationType.type,
-        CreateInvitationsGroupOperationType.type,
-        ReadInvitationGroupOperationType.type,
-        UpdateGroupInvitationType.type,
-        DeleteGroupInvitationOperationType.type,
-        ListGroupUsersGroupOperationType.type,
-        UpdateGroupOperationType.type,
-        DeleteGroupOperationType.type,
-        UpdateGroupUserOperationType.type,
-        DeleteGroupUserOperationType.type,
+        ListInvitationsWorkspaceOperationType.type,
+        CreateInvitationsWorkspaceOperationType.type,
+        ReadInvitationWorkspaceOperationType.type,
+        UpdateWorkspaceInvitationType.type,
+        DeleteWorkspaceInvitationOperationType.type,
+        ListWorkspaceUsersWorkspaceOperationType.type,
+        UpdateWorkspaceOperationType.type,
+        DeleteWorkspaceOperationType.type,
+        UpdateWorkspaceUserOperationType.type,
+        DeleteWorkspaceUserOperationType.type,
     ]
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
 
-        if group is None:
+        if workspace is None:
             return {}
 
         permission_by_check = {}
@@ -159,7 +162,7 @@ class BasicPermissionManagerType(PermissionManagerType):
 
         user_permissions_by_id = dict(
             CoreHandler()
-            .get_group_users(group, users_to_query, include_trash=include_trash)
+            .get_workspace_users(workspace, users_to_query, include_trash=include_trash)
             .values_list("user_id", "permissions")
         )
 
@@ -168,32 +171,32 @@ class BasicPermissionManagerType(PermissionManagerType):
                 if user_permissions_by_id.get(check.actor.id, "MEMBER") == "ADMIN":
                     permission_by_check[check] = True
                 else:
-                    permission_by_check[check] = UserInvalidGroupPermissionsError(
-                        check.actor, group, check.operation_name
+                    permission_by_check[check] = UserInvalidWorkspacePermissionsError(
+                        check.actor, workspace, check.operation_name
                     )
 
         return permission_by_check
 
-    def get_permissions_object(self, actor, group=None, include_trash=False):
-        if group is None:
+    def get_permissions_object(self, actor, workspace=None, include_trash=False):
+        if workspace is None:
             return None
 
         if include_trash:
-            manager = GroupUser.objects_and_trash
+            manager = WorkspaceUser.objects_and_trash
         else:
-            manager = GroupUser.objects
+            manager = WorkspaceUser.objects
 
-        queryset = manager.filter(user_id=actor.id, group_id=group.id)
+        queryset = manager.filter(user_id=actor.id, workspace_id=workspace.id)
 
         try:
-            # Check if the user is a member of this group
-            group_user = queryset.get()
-        except GroupUser.DoesNotExist:
+            # Check if the user is a member of this workspace
+            workspace_user = queryset.get()
+        except WorkspaceUser.DoesNotExist:
             return None
 
         return {
             "admin_only_operations": self.ADMIN_ONLY_OPERATIONS,
-            "is_admin": "ADMIN" in group_user.permissions,
+            "is_admin": "ADMIN" in workspace_user.permissions,
         }
 
 
@@ -208,7 +211,7 @@ class StaffOnlySettingOperationPermissionManagerType(PermissionManagerType):
 
     # Maps `CoreOperationType` to `Setting` boolean field.
     STAFF_ONLY_SETTING_OPERATION_MAP = {
-        CreateGroupOperationType.type: "allow_global_group_creation"
+        CreateWorkspaceOperationType.type: "allow_global_workspace_creation"
     }
 
     def get_permitted_operations_for_settings(self) -> tuple[list, list]:
@@ -241,7 +244,7 @@ class StaffOnlySettingOperationPermissionManagerType(PermissionManagerType):
                 staff_only_operations.append(staff_operation_type)
         return always_allowed_operations, staff_only_operations
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         (
             always_allowed_ops,
             staff_only_ops,
@@ -259,7 +262,7 @@ class StaffOnlySettingOperationPermissionManagerType(PermissionManagerType):
 
         return result
 
-    def get_permissions_object(self, actor, group=None):
+    def get_permissions_object(self, actor, workspace=None):
         (
             always_allowed_ops,
             staff_only_ops,

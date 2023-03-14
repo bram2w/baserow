@@ -31,8 +31,8 @@ class CreateRowCommentActionType(ActionType):
         table_name: str
         database_id: int
         database_name: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
@@ -50,7 +50,7 @@ class CreateRowCommentActionType(ActionType):
 
         table = TableHandler().get_table(table_id)
         database = table.database
-        group = database.group
+        workspace = database.workspace
 
         cls.register_action(
             user,
@@ -62,11 +62,11 @@ class CreateRowCommentActionType(ActionType):
                 table.name,
                 database.id,
                 database.name,
-                group.id,
-                group.name,
+                workspace.id,
+                workspace.name,
             ),
             cls.scope(table_id),
-            group,
+            workspace,
         )
         return row_comment
 

@@ -14,7 +14,7 @@ class TokenPermissionManagerType(PermissionManagerType):
     type = "token"
     supported_actor_types = [TokenSubjectType.type]
 
-    def check_multiple_permissions(self, checks, group=None, include_trash=False):
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         """
         Checks multiple permissions for token.
         """

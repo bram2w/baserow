@@ -53,7 +53,7 @@ class CreateRowActionType(UndoableActionType):
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
         See the baserow.contrib.database.rows.handler.RowHandler.create_row
         for more information.
         Undoing this action trashes the row and redoing restores it.
@@ -80,11 +80,13 @@ class CreateRowActionType(UndoableActionType):
             user_field_names=user_field_names,
         )
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id, table.name, table.database.id, table.database.name, row.id
         )
-        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), workspace=workspace
+        )
 
         return row
 
@@ -131,7 +133,7 @@ class CreateRowsActionType(UndoableActionType):
     ) -> List[GeneratedTableModel]:
         """
         Creates rows for a given table with the provided values if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
         See the baserow.contrib.database.rows.handler.RowHandler.create_rows
         for more information.
         Undoing this action trashes the rows and redoing restores them all.
@@ -150,7 +152,7 @@ class CreateRowsActionType(UndoableActionType):
             user, table, rows_values, before_row=before_row, model=model
         )
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -158,7 +160,9 @@ class CreateRowsActionType(UndoableActionType):
             table.database.name,
             [row.id for row in rows],
         )
-        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), workspace=workspace
+        )
 
         return rows
 
@@ -209,7 +213,7 @@ class ImportRowsActionType(UndoableActionType):
     ) -> Tuple[List[GeneratedTableModel], Dict[str, Any]]:
         """
         Creates rows for a given table with the provided values if the user
-        belongs to the related group. It also calls the table_updated signal.
+        belongs to the related workspace. It also calls the table_updated signal.
         This action is supposed to handle bigger row amount than the createRowsAction,
         it generates an import error report and allow to track the progress.
         Undoing this action trashes the rows and redoing restores them all.
@@ -232,7 +236,7 @@ class ImportRowsActionType(UndoableActionType):
         # big amount of data.
         table_updated.send(cls, table=table, user=user, force_table_refresh=True)
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -240,7 +244,9 @@ class ImportRowsActionType(UndoableActionType):
             table.database.name,
             [row.id for row in created_rows],
         )
-        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), workspace=workspace
+        )
 
         return created_rows, error_report
 
@@ -307,7 +313,7 @@ class DeleteRowActionType(UndoableActionType):
         database = table.database
         params = cls.Params(table.id, table.name, database.id, database.name, row_id)
         cls.register_action(
-            user, params, scope=cls.scope(table.id), group=database.group
+            user, params, scope=cls.scope(table.id), workspace=database.workspace
         )
 
     @classmethod
@@ -366,7 +372,7 @@ class DeleteRowsActionType(UndoableActionType):
 
         trashed_rows_entry = RowHandler().delete_rows(user, table, row_ids, model=model)
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -375,7 +381,9 @@ class DeleteRowsActionType(UndoableActionType):
             row_ids,
             trashed_rows_entry.id,
         )
-        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), workspace=workspace
+        )
 
     @classmethod
     def scope(cls, table_id) -> ActionScopeStr:
@@ -530,7 +538,7 @@ class MoveRowActionType(UndoableActionType):
         if rows_displacement == 0:
             return updated_row
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -539,7 +547,7 @@ class MoveRowActionType(UndoableActionType):
             row.id,
             rows_displacement,
         )
-        cls.register_action(user, params, cls.scope(table.id), group=group)
+        cls.register_action(user, params, cls.scope(table.id), workspace=workspace)
         return updated_row
 
     @classmethod
@@ -642,7 +650,7 @@ class UpdateRowActionType(UndoableActionType):
         updated_row = row_handler.update_row(user, table, row, values, model=model)
         row_values = row_handler.get_internal_values_for_fields(row, field_keys)
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -652,7 +660,9 @@ class UpdateRowActionType(UndoableActionType):
             row_values,
             original_row_values,
         )
-        cls.register_action(user, params, scope=cls.scope(table.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(table.id), workspace=workspace
+        )
 
         return updated_row
 
@@ -738,7 +748,7 @@ class UpdateRowsActionType(UndoableActionType):
             user, table, rows, model=model, rows_to_update=original_rows
         )
 
-        group = table.database.group
+        workspace = table.database.workspace
         params = cls.Params(
             table.id,
             table.name,
@@ -748,7 +758,7 @@ class UpdateRowsActionType(UndoableActionType):
             new_rows,
             original_rows_values,
         )
-        cls.register_action(user, params, cls.scope(table.id), group=group)
+        cls.register_action(user, params, cls.scope(table.id), workspace=workspace)
 
         return updated_rows
 

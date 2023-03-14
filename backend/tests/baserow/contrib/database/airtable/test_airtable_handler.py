@@ -15,7 +15,7 @@ from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 from baserow.contrib.database.airtable.handler import AirtableHandler
 from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.fields.models import TextField
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.jobs.constants import JOB_PENDING
 from baserow.core.jobs.exceptions import JobDoesNotExist, MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
@@ -333,8 +333,8 @@ def test_to_baserow_database_export_without_primary_value():
 
 @pytest.mark.django_db
 @responses.activate
-def test_import_from_airtable_to_group(data_fixture, tmpdir):
-    group = data_fixture.create_group()
+def test_import_from_airtable_to_workspace(data_fixture, tmpdir):
+    workspace = data_fixture.create_workspace()
     base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
@@ -389,8 +389,8 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
 
     progress = Progress(1000)
 
-    database = AirtableHandler.import_from_airtable_to_group(
-        group,
+    database = AirtableHandler.import_from_airtable_to_workspace(
+        workspace,
         "shrXxmp0WmqsTkFWTzv",
         storage=storage,
         progress_builder=progress.create_child_builder(represents_progress=1000),
@@ -433,7 +433,7 @@ def test_import_from_airtable_to_group(data_fixture, tmpdir):
 @pytest.mark.django_db
 @responses.activate
 def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")
 
@@ -447,8 +447,8 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
         )
 
     with pytest.raises(AirtableShareIsNotABase):
-        AirtableHandler.import_from_airtable_to_group(
-            group, "shrXxmp0WmqsTkFWTzv", storage=storage
+        AirtableHandler.import_from_airtable_to_workspace(
+            workspace, "shrXxmp0WmqsTkFWTzv", storage=storage
         )
 
 
@@ -457,25 +457,25 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
 @patch("baserow.core.jobs.handler.run_async_job")
 def test_create_and_start_airtable_import_job(mock_run_async_job, data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         JobHandler().create_and_start_job(
             user,
             "airtable",
-            group_id=group_2.id,
+            workspace_id=workspace_2.id,
             airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
         )
 
     job = JobHandler().create_and_start_job(
         user,
         "airtable",
-        group_id=group.id,
+        workspace_id=workspace.id,
         airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
     )
     assert job.user_id == user.id
-    assert job.group_id == group.id
+    assert job.workspace_id == workspace.id
     assert job.airtable_share_id == "shrXxmp0WmqsTkFWTz"
     assert job.progress_percentage == 0
     assert job.state == "pending"
@@ -490,14 +490,14 @@ def test_create_and_start_airtable_import_job(mock_run_async_job, data_fixture):
 @responses.activate
 def test_create_and_start_airtable_import_job_while_other_job_is_running(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     data_fixture.create_airtable_import_job(user=user, state=JOB_PENDING)
 
     with pytest.raises(MaxJobCountExceeded):
         JobHandler().create_and_start_job(
             user,
             "airtable",
-            group_id=group.id,
+            workspace_id=workspace.id,
             airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
         )
 

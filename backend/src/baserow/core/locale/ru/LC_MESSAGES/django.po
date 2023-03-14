@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-16 14:17+0000\n"
+"POT-Creation-Date: 2023-02-27 10:23+0000\n"
 "PO-Revision-Date: 2022-07-05 11:27+0000\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -19,88 +19,88 @@ msgstr ""
 msgid "in group \"%(group_name)s\" (%(group_id)s)."
 msgstr ""
 
-#: src/baserow/core/actions.py:29
+#: src/baserow/core/actions.py:36
 msgid "Delete group"
 msgstr ""
 
-#: src/baserow/core/actions.py:30
+#: src/baserow/core/actions.py:37
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
 msgstr ""
 
-#: src/baserow/core/actions.py:90
+#: src/baserow/core/actions.py:97
 msgid "Create group"
 msgstr ""
 
-#: src/baserow/core/actions.py:91
+#: src/baserow/core/actions.py:98
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) created."
 msgstr ""
 
-#: src/baserow/core/actions.py:149
+#: src/baserow/core/actions.py:156
 msgid "Update group"
 msgstr ""
 
-#: src/baserow/core/actions.py:151
+#: src/baserow/core/actions.py:158
 #, python-format
 msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
 
-#: src/baserow/core/actions.py:230
+#: src/baserow/core/actions.py:237
 msgid "Order groups"
 msgstr ""
 
-#: src/baserow/core/actions.py:231
+#: src/baserow/core/actions.py:238
 msgid "Groups order changed."
 msgstr ""
 
-#: src/baserow/core/actions.py:290
+#: src/baserow/core/actions.py:297
 msgid "Order applications"
 msgstr ""
 
-#: src/baserow/core/actions.py:290
+#: src/baserow/core/actions.py:297
 msgid "Applications reordered"
 msgstr ""
 
-#: src/baserow/core/actions.py:346
+#: src/baserow/core/actions.py:360
 msgid "Create application"
 msgstr ""
 
-#: src/baserow/core/actions.py:347
+#: src/baserow/core/actions.py:361
 #, python-format
 msgid ""
 "\"%(application_name)s\" (%(application_id)s) %(application_type)s created"
 msgstr ""
 
-#: src/baserow/core/actions.py:422
+#: src/baserow/core/actions.py:438
 msgid "Delete application"
 msgstr ""
 
-#: src/baserow/core/actions.py:424
+#: src/baserow/core/actions.py:440
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
 "%(application_type)s deleted"
 msgstr ""
 
-#: src/baserow/core/actions.py:486
+#: src/baserow/core/actions.py:502
 msgid "Update application"
 msgstr ""
 
-#: src/baserow/core/actions.py:488
+#: src/baserow/core/actions.py:504
 #, python-format
 msgid ""
 "Application (%(application_id)s) of type %(application_type)s renamed from "
 "\"%(original_application_name)s\" to \"%(application_name)s\""
 msgstr ""
 
-#: src/baserow/core/actions.py:559
+#: src/baserow/core/actions.py:575
 msgid "Duplicate application"
 msgstr ""
 
-#: src/baserow/core/actions.py:561
+#: src/baserow/core/actions.py:577
 #, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
@@ -108,20 +108,93 @@ msgid ""
 "\" (%(original_application_id)s)"
 msgstr ""
 
-#: src/baserow/core/actions.py:638
+#: src/baserow/core/actions.py:654
 msgid "Install template"
 msgstr ""
 
-#: src/baserow/core/actions.py:640
+#: src/baserow/core/actions.py:656
 #, python-format
 msgid ""
 "Template \"%(template_name)s\" (%(template_id)s) installed into application "
 "IDs %(installed_application_ids)s"
 msgstr ""
 
+#: src/baserow/core/actions.py:734
+#, fuzzy
+#| msgid "Group invitation"
+msgid "Create group invitation"
+msgstr "Invitation à un groupe"
+
+#: src/baserow/core/actions.py:736
+#, python-format
+msgid ""
+"Group invitation created for \"%(email)s\" to join \"%(group_name)s"
+"\" (%(group_id)s) as %(permissions)s."
+msgstr ""
+
+#: src/baserow/core/actions.py:787
+#, fuzzy
+#| msgid "Group invitation"
+msgid "Delete group invitation"
+msgstr "Invitation à un groupe"
+
+#: src/baserow/core/actions.py:789
+#, python-format
+msgid ""
+"Group invitation (%(invitation_id)s) deleted for \"%(email)s\" to join "
+"\"%(group_name)s\" (%(group_id)s) as %(permissions)s."
+msgstr ""
+
+#: src/baserow/core/actions.py:842
+#, fuzzy
+#| msgid "Group invitation"
+msgid "Accept group invitation"
+msgstr "Invitation à un groupe"
+
+#: src/baserow/core/actions.py:844
+#, python-format
+msgid ""
+"Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
+"\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
+msgstr ""
+
+#: src/baserow/core/actions.py:897
+#, fuzzy
+#| msgid "Group invitation"
+msgid "Reject group invitation"
+msgstr "Invitation à un groupe"
+
+#: src/baserow/core/actions.py:899
+#, python-format
+msgid ""
+"Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
+"\"%(group_name)s\" (%(group_id)s) as %(permissions)s was rejected."
+msgstr ""
+
+#: src/baserow/core/actions.py:952
+msgid "Update group invitation permissions"
+msgstr ""
+
+#: src/baserow/core/actions.py:954
+#, python-format
+msgid ""
+"Invitation (%(invitation_id)s) permissions changed from "
+"%(original_permissions)s to %(permissions)s for %(email)s  on group "
+"\"%(group_name)s\" (%(group_id)s)."
+msgstr ""
+
+#: src/baserow/core/actions.py:1011
+msgid "Leave group"
+msgstr ""
+
+#: src/baserow/core/actions.py:1012
+#, python-format
+msgid "Group \"%(group_name)s\" (%(group_id)s) left."
+msgstr ""
+
 #: src/baserow/core/emails.py:96
 #, python-format
-msgid "%(by)s invited you to %(group_name)s - Baserow"
+msgid "%(by)s invited you to %(workspace_name)s - Baserow"
 msgstr ""
 
 #: src/baserow/core/snapshots/actions.py:21
@@ -158,32 +231,6 @@ msgid ""
 "\"%(application_name)s\" (%(application_id)s)."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/group_invitation.html:146
-msgid "Invitation"
-msgstr ""
-
-#: src/baserow/core/templates/baserow/core/group_invitation.html:151
-#, python-format
-msgid ""
-"<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-"%(group_name)s</strong>."
-msgstr ""
-
-#: src/baserow/core/templates/baserow/core/group_invitation.html:165
-msgid "Accept invitation"
-msgstr ""
-
-#: src/baserow/core/templates/baserow/core/group_invitation.html:179
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:161
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:179
-msgid ""
-"Baserow is an open source no-code database tool which allows you to "
-"collaborate on projects, customers and more. It gives you the powers of a "
-"developer without leaving your browser."
-msgstr ""
-
 #: src/baserow/core/templates/baserow/core/user/account_deleted.html:146
 msgid "Account permanently deleted"
 msgstr ""
@@ -193,6 +240,17 @@ msgstr ""
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "has been permanently deleted."
+msgstr ""
+
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:161
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:179
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:180
+msgid ""
+"Baserow is an open source no-code database tool which allows you to "
+"collaborate on projects, customers and more. It gives you the powers of a "
+"developer without leaving your browser."
 msgstr ""
 
 #: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:146
@@ -245,46 +303,128 @@ msgid ""
 "hours."
 msgstr ""
 
-#: src/baserow/core/user/actions.py:20
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:146
+msgid "Invitation"
+msgstr ""
+
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:152
+#, python-format
+msgid ""
+"<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
+"%(workspace_name)s</strong>."
+msgstr ""
+
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:166
+msgid "Accept invitation"
+msgstr ""
+
+#: src/baserow/core/trash/actions.py:20
+msgid "Empty trash"
+msgstr ""
+
+#: src/baserow/core/trash/actions.py:22
+#, python-format
+msgid ""
+"Trash for application \"%(application_name)s\" (%(application_id)s) has been "
+"emptied"
+msgstr ""
+
+#: src/baserow/core/trash/actions.py:79
+#, python-format
+msgid ""
+"Trash for workspace \"%(workspace_name)s\" (%(workspace_id)s) has been "
+"emptied."
+msgstr ""
+
+#: src/baserow/core/trash/actions.py:90
+msgid "Restore from trash"
+msgstr ""
+
+#: src/baserow/core/trash/actions.py:91
+#, python-format
+msgid ""
+"Item of type \"%(item_type)s\" (%(item_id)s) has been restored from trash"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:23
 msgid "Create User"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:22
+#: src/baserow/core/user/actions.py:25
 #, python-format
 msgid ""
-"User \"%(user_email)s\" (%(user_id)s) created (via invitation: "
-"%(with_invitation_token)s, from template: %(template_id)s)"
+"User \"%(user_email)s\" (%(user_id)s) created via \"%(auth_provider_type)s"
+"\" (%(auth_provider_id)s) auth provider (invitation: "
+"%(with_invitation_token)s)"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:92
+#: src/baserow/core/user/actions.py:110
 msgid "Update User"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:93
+#: src/baserow/core/user/actions.py:111
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:136
+#: src/baserow/core/user/actions.py:155
 msgid "Schedule user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:138
+#: src/baserow/core/user/actions.py:157
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) scheduled to be deleted after grace "
 "time"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:169
+#: src/baserow/core/user/actions.py:188
 msgid "Cancel user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:171
+#: src/baserow/core/user/actions.py:190
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
 "process"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:221
+msgid "Sign In User"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:223
+#, python-format
+msgid ""
+"User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
+"\" (%(auth_provider_id)s) auth provider"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:275
+msgid "Send reset user password"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:276
+#, python-format
+msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:306
+msgid "Change user password"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:307
+#, python-format
+msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:343
+msgid "Reset user password"
+msgstr ""
+
+#: src/baserow/core/user/actions.py:344
+#, python-format
+msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
 msgstr ""
 
 #: src/baserow/core/user/emails.py:16
@@ -303,10 +443,7 @@ msgstr ""
 msgid "Account deletion cancelled - Baserow"
 msgstr ""
 
-#: src/baserow/core/user/handler.py:205
+#: src/baserow/core/user/handler.py:213
 #, python-format
-msgid "%(name)s's group"
+msgid "%(name)s's workspace"
 msgstr ""
-
-#~ msgid "Group invitation"
-#~ msgstr "Invitation à un groupe"

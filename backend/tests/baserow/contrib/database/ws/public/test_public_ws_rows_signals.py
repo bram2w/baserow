@@ -1679,7 +1679,7 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
         },
     )
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
@@ -1781,7 +1781,7 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
         },
     )
     TrashHandler.trash(
-        user, table.database.group, table.database, row, parent_id=table.id
+        user, table.database.workspace, table.database, row, parent_id=table.id
     )
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
@@ -1874,7 +1874,7 @@ def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters
     trashed_rows.rows = [row, row2]
 
     trash_entry = TrashHandler.trash(
-        user, table.database.group, table.database, trashed_rows, parent_id=table.id
+        user, table.database.workspace, table.database, trashed_rows, parent_id=table.id
     )
     TrashHandler.restore_item(
         user, "rows", trash_entry.trash_item_id, parent_trash_item_id=table.id

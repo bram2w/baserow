@@ -4,6 +4,7 @@ from rest_framework import serializers
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.tokens.models import Token
+from baserow.core.mixins import GroupToWorkspaceCompatModelSerializerMixin
 
 from .schemas import token_permissions_field_schema
 
@@ -178,7 +179,9 @@ class TokenPermissionsFieldFix(OpenApiSerializerFieldExtension):
         return token_permissions_field_schema
 
 
-class TokenSerializer(serializers.ModelSerializer):
+class TokenSerializer(
+    GroupToWorkspaceCompatModelSerializerMixin, serializers.ModelSerializer
+):
     permissions = TokenPermissionsField()
 
     class Meta:
@@ -186,7 +189,8 @@ class TokenSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "group",
+            "group",  # GroupDeprecation
+            "workspace",
             "key",
             "permissions",
         )
@@ -195,12 +199,15 @@ class TokenSerializer(serializers.ModelSerializer):
         }
 
 
-class TokenCreateSerializer(serializers.ModelSerializer):
+class TokenCreateSerializer(
+    GroupToWorkspaceCompatModelSerializerMixin, serializers.ModelSerializer
+):
     class Meta:
         model = Token
         fields = (
             "name",
-            "group",
+            "group",  # GroupDeprecation
+            "workspace",
         )
 
 

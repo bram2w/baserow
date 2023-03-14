@@ -9,7 +9,7 @@ export default (client) => {
       return userPaginatedService.fetch(usersUrl, page, search, [], [])
     },
     fetchGroups(page, search) {
-      const groupsUrl = '/admin/audit-log/groups/'
+      const groupsUrl = '/admin/audit-log/workspaces/'
       const groupPaginatedService = baseService(client, groupsUrl)
       return groupPaginatedService.fetch(groupsUrl, page, search, [], [])
     },

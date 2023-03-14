@@ -8,7 +8,10 @@ from baserow.contrib.database.views.models import (
     ViewFilter,
     ViewSort,
 )
-from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
+from baserow.core.object_scopes import (
+    ApplicationObjectScopeType,
+    WorkspaceObjectScopeType,
+)
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
@@ -25,12 +28,12 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
-            "table", "table__database", "table__database__group"
+            "table", "table__database", "table__database__workspace"
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(table__database__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(table__database__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == DatabaseObjectScopeType.type
@@ -60,12 +63,12 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
             "view",
             "view__table",
             "view__table__database",
-            "view__table__database__group",
+            "view__table__database__workspace",
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(view_table__database__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(view_table__database__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == DatabaseObjectScopeType.type
@@ -98,12 +101,12 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
             "view",
             "view__table",
             "view__table__database",
-            "view__table__database__group",
+            "view__table__database__workspace",
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(view_table__database__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(view_table__database__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == DatabaseObjectScopeType.type
@@ -136,12 +139,12 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
             "view",
             "view__table",
             "view__table__database",
-            "view__table__database__group",
+            "view__table__database__workspace",
         )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(view_table__database__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(view_table__database__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == DatabaseObjectScopeType.type

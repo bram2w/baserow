@@ -172,7 +172,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             base_queryset = field_model.objects
 
         try:
-            field = base_queryset.select_related("table__database__group").get(
+            field = base_queryset.select_related("table__database__workspace").get(
                 id=field_id
             )
         except Field.DoesNotExist:
@@ -252,9 +252,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             as a second tuple value.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, CreateFieldOperationType.type, group=group, context=table
+            user, CreateFieldOperationType.type, workspace=workspace, context=table
         )
 
         # Because only one primary field per table can exist and we have to check if one
@@ -402,9 +402,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 "Field itself."
             )
 
-        group = field.table.database.group
+        workspace = field.table.database.workspace
         CoreHandler().check_permissions(
-            user, UpdateFieldOperationType.type, group=group, context=field
+            user, UpdateFieldOperationType.type, workspace=workspace, context=field
         )
 
         old_field = deepcopy(field)
@@ -623,7 +623,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             DuplicateFieldOperationType.type,
-            group=database.group,
+            workspace=database.workspace,
             context=field,
         )
 
@@ -700,9 +700,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         if not isinstance(field, Field):
             raise ValueError("The field is not an instance of Field")
 
-        group = field.table.database.group
+        workspace = field.table.database.workspace
         CoreHandler().check_permissions(
-            user, DeleteFieldOperationType.type, group=group, context=field
+            user, DeleteFieldOperationType.type, workspace=workspace, context=field
         )
 
         if field.primary and not allow_deleting_primary:
@@ -735,7 +735,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         else:
             existing_trash_entry = TrashHandler.trash(
                 user,
-                group,
+                workspace,
                 field.table.database,
                 field,
                 existing_trash_entry=existing_trash_entry,
@@ -803,9 +803,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         :type select_options: list
         """
 
-        group = field.table.database.group
+        workspace = field.table.database.workspace
         CoreHandler().check_permissions(
-            user, UpdateFieldOperationType.type, group=group, context=field
+            user, UpdateFieldOperationType.type, workspace=workspace, context=field
         )
 
         field_type = field_type_registry.get_by_model(field)

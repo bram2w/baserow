@@ -21,7 +21,7 @@ class SsoErrorCode(Enum):
     PROVIDER_DOES_NOT_EXIST = "errorProviderDoesNotExist"
     AUTH_FLOW_ERROR = "errorAuthFlowError"
     DIFFERENT_PROVIDER = "errorDifferentProvider"
-    GROUP_INVITATION_EMAIL_MISMATCH = "errorGroupInvitationEmailMismatch"
+    GROUP_INVITATION_EMAIL_MISMATCH = "errorWorkspaceInvitationEmailMismatch"
     SIGNUP_DISABLED = "errorSignupDisabled"
 
 

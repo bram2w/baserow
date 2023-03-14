@@ -23,15 +23,15 @@ from baserow.core.action.registries import (
     UndoableActionType,
     action_type_registry,
 )
-from baserow.core.action.scopes import GroupActionScopeType, RootActionScopeType
+from baserow.core.action.scopes import RootActionScopeType, WorkspaceActionScopeType
 from baserow.core.actions import (
     CreateApplicationActionType,
-    CreateGroupActionType,
-    DeleteGroupActionType,
+    CreateWorkspaceActionType,
+    DeleteWorkspaceActionType,
     UpdateApplicationActionType,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GROUP_USER_PERMISSION_ADMIN, Application, Group
+from baserow.core.models import WORKSPACE_USER_PERMISSION_ADMIN, Application, Workspace
 from baserow.test_utils.helpers import (
     assert_undo_redo_actions_are_valid,
     assert_undo_redo_actions_fails_with_error,
@@ -46,11 +46,13 @@ def test_undoing_action_with_matching_session_and_category_undoes(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 @pytest.mark.django_db
@@ -61,18 +63,18 @@ def test_undoing_action_with_matching_session_and_not_matching_category_does_not
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
-        user, group_name="test"
+    workspace_user = action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
     )
 
     fake_category_which_wont_match = cast(
         ActionScopeStr,
-        CreateGroupActionType.scope() + "_fake_category_which_wont_match",
+        CreateWorkspaceActionType.scope() + "_fake_category_which_wont_match",
     )
     actions = ActionHandler.undo(user, [fake_category_which_wont_match], session_id)
 
     assert not actions
-    assert Group.objects.filter(id=group_user.group_id).exists()
+    assert Workspace.objects.filter(id=workspace_user.workspace_id).exists()
 
 
 @pytest.mark.django_db
@@ -83,13 +85,13 @@ def test_undoing_action_with_not_matching_session_and_not_matching_category_does
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
-        user, group_name="test"
+    workspace_user = action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
     )
 
     fake_category_which_wont_match = cast(
         ActionScopeStr,
-        CreateGroupActionType.scope() + "_fake_category_which_wont_match",
+        CreateWorkspaceActionType.scope() + "_fake_category_which_wont_match",
     )
     other_session_which_wont_match = session_id + "_fake"
     actions = ActionHandler.undo(
@@ -97,7 +99,7 @@ def test_undoing_action_with_not_matching_session_and_not_matching_category_does
     )
 
     assert not actions
-    assert Group.objects.filter(id=group_user.group_id).exists()
+    assert Workspace.objects.filter(id=workspace_user.workspace_id).exists()
 
 
 @pytest.mark.django_db
@@ -108,19 +110,19 @@ def test_undoing_action_with_not_matching_session_and_matching_category_does_not
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
-        user, group_name="test"
+    workspace_user = action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
     )
 
     other_session_which_wont_match = session_id + "_fake"
     actions = ActionHandler.undo(
         user,
-        [CreateGroupActionType.scope()],
+        [CreateWorkspaceActionType.scope()],
         other_session_which_wont_match,
     )
 
     assert not actions
-    assert Group.objects.filter(id=group_user.group_id).exists()
+    assert Workspace.objects.filter(id=workspace_user.workspace_id).exists()
 
 
 @pytest.mark.django_db
@@ -129,18 +131,18 @@ def test_redoing_action_with_matching_session_and_category_redoes(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group_user = action_type_registry.get_by_type(CreateGroupActionType).do(
-        user, group_name="test"
+    workspace_user = action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
     )
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
-    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.redo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
-    assert Group.objects.filter(id=group_user.group_id).exists()
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
+    assert Workspace.objects.filter(id=workspace_user.workspace_id).exists()
 
 
 @pytest.mark.django_db
@@ -151,21 +153,23 @@ def test_redoing_action_with_matching_session_and_not_matching_category_doesnt_r
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
-    assert not Group.objects.exists()
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
+    assert not Workspace.objects.exists()
 
     fake_category_which_wont_match = cast(
         ActionScopeStr,
-        CreateGroupActionType.scope() + "_fake_category_which_wont_match",
+        CreateWorkspaceActionType.scope() + "_fake_category_which_wont_match",
     )
     actions = ActionHandler.redo(user, [fake_category_which_wont_match], session_id)
 
     assert not actions
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 @pytest.mark.django_db
@@ -176,16 +180,18 @@ def test_redoing_action_with_not_matching_session_and_not_matching_category_does
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
-    assert not Group.objects.exists()
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
+    assert not Workspace.objects.exists()
 
     fake_category_which_wont_match = cast(
         ActionScopeStr,
-        CreateGroupActionType.scope() + "_fake_category_which_wont_match",
+        CreateWorkspaceActionType.scope() + "_fake_category_which_wont_match",
     )
     other_session_which_wont_match = session_id + "_fake"
 
@@ -194,7 +200,7 @@ def test_redoing_action_with_not_matching_session_and_not_matching_category_does
     )
 
     assert not actions
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 @pytest.mark.django_db
@@ -205,23 +211,25 @@ def test_redoing_action_with_not_matching_session_and_matching_category_doesnt_r
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
-    assert not Group.objects.exists()
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
+    assert not Workspace.objects.exists()
 
     other_session_which_wont_match = session_id + "_fake"
 
     actions = ActionHandler.redo(
         user,
-        [CreateGroupActionType.scope()],
+        [CreateWorkspaceActionType.scope()],
         other_session_which_wont_match,
     )
 
     assert not actions
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 @pytest.mark.django_db
@@ -236,21 +244,25 @@ def test_undoing_with_multiple_sessions_undoes_only_in_provided_session(
         same_user_with_different_session, "different-session"
     )
 
-    group_user_from_first_session = action_type_registry.get_by_type(
-        CreateGroupActionType
-    ).do(user, group_name="test")
-    group_user_from_second_session = action_type_registry.get_by_type(
-        CreateGroupActionType
-    ).do(same_user_with_different_session, group_name="test2")
+    workspace_user_from_first_session = action_type_registry.get_by_type(
+        CreateWorkspaceActionType
+    ).do(user, workspace_name="test")
+    workspace_user_from_second_session = action_type_registry.get_by_type(
+        CreateWorkspaceActionType
+    ).do(same_user_with_different_session, workspace_name="test2")
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
     assert not actions
-    assert not Group.objects.filter(id=group_user_from_first_session.group_id).exists()
-    assert Group.objects.filter(id=group_user_from_second_session.group_id).exists()
+    assert not Workspace.objects.filter(
+        id=workspace_user_from_first_session.workspace_id
+    ).exists()
+    assert Workspace.objects.filter(
+        id=workspace_user_from_second_session.workspace_id
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -264,31 +276,39 @@ def test_redoing_with_multiple_sessions_redoes_only_in_provided_session(
     other_session_id = "different-session"
     set_untrusted_client_session_id(same_user_with_different_session, other_session_id)
 
-    group_user_from_first_session = action_type_registry.get_by_type(
-        CreateGroupActionType
-    ).do(user, group_name="test")
-    group_user_from_second_session = action_type_registry.get_by_type(
-        CreateGroupActionType
-    ).do(same_user_with_different_session, group_name="test2")
+    workspace_user_from_first_session = action_type_registry.get_by_type(
+        CreateWorkspaceActionType
+    ).do(user, workspace_name="test")
+    workspace_user_from_second_session = action_type_registry.get_by_type(
+        CreateWorkspaceActionType
+    ).do(same_user_with_different_session, workspace_name="test2")
 
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], other_session_id)
-    assert not Group.objects.filter(id=group_user_from_first_session.group_id).exists()
-    assert not Group.objects.filter(id=group_user_from_second_session.group_id).exists()
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], other_session_id)
+    assert not Workspace.objects.filter(
+        id=workspace_user_from_first_session.workspace_id
+    ).exists()
+    assert not Workspace.objects.filter(
+        id=workspace_user_from_second_session.workspace_id
+    ).exists()
 
     # Do something else in the other session, this should not affect the redo of
     # the first session.
-    action_type_registry.get_by_type(CreateGroupActionType).do(
-        same_user_with_different_session, group_name="test2"
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        same_user_with_different_session, workspace_name="test2"
     )
 
-    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
-    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.redo(user, [CreateWorkspaceActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
+    actions = ActionHandler.redo(user, [CreateWorkspaceActionType.scope()], session_id)
     assert not actions
 
-    assert Group.objects.filter(id=group_user_from_first_session.group_id).exists()
-    assert not Group.objects.filter(id=group_user_from_second_session.group_id).exists()
+    assert Workspace.objects.filter(
+        id=workspace_user_from_first_session.workspace_id
+    ).exists()
+    assert not Workspace.objects.filter(
+        id=workspace_user_from_second_session.workspace_id
+    ).exists()
 
 
 @pytest.mark.django_db
@@ -300,25 +320,25 @@ def test_undoing_with_multiple_users_undoes_only_in_the_own_users_actions(
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user(session_id=session_id)
 
-    group_created_by_first_user = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test")
-        .group
+    workspace_created_by_first_user = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test")
+        .workspace
     )
-    group_created_by_second_user = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user2, group_name="test2")
-        .group
+    workspace_created_by_second_user = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user2, workspace_name="test2")
+        .workspace
     )
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
     assert not actions
 
-    assert not Group.objects.filter(id=group_created_by_first_user.id).exists()
-    assert Group.objects.filter(id=group_created_by_second_user.id).exists()
+    assert not Workspace.objects.filter(id=workspace_created_by_first_user.id).exists()
+    assert Workspace.objects.filter(id=workspace_created_by_second_user.id).exists()
 
 
 @pytest.mark.django_db
@@ -330,33 +350,33 @@ def test_redoing_with_multiple_users_redoes_only_in_the_own_users_actions(
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user(session_id=session_id)
 
-    group_created_by_first_user = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test")
-        .group
+    workspace_created_by_first_user = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test")
+        .workspace
     )
-    group_created_by_second_user = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user2, group_name="test2")
-        .group
+    workspace_created_by_second_user = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user2, workspace_name="test2")
+        .workspace
     )
 
     user2_actions = ActionHandler.undo(
-        user2, [CreateGroupActionType.scope()], session_id
+        user2, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_are_valid(user2_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_are_valid(user2_actions, [CreateWorkspaceActionType])
 
-    actions = ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+    actions = ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
 
-    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
-    assert_undo_redo_actions_are_valid(actions, [CreateGroupActionType])
+    actions = ActionHandler.redo(user, [CreateWorkspaceActionType.scope()], session_id)
+    assert_undo_redo_actions_are_valid(actions, [CreateWorkspaceActionType])
 
-    actions = ActionHandler.redo(user, [CreateGroupActionType.scope()], session_id)
+    actions = ActionHandler.redo(user, [CreateWorkspaceActionType.scope()], session_id)
     assert not actions
 
-    assert Group.objects.filter(id=group_created_by_first_user.id).exists()
-    assert not Group.objects.filter(id=group_created_by_second_user.id).exists()
+    assert Workspace.objects.filter(id=workspace_created_by_first_user.id).exists()
+    assert not Workspace.objects.filter(id=workspace_created_by_second_user.id).exists()
 
 
 @pytest.mark.django_db
@@ -367,58 +387,60 @@ def test_when_undo_fails_can_try_undo_next_action(
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group1 = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test")
-        .group
+    workspace1 = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test")
+        .workspace
     )
-    group2 = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test2")
-        .group
+    workspace2 = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test2")
+        .workspace
     )
-    group2.delete()
+    workspace2.delete()
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_fails_with_error(undone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_fails_with_error(
+        undone_actions, [CreateWorkspaceActionType]
+    )
 
-    assert Group.objects.filter(id=group1.id).exists()
+    assert Workspace.objects.filter(id=workspace1.id).exists()
 
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert not Group.objects.filter(id=group1.id).exists()
+    assert not Workspace.objects.filter(id=workspace1.id).exists()
 
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-@patch("baserow.core.signals.group_deleted.send")
+@patch("baserow.core.signals.workspace_deleted.send")
 def test_when_undo_fails_the_action_is_rolled_back(
-    mock_group_deleted,
+    mock_workspace_deleted,
     data_fixture,
 ):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test2")
-        .group
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test2")
+        .workspace
     )
 
-    mock_group_deleted.side_effect = Exception(
+    mock_workspace_deleted.side_effect = Exception(
         "Error that should make the undo rollback"
     )
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert undone_actions
     assert undone_actions[0].error, "Undo/redo action should have an error"
 
-    assert Group.objects.filter(id=group.id).exists(), (
-        "The group should still exist as the undo transaction should have failed and "
+    assert Workspace.objects.filter(id=workspace.id).exists(), (
+        "The workspace should still exist as the undo transaction should have failed and "
         "rolled back. "
     )
 
@@ -432,44 +454,48 @@ def test_when_undo_fails_can_try_redo_undo_to_try_again(
     user = data_fixture.create_user(session_id=session_id)
     other_user = data_fixture.create_user(session_id=session_id)
 
-    # User A creates a group
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test")
-        .group
+    # User A creates a workspace
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test")
+        .workspace
     )
 
-    # User B deletes the group
-    locked_group = CoreHandler().get_group_for_update(group_id=group.id)
-    data_fixture.create_user_group(
-        group=locked_group,
+    # User B deletes the workspace
+    locked_workspace = CoreHandler().get_workspace_for_update(workspace_id=workspace.id)
+    data_fixture.create_user_workspace(
+        workspace=locked_workspace,
         user=other_user,
-        permissions=GROUP_USER_PERMISSION_ADMIN,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
-    action_type_registry.get_by_type(DeleteGroupActionType).do(
-        other_user, group=locked_group
+    action_type_registry.get_by_type(DeleteWorkspaceActionType).do(
+        other_user, workspace=locked_workspace
     )
 
-    # User A tries to Undo the creation of the group, it fails as it has already been
-    # deleted.
+    # User A tries to Undo the creation of the workspace, it fails as it has already
+    # been deleted.
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_fails_with_error(undone_actions, [DeleteGroupActionType])
+    assert_undo_redo_actions_fails_with_error(
+        undone_actions, [DeleteWorkspaceActionType]
+    )
 
-    # User B Undoes the deletion, recreating the group
-    ActionHandler.undo(other_user, [DeleteGroupActionType.scope()], session_id)
+    # User B Undoes the deletion, recreating the workspace
+    ActionHandler.undo(other_user, [DeleteWorkspaceActionType.scope()], session_id)
 
     # User A Redoes which does nothing
     redone_actions = ActionHandler.redo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_fails_with_error(redone_actions, [DeleteGroupActionType])
+    assert_undo_redo_actions_fails_with_error(
+        redone_actions, [DeleteWorkspaceActionType]
+    )
 
-    # User A can now Undo the creation of the group as it exists again
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    # User A can now Undo the creation of the workspace as it exists again
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 @pytest.mark.django_db
@@ -480,31 +506,35 @@ def test_when_redo_fails_the_action_is_rolled_back(
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
 
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test2")
-        .group
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test2")
+        .workspace
     )
-    action_type_registry.get_by_type(DeleteGroupActionType).do(
-        user, CoreHandler().get_group_for_update(group.id)
+    action_type_registry.get_by_type(DeleteWorkspaceActionType).do(
+        user, CoreHandler().get_workspace_for_update(workspace.id)
     )
 
-    # Undo the deletion restoring the group.
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    # Undo the deletion restoring the workspace.
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    with patch("baserow.core.signals.group_deleted.send") as mock_group_deleted_send:
-        mock_group_deleted_send.side_effect = Exception(
+    with patch(
+        "baserow.core.signals.workspace_deleted.send"
+    ) as mock_workspace_deleted_send:
+        mock_workspace_deleted_send.side_effect = Exception(
             "Error that should make the redo rollback"
         )
 
         # Redo the deletion
         redone_actions = ActionHandler.redo(
-            user, [CreateGroupActionType.scope()], session_id
+            user, [CreateWorkspaceActionType.scope()], session_id
         )
-    assert_undo_redo_actions_fails_with_error(redone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_fails_with_error(
+        redone_actions, [CreateWorkspaceActionType]
+    )
 
-    assert Group.objects.filter(id=group.id).exists(), (
-        "The group should still exist as the redo should have rolled back when it "
+    assert Workspace.objects.filter(id=workspace.id).exists(), (
+        "The workspace should still exist as the redo should have rolled back when it "
         "failed. "
     )
 
@@ -567,13 +597,13 @@ def test_cleanup_doesnt_do_n_queries_per_action_when_they_have_no_custom_cleanup
 
 def _create_two_no_custom_cleanup_actions(data_fixture):
     user = data_fixture.create_user()
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test2")
-        .group
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test2")
+        .workspace
     )
-    action_type_registry.get_by_type(DeleteGroupActionType).do(
-        user, CoreHandler().get_group_for_update(group.id)
+    action_type_registry.get_by_type(DeleteWorkspaceActionType).do(
+        user, CoreHandler().get_workspace_for_update(workspace.id)
     )
 
 
@@ -639,15 +669,19 @@ def test_undoing_multiple_actions_in_a_single_undo_operation(data_fixture):
     session_id, action_group = "session-id", uuid.uuid4()
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test2"
+    )
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert_undo_redo_actions_are_valid(
-        undone_actions, [CreateGroupActionType, CreateGroupActionType]
+        undone_actions, [CreateWorkspaceActionType, CreateWorkspaceActionType]
     )
 
 
@@ -658,19 +692,23 @@ def test_undoing_multiple_actions_is_limited_in_a_single_undo_operation(data_fix
     session_id, action_group = "session-id", uuid.uuid4()
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test2"
+    )
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_are_valid(undone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_are_valid(undone_actions, [CreateWorkspaceActionType])
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_are_valid(undone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_are_valid(undone_actions, [CreateWorkspaceActionType])
 
 
 @pytest.mark.django_db
@@ -679,17 +717,21 @@ def test_redoing_multiple_actions_in_a_single_redo_operation(data_fixture):
     session_id, action_group = "session-id", uuid.uuid4()
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test2"
+    )
 
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
     redone_actions = ActionHandler.redo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert_undo_redo_actions_are_valid(
-        redone_actions, [CreateGroupActionType, CreateGroupActionType]
+        redone_actions, [CreateWorkspaceActionType, CreateWorkspaceActionType]
     )
 
 
@@ -700,22 +742,26 @@ def test_redoing_multiple_actions_is_limited_in_a_single_undo_operation(data_fix
     session_id, action_group = "session-id", uuid.uuid4()
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test"
+    )
 
-    action_type_registry.get_by_type(CreateGroupActionType).do(user, group_name="test2")
+    action_type_registry.get_by_type(CreateWorkspaceActionType).do(
+        user, workspace_name="test2"
+    )
 
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
     redone_actions = ActionHandler.redo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_are_valid(redone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_are_valid(redone_actions, [CreateWorkspaceActionType])
 
     redone_actions = ActionHandler.redo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
-    assert_undo_redo_actions_are_valid(redone_actions, [CreateGroupActionType])
+    assert_undo_redo_actions_are_valid(redone_actions, [CreateWorkspaceActionType])
 
 
 @pytest.mark.django_db
@@ -729,14 +775,14 @@ def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
     user_2 = data_fixture.create_user(
         session_id=session_id, action_group=action_group_2
     )
-    group = data_fixture.create_group(users=[user_1, user_2])
+    workspace = data_fixture.create_workspace(users=[user_1, user_2])
 
     def _interleave_actions():
         user_1_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
-            user_1, group=group, application_type="database", name="u1_a1"
+            user_1, workspace=workspace, application_type="database", name="u1_a1"
         )
         user_2_app = action_type_registry.get_by_type(CreateApplicationActionType).do(
-            user_2, group=group, application_type="database", name="u2_a1"
+            user_2, workspace=workspace, application_type="database", name="u2_a1"
         )
         action_type_registry.get_by_type(UpdateApplicationActionType).do(
             user_1, application=user_1_app, name="u1_a2"
@@ -751,28 +797,28 @@ def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
 
     # user1 undo, user2 undo, user1 redo, user2 redo
     undone_actions = ActionHandler.undo(
-        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_1, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
     )
     assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
     undone_actions = ActionHandler.undo(
-        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_2, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
     )
     assert Application.objects.count() == 0
     redone_actions = ActionHandler.redo(
-        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_1, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
     )
     assert list(Application.objects.values_list("name", flat=True)) == ["u1_a2"]
     redone_actions = ActionHandler.redo(
-        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_2, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
@@ -783,28 +829,28 @@ def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
 
     # user1 undo, user2 undo, user2 redo, user1 redo
     undone_actions = ActionHandler.undo(
-        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_1, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
     )
     assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
     undone_actions = ActionHandler.undo(
-        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_2, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         undone_actions, [UpdateApplicationActionType, CreateApplicationActionType]
     )
     assert Application.objects.count() == 0
     redone_actions = ActionHandler.redo(
-        user_2, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_2, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
     )
     assert list(Application.objects.values_list("name", flat=True)) == ["u2_a2"]
     redone_actions = ActionHandler.redo(
-        user_1, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user_1, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(
         redone_actions, [CreateApplicationActionType, UpdateApplicationActionType]
@@ -816,37 +862,37 @@ def test_undo_redo_action_group_with_interleaved_actions(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.undo_redo
-@patch("baserow.core.signals.group_deleted.send")
+@patch("baserow.core.signals.workspace_deleted.send")
 def test_when_undo_fails_the_action_group_is_rolled_back(
-    mock_group_deleted,
+    mock_workspace_deleted,
     data_fixture,
 ):
     session_id, action_group = "session-id", uuid.uuid4()
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
 
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test2")
-        .group
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test2")
+        .workspace
     )
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group=group, application_type="database", name="u1_a1"
+        user, workspace=workspace, application_type="database", name="u1_a1"
     )
 
-    mock_group_deleted.side_effect = Exception(
+    mock_workspace_deleted.side_effect = Exception(
         "Error that should make the undo rollback"
     )
 
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert_undo_redo_actions_fails_with_error(
-        undone_actions, [CreateGroupActionType, CreateApplicationActionType]
+        undone_actions, [CreateWorkspaceActionType, CreateApplicationActionType]
     )
 
-    assert Group.objects.filter(id=group.id).exists(), (
-        "The group should still exist as the undo transaction should have failed and "
+    assert Workspace.objects.filter(id=workspace.id).exists(), (
+        "The workspace should still exist as the undo transaction should have failed and "
         "rolled back. "
     )
 
@@ -865,52 +911,52 @@ def test_when_undo_fails_in_action_group_can_try_redo_undo_to_try_again(
     user = data_fixture.create_user(session_id=session_id, action_group=action_group)
     other_user = data_fixture.create_user(session_id=session_id)
 
-    # User A creates a group
-    group = (
-        action_type_registry.get_by_type(CreateGroupActionType)
-        .do(user, group_name="test")
-        .group
+    # User A creates a workspace
+    workspace = (
+        action_type_registry.get_by_type(CreateWorkspaceActionType)
+        .do(user, workspace_name="test")
+        .workspace
     )
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group=group, application_type="database", name="u1_a1"
+        user, workspace=workspace, application_type="database", name="u1_a1"
     )
 
-    # User B deletes the group
-    locked_group = CoreHandler().get_group_for_update(group_id=group.id)
-    data_fixture.create_user_group(
-        group=locked_group,
+    # User B deletes the workspace
+    locked_workspace = CoreHandler().get_workspace_for_update(workspace_id=workspace.id)
+    data_fixture.create_user_workspace(
+        workspace=locked_workspace,
         user=other_user,
-        permissions=GROUP_USER_PERMISSION_ADMIN,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
-    action_type_registry.get_by_type(DeleteGroupActionType).do(
-        other_user, group=locked_group
+    action_type_registry.get_by_type(DeleteWorkspaceActionType).do(
+        other_user, workspace=locked_workspace
     )
 
-    # User A tries to Undo the creation of the group, it fails as it has already been
-    # deleted.
+    # User A tries to Undo the creation of the workspace, it fails as it has already
+    # been deleted.
     undone_actions = ActionHandler.undo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert_undo_redo_actions_fails_with_error(
-        undone_actions, [DeleteGroupActionType, CreateApplicationActionType]
+        undone_actions, [DeleteWorkspaceActionType, CreateApplicationActionType]
     )
 
-    # User B Undoes the deletion, recreating the group
-    ActionHandler.undo(other_user, [DeleteGroupActionType.scope()], session_id)
+    # User B Undoes the deletion, recreating the workspace
+    ActionHandler.undo(other_user, [DeleteWorkspaceActionType.scope()], session_id)
 
     # User A Redoes which does nothing
     redone_actions = ActionHandler.redo(
-        user, [CreateGroupActionType.scope()], session_id
+        user, [CreateWorkspaceActionType.scope()], session_id
     )
     assert_undo_redo_actions_fails_with_error(
-        redone_actions, [DeleteGroupActionType, CreateApplicationActionType]
+        redone_actions, [DeleteWorkspaceActionType, CreateApplicationActionType]
     )
 
-    # User A can now Undo the creation of the group as it exists again
-    ActionHandler.undo(user, [CreateGroupActionType.scope()], session_id)
+    # User A can now Undo the creation of the workspace as it exists again
+    ActionHandler.undo(user, [CreateWorkspaceActionType.scope()], session_id)
 
-    assert not Group.objects.exists()
+    assert not Workspace.objects.exists()
 
 
 def _create_an_action_with_custom_cleanup(data_fixture):

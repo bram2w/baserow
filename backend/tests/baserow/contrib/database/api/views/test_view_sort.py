@@ -56,8 +56,8 @@ def test_list_view_sortings(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            "api:groups:item",
-            kwargs={"group_id": view_1.table.database.group.id},
+            "api:workspaces:item",
+            kwargs={"workspace_id": view_1.table.database.workspace.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -238,8 +238,8 @@ def test_get_view_sort(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            "api:groups:item",
-            kwargs={"group_id": sort_1.view.table.database.group.id},
+            "api:workspaces:item",
+            kwargs={"workspace_id": sort_1.view.table.database.workspace.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

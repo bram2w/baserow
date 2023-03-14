@@ -157,7 +157,7 @@
             <li
               v-if="
                 $hasPermission(
-                  'group.create_invitation',
+                  'workspace.create_invitation',
                   selectedGroup,
                   selectedGroup.id
                 )
@@ -187,7 +187,7 @@
             <nuxt-link
               v-if="
                 $hasPermission(
-                  'group.list_group_users',
+                  'workspace.list_workspace_users',
                   selectedGroup,
                   selectedGroup.id
                 )
@@ -226,7 +226,7 @@
                   handle: '[data-sortable-handle]',
                   marginTop: -1.5,
                   enabled: $hasPermission(
-                    'group.order_applications',
+                    'workspace.order_applications',
                     selectedGroup,
                     selectedGroup.id
                   ),
@@ -248,7 +248,7 @@
               <a
                 v-if="
                   $hasPermission(
-                    'group.create_application',
+                    'workspace.create_application',
                     selectedGroup,
                     selectedGroup.id
                   )
@@ -294,7 +294,7 @@
             </li>
             <li class="sidebar__new-wrapper">
               <a
-                v-if="$hasPermission('create_group')"
+                v-if="$hasPermission('create_workspace')"
                 class="sidebar__new"
                 @click="$refs.createGroupModal.show()"
               >

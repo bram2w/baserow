@@ -4,8 +4,8 @@ from baserow.contrib.database.models import Database
 
 class ApplicationFixtures:
     def create_database_application(self, user=None, **kwargs):
-        if "group" not in kwargs:
-            kwargs["group"] = self.create_group(user=user)
+        if "workspace" not in kwargs:
+            kwargs["workspace"] = self.create_workspace(user=user)
 
         if "name" not in kwargs:
             kwargs["name"] = self.fake.name()
@@ -16,8 +16,8 @@ class ApplicationFixtures:
         return Database.objects.create(**kwargs)
 
     def create_builder_application(self, user=None, **kwargs):
-        if "group" not in kwargs:
-            kwargs["group"] = self.create_group(user=user)
+        if "workspace" not in kwargs:
+            kwargs["workspace"] = self.create_workspace(user=user)
 
         if "name" not in kwargs:
             kwargs["name"] = self.fake.name()

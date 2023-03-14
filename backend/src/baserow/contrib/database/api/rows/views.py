@@ -95,7 +95,7 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
@@ -249,7 +249,7 @@ class RowsView(APIView):
         operation_id="list_database_table_rows",
         description=(
             "Lists all the rows of the table related to the provided parameter if the "
-            "user has access to the related database's group. The response is "
+            "user has access to the related database's workspace. The response is "
             "paginated by a page/size style. It is also possible to provide an "
             "optional search query, only rows where the data matches the search query "
             "are going to be returned then. The properties of the returned rows "
@@ -288,7 +288,7 @@ class RowsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
@@ -312,7 +312,7 @@ class RowsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ListRowsDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -400,7 +400,7 @@ class RowsView(APIView):
         operation_id="create_database_table_row",
         description=(
             "Creates a new row in the table if the user has access to the related "
-            "table's group. The accepted body fields are depending on the fields "
+            "table's workspace. The accepted body fields are depending on the fields "
             "that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** to list them all. None of the fields are "
             "required, if they are not provided the value is going to be `null` or "
@@ -436,7 +436,7 @@ class RowsView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
@@ -456,7 +456,7 @@ class RowsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             CreateRowDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -536,7 +536,7 @@ class RowNamesView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
@@ -593,7 +593,7 @@ class RowNamesView(APIView):
             CoreHandler().check_permissions(
                 request.user,
                 ListRowNamesDatabaseTableOperationType.type,
-                group=database.group,
+                workspace=database.workspace,
                 context=table,
             )
 
@@ -638,7 +638,7 @@ class RowView(APIView):
         operation_id="get_database_table_row",
         description=(
             "Fetches an existing row from the table if the user has access to the "
-            "related table's group. The properties of the returned row depend on "
+            "related table's workspace. The properties of the returned row depend on "
             "which fields the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. In the example "
             "all field types are listed, but normally the number in field_{id} key is "
@@ -662,7 +662,7 @@ class RowView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
@@ -718,7 +718,7 @@ class RowView(APIView):
         operation_id="update_database_table_row",
         description=(
             "Updates an existing row in the table if the user has access to the "
-            "related table's group. The accepted body fields are depending on the "
+            "related table's workspace. The accepted body fields are depending on the "
             "fields that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. None of the "
             "fields are required, if they are not provided the value is not going to "
@@ -755,7 +755,7 @@ class RowView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
@@ -830,7 +830,7 @@ class RowView(APIView):
         operation_id="delete_database_table_row",
         description=(
             "Deletes an existing row in the table if the user has access to the "
-            "table's group."
+            "table's workspace."
         ),
         responses={
             204: None,
@@ -845,7 +845,7 @@ class RowView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
@@ -929,7 +929,7 @@ class RowMoveView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
@@ -1003,7 +1003,7 @@ class BatchRowsView(APIView):
         operation_id="batch_create_database_table_rows",
         description=(
             "Creates new rows in the table if the user has access to the related "
-            "table's group. The accepted body fields are depending on the fields "
+            "table's workspace. The accepted body fields are depending on the fields "
             "that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** to list them all. None of the fields are "
             "required, if they are not provided the value is going to be `null` or "
@@ -1041,7 +1041,7 @@ class BatchRowsView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
@@ -1118,7 +1118,7 @@ class BatchRowsView(APIView):
         operation_id="batch_update_database_table_rows",
         description=(
             "Updates existing rows in the table if the user has access to the "
-            "related table's group. The accepted body fields are depending on the "
+            "related table's workspace. The accepted body fields are depending on the "
             "fields that the table has. For a complete overview of fields use the "
             "**list_database_table_fields** endpoint to list them all. None of the "
             "fields are required, if they are not provided the value is not going to "
@@ -1157,7 +1157,7 @@ class BatchRowsView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
@@ -1225,7 +1225,7 @@ class BatchDeleteRowsView(APIView):
         operation_id="batch_delete_database_table_rows",
         description=(
             "Deletes existing rows in the table if the user has access to the "
-            "table's group."
+            "table's workspace."
             "\n\n **WARNING:**  This endpoint doesn't yet work with row deleted webhooks."
         ),
         request=BatchDeleteRowsSerializer,
@@ -1247,7 +1247,7 @@ class BatchDeleteRowsView(APIView):
     @validate_body(BatchDeleteRowsSerializer)
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             RowIdsNotUnique: ERROR_ROW_IDS_NOT_UNIQUE,
@@ -1353,7 +1353,7 @@ class RowAdjacentView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
@@ -1373,7 +1373,7 @@ class RowAdjacentView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ReadAdjacentRowDatabaseRowOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 

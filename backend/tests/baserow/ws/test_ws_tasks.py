@@ -65,8 +65,8 @@ async def test_broadcast_to_users(data_fixture):
 async def test_broadcast_to_channel_group(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(users=[user_1, user_2])
-    database = data_fixture.create_database_application(group=group_1)
+    workspace_1 = data_fixture.create_workspace(users=[user_1, user_2])
+    database = data_fixture.create_database_application(workspace=workspace_1)
     table_1 = data_fixture.create_database_table(user=user_1)
     table_2 = data_fixture.create_database_table(user=user_2)
     table_3 = data_fixture.create_database_table(database=database)
@@ -90,7 +90,7 @@ async def test_broadcast_to_channel_group(data_fixture):
     response_2["web_socket_id"]
 
     # We don't expect any communicator to receive anything because they didn't join a
-    # group.
+    # workspace.
     await sync_to_async(broadcast_to_channel_group)(
         f"table-{table_1.id}", {"message": "nothing2"}
     )
@@ -169,13 +169,13 @@ async def test_broadcast_to_channel_group(data_fixture):
 @pytest.mark.run(order=6)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
-async def test_broadcast_to_group(data_fixture):
+async def test_broadcast_to_workspace(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
     user_3, token_3 = data_fixture.create_user_and_token()
     user_4, token_4 = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(users=[user_1, user_2, user_4])
-    group_2 = data_fixture.create_group(users=[user_2, user_3])
+    workspace_1 = data_fixture.create_workspace(users=[user_1, user_2, user_4])
+    workspace_2 = data_fixture.create_workspace(users=[user_2, user_3])
 
     communicator_1 = WebsocketCommunicator(
         application,
@@ -203,7 +203,9 @@ async def test_broadcast_to_group(data_fixture):
     await communicator_3.connect()
     await communicator_3.receive_json_from()
 
-    await database_sync_to_async(broadcast_to_group)(group_1.id, {"message": "test"})
+    await database_sync_to_async(broadcast_to_group)(
+        workspace_1.id, {"message": "test"}
+    )
     response_1 = await communicator_1.receive_json_from(0.1)
     response_2 = await communicator_2.receive_json_from(0.1)
     await communicator_3.receive_nothing(0.1)
@@ -212,7 +214,7 @@ async def test_broadcast_to_group(data_fixture):
     assert response_2["message"] == "test"
 
     await database_sync_to_async(broadcast_to_group)(
-        group_1.id, {"message": "test2"}, ignore_web_socket_id=web_socket_id_1
+        workspace_1.id, {"message": "test2"}, ignore_web_socket_id=web_socket_id_1
     )
 
     await communicator_1.receive_nothing(0.1)
@@ -222,7 +224,7 @@ async def test_broadcast_to_group(data_fixture):
     assert response_2["message"] == "test2"
 
     await database_sync_to_async(broadcast_to_group)(
-        group_2.id, {"message": "test3"}, ignore_web_socket_id=web_socket_id_2
+        workspace_2.id, {"message": "test3"}, ignore_web_socket_id=web_socket_id_2
     )
 
     await communicator_1.receive_nothing(0.1)
@@ -241,13 +243,13 @@ async def test_broadcast_to_group(data_fixture):
 @pytest.mark.run(order=6)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
-async def test_broadcast_to_groups(data_fixture):
+async def test_broadcast_to_workspaces(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
     user_3, token_3 = data_fixture.create_user_and_token()
     user_4, token_4 = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(users=[user_1, user_2, user_4])
-    group_2 = data_fixture.create_group(users=[user_2, user_3])
+    workspace_1 = data_fixture.create_workspace(users=[user_1, user_2, user_4])
+    workspace_2 = data_fixture.create_workspace(users=[user_2, user_3])
 
     communicator_1 = WebsocketCommunicator(
         application,
@@ -275,7 +277,9 @@ async def test_broadcast_to_groups(data_fixture):
     await communicator_3.connect()
     await communicator_3.receive_json_from()
 
-    await database_sync_to_async(broadcast_to_groups)([group_1.id], {"message": "test"})
+    await database_sync_to_async(broadcast_to_groups)(
+        [workspace_1.id], {"message": "test"}
+    )
     response_1 = await communicator_1.receive_json_from(0.1)
     response_2 = await communicator_2.receive_json_from(0.1)
     await communicator_3.receive_nothing(0.1)
@@ -284,7 +288,7 @@ async def test_broadcast_to_groups(data_fixture):
     assert response_2["message"] == "test"
 
     await database_sync_to_async(broadcast_to_groups)(
-        [group_1.id], {"message": "test2"}, ignore_web_socket_id=web_socket_id_1
+        [workspace_1.id], {"message": "test2"}, ignore_web_socket_id=web_socket_id_1
     )
 
     await communicator_1.receive_nothing(0.1)
@@ -303,7 +307,7 @@ async def test_broadcast_to_groups(data_fixture):
     web_socket_id_4 = response_4["web_socket_id"]
 
     await database_sync_to_async(broadcast_to_groups)(
-        [group_1.id, group_2.id],
+        [workspace_1.id, workspace_2.id],
         {"message": "test3"},
         ignore_web_socket_id=web_socket_id_4,
     )

@@ -2,7 +2,10 @@ from django.db.models import Q
 
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
 from baserow.contrib.database.table.models import Table
-from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
+from baserow.core.object_scopes import (
+    ApplicationObjectScopeType,
+    WorkspaceObjectScopeType,
+)
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
@@ -17,11 +20,13 @@ class DatabaseTableObjectScopeType(ObjectScopeType):
         return context.database
 
     def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related("database", "database__group")
+        return self.get_base_queryset().prefetch_related(
+            "database", "database__workspace"
+        )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(database__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(database__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == DatabaseObjectScopeType.type

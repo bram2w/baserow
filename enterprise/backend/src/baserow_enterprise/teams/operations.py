@@ -1,4 +1,4 @@
-from baserow.core.operations import GroupCoreOperationType
+from baserow.core.operations import WorkspaceCoreOperationType
 from baserow.core.registries import OperationType
 
 
@@ -6,7 +6,7 @@ class TeamOperationType(OperationType):
     context_scope_name = "team"
 
 
-class CreateTeamOperationType(GroupCoreOperationType):
+class CreateTeamOperationType(WorkspaceCoreOperationType):
     type = "enterprise.teams.create_team"
 
 
@@ -14,7 +14,7 @@ class ReadTeamOperationType(TeamOperationType):
     type = "enterprise.teams.team.read"
 
 
-class ListTeamsOperationType(GroupCoreOperationType):
+class ListTeamsOperationType(WorkspaceCoreOperationType):
     type = "enterprise.teams.list_teams"
     object_scope_name = "team"
 

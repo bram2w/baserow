@@ -6,7 +6,7 @@ start the app with the least amount of hassle.
 
 ### Quickstart
 
-If you are familiar with git and docker-compose run these commands to launch baserow's
+If you are familiar with git and docker-compose run these commands to launch Baserow's
 dev environment locally, otherwise please start from the Installing Requirements section
 below.
 
@@ -98,7 +98,7 @@ to sign up and login to your Baserow.
 
 Baserow's backend container exposes a rest API. Find the API spec for your local version
 of Baserow at http://localhost:8000/api/redoc/ . To check that it is working correctly
-when you visit http://localhost:8000/api/groups/ in a browser you should see the error
+when you visit http://localhost:8000/api/workspaces/ in a browser you should see the error
 "Authentication credentials were not provided." as no JWT was provided.
 
 ## Attaching to the dev environment

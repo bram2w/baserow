@@ -27,27 +27,27 @@ from baserow.api.errors import (
     ERROR_HOSTNAME_IS_NOT_ALLOWED,
     EXPIRED_TOKEN_SIGNATURE,
 )
-from baserow.api.groups.invitations.errors import (
-    ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
-    ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
-)
 from baserow.api.schemas import get_error_schema
 from baserow.api.sessions import (
     get_untrusted_client_session_id,
     set_user_session_data_from_request,
 )
 from baserow.api.user.registries import user_data_registry
+from baserow.api.workspaces.invitations.errors import (
+    ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+    ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
+)
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import ActionScopeStr, action_type_registry
 from baserow.core.auth_provider.exceptions import AuthProviderDisabled
 from baserow.core.auth_provider.handler import PasswordProviderHandler
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
-    GroupInvitationDoesNotExist,
-    GroupInvitationEmailMismatch,
     LockConflict,
+    WorkspaceInvitationDoesNotExist,
+    WorkspaceInvitationEmailMismatch,
 )
-from baserow.core.models import GroupInvitation, Template
+from baserow.core.models import Template, WorkspaceInvitation
 from baserow.core.user.actions import (
     ChangeUserPasswordActionType,
     CreateUserActionType,
@@ -192,7 +192,7 @@ class UserView(APIView):
         description=(
             "Creates a new user based on the provided values. If desired an "
             "authentication JWT can be generated right away. After creating an "
-            "account the initial group containing a database is created."
+            "account the initial workspace containing a database is created."
         ),
         responses={
             200: create_user_response_schema,
@@ -214,8 +214,8 @@ class UserView(APIView):
             UserAlreadyExist: ERROR_ALREADY_EXISTS,
             DeactivatedUserException: ERROR_DEACTIVATED_USER,
             BadSignature: BAD_TOKEN_SIGNATURE,
-            GroupInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
-            GroupInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
+            WorkspaceInvitationDoesNotExist: ERROR_GROUP_INVITATION_DOES_NOT_EXIST,
+            WorkspaceInvitationEmailMismatch: ERROR_GROUP_INVITATION_EMAIL_MISMATCH,
             DisabledSignupError: ERROR_DISABLED_SIGNUP,
             AuthProviderDisabled: ERROR_AUTH_PROVIDER_DISABLED,
         }
@@ -233,12 +233,17 @@ class UserView(APIView):
             else None
         )
 
+        # GroupDeprecation
+        token = data.get(
+            "workspace_invitation_token", data.get("group_invitation_token")
+        )
+
         user = action_type_registry.get(CreateUserActionType.type).do(
             name=data["name"],
             email=data["email"],
             password=data["password"],
             language=data["language"],
-            group_invitation_token=data.get("group_invitation_token"),
+            workspace_invitation_token=token,
             template=template,
         )
 
@@ -469,7 +474,7 @@ class DashboardView(APIView):
         operation_id="dashboard",
         description=(
             "Lists all the relevant user information that for example could be shown "
-            "on a dashboard. It will contain all the pending group invitations for "
+            "on a dashboard. It will contain all the pending workspace invitations for "
             "that user."
         ),
         responses={200: DashboardSerializer},
@@ -478,11 +483,14 @@ class DashboardView(APIView):
     def get(self, request):
         """Lists all the data related to the user dashboard page."""
 
-        group_invitations = GroupInvitation.objects.select_related(
-            "group", "invited_by"
+        workspace_invitations = WorkspaceInvitation.objects.select_related(
+            "workspace", "invited_by"
         ).filter(email=request.user.username)
         dashboard_serializer = DashboardSerializer(
-            {"group_invitations": group_invitations}
+            {
+                "workspace_invitations": workspace_invitations,
+                "group_invitations": workspace_invitations,  # GroupDeprecation
+            }
         )
         return Response(dashboard_serializer.data)
 

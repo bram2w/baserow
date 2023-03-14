@@ -31,7 +31,7 @@
             ></DashboardGroup>
             <div>
               <a
-                v-if="$hasPermission('create_group')"
+                v-if="$hasPermission('create_workspace')"
                 class="dashboard__create-link"
                 @click="$refs.createGroupModal.show()"
               >

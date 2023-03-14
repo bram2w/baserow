@@ -1,6 +1,6 @@
 from django.db.models import Q
 
-from baserow.core.object_scopes import GroupObjectScopeType
+from baserow.core.object_scopes import WorkspaceObjectScopeType
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 from baserow_enterprise.models import Team, TeamSubject
 
@@ -10,18 +10,18 @@ class TeamObjectScopeType(ObjectScopeType):
     model_class = Team
 
     def get_parent_scope(self):
-        return object_scope_type_registry.get("group")
+        return object_scope_type_registry.get("workspace")
 
     def get_parent(self, context):
-        return context.group
+        return context.workspace
 
     def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("workspace")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
 
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(workspace__in=[s.id for s in scopes])
 
         raise TypeError("The given type is not handled.")
 
@@ -37,12 +37,12 @@ class TeamSubjectObjectScopeType(ObjectScopeType):
         return context.team
 
     def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related("team", "team__group")
+        return self.get_base_queryset().prefetch_related("team", "team__workspace")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
 
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(team__group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(team__workspace__in=[s.id for s in scopes])
 
         if scope_type.type == TeamObjectScopeType.type:
             return Q(team__in=[s.id for s in scopes])

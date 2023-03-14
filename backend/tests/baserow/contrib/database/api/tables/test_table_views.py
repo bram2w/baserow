@@ -52,7 +52,7 @@ def test_list_tables(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
 
     response = api_client.delete(
-        reverse("api:groups:item", kwargs={"group_id": database.group.id}),
+        reverse("api:workspaces:item", kwargs={"workspace_id": database.workspace.id}),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -501,7 +501,7 @@ def test_async_duplicate_interesting_table(api_client, data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )
-    group_1 = data_fixture.create_group(user=user_1)
+    workspace_1 = data_fixture.create_workspace(user=user_1)
     _, token_2 = data_fixture.create_user_and_token(
         email="test_2@test.nl", password="password", first_name="Test2"
     )
@@ -509,15 +509,15 @@ def test_async_duplicate_interesting_table(api_client, data_fixture):
         email="test_3@test.nl",
         password="password",
         first_name="Test3",
-        group=group_1,
+        workspace=workspace_1,
     )
 
-    database = data_fixture.create_database_application(group=group_1)
+    database = data_fixture.create_database_application(workspace=workspace_1)
     table_1, _, _, _, context = setup_interesting_test_table(
         data_fixture, database=database, user=user_1
     )
 
-    # user_2 cannot duplicate a table of other groups
+    # user_2 cannot duplicate a table of other workspaces
     response = api_client.post(
         reverse("api:database:tables:async_duplicate", kwargs={"table_id": table_1.id}),
         format="json",
@@ -535,7 +535,7 @@ def test_async_duplicate_interesting_table(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
 
-    # user can duplicate an application created by other in the same group
+    # user can duplicate an application created by other in the same workspace
     response = api_client.post(
         reverse("api:database:tables:async_duplicate", kwargs={"table_id": table_1.id}),
         format="json",

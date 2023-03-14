@@ -743,9 +743,9 @@ def test_get_set_export_serialized_value_multiple_select_field(
     data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    imported_group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -793,9 +793,11 @@ def test_get_set_export_serialized_value_multiple_select_field(
     )
     assert len(SelectOption.objects.all()) == 3
 
-    exported_applications = core_handler.export_group_applications(group, BytesIO())
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    exported_applications = core_handler.export_workspace_applications(
+        workspace, BytesIO()
+    )
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]
@@ -847,8 +849,8 @@ def test_conversion_single_select_to_multiple_select_field(
     data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -956,8 +958,8 @@ def test_conversion_single_select_to_multiple_select_field(
 @pytest.mark.django_db
 def test_conversion_multiple_select_to_multiple_select_field(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
 
@@ -1169,8 +1171,8 @@ def test_conversion_number_to_multiple_select_field(
     data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -1286,8 +1288,8 @@ def test_conversion_number_to_multiple_select_field(
 @pytest.mark.django_db
 def test_conversion_email_to_multiple_select_field(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -1401,8 +1403,8 @@ def test_conversion_email_to_multiple_select_field(data_fixture):
 @pytest.mark.django_db
 def test_conversion_date_to_multiple_select_field(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -1831,8 +1833,8 @@ def test_convert_multiple_select_to_text_with_comma_and_quotes(data_fixture):
 @pytest.mark.django_db
 def test_conversion_to_multiple_select_field_with_select_options(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -1917,8 +1919,8 @@ def test_conversion_to_multiple_select_with_more_than_threshold_options_in_extra
     data_fixture,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -1993,8 +1995,8 @@ def test_conversion_to_multiple_select_with_more_than_threshold_options_provided
     data_fixture,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -2070,8 +2072,8 @@ def test_conversion_to_multiple_select_with_option_value_too_large(
     data_fixture,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -2137,8 +2139,8 @@ def test_conversion_to_multiple_select_with_same_option_value_on_same_row(
     data_fixture,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()

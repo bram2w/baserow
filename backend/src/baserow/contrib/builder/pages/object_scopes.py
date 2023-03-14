@@ -4,7 +4,10 @@ from django.db.models import Q
 
 from baserow.contrib.builder.object_scopes import BuilderObjectScopeType
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
+from baserow.core.object_scopes import (
+    ApplicationObjectScopeType,
+    WorkspaceObjectScopeType,
+)
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 from baserow.core.types import ContextObject
 
@@ -23,7 +26,7 @@ class BuilderPageObjectScopeType(ObjectScopeType):
         return self.get_base_queryset().prefetch_related("builder", "builder__group")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
+        if scope_type.type == WorkspaceObjectScopeType.type:
             return Q(builder__group__in=[s.id for s in scopes])
 
         if (

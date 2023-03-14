@@ -46,7 +46,7 @@ def test_batch_create_rows_token_no_create_permission(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     no_create_perm_token = TokenHandler().create_token(
-        user, table.database.group, "no permissions"
+        user, table.database.workspace, "no permissions"
     )
     TokenHandler().update_token_permissions(
         user, no_create_perm_token, False, True, True, True
@@ -66,7 +66,7 @@ def test_batch_create_rows_token_no_create_permission(api_client, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.api_rows
-def test_batch_create_rows_user_not_in_group(api_client, data_fixture):
+def test_batch_create_rows_user_not_in_workspace(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table()
     request_body = {
@@ -612,9 +612,9 @@ def test_batch_create_rows_dependent_fields(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_create_rows_num_of_queries(api_client, data_fixture):
-    group = data_fixture.create_group()
-    user, jwt_token = data_fixture.create_user_and_token(group=group)
-    user2 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user, jwt_token = data_fixture.create_user_and_token(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
     table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
     # number field updating another table through link & formula
@@ -808,7 +808,7 @@ def test_batch_update_rows_token_no_update_permission(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     no_update_perm_token = TokenHandler().create_token(
-        user, table.database.group, "no permissions"
+        user, table.database.workspace, "no permissions"
     )
     TokenHandler().update_token_permissions(
         user, no_update_perm_token, True, True, False, True
@@ -828,7 +828,7 @@ def test_batch_update_rows_token_no_update_permission(api_client, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.api_rows
-def test_batch_update_rows_user_not_in_group(api_client, data_fixture):
+def test_batch_update_rows_user_not_in_workspace(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table()
     request_body = {
@@ -1663,9 +1663,9 @@ def test_batch_create_rows_dependent_fields_lookup(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.api_rows
 def test_batch_update_rows_num_of_queries(api_client, data_fixture):
-    group = data_fixture.create_group()
-    user, jwt_token = data_fixture.create_user_and_token(group=group)
-    user2 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user, jwt_token = data_fixture.create_user_and_token(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
     table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
     # number field updating another table through link & formula
@@ -1873,7 +1873,7 @@ def test_batch_delete_rows_token_no_delete_permission(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     no_create_perm_token = TokenHandler().create_token(
-        user, table.database.group, "no permissions"
+        user, table.database.workspace, "no permissions"
     )
     TokenHandler().update_token_permissions(
         user, no_create_perm_token, True, True, True, False
@@ -1893,7 +1893,7 @@ def test_batch_delete_rows_token_no_delete_permission(api_client, data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.api_rows
-def test_batch_delete_rows_user_not_in_group(api_client, data_fixture):
+def test_batch_delete_rows_user_not_in_workspace(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table()
     request_body = {"items": [22]}

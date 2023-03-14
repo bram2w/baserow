@@ -72,9 +72,9 @@ def test_import_export_grid_view_w_decorator(data_fixture):
 
 @pytest.mark.django_db
 def test_field_type_changed_w_decoration(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     text_field = data_fixture.create_text_field(table=table)
     option_field = data_fixture.create_single_select_field(
@@ -241,11 +241,11 @@ def test_create_single_select_color_with_premium_license(premium_data_fixture):
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_create_single_select_color_without_premium_license(premium_data_fixture):
-    group = premium_data_fixture.create_group()
-    database = premium_data_fixture.create_database_application(group=group)
+    workspace = premium_data_fixture.create_workspace()
+    database = premium_data_fixture.create_database_application(workspace=workspace)
     table = premium_data_fixture.create_database_table(database=database)
     user = premium_data_fixture.create_user(
-        has_active_premium_license=False, group=group
+        has_active_premium_license=False, workspace=workspace
     )
     grid_view = premium_data_fixture.create_grid_view(user=user, table=table)
 
@@ -271,16 +271,16 @@ def test_create_single_select_color_without_premium_license(premium_data_fixture
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_single_select_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_single_select_color_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [grid_view.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [grid_view.table.database.workspace.id]
     )
     handler.create_decoration(
         view=grid_view,
@@ -290,7 +290,7 @@ def test_create_single_select_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
@@ -347,16 +347,16 @@ def test_create_conditional_color_without_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_conditional_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_conditional_color_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [grid_view.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [grid_view.table.database.workspace.id]
     )
     handler.create_decoration(
         view=grid_view,
@@ -366,7 +366,7 @@ def test_create_conditional_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,

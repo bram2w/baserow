@@ -33,8 +33,8 @@ class CreateUserActionType(ActionType):
         user_email: str
         auth_provider_id: int
         auth_provider_type: str
-        group_id: Optional[int] = None
-        group_name: Optional[str] = ""
+        workspace_id: Optional[int] = None
+        workspace_name: Optional[str] = ""
         with_invitation_token: bool = False
         template_id: Optional[int] = None
 
@@ -45,7 +45,7 @@ class CreateUserActionType(ActionType):
         email: str,
         password: str,
         language: str,
-        group_invitation_token: Optional[str] = None,
+        workspace_invitation_token: Optional[str] = None,
         template: Optional[Template] = None,
         auth_provider: Optional[AuthProviderModel] = None,
     ) -> AbstractUser:
@@ -56,8 +56,8 @@ class CreateUserActionType(ActionType):
         :param email: The email address of the user.
         :param password: The password of the user.
         :param language: The language of the user.
-        :param group_invitation_token: The group invitation token that will be used to
-            add the user to a group.
+        :param workspace_invitation_token: The workspace invitation token that will be
+            used to add the user to a workspace.
         :param template: The template that will be used to create the user.
         :param auth_provider: The auth provider that will be used to create the user.
 
@@ -72,15 +72,15 @@ class CreateUserActionType(ActionType):
             email,
             password,
             language,
-            group_invitation_token,
+            workspace_invitation_token,
             template,
             auth_provider=auth_provider,
         )
 
-        group_id, group_name = None, None
-        if user.default_group:
-            group_id = user.default_group.id
-            group_name = user.default_group.name
+        workspace_id, workspace_name = None, None
+        if user.default_workspace:
+            workspace_id = user.default_workspace.id
+            workspace_name = user.default_workspace.name
 
         cls.register_action(
             user=user,
@@ -89,13 +89,13 @@ class CreateUserActionType(ActionType):
                 user.email,
                 auth_provider.id,
                 auth_provider_type_registry.get_by_model(auth_provider).type,
-                group_id,
-                group_name,
-                group_invitation_token is not None,
+                workspace_id,
+                workspace_name,
+                workspace_invitation_token is not None,
                 template.id if template else None,
             ),
             scope=cls.scope(),
-            group=user.default_group,
+            workspace=user.default_workspace,
         )
         return user
 

@@ -93,6 +93,7 @@ def test_create_webhooks(api_client, data_fixture):
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
+    print(response.json())
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
 

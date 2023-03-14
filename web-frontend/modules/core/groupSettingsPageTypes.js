@@ -80,7 +80,11 @@ export class InvitesGroupSettingsPageType extends GroupSettingsPageType {
    * invitations table by checking their `group.list_invitations` permission.
    */
   hasPermission(group) {
-    return this.app.$hasPermission('group.list_invitations', group, group.id)
+    return this.app.$hasPermission(
+      'workspace.list_invitations',
+      group,
+      group.id
+    )
   }
 
   getRoute(group) {

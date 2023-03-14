@@ -1,5 +1,5 @@
-from baserow.core.operations import GroupCoreOperationType
+from baserow.core.operations import WorkspaceCoreOperationType
 
 
-class RunAirtableImportJobOperationType(GroupCoreOperationType):
-    type = "group.run_airtable_import"
+class RunAirtableImportJobOperationType(WorkspaceCoreOperationType):
+    type = "workspace.run_airtable_import"

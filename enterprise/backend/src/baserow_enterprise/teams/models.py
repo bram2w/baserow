@@ -4,26 +4,32 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.core.mixins import CreatedAndUpdatedOnMixin, TrashableModelMixin
-from baserow.core.models import Group
+from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
+    GroupToWorkspaceCompatModelMixin,
+    TrashableModelMixin,
+)
+from baserow.core.models import Workspace
 from baserow_enterprise.role.models import RoleAssignment
 from baserow_enterprise.teams.mixins import ParentTeamTrashableModelMixin
 
 
-class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
+class Team(
+    TrashableModelMixin, CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin
+):
     """
     Represents a collection of `Subject` (`User`, `Team`), in a
-    single group, which are grouped together under a common name.
+    single workspace, which are grouped together under a common name.
     """
 
     name = models.CharField(
         max_length=160, help_text="A human friendly name for this team."
     )
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         related_name="teams",
         on_delete=models.CASCADE,
-        help_text="The group that this team belongs to.",
+        help_text="The workspace that this team belongs to.",
     )
     role_assignments = GenericRelation(
         RoleAssignment,
@@ -33,7 +39,7 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
     )
 
     class Meta:
-        unique_together = [["name", "group"]]
+        unique_together = [["name", "workspace"]]
         ordering = (
             "name",
             "id",
@@ -60,7 +66,7 @@ class Team(TrashableModelMixin, CreatedAndUpdatedOnMixin):
         from baserow_enterprise.role.handler import RoleAssignmentHandler
 
         role_assignment = RoleAssignmentHandler().get_current_role_assignment(
-            self, self.group
+            self, self.workspace
         )
         if role_assignment:
             return role_assignment.role.uid

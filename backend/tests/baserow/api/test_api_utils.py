@@ -14,7 +14,7 @@ from baserow.api.utils import (
     validate_data,
     validate_data_custom_fields,
 )
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     Instance,
@@ -57,12 +57,12 @@ class TemporaryInstance(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance)
 
 class TemporaryInstanceType1(TemporaryInstance):
     type = "temporary_1"
-    model_class = Group
+    model_class = Workspace
 
 
 class TemporaryInstanceType2(TemporaryInstance):
     type = "temporary_2"
-    model_class = Group
+    model_class = Workspace
     serializer_field_names = ["name"]
     serializer_field_overrides = {"name": serializers.IntegerField()}
 
@@ -361,16 +361,16 @@ def test_validate_data_custom_fields():
 
 @pytest.mark.django_db
 def test_get_serializer_class(data_fixture):
-    group = data_fixture.create_group(name="Group 1")
+    workspace = data_fixture.create_workspace(name="Group 1")
 
-    group_serializer = get_serializer_class(Group, ["name"])(group)
-    assert group_serializer.data == {"name": "Group 1"}
-    assert group_serializer.__class__.__name__ == "GroupSerializer"
+    workspace_serializer = get_serializer_class(Workspace, ["name"])(workspace)
+    assert workspace_serializer.data == {"name": "Group 1"}
+    assert workspace_serializer.__class__.__name__ == "WorkspaceSerializer"
 
-    group_serializer_2 = get_serializer_class(
-        Group, ["id", "name"], {"id": CharField()}
-    )(group)
-    assert group_serializer_2.data == {"id": str(group.id), "name": "Group 1"}
+    workspace_serializer_2 = get_serializer_class(
+        Workspace, ["id", "name"], {"id": CharField()}
+    )(workspace)
+    assert workspace_serializer_2.data == {"id": str(workspace.id), "name": "Group 1"}
 
 
 @override_settings(DEBUG=False)

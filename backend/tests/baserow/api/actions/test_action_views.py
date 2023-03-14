@@ -9,8 +9,8 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_409_CO
 from baserow.api.actions.serializers import UndoRedoResultCodeField
 from baserow.contrib.database.fields.models import NumberField, TextField
 from baserow.core.action.models import Action
-from baserow.core.actions import CreateGroupActionType
-from baserow.core.models import Group
+from baserow.core.actions import CreateWorkspaceActionType
+from baserow.core.models import Workspace
 from baserow.test_utils.helpers import independent_test_db_connection
 
 User = get_user_model()
@@ -57,15 +57,15 @@ def test_can_undo_an_action_and_get_correct_response_code(api_client, data_fixtu
 
     same_session_id = "test"
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
         HTTP_CLIENTSESSIONID=same_session_id,
     )
-    group_id = response.json()["id"]
+    workspace_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group_id).exists()
+    assert Workspace.objects.filter(id=workspace_id).exists()
 
     response = api_client.patch(
         reverse("api:user:undo"),
@@ -75,13 +75,13 @@ def test_can_undo_an_action_and_get_correct_response_code(api_client, data_fixtu
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert not Group.objects.filter(id=group_id).exists()
+    assert not Workspace.objects.filter(id=workspace_id).exists()
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             }
         ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
@@ -97,15 +97,15 @@ def test_undoing_an_action_which_fails_returns_correct_result_code(
 
     same_session_id = "test"
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
         HTTP_CLIENTSESSIONID=same_session_id,
     )
-    group_id = response.json()["id"]
+    workspace_id = response.json()["id"]
 
-    Group.objects.filter(id=group_id).delete()
+    Workspace.objects.filter(id=workspace_id).delete()
 
     response = api_client.patch(
         reverse("api:user:undo"),
@@ -119,8 +119,8 @@ def test_undoing_an_action_which_fails_returns_correct_result_code(
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             }
         ],
         "result_code": UndoRedoResultCodeField.SKIPPED_DUE_TO_ERROR,
@@ -168,15 +168,15 @@ def test_can_redo_an_action_and_get_correct_response_code(api_client, data_fixtu
 
     same_session_id = "test"
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
         HTTP_CLIENTSESSIONID=same_session_id,
     )
-    group_id = response.json()["id"]
+    workspace_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group_id).exists()
+    assert Workspace.objects.filter(id=workspace_id).exists()
 
     api_client.patch(
         reverse("api:user:undo"),
@@ -186,7 +186,7 @@ def test_can_redo_an_action_and_get_correct_response_code(api_client, data_fixtu
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert not Group.objects.filter(id=group_id).exists()
+    assert not Workspace.objects.filter(id=workspace_id).exists()
 
     response = api_client.patch(
         reverse("api:user:redo"),
@@ -196,14 +196,14 @@ def test_can_redo_an_action_and_get_correct_response_code(api_client, data_fixtu
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert Group.objects.filter(id=group_id).exists()
+    assert Workspace.objects.filter(id=workspace_id).exists()
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             }
         ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
@@ -219,13 +219,13 @@ def test_redoing_an_action_which_fails_returns_correct_result_code(
 
     same_session_id = "test"
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
         HTTP_CLIENTSESSIONID=same_session_id,
     )
-    group_id = response.json()["id"]
+    workspace_id = response.json()["id"]
 
     api_client.patch(
         reverse("api:user:undo"),
@@ -235,7 +235,7 @@ def test_redoing_an_action_which_fails_returns_correct_result_code(
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    Group.objects_and_trash.filter(id=group_id).delete()
+    Workspace.objects_and_trash.filter(id=workspace_id).delete()
 
     response = api_client.patch(
         reverse("api:user:redo"),
@@ -249,8 +249,8 @@ def test_redoing_an_action_which_fails_returns_correct_result_code(
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             }
         ],
         "result_code": UndoRedoResultCodeField.SKIPPED_DUE_TO_ERROR,
@@ -268,7 +268,7 @@ def test_can_undo_an_action_group_and_get_correct_response_code(
     same_action_group = str(uuid.uuid4())
 
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -276,12 +276,12 @@ def test_can_undo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group,
     )
     assert response.status_code == HTTP_200_OK
-    group1_id = response.json()["id"]
+    workspace1_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group1_id).exists()
+    assert Workspace.objects.filter(id=workspace1_id).exists()
 
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 2"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -289,11 +289,11 @@ def test_can_undo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group,
     )
     assert response.status_code == HTTP_200_OK
-    group2_id = response.json()["id"]
+    workspace2_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group2_id).exists()
+    assert Workspace.objects.filter(id=workspace2_id).exists()
 
-    # the undo should delete both groups
+    # the undo should delete both workspaces
     response = api_client.patch(
         reverse("api:user:undo"),
         {"scopes": {"root": True}},
@@ -302,17 +302,17 @@ def test_can_undo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert not Group.objects.filter(id__in=[group1_id, group2_id]).exists()
+    assert not Workspace.objects.filter(id__in=[workspace1_id, workspace2_id]).exists()
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             },
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             },
         ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
@@ -330,7 +330,7 @@ def test_can_redo_an_action_group_and_get_correct_response_code(
     same_action_group_id = str(uuid.uuid4())
 
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -338,12 +338,12 @@ def test_can_redo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group_id,
     )
     assert response.status_code == HTTP_200_OK
-    group1_id = response.json()["id"]
+    workspace1_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group1_id).exists()
+    assert Workspace.objects.filter(id=workspace1_id).exists()
 
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 2"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -351,9 +351,9 @@ def test_can_redo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTUNDOREDOACTIONGROUPID=same_action_group_id,
     )
     assert response.status_code == HTTP_200_OK
-    group2_id = response.json()["id"]
+    workspace2_id = response.json()["id"]
 
-    assert Group.objects.filter(id=group2_id).exists()
+    assert Workspace.objects.filter(id=workspace2_id).exists()
 
     api_client.patch(
         reverse("api:user:undo"),
@@ -363,9 +363,9 @@ def test_can_redo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert Group.objects.count() == 0
+    assert Workspace.objects.count() == 0
 
-    # the redo should recreate both groups
+    # the redo should recreate both workspaces
     response = api_client.patch(
         reverse("api:user:redo"),
         {"scopes": {"root": True}},
@@ -374,18 +374,18 @@ def test_can_redo_an_action_group_and_get_correct_response_code(
         HTTP_CLIENTSESSIONID=same_session_id,
     )
 
-    assert Group.objects.filter(id=group1_id).exists()
-    assert Group.objects.filter(id=group2_id).exists()
+    assert Workspace.objects.filter(id=workspace1_id).exists()
+    assert Workspace.objects.filter(id=workspace2_id).exists()
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         "actions": [
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             },
             {
-                "action_scope": CreateGroupActionType.scope(),
-                "action_type": CreateGroupActionType.type,
+                "action_scope": CreateWorkspaceActionType.scope(),
+                "action_type": CreateWorkspaceActionType.type,
             },
         ],
         "result_code": UndoRedoResultCodeField.SUCCESS,
@@ -401,7 +401,7 @@ def test_invalid_undo_redo_action_group_header_raise_error(api_client, data_fixt
     action_group = "invalid_header_should_be_uuid4"
 
     response = api_client.post(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         {"name": "Test 1"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",

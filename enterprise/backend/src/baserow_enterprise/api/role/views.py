@@ -19,11 +19,11 @@ from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GRO
 from baserow.api.schemas import get_error_schema
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
-    GroupDoesNotExist,
-    LastAdminOfGroup,
+    LastAdminOfWorkspace,
     ObjectScopeTypeDoesNotExist,
     SubjectTypeNotExist,
-    UserNotInGroup,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import object_scope_type_registry
@@ -68,16 +68,16 @@ class RoleAssignmentsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The group in which the role assignment takes place.",
+                description="The workspace in which the role assignment takes place.",
             ),
         ],
         tags=["Role assignments"],
         operation_id="assign_role",
         description=(
-            "You can assign a role to a subject into the given group for the given "
+            "You can assign a role to a subject into the given workspace for the given "
             "scope with this endpoint. If you want to remove the role you can "
             "omit the role property."
         ),
@@ -105,15 +105,15 @@ class RoleAssignmentsView(APIView):
     )
     @map_exceptions(
         {
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
             SubjectTypeNotExist: ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
             SubjectUnsupported: ERROR_SUBJECT_TYPE_UNSUPPORTED,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             RoleNotExist: ERROR_ROLE_DOES_NOT_EXIST,
-            LastAdminOfGroup: ERROR_LAST_ADMIN_OF_GROUP,
+            LastAdminOfWorkspace: ERROR_LAST_ADMIN_OF_GROUP,
         }
     )
     @validate_body(CreateRoleAssignmentSerializer, return_validated=True)
@@ -121,12 +121,12 @@ class RoleAssignmentsView(APIView):
     def post(
         self,
         request: Request,
-        group_id: int,
+        workspace_id: int,
         data,
     ) -> Response:
         """Assign or remove a role to the user on the given scope."""
 
-        group = CoreHandler().get_group(group_id)
+        workspace = CoreHandler().get_workspace(workspace_id)
 
         role = data.get("role", None)
         subject = data.get("subject", None)
@@ -139,7 +139,7 @@ class RoleAssignmentsView(APIView):
         ).do(
             request.user,
             new_role_assignments,
-            group,
+            workspace,
         )
 
         role_assignment = roles_assignments[0]
@@ -153,10 +153,10 @@ class RoleAssignmentsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The group in which the role assignments are related to.",
+                description="The workspace in which the role assignments are related to.",
             ),
             OpenApiParameter(
                 name="scope_id",
@@ -176,9 +176,9 @@ class RoleAssignmentsView(APIView):
         tags=["Role assignments"],
         operation_id="list_role_assignments",
         description=(
-            "You can list the role assignments within a group, optionally filtered down"
-            "to a specific scope inside of that group. If the scope isn't specified,"
-            "the group will be considered the scope."
+            "You can list the role assignments within a workspace, optionally filtered down"
+            "to a specific scope inside of that workspace. If the scope isn't specified,"
+            "the workspace will be considered the scope."
         ),
         request=GetRoleAssignmentsQueryParametersSerializer,
         responses={
@@ -200,8 +200,8 @@ class RoleAssignmentsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             ScopeNotExist: ERROR_SCOPE_DOES_NOT_EXIST,
             ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
         }
@@ -212,25 +212,25 @@ class RoleAssignmentsView(APIView):
     def get(
         self,
         request: Request,
-        group_id: int,
+        workspace_id: int,
         query_params: Dict[str, Any],
     ) -> Response:
 
-        group = CoreHandler().get_group(group_id)
-        scope = query_params.get("scope", group)
+        workspace = CoreHandler().get_workspace(workspace_id)
+        scope = query_params.get("scope", workspace)
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, request.user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(RBAC, request.user, workspace)
 
         scope_type = object_scope_type_registry.get_by_model(scope)
         CoreHandler().check_permissions(
             request.user,
             ROLE_ASSIGNABLE_OBJECT_MAP[scope_type.type]["READ"],
-            group=group,
+            workspace=workspace,
             context=scope,
         )
 
         role_assignments = RoleAssignmentHandler().get_role_assignments(
-            group, scope=scope
+            workspace, scope=scope
         )
 
         return Response(RoleAssignmentSerializer(role_assignments, many=True).data)
@@ -242,16 +242,16 @@ class BatchRoleAssignmentsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The group in which the role assignment takes place.",
+                description="The workspace in which the role assignment takes place.",
             ),
         ],
         tags=["Role assignments"],
         operation_id="batch_assign_role",
         description=(
-            "You can assign a role to a multiple subjects into the given group for "
+            "You can assign a role to a multiple subjects into the given workspace for "
             "the given scopes with this endpoint. If you want to remove the role you "
             "can omit the role property."
         ),
@@ -279,8 +279,8 @@ class BatchRoleAssignmentsView(APIView):
     )
     @map_exceptions(
         {
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ObjectScopeTypeDoesNotExist: ERROR_OBJECT_SCOPE_TYPE_DOES_NOT_EXIST,
             SubjectTypeNotExist: ERROR_SUBJECT_TYPE_DOES_NOT_EXIST,
             SubjectNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
@@ -297,7 +297,7 @@ class BatchRoleAssignmentsView(APIView):
     def post(
         self,
         request: Request,
-        group_id: int,
+        workspace_id: int,
         data,
     ) -> Response:
         """
@@ -307,7 +307,7 @@ class BatchRoleAssignmentsView(APIView):
 
         data = data.get("items", [])
         user = request.user
-        group = CoreHandler().get_group(group_id)
+        workspace = CoreHandler().get_workspace(workspace_id)
 
         _, duplicates = unique_dicts_in_list(
             data, unique_fields=["subject_id", "subject_type", "scope_id", "scope_type"]
@@ -325,7 +325,7 @@ class BatchRoleAssignmentsView(APIView):
         ).do(
             user,
             new_role_assignments,
-            group,
+            workspace,
         )
 
         response = [

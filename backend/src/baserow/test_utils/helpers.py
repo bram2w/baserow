@@ -23,7 +23,7 @@ from baserow.contrib.database.models import Database
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import ActionType
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 
 User = get_user_model()
 
@@ -77,12 +77,12 @@ def setup_interesting_test_table(
     user2 = User.objects.filter(
         email="user2@example.com"
     ).first() or data_fixture.create_user(
-        group=database.group, email="user2@example.com"
+        workspace=database.workspace, email="user2@example.com"
     )
     user3 = User.objects.filter(
         email="user3@example.com"
     ).first() or data_fixture.create_user(
-        group=database.group, email="user3@example.com"
+        workspace=database.workspace, email="user3@example.com"
     )
     table = data_fixture.create_database_table(
         database=database, user=user, name=name or "interesting_test_table"
@@ -362,7 +362,7 @@ def setup_interesting_test_table(
 def setup_interesting_test_database(
     data_fixture,
     user: Optional[AbstractUser] = None,
-    group: Optional[Group] = None,
+    workspace: Optional[Workspace] = None,
     database: Optional[Database] = None,
     name: Optional[str] = None,
     user_kwargs=None,
@@ -372,7 +372,7 @@ def setup_interesting_test_database(
 
     user = user or data_fixture.create_user(**user_kwargs)
     database = database or data_fixture.create_database_application(
-        user=user, group=group, name=name
+        user=user, workspace=workspace, name=name
     )
 
     for table_name in ["A", "B", "C"]:

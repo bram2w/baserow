@@ -7,7 +7,7 @@ Baserow consists of two main components:
 1. The **backend** is a Python Django application that exposes a REST API. This is the
    core of Baserow and it does not have a user interface. The [API spec](../apis/api.md) can
    be found here. The persistent state is stored in a PostgreSQL database.
-1. The **web frontend** is an application that serves as a user interface for the
+2. The **web frontend** is an application that serves as a user interface for the
    backend and is made in [NuxtJS](https://nuxtjs.org/) and
    [Vue.js](https://vuejs.org/). It communicates to the backend via the REST API.
    
@@ -19,7 +19,7 @@ The backend consists of the **core**, **api** and **database** apps. The package
 contains base settings that can be extended. The REST API is written as a decoupled
 component which is not required to run Baserow. It is highly recommended though. The
 same goes for the database app, which is written as a plugin for Baserow. Without it you
-would only have the core which has functionality like authentication, groups and the
+would only have the core which has functionality like authentication, workspaces and the
 application abstraction.
 
 ### Handlers
@@ -30,7 +30,7 @@ around these handlers which are doing the actual job. The reason why we choose t
 this way is that if we ever want to implement a Web Socket API, SOAP API or any other
 API we can also build that around the same handler. That way we never have to write code
 twice. It is also useful for when you want to do something via the command line. If you
-for example want to create a new group you can do the following.
+for example want to create a new workspace you can do the following.
 
 ```python
 from django.contrib.auth import get_user_model
@@ -38,7 +38,7 @@ from baserow.core.handler import CoreHandler
 
 User = get_user_model()
 user = User.objects.get(pk=1)
-group = CoreHandler().create_group(user, name='Example group')
+workspace = CoreHandler().create_workspace(user, name='Example workspace')
 ```
 
 ## Web frontend
@@ -56,21 +56,21 @@ http://localhost:8000/style-guide.
 
 ## Concepts
 
-### Groups
+### Workspaces
 
-A group can contain multiple applications. It can be used to define a company, and it is
-possible to invite additional users to a group. Every user in the group has access to
-all the applications within that group. Live collaboration allows users to immediately
-see changes made by others without having to refresh the page. Groups can easily be
+A workspace can contain multiple applications. It can be used to define a company, and it is
+possible to invite additional users to a workspace. Every user in the workspace has access to
+all the applications within that workspace. Live collaboration allows users to immediately
+see changes made by others without having to refresh the page. Workspaces can easily be
 created, edited and deleted via the `baserow.core.handler.CoreHandler`
 and via the REST API.
 
 ### Applications
 
-An application is more of an abstraction that can be added to a group. By default the
+An application is more of an abstraction that can be added to a workspace. By default the
 database plugin is included which contains the database application. Via the
 "create new" button in the sidebar a new application instance can be created for the
-selected group. When clicked you will see a context menu with all the application types.
+selected workspace. When clicked you will see a context menu with all the application types.
 Plugins can introduce new application types. Applications can easily be created, edited
 and deleted via the `baserow.core.handler.CoreHandler` and via the REST API.
 

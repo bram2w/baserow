@@ -11,89 +11,89 @@ class UpdateSettingsOperationType(CoreOperationType):
     type = "settings.update"
 
 
-class CreateGroupOperationType(CoreOperationType):
-    type = "create_group"
+class CreateWorkspaceOperationType(CoreOperationType):
+    type = "create_workspace"
 
 
-class ListGroupsOperationType(CoreOperationType):
-    type = "list_groups"
-    object_scope_name = "group"
+class ListWorkspacesOperationType(CoreOperationType):
+    type = "list_workspaces"
+    object_scope_name = "workspace"
 
 
-class GroupCoreOperationType(CoreOperationType, ABC):
-    context_scope_name = "group"
+class WorkspaceCoreOperationType(CoreOperationType, ABC):
+    context_scope_name = "workspace"
 
 
-class ReadGroupOperationType(GroupCoreOperationType):
-    type = "group.read"
+class ReadWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.read"
 
 
-class UpdateGroupOperationType(GroupCoreOperationType):
-    type = "group.update"
+class UpdateWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.update"
 
 
-class DeleteGroupOperationType(GroupCoreOperationType):
-    type = "group.delete"
+class DeleteWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.delete"
 
 
-class RestoreGroupOperationType(GroupCoreOperationType):
-    type = "group.restore"
+class RestoreWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.restore"
 
 
-class ListApplicationsGroupOperationType(GroupCoreOperationType):
-    type = "group.list_applications"
+class ListApplicationsWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.list_applications"
     object_scope_name = "application"
 
 
-class CreateApplicationsGroupOperationType(GroupCoreOperationType):
-    type = "group.create_application"
+class CreateApplicationsWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.create_application"
 
 
-class OrderApplicationsOperationType(GroupCoreOperationType):
-    type = "group.order_applications"
+class OrderApplicationsOperationType(WorkspaceCoreOperationType):
+    type = "workspace.order_applications"
     object_scope_name = "application"
 
 
-class CreateInvitationsGroupOperationType(GroupCoreOperationType):
-    type = "group.create_invitation"
+class CreateInvitationsWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.create_invitation"
 
 
-class ListInvitationsGroupOperationType(GroupCoreOperationType):
-    type = "group.list_invitations"
-    object_scope_name = "group_invitation"
+class ListInvitationsWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.list_invitations"
+    object_scope_name = "workspace_invitation"
 
 
-class ListGroupUsersGroupOperationType(GroupCoreOperationType):
-    type = "group.list_group_users"
-    object_scope_name = "group_user"
+class ListWorkspaceUsersWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.list_workspace_users"
+    object_scope_name = "workspace_user"
 
 
-class InvitationGroupOperationType(CoreOperationType, ABC):
-    context_scope_name = "group_invitation"
+class InvitationWorkspaceOperationType(CoreOperationType, ABC):
+    context_scope_name = "workspace_invitation"
 
 
-class ReadInvitationGroupOperationType(InvitationGroupOperationType):
+class ReadInvitationWorkspaceOperationType(InvitationWorkspaceOperationType):
     type = "invitation.read"
 
 
-class UpdateGroupInvitationType(InvitationGroupOperationType):
+class UpdateWorkspaceInvitationType(InvitationWorkspaceOperationType):
     type = "invitation.update"
 
 
-class DeleteGroupInvitationOperationType(InvitationGroupOperationType):
+class DeleteWorkspaceInvitationOperationType(InvitationWorkspaceOperationType):
     type = "invitation.delete"
 
 
-class GroupUserOperationType(OperationType, ABC):
-    context_scope_name = "group_user"
+class WorkspaceUserOperationType(OperationType, ABC):
+    context_scope_name = "workspace_user"
 
 
-class UpdateGroupUserOperationType(GroupUserOperationType):
-    type = "group_user.update"
+class UpdateWorkspaceUserOperationType(WorkspaceUserOperationType):
+    type = "workspace_user.update"
 
 
-class DeleteGroupUserOperationType(GroupUserOperationType):
-    type = "group_user.delete"
+class DeleteWorkspaceUserOperationType(WorkspaceUserOperationType):
+    type = "workspace_user.delete"
 
 
 class ApplicationOperationType(OperationType, ABC):

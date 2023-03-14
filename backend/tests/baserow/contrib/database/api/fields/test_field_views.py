@@ -32,8 +32,8 @@ def test_list_fields(api_client, data_fixture):
     field_3 = data_fixture.create_number_field(table=table_1, order=2)
     data_fixture.create_boolean_field(table=table_2, order=1)
 
-    token = TokenHandler().create_token(user, table_1.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table_1.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table_1.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table_1.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(
         user, wrong_token, False, False, False, True
     )
@@ -84,7 +84,7 @@ def test_list_fields(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=table_1.database.group)
+    data_fixture.create_template(workspace=table_1.database.workspace)
     url = reverse("api:database:fields:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -115,8 +115,8 @@ def test_list_fields(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            "api:groups:item",
-            kwargs={"group_id": table_1.database.group.id},
+            "api:workspaces:item",
+            kwargs={"workspace_id": table_1.database.workspace.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
@@ -156,8 +156,8 @@ def test_create_field(api_client, data_fixture):
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, True, True, True)
 
     # Test operation with JWT token
@@ -312,8 +312,8 @@ def test_get_field(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            "api:groups:item",
-            kwargs={"group_id": table.database.group.id},
+            "api:workspaces:item",
+            kwargs={"workspace_id": table.database.workspace.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -790,7 +790,7 @@ def test_async_duplicate_field(api_client, data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )
-    group_1 = data_fixture.create_group(user=user_1)
+    workspace_1 = data_fixture.create_workspace(user=user_1)
     _, token_2 = data_fixture.create_user_and_token(
         email="test_2@test.nl", password="password", first_name="Test2"
     )
@@ -798,10 +798,10 @@ def test_async_duplicate_field(api_client, data_fixture):
         email="test_3@test.nl",
         password="password",
         first_name="Test3",
-        group=group_1,
+        workspace=workspace_1,
     )
 
-    database = data_fixture.create_database_application(group=group_1)
+    database = data_fixture.create_database_application(workspace=workspace_1)
     table_1, _, _, _, context = setup_interesting_test_table(
         data_fixture, database=database, user=user_1
     )
@@ -810,7 +810,7 @@ def test_async_duplicate_field(api_client, data_fixture):
     original_field_count = field_set.count()
     primary_field = field_set.get(primary=True)
 
-    # user cannot duplicate a field if not belonging to the same group
+    # user cannot duplicate a field if not belonging to the same workspace
     response = api_client.post(
         reverse(
             "api:database:fields:async_duplicate", kwargs={"field_id": primary_field.id}
@@ -830,7 +830,7 @@ def test_async_duplicate_field(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_FIELD_DOES_NOT_EXIST"
 
-    # user can duplicate a field created by other in the same group
+    # user can duplicate a field created by other in the same workspace
     response = api_client.post(
         reverse(
             "api:database:fields:async_duplicate", kwargs={"field_id": primary_field.id}

@@ -66,7 +66,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .errors import ERROR_GRID_DOES_NOT_EXIST
@@ -184,7 +184,7 @@ class GridViewView(APIView):
         operation_id="list_database_table_grid_view_rows",
         description=(
             "Lists the requested rows of the view's table related to the provided "
-            "`view_id` if the authorized user has access to the database's group. "
+            "`view_id` if the authorized user has access to the database's workspace. "
             "The response is paginated either by a limit/offset or page/size style. "
             "The style depends on the provided GET parameters. The properties of the "
             "returned rows depends on which fields the table has. For a complete "
@@ -220,7 +220,7 @@ class GridViewView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
@@ -244,11 +244,11 @@ class GridViewView(APIView):
         view = view_handler.get_view_as_user(request.user, view_id, GridView)
         view_type = view_type_registry.get_by_model(view)
 
-        group = view.table.database.group
+        workspace = view.table.database.workspace
         CoreHandler().check_permissions(
             request.user,
             ListRowsDatabaseTableOperationType.type,
-            group=group,
+            workspace=workspace,
             context=view.table,
             allow_if_template=True,
         )
@@ -331,7 +331,7 @@ class GridViewView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
         }
     )
@@ -346,7 +346,7 @@ class GridViewView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ListRowsDatabaseTableOperationType.type,
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
             context=view.table,
         )
 
@@ -420,7 +420,7 @@ class GridViewFieldAggregationsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
         }
     )
@@ -524,7 +524,7 @@ class GridViewFieldAggregationView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
             FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
@@ -730,7 +730,7 @@ class PublicGridViewRowsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_GRID_DOES_NOT_EXIST,
             OrderByFieldNotFound: ERROR_ORDER_BY_FIELD_NOT_FOUND,
             OrderByFieldNotPossible: ERROR_ORDER_BY_FIELD_NOT_POSSIBLE,

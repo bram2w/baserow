@@ -8,7 +8,7 @@ from baserow_premium.license.handler import LicenseHandler
 from baserow.api.sessions import get_user_remote_addr_ip
 from baserow.core.action.registries import ActionType
 from baserow.core.action.signals import ActionCommandType
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow_enterprise.features import AUDIT_LOG
 
 from .models import AuditLogEntry
@@ -23,11 +23,11 @@ class AuditLogHandler:
         action_params: Dict[str, Any],
         action_timestamp: datetime,
         action_command_type: ActionCommandType,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         **kwargs: Any,
     ):
         """
-        Creates a new audit log entry for the given user, group and event type.
+        Creates a new audit log entry for the given user, workspace and event type.
         The kwargs will be stored as JSON in the data field of the audit log
         entry.
 
@@ -38,25 +38,25 @@ class AuditLogHandler:
         :param action_timestamp: The timestamp when the action was performed.
         :param action_command_type: The command type that was used to perform
             the action.
-        :param group: The group that the action was performed on.
+        :param workspace: The workspace that the action was performed on.
         :raises FeaturesNotAvailableError: When the AUDIT_LOG feature is not
             available.
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(AUDIT_LOG, user)
 
-        group_id, group_name = None, None
-        if group is not None:
-            group_id = group.id
-            group_name = group.name
+        workspace_id, workspace_name = None, None
+        if workspace is not None:
+            workspace_id = workspace.id
+            workspace_name = workspace.name
 
         ip_address = get_user_remote_addr_ip(user)
 
         return AuditLogEntry.objects.create(
             user_id=user.id,
             user_email=user.email,
-            group_id=group_id,
-            group_name=group_name,
+            workspace_id=workspace_id,
+            workspace_name=workspace_name,
             action_type=action_type.type,
             action_params=action_params,
             action_timestamp=action_timestamp,

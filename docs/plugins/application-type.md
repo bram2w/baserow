@@ -1,10 +1,10 @@
 # Application type
 
-An application is an abstraction that a user can add to group. More information about 
+An application is an abstraction that a user can add to workspace. More information about 
 this can be found in the [introduction](../technical/introduction.md). This is a
 tutorial about how you can add your own application to Baserow via a plugin. We are 
 going to create a text file application. In the end a user can use the "Create new" 
-button to create a text file and add it to a group. We expect that you are using the
+button to create a text file and add it to a workspace. We expect that you are using the
 [plugin boilerplate](./boilerplate.md).
 
 ## Backend

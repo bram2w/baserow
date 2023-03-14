@@ -1,5 +1,6 @@
 from django.apps import AppConfig
 from django.conf import settings
+from django.db.models import Q
 from django.db.models.signals import post_migrate
 
 
@@ -15,17 +16,20 @@ class CoreConfig(AppConfig):
         from baserow.core.trash.trash_types import (
             ApplicationTrashableItemType,
             GroupTrashableItemType,
+            WorkspaceTrashableItemType,
         )
 
-        trash_item_type_registry.register(GroupTrashableItemType())
+        trash_item_type_registry.register(WorkspaceTrashableItemType())
         trash_item_type_registry.register(ApplicationTrashableItemType())
+        # GroupDeprecation
+        trash_item_type_registry.register(GroupTrashableItemType())
 
         from baserow.core.permission_manager import (
             BasicPermissionManagerType,
             CorePermissionManagerType,
-            GroupMemberOnlyPermissionManagerType,
             StaffOnlyPermissionManagerType,
             StaffOnlySettingOperationPermissionManagerType,
+            WorkspaceMemberOnlyPermissionManagerType,
         )
         from baserow.core.registries import (
             object_scope_type_registry,
@@ -37,7 +41,7 @@ class CoreConfig(AppConfig):
         permission_manager_type_registry.register(StaffOnlyPermissionManagerType())
         permission_manager_type_registry.register(BasicPermissionManagerType())
         permission_manager_type_registry.register(
-            GroupMemberOnlyPermissionManagerType()
+            WorkspaceMemberOnlyPermissionManagerType()
         )
         permission_manager_type_registry.register(
             StaffOnlySettingOperationPermissionManagerType()
@@ -46,18 +50,18 @@ class CoreConfig(AppConfig):
         from .object_scopes import (
             ApplicationObjectScopeType,
             CoreObjectScopeType,
-            GroupInvitationObjectScopeType,
-            GroupObjectScopeType,
-            GroupUserObjectScopeType,
+            WorkspaceInvitationObjectScopeType,
+            WorkspaceObjectScopeType,
+            WorkspaceUserObjectScopeType,
         )
         from .snapshots.object_scopes import SnapshotObjectScopeType
 
         object_scope_type_registry.register(CoreObjectScopeType())
         object_scope_type_registry.register(ApplicationObjectScopeType())
-        object_scope_type_registry.register(GroupObjectScopeType())
-        object_scope_type_registry.register(GroupInvitationObjectScopeType())
+        object_scope_type_registry.register(WorkspaceObjectScopeType())
+        object_scope_type_registry.register(WorkspaceInvitationObjectScopeType())
         object_scope_type_registry.register(SnapshotObjectScopeType())
-        object_scope_type_registry.register(GroupUserObjectScopeType())
+        object_scope_type_registry.register(WorkspaceUserObjectScopeType())
 
         from baserow.core.registries import subject_type_registry
 
@@ -67,29 +71,29 @@ class CoreConfig(AppConfig):
         subject_type_registry.register(AnonymousUserSubjectType())
 
         from .operations import (
-            CreateApplicationsGroupOperationType,
-            CreateGroupOperationType,
-            CreateInvitationsGroupOperationType,
+            CreateApplicationsWorkspaceOperationType,
+            CreateInvitationsWorkspaceOperationType,
+            CreateWorkspaceOperationType,
             DeleteApplicationOperationType,
-            DeleteGroupInvitationOperationType,
-            DeleteGroupOperationType,
-            DeleteGroupUserOperationType,
+            DeleteWorkspaceInvitationOperationType,
+            DeleteWorkspaceOperationType,
+            DeleteWorkspaceUserOperationType,
             DuplicateApplicationOperationType,
-            ListApplicationsGroupOperationType,
-            ListGroupsOperationType,
-            ListGroupUsersGroupOperationType,
-            ListInvitationsGroupOperationType,
+            ListApplicationsWorkspaceOperationType,
+            ListInvitationsWorkspaceOperationType,
+            ListWorkspacesOperationType,
+            ListWorkspaceUsersWorkspaceOperationType,
             OrderApplicationsOperationType,
             ReadApplicationOperationType,
-            ReadGroupOperationType,
-            ReadInvitationGroupOperationType,
+            ReadInvitationWorkspaceOperationType,
+            ReadWorkspaceOperationType,
             RestoreApplicationOperationType,
-            RestoreGroupOperationType,
+            RestoreWorkspaceOperationType,
             UpdateApplicationOperationType,
-            UpdateGroupInvitationType,
-            UpdateGroupOperationType,
-            UpdateGroupUserOperationType,
             UpdateSettingsOperationType,
+            UpdateWorkspaceInvitationType,
+            UpdateWorkspaceOperationType,
+            UpdateWorkspaceUserOperationType,
         )
         from .snapshots.operations import (
             CreateSnapshotApplicationOperationType,
@@ -99,27 +103,27 @@ class CoreConfig(AppConfig):
         )
         from .trash.operations import (
             EmptyApplicationTrashOperationType,
-            EmptyGroupTrashOperationType,
+            EmptyWorkspaceTrashOperationType,
             ReadApplicationTrashOperationType,
-            ReadGroupTrashOperationType,
+            ReadWorkspaceTrashOperationType,
         )
 
-        operation_type_registry.register(CreateApplicationsGroupOperationType())
-        operation_type_registry.register(CreateGroupOperationType())
-        operation_type_registry.register(CreateInvitationsGroupOperationType())
-        operation_type_registry.register(DeleteGroupInvitationOperationType())
-        operation_type_registry.register(DeleteGroupOperationType())
-        operation_type_registry.register(ListApplicationsGroupOperationType())
-        operation_type_registry.register(ListInvitationsGroupOperationType())
-        operation_type_registry.register(ReadInvitationGroupOperationType())
-        operation_type_registry.register(ListGroupsOperationType())
-        operation_type_registry.register(UpdateGroupInvitationType())
-        operation_type_registry.register(ReadGroupOperationType())
-        operation_type_registry.register(UpdateGroupOperationType())
-        operation_type_registry.register(ListGroupUsersGroupOperationType())
+        operation_type_registry.register(CreateApplicationsWorkspaceOperationType())
+        operation_type_registry.register(CreateWorkspaceOperationType())
+        operation_type_registry.register(CreateInvitationsWorkspaceOperationType())
+        operation_type_registry.register(DeleteWorkspaceInvitationOperationType())
+        operation_type_registry.register(DeleteWorkspaceOperationType())
+        operation_type_registry.register(ListApplicationsWorkspaceOperationType())
+        operation_type_registry.register(ListInvitationsWorkspaceOperationType())
+        operation_type_registry.register(ReadInvitationWorkspaceOperationType())
+        operation_type_registry.register(ListWorkspacesOperationType())
+        operation_type_registry.register(UpdateWorkspaceInvitationType())
+        operation_type_registry.register(ReadWorkspaceOperationType())
+        operation_type_registry.register(UpdateWorkspaceOperationType())
+        operation_type_registry.register(ListWorkspaceUsersWorkspaceOperationType())
         operation_type_registry.register(OrderApplicationsOperationType())
-        operation_type_registry.register(UpdateGroupUserOperationType())
-        operation_type_registry.register(DeleteGroupUserOperationType())
+        operation_type_registry.register(UpdateWorkspaceUserOperationType())
+        operation_type_registry.register(DeleteWorkspaceUserOperationType())
         operation_type_registry.register(UpdateApplicationOperationType())
         operation_type_registry.register(DuplicateApplicationOperationType())
         operation_type_registry.register(DeleteApplicationOperationType())
@@ -128,49 +132,49 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(DeleteApplicationSnapshotOperationType())
         operation_type_registry.register(ListSnapshotsApplicationOperationType())
         operation_type_registry.register(RestoreApplicationSnapshotOperationType())
-        operation_type_registry.register(ReadGroupTrashOperationType())
+        operation_type_registry.register(ReadWorkspaceTrashOperationType())
         operation_type_registry.register(ReadApplicationTrashOperationType())
         operation_type_registry.register(EmptyApplicationTrashOperationType())
-        operation_type_registry.register(EmptyGroupTrashOperationType())
+        operation_type_registry.register(EmptyWorkspaceTrashOperationType())
         operation_type_registry.register(RestoreApplicationOperationType())
-        operation_type_registry.register(RestoreGroupOperationType())
+        operation_type_registry.register(RestoreWorkspaceOperationType())
         operation_type_registry.register(ReadApplicationOperationType())
 
         from baserow.core.actions import (
-            AcceptGroupInvitationActionType,
+            AcceptWorkspaceInvitationActionType,
             CreateApplicationActionType,
-            CreateGroupActionType,
-            CreateGroupInvitationActionType,
+            CreateWorkspaceActionType,
+            CreateWorkspaceInvitationActionType,
             DeleteApplicationActionType,
-            DeleteGroupActionType,
-            DeleteGroupInvitationActionType,
+            DeleteWorkspaceActionType,
+            DeleteWorkspaceInvitationActionType,
             DuplicateApplicationActionType,
             InstallTemplateActionType,
-            LeaveGroupActionType,
+            LeaveWorkspaceActionType,
             OrderApplicationsActionType,
-            OrderGroupsActionType,
-            RejectGroupInvitationActionType,
+            OrderWorkspacesActionType,
+            RejectWorkspaceInvitationActionType,
             UpdateApplicationActionType,
-            UpdateGroupActionType,
-            UpdateGroupInvitationActionType,
+            UpdateWorkspaceActionType,
+            UpdateWorkspaceInvitationActionType,
         )
 
-        action_type_registry.register(CreateGroupActionType())
-        action_type_registry.register(DeleteGroupActionType())
-        action_type_registry.register(UpdateGroupActionType())
-        action_type_registry.register(OrderGroupsActionType())
+        action_type_registry.register(CreateWorkspaceActionType())
+        action_type_registry.register(DeleteWorkspaceActionType())
+        action_type_registry.register(UpdateWorkspaceActionType())
+        action_type_registry.register(OrderWorkspacesActionType())
         action_type_registry.register(CreateApplicationActionType())
         action_type_registry.register(UpdateApplicationActionType())
         action_type_registry.register(DeleteApplicationActionType())
         action_type_registry.register(OrderApplicationsActionType())
         action_type_registry.register(DuplicateApplicationActionType())
         action_type_registry.register(InstallTemplateActionType())
-        action_type_registry.register(CreateGroupInvitationActionType())
-        action_type_registry.register(DeleteGroupInvitationActionType())
-        action_type_registry.register(AcceptGroupInvitationActionType())
-        action_type_registry.register(RejectGroupInvitationActionType())
-        action_type_registry.register(UpdateGroupInvitationActionType())
-        action_type_registry.register(LeaveGroupActionType())
+        action_type_registry.register(CreateWorkspaceInvitationActionType())
+        action_type_registry.register(DeleteWorkspaceInvitationActionType())
+        action_type_registry.register(AcceptWorkspaceInvitationActionType())
+        action_type_registry.register(RejectWorkspaceInvitationActionType())
+        action_type_registry.register(UpdateWorkspaceInvitationActionType())
+        action_type_registry.register(LeaveWorkspaceActionType())
 
         from baserow.core.snapshots.actions import (
             CreateSnapshotActionType,
@@ -212,12 +216,12 @@ class CoreConfig(AppConfig):
 
         from baserow.core.action.scopes import (
             ApplicationActionScopeType,
-            GroupActionScopeType,
             RootActionScopeType,
+            WorkspaceActionScopeType,
         )
 
         action_scope_registry.register(RootActionScopeType())
-        action_scope_registry.register(GroupActionScopeType())
+        action_scope_registry.register(WorkspaceActionScopeType())
         action_scope_registry.register(ApplicationActionScopeType())
 
         from baserow.core.jobs.registries import job_type_registry
@@ -270,10 +274,21 @@ def sync_operations_after_migrate(sender, **kwargs):
         except LookupError:
             print("Skipping operation creation as Operation model does not exist.")
         else:
+            # Pluck out the `type` from each registered operation type.
             from baserow.core.registries import operation_type_registry
 
-            print("Creating all operations...")
-            all_operation_types = [
-                Operation(name=o.type) for o in operation_type_registry.get_all()
-            ]
-            Operation.objects.bulk_create(all_operation_types, ignore_conflicts=True)
+            all_operation_types = [o.type for o in operation_type_registry.get_all()]
+
+            # Create all the operations that are registered in the registry.
+            operations = [Operation(name=optype) for optype in all_operation_types]
+            inserted_count = Operation.objects.bulk_create(
+                operations, ignore_conflicts=True
+            )
+            print(f"Created {len(inserted_count)} operations...")
+
+            # Delete any existing operations which aren't in the registry.
+            _, deletions = Operation.objects.filter(
+                ~Q(name__in=all_operation_types)
+            ).delete()
+            ops_deleted = deletions.get("core.Operation", 0)
+            print(f"Deleted {ops_deleted} un-registered operations...")

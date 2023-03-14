@@ -18,7 +18,7 @@
       </template>
       <template #header-right-side>
         <div
-          v-if="$hasPermission('group.create_invitation', group, group.id)"
+          v-if="$hasPermission('workspace.create_invitation', group, group.id)"
           class="button margin-left-2 button--large"
           @click="$refs.inviteModal.show()"
         >

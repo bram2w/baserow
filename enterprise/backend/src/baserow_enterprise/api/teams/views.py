@@ -16,7 +16,7 @@ from baserow.api.mixins import SearchableViewMixin, SortableViewMixin
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace, WorkspaceDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 from baserow_enterprise.api.errors import (
@@ -80,10 +80,10 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="Lists all teams in a given group.",
+                description="Lists all teams in a given workspace.",
             ),
             OpenApiParameter(
                 name="search",
@@ -99,30 +99,30 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
             ),
         ],
         tags=["Teams"],
-        operation_id="list_teams",
-        description=("Lists all teams in a given group."),
+        operation_id="workspace_list_teams",
+        description=("Lists all teams in a given workspace."),
         responses={
             200: TeamResponseSerializer(many=True),
             404: get_error_schema(["ERROR_GROUP_DOES_NOT_EXIST"]),
         },
     )
-    @map_exceptions({GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST})
+    @map_exceptions({WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST})
     @validate_query_parameters(GetTeamsViewParamsSerializer)
-    def get(self, request, group_id: int, query_params):
-        """Responds with a list of teams in a specific group."""
+    def get(self, request, workspace_id: int, query_params):
+        """Responds with a list of teams in a specific workspace."""
 
         search = query_params.get("search")
         sorts = query_params.get("sorts")
 
-        group = CoreHandler().get_group(group_id)
+        workspace = CoreHandler().get_workspace(workspace_id)
         CoreHandler().check_permissions(
             request.user,
             ListTeamsOperationType.type,
-            group=group,
-            context=group,
+            workspace=workspace,
+            context=workspace,
         )
 
-        teams = TeamHandler().list_teams_in_group(request.user, group)
+        teams = TeamHandler().list_teams_in_workspace(request.user, workspace)
         teams = self.apply_search(search, teams)
         teams = self.apply_sorts_or_default_sort(sorts, teams)
 
@@ -132,7 +132,7 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
     @extend_schema(
         parameters=[CLIENT_SESSION_ID_SCHEMA_PARAMETER],
         tags=["Teams"],
-        operation_id="create_team",
+        operation_id="workspace_create_team",
         description=("Creates a new team."),
         request=TeamSerializer,
         responses={
@@ -157,9 +157,9 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             RoleUnsupported: ERROR_ROLE_DOES_NOT_EXIST,
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             TeamNameNotUnique: ERROR_TEAM_NAME_NOT_UNIQUE,
             TeamSubjectBadRequest: ERROR_SUBJECT_BAD_REQUEST,
             TeamSubjectDoesNotExist: ERROR_SUBJECT_DOES_NOT_EXIST,
@@ -169,15 +169,15 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
     )
     @transaction.atomic
     @validate_body(TeamSerializer)
-    def post(self, request, group_id: int, data):
+    def post(self, request, workspace_id: int, data):
         """Creates a new team for a user."""
 
-        group = CoreHandler().get_group(group_id)
+        workspace = CoreHandler().get_workspace(workspace_id)
         CoreHandler().check_permissions(
             request.user,
             CreateTeamOperationType.type,
-            group=group,
-            context=group,
+            workspace=workspace,
+            context=workspace,
         )
 
         default_role = data.get("default_role", NO_ACCESS_ROLE_UID)
@@ -185,7 +185,7 @@ class TeamsView(APIView, SearchableViewMixin, SortableViewMixin):
             default_role = RoleAssignmentHandler().get_role_by_uid(default_role)
 
         team = action_type_registry.get_by_type(CreateTeamActionType).do(
-            request.user, data["name"], group, data["subjects"], default_role
+            request.user, data["name"], workspace, data["subjects"], default_role
         )
         return Response(TeamResponseSerializer(team).data)
 
@@ -218,7 +218,7 @@ class TeamView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ReadTeamOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=team,
         )
 
@@ -253,7 +253,7 @@ class TeamView(APIView):
     @validate_body(TeamSerializer)
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             RoleUnsupported: ERROR_ROLE_DOES_NOT_EXIST,
             TeamNameNotUnique: ERROR_TEAM_NAME_NOT_UNIQUE,
             TeamDoesNotExist: ERROR_TEAM_DOES_NOT_EXIST,
@@ -262,13 +262,13 @@ class TeamView(APIView):
         }
     )
     def put(self, request, data, team_id: int):
-        """Updates the team if the user belongs to the group."""
+        """Updates the team if the user belongs to the workspace."""
 
         team = TeamHandler().get_team_for_update(request.user, team_id)
         CoreHandler().check_permissions(
             request.user,
             UpdateTeamOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=team,
         )
 
@@ -296,7 +296,7 @@ class TeamView(APIView):
         operation_id="delete_team",
         description=(
             "Deletes a team if the authorized user is in the team's "
-            "group. All the related children (e.g. subjects) are also going to be deleted."
+            "workspace. All the related children (e.g. subjects) are also going to be deleted."
         ),
         responses={
             204: None,
@@ -312,19 +312,19 @@ class TeamView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TeamDoesNotExist: ERROR_TEAM_DOES_NOT_EXIST,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, team_id: int):
-        """Deletes an existing team if the user belongs to the group."""
+        """Deletes an existing team if the user belongs to the workspace."""
 
         team = TeamHandler().get_team_for_update(request.user, team_id)
         CoreHandler().check_permissions(
             request.user,
             DeleteTeamOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=team,
         )
 
@@ -357,7 +357,7 @@ class TeamSubjectsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ListTeamSubjectsOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=team,
         )
 
@@ -402,7 +402,7 @@ class TeamSubjectsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             CreateTeamSubjectOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=team,
         )
 
@@ -453,7 +453,7 @@ class TeamSubjectView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ReadTeamSubjectOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=subject,
         )
 
@@ -479,7 +479,7 @@ class TeamSubjectView(APIView):
         tags=["Teams"],
         operation_id="delete_subject",
         description=(
-            "Deletes a subject if the authorized user is in the team's group."
+            "Deletes a subject if the authorized user is in the team's workspace."
         ),
         responses={
             204: None,
@@ -498,7 +498,7 @@ class TeamSubjectView(APIView):
     )
     @transaction.atomic
     def delete(self, request, team_id: int, subject_id: int):
-        """Deletes an existing team subject if the user belongs to the group."""
+        """Deletes an existing team subject if the user belongs to the workspace."""
 
         team = TeamHandler().get_team(request.user, team_id)
         subject = TeamHandler().get_subject_for_update(subject_id, team)
@@ -506,7 +506,7 @@ class TeamSubjectView(APIView):
         CoreHandler().check_permissions(
             request.user,
             DeleteTeamSubjectOperationType.type,
-            group=team.group,
+            workspace=team.workspace,
             context=subject,
         )
 

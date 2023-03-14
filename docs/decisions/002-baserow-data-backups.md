@@ -63,7 +63,7 @@ tables in a "related" fashion without using actual FK's, after a restore they co
 very odd results.
 
 Finally, this method also means we could need to come up with our own custom script to
-find all the tables/groups of tables to back-up, loop over them running pg_dump many
+find all the tables/workspaces of tables to back-up, loop over them running pg_dump many
 times, and then somehow combine the resulting SQL scripts and store them. It also means
 we can't use pg_dump's built in non SQL script output formats it provides, like the
 custom compressed format or the directory format, as we need to stitch together

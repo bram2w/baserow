@@ -11,7 +11,7 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.core.exceptions import PermissionDenied, UserNotInGroup
+from baserow.core.exceptions import PermissionDenied, UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.ws.registries import PageType
 
@@ -35,10 +35,10 @@ class TablePageType(PageType):
             CoreHandler().check_permissions(
                 user,
                 ListenToAllDatabaseTableEventsOperationType.type,
-                group=table.database.group,
+                workspace=table.database.workspace,
                 context=table,
             )
-        except (UserNotInGroup, TableDoesNotExist, PermissionDenied):
+        except (UserNotInWorkspace, TableDoesNotExist, PermissionDenied):
             return False
 
         return True

@@ -25,11 +25,11 @@ from baserow.contrib.database.models import (
 from baserow.contrib.database.views.models import GridViewFieldOptions
 from baserow.core.exceptions import (
     BaseURLHostnameNotAllowed,
-    GroupInvitationDoesNotExist,
-    GroupInvitationEmailMismatch,
+    WorkspaceInvitationDoesNotExist,
+    WorkspaceInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     DisabledSignupError,
@@ -100,10 +100,10 @@ def test_create_user(data_fixture):
         assert user.username == "test@test.nl"
         assert user.profile.language == "en"
 
-        assert Group.objects.all().count() == 1
-        group = Group.objects.all().first()
-        assert group.users.filter(id=user.id).count() == 1
-        assert group.name == "Test1's group"
+        assert Workspace.objects.all().count() == 1
+        workspace = Workspace.objects.all().first()
+        assert workspace.users.filter(id=user.id).count() == 1
+        assert workspace.name == "Test1's workspace"
 
         assert Database.objects.all().count() == 1
         assert Table.objects.all().count() == 2
@@ -133,14 +133,16 @@ def test_create_user(data_fixture):
         assert model_2_results[2].order == Decimal("3.00000000000000000000")
         assert model_2_results[3].order == Decimal("4.00000000000000000000")
 
-        plugin_mock.user_created.assert_called_with(user, group, None, None)
+        plugin_mock.user_created.assert_called_with(user, workspace, None, None)
 
         # Test profile properties
         user2 = user_handler.create_user(
             "Test2", "test2@test.nl", "password", language="fr"
         )
         assert user2.profile.language == "fr"
-        assert Group.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
+        assert (
+            Workspace.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
+        )
 
         with pytest.raises(UserAlreadyExist):
             user_handler.create_user("Test1", "test@test.nl", valid_password)
@@ -204,64 +206,64 @@ def test_create_user_with_invitation(data_fixture):
         user_handler = UserHandler()
         core_handler = CoreHandler()
 
-        invitation = data_fixture.create_group_invitation(email="test0@test.nl")
-        signer = core_handler.get_group_invitation_signer()
+        invitation = data_fixture.create_workspace_invitation(email="test0@test.nl")
+        signer = core_handler.get_workspace_invitation_signer()
 
         with pytest.raises(BadSignature):
             user_handler.create_user(
                 "Test1",
                 "test0@test.nl",
                 valid_password,
-                group_invitation_token="INVALID",
+                workspace_invitation_token="INVALID",
             )
 
-        with pytest.raises(GroupInvitationDoesNotExist):
+        with pytest.raises(WorkspaceInvitationDoesNotExist):
             user_handler.create_user(
                 "Test1",
                 "test0@test.nl",
                 valid_password,
-                group_invitation_token=signer.dumps(99999),
+                workspace_invitation_token=signer.dumps(99999),
             )
 
-        with pytest.raises(GroupInvitationEmailMismatch):
+        with pytest.raises(WorkspaceInvitationEmailMismatch):
             user_handler.create_user(
                 "Test1",
                 "test1@test.nl",
                 valid_password,
-                group_invitation_token=signer.dumps(invitation.id),
+                workspace_invitation_token=signer.dumps(invitation.id),
             )
 
         data_fixture.update_settings(
-            allow_new_signups=False, allow_signups_via_group_invitations=False
+            allow_new_signups=False, allow_signups_via_workspace_invitations=False
         )
         with pytest.raises(DisabledSignupError):
             user_handler.create_user(
                 "Test1",
                 "test0@test.nl",
                 valid_password,
-                group_invitation_token=signer.dumps(invitation.id),
+                workspace_invitation_token=signer.dumps(invitation.id),
             )
 
         data_fixture.update_settings(
-            allow_new_signups=False, allow_signups_via_group_invitations=True
+            allow_new_signups=False, allow_signups_via_workspace_invitations=True
         )
         user = user_handler.create_user(
             "Test1",
             "test0@test.nl",
             valid_password,
-            group_invitation_token=signer.dumps(invitation.id),
+            workspace_invitation_token=signer.dumps(invitation.id),
         )
 
-        assert Group.objects.all().count() == 1
-        assert Group.objects.all().first().id == invitation.group_id
-        assert GroupUser.objects.all().count() == 2
+        assert Workspace.objects.all().count() == 1
+        assert Workspace.objects.all().first().id == invitation.workspace_id
+        assert WorkspaceUser.objects.all().count() == 2
 
         plugin_mock.user_created.assert_called_once()
         args = plugin_mock.user_created.call_args
         assert args[0][0] == user
-        assert args[0][1].id == invitation.group_id
+        assert args[0][1].id == invitation.workspace_id
         assert args[0][2].email == invitation.email
-        assert args[0][2].group_id == invitation.group_id
+        assert args[0][2].workspace_id == invitation.workspace_id
 
         # We do not expect any initial data to have been created.
         assert Database.objects.all().count() == 0
@@ -281,8 +283,8 @@ def test_create_user_with_template(data_fixture):
         "Test1", "test0@test.nl", valid_password, template=template
     )
 
-    assert Group.objects.all().count() == 2
-    assert GroupUser.objects.all().count() == 1
+    assert Workspace.objects.all().count() == 2
+    assert WorkspaceUser.objects.all().count() == 1
     # We expect the example template to be installed
     assert Database.objects.all().count() == 1
     assert Database.objects.all().first().name == "Event marketing"
@@ -475,7 +477,7 @@ def test_cancel_user_deletion(data_fixture, mailoutbox):
 
 
 @pytest.mark.django_db(transaction=False)
-def test_delete_expired_users_and_related_groups_if_last_admin(
+def test_delete_expired_users_and_related_workspaces_if_last_admin(
     data_fixture, mailoutbox, django_capture_on_commit_callbacks
 ):
     user1 = data_fixture.create_user(email="test1@localhost", to_be_deleted=True)
@@ -516,31 +518,39 @@ def test_delete_expired_users_and_related_groups_if_last_admin(
     )
 
     # Only one deleted admin
-    groupuser1 = data_fixture.create_user_group(user=user1)
+    workspaceuser1 = data_fixture.create_user_workspace(user=user1)
 
     # With two admins that are going to be deleted and one user
-    groupuser1_2 = data_fixture.create_user_group(user=user1)
-    groupuser5_2 = data_fixture.create_user_group(user=user5, group=groupuser1_2.group)
-    groupuser3 = data_fixture.create_user_group(
-        user=user3, permissions="MEMBER", group=groupuser1_2.group
+    workspaceuser1_2 = data_fixture.create_user_workspace(user=user1)
+    workspaceuser5_2 = data_fixture.create_user_workspace(
+        user=user5, workspace=workspaceuser1_2.workspace
+    )
+    workspaceuser3 = data_fixture.create_user_workspace(
+        user=user3, permissions="MEMBER", workspace=workspaceuser1_2.workspace
     )
 
     # With two admins but one non active and we delete the other
-    groupuser1_3 = data_fixture.create_user_group(user=user1)
-    groupuser6 = data_fixture.create_user_group(user=user6, group=groupuser1_3.group)
+    workspaceuser1_3 = data_fixture.create_user_workspace(user=user1)
+    workspaceuser6 = data_fixture.create_user_workspace(
+        user=user6, workspace=workspaceuser1_3.workspace
+    )
 
     # Only one non deleted admin
-    groupuser2 = data_fixture.create_user_group(user=user2)
+    workspaceuser2 = data_fixture.create_user_workspace(user=user2)
 
     # Only one admin non deleted and with a deleted user
-    groupuser4 = data_fixture.create_user_group(user=user4)
-    groupuser5 = data_fixture.create_user_group(
-        user=user5, permissions="MEMBER", group=groupuser4.group
+    workspaceuser4 = data_fixture.create_user_workspace(user=user4)
+    workspaceuser5 = data_fixture.create_user_workspace(
+        user=user5, permissions="MEMBER", workspace=workspaceuser4.workspace
     )
 
     # One deleted admin with normal user
-    groupuser4_2 = data_fixture.create_user_group(user=user4, permissions="MEMBER")
-    groupuser5_3 = data_fixture.create_user_group(user=user5, group=groupuser4_2.group)
+    workspaceuser4_2 = data_fixture.create_user_workspace(
+        user=user4, permissions="MEMBER"
+    )
+    workspaceuser5_3 = data_fixture.create_user_workspace(
+        user=user5, workspace=workspaceuser4_2.workspace
+    )
 
     handler = UserHandler()
 
@@ -557,7 +567,7 @@ def test_delete_expired_users_and_related_groups_if_last_admin(
 
     with freeze_time("2020-01-07 12:00"):
         with django_capture_on_commit_callbacks(execute=True):
-            handler.delete_expired_users_and_related_groups_if_last_admin(
+            handler.delete_expired_users_and_related_workspaces_if_last_admin(
                 grace_delay=datetime.timedelta(days=3)
             )
 
@@ -570,14 +580,14 @@ def test_delete_expired_users_and_related_groups_if_last_admin(
     assert user4.id in user_ids
     assert user6.id in user_ids
 
-    group_ids = Group.objects.values_list("pk", flat=True)
-    assert len(group_ids) == 3
-    assert groupuser1.group.id not in group_ids
-    assert groupuser1_2.group.id not in group_ids
-    assert groupuser1_3.group.id in group_ids
-    assert groupuser2.group.id in group_ids
-    assert groupuser4.group.id in group_ids
-    assert groupuser4_2.group.id not in group_ids
+    workspace_ids = Workspace.objects.values_list("pk", flat=True)
+    assert len(workspace_ids) == 3
+    assert workspaceuser1.workspace.id not in workspace_ids
+    assert workspaceuser1_2.workspace.id not in workspace_ids
+    assert workspaceuser1_3.workspace.id in workspace_ids
+    assert workspaceuser2.workspace.id in workspace_ids
+    assert workspaceuser4.workspace.id in workspace_ids
+    assert workspaceuser4_2.workspace.id not in workspace_ids
 
     end_table_names = sorted(connection.introspection.table_names())
 

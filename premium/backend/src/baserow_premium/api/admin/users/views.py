@@ -53,7 +53,7 @@ class UsersAdminView(AdminListingView):
 
     def get_queryset(self, request):
         return User.objects.prefetch_related(
-            "groupuser_set", "groupuser_set__group"
+            "workspaceuser_set", "workspaceuser_set__workspace"
         ).all()
 
     @extend_schema(

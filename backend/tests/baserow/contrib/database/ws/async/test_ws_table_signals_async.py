@@ -4,7 +4,7 @@ from channels.testing import WebsocketCommunicator
 
 from baserow.config.asgi import application
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from tests.baserow.contrib.database.utils import received_message
 
 
@@ -15,11 +15,11 @@ def use_async_event_loop_here(async_event_loop):
 
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
-async def test_unsubscribe_subject_from_table_group_user_deleted(data_fixture):
-    group_owner = data_fixture.create_user()
+async def test_unsubscribe_subject_from_table_workspace_user_deleted(data_fixture):
+    workspace_owner = data_fixture.create_user()
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=group_owner, members=[user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=workspace_owner, members=[user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     # Establish websocket connection and subscribe to table
@@ -34,9 +34,9 @@ async def test_unsubscribe_subject_from_table_group_user_deleted(data_fixture):
     await communicator.send_json_to({"page": "table", "table_id": table.id})
     await communicator.receive_json_from()
 
-    # Kick user from group
-    await sync_to_async(CoreHandler().delete_group_user)(
-        group_owner, GroupUser.objects.get(user=user, group=group)
+    # Kick user from workspace
+    await sync_to_async(CoreHandler().delete_workspace_user)(
+        workspace_owner, WorkspaceUser.objects.get(user=user, workspace=workspace)
     )
 
     # Make sure the user has been un-subscribed

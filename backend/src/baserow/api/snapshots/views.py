@@ -28,7 +28,7 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
     ApplicationOperationNotSupported,
-    UserNotInGroup,
+    UserNotInWorkspace,
 )
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.snapshots.actions import DeleteSnapshotActionType
@@ -70,7 +70,7 @@ class SnapshotsView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, application_id):
@@ -119,7 +119,7 @@ class SnapshotsView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaximumSnapshotsReached: ERROR_MAXIMUM_SNAPSHOTS_REACHED,
             ApplicationOperationNotSupported: ERROR_APPLICATION_OPERATION_NOT_SUPPORTED,
             SnapshotIsBeingCreated: ERROR_SNAPSHOT_IS_BEING_CREATED,
@@ -156,7 +156,7 @@ class RestoreSnapshotView(APIView):
         operation_id="restore_snapshot",
         description=(
             "Restores a snapshot. When an application snapshot is restored, "
-            "a new application will be created in the same group that the original "
+            "a new application will be created in the same workspace that the original "
             "application was placed in with the name of the snapshot and data that were"
             " in the original application at the time the snapshot was taken. "
             "The original application that the snapshot was taken from is unaffected. "
@@ -181,7 +181,7 @@ class RestoreSnapshotView(APIView):
     @map_exceptions(
         {
             SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ApplicationOperationNotSupported: ERROR_APPLICATION_OPERATION_NOT_SUPPORTED,
             SnapshotIsBeingRestored: ERROR_SNAPSHOT_IS_BEING_RESTORED,
             SnapshotIsBeingDeleted: ERROR_SNAPSHOT_IS_BEING_DELETED,
@@ -238,7 +238,7 @@ class SnapshotView(APIView):
     @map_exceptions(
         {
             SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ApplicationOperationNotSupported: ERROR_APPLICATION_OPERATION_NOT_SUPPORTED,
             SnapshotIsBeingRestored: ERROR_SNAPSHOT_IS_BEING_RESTORED,
             SnapshotIsBeingDeleted: ERROR_SNAPSHOT_IS_BEING_DELETED,

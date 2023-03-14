@@ -7,7 +7,7 @@ from django.db import connection
 from psycopg2 import sql
 
 from baserow.core.action.registries import action_type_registry
-from baserow.core.actions import AcceptGroupInvitationActionType
+from baserow.core.actions import AcceptWorkspaceInvitationActionType
 from baserow.core.auth_provider.auth_provider_types import AuthProviderType
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
 from baserow.core.auth_provider.models import AuthProviderModel
@@ -31,7 +31,7 @@ class UserInfo:
     email: str
     name: str
     language: Optional[str] = None
-    group_invitation_token: Optional[str] = None
+    workspace_invitation_token: Optional[str] = None
 
 
 class AuthProviderHandler:
@@ -154,12 +154,12 @@ class AuthProviderHandler:
 
             action_type_registry.get(SignInUserActionType.type).do(user, auth_provider)
 
-            if user_info.group_invitation_token:
+            if user_info.workspace_invitation_token:
                 core_handler = CoreHandler()
-                invitation = core_handler.get_group_invitation_by_token(
-                    user_info.group_invitation_token
+                invitation = core_handler.get_workspace_invitation_by_token(
+                    user_info.workspace_invitation_token
                 )
-                action_type_registry.get(AcceptGroupInvitationActionType.type).do(
+                action_type_registry.get(AcceptWorkspaceInvitationActionType.type).do(
                     user, invitation
                 )
 
@@ -170,7 +170,7 @@ class AuthProviderHandler:
                 email=user_info.email,
                 password=None,
                 language=user_info.language,
-                group_invitation_token=user_info.group_invitation_token,
+                workspace_invitation_token=user_info.workspace_invitation_token,
                 auth_provider=auth_provider,
             )
             created = True

@@ -58,7 +58,7 @@ def broadcast_to_users(
 @app.task(bind=True)
 def broadcast_to_permitted_users(
     self,
-    group_id: int,
+    workspace_id: int,
     operation_type: str,
     scope_name: str,
     scope_id: int,
@@ -70,7 +70,7 @@ def broadcast_to_permitted_users(
     to perform the operation provided.
 
     :param self:
-    :param group_id: The group the users are in
+    :param workspace_id: The workspace the users are in
     :param operation_type: The operation that should be checked for
     :param scope_name: The name of the scope that the operation is executed on
     :param scope_id: The id of the scope instance
@@ -83,14 +83,16 @@ def broadcast_to_permitted_users(
 
     from baserow.core.handler import CoreHandler
     from baserow.core.mixins import TrashableModelMixin
-    from baserow.core.models import Group, GroupUser
+    from baserow.core.models import Workspace, WorkspaceUser
     from baserow.core.registries import object_scope_type_registry
 
-    group = Group.objects.get(id=group_id)
+    workspace = Workspace.objects.get(id=workspace_id)
 
-    users_in_group = [
-        group_user.user
-        for group_user in GroupUser.objects.filter(group=group).select_related("user")
+    users_in_workspace = [
+        workspace_user.user
+        for workspace_user in WorkspaceUser.objects.filter(
+            workspace=workspace
+        ).select_related("user")
     ]
 
     scope_type = object_scope_type_registry.get(scope_name)
@@ -107,9 +109,9 @@ def broadcast_to_permitted_users(
     user_ids = [
         u.id
         for u in CoreHandler().check_permission_for_multiple_actors(
-            users_in_group,
+            users_in_workspace,
             operation_type,
-            group,
+            workspace,
             context=scope,
         )
     ]
@@ -148,19 +150,18 @@ def broadcast_to_users_individual_payloads(
 
 
 @app.task(bind=True)
-def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
+def broadcast_to_channel_group(self, workspace, payload, ignore_web_socket_id=None):
     """
-    Broadcasts a JSON payload all the users within the channel group having the
+    Broadcasts a JSON payload all the users within the channel workspace having the
     provided name.
 
-    :param group: The name of the channel group where the payload must be broad casted
-        to.
-    :type group: str
-    :param payload: A dictionary object containing the payload that must be
-        broadcasted.
+    :param workspace: The name of the channel workspace where the payload must be
+        broadcast to.
+    :type workspace: str
+    :param payload: A dictionary object containing the payload that must be broadcast.
     :type payload: dict
     :param ignore_web_socket_id: The web socket id to which the message must not be
-        send. This is normally the web socket id that has originally made the change
+        sent. This is normally the web socket id that has originally made the change
         request.
     :type ignore_web_socket_id: str
     """
@@ -171,7 +172,7 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
     channel_layer = get_channel_layer()
     async_to_sync(closing_group_send)(
         channel_layer,
-        group,
+        workspace,
         {
             "type": "broadcast_to_group",
             "payload": payload,
@@ -181,27 +182,29 @@ def broadcast_to_channel_group(self, group, payload, ignore_web_socket_id=None):
 
 
 @app.task(bind=True)
-def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
+def broadcast_to_group(self, workspace_id, payload, ignore_web_socket_id=None):
     """
-    Broadcasts a JSON payload to all users that are in provided group (Group model) id.
+    Broadcasts a JSON payload to all users that are in provided workspace (Workspace
+    model) id.
 
-    :param group_id: The message will only be broadcasted to the users within the
-        provided group id.
-    :type group_id: int
-    :param payload: A dictionary object containing the payload that must be
-        broadcasted.
+    :param workspace_id: The message will only be broadcast to the users within the
+        provided workspace id.
+    :type workspace_id: int
+    :param payload: A dictionary object containing the payload that must be broadcast.
     :type payload: dict
     :param ignore_web_socket_id: The web socket id to which the message must not be
-        send. This is normally the web socket id that has originally made the change
+        sent. This is normally the web socket id that has originally made the change
         request.
     :type ignore_web_socket_id: str
     """
 
-    from baserow.core.models import GroupUser
+    from baserow.core.models import WorkspaceUser
 
     user_ids = [
         user["user_id"]
-        for user in GroupUser.objects.filter(group_id=group_id).values("user_id")
+        for user in WorkspaceUser.objects.filter(workspace_id=workspace_id).values(
+            "user_id"
+        )
     ]
 
     if len(user_ids) == 0:
@@ -212,23 +215,22 @@ def broadcast_to_group(self, group_id, payload, ignore_web_socket_id=None):
 
 @app.task(bind=True)
 def broadcast_to_groups(
-    self, group_ids: Iterable[int], payload: dict, ignore_web_socket_id: str = None
+    self, workspace_ids: Iterable[int], payload: dict, ignore_web_socket_id: str = None
 ):
     """
-    Broadcasts a JSON payload to all users that are in the provided groups.
+    Broadcasts a JSON payload to all users that are in the provided workspaces.
 
-    :param group_ids: Ids of groups to broadcast to.
-    :param payload: A dictionary object containing the payload that must be
-        broadcasted.
+    :param workspace_ids: Ids of workspaces to broadcast to.
+    :param payload: A dictionary object containing the payload that must be broadcast.
     :param ignore_web_socket_id: The web socket id to which the message must not be
         sent. This is normally the web socket id that has originally made the change
         request.
     """
 
-    from baserow.core.models import GroupUser
+    from baserow.core.models import WorkspaceUser
 
     user_ids = list(
-        GroupUser.objects.filter(group_id__in=group_ids)
+        WorkspaceUser.objects.filter(workspace_id__in=workspace_ids)
         .distinct("user_id")
         .order_by("user_id")
         .values_list("user_id", flat=True)
@@ -256,31 +258,33 @@ def broadcast_application_created(
 
     from baserow.api.applications.serializers import get_application_serializer
     from baserow.core.handler import CoreHandler
-    from baserow.core.models import Application, GroupUser
+    from baserow.core.models import Application, WorkspaceUser
     from baserow.core.operations import ReadApplicationOperationType
 
     application = Application.objects.get(id=application_id)
-    group = application.group
-    users_in_group = [
-        group_user.user
-        for group_user in GroupUser.objects.filter(group=group).select_related("user")
+    workspace = application.workspace
+    users_in_workspace = [
+        workspace_user.user
+        for workspace_user in WorkspaceUser.objects.filter(
+            workspace=workspace
+        ).select_related("user")
     ]
 
     user_ids = [
         u.id
         for u in CoreHandler().check_permission_for_multiple_actors(
-            users_in_group,
+            users_in_workspace,
             ReadApplicationOperationType.type,
-            group,
+            workspace,
             context=application,
         )
     ]
 
-    users_in_group_id_map = {user.id: user for user in users_in_group}
+    users_in_workspace_id_map = {user.id: user for user in users_in_workspace}
 
     payload_map = {}
     for user_id in user_ids:
-        user = users_in_group_id_map[user_id]
+        user = users_in_workspace_id_map[user_id]
         application_serialized = get_application_serializer(
             application, context={"user": user}
         ).data

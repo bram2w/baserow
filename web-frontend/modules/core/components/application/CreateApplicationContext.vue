@@ -66,7 +66,7 @@ export default {
     },
     canCreateCreateApplication() {
       return this.$hasPermission(
-        'group.create_application',
+        'workspace.create_application',
         this.group,
         this.group.id
       )

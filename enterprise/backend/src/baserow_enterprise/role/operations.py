@@ -1,13 +1,13 @@
 from baserow.contrib.database.table.operations import DatabaseTableOperationType
-from baserow.core.operations import ApplicationOperationType, GroupCoreOperationType
+from baserow.core.operations import ApplicationOperationType, WorkspaceCoreOperationType
 
 
-class AssignRoleGroupOperationType(GroupCoreOperationType):
-    type = "group.assign_role"
+class AssignRoleWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.assign_role"
 
 
-class ReadRoleGroupOperationType(GroupCoreOperationType):
-    type = "group.read_role"
+class ReadRoleWorkspaceOperationType(WorkspaceCoreOperationType):
+    type = "workspace.read_role"
 
 
 class ReadRoleApplicationOperationType(ApplicationOperationType):

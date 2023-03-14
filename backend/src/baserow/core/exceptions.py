@@ -14,28 +14,32 @@ class IsNotAdminError(PermissionException):
     """
 
 
-class UserNotInGroup(PermissionException):
-    """Raised when the user doesn't have access to the related group."""
+class UserNotInWorkspace(PermissionException):
+    """Raised when the user doesn't have access to the related workspace."""
 
-    def __init__(self, user=None, group=None, *args, **kwargs):
-        if user and group:
+    def __init__(self, user=None, workspace=None, *args, **kwargs):
+        if user and workspace:
             super().__init__(
-                f"User {user} doesn't belong to group {group}.", *args, **kwargs
+                f"User {user} doesn't belong to workspace {workspace}.", *args, **kwargs
             )
         else:
-            super().__init__("The user doesn't belong to the group", *args, **kwargs)
+            super().__init__(
+                "The user doesn't belong to the workspace", *args, **kwargs
+            )
 
 
-class UserInvalidGroupPermissionsError(PermissionException):
-    """Raised when a user doesn't have the right permissions to the related group."""
+class UserInvalidWorkspacePermissionsError(PermissionException):
+    """
+    Raised when a user doesn't have the right permissions to the related workspace.
+    """
 
-    def __init__(self, user, group, permissions, *args, **kwargs):
+    def __init__(self, user, workspace, permissions, *args, **kwargs):
         self.user = user
-        self.group = group
+        self.workspace = workspace
         self.permissions = permissions
         super().__init__(
             f"The user {user} doesn't have the right permissions {permissions} to "
-            f"{group}.",
+            f"{workspace}.",
             *args,
             **kwargs,
         )
@@ -56,33 +60,34 @@ class PermissionDenied(PermissionException):
             super().__init__(f"Permission denied.", *args, **kwargs)
 
 
-class GroupDoesNotExist(Exception):
-    """Raised when trying to get a group that does not exist."""
+class WorkspaceDoesNotExist(Exception):
+    """Raised when trying to get a workspace that does not exist."""
 
 
-class GroupUserDoesNotExist(Exception):
-    """Raised when trying to get a group user that does not exist."""
+class WorkspaceUserDoesNotExist(Exception):
+    """Raised when trying to get a workspace user that does not exist."""
 
 
-class GroupUserAlreadyExists(Exception):
+class WorkspaceUserAlreadyExists(Exception):
     """
-    Raised when trying to create a group user that already exists. This could also be
-    raised when an invitation is created for a user that is already part of the group.
-    """
-
-
-class GroupUserIsLastAdmin(Exception):
-    """
-    Raised when the last admin of the group tries to leave it. This will leave the
-    group in a state where no one has control over it. He either needs to delete the
-    group or make someone else admin.
+    Raised when trying to create a workspace user that already exists. This could also
+    be raised when an invitation is created for a user that is already part of the
+    workspace.
     """
 
 
-class CannotDeleteYourselfFromGroup(Exception):
+class WorkspaceUserIsLastAdmin(Exception):
     """
-    Raised when the user tries to delete himself from the group. The `leave_group`
-    method must be used in that case.
+    Raised when the last admin of the workspace tries to leave it. This will leave the
+    workspace in a state where no one has control over it. He either needs to delete the
+    workspace or make someone else admin.
+    """
+
+
+class CannotDeleteYourselfFromWorkspace(Exception):
+    """
+    Raised when the user tries to delete himself from the workspace.
+    The `leave_workspace` method must be used in that case.
     """
 
 
@@ -90,13 +95,13 @@ class ApplicationDoesNotExist(Exception):
     """Raised when trying to get an application that does not exist."""
 
 
-class ApplicationNotInGroup(Exception):
-    """Raised when a provided application does not belong to a group."""
+class ApplicationNotInWorkspace(Exception):
+    """Raised when a provided application does not belong to a workspace."""
 
     def __init__(self, application_id=None, *args, **kwargs):
         self.application_id = application_id
         super().__init__(
-            f"The application {application_id} does not belong to the group.",
+            f"The application {application_id} does not belong to the workspace.",
             *args,
             **kwargs,
         )
@@ -176,15 +181,15 @@ class BaseURLHostnameNotAllowed(Exception):
     """
 
 
-class GroupInvitationDoesNotExist(Exception):
+class WorkspaceInvitationDoesNotExist(Exception):
     """
-    Raised when the requested group invitation doesn't exist.
+    Raised when the requested workspace invitation doesn't exist.
     """
 
 
-class GroupInvitationEmailMismatch(Exception):
+class WorkspaceInvitationEmailMismatch(Exception):
     """
-    Raised when the group invitation email is not the expected email address.
+    Raised when the workspace invitation email is not the expected email address.
     """
 
 
@@ -258,9 +263,9 @@ class DuplicateApplicationMaxLocksExceededException(
     )
 
 
-class LastAdminOfGroup(Exception):
+class LastAdminOfWorkspace(Exception):
     """
-    Raised when somebody tries to remove the last admin of a group.
+    Raised when somebody tries to remove the last admin of a workspace.
     """
 
 

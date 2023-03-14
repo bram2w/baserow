@@ -40,8 +40,8 @@ def test_premium_view_attributes_as_non_premium_user(api_client, premium_data_fi
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=False
     )
-    group = premium_data_fixture.create_group(user=user)
-    database = premium_data_fixture.create_database_application(group=group)
+    workspace = premium_data_fixture.create_workspace(user=user)
+    database = premium_data_fixture.create_database_application(workspace=workspace)
     table = premium_data_fixture.create_database_table(database=database)
     view = premium_data_fixture.create_grid_view(table=table)
 
@@ -63,8 +63,8 @@ def test_premium_view_attributes_invalid_attributes(api_client, premium_data_fix
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
-    group = premium_data_fixture.create_group(user=user)
-    database = premium_data_fixture.create_database_application(group=group)
+    workspace = premium_data_fixture.create_workspace(user=user)
+    database = premium_data_fixture.create_database_application(workspace=workspace)
     table = premium_data_fixture.create_database_table(database=database)
     view = premium_data_fixture.create_grid_view(table=table, name="some name")
 
@@ -87,11 +87,11 @@ def test_premium_view_attributes_template(api_client, premium_data_fixture):
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
-    group = premium_data_fixture.create_group(user=user)
-    database = premium_data_fixture.create_database_application(group=group)
+    workspace = premium_data_fixture.create_workspace(user=user)
+    database = premium_data_fixture.create_database_application(workspace=workspace)
     table = premium_data_fixture.create_database_table(database=database)
     view = premium_data_fixture.create_grid_view(table=table, name="some name")
-    premium_data_fixture.create_template(group=group)
+    premium_data_fixture.create_template(workspace=workspace)
 
     response = api_client.patch(
         reverse(

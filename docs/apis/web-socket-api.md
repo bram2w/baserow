@@ -2,7 +2,7 @@
 
 The web socket API is used for real time collaboration. When a user makes a change, for
 example when creating a new database application, then the backend broadcasts a message
-containing that application to all the users within the related group and who are
+containing that application to all the users within the related workspace and who are
 connected to the web socket. The web-frontend uses the web socket to update already
 fetched data in real time when it has changed. This ensures that the user is always
 working with the most recent data without reloading the page.
@@ -14,7 +14,7 @@ and obtain a [JSON Web Token](https://jwt.io/). After that you can connect to th
 following URL providing your JWT as query parameter: 
 `wss://api.baserow.io/ws/core/?jwt_token=YOUR_JWT_TOKEN`. If you self host
 you need to replace `api.baserow.io` with your own backend URL. The web socket
-connection only receives messages targeted at the groups that the authenticated user
+connection only receives messages targeted at the workspaces that the authenticated user
 belongs to. Below is an example of how to connect to the web socket in JavaScript.
 
 ```javascript
@@ -35,7 +35,7 @@ always contain a key named `type` which indicates what has changed. For example
 `application` is provided containing the newly created application in serialized form.
 
 Below you will find an example of a message when another user has created a database
-application in a group that the receiver also belongs to. There are of course many event
+application in a workspace that the receiver also belongs to. There are of course many event
 types, they are described at the bottom of this page.
 
 ```json
@@ -46,9 +46,9 @@ types, they are described at the bottom of this page.
       "name": "Test",
       "order": 8,
       "type": "database",
-      "group": {
+      "workspace": {
          "id": 1,
-         "name": "Bram's group"
+         "name": "Bram's workspace"
       },
       "tables": []
    }
@@ -86,7 +86,7 @@ WebSocketId: 934254ab-0c87-4dbc-9d71-7eeab029296c
 
 ## Subscribe to a page
 
-A user will receive all the core messages related to groups and application by default,
+A user will receive all the core messages related to workspaces and application by default,
 but we also have messages related to certain pages, for example to the table page.
 Because we don't want to cause an overload of messages you can subscribe to a page. If
 successful you will only receive messages related to that page and you will
