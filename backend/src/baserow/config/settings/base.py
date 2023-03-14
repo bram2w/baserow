@@ -591,6 +591,7 @@ USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 16
 APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # The template that must be selected when the user first opens the templates select
 # modal.
+# IF CHANGING KEEP IN SYNC WITH e2e-tests/wait-for-services.sh
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
 MAX_FIELD_LIMIT = 1500
@@ -792,6 +793,8 @@ BASEROW_DISABLE_MODEL_CACHE = bool(os.getenv("BASEROW_DISABLE_MODEL_CACHE", ""))
 BASEROW_NOWAIT_FOR_LOCKS = not bool(
     os.getenv("BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR", False)
 )
+
+LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

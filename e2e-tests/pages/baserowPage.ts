@@ -1,5 +1,6 @@
 import { Page, expect } from '@playwright/test'
 import { baserowConfig } from '../playwright.config'
+import { User } from "../fixtures/user";
 
 export class BaserowPage {
   readonly page: Page
@@ -8,6 +9,10 @@ export class BaserowPage {
 
   constructor(page: Page) {
     this.page = page
+  }
+
+  async authWithMiddleware(user: User) {
+      await this.page.goto(`${this.baseUrl}?token=${user.refreshToken}`)
   }
 
   async goto() {

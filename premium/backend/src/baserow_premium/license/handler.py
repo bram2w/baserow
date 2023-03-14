@@ -305,7 +305,7 @@ class LicenseHandler:
                     "instance_id": settings_object.instance_id,
                     "extra_license_info": extra_license_info,
                 },
-                timeout=10,
+                timeout=settings.LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS,
                 headers=headers,
             )
 
