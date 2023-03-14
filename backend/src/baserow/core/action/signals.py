@@ -22,13 +22,13 @@ def log_action_receiver(
     action_params,
     action_timestamp,
     action_command_type,
-    group,
+    workspace,
     **kwargs,
 ):
     logger.info(
-        "{action_command_type}: group={group_id} action_type={action_type} user={user_id}",
+        "{action_command_type}: workspace={workspace_id} action_type={action_type} user={user_id}",
         action_command_type=action_command_type.name.lower(),
-        group_id=group.id if group else "",
+        workspace_id=workspace.id if workspace else "",
         action_type=action_type.type,
         user_id=user.id,
     )

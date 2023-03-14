@@ -7,7 +7,8 @@ in Baserow. It can freely use Handlers to do the logic, but it almost certainly
 shouldn't call any other ActionType's unless it is some sort of `meta` ActionAction if
 we ever have one. ActionTypes will be retrieved from a registry given a type and
 triggered by `API` methods (
-e.g. `action_type_registry.get_by_type(DeleteGroupAction).do(user, group_to_delete)`).
+e.g. `action_type_registry.get_by_type(DeleteWorkspaceAction).do(user, 
+workspace_to_delete)`).
 
 1. In `backend/src/baserow/core/actions/registries.py` there is a `action_type_registry`
    which can be used to register `ActionType`'s
@@ -29,9 +30,9 @@ e.g. `action_type_registry.get_by_type(DeleteGroupAction).do(user, group_to_dele
 
 See baserow.core.action.models.Action for more details.
 
-| id (serial) | user_id (fk to user table, nullable) | session (text nullable) |  category (text) | created_on (auto_now_add DateTimeField) | type (text) | params (JSONB) | undone_at (nullable DateTimeField) | error (text nullable) |
-| ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
-| 1 | 2 | 'some-uuid-from-client' | 'root' | datetime | 'group_created' | '{created_group_id:10}' |  null | null |
+| id (serial) | user_id (fk to user table, nullable) | session (text nullable) |  category (text) | created_on (auto_now_add DateTimeField) | type (text)         | params (JSONB)              | undone_at (nullable DateTimeField) | error (text nullable) |
+| ------ | ------ | ------ | ------ | ------ |---------------------|-----------------------------| ------ | ------ |
+| 1 | 2 | 'some-uuid-from-client' | 'root' | datetime | 'workspace_created' | '{created_workspace_id:10}' |  null | null |
 
 ### ActionHandler and Undo/Redo endpoints
 
@@ -41,8 +42,8 @@ and `/api/user/redo` which call the `ActionHandler`. To trigger an `undo` / `red
 need three pieces of information:
 
 1. The user triggering the undo/redo, so we can check if they still have permissions to
-   undo/redo the action. For example a user might be redoing a deletion of a group, but
-   if they have been banned from the group in the meantime they should be prevented
+   undo/redo the action. For example a user might be redoing a deletion of a workspace, but
+   if they have been banned from the workspace in the meantime they should be prevented
    from redoing.
 2. A `client session id`. Every time a user does an action in Baserow we check the
    `ClientSessionId` header. If set we associate the action with that `ClientSessionId`.
@@ -52,18 +53,18 @@ need three pieces of information:
    unique `ClientSessionId`.
 3. A `category`. Every time an action is performed in Baserow we associate it with a
    particular category. This is literally just a text column on the `Action` model with
-   values like `root` or `table10` or `group20`. An actions category describes in which
+   values like `root` or `table10` or `workspace20`. An actions category describes in which
    logical part of Baserow the action was performed. The `ActionType` implementation
    decides what to set its category to when calling `cls.register_action`. When an
    undo/redo occurs the web-frontend sends the categories the user is currently looking
-   at. For example if I have table 20 open, with group 6 in the side bar and I press
+   at. For example if I have table 20 open, with workspace 6 in the side bar and I press
    undo/redo the category sent will be:
 
 ```json
 {
   root: true,
   table: 20,
-  group: 6
+  workspace: 6
 }
 ```
 
@@ -72,23 +73,23 @@ which were done in:
 
 1. The root category
 2. The table 20 category
-3. The group 6 category
+3. The workspace 6 category
 
-For example, if I renamed table 20, then the table_update action would be in group 6
+For example, if I renamed table 20, then the table_update action would be in workspace 6
 category. If I was then looking at table 20 in the UI and pressed undo, the UI would
-send the group 6 category as one of the active categories as table 20 is in group 6.
-Meaning I could then undo this rename. If i was to first switch to group 5 and press
-undo, the UI would send group 5 as the category and I wouldn't be able to undo the
-rename of table 20 until I switched back into a part of the UI where the group 6
+send the workspace 6 category as one of the active categories as table 20 is in workspace 6.
+Meaning I could then undo this rename. If i was to first switch to workspace 5 and press
+undo, the UI would send workspace 5 as the category and I wouldn't be able to undo the
+rename of table 20 until I switched back into a part of the UI where the workspace 6
 category is active.
 
 ### Undo Redo Worked Example
 
-1. User A opens Table 10, which is in Application 2 in Group 1.
+1. User A opens Table 10, which is in Application 2 in Workspace 1.
     1. On page load a ClientSessionId `example_client_session_id` is generated and
        stored in the `auth` store. (its a uuid normally).
     1. The current category for this page is set in the `undoRedo` store to
-       be: `{root: true, table_id:10, application_id:2, group_id:1}`
+       be: `{root: true, table_id:10, application_id:2, workspace_id:1}`
 1. User A changes the Tables name.
     1. A request is sent to the table update endpoint.
         1. The `ClientSessionId` header is set on the request
@@ -96,7 +97,7 @@ category is active.
     1. The table update API endpoint will
        call `action_type_registry.get(UpdateTableAction).do(user, ...)`
     2. The change is made and a new Action is stored.
-        1. UpdateTableAction sets the `category` of the action to be `group1`
+        1. UpdateTableAction sets the `category` of the action to be `workspace1`
         1. The `ClientSessionId` is found from the request and the session of the action
            is set to `example_client_session_id`
         1. The `user` of the action is set to `User A`
@@ -111,10 +112,10 @@ category is active.
     1. `ActionHandler.undo` is called.
         1. It finds the latest action for `User A` in
            session `example_client_session_id` and in any of the following
-           categories `["root", "group1", "application2", "table10"]`. These were
+           categories `["root", "workspace1", "application2", "table10"]`. These were
            calculated from the category parameter provided to the endpoint.
         1. The table rename action is found as it's session matches, it is in
-           category `group`, it was done by `User A` and it has not yet been undone (
+           category `workspace`, it was done by `User A` and it has not yet been undone (
            the `undone_at` column is null).
         1. It deserializes the parameters for the latest action from the table into the
            action's `Params` dataclass

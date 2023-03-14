@@ -10,7 +10,7 @@ from baserow.core.action.registries import (
     ActionTypeDescription,
     UndoableActionType,
 )
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.trash.handler import TrashHandler
 from baserow_enterprise.models import Team, TeamSubject
 from baserow_enterprise.role.handler import RoleAssignmentHandler
@@ -32,7 +32,7 @@ class CreateTeamActionType(UndoableActionType):
     class Params:
         name: str
         team_id: int
-        group_id: int
+        workspace_id: int
         subjects: List[Dict]
 
     @classmethod
@@ -40,7 +40,7 @@ class CreateTeamActionType(UndoableActionType):
         cls,
         user: AbstractUser,
         name: str,
-        group: Group,
+        workspace: Workspace,
         subjects: Optional[List[Dict]] = None,
         default_role: Optional[Role] = None,
     ) -> Team:
@@ -52,7 +52,7 @@ class CreateTeamActionType(UndoableActionType):
 
         :param user: The user creating the team.
         :param name: The name to give the team.
-        :param group: The group to create the team in.
+        :param workspace: The workspace to create the team in.
         :param subjects: An array of subject ID/type objects.
         :param default_role: The default role to apply to the workspace.
         """
@@ -60,19 +60,19 @@ class CreateTeamActionType(UndoableActionType):
         if subjects is None:
             subjects = []
 
-        team = TeamHandler().create_team(user, name, group, subjects, default_role)
+        team = TeamHandler().create_team(user, name, workspace, subjects, default_role)
 
         cls.register_action(
             user=user,
-            params=cls.Params(team.name, team.id, group.id, subjects),
-            scope=cls.scope(team.group_id),
-            group=group,
+            params=cls.Params(team.name, team.id, workspace.id, subjects),
+            scope=cls.scope(team.workspace_id),
+            workspace=workspace,
         )
         return team
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return TeamsActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return TeamsActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(
@@ -107,7 +107,7 @@ class UpdateTeamActionType(UndoableActionType):
         team_id: int
         original_name: str
         name: str
-        group_id: int
+        workspace_id: int
         subjects: List[Dict]
         original_default_role_uid: Union[str, None]
         default_role_uid: Union[str, None]
@@ -153,20 +153,20 @@ class UpdateTeamActionType(UndoableActionType):
                 team.id,
                 original_name,
                 name,
-                team.group_id,
+                team.workspace_id,
                 subjects,
                 original_default_role_uid,
                 default_role_uid,
             ),
-            scope=cls.scope(team.group_id),
-            group=team.group,
+            scope=cls.scope(team.workspace_id),
+            workspace=team.workspace,
         )
 
         return team
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return TeamsActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return TeamsActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
@@ -203,7 +203,7 @@ class DeleteTeamActionType(UndoableActionType):
     def do(cls, user: AbstractUser, team: Team) -> None:
         """
         Deletes an existing team instance if the user has access to the
-        related group. The `team_deleted` signal is also called. See
+        related workspace. The `team_deleted` signal is also called. See
         baserow_enterprise.teams.handler.TeamHandler.delete_team for further details.
         Undoing this action restores the team and redoing trashes it.
 
@@ -216,13 +216,13 @@ class DeleteTeamActionType(UndoableActionType):
         cls.register_action(
             user=user,
             params=cls.Params(team.id, team.name),
-            scope=cls.scope(team.group_id),
-            group=team.group,
+            scope=cls.scope(team.workspace_id),
+            workspace=team.workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return TeamsActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return TeamsActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user, params: Params, action_being_undone: Action):
@@ -278,14 +278,14 @@ class CreateTeamSubjectActionType(UndoableActionType):
             params=cls.Params(
                 team.id, team.name, subject.id, subject_lookup, subject_type
             ),
-            scope=cls.scope(team.group_id),
-            group=team.group,
+            scope=cls.scope(team.workspace_id),
+            workspace=team.workspace,
         )
         return subject
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return TeamsActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return TeamsActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(
@@ -334,7 +334,7 @@ class DeleteTeamSubjectActionType(UndoableActionType):
     def do(cls, user: AbstractUser, subject: TeamSubject) -> None:
         """
         Deletes an existing subject instance if the user has access to the
-        related group. The `team_subject_deleted` signal is also called. See
+        related workspace. The `team_subject_deleted` signal is also called. See
         baserow_enterprise.teams.handler.TeamHandler.delete_team_subject for
         further details. Undoing this action restores the subject and redoing trashes it
 
@@ -354,8 +354,8 @@ class DeleteTeamSubjectActionType(UndoableActionType):
                 subject.subject_id,
                 subject.subject_type_natural_key,
             ),
-            scope=cls.scope(subject.team.group_id),
-            group=subject.team.group,
+            scope=cls.scope(subject.team.workspace_id),
+            workspace=subject.team.workspace,
         )
 
     @classmethod

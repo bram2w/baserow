@@ -21,55 +21,55 @@ from tqdm import tqdm
 
 from baserow.core.user.utils import normalize_email_address
 
-from .emails import GroupInvitationEmail
+from .emails import WorkspaceInvitationEmail
 from .exceptions import (
     ApplicationDoesNotExist,
-    ApplicationNotInGroup,
+    ApplicationNotInWorkspace,
     BaseURLHostnameNotAllowed,
-    CannotDeleteYourselfFromGroup,
+    CannotDeleteYourselfFromWorkspace,
     DuplicateApplicationMaxLocksExceededException,
-    GroupDoesNotExist,
-    GroupInvitationDoesNotExist,
-    GroupInvitationEmailMismatch,
-    GroupUserAlreadyExists,
-    GroupUserDoesNotExist,
-    GroupUserIsLastAdmin,
     InvalidPermissionContext,
-    LastAdminOfGroup,
+    LastAdminOfWorkspace,
     PermissionDenied,
     PermissionException,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
-    UserNotInGroup,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
+    WorkspaceInvitationDoesNotExist,
+    WorkspaceInvitationEmailMismatch,
+    WorkspaceUserAlreadyExists,
+    WorkspaceUserDoesNotExist,
+    WorkspaceUserIsLastAdmin,
     is_max_lock_exceeded_exception,
 )
 from .models import (
-    GROUP_USER_PERMISSION_ADMIN,
-    GROUP_USER_PERMISSION_MEMBER,
+    WORKSPACE_USER_PERMISSION_ADMIN,
+    WORKSPACE_USER_PERMISSION_MEMBER,
     Application,
-    Group,
-    GroupInvitation,
-    GroupUser,
     Settings,
     Template,
     TemplateCategory,
+    Workspace,
+    WorkspaceInvitation,
+    WorkspaceUser,
 )
 from .operations import (
-    CreateApplicationsGroupOperationType,
-    CreateGroupOperationType,
-    CreateInvitationsGroupOperationType,
+    CreateApplicationsWorkspaceOperationType,
+    CreateInvitationsWorkspaceOperationType,
+    CreateWorkspaceOperationType,
     DeleteApplicationOperationType,
-    DeleteGroupInvitationOperationType,
-    DeleteGroupOperationType,
-    DeleteGroupUserOperationType,
+    DeleteWorkspaceInvitationOperationType,
+    DeleteWorkspaceOperationType,
+    DeleteWorkspaceUserOperationType,
     DuplicateApplicationOperationType,
     OrderApplicationsOperationType,
     ReadApplicationOperationType,
     UpdateApplicationOperationType,
-    UpdateGroupInvitationType,
-    UpdateGroupOperationType,
-    UpdateGroupUserOperationType,
     UpdateSettingsOperationType,
+    UpdateWorkspaceInvitationType,
+    UpdateWorkspaceOperationType,
+    UpdateWorkspaceUserOperationType,
 )
 from .registries import (
     application_type_registry,
@@ -82,16 +82,16 @@ from .signals import (
     application_deleted,
     application_updated,
     applications_reordered,
-    before_group_deleted,
-    before_group_user_deleted,
-    before_group_user_updated,
-    group_created,
-    group_deleted,
-    group_updated,
-    group_user_added,
-    group_user_deleted,
-    group_user_updated,
-    groups_reordered,
+    before_workspace_deleted,
+    before_workspace_user_deleted,
+    before_workspace_user_updated,
+    workspace_created,
+    workspace_deleted,
+    workspace_updated,
+    workspace_user_added,
+    workspace_user_deleted,
+    workspace_user_updated,
+    workspaces_reordered,
 )
 from .telemetry.utils import baserow_trace_methods, disable_instrumentation
 from .trash.handler import TrashHandler
@@ -105,7 +105,7 @@ from .utils import (
 
 User = get_user_model()
 
-GroupForUpdate = NewType("GroupForUpdate", Group)
+WorkspaceForUpdate = NewType("WorkspaceForUpdate", Workspace)
 
 tracer = trace.get_tracer(__name__)
 
@@ -150,9 +150,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             kwargs,
             [
                 "allow_new_signups",
-                "allow_signups_via_group_invitations",
+                "allow_signups_via_workspace_invitations",
                 "allow_reset_password",
-                "allow_global_group_creation",
+                "allow_global_workspace_creation",
                 "account_deletion_grace_delay",
                 "track_group_usage",
             ],
@@ -165,7 +165,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     def check_multiple_permissions(
         self,
         checks: List[PermissionCheck],
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         include_trash: bool = False,
         return_permissions_exceptions: bool = False,
     ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
@@ -186,8 +186,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         :param checks: The list of check to do. Each check is a triplet of
             (actor, permission_name, scope).
-        :param group: The optional group in which the operations take place.
-        :param include_trash: If true then also checks if the given group has been
+        :param workspace: The optional workspace in which the operations take place.
+        :param include_trash: If true then also checks if the given workspace has been
             trashed instead of raising a DoesNotExist exception.
         :return: A dictionary with one entry for each check of the parameter as key and
             whether the operation is allowed or not as value.
@@ -211,7 +211,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
             manager_result = permission_manager_type.check_multiple_permissions(
                 supported_checks,
-                group=group,
+                workspace=workspace,
                 include_trash=include_trash,
             )
 
@@ -241,7 +241,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         actors: List[Actor],
         operation_name: str,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         context: Optional[ContextObject] = None,
         include_trash: bool = False,
     ) -> List[Actor]:
@@ -252,17 +252,17 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param actor: The actor who wants to execute the operation. Generally a `User`,
             but can be a `Token`.
         :param operation_name: The operation name the actor wants to execute.
-        :param group: The optional group in which  the operation takes place.
+        :param workspace: The optional workspace in which  the operation takes place.
         :param context: The optional object affected by the operation. For instance
             if you are updating a `Table` object, the context is this `Table` object.
-        :param include_trash: If true then also checks if the given group has been
+        :param include_trash: If true then also checks if the given workspace has been
             trashed instead of raising a DoesNotExist exception.
         :return: The list of allowed actors.
         """
 
         checks = [PermissionCheck(actor, operation_name, context) for actor in actors]
         checked = self.check_multiple_permissions(
-            checks, group, include_trash=include_trash
+            checks, workspace, include_trash=include_trash
         )
 
         return [actor for (actor, _, _), result in checked.items() if result is True]
@@ -271,7 +271,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         actor: Actor,
         operation_name: str,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         context: Optional[ContextObject] = None,
         include_trash: bool = False,
         raise_permission_exceptions: bool = True,
@@ -295,15 +295,15 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param actor: The actor who wants to execute the operation. Generally a `User`,
             but can be a `Token`.
         :param operation_name: The operation name the actor wants to execute.
-        :param group: The optional group in which  the operation takes place.
+        :param workspace: The optional workspace in which  the operation takes place.
         :param context: The optional object affected by the operation. For instance
             if you are updating a `Table` object, the context is this `Table` object.
-        :param include_trash: If true then also checks if the given group has been
+        :param include_trash: If true then also checks if the given workspace has been
             trashed instead of raising a DoesNotExist exception.
         :param raise_permission_exceptions: Raise an exception when the permission is
             disallowed when `True`. Return `False` instead when `False`.
             `True` by default.
-        :param allow_if_template: If true and if the group is related to a template,
+        :param allow_if_template: If true and if the workspace is related to a template,
             then True is always returned and no exception will be raised.
         :raise PermissionException: If the operation is disallowed.
         :return: `True` if the operation is permitted or `False` if the operation is
@@ -313,14 +313,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         if settings.DEBUG or settings.TESTS:
             self._ensure_context_matches_operation(context, operation_name)
 
-        if allow_if_template and group and group.has_template():
+        if allow_if_template and workspace and workspace.has_template():
             return True
 
         check = PermissionCheck(actor, operation_name, context)
 
         allowed = self.check_multiple_permissions(
             [check],
-            group,
+            workspace,
             include_trash=include_trash,
             return_permissions_exceptions=True,
         ).get(check, None)
@@ -358,11 +358,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
     def get_permissions(
-        self, actor: Actor, group: Optional[Group] = None
+        self, actor: Actor, workspace: Optional[Workspace] = None
     ) -> List[PermissionObjectResult]:
         """
         Generates the object sent to a client to easily check the actor permissions over
-        the given group.
+        the given workspace.
 
         This object is generated by going over all permission managers listed in
         `settings.PERMISSION_MANAGERS` and aggregating the results in a list of dict
@@ -391,8 +391,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         frontend side at all.
 
         :param actor: The actor whom we want to compute the permission object for.
-        :param group: The optional group into which we want to compute the permission
-            object.
+        :param workspace: The optional workspace into which we want to compute the
+            permission object.
         :return: The full permission object.
         """
 
@@ -402,7 +402,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 permission_manager_name
             )
 
-            perms = permission_manager_type.get_permissions_object(actor, group=group)
+            perms = permission_manager_type.get_permissions_object(
+                actor, workspace=workspace
+            )
             if perms is not None:
                 result.append(
                     PermissionObjectResult(
@@ -417,7 +419,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         actor: Actor,
         operation_name: str,
         queryset: QuerySet,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         context: Optional[ContextObject] = None,
         allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
@@ -434,14 +436,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param queryset: The queryset we want to filter. The queryset should contains
             object that are in the same `ObjectScopeType` as the one described in the
             `OperationType` corresponding to the given `operation_name`.
-        :param group: An optional group into which the operation occurs.
+        :param workspace: An optional workspace into which the operation occurs.
         :param context: The optional context of the operation.
-        :param allow_if_template: If true and if the group is related to a template,
+        :param allow_if_template: If true and if the workspace is related to a template,
             then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
         """
 
-        if allow_if_template and group and group.has_template():
+        if allow_if_template and workspace and workspace.has_template():
             return queryset
 
         for permission_manager_name in settings.PERMISSION_MANAGERS:
@@ -449,384 +451,423 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 permission_manager_name
             )
             queryset = permission_manager_type.filter_queryset(
-                actor, operation_name, queryset, group=group, context=context
+                actor, operation_name, queryset, workspace=workspace, context=context
             )
 
         return queryset
 
-    def get_group_for_update(self, group_id: int) -> GroupForUpdate:
+    def get_workspace_for_update(self, workspace_id: int) -> WorkspaceForUpdate:
         return cast(
-            GroupForUpdate,
-            self.get_group(
-                group_id, base_queryset=Group.objects.select_for_update(of=("self",))
+            WorkspaceForUpdate,
+            self.get_workspace(
+                workspace_id,
+                base_queryset=Workspace.objects.select_for_update(of=("self",)),
             ),
         )
 
-    def get_group(self, group_id: int, base_queryset: QuerySet = None) -> Group:
+    def get_workspace(
+        self, workspace_id: int, base_queryset: QuerySet = None
+    ) -> Workspace:
         """
-        Selects a group with a given id from the database.
+        Selects a workspace with a given id from the database.
 
-        :param group_id: The identifier of the group that must be returned.
-        :param base_queryset: The base queryset from where to select the group
+        :param workspace_id: The identifier of the workspace that must be returned.
+        :param base_queryset: The base queryset from where to select the workspace
             object. This can for example be used to do a `prefetch_related`.
-        :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :return: The requested group instance of the provided id.
+        :raises WorkspaceDoesNotExist: When the workspace with the
+            provided id does not exist.
+        :return: The requested workspace instance of the provided id.
         """
 
         if base_queryset is None:
-            base_queryset = Group.objects
+            base_queryset = Workspace.objects
 
         try:
-            group = base_queryset.get(id=group_id)
-        except Group.DoesNotExist:
-            raise GroupDoesNotExist(f"The group with id {group_id} does not exist.")
+            workspace = base_queryset.get(id=workspace_id)
+        except Workspace.DoesNotExist:
+            raise WorkspaceDoesNotExist(
+                f"The workspace with id {workspace_id} does not exist."
+            )
 
-        return group
+        return workspace
 
-    def get_groupuser_group_queryset(self) -> QuerySet[GroupUser]:
+    def get_workspaceuser_workspace_queryset(self) -> QuerySet[WorkspaceUser]:
         """
-        Returns GroupUser queryset that will prefetch groups and their users.
+        Returns WorkspaceUser queryset that will prefetch workspaces and their users.
         """
 
-        groupusers_with_user_and_profile = GroupUser.objects.select_related(
+        workspaceusers_with_user_and_profile = WorkspaceUser.objects.select_related(
             "user"
         ).select_related("user__profile")
-        groupuser_groups = GroupUser.objects.select_related("group").prefetch_related(
+        workspaceuser_workspaces = WorkspaceUser.objects.select_related(
+            "workspace"
+        ).prefetch_related(
             Prefetch(
-                "group__groupuser_set",
-                queryset=groupusers_with_user_and_profile,
+                "workspace__workspaceuser_set",
+                queryset=workspaceusers_with_user_and_profile,
             )
         )
-        return groupuser_groups
+        return workspaceuser_workspaces
 
-    def create_group(self, user: User, name: str) -> GroupUser:
+    def create_workspace(self, user: User, name: str) -> WorkspaceUser:
         """
-        Creates a new group for an existing user.
+        Creates a new workspace for an existing user.
 
-        :param user: The user that must be in the group.
-        :param name: The name of the group.
-        :return: The newly created GroupUser object
+        :param user: The user that must be in the workspace.
+        :param name: The name of the workspace.
+        :return: The newly created WorkspaceUser object
         """
 
-        CoreHandler().check_permissions(user, CreateGroupOperationType.type)
+        CoreHandler().check_permissions(user, CreateWorkspaceOperationType.type)
 
-        group = Group.objects.create(name=name)
+        workspace = Workspace.objects.create(name=name)
 
-        last_order = GroupUser.get_last_order(user)
-        group_user = GroupUser.objects.create(
-            group=group,
+        last_order = WorkspaceUser.get_last_order(user)
+        workspace_user = WorkspaceUser.objects.create(
+            workspace=workspace,
             user=user,
             order=last_order,
-            permissions=GROUP_USER_PERMISSION_ADMIN,
+            permissions=WORKSPACE_USER_PERMISSION_ADMIN,
         )
 
-        group_created.send(self, group=group, user=user)
+        workspace_created.send(self, workspace=workspace, user=user)
 
-        return group_user
+        return workspace_user
 
-    def update_group(
-        self, user: AbstractUser, group: GroupForUpdate, name: str
-    ) -> Group:
+    def update_workspace(
+        self, user: AbstractUser, workspace: WorkspaceForUpdate, name: str
+    ) -> Workspace:
         """
-        Updates the values of a group if the user has admin permissions to the group.
+        Updates the values of a workspace if the user has admin
+        permissions to the workspace.
 
         :param user: The user on whose behalf the change is made.
-        :param group: The group instance that must be updated.
-        :param name: The new name to give the group.
+        :param workspace: The workspace instance that must be updated.
+        :param name: The new name to give the workspace.
         :raises ValueError: If one of the provided parameters is invalid.
-        :return: The updated group
+        :return: The updated workspace
         """
 
-        if not isinstance(group, Group):
-            raise ValueError("The group is not an instance of Group.")
+        if not isinstance(workspace, Workspace):
+            raise ValueError("The workspace is not an instance of Workspace.")
 
         CoreHandler().check_permissions(
-            user, UpdateGroupOperationType.type, group=group, context=group
+            user,
+            UpdateWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
-        group.name = name
-        group.save()
+        workspace.name = name
+        workspace.save()
 
-        group_updated.send(self, group=group, user=user)
+        workspace_updated.send(self, workspace=workspace, user=user)
 
-        return group
+        return workspace
 
-    def leave_group(self, user, group):
+    def leave_workspace(self, user, workspace):
         """
-        Called when a user of group wants to leave a group.
+        Called when a user of workspace wants to leave a workspace.
 
-        :param user: The user that wants to leave the group.
+        :param user: The user that wants to leave the workspace.
         :type user: User
-        :param group: The group that the user wants to leave.
-        :type group: Group
+        :param workspace: The workspace that the user wants to leave.
+        :type workspace: Workspace
         """
 
-        if not isinstance(group, Group):
-            raise ValueError("The group is not an instance of Group.")
+        if not isinstance(workspace, Workspace):
+            raise ValueError("The workspace is not an instance of Workspace.")
 
         try:
-            group_user = GroupUser.objects.get(user=user, group=group)
-        except GroupUser.DoesNotExist:
-            raise UserNotInGroup(user, self)
+            workspace_user = WorkspaceUser.objects.get(user=user, workspace=workspace)
+        except WorkspaceUser.DoesNotExist:
+            raise UserNotInWorkspace(user, self)
 
         # If the current user is an admin and he is the last admin left, he is not
-        # allowed to leave the group otherwise no one will have control over it. He
-        # needs to give someone else admin permissions first or he must leave the group.
+        # allowed to leave the workspace otherwise no one will have control over it. He
+        # needs to give someone else admin permissions first or he must
+        # leave the workspace.
         if (
-            group_user.permissions == GROUP_USER_PERMISSION_ADMIN
-            and GroupUser.objects.filter(
-                group=group, permissions=GROUP_USER_PERMISSION_ADMIN
+            workspace_user.permissions == WORKSPACE_USER_PERMISSION_ADMIN
+            and WorkspaceUser.objects.filter(
+                workspace=workspace, permissions=WORKSPACE_USER_PERMISSION_ADMIN
             )
             .exclude(user__profile__to_be_deleted=True)
             .count()
             == 1
         ):
-            raise GroupUserIsLastAdmin(
-                "The user is the last admin left in the group and can therefore not "
-                "leave it."
+            raise WorkspaceUserIsLastAdmin(
+                "The user is the last admin left in the workspace and "
+                "can therefore not leave it."
             )
 
-        before_group_user_deleted.send(
-            self, user=user, group=group, group_user=group_user
+        before_workspace_user_deleted.send(
+            self, user=user, workspace=workspace, workspace_user=workspace_user
         )
 
         # If the user is not the last admin, we can safely delete the user from the
-        # group.
-        group_user_id = group_user.id
-        group_user.delete()
-        group_user_deleted.send(
+        # workspace.
+        workspace_user_id = workspace_user.id
+        workspace_user.delete()
+        workspace_user_deleted.send(
             self,
-            group_user_id=group_user_id,
-            group_user=group_user,
+            workspace_user_id=workspace_user_id,
+            workspace_user=workspace_user,
             user=user,
         )
 
-    def delete_group_by_id(self, user: AbstractUser, group_id: int):
+    def delete_workspace_by_id(self, user: AbstractUser, workspace_id: int):
         """
-        Deletes a group by id and it's related applications instead of using an
-        instance. Only if the user has admin permissions for the group.
+        Deletes a workspace by id and it's related applications instead of using an
+        instance. Only if the user has admin permissions for the workspace.
 
         :param user: The user on whose behalf the delete is done.
-        :param group_id: The group id that must be deleted.
+        :param workspace_id: The workspace id that must be deleted.
         :raises ValueError: If one of the provided parameters is invalid.
         """
 
-        locked_group = self.get_group_for_update(group_id)
-        self.delete_group(user, locked_group)
+        locked_workspace = self.get_workspace_for_update(workspace_id)
+        self.delete_workspace(user, locked_workspace)
 
-    def delete_group(self, user: AbstractUser, group: GroupForUpdate):
+    def delete_workspace(self, user: AbstractUser, workspace: WorkspaceForUpdate):
         """
-        Deletes an existing group and related applications if the user has admin
-        permissions for the group. The group can be restored after deletion using the
-        trash handler.
+        Deletes an existing workspace and related applications if the user has admin
+        permissions for the workspace. The workspace can be restored after deletion
+        using the trash handler.
 
         :param user: The user on whose behalf the delete is done.
         :type: user: User
-        :param group: The group instance that must be deleted.
-        :type: group: Group
+        :param workspace: The workspace instance that must be deleted.
+        :type: workspace: Workspace
         :raises ValueError: If one of the provided parameters is invalid.
         """
 
-        if not isinstance(group, Group):
-            raise ValueError("The group is not an instance of Group.")
-
-        CoreHandler().check_permissions(
-            user, DeleteGroupOperationType.type, group=group, context=group
-        )
-
-        # Load the group users before the group is deleted so that we can pass those
-        # along with the signal.
-        group_id = group.id
-        group_users = list(group.users.all())
-
-        before_group_deleted.send(
-            self, group_id=group_id, group=group, group_users=group_users, user=user
-        )
-
-        TrashHandler.trash(user, group, None, group)
-
-        group_deleted.send(
-            self, group_id=group_id, group=group, group_users=group_users, user=user
-        )
-
-    def order_groups(self, user: AbstractUser, group_ids: List[int]):
-        """
-        Changes the order of groups for a user.
-
-        :param user: The user on whose behalf the ordering is done.
-        :param group_ids: A list of group ids ordered the way they need to be ordered.
-        """
-
-        for index, group_id in enumerate(group_ids):
-            GroupUser.objects.filter(user=user, group_id=group_id).update(
-                order=index + 1
-            )
-        groups_reordered.send(self, user=user, group_ids=group_ids)
-
-    def get_groups_order(self, user: AbstractUser) -> List[int]:
-        """
-        Returns the order of groups for a user.
-
-        :param user: The user on whose behalf the ordering is done.
-        :return: A list of group ids ordered the way they need to be ordered.
-        """
-
-        return [
-            group_user.group_id
-            for group_user in GroupUser.objects.filter(user=user).order_by("order")
-        ]
-
-    def get_group_user(self, group_user_id, base_queryset=None):
-        """
-        Fetches a group user object related to the provided id from the database.
-
-        :param group_user_id: The identifier of the group user that must be returned.
-        :type group_user_id: int
-        :param base_queryset: The base queryset from where to select the group user
-            object. This can for example be used to do a `select_related`.
-        :type base_queryset: Queryset
-        :raises GroupDoesNotExist: When the group with the provided id does not exist.
-        :return: The requested group user instance of the provided group_id.
-        :rtype: GroupUser
-        """
-
-        if base_queryset is None:
-            base_queryset = GroupUser.objects
-
-        try:
-            group_user = base_queryset.select_related("group").get(id=group_user_id)
-        except GroupUser.DoesNotExist:
-            raise GroupUserDoesNotExist(
-                f"The group user with id {group_user_id} does " f"not exist."
-            )
-
-        return group_user
-
-    def get_group_users(
-        self, group: Group, users: List[User], include_trash: bool = False
-    ) -> QuerySet:
-        """
-        Returns a queryset to get all GroupUser for the given group for all users.
-
-        :param group: The group the GroupUser must belong to.
-        :param users: The user list we want the GroupUsers for.
-        :param include_trash: Whether or not we want to include trashed Group in the
-           result.
-        """
-
-        group_user_queryset = (
-            GroupUser.objects_and_trash if include_trash else GroupUser.objects
-        )
-        return group_user_queryset.filter(user__in=users, group=group)
-
-    def update_group_user(
-        self,
-        user: AbstractUser,
-        group_user: GroupUser,
-        **kwargs,
-    ) -> GroupUser:
-        """
-        Updates the values of an existing group user.
-
-        :param user: The user on whose behalf the group user is deleted.
-        :param group_user: The group user that must be updated.
-        :return: The updated group user instance.
-        """
-
-        if not isinstance(group_user, GroupUser):
-            raise ValueError("The group user is not an instance of GroupUser.")
+        if not isinstance(workspace, Workspace):
+            raise ValueError("The workspace is not an instance of Workspace.")
 
         CoreHandler().check_permissions(
             user,
-            UpdateGroupUserOperationType.type,
-            group=group_user.group,
-            context=group_user,
+            DeleteWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
-        return self.force_update_group_user(user, group_user, **kwargs)
+        # Load the workspace users before the workspace is deleted so that we can
+        # pass those along with the signal.
+        workspace_id = workspace.id
+        workspace_users = list(workspace.users.all())
 
-    def force_update_group_user(
-        self, user: Optional[AbstractUser], group_user: GroupUser, **kwargs
-    ) -> GroupUser:
+        before_workspace_deleted.send(
+            self,
+            workspace_id=workspace_id,
+            workspace=workspace,
+            workspace_users=workspace_users,
+            user=user,
+        )
+
+        TrashHandler.trash(user, workspace, None, workspace)
+
+        workspace_deleted.send(
+            self,
+            workspace_id=workspace_id,
+            workspace=workspace,
+            workspace_users=workspace_users,
+            user=user,
+        )
+
+    def order_workspaces(self, user: AbstractUser, workspace_ids: List[int]):
         """
-        Forcibly updates the group users attributes without checking permissions whilst
-        sending all the appropriate signals that an update has been done.
+        Changes the order of workspaces for a user.
+
+        :param user: The user on whose behalf the ordering is done.
+        :param workspace_ids: A list of workspace ids ordered the way they
+            need to be ordered.
+        """
+
+        for index, workspace_id in enumerate(workspace_ids):
+            WorkspaceUser.objects.filter(user=user, workspace_id=workspace_id).update(
+                order=index + 1
+            )
+        workspaces_reordered.send(self, user=user, workspace_ids=workspace_ids)
+
+    def get_workspaces_order(self, user: AbstractUser) -> List[int]:
+        """
+        Returns the order of workspaces for a user.
+
+        :param user: The user on whose behalf the ordering is done.
+        :return: A list of workspace ids ordered the way they need to be ordered.
+        """
+
+        return [
+            workspace_user.workspace_id
+            for workspace_user in WorkspaceUser.objects.filter(user=user).order_by(
+                "order"
+            )
+        ]
+
+    def get_workspace_user(self, workspace_user_id, base_queryset=None):
+        """
+        Fetches a workspace user object related to the provided id from the database.
+
+        :param workspace_user_id: The identifier of the workspace user that
+            must be returned.
+        :type workspace_user_id: int
+        :param base_queryset: The base queryset from where to select the workspace user
+            object. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises WorkspaceDoesNotExist: When the workspace with the provided
+            id does not exist.
+        :return: The requested workspace user instance of the provided workspace_id.
+        :rtype: WorkspaceUser
+        """
+
+        if base_queryset is None:
+            base_queryset = WorkspaceUser.objects
+
+        try:
+            workspace_user = base_queryset.select_related("workspace").get(
+                id=workspace_user_id
+            )
+        except WorkspaceUser.DoesNotExist:
+            raise WorkspaceUserDoesNotExist(
+                f"The workspace user with id {workspace_user_id} does " f"not exist."
+            )
+
+        return workspace_user
+
+    def get_workspace_users(
+        self, workspace: Workspace, users: List[User], include_trash: bool = False
+    ) -> QuerySet:
+        """
+        Returns a queryset to get all WorkspaceUser for the given
+        workspace for all users.
+
+        :param workspace: The workspace the WorkspaceUser must belong to.
+        :param users: The user list we want the WorkspaceUsers for.
+        :param include_trash: Whether or not we want to include trashed Workspace
+            in the result.
+        """
+
+        workspace_user_queryset = (
+            WorkspaceUser.objects_and_trash if include_trash else WorkspaceUser.objects
+        )
+        return workspace_user_queryset.filter(user__in=users, workspace=workspace)
+
+    def update_workspace_user(
+        self,
+        user: AbstractUser,
+        workspace_user: WorkspaceUser,
+        **kwargs,
+    ) -> WorkspaceUser:
+        """
+        Updates the values of an existing workspace user.
+
+        :param user: The user on whose behalf the workspace user is deleted.
+        :param workspace_user: The workspace user that must be updated.
+        :return: The updated workspace user instance.
+        """
+
+        if not isinstance(workspace_user, WorkspaceUser):
+            raise ValueError("The workspace user is not an instance of WorkspaceUser.")
+
+        CoreHandler().check_permissions(
+            user,
+            UpdateWorkspaceUserOperationType.type,
+            workspace=workspace_user.workspace,
+            context=workspace_user,
+        )
+
+        return self.force_update_workspace_user(user, workspace_user, **kwargs)
+
+    def force_update_workspace_user(
+        self, user: Optional[AbstractUser], workspace_user: WorkspaceUser, **kwargs
+    ) -> WorkspaceUser:
+        """
+        Forcibly updates the workspace users attributes without checking permissions
+        whilst sending all the appropriate signals that an update has been done.
         """
 
         with atomic_if_not_already():
             if kwargs["permissions"] != "ADMIN":
-                CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+                CoreHandler.raise_if_user_is_last_admin_of_workspace(workspace_user)
 
-            before_group_user_updated.send(self, group_user=group_user, **kwargs)
-            permissions_before = group_user.permissions
-            group_user = set_allowed_attrs(kwargs, ["permissions"], group_user)
-            group_user.save()
-            group_user_updated.send(
+            before_workspace_user_updated.send(
+                self, workspace_user=workspace_user, **kwargs
+            )
+            permissions_before = workspace_user.permissions
+            workspace_user = set_allowed_attrs(kwargs, ["permissions"], workspace_user)
+            workspace_user.save()
+            workspace_user_updated.send(
                 self,
-                group_user=group_user,
+                workspace_user=workspace_user,
                 user=user,
                 permissions_before=permissions_before,
             )
-            return group_user
+            return workspace_user
 
-    def delete_group_user(self, user, group_user):
+    def delete_workspace_user(self, user, workspace_user):
         """
-        Deletes the provided group user.
+        Deletes the provided workspace user.
 
-        :param user: The user on whose behalf the group user is deleted.
+        :param user: The user on whose behalf the workspace user is deleted.
         :type user: User
-        :param group_user: The group user that must be deleted.
-        :type group_user: GroupUser
-        :raises CannotDeleteYourselfFromGroup; If the user tries to delete himself
-            from the group.
+        :param workspace_user: The workspace user that must be deleted.
+        :type workspace_user: WorkspaceUser
+        :raises CannotDeleteYourselfFromWorkspace; If the user tries to delete himself
+            from the workspace.
         """
 
-        if not isinstance(group_user, GroupUser):
-            raise ValueError("The group user is not an instance of GroupUser.")
+        if not isinstance(workspace_user, WorkspaceUser):
+            raise ValueError("The workspace user is not an instance of WorkspaceUser.")
 
         CoreHandler().check_permissions(
             user,
-            DeleteGroupUserOperationType.type,
-            group=group_user.group,
-            context=group_user,
+            DeleteWorkspaceUserOperationType.type,
+            workspace=workspace_user.workspace,
+            context=workspace_user,
         )
 
-        if user.id == group_user.user_id:
-            raise CannotDeleteYourselfFromGroup("Cannot delete yourself from group.")
+        if user.id == workspace_user.user_id:
+            raise CannotDeleteYourselfFromWorkspace(
+                "Cannot delete yourself from workspace."
+            )
 
-        before_group_user_deleted.send(
-            self, user=group_user.user, group=group_user.group, group_user=group_user
-        )
-
-        group_user_id = group_user.id
-        group_user.delete()
-
-        group_user_deleted.send(
+        before_workspace_user_deleted.send(
             self,
-            group_user_id=group_user_id,
-            group_user=group_user,
+            user=workspace_user.user,
+            workspace=workspace_user.workspace,
+            workspace_user=workspace_user,
+        )
+
+        workspace_user_id = workspace_user.id
+        workspace_user.delete()
+
+        workspace_user_deleted.send(
+            self,
+            workspace_user_id=workspace_user_id,
+            workspace_user=workspace_user,
             user=user,
         )
 
-    def get_group_invitation_signer(self):
+    def get_workspace_invitation_signer(self):
         """
-        Returns the group invitation signer. This is for example used to create a url
-        safe signed version of the invitation id which is used when sending a public
-        accept link to the user.
+        Returns the workspace invitation signer. This is for example used to create
+        a url safe signed version of the invitation id which is used when sending a
+        public accept link to the user.
 
         :return: The itsdangerous serializer.
         :rtype: URLSafeSerializer
         """
 
-        return URLSafeSerializer(settings.SECRET_KEY, "group-invite")
+        return URLSafeSerializer(settings.SECRET_KEY, "workspace-invite")
 
-    def send_group_invitation_email(self, invitation, base_url):
+    def send_workspace_invitation_email(self, invitation, base_url):
         """
-        Sends out a group invitation email to the user based on the provided
+        Sends out a workspace invitation email to the user based on the provided
         invitation instance.
 
         :param invitation: The invitation instance for which the email must be send.
-        :type invitation: GroupInvitation
+        :type invitation: WorkspaceInvitation
         :param base_url: The base url of the frontend, where the user can accept his
             invitation. The signed invitation id is appended to the URL (base_url +
             '/TOKEN'). Only the PUBLIC_WEB_FRONTEND_HOSTNAME is allowed as domain name.
@@ -841,7 +882,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 f"The hostname {parsed_base_url.netloc} is not allowed."
             )
 
-        signer = self.get_group_invitation_signer()
+        signer = self.get_workspace_invitation_signer()
         signed_invitation_id = signer.dumps(invitation.id)
 
         if not base_url.endswith("/"):
@@ -851,91 +892,94 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Send the email in the language of the user that has send the invitation.
         with translation.override(invitation.invited_by.profile.language):
-            email = GroupInvitationEmail(
+            email = WorkspaceInvitationEmail(
                 invitation, public_accept_url, to=[invitation.email]
             )
             email.send()
 
-    def get_group_invitation_by_token(self, token, base_queryset=None):
+    def get_workspace_invitation_by_token(self, token, base_queryset=None):
         """
-        Returns the group invitation instance if a valid signed token of the id is
+        Returns the workspace invitation instance if a valid signed token of the id is
         provided. It can be signed using the signer returned by the
-        `get_group_invitation_signer` method.
+        `get_workspace_invitation_signer` method.
 
-        :param token: The signed invitation id of related to the group invitation
+        :param token: The signed invitation id of related to the workspace invitation
             that must be fetched. Must be signed using the signer returned by the
-            `get_group_invitation_signer`.
+            `get_workspace_invitation_signer`.
         :type token: str
         :param base_queryset: The base queryset from where to select the invitation.
             This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
         :raises BadSignature: When the provided token has a bad signature.
-        :raises GroupInvitationDoesNotExist: If the invitation does not exist.
-        :return: The requested group invitation instance related to the provided token.
-        :rtype: GroupInvitation
+        :raises WorkspaceInvitationDoesNotExist: If the invitation does not exist.
+        :return: The requested workspace invitation instance related to the
+            provided token.
+        :rtype: WorkspaceInvitation
         """
 
-        signer = self.get_group_invitation_signer()
-        group_invitation_id = signer.loads(token)
+        signer = self.get_workspace_invitation_signer()
+        workspace_invitation_id = signer.loads(token)
 
         if base_queryset is None:
-            base_queryset = GroupInvitation.objects
+            base_queryset = WorkspaceInvitation.objects
 
         try:
-            group_invitation = base_queryset.select_related("group", "invited_by").get(
-                id=group_invitation_id
-            )
-        except GroupInvitation.DoesNotExist:
-            raise GroupInvitationDoesNotExist(
-                f"The group invitation with id {group_invitation_id} does not exist."
+            workspace_invitation = base_queryset.select_related(
+                "workspace", "invited_by"
+            ).get(id=workspace_invitation_id)
+        except WorkspaceInvitation.DoesNotExist:
+            raise WorkspaceInvitationDoesNotExist(
+                f"The workspace invitation with id {workspace_invitation_id} "
+                "does not exist."
             )
 
-        return group_invitation
+        return workspace_invitation
 
-    def get_group_invitation(self, group_invitation_id, base_queryset=None):
+    def get_workspace_invitation(self, workspace_invitation_id, base_queryset=None):
         """
-        Selects a group invitation with a given id from the database.
+        Selects a workspace invitation with a given id from the database.
 
-        :param group_invitation_id: The identifier of the invitation that must be
+        :param workspace_invitation_id: The identifier of the invitation that must be
             returned.
-        :type group_invitation_id: int
+        :type workspace_invitation_id: int
         :param base_queryset: The base queryset from where to select the invitation.
             This can for example be used to do a `select_related`.
         :type base_queryset: Queryset
-        :raises GroupInvitationDoesNotExist: If the invitation does not exist.
+        :raises WorkspaceInvitationDoesNotExist: If the invitation does not exist.
         :return: The requested field instance of the provided id.
-        :rtype: GroupInvitation
+        :rtype: WorkspaceInvitation
         """
 
         if base_queryset is None:
-            base_queryset = GroupInvitation.objects
+            base_queryset = WorkspaceInvitation.objects
 
         try:
-            group_invitation = base_queryset.select_related("group", "invited_by").get(
-                id=group_invitation_id
-            )
-        except GroupInvitation.DoesNotExist:
-            raise GroupInvitationDoesNotExist(
-                f"The group invitation with id {group_invitation_id} does not exist."
+            workspace_invitation = base_queryset.select_related(
+                "workspace", "invited_by"
+            ).get(id=workspace_invitation_id)
+        except WorkspaceInvitation.DoesNotExist:
+            raise WorkspaceInvitationDoesNotExist(
+                f"The workspace invitation with id {workspace_invitation_id} "
+                "does not exist."
             )
 
-        return group_invitation
+        return workspace_invitation
 
-    def create_group_invitation(
-        self, user, group, email, permissions, base_url, message=""
+    def create_workspace_invitation(
+        self, user, workspace, email, permissions, base_url, message=""
     ):
         """
-        Creates a new group invitation for the given email address and sends out an
+        Creates a new workspace invitation for the given email address and sends out an
         email containing the invitation.
 
         :param user: The user on whose behalf the invitation is created.
         :type user: User
-        :param group: The group for which the user is invited.
-        :type group: Group
-        :param email: The email address of the person that is invited to the group.
+        :param workspace: The workspace for which the user is invited.
+        :type workspace: Workspace
+        :param email: The email address of the person that is invited to the workspace.
             Can be an existing or not existing user.
         :type email: str
-        :param permissions: The group permissions that the user will get once he has
+        :param permissions: The workspace permissions that the user will get once he has
             accepted the invitation.
         :type permissions: str
         :param base_url: The base url of the frontend, where the user can accept his
@@ -945,25 +989,30 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param message: A custom message that will be included in the invitation email.
         :type message: Optional[str]
         :raises ValueError: If the provided permissions are not allowed.
-        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
-            group or doesn't have right permissions in the group.
-        :return: The created group invitation.
-        :rtype: GroupInvitation
+        :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
+            workspace or doesn't have right permissions in the workspace.
+        :return: The created workspace invitation.
+        :rtype: WorkspaceInvitation
         """
 
         CoreHandler().check_permissions(
-            user, CreateInvitationsGroupOperationType.type, group=group, context=group
+            user,
+            CreateInvitationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
         email = normalize_email_address(email)
 
-        if GroupUser.objects.filter(group=group, user__email=email).exists():
-            raise GroupUserAlreadyExists(
-                f"The user {email} is already part of the " f"group."
+        if WorkspaceUser.objects.filter(
+            workspace=workspace, user__email=email
+        ).exists():
+            raise WorkspaceUserAlreadyExists(
+                f"The user {email} is already part of the workspace."
             )
 
-        invitation, _ = GroupInvitation.objects.update_or_create(
-            group=group,
+        invitation, _ = WorkspaceInvitation.objects.update_or_create(
+            workspace=workspace,
             email=email,
             defaults={
                 "message": message,
@@ -972,33 +1021,33 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             },
         )
 
-        self.send_group_invitation_email(invitation, base_url)
+        self.send_workspace_invitation_email(invitation, base_url)
 
         return invitation
 
-    def update_group_invitation(self, user, invitation, permissions):
+    def update_workspace_invitation(self, user, invitation, permissions):
         """
         Updates the permissions of an existing invitation if the user has ADMIN
-        permissions to the related group.
+        permissions to the related workspace.
 
         :param user: The user on whose behalf the invitation is updated.
         :type user: User
         :param invitation: The invitation that must be updated.
-        :type invitation: GroupInvitation
+        :type invitation: WorkspaceInvitation
         :param permissions: The new permissions of the invitation that the user must
             has after accepting.
         :type permissions: str
         :raises ValueError: If the provided permissions is not allowed.
-        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
-            group or doesn't have right permissions in the group.
-        :return: The updated group permissions instance.
-        :rtype: GroupInvitation
+        :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
+            workspace or doesn't have right permissions in the workspace.
+        :return: The updated workspace permissions instance.
+        :rtype: WorkspaceInvitation
         """
 
         CoreHandler().check_permissions(
             user,
-            UpdateGroupInvitationType.type,
-            group=invitation.group,
+            UpdateWorkspaceInvitationType.type,
+            workspace=invitation.workspace,
             context=invitation,
         )
 
@@ -1007,112 +1056,115 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return invitation
 
-    def delete_group_invitation(self, user, invitation):
+    def delete_workspace_invitation(self, user, invitation):
         """
-        Deletes an existing group invitation if the user has ADMIN permissions to the
-        related group.
+        Deletes an existing workspace invitation if the user has ADMIN permissions to
+        the related workspace.
 
         :param user: The user on whose behalf the invitation is deleted.
         :type user: User
         :param invitation: The invitation that must be deleted.
-        :type invitation: GroupInvitation
-        :raises UserInvalidGroupPermissionsError: If the user does not belong to the
-            group or doesn't have right permissions in the group.
+        :type invitation: WorkspaceInvitation
+        :raises UserInvalidWorkspacePermissionsError: If the user does not belong to the
+            workspace or doesn't have right permissions in the workspace.
         """
 
         CoreHandler().check_permissions(
             user,
-            DeleteGroupInvitationOperationType.type,
-            group=invitation.group,
+            DeleteWorkspaceInvitationOperationType.type,
+            workspace=invitation.workspace,
             context=invitation,
         )
 
         invitation.delete()
 
-    def reject_group_invitation(self, user, invitation):
+    def reject_workspace_invitation(self, user, invitation):
         """
-        Rejects a group invitation by deleting the invitation so that can't be reused
-        again. It can only be rejected if the invitation was addressed to the email
-        address of the user.
+        Rejects a workspace invitation by deleting the invitation so that can't be
+        reused again. It can only be rejected if the invitation was addressed to the
+        email address of the user.
 
         :param user: The user who wants to reject the invitation.
         :type user: User
         :param invitation: The invitation that must be rejected.
-        :type invitation: GroupInvitation
-        :raises GroupInvitationEmailMismatch: If the invitation email does not match
+        :type invitation: WorkspaceInvitation
+        :raises WorkspaceInvitationEmailMismatch: If the invitation email does not match
             the one of the user.
         """
 
         if user.username != invitation.email:
-            raise GroupInvitationEmailMismatch(
+            raise WorkspaceInvitationEmailMismatch(
                 "The email address of the invitation does not match the one of the "
                 "user."
             )
 
         invitation.delete()
 
-    def add_user_to_group(
+    def add_user_to_workspace(
         self,
-        group: Group,
+        workspace: Workspace,
         user: AbstractUser,
-        permissions: str = GROUP_USER_PERMISSION_MEMBER,
-    ) -> GroupUser:
+        permissions: str = WORKSPACE_USER_PERMISSION_MEMBER,
+    ) -> WorkspaceUser:
         """
-        Adds a user to the group by creating the appropriate `GroupUser`. If the user
-        is already in the group, the permissions field is updated.
+        Adds a user to the workspace by creating the appropriate `WorkspaceUser`.
+        If the user is already in the workspace, the permissions field is updated.
 
-        :param group: the group in which we want to add the user.
+        :param workspace: the workspace in which we want to add the user.
         :param user: the user we want to add.
-        :param permissions: the permissions of the user in this group. 'member' by
+        :param permissions: the permissions of the user in this workspace. 'member' by
             default if not specified.
-        :return: The created `GroupUser` object.
+        :return: The created `WorkspaceUser` object.
         """
 
-        group_user, _ = GroupUser.objects.update_or_create(
+        workspace_user, _ = WorkspaceUser.objects.update_or_create(
             user=user,
-            group=group,
+            workspace=workspace,
             defaults={
-                "order": GroupUser.get_last_order(user),
+                "order": WorkspaceUser.get_last_order(user),
                 "permissions": permissions,
             },
         )
 
-        group_user_added.send(
-            self, group_user_id=group_user.id, group_user=group_user, user=user
+        workspace_user_added.send(
+            self,
+            workspace_user_id=workspace_user.id,
+            workspace_user=workspace_user,
+            user=user,
         )
 
-        return group_user
+        return workspace_user
 
-    def accept_group_invitation(
-        self, user: User, invitation: GroupInvitation
-    ) -> GroupUser:
+    def accept_workspace_invitation(
+        self, user: User, invitation: WorkspaceInvitation
+    ) -> WorkspaceUser:
         """
-        Accepts a group invitation by adding the user to the correct group with the
-        right permissions. It can only be accepted if the invitation was addressed to
-        the email address of the user. Because the invitation has been accepted it
-        can then be deleted. If the user is already a member of the group then the
-        permissions are updated.
+        Accepts a workspace invitation by adding the user to the correct workspace with
+        the right permissions. It can only be accepted if the invitation was
+        addressed to the email address of the user. Because the invitation has been
+        accepted it can then be deleted. If the user is already a member of the
+        workspace then the permissions are updated.
 
         :param user: The user who has accepted the invitation.
         :param invitation: The invitation that must be accepted.
-        :raises GroupInvitationEmailMismatch: If the invitation email does not match
+        :raises WorkspaceInvitationEmailMismatch: If the invitation email does not match
             the one of the user.
-        :return: The group user relationship related to the invite.
+        :return: The workspace user relationship related to the invite.
         """
 
         if user.username != invitation.email:
-            raise GroupInvitationEmailMismatch(
+            raise WorkspaceInvitationEmailMismatch(
                 "The email address of the invitation does not match the one of the "
                 "user."
             )
 
-        group_user = self.add_user_to_group(
-            invitation.group, user, permissions=invitation.permissions
+        workspace_user = self.add_user_to_workspace(
+            invitation.workspace, user, permissions=invitation.permissions
         )
 
         invitation.delete()
 
-        return group_user
+        return workspace_user
 
     def get_user_application(
         self,
@@ -1126,7 +1178,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param application_id: The identifier of the application that must be returned.
         :param base_queryset: The base queryset from where to select the application
             object. This can for example be used to do a `select_related`.
-        :raises UserNotInGroup: If the user does not belong to the group of the
+        :raises UserNotInWorkspace: If the user does not belong to the workspace of the
             application.
         :return: The requested application instance of the provided id.
         """
@@ -1136,7 +1188,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             ReadApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
@@ -1160,7 +1212,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             base_queryset = Application.objects
 
         try:
-            application = base_queryset.select_related("group", "content_type").get(
+            application = base_queryset.select_related("workspace", "content_type").get(
                 id=application_id
             )
         except Application.DoesNotExist:
@@ -1175,26 +1227,26 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return application
 
-    def list_applications_in_group(
-        self, group_id: int, base_queryset: Optional[QuerySet] = None
+    def list_applications_in_workspace(
+        self, workspace_id: int, base_queryset: Optional[QuerySet] = None
     ) -> QuerySet:
         """
-        Return a list of applications in a group.
+        Return a list of applications in a workspace.
 
-        :param group: The group to list the applications from.
+        :param workspace_id: The workspace to list the applications from.
         :param base_queryset: The base queryset from where to select the application
-        :return: A list of applications in the group.
+        :return: A list of applications in the workspace.
         """
 
         if base_queryset is None:
             base_queryset = Application.objects
 
-        return base_queryset.filter(group_id=group_id, group__trashed=False)
+        return base_queryset.filter(workspace_id=workspace_id, workspace__trashed=False)
 
     def create_application(
         self,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         type_name: str,
         name: str,
         init_with_data: bool = False,
@@ -1203,7 +1255,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         Creates a new application based on the provided type.
 
         :param user: The user on whose behalf the application is created.
-        :param group: The group that the application instance belongs to.
+        :param workspace: The workspace that the application instance belongs to.
         :param type_name: The type name of the application. ApplicationType can be
             registered via the ApplicationTypeRegistry.
         :param name: The name of the application.
@@ -1213,28 +1265,33 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         CoreHandler().check_permissions(
-            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+            user,
+            CreateApplicationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
         application_type = application_type_registry.get(type_name)
         application = application_type.create_application(
-            user, group, name, init_with_data
+            user, workspace, name, init_with_data
         )
 
         application_created.send(self, application=application, user=user)
         return application
 
-    def find_unused_application_name(self, group_id: int, proposed_name: str) -> str:
+    def find_unused_application_name(
+        self, workspace_id: int, proposed_name: str
+    ) -> str:
         """
         Finds an unused name for an application.
 
-        :param group_id: The group id that the application belongs to.
+        :param workspace_id: The workspace id that the application belongs to.
         :param proposed_name: The name that is proposed to be used.
         :return: A unique name to use.
         """
 
-        existing_applications_names = self.list_applications_in_group(
-            group_id
+        existing_applications_names = self.list_applications_in_workspace(
+            workspace_id
         ).values_list("name", flat=True)
         return find_unused_name(
             [proposed_name], existing_applications_names, max_length=255
@@ -1255,7 +1312,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             UpdateApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
@@ -1282,12 +1339,12 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The new (duplicated) application instance.
         """
 
-        group = application.group
+        workspace = application.workspace
 
         CoreHandler().check_permissions(
             user,
             DuplicateApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
@@ -1313,14 +1370,14 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         # Set a new unique name for the new application
         serialized["name"] = self.find_unused_application_name(
-            group.id, serialized["name"]
+            workspace.id, serialized["name"]
         )
-        serialized["order"] = application_type.model_class.get_last_order(group)
+        serialized["order"] = application_type.model_class.get_last_order(workspace)
 
         # import it back as a new application
         id_mapping: Dict[str, Any] = {}
         new_application_clone = application_type.import_serialized(
-            group,
+            workspace,
             serialized,
             id_mapping,
             progress_builder=progress.create_child_builder(
@@ -1339,34 +1396,37 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         return new_application_clone
 
     def order_applications(
-        self, user: AbstractUser, group: Group, order: List[int]
+        self, user: AbstractUser, workspace: Workspace, order: List[int]
     ) -> List[int]:
         """
-        Updates the order of the applications in the given group. The order of the
+        Updates the order of the applications in the given workspace. The order of the
         applications that are not in the `order` parameter set to `0`.
 
         :param user: The user on whose behalf the tables are ordered.
-        :param group: The group of which the applications must be updated.
+        :param workspace: The workspace of which the applications must be updated.
         :param order: A list containing the application ids in the desired order.
-        :raises ApplicationNotInGroup: If one of the applications ids in the order does
-            not belong to the database.
+        :raises ApplicationNotInWorkspace: If one of the applications ids in the order
+            does not belong to the database.
         :return: The old order of application ids.
         """
 
         CoreHandler().check_permissions(
-            user, OrderApplicationsOperationType.type, group=group, context=group
+            user,
+            OrderApplicationsOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
-        all_applications = Application.objects.filter(group_id=group.id).order_by(
-            "order"
-        )
+        all_applications = Application.objects.filter(
+            workspace_id=workspace.id
+        ).order_by("order")
 
         users_applications = CoreHandler().filter_queryset(
             user,
             OrderApplicationsOperationType.type,
             all_applications,
-            group=group,
-            context=group,
+            workspace=workspace,
+            context=workspace,
         )
 
         users_application_ids = users_applications.values_list("id", flat=True)
@@ -1374,18 +1434,20 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         # Check that all ordered ids can be ordered by the user
         for application_id in order:
             if application_id not in users_application_ids:
-                raise ApplicationNotInGroup(application_id)
+                raise ApplicationNotInWorkspace(application_id)
 
         new_order = Application.order_objects(all_applications, order)
 
-        applications_reordered.send(self, group=group, order=new_order, user=user)
+        applications_reordered.send(
+            self, workspace=workspace, order=new_order, user=user
+        )
 
         return users_application_ids
 
     def delete_application(self, user: AbstractUser, application: Application):
         """
         Deletes an existing application instance if the user has access to the
-        related group. The `application_deleted` signal is also called.
+        related workspace. The `application_deleted` signal is also called.
 
         :param user: The user on whose behalf the application is deleted.
         :param application: The application instance that needs to be deleted.
@@ -1398,27 +1460,28 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             DeleteApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
         application_id = application.id
-        TrashHandler.trash(user, application.group, application, application)
+        TrashHandler.trash(user, application.workspace, application, application)
 
         application_deleted.send(
             self, application_id=application_id, application=application, user=user
         )
 
-    def export_group_applications(self, group, files_buffer, storage=None):
+    def export_workspace_applications(self, workspace, files_buffer, storage=None):
         """
-        Exports the applications of a group to a list. They can later be imported via
-        the `import_applications_to_group` method. The result can be serialized to JSON.
+        Exports the applications of a workspace to a list. They can later be imported
+        via the `import_applications_to_workspace` method. The result can be
+        serialized to JSON.
 
         @TODO look into speed optimizations by streaming to a JSON file instead of
             generating the entire file in memory.
 
-        :param group: The group of which the applications must be exported.
-        :type group: Group
+        :param workspace: The workspace of which the applications must be exported.
+        :type workspace: Workspace
         :param files_buffer: A file buffer where the files must be written to in ZIP
             format.
         :type files_buffer: IOBase
@@ -1433,7 +1496,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             exported_applications = []
-            applications = group.application_set.all()
+            applications = workspace.application_set.all()
             for a in applications:
                 application = a.specific
                 application_type = application_type_registry.get_by_model(application)
@@ -1445,24 +1508,24 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         return exported_applications
 
-    def import_applications_to_group(
+    def import_applications_to_workspace(
         self,
-        group: Group,
+        workspace: Workspace,
         exported_applications: List[Dict[str, Any]],
         files_buffer: IO[bytes],
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Tuple[List[Application], Dict[str, Any]]:
         """
-        Imports multiple exported applications into the given group. It is compatible
-        with an export of the `export_group_applications` method.
+        Imports multiple exported applications into the given workspace. It is
+        compatible with an export of the `export_workspace_applications` method.
 
         @TODO look into speed optimizations by streaming from a JSON file instead of
             loading the entire file into memory.
 
-        :param group: The group that the applications must be imported to.
+        :param workspace: The workspace that the applications must be imported to.
         :param exported_applications: A list containing the applications generated by
-            the `export_group_applications` method.
+            the `export_workspace_applications` method.
         :param files_buffer: A file buffer containing the exported files in ZIP format.
         :param storage: The storage where the files can be copied to.
         :param progress_builder: If provided will be used to build a child progress bar
@@ -1481,11 +1544,11 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             id_mapping: Dict[str, Any] = {}
             imported_applications = []
-            next_application_order_value = Application.get_last_order(group)
+            next_application_order_value = Application.get_last_order(workspace)
             for application in exported_applications:
                 application_type = application_type_registry.get(application["type"])
                 imported_application = application_type.import_serialized(
-                    group,
+                    workspace,
                     application,
                     id_mapping,
                     files_zip,
@@ -1507,10 +1570,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         :param template_id: The identifier of the template that must be returned.
         :type template_id: int
-        :param base_queryset: The base queryset from where to select the group
+        :param base_queryset: The base queryset from where to select the workspace
             object. This can for example be used to do a `prefetch_related`.
         :type base_queryset: Queryset
-        :raises TemplateDoesNotExist: When the group with the provided id does not
+        :raises TemplateDoesNotExist: When the workspace with the provided id does not
             exist.
         :return: The requested template instance related to the provided id.
         :rtype: Template
@@ -1540,10 +1603,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         template before installing. It will also make sure that the right categories
         exist and that old ones are deleted.
 
-        If the template doesn't exist, a group can be created and we can import the
-        export in that group. If the template already exists we check if the
+        If the template doesn't exist, a workspace can be created and we can import the
+        export in that workspace. If the template already exists we check if the
         `export_hash` has changed, if so it means the export has changed. Because we
-        don't have updating capability, we delete the old group and create a new one
+        don't have updating capability, we delete the old workspace and create a new one
         where we can import the export into.
 
         :param storage:
@@ -1556,7 +1619,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         installed_templates = (
             Template.objects.all()
             .prefetch_related("categories")
-            .select_related("group")
+            .select_related("workspace")
         )
         installed_categories = list(TemplateCategory.objects.all())
 
@@ -1586,19 +1649,20 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 ",".join(parsed_json["keywords"]) if "keywords" in parsed_json else ""
             )
 
-            # If the installed template and group exist, and if there is a hash
-            # mismatch, we need to delete the old group and all the related
-            # applications in it. This is because a new group will be created.
+            # If the installed template and workspace exist, and if there is a hash
+            # mismatch, we need to delete the old workspace and all the related
+            # applications in it. This is because a new workspace will be created.
             if (
                 installed_template
-                and installed_template.group
+                and installed_template.workspace
                 and installed_template.export_hash != export_hash
             ):
-                TrashHandler.permanently_delete(installed_template.group)
+                TrashHandler.permanently_delete(installed_template.workspace)
 
             # If the installed template does not yet exist or if there is a export
-            # hash mismatch, which means the group has already been deleted, we can
-            # create a new group and import the exported applications into that group.
+            # hash mismatch, which means the workspace has already been deleted, we can
+            # create a new workspace and import the exported applications into that
+            # workspace.
             if not installed_template or installed_template.export_hash != export_hash:
                 # It is optionally possible for a template to have additional files.
                 # They are stored in a ZIP file and are generated when the template
@@ -1611,9 +1675,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                     # maintain backward compatibility and to not brake anything.
                     files_buffer = BytesIO()
 
-                group = Group.objects.create(name=parsed_json["name"])
-                self.import_applications_to_group(
-                    group,
+                workspace = Workspace.objects.create(name=parsed_json["name"])
+                self.import_applications_to_workspace(
+                    workspace,
                     parsed_json["export"],
                     files_buffer=files_buffer,
                     storage=storage,
@@ -1622,16 +1686,16 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 if files_buffer:
                     files_buffer.close()
             else:
-                group = installed_template.group
-                group.name = parsed_json["name"]
-                group.save()
+                workspace = installed_template.workspace
+                workspace.name = parsed_json["name"]
+                workspace.save()
 
             kwargs = {
                 "name": parsed_json["name"],
                 "icon": parsed_json["icon"],
                 "export_hash": export_hash,
                 "keywords": keywords,
-                "group": group,
+                "workspace": workspace,
             }
 
             if not installed_template:
@@ -1667,7 +1731,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             for template_file_path in templates
         ]
         for template in Template.objects.filter(~Q(slug__in=slugs)):
-            TrashHandler.permanently_delete(template.group)
+            TrashHandler.permanently_delete(template.workspace)
             template.delete()
 
         # Delete all the categories that don't have any templates anymore.
@@ -1692,24 +1756,28 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
     def install_template(
         self,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         template: Template,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Tuple[List[Application], Dict[str, Any]]:
         """
-        Installs the exported applications of a template into the given group if the
-        provided user has access to that group.
+        Installs the exported applications of a template into the given workspace if the
+        provided user has access to that workspace.
 
         :param user: The user on whose behalf the template installed.
-        :param group: The group where the template applications must be imported into.
+        :param workspace: The workspace where the template applications must be
+            imported into.
         :param template: The template that must be installed.
         :param storage: The storage where the files can be copied to.
         :return: The imported applications.
         """
 
         CoreHandler().check_permissions(
-            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+            user,
+            CreateApplicationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
         template_path = self.get_valid_template_path_or_raise(template)
@@ -1728,8 +1796,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             # maintain backward compatibility and to not brake anything.
             files_buffer = BytesIO()
 
-        applications, id_mapping = self.import_applications_to_group(
-            group,
+        applications, id_mapping = self.import_applications_to_workspace(
+            workspace,
             parsed_json["export"],
             files_buffer=files_buffer,
             storage=storage,
@@ -1756,25 +1824,25 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         return applications, id_mapping
 
     @classmethod
-    def raise_if_user_is_last_admin_of_group(cls, group_user: GroupUser):
+    def raise_if_user_is_last_admin_of_workspace(cls, workspace_user: WorkspaceUser):
         """
-        Checks if a user that's about to be removed is the last admin of the group.
+        Checks if a user that's about to be removed is the last admin of the workspace.
 
-        :param group_user: The group user we are checking for
+        :param workspace_user: The workspace user we are checking for
         :return:
         """
 
-        admins_in_group_count = len(
-            GroupUser.objects.filter(
-                group=group_user.group, permissions="ADMIN"
+        admins_in_workspace_count = len(
+            WorkspaceUser.objects.filter(
+                workspace=workspace_user.workspace, permissions="ADMIN"
             ).select_for_update(of=("self",))
         )
 
-        is_subject_admin = group_user.permissions == "ADMIN"
-        is_subject_last_admin = is_subject_admin and admins_in_group_count == 1
+        is_subject_admin = workspace_user.permissions == "ADMIN"
+        is_subject_last_admin = is_subject_admin and admins_in_workspace_count == 1
 
         if is_subject_last_admin:
-            raise LastAdminOfGroup()
+            raise LastAdminOfWorkspace()
 
     @staticmethod
     def is_max_lock_exceeded_exception(exception: OperationalError) -> bool:

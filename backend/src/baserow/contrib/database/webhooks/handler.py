@@ -68,9 +68,12 @@ class WebhookHandler:
 
         webhook = self._get_table_webhook(webhook_id, base_queryset=base_queryset)
 
-        group = webhook.table.database.group
+        workspace = webhook.table.database.workspace
         CoreHandler().check_permissions(
-            user, ReadWebhookOperationType.type, group=group, context=webhook.table
+            user,
+            ReadWebhookOperationType.type,
+            workspace=workspace,
+            context=webhook.table,
         )
 
         return webhook
@@ -92,7 +95,7 @@ class WebhookHandler:
             base_queryset = TableWebhook.objects
 
         try:
-            webhook = base_queryset.select_related("table__database__group").get(
+            webhook = base_queryset.select_related("table__database__workspace").get(
                 id=webhook_id
             )
         except TableWebhook.DoesNotExist:
@@ -111,9 +114,12 @@ class WebhookHandler:
         :return: The fetched webhooks related to the table.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, ListTableWebhooksOperationType.type, group=group, context=table
+            user,
+            ListTableWebhooksOperationType.type,
+            workspace=workspace,
+            context=table,
         )
 
         return TableWebhook.objects.prefetch_related("events", "headers").filter(
@@ -135,15 +141,15 @@ class WebhookHandler:
         :param table: The table for which the webhook must be created.
         :param events: A list containing the event types related to the webhook. They
             will only be added if the provided `include_all_events` is False.
-        :param headers: An object containing the additional headers that must be send
+        :param headers: An object containing the additional headers that must be sent
             when the webhook triggers. The key is the name and the value the value.
         :param kwargs: Additional arguments passed along to the webhook object.
         :return: The newly created webhook object.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, CreateWebhookOperationType.type, group=group, context=table
+            user, CreateWebhookOperationType.type, workspace=workspace, context=table
         )
 
         webhook_count = TableWebhook.objects.filter(table_id=table.id).count()
@@ -200,15 +206,18 @@ class WebhookHandler:
         :param webhook: The webhook object that must be updated.
         :param events: A list containing the event types related to the webhook. They
             will only be added if the provided `include_all_events` is False.
-        :param headers: An object containing the additional headers that must be send
+        :param headers: An object containing the additional headers that must be sent
             when the webhook triggers. The key is the name and the value the value.
         :param kwargs: Additional arguments passed along to the webhook object.
         :return: The updated webhook object.
         """
 
-        group = webhook.table.database.group
+        workspace = webhook.table.database.workspace
         CoreHandler().check_permissions(
-            user, UpdateWebhookOperationType.type, group=group, context=webhook.table
+            user,
+            UpdateWebhookOperationType.type,
+            workspace=workspace,
+            context=webhook.table,
         )
 
         # if the webhook is not active and a user sets the webhook to active
@@ -295,9 +304,12 @@ class WebhookHandler:
         :param webhook: The webhook object that must be deleted.
         """
 
-        group = webhook.table.database.group
+        workspace = webhook.table.database.workspace
         CoreHandler().check_permissions(
-            user, DeleteWebhookOperationType.type, group=group, context=webhook.table
+            user,
+            DeleteWebhookOperationType.type,
+            workspace=workspace,
+            context=webhook.table,
         )
 
         webhook.delete()
@@ -312,9 +324,9 @@ class WebhookHandler:
 
         :param method: The HTTP request method that must be used.
         :param url: The URL that must called.
-        :param headers: The headers that must be send. The key is the name and the
+        :param headers: The headers that must be sent. The key is the name and the
             value the value.
-        :param payload: The JSON pay as dict that must be send.
+        :param payload: The JSON pay as dict that must be sent.
         :return: The request and response as the tuple (request, response)
         """
 
@@ -371,11 +383,11 @@ class WebhookHandler:
         if not headers:
             headers = {}
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             TestTriggerWebhookOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 

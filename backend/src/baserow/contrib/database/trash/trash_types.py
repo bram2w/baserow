@@ -56,7 +56,7 @@ class TableTrashableItemType(TrashableItemType):
                 trash_item_type="field",
                 trash_item_id__in=field_ids_to_check_for_individual_entries,
                 application=trashed_item.database,
-                group=trashed_item.database.group,
+                workspace=trashed_item.database.workspace,
             ).exists():
                 # Don't restore fields with their own trash entry as they have been
                 # separately deleted individually before the table was deleted.

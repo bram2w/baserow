@@ -12,7 +12,7 @@ from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_query_parameters
 from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
-from baserow.core.exceptions import GroupInvitationEmailMismatch
+from baserow.core.exceptions import WorkspaceInvitationEmailMismatch
 from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignupError
 from baserow_enterprise.api.sso.serializers import SsoLoginRequestSerializer
@@ -46,10 +46,20 @@ class OAuth2LoginView(APIView):
                 description="The relative part of URL that the user wanted to access.",
             ),
             OpenApiParameter(
+                deprecated=True,
                 name="group_invitation_token",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
-                description="The invitation token sent to the user to join a specific group.",
+                description="Please use the functionally identical "
+                "`workspace_invitation_token` instead as this querystring "
+                "is being removed in the future.",
+            ),
+            OpenApiParameter(
+                name="workspace_invitation_token",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="The invitation token sent to the "
+                "user to join a specific workspace.",
             ),
         ],
         tags=["Auth"],
@@ -128,7 +138,7 @@ class OAuth2CallbackView(APIView):
             AuthFlowError: SsoErrorCode.AUTH_FLOW_ERROR,
             DeactivatedUserException: SsoErrorCode.USER_DEACTIVATED,
             DifferentAuthProvider: SsoErrorCode.DIFFERENT_PROVIDER,
-            GroupInvitationEmailMismatch: SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH,
+            WorkspaceInvitationEmailMismatch: SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH,
             DisabledSignupError: SsoErrorCode.SIGNUP_DISABLED,
         }
     )

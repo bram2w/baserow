@@ -47,7 +47,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaNumberType,
     BaserowFormulaTextType,
 )
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 
 from .registries import ViewFilterType
 
@@ -1006,36 +1006,36 @@ class MultipleCollaboratorsHasViewFilterType(ManyToManyHasBaseViewFilter):
 
     def get_export_serialized_value(self, value, id_mapping):
         if self.COLLABORATORS_KEY not in id_mapping:
-            group_id = id_mapping.get("group_id", None)
-            if group_id is None:
+            workspace_id = id_mapping.get("workspace_id", None)
+            if workspace_id is None:
                 return value
 
             id_mapping[self.COLLABORATORS_KEY] = defaultdict(list)
 
-            groupusers_from_group = GroupUser.objects.filter(
-                group_id=group_id
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
             ).select_related("user")
 
-            for groupuser in groupusers_from_group:
+            for workspaceuser in workspaceusers_from_workspace:
                 id_mapping[self.COLLABORATORS_KEY][
-                    str(groupuser.user.id)
-                ] = groupuser.user.email
+                    str(workspaceuser.user.id)
+                ] = workspaceuser.user.email
 
         return id_mapping[self.COLLABORATORS_KEY].get(value, "")
 
     def set_import_serialized_value(self, value, id_mapping):
-        group_id = id_mapping.get("group_id", None)
-        if group_id is None:
+        workspace_id = id_mapping.get("workspace_id", None)
+        if workspace_id is None:
             return ""
 
         if self.COLLABORATORS_KEY not in id_mapping:
             id_mapping[self.COLLABORATORS_KEY] = defaultdict(list)
-            groupusers_from_group = GroupUser.objects.filter(
-                group_id=group_id
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
             ).select_related("user")
-            for groupuser in groupusers_from_group:
-                id_mapping[self.COLLABORATORS_KEY][str(groupuser.user.email)] = str(
-                    groupuser.user.id
+            for workspaceuser in workspaceusers_from_workspace:
+                id_mapping[self.COLLABORATORS_KEY][str(workspaceuser.user.email)] = str(
+                    workspaceuser.user.id
                 )
         return id_mapping[self.COLLABORATORS_KEY].get(value, "")
 

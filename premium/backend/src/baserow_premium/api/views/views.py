@@ -23,7 +23,7 @@ from baserow.contrib.database.views.exceptions import ViewDoesNotExist
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 
 class PremiumViewAttributesView(APIView):
@@ -61,7 +61,7 @@ class PremiumViewAttributesView(APIView):
     @map_exceptions(
         {
             CannotUpdatePremiumAttributesOnTemplate: ERROR_CANNOT_UPDATE_PREMIUM_ATTRIBUTES_ON_TEMPLATE,  # noqa
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
         }
     )

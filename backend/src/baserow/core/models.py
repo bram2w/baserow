@@ -19,18 +19,19 @@ from baserow.core.user_files.models import UserFile
 from .action.models import Action
 from .mixins import (
     CreatedAndUpdatedOnMixin,
+    GroupToWorkspaceCompatModelMixin,
     HierarchicalModelMixin,
     OrderableMixin,
-    ParentGroupTrashableModelMixin,
+    ParentWorkspaceTrashableModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
 
 __all__ = [
     "Settings",
-    "Group",
-    "GroupUser",
-    "GroupInvitation",
+    "Workspace",
+    "WorkspaceUser",
+    "WorkspaceInvitation",
     "Application",
     "TemplateCategory",
     "Template",
@@ -39,6 +40,8 @@ __all__ = [
     "UserFile",
     "Action",
     "Snapshot",
+    "DuplicateApplicationJob",
+    "InstallTemplateJob",
 ]
 
 
@@ -46,9 +49,9 @@ User = get_user_model()
 
 
 # The difference between an admin and member right now is that an admin has
-# permissions to update, delete and manage the members of a group.
-GROUP_USER_PERMISSION_ADMIN = "ADMIN"
-GROUP_USER_PERMISSION_MEMBER = "MEMBER"
+# permissions to update, delete and manage the members of a workspace.
+WORKSPACE_USER_PERMISSION_ADMIN = "ADMIN"
+WORKSPACE_USER_PERMISSION_MEMBER = "MEMBER"
 
 
 def get_default_application_content_type():
@@ -75,7 +78,7 @@ class Settings(models.Model):
         help_text="Indicates whether new users can create a new account when signing "
         "up.",
     )
-    allow_signups_via_group_invitations = models.BooleanField(
+    allow_signups_via_workspace_invitations = models.BooleanField(
         default=True,
         help_text="Indicates whether invited users can create an account when signing "
         "up, even if allow_new_signups is disabled.",
@@ -84,9 +87,9 @@ class Settings(models.Model):
         default=True,
         help_text="Indicates whether users can request a password reset link.",
     )
-    allow_global_group_creation = models.BooleanField(
+    allow_global_workspace_creation = models.BooleanField(
         default=True,
-        help_text="Indicates whether all users can create groups, or just staff.",
+        help_text="Indicates whether all users can create workspaces, or just staff.",
     )
     account_deletion_grace_delay = models.PositiveSmallIntegerField(
         default=30,
@@ -128,9 +131,9 @@ class UserProfile(models.Model):
     )
 
 
-class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
-    name = models.CharField(max_length=160)
-    users = models.ManyToManyField(User, through="GroupUser")
+class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
+    name = models.CharField(max_length=165)
+    users = models.ManyToManyField(User, through="WorkspaceUser")
     storage_usage = models.IntegerField(null=True)
     storage_usage_updated_at = models.DateTimeField(null=True)
     seats_taken = models.IntegerField(null=True)
@@ -151,7 +154,7 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
 
     def application_set_including_trash(self):
         """
-        :return: The applications for this group including any trashed applications.
+        :return: The applications for this workspace including any trashed applications.
         """
 
         return self.application_set(manager="objects_and_trash")
@@ -159,31 +162,34 @@ class Group(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixi
     def has_template(self):
         return self.template_set.all().exists()
 
-    def get_group_user(self, user: User, include_trash: bool = False) -> "GroupUser":
+    def get_workspace_user(
+        self, user: User, include_trash: bool = False
+    ) -> "WorkspaceUser":
         """
-        Return the GroupUser object for this group for the specified user.
+        Return the WorkspaceUser object for this workspace for the specified user.
 
-        :param user: The user we want the group user for.
-        :param include_trash: Do we want to check trashed group user also ?
-        :return: The related group user instance.
+        :param user: The user we want the workspace user for.
+        :param include_trash: Do we want to check trashed workspace user also ?
+        :return: The related workspace user instance.
         """
 
         if include_trash:
-            manager = GroupUser.objects_and_trash
+            manager = WorkspaceUser.objects_and_trash
         else:
-            manager = GroupUser.objects
+            manager = WorkspaceUser.objects
 
-        return manager.get(user=user, group=self)
+        return manager.get(user=user, workspace=self)
 
     def __str__(self):
-        return f"<Group id={self.id}, name={self.name}>"
+        return f"<Workspace id={self.id}, name={self.name}>"
 
     def __repr__(self):
-        return f"<Group id={self.id}, name={self.name}>"
+        return f"<Workspace id={self.id}, name={self.name}>"
 
 
-class GroupUser(
-    ParentGroupTrashableModelMixin,
+class WorkspaceUser(
+    ParentWorkspaceTrashableModelMixin,
+    GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     models.Model,
@@ -191,24 +197,24 @@ class GroupUser(
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        help_text="The user that has access to the group.",
+        help_text="The user that has access to the workspace.",
     )
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.CASCADE,
-        help_text="The group that the user has access to.",
+        help_text="The workspace that the user has access to.",
     )
     order = models.PositiveIntegerField(
-        help_text="Unique order that the group has for the user."
+        help_text="Unique order that the workspace has for the user."
     )
     permissions = models.CharField(
-        default=GROUP_USER_PERMISSION_MEMBER,
+        default=WORKSPACE_USER_PERMISSION_MEMBER,
         max_length=32,
-        help_text="The permissions that the user has within the group.",
+        help_text="The permissions that the user has within the workspace.",
     )
 
     class Meta:
-        unique_together = [["user", "group"]]
+        unique_together = [["user", "workspace"]]
         ordering = ("order",)
 
     @classmethod
@@ -217,14 +223,17 @@ class GroupUser(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
 
-class GroupInvitation(
-    ParentGroupTrashableModelMixin, CreatedAndUpdatedOnMixin, models.Model
+class WorkspaceInvitation(
+    ParentWorkspaceTrashableModelMixin,
+    GroupToWorkspaceCompatModelMixin,
+    CreatedAndUpdatedOnMixin,
+    models.Model,
 ):
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.CASCADE,
-        help_text="The group that the user will get access to once the invitation is "
-        "accepted.",
+        help_text="The workspace that the user will get access to once the invitation "
+        "is accepted.",
     )
     invited_by = models.ForeignKey(
         User,
@@ -237,9 +246,9 @@ class GroupInvitation(
         "Only a user with that email address can accept it.",
     )
     permissions = models.CharField(
-        default=GROUP_USER_PERMISSION_MEMBER,
+        default=WORKSPACE_USER_PERMISSION_MEMBER,
         max_length=32,
-        help_text="The permissions that the user is going to get within the group "
+        help_text="The permissions that the user is going to get within the workspace "
         "after accepting the invitation.",
     )
     message = models.TextField(
@@ -259,9 +268,10 @@ class Application(
     CreatedAndUpdatedOnMixin,
     OrderableMixin,
     PolymorphicContentTypeMixin,
+    GroupToWorkspaceCompatModelMixin,
     models.Model,
 ):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, null=True)
     name = models.CharField(max_length=160)
     order = models.PositiveIntegerField()
     content_type = models.ForeignKey(
@@ -281,12 +291,12 @@ class Application(
         ordering = ("order",)
 
     @classmethod
-    def get_last_order(cls, group):
-        queryset = Application.objects.filter(group=group)
+    def get_last_order(cls, workspace):
+        queryset = Application.objects.filter(workspace=workspace)
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_parent(self):
-        return self.group
+        return self.workspace
 
 
 class TemplateCategory(models.Model):
@@ -296,7 +306,7 @@ class TemplateCategory(models.Model):
         ordering = ("name",)
 
 
-class Template(models.Model):
+class Template(GroupToWorkspaceCompatModelMixin, models.Model):
     name = models.CharField(max_length=64)
     slug = models.SlugField(
         help_text="The template slug that is used to match the template with the JSON "
@@ -308,8 +318,8 @@ class Template(models.Model):
         "purposes.",
     )
     categories = models.ManyToManyField(TemplateCategory, related_name="templates")
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.SET_NULL,
         null=True,
         help_text="The group containing the applications related to the template. The "
@@ -342,7 +352,7 @@ class UserLogEntry(models.Model):
         ordering = ["-timestamp"]
 
 
-class TrashEntry(models.Model):
+class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
     """
     A TrashEntry is a record indicating that another model in Baserow has a trashed
     row. When a user deletes certain things in Baserow they are not actually deleted
@@ -369,12 +379,12 @@ class TrashEntry(models.Model):
         User, on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    # The group and application fields are used to group trash into separate "bins"
-    # which can be viewed and emptied independently of each other.
+    # The workspace and application fields are used to workspace trash into
+    # separate "bins" which can be viewed and emptied independently of each other.
 
-    # The group the item that is trashed is found in, if the trashed item is the
-    # group itself then this should also be set to that trashed group.
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    # The workspace the item that is trashed is found in, if the trashed item is the
+    # workspace itself then this should also be set to that trashed workspace.
+    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE)
     # The application the item that is trashed is found in, if the trashed item is the
     # application itself then this should also be set to that trashed application.
     application = models.ForeignKey(
@@ -414,7 +424,7 @@ class TrashEntry(models.Model):
         ]
         indexes = [
             models.Index(
-                fields=["-trashed_at", "trash_item_type", "group", "application"]
+                fields=["-trashed_at", "trash_item_type", "workspace", "application"]
             )
         ]
 
@@ -459,10 +469,14 @@ class Snapshot(HierarchicalModelMixin, models.Model):
 
 
 class InstallTemplateJob(
-    JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
+    GroupToWorkspaceCompatModelMixin,
+    JobWithUserIpAddress,
+    JobWithWebsocketId,
+    JobWithUndoRedoIds,
+    Job,
 ):
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.CASCADE,
         help_text="The group where the template is installed.",
     )

@@ -7,8 +7,8 @@ from rest_framework import serializers
 
 from baserow.api.user.registries import MemberDataType
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group
-from baserow.core.operations import ListGroupUsersGroupOperationType
+from baserow.core.models import Workspace
+from baserow.core.operations import ListWorkspaceUsersWorkspaceOperationType
 from baserow.core.registries import permission_manager_type_registry
 from baserow_enterprise.api.role.serializers import RoleField
 from baserow_enterprise.role.handler import RoleAssignmentHandler
@@ -28,7 +28,7 @@ class EnterpriseRolesDataType(MemberDataType):
                 allow_null=True,
                 help_text=(
                     "Enterprise or advanced only: the uid of the role that is assigned "
-                    "to this group user in this group."
+                    "to this workspace user in this workspace."
                 ),
             ),
             "highest_role_uid": RoleField(
@@ -37,17 +37,21 @@ class EnterpriseRolesDataType(MemberDataType):
                 allow_null=True,
                 help_text=(
                     "Enterprise or advanced only: the highest role uid assigned to "
-                    "this user in this group on anything, including roles from teams."
+                    "this user in this workspace on anything, including roles from "
+                    "teams."
                 ),
             ),
         }
 
     def annotate_serialized_data(
-        self, group: Group, serialized_data: List[OrderedDict], user: AbstractUser
+        self,
+        workspace: Workspace,
+        serialized_data: List[OrderedDict],
+        user: AbstractUser,
     ) -> List[OrderedDict]:
         """
         Responsible for annotating team data on `GroupUser` responses.
-        Primarily used to inform API consumers of which teams group members
+        Primarily used to inform API consumers of which teams workspace members
         belong to.
         """
 
@@ -57,22 +61,22 @@ class EnterpriseRolesDataType(MemberDataType):
 
         if (
             "role" not in settings.PERMISSION_MANAGERS
-            or not permission_manager_type_registry.get("role").is_enabled(group)
+            or not permission_manager_type_registry.get("role").is_enabled(workspace)
         ):
             return serialized_data
 
         if not CoreHandler().check_permissions(
             user,
-            ListGroupUsersGroupOperationType.type,
-            group=group,
-            context=group,
+            ListWorkspaceUsersWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
             raise_permission_exceptions=False,
         ):
             return serialized_data
 
         license_plugin = plugin_registry.get_by_type(PremiumPlugin).get_license_plugin()
 
-        usage = license_plugin.get_seat_usage_for_group(group)
+        usage = license_plugin.get_seat_usage_for_workspace(workspace)
         if usage:
             highest_role_per_user = usage.highest_role_per_user_id
         else:

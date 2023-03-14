@@ -6,7 +6,7 @@ from rest_framework.serializers import ModelSerializer
 
 from baserow.api.mixins import UnknownFieldRaisesExceptionSerializerMixin
 from baserow.api.user.validators import password_validation
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 
 User = get_user_model()
 
@@ -18,7 +18,7 @@ _USER_ADMIN_SERIALIZER_API_DOC_KWARGS = {
     },
     "is_staff": {
         "help_text": "Designates whether this user is an admin and has access to all "
-        "groups and Baserow's admin areas. "
+        "workspaces and Baserow's admin areas. "
     },
 }
 
@@ -28,7 +28,7 @@ class UserAdminGroupsSerializer(ModelSerializer):
     name = serializers.CharField(source="group.name")
 
     class Meta:
-        model = GroupUser
+        model = WorkspaceUser
 
         fields = (
             "id",
@@ -45,7 +45,10 @@ class UserAdminResponseSerializer(ModelSerializer):
     # Max length set to match django user models first_name fields max length
     name = CharField(source="first_name", max_length=150)
     username = EmailField()
-    groups = UserAdminGroupsSerializer(source="groupuser_set", many=True)
+    groups = UserAdminGroupsSerializer(
+        source="workspaceuser_set", many=True
+    )  # GroupDeprecation
+    workspaces = UserAdminGroupsSerializer(source="workspaceuser_set", many=True)
 
     class Meta:
         model = User
@@ -53,7 +56,8 @@ class UserAdminResponseSerializer(ModelSerializer):
             "id",
             "username",
             "name",
-            "groups",
+            "groups",  # GroupDeprecation
+            "workspaces",
             "last_login",
             "date_joined",
             "is_active",

@@ -11,7 +11,7 @@ from django.db.models.functions import Coalesce
 from baserow_premium.license.handler import LicenseHandler
 
 from baserow.contrib.database.tokens.models import Token
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import atomic_if_not_already
 from baserow_enterprise.models import Role, RoleAssignment, Team, TeamSubject
@@ -66,9 +66,9 @@ class TeamHandler:
             _annotated_default_role_uid=Subquery(
                 RoleAssignment.objects.select_related("role")
                 .filter(
-                    scope_id=OuterRef("group_id"),
-                    group_id=OuterRef("group_id"),
-                    scope_type=ContentType.objects.get_for_model(Group),
+                    scope_id=OuterRef("workspace_id"),
+                    workspace_id=OuterRef("workspace_id"),
+                    scope_type=ContentType.objects.get_for_model(Workspace),
                     subject_type=ContentType.objects.get_for_model(Team),
                     subject_id=OuterRef("id"),
                 )
@@ -112,16 +112,18 @@ class TeamHandler:
             subject_sample=RawSQL(subject_sample_sql, [subject_sample_size]),  # nosec
         )
 
-    def list_teams_in_group(
-        self, user: AbstractUser, group: Group, subject_sample_size: int = 10
+    def list_teams_in_workspace(
+        self, user: AbstractUser, workspace: Workspace, subject_sample_size: int = 10
     ) -> QuerySet:
         """
-        Returns a list of teams in a given group.
+        Returns a list of teams in a given workspace.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, workspace)
 
-        return self.get_teams_sample_queryset(subject_sample_size).filter(group=group)
+        return self.get_teams_sample_queryset(subject_sample_size).filter(
+            workspace=workspace
+        )
 
     def get_team(self, user: AbstractUser, team_id: int, base_queryset=None) -> Team:
         """
@@ -136,7 +138,7 @@ class TeamHandler:
         except Team.DoesNotExist:
             raise TeamDoesNotExist(f"The team with id {team_id} does not exist.")
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.workspace)
 
         return team
 
@@ -154,23 +156,23 @@ class TeamHandler:
         self,
         user: AbstractUser,
         name: str,
-        group: Group,
+        workspace: Workspace,
         subjects: Optional[List[Dict]] = None,
         default_role: Optional[Role] = None,
     ) -> Team:
         """
-        Creates a new team for an existing group.
+        Creates a new team for an existing workspace.
         Can optionally be given an array of subjects to create at the same time.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, workspace)
 
         if subjects is None:
             subjects = []
 
         with atomic_if_not_already():
             try:
-                team = Team.objects.create(group=group, name=name)
+                team = Team.objects.create(workspace=workspace, name=name)
             except IntegrityError as e:
                 if "unique constraint" in e.args[0]:
                     raise TeamNameNotUnique(name=name)
@@ -182,7 +184,7 @@ class TeamHandler:
                 )
 
         # If we've been given a `default_role`, assign it to the team.
-        RoleAssignmentHandler().assign_role(team, group, default_role)
+        RoleAssignmentHandler().assign_role(team, workspace, default_role)
 
         team_created.send(self, team_id=team.id, team=team, user=user)
 
@@ -202,13 +204,13 @@ class TeamHandler:
         Updates an existing team instance.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.workspace)
 
         if subjects is None:
             subjects = []
 
         # In a transaction...
-        # 1. Fetch the existing subjects and group them by their type.
+        # 1. Fetch the existing subjects and workspace them by their type.
         # 2. Update the name field.
         # 3. Create any new subjects we've been given.
         # 4. Remove any existing subjects we don't want anymore.
@@ -261,7 +263,7 @@ class TeamHandler:
                     self.delete_subject_by_id(user, removed_subject_id, team)
 
             # If we've been given a `default_role`, assign it to the team.
-            RoleAssignmentHandler().assign_role(team, team.group, default_role)
+            RoleAssignmentHandler().assign_role(team, team.workspace, default_role)
 
         team_updated.send(self, team=team, user=user)
 
@@ -271,7 +273,7 @@ class TeamHandler:
 
     def delete_team_by_id(self, user: AbstractUser, team_id: int):
         """
-        Deletes a team by id, only if the user has admin permissions for the group.
+        Deletes a team by id, only if the user has admin permissions for the workspace.
         """
 
         locked_team = self.get_team_for_update(user, team_id)
@@ -279,16 +281,16 @@ class TeamHandler:
 
     def delete_team(self, user: AbstractUser, team: TeamForUpdate):
         """
-        Deletes an existing team if the user has admin permissions for the group.
+        Deletes an existing team if the user has admin permissions for the workspace.
         The team can be restored after deletion using the trash handler.
         """
 
         if not isinstance(team, Team):
             raise ValueError("The team is not an instance of Team.")
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.workspace)
 
-        TrashHandler.trash(user, team.group, None, team)
+        TrashHandler.trash(user, team.workspace, None, team)
 
         team_deleted.send(self, team_id=team.id, team=team, user=user)
 
@@ -300,7 +302,7 @@ class TeamHandler:
         """
 
         team = self.get_team(user, team_id, base_queryset=Team.objects_and_trash)
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.workspace)
         TrashHandler.restore_item(user, "team", team_id)
         team.refresh_from_db()
         return team
@@ -387,10 +389,10 @@ class TeamHandler:
                 if pk_override:
                     pk_overrides[unique_subject_type][subject_id] = pk_override
 
-            # TODO: if we support a subject type that doesn't have a `group`
+            # TODO: if we support a subject type that doesn't have a `workspace`
             #   relation on its model, then this filter need to be modified.
             type_subject_models = model_class.objects.filter(
-                pk__in=subject_ids_of_type, group=team.group_id
+                pk__in=subject_ids_of_type, workspace=team.workspace_id
             )
 
             # If the subjects we found don't match those in `subject_ids_of_type`,
@@ -443,7 +445,7 @@ class TeamHandler:
         redo to re-create a subject with the same PK.
         """
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(TEAMS, user, team.workspace)
 
         # Determine if this `TeamSubject` content type natural key is supported.
         if not self.is_supported_subject_type(subject_natural_key):
@@ -471,12 +473,14 @@ class TeamHandler:
                 f"The subject with {lookup_str} and type={subject_natural_key} does not exist."
             )
 
-        # Verify that the subject belongs to the group the team belongs to.
+        # Verify that the subject belongs to the workspace the team belongs to.
         if isinstance(subject, User):
-            if not team.group.users.filter(groupuser__user_id=subject.id).exists():
+            if not team.workspace.users.filter(
+                workspaceuser__user_id=subject.id
+            ).exists():
                 raise TeamSubjectNotInGroup()
         elif isinstance(subject, Token):
-            if subject.group_id != team.group_id:
+            if subject.workspace_id != team.workspace_id:
                 raise TeamSubjectNotInGroup()
 
         signal = team_subject_created
@@ -492,7 +496,7 @@ class TeamHandler:
 
     def list_subjects_in_team(self, team_id: int) -> QuerySet:
         """
-        Returns a list of subjects in a given group.
+        Returns a list of subjects in a given workspace.
         """
 
         return TeamSubject.objects.select_related("subject_type").filter(team=team_id)
@@ -512,7 +516,7 @@ class TeamHandler:
     def delete_subject_by_id(self, user: AbstractUser, subject_id: int, team: Team):
         """
         Deletes a subject by id, only if the user has admin permissions
-        for the group.
+        for the workspace.
         """
 
         locked_subject = self.get_subject_for_update(subject_id, team)
@@ -520,7 +524,7 @@ class TeamHandler:
 
     def delete_subject(self, user: AbstractUser, subject: TeamSubjectForUpdate):
         """
-        Deletes an existing subject if the user has admin permissions for the group.
+        Deletes an existing subject if the user has admin permissions for the workspace.
         The subject can be restored after deletion using the trash handler.
         """
 
@@ -528,7 +532,7 @@ class TeamHandler:
             raise ValueError("The subject is not an instance of TeamSubject.")
 
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            TEAMS, user, subject.team.group
+            TEAMS, user, subject.team.workspace
         )
 
         subject.delete()

@@ -84,7 +84,7 @@ export default {
           'baserow_enterprise.Team',
           this.column.additionalProps.groupId,
           this.column.additionalProps.groupId,
-          'group',
+          'workspace',
           permissionsNew
         )
       } catch (error) {

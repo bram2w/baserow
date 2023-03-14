@@ -23,7 +23,7 @@ User = get_user_model()
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
-    from .models import Group
+    from baserow.core.models import Workspace
 
 
 class ViewOwnershipPermissionManagerType(PermissionManagerType):
@@ -46,7 +46,7 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
     def check_multiple_permissions(
         self,
         checks: List[PermissionCheck],
-        group: "Group",
+        workspace: "Workspace",
         include_trash: bool = False,
     ) -> Dict[PermissionCheck, Union[bool, PermissionException]]:
         """
@@ -62,10 +62,10 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
         result_by_check = {}
         for check in checks:
             actor, operation_name, context = check
-            if operation_name not in self.operations or not group or not context:
+            if operation_name not in self.operations or not workspace or not context:
                 continue
 
-            premium = LicenseHandler.user_has_feature(PREMIUM, actor, group)
+            premium = LicenseHandler.user_has_feature(PREMIUM, actor, workspace)
 
             view_scope_type = object_scope_type_registry.get("database_view")
             view = object_scope_type_registry.get_parent(
@@ -93,7 +93,7 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
         actor: "AbstractUser",
         operation_name: str,
         queryset: QuerySet,
-        group: Optional["Group"] = None,
+        workspace: Optional["Workspace"] = None,
         context: Optional[Any] = None,
     ) -> QuerySet:
         """
@@ -103,7 +103,7 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
             Generally a `User` but can be a Token.
         :param operation: The operation name for which we want to filter the queryset
             for.
-        :param group: An optional group into which the operation takes place.
+        :param workspace: An optional workspace into which the operation takes place.
         :param context: An optional context object related to the current operation.
         :return: The queryset potentially filtered.
         """
@@ -114,10 +114,10 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
         if operation_name != ListViewsOperationType.type:
             return queryset
 
-        if not group:
+        if not workspace:
             return queryset
 
-        premium = LicenseHandler.user_has_feature(PREMIUM, actor, group)
+        premium = LicenseHandler.user_has_feature(PREMIUM, actor, workspace)
 
         if premium:
             return queryset.filter(

@@ -15,7 +15,7 @@
       </li>
       <li>
         <a
-          v-if="$hasPermission('create_group')"
+          v-if="$hasPermission('create_workspace')"
           class="dashboard__sidebar-link dashboard__sidebar-link--light"
           @click="$emit('create-group-clicked')"
         >

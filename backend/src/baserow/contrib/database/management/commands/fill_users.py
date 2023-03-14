@@ -6,10 +6,10 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 
 from baserow.core.models import (
-    GROUP_USER_PERMISSION_ADMIN,
-    Group,
-    GroupUser,
+    WORKSPACE_USER_PERMISSION_ADMIN,
     UserProfile,
+    Workspace,
+    WorkspaceUser,
 )
 
 User = get_user_model()
@@ -51,12 +51,12 @@ class Command(BaseCommand):
             # Manually create the user profile
             UserProfile.objects.create(user=user)
 
-            group = Group.objects.create(name=name + "'s Group")
-            GroupUser.objects.create(
-                group=group,
+            workspace = Workspace.objects.create(name=name + "'s workspace")
+            WorkspaceUser.objects.create(
+                workspace=workspace,
                 user=user,
                 order=0,
-                permissions=GROUP_USER_PERMISSION_ADMIN,
+                permissions=WORKSPACE_USER_PERMISSION_ADMIN,
             )
 
         self.stdout.write(self.style.SUCCESS(f"{limit} rows have been inserted."))

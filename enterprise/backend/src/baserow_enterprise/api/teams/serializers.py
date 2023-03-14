@@ -12,6 +12,7 @@ __all__ = [
     "TeamSubjectSerializer",
     "GetTeamsViewParamsSerializer",
     "TeamSubjectResponseSerializer",
+    "WorkspaceUserEnterpriseTeamSerializer",
 ]
 
 
@@ -59,8 +60,8 @@ class TeamSerializer(
         required=False,
         allow_null=True,
         help_text=(
-            "The uid of the role you want to assign to the team in the given group. "
-            "You can omit this property if you want to remove the role."
+            "The uid of the role you want to assign to the team in the given "
+            "workspace. You can omit this property if you want to remove the role."
         ),
     )
     subjects = TeamSubjectSerializer(
@@ -81,6 +82,12 @@ class TeamResponseSerializer(serializers.ModelSerializer):
         source="default_role_uid",
         help_text=("The uid of the role this team has in its workspace."),
     )
+    group = serializers.IntegerField(
+        source="group_id",
+        help_text="DEPRECATED: Please use the functionally identical "
+        "`workspace` instead as this field is "
+        "being removed in the future.",
+    )  # GroupDeprecation
     subject_count = serializers.IntegerField(
         help_text="The amount of subjects (e.g. users) that are currently assigned to this team."
     )
@@ -95,7 +102,8 @@ class TeamResponseSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "group",
+            "group",  # GroupDeprecation
+            "workspace",
             "created_on",
             "updated_on",
             "default_role",
@@ -132,9 +140,9 @@ class TeamSubjectResponseSerializer(serializers.ModelSerializer):
         return obj.subject_type_natural_key
 
 
-class GroupUserEnterpriseTeamSerializer(serializers.Serializer):
+class WorkspaceUserEnterpriseTeamSerializer(serializers.Serializer):
     """
-    A serializer for the `GroupUserSerializer.teams` field.
+    A serializer for the `WorkspaceUserSerializer.teams` field.
     """
 
     id = serializers.IntegerField(

@@ -17,13 +17,13 @@ def load_test_data():
     print("Add basic data...")
 
     user = User.objects.get(email="admin@baserow.io")
-    group = user.groupuser_set.get(group__name="Acme Corp").group
+    workspace = user.workspaceuser_set.get(workspace__name="Acme Corp").workspace
 
     try:
         database = Database.objects.get(name="Back to local")
     except Database.DoesNotExist:
         database = CoreHandler().create_application(
-            user, group, "database", name="Back to local"
+            user, workspace, "database", name="Back to local"
         )
 
     try:

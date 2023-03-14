@@ -24,11 +24,11 @@ def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_rol
 def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(
+    workspace = data_fixture.create_workspace(
         user=user,
         custom_permissions=[(user2, "VIEWER")],
     )
-    database = data_fixture.create_database_application(group=group)
+    database = data_fixture.create_database_application(workspace=workspace)
 
     table = data_fixture.create_database_table(database=database, user=user)
 
@@ -37,7 +37,7 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
 
     assert len(RoleAssignment.objects.all()) == 0
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     # Can add a first roleAssignment
     response = api_client.post(
@@ -57,13 +57,13 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     assert response.status_code == HTTP_200_OK
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
-        user2, group, scope=table
+        user2, workspace, scope=table
     )
 
     assert role_assignment_user_2.scope == table
     assert role_assignment_user_2.subject == user2
     assert role_assignment_user_2.role == builder_role
-    assert role_assignment_user_2.group == group
+    assert role_assignment_user_2.workspace == workspace
 
     assert response_json == {
         "id": role_assignment_user_2.id,
@@ -84,8 +84,8 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user2.id,
             "subject_type": UserSubjectType.type,
             "role": editor_role.uid,
@@ -94,13 +94,13 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     )
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
-        user2, group
+        user2, workspace
     )
 
     assert role_assignment_user_2.role == editor_role
-    assert role_assignment_user_2.scope == group
+    assert role_assignment_user_2.scope == workspace
 
-    # Check that we don't create new RoleAssignment for the same scope/subject/group
+    # Check that we don't create new RoleAssignment for the same scope/subject/workspace
     response = api_client.post(
         url,
         {
@@ -114,7 +114,7 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     )
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
-        user2, group, scope=table
+        user2, workspace, scope=table
     )
 
     assert role_assignment_user_2.role == editor_role
@@ -136,7 +136,7 @@ def test_create_role_assignment(api_client, data_fixture, enterprise_data_fixtur
     assert response.status_code == HTTP_204_NO_CONTENT
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
-        user2, group, scope=table
+        user2, workspace, scope=table
     )
 
     assert role_assignment_user_2 is None
@@ -148,18 +148,18 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    workspace_2 = data_fixture.create_workspace()
     role = Role.objects.get(uid="ADMIN")
     builder_role = Role.objects.get(uid="BUILDER")
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     response = api_client.post(
         url,
         {
             "scope_id": 9999,
-            "scope_type": "group",
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
@@ -174,7 +174,7 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
+            "scope_id": workspace.id,
             "scope_type": "nonsense",
             "subject_id": user_2.id,
             "subject_type": UserSubjectType.type,
@@ -190,8 +190,8 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": 99999,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
@@ -206,8 +206,8 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": "nonsense",
             "role": role.uid,
@@ -222,8 +222,8 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": UserSubjectType.type,
             "role": 999999,
@@ -236,10 +236,10 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_ROLE_DOES_NOT_EXIST"
 
     response = api_client.post(
-        reverse("api:enterprise:role:list", kwargs={"group_id": group_2.id}),
+        reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace_2.id}),
         {
-            "scope_id": group_2.id,
-            "scope_type": "group",
+            "scope_id": workspace_2.id,
+            "scope_type": "workspace",
             "subject_id": user_3.id,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
@@ -252,10 +252,10 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_SUBJECT_DOES_NOT_EXIST"
 
     response = api_client.post(
-        reverse("api:enterprise:role:list", kwargs={"group_id": 999999}),
+        reverse("api:enterprise:role:list", kwargs={"workspace_id": 999999}),
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
@@ -270,8 +270,8 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user.id,
             "subject_type": UserSubjectType.type,
             "role": builder_role.uid,
@@ -287,16 +287,16 @@ def test_create_role_assignment_invalid_requests(api_client, data_fixture):
 @pytest.mark.django_db
 def test_assign_last_admin_the_admin_role_works(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     admin_role = Role.objects.get(uid="ADMIN")
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     response = api_client.post(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user.id,
             "subject_type": UserSubjectType.type,
             "role": admin_role.uid,
@@ -310,18 +310,18 @@ def test_assign_last_admin_the_admin_role_works(data_fixture, api_client):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_get_role_assignments_group_level(data_fixture, api_client):
+def test_get_role_assignments_workspace_level(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     response = api_client.get(
         url,
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
         },
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
@@ -333,8 +333,8 @@ def test_get_role_assignments_group_level(data_fixture, api_client):
         {
             "id": None,
             "role": "ADMIN",
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user.id,
             "subject_type": "auth.User",
             "subject": {
@@ -347,8 +347,8 @@ def test_get_role_assignments_group_level(data_fixture, api_client):
         {
             "id": None,
             "role": "BUILDER",
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": "auth.User",
             "subject": {
@@ -366,16 +366,16 @@ def test_get_role_assignments_group_level(data_fixture, api_client):
 def test_get_role_assignments_application_level(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
     role_assignment = RoleAssignmentHandler().assign_role(
-        user_2, group, role=admin_role, scope=database.application_ptr
+        user_2, workspace, role=admin_role, scope=database.application_ptr
     )
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     # TODO test with crap scope_type
     response = api_client.get(
@@ -412,17 +412,17 @@ def test_get_role_assignments_application_level(data_fixture, api_client):
 def test_get_role_assignments_table_level(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     admin_role = Role.objects.get(uid="ADMIN")
 
     role_assignment = RoleAssignmentHandler().assign_role(
-        user_2, group, role=admin_role, scope=table
+        user_2, workspace, role=admin_role, scope=table
     )
 
-    url = reverse("api:enterprise:role:list", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:list", kwargs={"workspace_id": workspace.id})
 
     response = api_client.get(
         url,
@@ -459,8 +459,8 @@ def test_batch_assign_role(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
     user3 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2, user3])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2, user3])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     table = data_fixture.create_database_table(user=user, database=database)
 
@@ -469,12 +469,12 @@ def test_batch_assign_role(data_fixture, api_client):
 
     assert len(RoleAssignment.objects.all()) == 0
 
-    url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:batch", kwargs={"workspace_id": workspace.id})
 
     RoleAssignmentHandler().assign_role(
-        user3, group, viewer_role, scope=database.application_ptr
+        user3, workspace, viewer_role, scope=database.application_ptr
     )
-    RoleAssignmentHandler().assign_role(user3, group, viewer_role, scope=table)
+    RoleAssignmentHandler().assign_role(user3, workspace, viewer_role, scope=table)
 
     # Can add a first roleAssignment
     response = api_client.post(
@@ -512,13 +512,13 @@ def test_batch_assign_role(data_fixture, api_client):
     response_json = response.json()
 
     role_assignment_user_2 = RoleAssignmentHandler().get_current_role_assignment(
-        user2, group, scope=table
+        user2, workspace, scope=table
     )
 
     assert role_assignment_user_2.scope == table
     assert role_assignment_user_2.subject == user2
     assert role_assignment_user_2.role == builder_role
-    assert role_assignment_user_2.group == group
+    assert role_assignment_user_2.workspace == workspace
 
     assert response_json == [
         {
@@ -544,14 +544,14 @@ def test_batch_assign_role(data_fixture, api_client):
 def test_batch_assign_role_duplicates(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database = data_fixture.create_database_application(workspace=workspace)
 
     table = data_fixture.create_database_table(user=user, database=database)
 
     builder_role = Role.objects.get(uid="BUILDER")
 
-    url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:batch", kwargs={"workspace_id": workspace.id})
 
     role_assignment = {
         "scope_id": table.id,
@@ -582,30 +582,34 @@ def test_batch_assign_role_is_undoable(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_2, user_3])
+    workspace = data_fixture.create_workspace(user=user, members=[user_2, user_3])
     role = Role.objects.get(uid="ADMIN")
     session_id = "TEST"
 
-    url = reverse("api:enterprise:role:batch", kwargs={"group_id": group.id})
+    url = reverse("api:enterprise:role:batch", kwargs={"workspace_id": workspace.id})
 
     initial_role_user_2 = (
-        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_2, workspace=workspace)
+        .role
     )
     initial_role_user_3 = (
-        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_3, workspace=workspace)
+        .role
     )
 
     role_assignments = [
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_2.id,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
         },
         {
-            "scope_id": group.id,
-            "scope_type": "group",
+            "scope_id": workspace.id,
+            "scope_type": "workspace",
             "subject_id": user_3.id,
             "subject_type": UserSubjectType.type,
             "role": role.uid,
@@ -621,28 +625,36 @@ def test_batch_assign_role_is_undoable(api_client, data_fixture):
     )
 
     assert (
-        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_2, workspace=workspace)
+        .role
         == role
     )
     assert (
-        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_3, workspace=workspace)
+        .role
         == role
     )
 
     api_client.patch(
         reverse("api:user:undo"),
-        {"scopes": {"root": True, "group": group.id}},
+        {"scopes": {"root": True, "workspace": workspace.id}},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
         HTTP_CLIENTSESSIONID=session_id,
     )
 
     assert (
-        RoleAssignmentHandler().get_current_role_assignment(user_2, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_2, workspace=workspace)
+        .role
         == initial_role_user_2
     )
 
     assert (
-        RoleAssignmentHandler().get_current_role_assignment(user_3, group=group).role
+        RoleAssignmentHandler()
+        .get_current_role_assignment(user_3, workspace=workspace)
+        .role
         == initial_role_user_3
     )

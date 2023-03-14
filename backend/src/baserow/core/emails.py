@@ -84,8 +84,8 @@ class BaseEmailMessage(EmailMultiAlternatives):
         transaction.on_commit(lambda: s.send(fail_silently))
 
 
-class GroupInvitationEmail(BaseEmailMessage):
-    template_name = "baserow/core/group_invitation.html"
+class WorkspaceInvitationEmail(BaseEmailMessage):
+    template_name = "baserow/core/workspace_invitation.html"
 
     def __init__(self, invitation, public_accept_url, *args, **kwargs):
         self.public_accept_url = public_accept_url
@@ -93,9 +93,9 @@ class GroupInvitationEmail(BaseEmailMessage):
         super().__init__(*args, **kwargs)
 
     def get_subject(self):
-        return _("%(by)s invited you to %(group_name)s - Baserow",) % {
+        return _("%(by)s invited you to %(workspace_name)s - Baserow",) % {
             "by": self.invitation.invited_by.first_name,
-            "group_name": self.invitation.group.name,
+            "workspace_name": self.invitation.workspace.name,
         }
 
     def get_context(self):

@@ -13,7 +13,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DuplicateFieldJob
 from baserow.contrib.database.fields.operations import DuplicateFieldOperationType
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace, WorkspaceDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 
@@ -24,8 +24,8 @@ class DuplicateFieldJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
     }
 
     request_serializer_field_names = ["field_id"]
@@ -57,7 +57,7 @@ class DuplicateFieldJobType(JobType):
         CoreHandler().check_permissions(
             user,
             DuplicateFieldOperationType.type,
-            group=field.table.database.group,
+            workspace=field.table.database.workspace,
             context=field,
         )
 

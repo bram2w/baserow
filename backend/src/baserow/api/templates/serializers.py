@@ -16,7 +16,15 @@ class TemplateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Template
-        fields = ("id", "name", "icon", "keywords", "group_id", "is_default")
+        fields = (
+            "id",
+            "name",
+            "icon",
+            "keywords",
+            "group_id",  # GroupDeprecation
+            "workspace_id",
+            "is_default",
+        )
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_is_default(self, instance):

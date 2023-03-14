@@ -3,7 +3,7 @@ from typing import List
 from baserow_premium.license.registries import LicenseType
 
 from baserow.api.user.registries import UserDataType
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registries import plugin_registry
 
 
@@ -20,9 +20,9 @@ class ActiveLicensesDataType(UserDataType):
 
         license_plugin = plugin_registry.get_by_type(PremiumPlugin).get_license_plugin()
 
-        per_group_licenses = {
-            group_id: {license_type.type: True for license_type in license_types}
-            for group_id, license_types in license_plugin.get_active_per_group_licenses(
+        per_workspace_licenses = {
+            workspace_id: {license_type.type: True for license_type in license_types}
+            for workspace_id, license_types in license_plugin.get_active_per_workspace_licenses(
                 user
             ).items()
         }
@@ -34,7 +34,7 @@ class ActiveLicensesDataType(UserDataType):
         }
         return {
             "instance_wide": instance_wide_licenses,
-            "per_group": per_group_licenses,
+            "per_workspace": per_workspace_licenses,
         }
 
     @classmethod
@@ -64,56 +64,66 @@ class ActiveLicensesDataType(UserDataType):
         )
 
     @classmethod
-    def realtime_message_to_disable_group_license(
-        cls, group: Group, license_to_disable: LicenseType
+    def realtime_message_to_disable_workspace_license(
+        cls, workspace: Workspace, license_to_disable: LicenseType
     ):
         """
         The message body for a realtime event of type user_data_updated which will
-        disable a group license a user has.
-        """
-
-        return cls.realtime_message_to_update_user_data(
-            {cls.type: {"per_group": {group.id: {license_to_disable.type: False}}}}
-        )
-
-    @classmethod
-    def realtime_message_to_enable_group_license(
-        cls, group: Group, license_to_enable: LicenseType
-    ):
-        """
-        The message body for a realtime event of type user_data_updated which will
-        enable a group license a user has.
-        """
-
-        return cls.realtime_message_to_update_user_data(
-            {cls.type: {"per_group": {group.id: {license_to_enable.type: True}}}}
-        )
-
-    @classmethod
-    def realtime_message_to_disable_all_licenses_from_group(cls, group: Group):
-        """
-        The message body for a realtime event of type user_data_updated which will
-        disable all licenses the user got directly for a group.
-        """
-
-        return cls.realtime_message_to_update_user_data(
-            {cls.type: {"per_group": {group.id: False}}}
-        )
-
-    @classmethod
-    def realtime_message_to_enable_multiple_group_licenses(
-        cls, group: Group, licenses_to_enable: List[LicenseType]
-    ):
-        """
-        The message body for a realtime event of type user_data_updated which will
-        grant multiple different licenses from a group.
+        disable a workspace license a user has.
         """
 
         return cls.realtime_message_to_update_user_data(
             {
                 cls.type: {
-                    "per_group": {
-                        group.id: {
+                    "per_workspace": {workspace.id: {license_to_disable.type: False}}
+                }
+            }
+        )
+
+    @classmethod
+    def realtime_message_to_enable_workspace_license(
+        cls, workspace: Workspace, license_to_enable: LicenseType
+    ):
+        """
+        The message body for a realtime event of type user_data_updated which will
+        enable a workspace license a user has.
+        """
+
+        return cls.realtime_message_to_update_user_data(
+            {
+                cls.type: {
+                    "per_workspace": {workspace.id: {license_to_enable.type: True}}
+                }
+            }
+        )
+
+    @classmethod
+    def realtime_message_to_disable_all_licenses_from_workspace(
+        cls, workspace: Workspace
+    ):
+        """
+        The message body for a realtime event of type user_data_updated which will
+        disable all licenses the user got directly for a workspace.
+        """
+
+        return cls.realtime_message_to_update_user_data(
+            {cls.type: {"per_workspace": {workspace.id: False}}}
+        )
+
+    @classmethod
+    def realtime_message_to_enable_multiple_workspace_licenses(
+        cls, workspace: Workspace, licenses_to_enable: List[LicenseType]
+    ):
+        """
+        The message body for a realtime event of type user_data_updated which will
+        grant multiple different licenses from a workspace.
+        """
+
+        return cls.realtime_message_to_update_user_data(
+            {
+                cls.type: {
+                    "per_workspace": {
+                        workspace.id: {
                             active_license.type: True
                             for active_license in licenses_to_enable
                         }

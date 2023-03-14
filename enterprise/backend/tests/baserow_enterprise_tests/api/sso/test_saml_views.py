@@ -19,7 +19,7 @@ from rest_framework.status import (
 from saml2.xml.schema import validate as validate_saml_xml
 
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from baserow_enterprise.api.sso.utils import (
     get_frontend_default_redirect_url,
     get_frontend_login_error_url,
@@ -256,18 +256,18 @@ def test_saml_assertion_consumer_service(api_client, enterprise_data_fixture):
     )
 
     with freeze_time("2022-11-23T14:23:25.00Z"):
-        group_user = enterprise_data_fixture.create_user_group(user=user)
-        invitation = enterprise_data_fixture.create_group_invitation(
-            group=group_user.group, email="newuser@email.com"
+        workspace_user = enterprise_data_fixture.create_user_workspace(user=user)
+        invitation = enterprise_data_fixture.create_workspace_invitation(
+            workspace=workspace_user.workspace, email="newuser@email.com"
         )
         core_handler = CoreHandler()
-        signer = core_handler.get_group_invitation_signer()
-        group_invitation_token = signer.dumps(invitation.id)
+        signer = core_handler.get_workspace_invitation_signer()
+        workspace_invitation_token = signer.dumps(invitation.id)
 
         assert not provider.is_verified
 
         query_string = urlencode(
-            {"language": "en", "group_invitation_token": group_invitation_token}
+            {"language": "en", "workspace_invitation_token": workspace_invitation_token}
         )
         response = api_client.post(
             sp_sso_saml_acs_url,
@@ -279,18 +279,18 @@ def test_saml_assertion_consumer_service(api_client, enterprise_data_fixture):
         assert response.status_code == HTTP_302_FOUND
         assert response.headers["Location"].startswith(
             (
-                f"{get_frontend_login_error_url()}?error=errorGroupInvitationEmailMismatch"
+                f"{get_frontend_login_error_url()}?error=errorWorkspaceInvitationEmailMismatch"
             )
         )
 
-        invitation = enterprise_data_fixture.create_group_invitation(
-            group=group_user.group, email="davide@baserow.io"
+        invitation = enterprise_data_fixture.create_workspace_invitation(
+            workspace=workspace_user.workspace, email="davide@baserow.io"
         )
-        signer = core_handler.get_group_invitation_signer()
-        group_invitation_token = signer.dumps(invitation.id)
+        signer = core_handler.get_workspace_invitation_signer()
+        workspace_invitation_token = signer.dumps(invitation.id)
 
         query_string = urlencode(
-            {"language": "en", "group_invitation_token": group_invitation_token}
+            {"language": "en", "workspace_invitation_token": workspace_invitation_token}
         )
         response = api_client.post(
             sp_sso_saml_acs_url,
@@ -314,11 +314,11 @@ def test_saml_assertion_consumer_service(api_client, enterprise_data_fixture):
         response_json = response.json()
         assert response_json["user"]["username"] is not None
 
-        # assert the user is a member of the group
-        group_user = GroupUser.objects.get(
+        # assert the user is a member of the workspace
+        workspace_user = WorkspaceUser.objects.get(
             user__username=response_json["user"]["username"]
         )
-        assert group_user.group_id == invitation.group_id
+        assert workspace_user.workspace_id == invitation.workspace_id
 
         # the SAML provider should be verified now
         provider.refresh_from_db()

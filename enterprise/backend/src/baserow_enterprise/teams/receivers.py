@@ -14,18 +14,18 @@ def cascade_subject_delete(sender, instance, **kwargs):
     TeamSubject.objects.filter(subject_id=instance.id, subject_type=subject_ct).delete()
 
 
-def cascade_group_user_delete(sender, instance, **kwargs):
+def cascade_workspace_user_delete(sender, instance, **kwargs):
     from .models import TeamSubject
 
     user_id = instance.user_id
     user_ct = ContentType.objects.get_for_model(User)
     TeamSubject.objects.filter(
-        subject_id=user_id, subject_type=user_ct, team__group=instance.group_id
+        subject_id=user_id, subject_type=user_ct, team__workspace=instance.workspace_id
     ).delete()
 
 
 def connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects():
-    from baserow.core.models import GroupUser
+    from baserow.core.models import WorkspaceUser
     from baserow.core.registries import subject_type_registry
 
     for subject_type in subject_type_registry.get_all():
@@ -35,4 +35,4 @@ def connect_to_post_delete_signals_to_cascade_deletion_to_team_subjects():
             continue
         post_delete.connect(cascade_subject_delete, subject_type.model_class)
 
-    post_delete.connect(cascade_group_user_delete, GroupUser)
+    post_delete.connect(cascade_workspace_user_delete, WorkspaceUser)

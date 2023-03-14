@@ -41,7 +41,8 @@ def test_admin_dashboard(api_client, premium_data_fixture):
         assert response.status_code == HTTP_200_OK
         assert response.json() == {
             "total_users": 2,
-            "total_groups": 1,
+            "total_groups": 1,  # GroupDeprecation
+            "total_workspaces": 1,
             "total_applications": 1,
             "new_users_last_24_hours": 2,
             "new_users_last_7_days": 2,
@@ -68,7 +69,8 @@ def test_admin_dashboard(api_client, premium_data_fixture):
         assert response.status_code == HTTP_200_OK
         assert response.json() == {
             "total_users": 2,
-            "total_groups": 1,
+            "total_groups": 1,  # GroupDeprecation
+            "total_workspaces": 1,
             "total_applications": 1,
             "new_users_last_24_hours": 2,
             "new_users_last_7_days": 2,

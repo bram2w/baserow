@@ -4,8 +4,11 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from baserow.core.mixins import CreatedAndUpdatedOnMixin
-from baserow.core.models import Group, Operation
+from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
+    GroupToWorkspaceCompatModelMixin,
+)
+from baserow.core.models import Operation, Workspace
 
 
 class RoleManager(models.Manager):
@@ -17,7 +20,7 @@ class RoleManager(models.Manager):
         return self.get(uid=uid)
 
 
-class Role(CreatedAndUpdatedOnMixin):
+class Role(CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin):
     """
     A Role is a set of allowed operation granted to those whom are associated to.
     """
@@ -39,8 +42,8 @@ class Role(CreatedAndUpdatedOnMixin):
         help_text="True if this role is a default role. The default role are the roles you can use by default.",
     )
 
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         null=True,
         related_name="roles",
         on_delete=models.CASCADE,
@@ -65,11 +68,11 @@ class Role(CreatedAndUpdatedOnMixin):
         ]
 
 
-class RoleAssignment(CreatedAndUpdatedOnMixin):
+class RoleAssignment(CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin):
     """
     A RoleAssignment is the association between a `Role` and a `Subject` for a
-    particular `Group` over a given `Scope`. A Subject can be a user or anything else
-    that can operate with the Baserow data.
+    particular `Workspace` over a given `Scope`. A Subject can be a user or anything
+    else that can operate with the Baserow data.
     """
 
     subject = GenericForeignKey("subject_type", "subject_id")
@@ -87,8 +90,8 @@ class RoleAssignment(CreatedAndUpdatedOnMixin):
         help_text="The role given to the subject for the group.",
     )
 
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         related_name="role_assignments",
         on_delete=models.CASCADE,
         help_text="The group that this role assignment belongs to.",
@@ -107,7 +110,7 @@ class RoleAssignment(CreatedAndUpdatedOnMixin):
         return repr(self)
 
     def __repr__(self):
-        return f"<RoleAssignment {self.subject} - {self.role.name} - {self.group} - {self.scope}>"
+        return f"<RoleAssignment {self.subject} - {self.role.name} - {self.workspace} - {self.scope}>"
 
     class Meta:
         constraints = [

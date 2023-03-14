@@ -9,7 +9,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.trash.trash_types import (
     ApplicationTrashableItemType,
-    GroupTrashableItemType,
+    WorkspaceTrashableItemType,
 )
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
@@ -31,13 +31,13 @@ def use_async_event_loop_here(async_event_loop):
 async def test_table_updated_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[user_excluded])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_excluded])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, table
+        user_excluded, workspace, no_access_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -62,13 +62,13 @@ async def test_table_updated_message_not_leaking(data_fixture):
 async def test_table_deleted_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[user_excluded])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_excluded])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, table
+        user_excluded, workspace, no_access_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -91,13 +91,13 @@ async def test_table_deleted_message_not_leaking(data_fixture):
 async def test_table_created_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[user_excluded])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_excluded])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, table
+        user_excluded, workspace, no_access_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -120,16 +120,16 @@ async def test_table_created_message_not_leaking(data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-async def test_group_restored_tables_not_leaking(data_fixture):
+async def test_workspace_restored_tables_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[user_excluded])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_excluded])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, table
+        user_excluded, workspace, no_access_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -141,9 +141,9 @@ async def test_group_restored_tables_not_leaking(data_fixture):
     await communicator.connect()
     await communicator.receive_json_from()
 
-    await sync_to_async(CoreHandler().delete_group)(user, group)
+    await sync_to_async(CoreHandler().delete_workspace)(user, workspace)
     await sync_to_async(TrashHandler().restore_item)(
-        user, GroupTrashableItemType.type, group.id
+        user, WorkspaceTrashableItemType.type, workspace.id
     )
 
     application_created_message = await get_message(communicator, "group_restored")
@@ -156,13 +156,13 @@ async def test_group_restored_tables_not_leaking(data_fixture):
 async def test_database_restored_tables_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user, members=[user_excluded])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_excluded])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user_excluded, group, no_access_role, table
+        user_excluded, workspace, no_access_role, table
     )
 
     # Establish websocket connection and subscribe to table

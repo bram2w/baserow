@@ -10,25 +10,27 @@ from opentelemetry import trace
 
 from baserow.config.celery import app
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import add_baserow_trace_attrs, baserow_trace
 
 tracer = trace.get_tracer(__name__)
 
 
-def filter_distinct_group_ids_per_fields(
-    queryset: QuerySet, group_id: Optional[int] = None
+def filter_distinct_workspace_ids_per_fields(
+    queryset: QuerySet, workspace_id: Optional[int] = None
 ) -> QuerySet:
     """
-    Filters the provided queryset to only return the distinct group ids.
+    Filters the provided queryset to only return the distinct workspace ids.
 
     :param queryset: The queryset that should be filtered.
-    :param group_id: The id of the group that should be filtered on.
+    :param workspace_id: The id of the workspace that should be filtered on.
     """
 
-    queryset = Group.objects.filter(application__database__table__field__in=queryset)
-    if group_id is not None:
-        queryset = queryset.filter(id=group_id)
+    queryset = Workspace.objects.filter(
+        application__database__table__field__in=queryset
+    )
+    if workspace_id is not None:
+        queryset = queryset.filter(id=workspace_id)
     return queryset.distinct().order_by("now")
 
 
@@ -38,11 +40,11 @@ def filter_distinct_group_ids_per_fields(
     soft_time_limit=settings.PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES * 60,
 )
 def run_periodic_fields_updates(
-    self, group_id: Optional[int] = None, update_now: bool = True
+    self, workspace_id: Optional[int] = None, update_now: bool = True
 ):
     """
     Refreshes all the fields that need to be updated periodically for all
-    groups.
+    workspaces.
     """
 
     for field_type_instance in field_type_registry.get_all():
@@ -50,17 +52,17 @@ def run_periodic_fields_updates(
         if field_qs is None:
             continue
 
-        group_qs = filter_distinct_group_ids_per_fields(field_qs, group_id)
+        workspace_qs = filter_distinct_workspace_ids_per_fields(field_qs, workspace_id)
 
-        for group in group_qs.all():
-            _run_periodic_field_type_update_per_group(
-                field_type_instance, group, update_now
+        for workspace in workspace_qs.all():
+            _run_periodic_field_type_update_per_workspace(
+                field_type_instance, workspace, update_now
             )
 
 
 @baserow_trace(tracer)
-def _run_periodic_field_type_update_per_group(
-    field_type_instance, group: Group, update_now=True
+def _run_periodic_field_type_update_per_workspace(
+    field_type_instance, workspace: Workspace, update_now=True
 ):
 
     qs = field_type_instance.get_fields_needing_periodic_update()
@@ -68,10 +70,10 @@ def _run_periodic_field_type_update_per_group(
         return
 
     if update_now:
-        group.refresh_now()
-    add_baserow_trace_attrs(update_now=update_now, group_id=group.id)
+        workspace.refresh_now()
+    add_baserow_trace_attrs(update_now=update_now, workspace_id=workspace.id)
 
-    for field in qs.filter(table__database__group_id=group.id):
+    for field in qs.filter(table__database__workspace_id=workspace.id):
         # noinspection PyBroadException
         try:
             _run_periodic_field_update(field, field_type_instance)

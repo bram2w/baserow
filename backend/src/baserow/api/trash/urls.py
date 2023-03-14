@@ -7,7 +7,7 @@ app_name = "baserow.api.trash"
 urlpatterns = [
     re_path(r"^$", TrashStructureView.as_view(), name="list"),
     re_path(
-        r"^group/(?P<group_id>[0-9]+)/$",
+        r"^workspace/(?P<workspace_id>[0-9]+)/$",
         TrashContentsView.as_view(),
         name="contents",
     ),

@@ -20,7 +20,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.core.models import Application, Group
+from baserow.core.models import Application, Workspace
 from baserow.core.registries import ApplicationType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, grouper
@@ -45,7 +45,7 @@ class DatabaseApplicationType(ApplicationType):
         database_tables = (
             database.table_set(manager="objects_and_trash")
             .all()
-            .select_related("database__group")
+            .select_related("database__workspace")
         )
 
         for table in database_tables:
@@ -82,8 +82,8 @@ class DatabaseApplicationType(ApplicationType):
                 serialized_fields.append(field_type.export_serialized(field))
 
             table_cache: Dict[str, Any] = {}
-            if table.database.group is not None:
-                table_cache["group_id"] = table.database.group.id
+            if table.database.workspace is not None:
+                table_cache["workspace_id"] = table.database.workspace.id
             serialized_views = []
             for v in table.view_set.all():
                 view = v.specific
@@ -231,14 +231,14 @@ class DatabaseApplicationType(ApplicationType):
         )
         progress = ChildProgressBuilder.build(progress_builder, child_total=child_total)
 
-        if "import_group_id" not in id_mapping and database.group is not None:
-            id_mapping["import_group_id"] = database.group.id
+        if "import_workspace_id" not in id_mapping and database.workspace is not None:
+            id_mapping["import_workspace_id"] = database.workspace.id
 
         if "database_tables" not in id_mapping:
             id_mapping["database_tables"] = {}
 
-        if "group_id" not in id_mapping and database.group is not None:
-            id_mapping["group_id"] = database.group.id
+        if "workspace_id" not in id_mapping and database.workspace is not None:
+            id_mapping["workspace_id"] = database.workspace.id
 
         imported_tables: List[Table] = []
 
@@ -425,7 +425,7 @@ class DatabaseApplicationType(ApplicationType):
 
     def import_serialized(
         self,
-        group: Group,
+        workspace: Workspace,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
@@ -443,7 +443,7 @@ class DatabaseApplicationType(ApplicationType):
         )
 
         application = super().import_serialized(
-            group,
+            workspace,
             serialized_values,
             id_mapping,
             files_zip,

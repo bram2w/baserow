@@ -6,7 +6,11 @@ from baserow.api.sessions import (
     set_client_undo_redo_action_group_id,
     set_untrusted_client_session_id,
 )
-from baserow.core.models import GROUP_USER_PERMISSION_ADMIN, GroupUser, UserProfile
+from baserow.core.models import (
+    WORKSPACE_USER_PERMISSION_ADMIN,
+    UserProfile,
+    WorkspaceUser,
+)
 
 User = get_user_model()
 
@@ -50,13 +54,13 @@ class UserFixtures:
         set_untrusted_client_session_id(user, session_id)
         set_client_undo_redo_action_group_id(user, action_group)
 
-        # add it to a specific group if it is given
-        if "group" in kwargs:
-            GroupUser.objects.create(
-                group=kwargs["group"],
+        # add it to a specific workspace if it is given
+        if "workspace" in kwargs:
+            WorkspaceUser.objects.create(
+                workspace=kwargs["workspace"],
                 user=user,
                 order=0,
-                permissions=GROUP_USER_PERMISSION_ADMIN,
+                permissions=WORKSPACE_USER_PERMISSION_ADMIN,
             )
 
         return user

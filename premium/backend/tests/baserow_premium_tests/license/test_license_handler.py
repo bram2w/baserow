@@ -188,7 +188,7 @@ def test_has_active_premium_license(data_fixture):
 @override_settings(DEBUG=True)
 def test_check_active_premium_license_for_group_with_valid_license(data_fixture):
     user_in_license = data_fixture.create_user()
-    group = data_fixture.create_group(user=user_in_license)
+    group = data_fixture.create_workspace(user=user_in_license)
     license = License.objects.create(license=VALID_TWO_SEAT_LICENSE.decode())
     LicenseUser.objects.create(license=license, user=user_in_license)
 
@@ -207,15 +207,15 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_check_active_premium_license_for_group_with_per_group_licenses(
-    data_fixture, alternative_per_group_license_service
+    data_fixture, alternative_per_workspace_license_service
 ):
     user_in_license = data_fixture.create_user()
-    group_1 = data_fixture.create_group(user=user_in_license)
-    group_2 = data_fixture.create_group(user=user_in_license)
-    group_3 = data_fixture.create_group(user=user_in_license)
-    group_4 = data_fixture.create_group(user=user_in_license)
+    group_1 = data_fixture.create_workspace(user=user_in_license)
+    group_2 = data_fixture.create_workspace(user=user_in_license)
+    group_3 = data_fixture.create_workspace(user=user_in_license)
+    group_4 = data_fixture.create_workspace(user=user_in_license)
 
-    alternative_per_group_license_service.restrict_user_premium_to(
+    alternative_per_workspace_license_service.restrict_user_premium_to(
         user_in_license, [group_1.id, group_2.id]
     )
 
@@ -955,7 +955,7 @@ def test_check_active_premium_license_for_group_with_license_pretending_to_be_si
     data_fixture,
 ):
     user_in_license = data_fixture.create_user()
-    group = data_fixture.create_group(user=user_in_license)
+    group = data_fixture.create_workspace(user=user_in_license)
     license = License.objects.create(
         license=VALID_TWO_SEAT_LICENSE.decode(), cached_untrusted_instance_wide=True
     )

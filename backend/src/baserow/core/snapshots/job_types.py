@@ -7,7 +7,7 @@ from baserow.contrib.database.exceptions import (
     DatabaseSnapshotMaxLocksExceededException,
 )
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.registries import application_type_registry
@@ -22,7 +22,7 @@ class CreateSnapshotJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
         DatabaseSnapshotMaxLocksExceededException: ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
     }
@@ -54,7 +54,7 @@ class RestoreSnapshotJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         SnapshotDoesNotExist: ERROR_SNAPSHOT_DOES_NOT_EXIST,
     }
 

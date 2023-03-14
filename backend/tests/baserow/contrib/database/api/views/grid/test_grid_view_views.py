@@ -198,7 +198,7 @@ def test_list_rows(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=grid.table.database.group)
+    data_fixture.create_template(workspace=grid.table.database.workspace)
     url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -2202,7 +2202,8 @@ def test_grid_view_link_row_lookup_view(api_client, data_fixture):
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_VIEW_DOES_NOT_EXIST"
 
-    # user that doesn't have access to the group, existing slug, but form is not public.
+    # user that doesn't have access to the workspace, existing slug,
+    # but form is not public.
     url = reverse(
         "api:database:views:link_row_field_lookup",
         kwargs={"slug": grid.slug, "field_id": link_row_field.id},

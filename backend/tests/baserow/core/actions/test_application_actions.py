@@ -3,7 +3,7 @@ from pytest_unordered import unordered
 
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
-from baserow.core.action.scopes import GroupActionScopeType
+from baserow.core.action.scopes import WorkspaceActionScopeType
 from baserow.core.actions import (
     CreateApplicationActionType,
     DeleteApplicationActionType,
@@ -20,12 +20,16 @@ from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 def test_can_undo_redo_order_applications(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group, order=1)
-    application_2 = data_fixture.create_database_application(group=group, order=2)
+    workspace = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace, order=1
+    )
+    application_2 = data_fixture.create_database_application(
+        workspace=workspace, order=2
+    )
 
     action_type_registry.get_by_type(OrderApplicationsActionType).do(
-        user, group, [application_2.id, application_1.id]
+        user, workspace, [application_2.id, application_1.id]
     )
 
     def check_queryset():
@@ -36,12 +40,12 @@ def test_can_undo_redo_order_applications(data_fixture, django_assert_num_querie
     assert check_queryset() == [application_2.id, application_1.id]
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert check_queryset() == [application_1.id, application_2.id]
 
     ActionHandler.redo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert check_queryset() == [application_2.id, application_1.id]
 
@@ -51,16 +55,16 @@ def test_can_undo_redo_order_applications(data_fixture, django_assert_num_querie
 def test_can_undo_create_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.filter(pk=application.id).count() == 0
@@ -71,19 +75,19 @@ def test_can_undo_create_application(data_fixture, django_assert_num_queries):
 def test_can_undo_redo_create_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     ActionHandler.redo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.filter(pk=application.id).count() == 1
@@ -94,12 +98,12 @@ def test_can_undo_redo_create_application(data_fixture, django_assert_num_querie
 def test_can_undo_delete_application(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     action_type_registry.get_by_type(DeleteApplicationActionType).do(user, application)
@@ -107,7 +111,7 @@ def test_can_undo_delete_application(data_fixture):
     assert Application.objects.filter(pk=application.id).count() == 0
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.filter(pk=application.id).count() == 1
@@ -118,12 +122,12 @@ def test_can_undo_delete_application(data_fixture):
 def test_can_undo_redo_delete_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     action_type_registry.get_by_type(DeleteApplicationActionType).do(user, application)
@@ -131,11 +135,11 @@ def test_can_undo_redo_delete_application(data_fixture, django_assert_num_querie
     assert Application.objects.filter(pk=application.id).count() == 0
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     ActionHandler.redo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.filter(pk=application.id).count() == 0
@@ -146,13 +150,13 @@ def test_can_undo_redo_delete_application(data_fixture, django_assert_num_querie
 def test_can_undo_update_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
     application_name_new = "New application name"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     action_type_registry.get_by_type(UpdateApplicationActionType).do(
@@ -162,7 +166,7 @@ def test_can_undo_update_application(data_fixture, django_assert_num_queries):
     assert Application.objects.get(pk=application.id).name == application_name_new
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.get(pk=application.id).name == application_name
@@ -173,13 +177,13 @@ def test_can_undo_update_application(data_fixture, django_assert_num_queries):
 def test_can_undo_redo_update_application(data_fixture, django_assert_num_queries):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
     application_name_new = "New application name"
 
     application = action_type_registry.get_by_type(CreateApplicationActionType).do(
-        user, group, application_type, name=application_name
+        user, workspace, application_type, name=application_name
     )
 
     action_type_registry.get_by_type(UpdateApplicationActionType).do(
@@ -189,11 +193,11 @@ def test_can_undo_redo_update_application(data_fixture, django_assert_num_querie
     assert Application.objects.get(pk=application.id).name == application_name_new
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     ActionHandler.redo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert Application.objects.get(pk=application.id).name == application_name_new
@@ -204,11 +208,11 @@ def test_can_undo_redo_update_application(data_fixture, django_assert_num_querie
 def test_can_undo_duplicate_simple_application(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_name = "My Application"
 
     application = data_fixture.create_database_application(
-        user, group=group, name=application_name
+        user, workspace=workspace, name=application_name
     )
 
     new_application = action_type_registry.get_by_type(
@@ -219,7 +223,7 @@ def test_can_undo_duplicate_simple_application(data_fixture):
     assert Application.objects.count() == 2
 
     actions_undone = ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     assert_undo_redo_actions_are_valid(actions_undone, [DuplicateApplicationActionType])
@@ -232,11 +236,11 @@ def test_can_undo_duplicate_simple_application(data_fixture):
 def test_can_undo_redo_duplicate_simple_application(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_name = "My Application"
 
     application = data_fixture.create_database_application(
-        user, group=group, name=application_name
+        user, workspace=workspace, name=application_name
     )
 
     new_application = action_type_registry.get_by_type(
@@ -247,11 +251,11 @@ def test_can_undo_redo_duplicate_simple_application(data_fixture):
     assert Application.objects.count() == 2
 
     ActionHandler.undo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
 
     actions_redone = ActionHandler.redo(
-        user, [GroupActionScopeType.value(group_id=group.id)], session_id
+        user, [WorkspaceActionScopeType.value(workspace_id=workspace.id)], session_id
     )
     assert_undo_redo_actions_are_valid(actions_redone, [DuplicateApplicationActionType])
     assert Application.objects.count() == 2

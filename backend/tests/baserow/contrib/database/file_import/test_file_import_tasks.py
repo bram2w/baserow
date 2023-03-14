@@ -21,7 +21,7 @@ from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
     InvalidInitialTableData,
 )
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.jobs.constants import (
     JOB_FAILED,
     JOB_FINISHED,
@@ -38,7 +38,7 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application()
 
-    with patch_filefield_storage(), pytest.raises(UserNotInGroup):
+    with patch_filefield_storage(), pytest.raises(UserNotInWorkspace):
         job = data_fixture.create_file_import_job(user=user, database=database)
         run_async_job(job.id)
 

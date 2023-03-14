@@ -24,11 +24,18 @@ sort:
 test:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests || exit;
 
+test-compat:
+	pytest tests/baserow/compat --run-disabled-in-ci || exit;
+
 test-regenerate-ci-durations:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests --store-durations || exit;
 
 test-parallel:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests -n 10 || exit;
+
+test-compat-parallel:
+	pytest tests/baserow/compat --run-disabled-in-ci -n 10 || exit;
+
 
 PYTEST_SPLITS:=1
 PYTEST_SPLIT_GROUP:=1

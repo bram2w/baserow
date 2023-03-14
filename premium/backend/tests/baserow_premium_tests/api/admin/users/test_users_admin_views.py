@@ -16,8 +16,8 @@ from rest_framework.status import (
 )
 
 from baserow.core.models import (
-    GROUP_USER_PERMISSION_ADMIN,
-    GROUP_USER_PERMISSION_MEMBER,
+    WORKSPACE_USER_PERMISSION_ADMIN,
+    WORKSPACE_USER_PERMISSION_MEMBER,
 )
 
 invalid_passwords = [
@@ -60,17 +60,17 @@ def test_admin_can_see_admin_users_endpoint(api_client, premium_data_fixture):
         date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
         has_active_premium_license=True,
     )
-    group_user_is_admin_of = premium_data_fixture.create_group()
-    premium_data_fixture.create_user_group(
-        group=group_user_is_admin_of,
+    workspace_user_is_admin_of = premium_data_fixture.create_workspace()
+    premium_data_fixture.create_user_workspace(
+        workspace=workspace_user_is_admin_of,
         user=staff_user,
-        permissions=GROUP_USER_PERMISSION_ADMIN,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
-    group_user_is_not_admin_of = premium_data_fixture.create_group()
-    premium_data_fixture.create_user_group(
-        group=group_user_is_not_admin_of,
+    workspace_user_is_not_admin_of = premium_data_fixture.create_workspace()
+    premium_data_fixture.create_user_workspace(
+        workspace=workspace_user_is_not_admin_of,
         user=staff_user,
-        permissions=GROUP_USER_PERMISSION_MEMBER,
+        permissions=WORKSPACE_USER_PERMISSION_MEMBER,
     )
     response = api_client.get(
         reverse("api:premium:admin:users:list"),
@@ -87,16 +87,28 @@ def test_admin_can_see_admin_users_endpoint(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": staff_user.first_name,
                 "username": staff_user.email,
-                "groups": [
+                "groups": [  # GroupDeprecation
                     {
-                        "id": group_user_is_admin_of.id,
-                        "name": group_user_is_admin_of.name,
-                        "permissions": GROUP_USER_PERMISSION_ADMIN,
+                        "id": workspace_user_is_admin_of.id,
+                        "name": workspace_user_is_admin_of.name,
+                        "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
                     },
                     {
-                        "id": group_user_is_not_admin_of.id,
-                        "name": group_user_is_not_admin_of.name,
-                        "permissions": GROUP_USER_PERMISSION_MEMBER,
+                        "id": workspace_user_is_not_admin_of.id,
+                        "name": workspace_user_is_not_admin_of.name,
+                        "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
+                    },
+                ],
+                "workspaces": [
+                    {
+                        "id": workspace_user_is_admin_of.id,
+                        "name": workspace_user_is_admin_of.name,
+                        "permissions": WORKSPACE_USER_PERMISSION_ADMIN,
+                    },
+                    {
+                        "id": workspace_user_is_not_admin_of.id,
+                        "name": workspace_user_is_not_admin_of.name,
+                        "permissions": WORKSPACE_USER_PERMISSION_MEMBER,
                     },
                 ],
                 "id": staff_user.id,
@@ -225,7 +237,8 @@ def test_admin_can_search_users(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
-                "groups": [],
+                "groups": [],  # GroupDeprecation
+                "workspaces": [],
                 "id": searched_for_user.id,
                 "is_staff": False,
                 "is_active": True,
@@ -268,7 +281,8 @@ def test_admin_can_sort_users(api_client, premium_data_fixture):
                 "date_joined": "2021-04-01T01:00:00Z",
                 "name": searched_for_user.first_name,
                 "username": searched_for_user.email,
-                "groups": [],
+                "groups": [],  # GroupDeprecation
+                "workspaces": [],
                 "id": searched_for_user.id,
                 "is_staff": False,
                 "is_active": True,
@@ -566,7 +580,8 @@ def test_admin_can_patch_user(api_client, premium_data_fixture):
         "date_joined": "2021-04-01T01:00:00Z",
         "name": user.first_name,
         "username": "some_other_email@test.nl",
-        "groups": [],
+        "groups": [],  # GroupDeprecation
+        "workspaces": [],
         "id": user.id,
         "is_staff": True,
         "is_active": True,
@@ -602,7 +617,8 @@ def test_admin_can_patch_user_without_providing_password(
         "date_joined": "2021-04-01T01:00:00Z",
         "name": "Test2",
         "username": "some_other_email@test.nl",
-        "groups": [],
+        "groups": [],  # GroupDeprecation
+        "workspaces": [],
         "id": user.id,
         "is_staff": True,
         "is_active": True,
@@ -758,7 +774,7 @@ def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
     fixed_num_of_queries_unrelated_to_number_of_rows = 6
 
     for i in range(10):
-        premium_data_fixture.create_user_group()
+        premium_data_fixture.create_user_workspace()
 
     with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
         response = api_client.get(
@@ -771,7 +787,7 @@ def test_admin_getting_view_users_only_runs_two_queries_instead_of_n(
 
     # Make even more to ensure that more rows don't result in more queries.
     for i in range(10):
-        premium_data_fixture.create_user_group()
+        premium_data_fixture.create_user_workspace()
 
     with django_assert_num_queries(fixed_num_of_queries_unrelated_to_number_of_rows):
         response = api_client.get(

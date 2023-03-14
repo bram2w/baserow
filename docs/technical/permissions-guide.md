@@ -216,7 +216,7 @@ from baserow.core.registries import PermissionManagerType
 class OwnedTablePermissionManagerType(PermissionManagerType):
     type = "owned_table"
 
-    def check_multiple_permissions(self, check, group=None, include_trash=False):
+    def check_multiple_permissions(self, check, workspace=None, include_trash=False):
         ...
 
     def get_permissions_object(self, actor, group=None):

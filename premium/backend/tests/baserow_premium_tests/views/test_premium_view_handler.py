@@ -244,16 +244,20 @@ def test_get_rows_grouped_by_single_select_field_with_empty_table(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_list_views_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -280,15 +284,17 @@ def test_list_views_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_get_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -306,14 +312,16 @@ def test_get_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_create_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
 
     view = handler.create_view(
         user=user,
@@ -331,16 +339,20 @@ def test_create_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_update_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
 
     view = handler.create_view(
         user=user,
@@ -361,16 +373,20 @@ def test_update_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_duplicate_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
 
     view = handler.create_view(
         user=user,
@@ -394,16 +410,20 @@ def test_duplicate_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_delete_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -429,16 +449,20 @@ def test_delete_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_field_options_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -461,16 +485,20 @@ def test_field_options_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_filters_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -510,16 +538,20 @@ def test_filters_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_sorts_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -559,16 +591,20 @@ def test_sorts_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_decorations_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -623,16 +659,20 @@ def test_decorations_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_aggregations_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     field = data_fixture.create_number_field(user=user, table=table)
     view = handler.create_view(
         user=user,
@@ -672,16 +712,20 @@ def test_aggregations_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_update_view_slug_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -701,16 +745,20 @@ def test_update_view_slug_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_get_public_view_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -731,16 +779,20 @@ def test_get_public_view_personal_ownership_type(
 @pytest.mark.django_db
 @pytest.mark.view_ownership
 def test_order_views_personal_ownership_type(
-    data_fixture, premium_data_fixture, alternative_per_group_license_service
+    data_fixture, premium_data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = premium_data_fixture.create_user(group=group)
-    user2 = premium_data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = premium_data_fixture.create_user(workspace=workspace)
+    user2 = premium_data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
-    alternative_per_group_license_service.restrict_user_premium_to(user2, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user2, workspace.id
+    )
     grid_1 = data_fixture.create_grid_view(
         table=table, user=user, created_by=user, order=1, ownership_type="collaborative"
     )

@@ -56,6 +56,7 @@ def test_0010_with_no_role_and_no_access_only_no_access_assignments(synced_roles
 
     old_state = migrate(migrate_from)
 
+    # Prior to it being renamed to Workspace.
     Group = old_state.apps.get_model("core", "Group")
     Role = old_state.apps.get_model("baserow_enterprise", "Role")
     Team = old_state.apps.get_model("baserow_enterprise", "Team")
@@ -104,6 +105,7 @@ def test_0010_with_no_role_and_no_access_only_no_role_assignments(synced_roles):
 
     old_state = migrate(migrate_from)
 
+    # Prior to it being renamed to Workspace.
     Group = old_state.apps.get_model("core", "Group")
     Role = old_state.apps.get_model("baserow_enterprise", "Role")
     Team = old_state.apps.get_model("baserow_enterprise", "Team")
@@ -152,6 +154,7 @@ def test_0010_with_no_role_and_no_access_mixed_role_assignments(synced_roles):
 
     old_state = migrate(migrate_from)
 
+    # Prior to it being renamed to Workspace.
     Group = old_state.apps.get_model("core", "Group")
     Role = old_state.apps.get_model("baserow_enterprise", "Role")
     Team = old_state.apps.get_model("baserow_enterprise", "Team")
@@ -217,6 +220,7 @@ def test_0010_migrates_groupusers(synced_roles):
     old_state = migrate(migrate_from)
 
     User = old_state.apps.get_model("auth", "User")
+    # Prior to it being renamed to Workspace.
     Group = old_state.apps.get_model("core", "Group")
     GroupUser = old_state.apps.get_model("core", "GroupUser")
 

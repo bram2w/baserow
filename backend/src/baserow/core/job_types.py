@@ -13,12 +13,12 @@ from baserow.api.errors import (
     ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
     ERROR_USER_NOT_IN_GROUP,
 )
-from baserow.api.groups.serializers import GroupSerializer
 from baserow.api.templates.errors import (
     ERROR_TEMPLATE_DOES_NOT_EXIST,
     ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
 )
 from baserow.api.templates.serializers import TemplateSerializer
+from baserow.api.workspaces.serializers import WorkspaceSerializer
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import (
     DuplicateApplicationActionType,
@@ -26,15 +26,15 @@ from baserow.core.actions import (
 )
 from baserow.core.exceptions import (
     DuplicateApplicationMaxLocksExceededException,
-    GroupDoesNotExist,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
-    UserNotInGroup,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.models import Application, DuplicateApplicationJob, InstallTemplateJob
-from baserow.core.operations import CreateApplicationsGroupOperationType
+from baserow.core.operations import CreateApplicationsWorkspaceOperationType
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import Progress
 
@@ -45,8 +45,8 @@ class DuplicateApplicationJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
         DuplicateApplicationMaxLocksExceededException: ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED,
     }
 
@@ -112,8 +112,8 @@ class InstallTemplateJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
         TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
         TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
     }
@@ -129,13 +129,19 @@ class InstallTemplateJobType(JobType):
         ),
     }
 
-    serializer_field_names = ["group", "template", "installed_applications"]
+    serializer_field_names = [
+        "workspace",
+        "template",
+        "installed_applications",
+        "group",  # GroupDeprecation
+    ]
     serializer_field_overrides = {
-        "group": GroupSerializer(read_only=True),
+        "workspace": WorkspaceSerializer(read_only=True),
         "template": TemplateSerializer(read_only=True),
         "installed_applications": InstallTemplateJobApplicationsSerializer(
             read_only=True
         ),
+        "group": WorkspaceSerializer(read_only=True),  # GroupDeprecation
     }
 
     def prepare_values(
@@ -143,9 +149,12 @@ class InstallTemplateJobType(JobType):
     ) -> Dict[str, Any]:
 
         handler = CoreHandler()
-        group = handler.get_group(values["group_id"])
+        workspace = handler.get_workspace(values["workspace_id"])
         CoreHandler().check_permissions(
-            user, CreateApplicationsGroupOperationType.type, group=group, context=group
+            user,
+            CreateApplicationsWorkspaceOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
         # ensure everything is ok for the installation, otherwise
@@ -154,7 +163,7 @@ class InstallTemplateJobType(JobType):
         handler.get_valid_template_path_or_raise(template)
 
         return {
-            "group": group,
+            "workspace": workspace,
             "template": template,
         }
 
@@ -165,7 +174,7 @@ class InstallTemplateJobType(JobType):
 
         installed_applications = action_type_registry.get_by_type(
             InstallTemplateActionType
-        ).do(job.user, job.group, job.template, progress_builder=progress_builder)
+        ).do(job.user, job.workspace, job.template, progress_builder=progress_builder)
 
         job.installed_applications = [app.id for app in installed_applications]
         job.save(update_fields=("installed_applications",))

@@ -84,7 +84,7 @@ class CreateViewFilterActionType(UndoableActionType):
             user, view, field, filter_type, filter_value
         )
 
-        group = view.table.database.group
+        workspace = view.table.database.workspace
         params = cls.Params(
             view.id,
             view.name,
@@ -98,7 +98,7 @@ class CreateViewFilterActionType(UndoableActionType):
             filter_type,
             filter_value,
         )
-        cls.register_action(user, params, cls.scope(view.id), group)
+        cls.register_action(user, params, cls.scope(view.id), workspace)
         return view_filter
 
     @classmethod
@@ -205,12 +205,12 @@ class UpdateViewFilterActionType(UndoableActionType):
             original_view_filter_type,
             original_view_filter_value,
         )
-        group = updated_view_filter.field.table.database.group
+        workspace = updated_view_filter.field.table.database.workspace
         cls.register_action(
             user,
             params,
             cls.scope(view_filter.view_id),
-            group,
+            workspace,
         )
 
         return updated_view_filter
@@ -311,14 +311,14 @@ class DeleteViewFilterActionType(UndoableActionType):
             view_filter_type,
             view_filter_value,
         )
-        group = view_filter.view.table.database.group
+        workspace = view_filter.view.table.database.workspace
         cls.register_action(
             user,
             params,
             cls.scope(
                 view_filter.view_id,
             ),
-            group,
+            workspace,
         )
 
     @classmethod
@@ -399,8 +399,8 @@ class CreateViewSortActionType(UndoableActionType):
             view_sort.id,
             sort_order,
         )
-        group = view.table.database.group
-        cls.register_action(user, params, cls.scope(view.id), group)
+        workspace = view.table.database.workspace
+        cls.register_action(user, params, cls.scope(view.id), workspace)
         return view_sort
 
     @classmethod
@@ -495,7 +495,7 @@ class UpdateViewSortActionType(UndoableActionType):
                 original_sort_order,
             ),
             scope=cls.scope(view_sort.view.id),
-            group=view_sort.view.table.database.group,
+            workspace=view_sort.view.table.database.workspace,
         )
 
         return updated_view_sort
@@ -578,8 +578,8 @@ class DeleteViewSortActionType(UndoableActionType):
             view_sort_id,
             sort_order,
         )
-        group = view_sort.view.table.database.group
-        cls.register_action(user, params, cls.scope(view_sort.view.id), group)
+        workspace = view_sort.view.table.database.workspace
+        cls.register_action(user, params, cls.scope(view_sort.view.id), workspace)
 
     @classmethod
     def scope(cls, view_id: int) -> ActionScopeStr:
@@ -651,7 +651,7 @@ class OrderViewsActionType(UndoableActionType):
             order,
             original_order,
         )
-        cls.register_action(user, params, cls.scope(table.id), table.database.group)
+        cls.register_action(user, params, cls.scope(table.id), table.database.workspace)
 
     @classmethod
     def scope(cls, table_id: int) -> ActionScopeStr:
@@ -740,7 +740,7 @@ class UpdateViewFieldOptionsActionType(UndoableActionType):
                 dict(original_field_options_to_save),
             ),
             scope=cls.scope(view.id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
 
     @classmethod
@@ -812,7 +812,7 @@ class RotateViewSlugActionType(UndoableActionType):
                 original_slug,
             ),
             scope=cls.scope(view.id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
         return view
 
@@ -897,7 +897,7 @@ class UpdateViewActionType(UndoableActionType):
                 original_data,
             ),
             scope=cls.scope(view.id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
         return view
 
@@ -969,7 +969,7 @@ class CreateViewActionType(UndoableActionType):
                 table.database.name,
             ),
             scope=cls.scope(table.id),
-            group=table.database.group,
+            workspace=table.database.workspace,
         )
 
         return view
@@ -1039,7 +1039,7 @@ class DuplicateViewActionType(UndoableActionType):
                 original_view.name,
             ),
             scope=cls.scope(original_view.table.id),
-            group=original_view.table.database.group,
+            workspace=original_view.table.database.workspace,
         )
 
         return view
@@ -1099,7 +1099,7 @@ class DeleteViewActionType(UndoableActionType):
                 view.table.database.name,
             ),
             scope=cls.scope(view.table_id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
 
     @classmethod
@@ -1184,7 +1184,7 @@ class CreateDecorationActionType(UndoableActionType):
                 value_provider_conf,
             ),
             scope=cls.scope(view.id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
 
         return decoration
@@ -1302,7 +1302,7 @@ class UpdateDecorationActionType(UndoableActionType):
                 order,
             ),
             scope=cls.scope(view_decoration.view_id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
 
         return view_decoration_updated
@@ -1394,7 +1394,7 @@ class DeleteDecorationActionType(UndoableActionType):
                 original_view_decoration.order,
             ),
             scope=cls.scope(view_decoration.view_id),
-            group=view.table.database.group,
+            workspace=view.table.database.workspace,
         )
 
     @classmethod

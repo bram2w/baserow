@@ -20,7 +20,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from baserow.api.user.registries import UserDataType, user_data_registry
 from baserow.contrib.database.models import Database, Table
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.user.handler import UserHandler
 
 User = get_user_model()
@@ -259,8 +259,8 @@ def test_create_user_with_invitation(data_fixture, client):
     data_fixture.create_password_provider()
     core_handler = CoreHandler()
     valid_password = "thisIsAValidPassword"
-    invitation = data_fixture.create_group_invitation(email="test0@test.nl")
-    signer = core_handler.get_group_invitation_signer()
+    invitation = data_fixture.create_workspace_invitation(email="test0@test.nl")
+    signer = core_handler.get_workspace_invitation_signer()
 
     response_failed = client.post(
         reverse("api:user:index"),
@@ -268,7 +268,7 @@ def test_create_user_with_invitation(data_fixture, client):
             "name": "Test1",
             "email": "test@test.nl",
             "password": valid_password,
-            "group_invitation_token": "INVALID",
+            "workspace_invitation_token": "INVALID",
         },
         format="json",
     )
@@ -281,7 +281,7 @@ def test_create_user_with_invitation(data_fixture, client):
             "name": "Test1",
             "email": "test0@test.nl",
             "password": valid_password,
-            "group_invitation_token": f"{signer.dumps(invitation.id)}2",
+            "workspace_invitation_token": f"{signer.dumps(invitation.id)}2",
         },
         format="json",
     )
@@ -295,7 +295,7 @@ def test_create_user_with_invitation(data_fixture, client):
             "name": "Test1",
             "email": "test@test.nl",
             "password": valid_password,
-            "group_invitation_token": signer.dumps(99999),
+            "workspace_invitation_token": signer.dumps(99999),
         },
         format="json",
     )
@@ -308,7 +308,7 @@ def test_create_user_with_invitation(data_fixture, client):
             "name": "Test1",
             "email": "test@test.nl",
             "password": valid_password,
-            "group_invitation_token": signer.dumps(invitation.id),
+            "workspace_invitation_token": signer.dumps(invitation.id),
         },
         format="json",
     )
@@ -322,15 +322,15 @@ def test_create_user_with_invitation(data_fixture, client):
             "name": "Test1",
             "email": "test0@test.nl",
             "password": valid_password,
-            "group_invitation_token": signer.dumps(invitation.id),
+            "workspace_invitation_token": signer.dumps(invitation.id),
         },
         format="json",
     )
     assert response_failed.status_code == HTTP_200_OK
     assert User.objects.all().count() == 2
-    assert Group.objects.all().count() == 1
-    assert Group.objects.all().first().id == invitation.group_id
-    assert GroupUser.objects.all().count() == 2
+    assert Workspace.objects.all().count() == 1
+    assert Workspace.objects.all().first().id == invitation.workspace_id
+    assert WorkspaceUser.objects.all().count() == 2
     assert Database.objects.all().count() == 0
     assert Table.objects.all().count() == 0
 
@@ -386,8 +386,8 @@ def test_create_user_with_template(data_fixture, client):
         format="json",
     )
     assert response.status_code == HTTP_200_OK
-    assert Group.objects.all().count() == 2
-    assert GroupUser.objects.all().count() == 1
+    assert Workspace.objects.all().count() == 2
+    assert WorkspaceUser.objects.all().count() == 1
     # We expect the example template to be installed
     assert Database.objects.all().count() == 1, Database.objects.values_list(
         "name", flat=True
@@ -763,27 +763,31 @@ def test_change_password_auth_disabled_staff(api_client, data_fixture):
 @pytest.mark.django_db
 def test_dashboard(data_fixture, client):
     user, token = data_fixture.create_user_and_token(email="test@localhost")
-    group_1 = data_fixture.create_group(name="Test1")
-    group_2 = data_fixture.create_group()
-    invitation_1 = data_fixture.create_group_invitation(
-        group=group_1, email="test@localhost"
+    workspace_1 = data_fixture.create_workspace(name="Test1")
+    workspace_2 = data_fixture.create_workspace()
+    invitation_1 = data_fixture.create_workspace_invitation(
+        workspace=workspace_1, email="test@localhost"
     )
-    data_fixture.create_group_invitation(group=group_1, email="test2@localhost")
-    data_fixture.create_group_invitation(group=group_2, email="test3@localhost")
+    data_fixture.create_workspace_invitation(
+        workspace=workspace_1, email="test2@localhost"
+    )
+    data_fixture.create_workspace_invitation(
+        workspace=workspace_2, email="test3@localhost"
+    )
 
     response = client.get(
         reverse("api:user:dashboard"), format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     response_json = response.json()
-    assert len(response_json["group_invitations"]) == 1
-    assert response_json["group_invitations"][0]["id"] == invitation_1.id
-    assert response_json["group_invitations"][0]["email"] == invitation_1.email
-    assert response_json["group_invitations"][0]["invited_by"] == (
+    assert len(response_json["workspace_invitations"]) == 1
+    assert response_json["workspace_invitations"][0]["id"] == invitation_1.id
+    assert response_json["workspace_invitations"][0]["email"] == invitation_1.email
+    assert response_json["workspace_invitations"][0]["invited_by"] == (
         invitation_1.invited_by.first_name
     )
-    assert response_json["group_invitations"][0]["group"] == "Test1"
-    assert response_json["group_invitations"][0]["message"] == invitation_1.message
-    assert "created_on" in response_json["group_invitations"][0]
+    assert response_json["workspace_invitations"][0]["workspace"] == "Test1"
+    assert response_json["workspace_invitations"][0]["message"] == invitation_1.message
+    assert "created_on" in response_json["workspace_invitations"][0]
 
 
 @pytest.mark.django_db

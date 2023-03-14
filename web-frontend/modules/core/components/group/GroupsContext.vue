@@ -33,7 +33,7 @@
     </div>
     <div class="select__footer">
       <a
-        v-if="$hasPermission('create_group')"
+        v-if="$hasPermission('create_workspace')"
         class="select__footer-button"
         @click="$refs.createGroupModal.show()"
       >

@@ -24,13 +24,13 @@ def test_get_page_base_queryset(data_fixture, django_assert_num_queries):
     # Without selecting related
     page = PageHandler().get_page(page.id)
     with django_assert_num_queries(2):
-        group = page.builder.group
+        workspace = page.builder.workspace
 
     # With selecting related
-    base_queryset = Page.objects.select_related("builder", "builder__group")
+    base_queryset = Page.objects.select_related("builder", "builder__workspace")
     page = PageHandler().get_page(page.id, base_queryset=base_queryset)
     with django_assert_num_queries(0):
-        group = page.builder.group
+        workspace = page.builder.workspace
 
 
 @pytest.mark.django_db

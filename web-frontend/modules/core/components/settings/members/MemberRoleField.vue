@@ -3,7 +3,7 @@
     v-if="
       props.column.additionalProps.userId === props.row.user_id ||
       !parent.$hasPermission(
-        'group_user.update',
+        'workspace_user.update',
         props.row,
         props.column.additionalProps.groupId
       )

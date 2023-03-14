@@ -150,8 +150,8 @@ def test_upload_file_with_token_auth(api_client, data_fixture, tmpdir):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    token = TokenHandler().create_token(user, group, "uploadFile")
+    workspace = data_fixture.create_workspace(user=user)
+    token = TokenHandler().create_token(user, workspace, "uploadFile")
 
     response = api_client.post(
         reverse("api:user_files:upload_file"),
@@ -386,8 +386,8 @@ def test_upload_file_via_url_with_token_auth(api_client, data_fixture, tmpdir):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    token = TokenHandler().create_token(user, group, "uploadFileViaUrl")
+    workspace = data_fixture.create_workspace(user=user)
+    token = TokenHandler().create_token(user, workspace, "uploadFileViaUrl")
 
     response = api_client.post(
         reverse("api:user_files:upload_via_url"),

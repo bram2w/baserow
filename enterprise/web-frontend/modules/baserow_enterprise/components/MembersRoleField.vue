@@ -4,7 +4,7 @@
       v-if="
         userId === row.user_id ||
         !$hasPermission(
-          'group_user.update',
+          'workspace_user.update',
           row,
           column.additionalProps.groupId
         )
@@ -98,7 +98,7 @@ export default {
           'auth.User',
           this.column.additionalProps.groupId,
           this.column.additionalProps.groupId,
-          'group',
+          'workspace',
           permissionsNew
         )
         this.$emit('refresh')

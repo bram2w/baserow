@@ -15,11 +15,13 @@ from rest_framework_simplejwt.serializers import (
 )
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from baserow.api.groups.invitations.serializers import UserGroupInvitationSerializer
 from baserow.api.sessions import set_user_session_data_from_request
 from baserow.api.user.jwt import get_user_from_token
 from baserow.api.user.registries import user_data_registry
 from baserow.api.user.validators import language_validation, password_validation
+from baserow.api.workspaces.invitations.serializers import (
+    UserWorkspaceInvitationSerializer,
+)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.auth_provider.exceptions import AuthProviderDisabled
 from baserow.core.auth_provider.handler import PasswordProviderHandler
@@ -116,17 +118,24 @@ class RegisterSerializer(serializers.Serializer):
         help_text="Indicates whether an authentication JWT should be generated and "
         "be included in the response.",
     )
+    # GroupDeprecation
     group_invitation_token = serializers.CharField(
         required=False,
-        help_text="If provided and valid, the user accepts the group invitation and "
-        "will have access to the group after signing up.",
+        source="workspace_invitation_token",
+        help_text="DEPRECATED: Please use `workspace_invitation_token` which "
+        "this attribute is being renamed to in 2024.",
+    )
+    workspace_invitation_token = serializers.CharField(
+        required=False,
+        help_text="If provided and valid, the user accepts the workspace invitation and "
+        "will have access to the workspace after signing up.",
     )
     template_id = serializers.PrimaryKeyRelatedField(
         required=False,
         default=None,
         queryset=Template.objects.all(),
         help_text="The id of the template that must be installed after creating the "
-        "account. This only works if the `group_invitation_token` param is not "
+        "account. This only works if the `workspace_invitation_token` param is not "
         "provided.",
     )
 
@@ -281,4 +290,8 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
 
 
 class DashboardSerializer(serializers.Serializer):
-    group_invitations = UserGroupInvitationSerializer(many=True)
+    # GroupDeprecation
+    group_invitations = UserWorkspaceInvitationSerializer(
+        many=True, source="workspace_invitations"
+    )
+    workspace_invitations = UserWorkspaceInvitationSerializer(many=True)

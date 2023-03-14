@@ -42,16 +42,16 @@ def test_import_export_database(data_fixture):
     del serialized["tables"][0]["rows"][1]["created_on"]
     del serialized["tables"][0]["rows"][1]["updated_on"]
 
-    imported_group = data_fixture.create_group()
+    imported_workspace = data_fixture.create_workspace()
     id_mapping = {}
 
     with freeze_time("2022-01-01 12:00"):
         imported_database = database_type.import_serialized(
-            imported_group, serialized, id_mapping, None, None
+            imported_workspace, serialized, id_mapping, None, None
         )
 
     assert imported_database.id != database.id
-    assert imported_database.group_id == imported_group.id
+    assert imported_database.workspace_id == imported_workspace.id
     assert imported_database.name == database.name
     assert imported_database.order == database.order
     assert imported_database.table_set.all().count() == 1
@@ -108,11 +108,13 @@ def test_import_export_database(data_fixture):
 def test_create_application_and_init_with_data(data_fixture):
     core_handler = CoreHandler()
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database_1 = core_handler.create_application(user, group, "database", "Database 1")
+    workspace = data_fixture.create_workspace(user=user)
+    database_1 = core_handler.create_application(
+        user, workspace, "database", "Database 1"
+    )
     assert Table.objects.filter(database=database_1).count() == 0
 
     database_2 = core_handler.create_application(
-        user, group, "database", "Database 2", init_with_data=True
+        user, workspace, "database", "Database 2", init_with_data=True
     )
     assert Table.objects.filter(database=database_2).count() == 1

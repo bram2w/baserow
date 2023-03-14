@@ -23,8 +23,8 @@ def test_create_snapshot_action_type(
     send_mock, data_fixture, django_capture_on_commit_callbacks
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace)
 
     with django_capture_on_commit_callbacks(execute=True):
         result = SnapshotHandler().create(application.id, user, "test snapshot")
@@ -53,9 +53,11 @@ def test_restore_snapshot_action_type(
     send_mock, data_fixture, django_capture_on_commit_callbacks
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    from_application = data_fixture.create_database_application(group=group)
-    to_application = data_fixture.create_database_application(group=group, name="test")
+    workspace = data_fixture.create_workspace(user=user)
+    from_application = data_fixture.create_database_application(workspace=workspace)
+    to_application = data_fixture.create_database_application(
+        workspace=workspace, name="test"
+    )
     snapshot = data_fixture.create_snapshot(
         snapshot_from_application=from_application,
         snapshot_to_application=to_application,
@@ -78,9 +80,11 @@ def test_restore_snapshot_action_type(
 @pytest.mark.django_db
 def test_delete_snapshot_action_type(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    from_application = data_fixture.create_database_application(group=group)
-    to_application = data_fixture.create_database_application(group=group, name="test")
+    workspace = data_fixture.create_workspace(user=user)
+    from_application = data_fixture.create_database_application(workspace=workspace)
+    to_application = data_fixture.create_database_application(
+        workspace=workspace, name="test"
+    )
     snapshot = data_fixture.create_snapshot(
         snapshot_from_application=from_application,
         snapshot_to_application=to_application,

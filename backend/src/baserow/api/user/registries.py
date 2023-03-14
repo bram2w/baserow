@@ -7,7 +7,7 @@ from rest_framework import serializers
 from baserow.core.registry import Instance, Registry
 
 if TYPE_CHECKING:
-    from baserow.core.models import Group
+    from baserow.core.models import Workspace
 
 
 class UserDataType(Instance):
@@ -88,7 +88,7 @@ class UserDataRegistry(Registry[UserDataType]):
 class MemberDataType(Instance):
     """
     The member data type can be used to inject an additional payload to the API
-    group user list responses. The returned dict of the `annotate_serialized_data`
+    workspace user list responses. The returned dict of the `annotate_serialized_data`
     method is added to the payload under the key containing the type name.
     """
 
@@ -98,7 +98,7 @@ class MemberDataType(Instance):
 
         """
         Should be given a `serializers.Field` object, which the `MemberDataType`
-        will annotate on `GroupUserSerializer`.
+        will annotate on `WorkspaceUserSerializer`.
         """
 
         raise NotImplementedError(
@@ -106,7 +106,7 @@ class MemberDataType(Instance):
         )
 
     def annotate_serialized_data(
-        self, group: "Group", serialized_data: dict, user: AbstractUser
+        self, workspace: "Workspace", serialized_data: dict, user: AbstractUser
     ) -> dict:
         """
         Should be given a `Serializer.data` object, which the `MemberDataType`

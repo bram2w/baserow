@@ -152,7 +152,7 @@ def test_last_modified_field_type(data_fixture):
 @pytest.mark.django_db(transaction=True)
 def test_import_export_last_modified_field(data_fixture):
     user = data_fixture.create_user()
-    imported_group = data_fixture.create_group(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -186,8 +186,8 @@ def test_import_export_last_modified_field(data_fixture):
     )
 
     core_handler = CoreHandler()
-    exported_applications = core_handler.export_group_applications(
-        database.group, BytesIO()
+    exported_applications = core_handler.export_workspace_applications(
+        database.workspace, BytesIO()
     )
 
     # We manually set this value in the export, because if it's set, then the import
@@ -197,8 +197,11 @@ def test_import_export_last_modified_field(data_fixture):
     ] = datetime(2021, 1, 1, 12, 00, tzinfo=timezone("UTC")).isoformat()
 
     with freeze_time("2020-01-02 12:00"):
-        imported_applications, id_mapping = core_handler.import_applications_to_group(
-            imported_group, exported_applications, BytesIO(), None
+        (
+            imported_applications,
+            id_mapping,
+        ) = core_handler.import_applications_to_workspace(
+            imported_workspace, exported_applications, BytesIO(), None
         )
 
     imported_database = imported_applications[0]

@@ -2,21 +2,25 @@ import pytest
 from pyinstrument import Profiler
 
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.table.usage_types import TableGroupStorageUsageItemType
+from baserow.contrib.database.table.usage_types import (
+    TableWorkspaceStorageUsageItemType,
+)
 from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
-def test_table_group_storage_usage_item_type(data_fixture):
+def test_table_workspace_storage_usage_item_type(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
 
-    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
-    table_group_storage_usage_item_type.register_plpgsql_functions()
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    table_workspace_storage_usage_item_type = TableWorkspaceStorageUsageItemType()
+    table_workspace_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 0
 
@@ -26,7 +30,9 @@ def test_table_group_storage_usage_item_type(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
@@ -36,16 +42,18 @@ def test_table_group_storage_usage_item_type(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_2.name}]})
 
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 700
 
 
 @pytest.mark.django_db
-def test_table_group_storage_usage_item_type_trashed_table(data_fixture):
+def test_table_workspace_storage_usage_item_type_trashed_table(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
     user_file_1 = data_fixture.create_user_file(
@@ -54,22 +62,26 @@ def test_table_group_storage_usage_item_type_trashed_table(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
-    table_group_storage_usage_item_type.register_plpgsql_functions()
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    table_workspace_storage_usage_item_type = TableWorkspaceStorageUsageItemType()
+    table_workspace_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
-    TrashHandler().trash(user, group, database, table)
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    TrashHandler().trash(user, workspace, database, table)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
     assert usage == 0
 
 
 @pytest.mark.django_db
-def test_table_group_storage_usage_item_type_trashed_database(data_fixture):
+def test_table_workspace_storage_usage_item_type_trashed_database(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
     user_file_1 = data_fixture.create_user_file(
@@ -78,22 +90,26 @@ def test_table_group_storage_usage_item_type_trashed_database(data_fixture):
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
-    table_group_storage_usage_item_type.register_plpgsql_functions()
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    table_workspace_storage_usage_item_type = TableWorkspaceStorageUsageItemType()
+    table_workspace_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
-    TrashHandler().trash(user, group, database, database)
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    TrashHandler().trash(user, workspace, database, database)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
     assert usage == 0
 
 
 @pytest.mark.django_db
-def test_table_group_storage_usage_item_type_unique_files(data_fixture):
+def test_table_workspace_storage_usage_item_type_unique_files(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     table_2 = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
@@ -109,15 +125,19 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
         {file_field.id: [{"name": user_file_1.name}, {"name": user_file_1.name}]},
     )
 
-    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
-    table_group_storage_usage_item_type.register_plpgsql_functions()
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    table_workspace_storage_usage_item_type = TableWorkspaceStorageUsageItemType()
+    table_workspace_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
     RowHandler().create_row(user, table, {file_field.id: [{"name": user_file_1.name}]})
 
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
@@ -125,7 +145,9 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
         user, table_2, {file_field_table_2.id: [{"name": user_file_1.name}]}
     )
 
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
 
     assert usage == 500
 
@@ -135,13 +157,13 @@ def test_table_group_storage_usage_item_type_unique_files(data_fixture):
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
-def test_table_group_storage_usage_item_type_performance(data_fixture):
+def test_table_workspace_storage_usage_item_type_performance(data_fixture):
     files_amount = 5000
     file_size_each = 200
 
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     file_field = data_fixture.create_file_field(table=table)
 
@@ -162,9 +184,11 @@ def test_table_group_storage_usage_item_type_performance(data_fixture):
 
     profiler = Profiler()
     profiler.start()
-    table_group_storage_usage_item_type = TableGroupStorageUsageItemType()
-    table_group_storage_usage_item_type.register_plpgsql_functions()
-    usage = table_group_storage_usage_item_type.calculate_storage_usage(group.id)
+    table_workspace_storage_usage_item_type = TableWorkspaceStorageUsageItemType()
+    table_workspace_storage_usage_item_type.register_plpgsql_functions()
+    usage = table_workspace_storage_usage_item_type.calculate_storage_usage(
+        workspace.id
+    )
     profiler.stop()
 
     print(profiler.output_text(unicode=True, color=True))

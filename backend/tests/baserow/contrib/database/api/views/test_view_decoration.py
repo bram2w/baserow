@@ -61,7 +61,10 @@ def test_list_view_decorations(api_client, data_fixture):
     assert response_json[1]["value_provider_type"] == decoration_2.value_provider_type
 
     response = api_client.delete(
-        reverse("api:groups:item", kwargs={"group_id": table_1.database.group.id}),
+        reverse(
+            "api:workspaces:item",
+            kwargs={"workspace_id": table_1.database.workspace.id},
+        ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -292,8 +295,8 @@ def test_get_view_decoration(api_client, data_fixture):
 
     response = api_client.delete(
         reverse(
-            "api:groups:item",
-            kwargs={"group_id": decoration_1.view.table.database.group.id},
+            "api:workspaces:item",
+            kwargs={"workspace_id": decoration_1.view.table.database.workspace.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

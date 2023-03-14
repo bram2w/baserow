@@ -4,13 +4,13 @@ from django.db.models.expressions import RawSQL
 
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.models import Table
-from baserow.core.usage.registries import GroupStorageUsageItemType, UsageInBytes
+from baserow.core.usage.registries import UsageInBytes, WorkspaceStorageUsageItemType
 from baserow.core.user_files.models import UserFile
 
 FILENAMES_PER_GROUP_PLPGSQL_FUNCTION = """
 drop function if exists filenames_per_group(integer);
 create or replace function
-filenames_per_group(group_id integer) returns table(filename text)
+filenames_per_group(workspace_id integer) returns table(filename text)
 as
 $body$
 declare
@@ -34,11 +34,11 @@ language plpgsql;
 """
 
 
-class TableGroupStorageUsageItemType(GroupStorageUsageItemType):
+class TableWorkspaceStorageUsageItemType(WorkspaceStorageUsageItemType):
     type = "table"
 
     def register_plpgsql_functions(self):
-        # Using 9999 as placeholder for the group_id function argument
+        # Using 9999 as placeholder for the workspace_id function argument
         with connection.cursor() as cursor:
             cursor.execute(
                 FILENAMES_PER_GROUP_PLPGSQL_FUNCTION.format(
@@ -47,19 +47,19 @@ class TableGroupStorageUsageItemType(GroupStorageUsageItemType):
                         FileField.objects.filter(
                             table__trashed=False,
                             table__database__trashed=False,
-                            table__database__group=9999,
+                            table__database__workspace=9999,
                         )
                         .only("id", "table_id")
                         .query
-                    ).replace("9999", "' || group_id || '"),
+                    ).replace("9999", "' || workspace_id || '"),
                 ),
             )
 
-    def calculate_storage_usage(self, group_id: int) -> UsageInBytes:
+    def calculate_storage_usage(self, workspace_id: int) -> UsageInBytes:
         usage = (
             UserFile.objects.filter(
                 unique__in=RawSQL(
-                    "select distinct filenames_per_group(%s)", (group_id,)
+                    "select distinct filenames_per_group(%s)", (workspace_id,)
                 )
             )
             .only("size")

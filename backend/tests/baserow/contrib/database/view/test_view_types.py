@@ -18,7 +18,7 @@ from baserow.contrib.database.views.registries import (
 from baserow.contrib.database.views.view_ownership_types import (
     CollaborativeViewOwnershipType,
 )
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from baserow.core.user_files.handler import UserFileHandler
 
 
@@ -438,10 +438,10 @@ def test_import_export_form_view(data_fixture, tmpdir):
 
 @pytest.mark.django_db
 def test_import_export_view_ownership_type(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     grid_view = data_fixture.create_grid_view(
         table=table,
@@ -467,7 +467,7 @@ def test_import_export_view_ownership_type(data_fixture):
 
     # view should not be imported if the user is gone
 
-    GroupUser.objects.filter(user=user2).delete()
+    WorkspaceUser.objects.filter(user=user2).delete()
 
     imported_grid_view = grid_view_type.import_serialized(
         grid_view.table, serialized, {}, None, None
@@ -493,10 +493,10 @@ def test_import_export_view_ownership_type(data_fixture):
 @pytest.mark.django_db
 def test_import_export_view_ownership_type_not_in_registry(data_fixture):
     ownership_types = {"collaborative": CollaborativeViewOwnershipType()}
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     grid_view = data_fixture.create_grid_view(
         table=table,

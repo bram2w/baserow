@@ -21,7 +21,7 @@ from baserow.api.decorators import (
 )
 from baserow.api.exceptions import RequestBodyValidationException
 from baserow.api.schemas import get_error_schema
-from baserow.core.exceptions import GroupInvitationEmailMismatch
+from baserow.core.exceptions import WorkspaceInvitationEmailMismatch
 from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignupError
 from baserow_enterprise.api.sso.saml.errors import ERROR_SAML_INVALID_LOGIN_REQUEST
 from baserow_enterprise.api.sso.saml.serializers import SAMLResponseSerializer
@@ -59,7 +59,7 @@ class AssertionConsumerServiceView(APIView):
             "Once authenticated, the user will be redirected to the original "
             "URL they were trying to access. If the response is invalid, the user "
             "will be redirected to an error page with a specific error message."
-            "It accepts the language code and the group invitation token as query "
+            "It accepts the language code and the workspace invitation token as query "
             "parameters if provided."
         ),
         responses={302: None},
@@ -73,7 +73,7 @@ class AssertionConsumerServiceView(APIView):
             DeactivatedUserException: SsoErrorCode.USER_DEACTIVATED,
             DifferentAuthProvider: SsoErrorCode.DIFFERENT_PROVIDER,
             RequestBodyValidationException: SsoErrorCode.INVALID_SAML_RESPONSE,
-            GroupInvitationEmailMismatch: SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH,
+            WorkspaceInvitationEmailMismatch: SsoErrorCode.GROUP_INVITATION_EMAIL_MISMATCH,
             DisabledSignupError: SsoErrorCode.SIGNUP_DISABLED,
         }
     )
@@ -111,12 +111,23 @@ class BaserowInitiatedSingleSignOn(APIView):
                 ),
             ),
             OpenApiParameter(
+                deprecated=True,
                 name="group_invitation_token",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description=(
-                    "If provided and valid, the user accepts the group invitation and "
-                    "will have access to the group after login or signing up."
+                    "Please use the functionally identical "
+                    "`workspace_invitation_token` instead as this querystring "
+                    "is being removed in the future"
+                ),
+            ),
+            OpenApiParameter(
+                name="workspace_invitation_token",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "If provided and valid, the user accepts the workspace invitation "
+                    "and will have access to the workspace after login or signing up."
                 ),
             ),
             OpenApiParameter(
@@ -183,12 +194,23 @@ class AdminAuthProvidersLoginUrlView(APIView):
                 ),
             ),
             OpenApiParameter(
+                deprecated=True,
                 name="group_invitation_token",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description=(
-                    "If provided and valid, the user accepts the group invitation and "
-                    "will have access to the group after login or signing up."
+                    "Please use the functionally identical "
+                    "`workspace_invitation_token` instead as this querystring "
+                    "is being removed in the future."
+                ),
+            ),
+            OpenApiParameter(
+                name="workspace_invitation_token",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "If provided and valid, the user accepts the workspace invitation "
+                    "and will have access to the workspace after login or signing up."
                 ),
             ),
             OpenApiParameter(

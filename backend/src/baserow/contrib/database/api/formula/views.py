@@ -28,7 +28,7 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 
@@ -65,7 +65,7 @@ class TypeFormulaView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             BaserowFormulaException: ERROR_WITH_FORMULA,
             SelfReferenceFieldDependencyError: ERROR_FIELD_SELF_REFERENCE,
@@ -81,7 +81,7 @@ class TypeFormulaView(APIView):
         CoreHandler().check_permissions(
             request.user,
             TypeFormulaOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 

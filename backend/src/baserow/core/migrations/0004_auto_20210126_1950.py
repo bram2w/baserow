@@ -6,10 +6,10 @@ from django.db import migrations, models
 
 
 def forward(apps, schema_editor):
-    from baserow.core.models import GROUP_USER_PERMISSION_ADMIN
 
-    GroupUser = apps.get_model("core", "GroupUser")
-    GroupUser.objects.all().update(permissions=GROUP_USER_PERMISSION_ADMIN)
+    # Prior to it being renamed to WorkspaceUser.
+    Groupuser = apps.get_model("core", "Groupuser")
+    Groupuser.objects.all().update(permissions="ADMIN")
 
 
 class Migration(migrations.Migration):

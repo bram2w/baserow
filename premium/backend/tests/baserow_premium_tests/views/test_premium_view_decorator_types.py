@@ -45,16 +45,16 @@ def test_create_left_border_color_without_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_left_border_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_left_border_color_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [grid_view.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [grid_view.table.database.workspace.id]
     )
     handler.create_decoration(
         view=grid_view,
@@ -64,7 +64,7 @@ def test_create_left_border_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,
@@ -113,16 +113,16 @@ def test_create_background_color_without_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_background_color_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_background_color_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     grid_view = premium_data_fixture.create_grid_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [grid_view.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [grid_view.table.database.workspace.id]
     )
     handler.create_decoration(
         view=grid_view,
@@ -132,7 +132,7 @@ def test_create_background_color_without_premium_license_for_group(
         user=user,
     )
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.create_decoration(
             view=grid_view,

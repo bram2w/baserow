@@ -15,12 +15,12 @@ from baserow.core.action.registries import action_type_registry
 @pytest.mark.django_db
 def test_create_db_token_action_type(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     token = action_type_registry.get(CreateDbTokenActionType.type).do(
-        user, group, "token"
+        user, workspace, "token"
     )
     assert token.name == "token"
-    assert token.group_id == group.id
+    assert token.workspace_id == workspace.id
     assert token.key is not None
 
 
@@ -59,8 +59,8 @@ def test_update_db_token_name_action_type(data_fixture):
 @pytest.mark.django_db
 def test_update_db_token_permissions_action_type(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    token = TokenHandler().create_token(user, group, "token")
+    workspace = data_fixture.create_workspace(user=user)
+    token = TokenHandler().create_token(user, workspace, "token")
 
     assert TokenPermission.objects.filter(token=token, type="create").count() == 1
     action_type_registry.get(UpdateDbTokenPermissionsActionType.type).do(

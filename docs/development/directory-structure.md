@@ -37,7 +37,7 @@ The src directory contains the full source code of the Baserow backend module.
 * `api`: is a Django app that exposes Baserow via a REST API. Even though it is an 
   optional app it is installed by default. It's highly recommended to use this package.
   It contains several directories each with their urls, views, serializers, and errors 
-  related to a specific part. For example, the groups and application both have their 
+  related to a specific part. For example, the workspaces and application both have their 
   own directory. There are also several modules that contain some generic classes, 
   functions, and decorators that are reused throughout the code. The `urls.py` module
   is included by the root url config under the namespace `api`.
@@ -50,7 +50,7 @@ The src directory contains the full source code of the Baserow backend module.
   optional.
 * `core`: is a required app that is installed by default. It contains some abstract
   concepts that are reused throughout the backend. It also contains the code for the 
-  group and application concepts that are at the core of Baserow. Of course there are
+  workspace and application concepts that are at the core of Baserow. Of course there are
   also helper classes, functions, and decorators that can be reused.
 * `manage.py`: the Django manage.py file to execute management commands.
 
@@ -68,7 +68,7 @@ test.
 
 ```python
 def test_something_important(data_fixture):
-    # A table, database and group have also been created because the text field depends
+    # A table, database and workspace have also been created because the text field depends
     # on them.
     field = data_fixture.create_text_field()
 ```

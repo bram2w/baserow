@@ -29,8 +29,8 @@ class ExportTableActionType(ActionType):
         export_type: str
         database_id: int
         database_name: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         view_id: Optional[int]
         view_name: Optional[str]
 
@@ -49,7 +49,7 @@ class ExportTableActionType(ActionType):
         """
 
         database = table.database
-        group = database.group
+        workspace = database.workspace
         view_id, view_name = None, None
         if view:
             view_id, view_name = view.id, view.name
@@ -62,13 +62,13 @@ class ExportTableActionType(ActionType):
                 export_type.upper(),
                 database.id,
                 database.name,
-                group.id,
-                group.name,
+                workspace.id,
+                workspace.name,
                 view_id,
                 view_name,
             ),
-            cls.scope(group.id),
-            group,
+            cls.scope(workspace.id),
+            workspace,
         )
 
     @classmethod

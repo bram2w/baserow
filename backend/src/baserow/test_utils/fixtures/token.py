@@ -13,7 +13,7 @@ class TokenFixtures:
         if "user" not in kwargs:
             kwargs["user"] = self.create_user()
 
-        if "group" not in kwargs:
-            kwargs["group"] = self.create_group(user=kwargs["user"])
+        if "workspace" not in kwargs:
+            kwargs["workspace"] = self.create_workspace(user=kwargs["user"])
 
         return Token.objects.create(**kwargs)

@@ -524,7 +524,7 @@ def test_import_export_tables_with_lookup_fields(
     data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
-    imported_group = data_fixture.create_group(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(
         name="Example", database=database, order=0
@@ -576,11 +576,11 @@ def test_import_export_tables_with_lookup_fields(
         target_field_id=customer_age.id,
     )
 
-    exported_applications = core_handler.export_group_applications(
-        database.group, BytesIO()
+    exported_applications = core_handler.export_workspace_applications(
+        database.workspace, BytesIO()
     )
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

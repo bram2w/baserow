@@ -8,7 +8,7 @@ from django.contrib.auth.models import AbstractUser
 from baserow_premium.license.handler import LicenseHandler
 
 from baserow.core.exceptions import PermissionDenied
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registries import (
     OperationType,
     PermissionManagerType,
@@ -35,15 +35,15 @@ class RolePermissionManagerType(PermissionManagerType):
     type = "role"
     supported_actor_types = [UserSubjectType.type]
 
-    def is_enabled(self, group: Group):
+    def is_enabled(self, workspace: Workspace):
         """
         Checks whether this permission manager should be enabled or not for a
-        particular group.
+        particular workspace.
 
-        :param group: The group in which we want to use this permission manager.
+        :param workspace: The workspace in which we want to use this permission manager.
         """
 
-        return LicenseHandler.group_has_feature(RBAC, group)
+        return LicenseHandler.workspace_has_feature(RBAC, workspace)
 
     def get_role_operations(self, role: Role) -> List[str]:
         """
@@ -67,16 +67,16 @@ class RolePermissionManagerType(PermissionManagerType):
         )
 
     def check_multiple_permissions(
-        self, checks: List[PermissionCheck], group=None, include_trash=False
+        self, checks: List[PermissionCheck], workspace=None, include_trash=False
     ):
         """
         Checks the permissions for each check.
         """
 
-        if group is None or not self.is_enabled(group):
+        if workspace is None or not self.is_enabled(workspace):
             return {}
 
-        # Group actor by subject_type
+        # Workspace actor by subject_type
         actors_by_subject_type = defaultdict(set)
         for actor, _, _ in checks:
             s_type = subject_type_registry.get_by_model(actor)
@@ -88,7 +88,7 @@ class RolePermissionManagerType(PermissionManagerType):
             computed_role_cache = {}
             roles_per_scope_by_actor = (
                 RoleAssignmentHandler().get_roles_per_scope_for_actors(
-                    group, actor_subject_type, actors, include_trash=include_trash
+                    workspace, actor_subject_type, actors, include_trash=include_trash
                 )
             )
 
@@ -145,12 +145,12 @@ class RolePermissionManagerType(PermissionManagerType):
             else operation_type.context_scope
         )
 
-        # Default permissions at the group level
-        _, default_group_roles = roles_by_scope[0]
+        # Default permissions at the workspace level
+        _, default_workspace_roles = roles_by_scope[0]
         default = any(
             [
                 operation_type.type in self.get_role_operations(r)
-                for r in default_group_roles
+                for r in default_workspace_roles
             ]
         )
         exceptions = set()
@@ -173,7 +173,7 @@ class RolePermissionManagerType(PermissionManagerType):
 
                 context_exception = scope
                 # Remove or add exceptions to the exception list according to the
-                # default policy for the group
+                # default policy for the workspace
                 if operation_type.type not in allowed_operations:
                     if default:
                         exceptions.add(context_exception)
@@ -213,7 +213,7 @@ class RolePermissionManagerType(PermissionManagerType):
         return default, exceptions
 
     def get_permissions_object(
-        self, actor: AbstractUser, group: Optional[Group] = None
+        self, actor: AbstractUser, workspace: Optional[Workspace] = None
     ) -> List[Dict[str, OperationPermissionContent]]:
         """
         Returns the permission object for this permission manager. The permission object
@@ -230,11 +230,11 @@ class RolePermissionManagerType(PermissionManagerType):
         of context IDs that are an exception to the default rule.
         """
 
-        if group is None or not self.is_enabled(group):
+        if workspace is None or not self.is_enabled(workspace):
             return None
 
-        # Get all role assignments for this actor into this group
-        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(group, actor)
+        # Get all role assignments for this actor into this workspace
+        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(workspace, actor)
 
         policy_per_operation = defaultdict(lambda: {"default": False, "exceptions": []})
 
@@ -283,18 +283,18 @@ class RolePermissionManagerType(PermissionManagerType):
         return policy_per_operation_with_exception_ids
 
     def filter_queryset(
-        self, actor, operation_name, queryset, group=None, context=None
+        self, actor, operation_name, queryset, workspace=None, context=None
     ):
         """
         Filter the given queryset according to the role given for the specified
         operation.
         """
 
-        if group is None or not self.is_enabled(group):
+        if workspace is None or not self.is_enabled(workspace):
             return queryset
 
-        # Get all role assignments for this user into this group
-        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(group, actor)
+        # Get all role assignments for this user into this workspace
+        roles_by_scope = RoleAssignmentHandler().get_roles_per_scope(workspace, actor)
         operation_type = operation_type_registry.get(operation_name)
 
         default, exceptions = self.get_operation_policy(

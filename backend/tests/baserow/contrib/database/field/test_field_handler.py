@@ -40,7 +40,7 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 # You must add --run-disabled-in-ci to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci to
@@ -286,7 +286,7 @@ def test_create_field(send_mock, data_fixture):
 
     settings.MAX_FIELD_LIMIT = field_limit
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_field(user=user_2, table=table, type_name="text")
 
     with pytest.raises(FieldTypeDoesNotExist):
@@ -356,7 +356,7 @@ def test_update_field(send_mock, data_fixture):
 
     handler = FieldHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_field(user=user_2, field=field)
 
     with pytest.raises(ValueError):
@@ -858,7 +858,7 @@ def test_delete_field(send_mock, data_fixture):
 
     handler = FieldHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_field(user=user_2, field=text_field)
 
     with pytest.raises(ValueError):
@@ -893,7 +893,7 @@ def test_update_select_options(data_fixture):
 
     handler = FieldHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_field_select_options(field=field, user=user_2, select_options=[])
 
     handler.update_field_select_options(

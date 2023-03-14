@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "Calculate the amount of seats taken per group"
 
     def handle(self, *args, **options):
-        groups_updated = PremiumUsageHandler.calculate_per_group_seats_taken()
+        groups_updated = PremiumUsageHandler.calculate_per_workspace_seats_taken()
         self.stdout.write(
             self.style.SUCCESS(f"{groups_updated} group(s) have been updated.")
         )

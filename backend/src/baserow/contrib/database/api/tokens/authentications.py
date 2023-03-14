@@ -5,7 +5,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
 from baserow.contrib.database.tokens.handler import TokenHandler
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 
 class TokenAuthentication(BaseAuthentication):
@@ -36,7 +36,7 @@ class TokenAuthentication(BaseAuthentication):
 
         try:
             token = handler.get_by_key(decoded_key)
-        except UserNotInGroup:
+        except UserNotInWorkspace:
             msg = "The token's user does not belong to the group anymore."
             raise AuthenticationFailed(
                 {"detail": msg, "error": "ERROR_TOKEN_GROUP_MISMATCH"}

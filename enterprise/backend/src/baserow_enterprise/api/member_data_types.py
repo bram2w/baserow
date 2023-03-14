@@ -1,13 +1,16 @@
 from collections import defaultdict
 from typing import List, OrderedDict
 
-from django.contrib.auth.models import AbstractUser, Group, User
+from django.contrib.auth.models import AbstractUser, User
 from django.contrib.contenttypes.models import ContentType
 
 from rest_framework import serializers
 
 from baserow.api.user.registries import MemberDataType
-from baserow_enterprise.api.teams.serializers import GroupUserEnterpriseTeamSerializer
+from baserow.core.models import Workspace
+from baserow_enterprise.api.teams.serializers import (
+    WorkspaceUserEnterpriseTeamSerializer,
+)
 from baserow_enterprise.models import TeamSubject
 
 
@@ -15,18 +18,22 @@ class EnterpriseMemberTeamsDataType(MemberDataType):
     type = "teams"
 
     def get_request_serializer_field(self) -> serializers.Field:
-        return GroupUserEnterpriseTeamSerializer(
+        return WorkspaceUserEnterpriseTeamSerializer(
             many=True,
             required=False,
-            help_text="Enterprise only: a list of team IDs and names, which this group user belongs to in this group.",
+            help_text="Enterprise only: a list of team IDs and names, which this "
+            "workspace user belongs to in this workspace.",
         )
 
     def annotate_serialized_data(
-        self, group: Group, serialized_data: List[OrderedDict], user: AbstractUser
+        self,
+        workspace: Workspace,
+        serialized_data: List[OrderedDict],
+        user: AbstractUser,
     ) -> List[OrderedDict]:
         """
-        Responsible for annotating team data on `GroupUser` responses.
-        Primarily used to inform API consumers of which teams group members
+        Responsible for annotating team data on `WorkspaceUser` responses.
+        Primarily used to inform API consumers of which teams workspace members
         belong to.
         """
 
@@ -36,7 +43,7 @@ class EnterpriseMemberTeamsDataType(MemberDataType):
         all_team_data = TeamSubject.objects.filter(
             subject_id__in=subject_ids,
             subject_type=user_ct,
-            team__group_id=group.id,
+            team__workspace_id=workspace.id,
             team__trashed=False,
         ).values("team_id", "team__name", "subject_id")
         for team_data in all_team_data:

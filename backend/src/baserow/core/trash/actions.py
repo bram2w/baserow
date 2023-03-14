@@ -5,9 +5,12 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
 from baserow.core.action.registries import ActionType, ActionTypeDescription
-from baserow.core.action.scopes import GROUP_ACTION_CONTEXT, GroupActionScopeType
-from baserow.core.exceptions import ApplicationDoesNotExist, GroupDoesNotExist
-from baserow.core.models import Application, Group
+from baserow.core.action.scopes import (
+    WORKSPACE_ACTION_CONTEXT,
+    WorkspaceActionScopeType,
+)
+from baserow.core.exceptions import ApplicationDoesNotExist, WorkspaceDoesNotExist
+from baserow.core.models import Application, Workspace
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -18,13 +21,13 @@ class EmptyTrashActionType(ActionType):
         _(
             'Trash for application "%(application_name)s" (%(application_id)s) has been emptied'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_id: Optional[int] = None
         application_name: Optional[str] = None
 
@@ -36,43 +39,45 @@ class EmptyTrashActionType(ActionType):
             raise ApplicationDoesNotExist
 
     @classmethod
-    def _get_group(cls, group_id: int):
+    def _get_workspace(cls, workspace_id: int):
         try:
-            return Group.objects_and_trash.get(id=group_id)
-        except Group.DoesNotExist:
-            raise GroupDoesNotExist
+            return Workspace.objects_and_trash.get(id=workspace_id)
+        except Workspace.DoesNotExist:
+            raise WorkspaceDoesNotExist
 
     @classmethod
     def do(
-        cls, user: AbstractUser, group_id: int, application_id: Optional[int] = None
+        cls, user: AbstractUser, workspace_id: int, application_id: Optional[int] = None
     ):
         application_name = None
-        group = None
+        workspace = None
         if application_id is not None:
             application = cls._get_application(application_id)
             application_name = application.name
-            group = application.group
+            workspace = application.workspace
         else:
-            group = cls._get_group(group_id)
+            workspace = cls._get_workspace(workspace_id)
 
-        TrashHandler().empty(user, group_id, application_id)
+        TrashHandler().empty(user, workspace_id, application_id)
 
         cls.register_action(
             user,
-            cls.Params(group_id, group.name, application_id, application_name),
-            cls.scope(group_id),
-            group,
+            cls.Params(workspace_id, workspace.name, application_id, application_name),
+            cls.scope(workspace_id),
+            workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def get_long_description(cls, params_dict: Dict[str, Any], *args, **kwargs) -> str:
         if params_dict.get("application_id") is None:
             return (
-                _('Trash for group "%(group_name)s" (%(group_id)s) has been emptied.')
+                _(
+                    'Trash for workspace "%(workspace_name)s" (%(workspace_id)s) has been emptied.'
+                )
                 % params_dict
             )
 
@@ -84,15 +89,15 @@ class RestoreFromTrashActionType(ActionType):
     description = ActionTypeDescription(
         _("Restore from trash"),
         _('Item of type "%(item_type)s" (%(item_id)s) has been restored from trash'),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
         item_id: int
         item_type: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
@@ -105,18 +110,18 @@ class RestoreFromTrashActionType(ActionType):
         trash_entry = TrashHandler.get_trash_entry(
             trash_item_type, trash_item_id, parent_trash_item_id
         )
-        group = trash_entry.group
+        workspace = trash_entry.workspace
         TrashHandler.restore_item(
             user, trash_item_type, trash_item_id, parent_trash_item_id
         )
 
         cls.register_action(
             user,
-            cls.Params(trash_item_id, trash_item_type, group.id, group.name),
-            cls.scope(group.id),
-            group,
+            cls.Params(trash_item_id, trash_item_type, workspace.id, workspace.name),
+            cls.scope(workspace.id),
+            workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)

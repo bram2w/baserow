@@ -393,11 +393,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if base_queryset is None:
             base_queryset = model.objects
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             ReadDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -605,7 +605,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :type model: Model
         :raises RowDoesNotExist: When the row with the provided id does not exist
             and raise_error is set to True.
-        :raises UserNotInGroup: If the user does not belong to the group.
+        :raises UserNotInWorkspace: If the user does not belong to the workspace.
         :return: If raise_error is False then a boolean indicating if the row does or
             does not exist.
         :rtype: bool
@@ -614,7 +614,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             ReadDatabaseRowOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -638,7 +638,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the row is created.
         :param table: The table for which to create a row for.
@@ -659,7 +659,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             CreateRowDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -852,9 +852,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The updated row instance.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, UpdateDatabaseRowOperationType.type, group=group, context=table
+            user,
+            UpdateDatabaseRowOperationType.type,
+            workspace=workspace,
+            context=table,
         )
 
         if model is None:
@@ -967,7 +970,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the rows are created.
         :param table: The table for which the rows should be created.
@@ -979,11 +982,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created row instances.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             CreateRowDatabaseTableOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1239,8 +1242,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> Tuple[List[GeneratedTableModel], Dict[str, Dict[str, Any]]]:
         """
         Creates new rows for a given table if the user
-        belongs to the related group. It also calls the rows_created if send_signal is
-        `True`. The data are validated before the creation if validate is True.
+        belongs to the related workspace. It also calls the rows_created if send_signal
+        is `True`. The data are validated before the creation if validate is True.
         when a row fails to import, it doesn't stop the import. Instead an error report
         is created with the raised error for each field of each failing rows.
 
@@ -1254,9 +1257,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created row instances and the error report.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, ImportRowsDatabaseTableOperationType.type, group=group, context=table
+            user,
+            ImportRowsDatabaseTableOperationType.type,
+            workspace=workspace,
+            context=table,
         )
 
         error_report = RowErrorReport(data)
@@ -1376,11 +1382,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The updated row instances.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             UpdateDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1669,11 +1675,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             provided so that it does not have to be generated for a second time.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             MoveRowDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1773,11 +1779,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             provided so that it does not have to be generated for a second time.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             DeleteDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1788,7 +1794,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             self, rows=[row], user=user, table=table, model=model
         )
 
-        TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
+        TrashHandler.trash(user, workspace, table.database, row, parent_id=table.id)
         rows_deleted_counter.add(
             1,
             {
@@ -1858,11 +1864,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             DeleteDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1890,7 +1896,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         trashed_rows.rows = rows
 
         TrashHandler.trash(
-            user, group, table.database, trashed_rows, parent_id=table.id
+            user, workspace, table.database, trashed_rows, parent_id=table.id
         )
         rows_deleted_counter.add(
             len(row_ids),

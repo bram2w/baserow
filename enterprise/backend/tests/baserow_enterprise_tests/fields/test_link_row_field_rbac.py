@@ -17,14 +17,14 @@ def enable_enterprise_and_roles_for_all_tests_here(enable_enterprise, synced_rol
 @pytest.mark.django_db
 def test_link_row_field_linked_to_table_with_no_access_created(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table_with_access = data_fixture.create_database_table(user, database=database)
     table_with_no_access = data_fixture.create_database_table(user, database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=no_access_role, scope=table_with_no_access
+        user, workspace, role=no_access_role, scope=table_with_no_access
     )
 
     with pytest.raises(PermissionDenied):
@@ -50,15 +50,15 @@ def test_link_row_field_linked_to_table_with_no_access_created(data_fixture):
 @pytest.mark.django_db
 def test_link_row_field_linked_to_table_with_no_access_updated(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table_with_access = data_fixture.create_database_table(user, database=database)
     table_with_no_access = data_fixture.create_database_table(user, database=database)
     table_unrelated = data_fixture.create_database_table(user, database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=no_access_role, scope=table_with_no_access
+        user, workspace, role=no_access_role, scope=table_with_no_access
     )
 
     link_row_field = FieldHandler().create_field(
@@ -81,14 +81,14 @@ def test_link_row_field_linked_to_table_with_no_access_updated(data_fixture):
 def test_link_row_field_linked_to_table_with_no_access_deleted(data_fixture):
     user = data_fixture.create_user()
     user_with_access = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_with_access])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_with_access])
+    database = data_fixture.create_database_application(workspace=workspace)
     table_with_access = data_fixture.create_database_table(user, database=database)
     table_with_no_access = data_fixture.create_database_table(user, database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=no_access_role, scope=table_with_no_access
+        user, workspace, role=no_access_role, scope=table_with_no_access
     )
 
     link_row_field = FieldHandler().create_field(
@@ -112,15 +112,15 @@ def test_link_row_field_linked_to_table_with_no_access_from_inaccessible_to_acce
 ):
     user = data_fixture.create_user()
     user_with_access = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user_with_access])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user_with_access])
+    database = data_fixture.create_database_application(workspace=workspace)
     table_with_access = data_fixture.create_database_table(user, database=database)
     table_with_no_access = data_fixture.create_database_table(user, database=database)
     table_unrelated = data_fixture.create_database_table(user, database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=no_access_role, scope=table_with_no_access
+        user, workspace, role=no_access_role, scope=table_with_no_access
     )
 
     link_row_field = FieldHandler().create_field(

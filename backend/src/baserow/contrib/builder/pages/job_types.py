@@ -44,7 +44,7 @@ class DuplicatePageJobType(JobType):
         CoreHandler().check_permissions(
             user,
             DuplicatePageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 

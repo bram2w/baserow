@@ -6,7 +6,7 @@
       class="loading margin-left-2 margin-top-2 margin-bottom-2 margin-bottom-2"
     ></div>
     <ul v-else class="context__menu">
-      <li v-if="$hasPermission('group.update', group, group.id)">
+      <li v-if="$hasPermission('workspace.update', group, group.id)">
         <a @click="$emit('rename')">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
           {{ $t('groupContext.renameGroup') }}
@@ -28,7 +28,7 @@
           {{ $t('groupContext.members') }}
         </a>
       </li>
-      <li v-if="$hasPermission('group.read_trash', group, group.id)">
+      <li v-if="$hasPermission('workspace.read_trash', group, group.id)">
         <a @click="showGroupTrashModal">
           <i class="context__menu-icon fas fa-fw fa-recycle"></i>
           {{ $t('groupContext.viewTrash') }}
@@ -40,7 +40,7 @@
           {{ $t('groupContext.leaveGroup') }}
         </a>
       </li>
-      <li v-if="$hasPermission('group.delete', group, group.id)">
+      <li v-if="$hasPermission('workspace.delete', group, group.id)">
         <a
           :class="{ 'context__menu-item--loading': loading }"
           @click="deleteGroup"
@@ -51,7 +51,7 @@
       </li>
     </ul>
     <TrashModal
-      v-if="$hasPermission('group.read_trash', group, group.id)"
+      v-if="$hasPermission('workspace.read_trash', group, group.id)"
       ref="groupTrashModal"
       :initial-group="group"
     >
