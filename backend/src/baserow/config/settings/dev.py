@@ -1,6 +1,9 @@
+from django.db.models.signals import post_migrate
+
 import snoop
 
 from .base import *  # noqa: F403, F401
+from .utils import setup_dev_e2e
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_hardcoded_secret_key")  # noqa: F405
 SIMPLE_JWT["SIGNING_KEY"] = os.getenv(  # noqa: F405
@@ -27,6 +30,9 @@ EMAIL_HOST = "mailhog"
 EMAIL_PORT = 1025
 
 BASEROW_MAX_ROW_REPORT_ERROR_COUNT = 10  # To trigger this exception easily
+
+post_migrate.connect(setup_dev_e2e, dispatch_uid="setup_dev_e2e")
+
 
 try:
     from .local import *  # noqa: F403, F401
