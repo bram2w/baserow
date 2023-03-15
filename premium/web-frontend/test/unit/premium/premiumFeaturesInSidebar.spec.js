@@ -103,7 +103,7 @@ describe('Sidebar Premium Features Snapshot tests', () => {
         'sidebar.admin',
         'premium.adminType.dashboard',
         'premium.adminType.users',
-        'premium.adminType.groups',
+        'premium.adminType.workspaces',
       ])
     )
   })
@@ -126,7 +126,7 @@ describe('Sidebar Premium Features Snapshot tests', () => {
         openedPage,
         'premium.adminType.dashboard',
         'premium.adminType.users',
-        'premium.adminType.groups',
+        'premium.adminType.workspaces',
       ])
     )
   })

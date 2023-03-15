@@ -2,7 +2,7 @@
   <div>
     <ul class="dashboard__sidebar-group">
       <li class="dashboard__sidebar-title">
-        {{ $t('dashboardSidebar.groups') }}
+        {{ $t('dashboardSidebar.workspaces') }}
       </li>
       <li v-for="group in groups" :key="group.id">
         <a
@@ -20,7 +20,7 @@
           @click="$emit('create-group-clicked')"
         >
           <i class="fas fa-fw fa-plus"></i>
-          {{ $t('dashboard.createGroup') }}
+          {{ $t('dashboard.createWorkspace') }}
         </a>
       </li>
     </ul>

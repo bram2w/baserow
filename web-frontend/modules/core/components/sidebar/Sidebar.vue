@@ -272,7 +272,7 @@
           </template>
           <template v-else-if="!hasSelectedGroup && !isCollapsed">
             <li v-if="groups.length === 0" class="tree_item margin-top-2">
-              <p>{{ $t('sidebar.errorNoGroup') }}</p>
+              <p>{{ $t('sidebar.errorNoWorkspace') }}</p>
             </li>
             <li
               v-for="(group, index) in groups"
@@ -299,7 +299,7 @@
                 @click="$refs.createGroupModal.show()"
               >
                 <i class="fas fa-plus"></i>
-                {{ $t('sidebar.createGroup') }}
+                {{ $t('sidebar.createWorkspace') }}
               </a>
             </li>
             <CreateGroupModal ref="createGroupModal"></CreateGroupModal>

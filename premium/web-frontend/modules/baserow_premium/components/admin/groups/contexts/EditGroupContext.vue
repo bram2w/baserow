@@ -6,7 +6,7 @@
         <li>
           <a @click.prevent="showDeleteModal">
             <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
-            {{ $t('editGroupContext.delete') }}
+            {{ $t('editWorkspaceContext.delete') }}
           </a>
         </li>
       </ul>

@@ -18,9 +18,9 @@
       v-else-if="$fetchState.error"
       type="error"
       icon="exclamation"
-      :title="$t('deleteAccountSettings.groupLoadingError')"
+      :title="$t('deleteAccountSettings.workspaceLoadingError')"
     >
-      {{ $t('deleteAccountSettings.groupLoadingErrorDescription') }}
+      {{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}
     </Alert>
 
     <div v-else-if="orphanGroups.length" class="delete-section">
@@ -28,10 +28,10 @@
         <div class="delete-section__label-icon">
           <i class="fas fa-exclamation"></i>
         </div>
-        {{ $t('deleteAccountSettings.orphanGroups') }}
+        {{ $t('deleteAccountSettings.orphanWorkspaces') }}
       </div>
       <p class="delete-section__description">
-        {{ $t('deleteAccountSettings.groupNoticeDescription') }}
+        {{ $t('deleteAccountSettings.workspaceNoticeDescription') }}
       </p>
       <ul class="delete-section__list">
         <li v-for="group in orphanGroups" :key="group.id">
@@ -40,7 +40,7 @@
           <small>
             {{
               $tc(
-                'deleteAccountSettings.orphanGroupMemberCount',
+                'deleteAccountSettings.orphanWorkspaceMemberCount',
                 groupMembers[group.id].length,
                 {
                   count: groupMembers[group.id].length,

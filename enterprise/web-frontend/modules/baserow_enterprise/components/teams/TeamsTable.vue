@@ -13,7 +13,7 @@
         {{
           $t('teamsTable.title', {
             teamCount: teamCount,
-            groupName: group.name,
+            workspaceName: group.name,
           })
         }}
       </template>

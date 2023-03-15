@@ -17,7 +17,9 @@
       </div>
     </FormElement>
     <FormElement :error="fieldHasErrors('group')" class="control">
-      <label class="control__label">{{ $t('apiTokenForm.groupLabel') }}</label>
+      <label class="control__label">{{
+        $t('apiTokenForm.workspaceLabel')
+      }}</label>
       <Dropdown
         v-model="values.group"
         class="col-4"

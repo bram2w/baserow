@@ -9,8 +9,8 @@
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Available in enterprise version",
-        "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any group then they will use a paid seat automatically.",
-        "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each groups members page."
+        "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
+        "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
     },
     "trashType": {
         "team": "team"
@@ -18,12 +18,12 @@
     "createTeamModal": {
         "title": "Create team",
         "invalidNameTitle": "Please use a different name",
-        "invalidNameMessage": "This team name is already in use in the specified group."
+        "invalidNameMessage": "This team name is already in use in the specified workspace."
     },
     "updateTeamModal": {
         "title": "Update {teamName}",
         "invalidNameTitle": "Please use a different name",
-        "invalidNameMessage": "This team name is already in use in the specified group."
+        "invalidNameMessage": "This team name is already in use in the specified workspace."
     },
     "manageTeamModals": {
         "subheading": "Teams allow you to give or restrict permissions in bulk to multiple people."
@@ -42,7 +42,7 @@
         "remove": "Delete team"
     },
     "teamsTable": {
-        "title": "{teamCount} teams in {groupName}",
+        "title": "{teamCount} teams in {workspaceName}",
         "createNew": "Create team",
         "nameColumn": "Name",
         "createdColumn": "Created on",
@@ -63,14 +63,14 @@
     "auditLog": {
         "title": "Audit log",
         "filterUserTitle": "User",
-        "filterGroupTitle": "Group",
+        "filterWorkspaceTitle": "Workspace",
         "filterActionTypeTitle": "Event Type",
         "filterFromTimestampTitle": "From Date",
         "filterFromTimestamp": "From Date",
         "filterToTimestampTitle": "To Date",
         "filterToTimestamp": "To Date",
         "user": "User",
-        "group": "Group",
+        "workspace": "Workspace",
         "actionType": "Event Type",
         "description": "Description",
         "timestamp": "Timestamp",
@@ -79,7 +79,7 @@
         "exportModalTitle": "Export to CSV",
         "clearFilters": "Clear",
         "allUsers": "All Users",
-        "allGroups": "All Groups",
+        "allWorkspaces": "All Workspaces",
         "allActionTypes": "All Event Types"
     },
     "auditLogExportModal": {
@@ -147,7 +147,7 @@
     "roles": {
         "admin": {
             "name": "Admin",
-            "description": "Can fully configure and edit groups and applications."
+            "description": "Can fully configure and edit workspaces and applications."
         },
         "builder": {
             "name": "Builder",
@@ -155,7 +155,7 @@
         },
         "editor": {
             "name": "Editor",
-            "description": "Can fully edit data but not configure applications or groups."
+            "description": "Can fully edit data but not configure applications or workspaces."
         },
         "commenter": {
             "name": "Commenter",
@@ -171,7 +171,7 @@
         },
         "noRoleLowPriority": {
             "name": "No role",
-            "description": "Get default group role from their teams."
+            "description": "Get default workspace role from their teams."
         }
     },
     "memberRolesModal": {
@@ -189,8 +189,8 @@
             "everyoneHasAccess": "Everyone at {name} workspace can access this database.",
             "onlyYouHaveAccess": "Only you can access this database.",
             "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent group.",
-            "headerTooltip": "Database roles will override group roles."
+            "warningMessage": "Other users might inherit access via their respective roles on the parent workspace.",
+            "headerTooltip": "Database roles will override workspace roles."
         },
         "table": {
             "title": "{name} table",
@@ -198,8 +198,8 @@
             "everyoneHasAccess": "Everyone at {name} workspace can access this table.",
             "onlyYouHaveAccess": "Only you can access this table.",
             "warningTitle": "Other users might inherit access!",
-            "warningMessage": "Other users might inherit access via their respective roles on the parent database or group.",
-            "headerTooltip": "Table roles will override group and database roles."
+            "warningMessage": "Other users might inherit access via their respective roles on the parent database or workspace.",
+            "headerTooltip": "Table roles will override workspace and database roles."
         }
     },
     "memberRolesShareToggle": {
@@ -266,7 +266,7 @@
         "sso": "Single Sign On",
         "rbac": "Role-based access control"
     },
-    "chatwootSuportSidebarGroup": {
+    "chatwootSupportSidebarWorkspace": {
         "directSupport": "Direct support"
     },
     "userTeamsField": {

@@ -3,12 +3,12 @@
     <div class="placeholder__icon">
       <i class="fas fa-layer-group"></i>
     </div>
-    <h1 class="placeholder__title">{{ $t('dashboard.noGroupTitle') }}</h1>
+    <h1 class="placeholder__title">{{ $t('dashboard.noWorkspaceTitle') }}</h1>
     <p v-if="$hasPermission('create_workspace')" class="placeholder__content">
-      {{ $t('dashboard.noGroupText') }}
+      {{ $t('dashboard.noWorkspaceText') }}
     </p>
     <p v-else class="placeholder__content">
-      {{ $t('dashboard.noGroupTextWithoutCreatePermission') }}
+      {{ $t('dashboard.noWorkspaceTextWithoutCreatePermission') }}
     </p>
     <div class="placeholder__action">
       <a
@@ -17,7 +17,7 @@
         @click="$emit('create-clicked')"
       >
         <i class="fas fa-plus"></i>
-        {{ $t('dashboard.createGroup') }}
+        {{ $t('dashboard.createWorkspace') }}
       </a>
     </div>
   </div>

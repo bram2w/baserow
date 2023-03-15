@@ -123,8 +123,10 @@ describe('test error handling', () => {
         const message = error.handler.getMessage('name', {
           matchesSomeOtherError: new ResponseErrorMessage('title', 'message'),
         })
-        expect(message.title).toBe('clientHandler.userNotInGroupTitle')
-        expect(message.message).toBe('clientHandler.userNotInGroupDescription')
+        expect(message.title).toBe('clientHandler.userNotInWorkspaceTitle')
+        expect(message.message).toBe(
+          'clientHandler.userNotInWorkspaceDescription'
+        )
       }
     }
   )
@@ -146,8 +148,10 @@ describe('test error handling', () => {
         const message = error.handler.getMessage('name', {
           matchesSomeOtherError: new ResponseErrorMessage('title', 'message'),
         })
-        expect(message.title).toBe('clientHandler.userNotInGroupTitle')
-        expect(message.message).toBe('clientHandler.userNotInGroupDescription')
+        expect(message.title).toBe('clientHandler.userNotInWorkspaceTitle')
+        expect(message.message).toBe(
+          'clientHandler.userNotInWorkspaceDescription'
+        )
       }
     }
   )

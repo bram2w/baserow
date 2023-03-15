@@ -51,11 +51,15 @@
         <div v-if="!settings.allow_new_signups" class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingAllowSignupsViaGroupInvitationsName') }}
+              {{
+                $t('settings.settingAllowSignupsViaWorkspaceInvitationsName')
+              }}
             </div>
             <div class="admin-settings__description">
               {{
-                $t('settings.settingAllowSignupsViaGroupInvitationDescription')
+                $t(
+                  'settings.settingAllowSignupsViaWorkspaceInvitationDescription'
+                )
               }}
             </div>
           </div>
@@ -94,12 +98,12 @@
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingAllowNonStaffCreateGroupOperation') }}
+              {{ $t('settings.settingAllowNonStaffCreateWorkspaceOperation') }}
             </div>
             <div class="admin-settings__description">
               {{
                 $t(
-                  'settings.settingAllowNonStaffCreateGroupOperationDescription'
+                  'settings.settingAllowNonStaffCreateWorkspaceOperationDescription'
                 )
               }}
             </div>
@@ -113,7 +117,9 @@
             >
             <div v-show="settings.allow_global_group_creation" class="warning">
               {{
-                $t('settings.settingAllowNonStaffCreateGroupOperationWarning')
+                $t(
+                  'settings.settingAllowNonStaffCreateWorkspaceOperationWarning'
+                )
               }}
             </div>
           </div>
@@ -155,10 +161,10 @@
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingTrackGroupUsage') }}
+              {{ $t('settings.settingTrackWorkspaceUsage') }}
             </div>
             <div class="admin-settings__description">
-              {{ $t('settings.settingTrackGroupUsageDescription') }}
+              {{ $t('settings.settingTrackWorkspaceUsageDescription') }}
             </div>
           </div>
           <div class="admin-settings__control">

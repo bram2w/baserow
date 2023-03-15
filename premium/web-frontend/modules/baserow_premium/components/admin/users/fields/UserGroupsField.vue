@@ -8,7 +8,7 @@
     <template #icon="{ record }">
       <i
         v-if="record.permissions === 'ADMIN'"
-        v-tooltip="$t('premium.user.isGroupAdmin')"
+        v-tooltip="$t('premium.user.isWorkspaceAdmin')"
         class="user-admin-group__icon fas fa-users-cog"
       ></i>
     </template>

@@ -1,7 +1,7 @@
 <template>
   <Modal>
     <h2 class="box__title">
-      {{ $t('deleteGroupModal.title', group) }}
+      {{ $t('deleteWorkspaceModal.title', group) }}
     </h2>
     <Error :error="error"></Error>
     <div>
@@ -11,7 +11,7 @@
         </template>
       </i18n>
       <p>
-        {{ $t('deleteGroupModal.comment') }}
+        {{ $t('deleteWorkspaceModal.comment') }}
       </p>
       <div class="actions">
         <div class="align-right">
@@ -22,7 +22,7 @@
             :title="group.name"
             @click.prevent="deleteGroup()"
           >
-            {{ $t('deleteGroupModal.delete', group) }}
+            {{ $t('deleteWorkspaceModal.delete', group) }}
           </a>
         </div>
       </div>

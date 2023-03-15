@@ -72,10 +72,10 @@ export default {
         this.handleError(error, 'group', {
           ERROR_GROUP_USER_ALREADY_EXISTS: new ResponseErrorMessage(
             this.$t(
-              'membersSettings.membersInviteModal.errors.userAlreadyInGroup.title'
+              'membersSettings.membersInviteModal.errors.userAlreadyInWorkspace.title'
             ),
             this.$t(
-              'membersSettings.membersInviteModal.errors.userAlreadyInGroup.text'
+              'membersSettings.membersInviteModal.errors.userAlreadyInWorkspace.text'
             )
           ),
         })

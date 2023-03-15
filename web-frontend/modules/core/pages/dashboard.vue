@@ -36,7 +36,7 @@
                 @click="$refs.createGroupModal.show()"
               >
                 <i class="fas fa-plus"></i>
-                {{ $t('dashboard.createGroup') }}
+                {{ $t('dashboard.createWorkspace') }}
               </a>
             </div>
           </template>

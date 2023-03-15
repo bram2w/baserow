@@ -3,12 +3,12 @@
     simple
     type="primary"
     icon="exclamation"
-    :title="$t('groupInvitation.title')"
+    :title="$t('workspaceInvitation.title')"
   >
     {{
-      $t('groupInvitation.message', {
+      $t('workspaceInvitation.message', {
         by: invitation.invited_by,
-        group: invitation.group,
+        workspace: invitation.workspace,
       })
     }}
     <div v-if="invitation.message !== ''" class="quote">
@@ -20,14 +20,14 @@
       :class="{ 'button--loading': rejectLoading }"
       :disabled="rejectLoading || acceptLoading"
       @click="!rejectLoading && !acceptLoading && reject(invitation)"
-      >{{ $t('groupInvitation.reject') }}</a
+      >{{ $t('workspaceInvitation.reject') }}</a
     >
     <a
       class="button button--success dashboard__alert-button"
       :class="{ 'button--loading': acceptLoading }"
       :disabled="rejectLoading || acceptLoading"
       @click="!rejectLoading && !acceptLoading && accept(invitation)"
-      >{{ $t('groupInvitation.accept') }}</a
+      >{{ $t('workspaceInvitation.accept') }}</a
     >
   </Alert>
 </template>

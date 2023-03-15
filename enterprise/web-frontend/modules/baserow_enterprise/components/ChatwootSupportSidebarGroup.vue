@@ -3,7 +3,7 @@
     <div class="tree__action">
       <a class="tree__link" @click="open">
         <i class="tree__icon tree__icon--type fas fa-question-circle"></i>
-        {{ $t('chatwootSuportSidebarGroup.directSupport') }}
+        {{ $t('chatwootSupportSidebarWorkspace.directSupport') }}
       </a>
     </div>
   </li>

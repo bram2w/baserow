@@ -3,7 +3,7 @@
     <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">
         <i class="fas fa-font"></i>
-        {{ $t('groupForm.nameLabel') }}
+        {{ $t('workspaceForm.nameLabel') }}
       </label>
       <div class="control__elements">
         <input
