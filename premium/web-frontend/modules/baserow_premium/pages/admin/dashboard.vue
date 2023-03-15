@@ -24,7 +24,7 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.totalGroups') }}
+                {{ $t('dashboard.totalWorkspaces') }}
               </div>
               <div class="admin-dashboard__numbers-value">
                 {{ data.total_groups }}

@@ -35,13 +35,13 @@
               @input="filterUser"
             ></PaginatedDropdown>
           </FilterWrapper>
-          <FilterWrapper :name="$t('auditLog.filterGroupTitle')">
+          <FilterWrapper :name="$t('auditLog.filterWorkspaceTitle')">
             <PaginatedDropdown
               ref="groupFilter"
               :value="filters.group_id"
               :fetch-page="fetchGroups"
-              :empty-item-display-name="$t('auditLog.allGroups')"
-              :not-selected-text="$t('auditLog.allGroups')"
+              :empty-item-display-name="$t('auditLog.allWorkspaces')"
+              :not-selected-text="$t('auditLog.allWorkspaces')"
               @input="filterGroup"
             ></PaginatedDropdown>
           </FilterWrapper>
@@ -122,7 +122,7 @@ export default {
       ),
       new CrudTableColumn(
         'group',
-        () => this.$t('auditLog.group'),
+        () => this.$t('auditLog.workspace'),
         SimpleField,
         true,
         false,

@@ -69,7 +69,7 @@
     },
     "permission": {
         "admin": "Admin",
-        "adminDescription": "Can fully configure and edit groups and applications.",
+        "adminDescription": "Can fully configure and edit workspaces and applications.",
         "member": "Member",
         "memberDescription": "Can fully configure and edit applications."
     },
@@ -169,7 +169,7 @@
         }
     },
     "trashType": {
-        "group": "group",
+        "workspace": "workspace",
         "application": "application",
         "table": "table",
         "field": "field",
@@ -208,10 +208,10 @@
         "tooManyRequestsDescription": "You are sending too many requests to the server. Please wait a moment.",
         "notCompletedTitle": "Action not completed.",
         "notCompletedDescription": "The action couldn't be completed because an unknown error has occurred.",
-        "userNotInGroupTitle": "Action not allowed.",
-        "userNotInGroupDescription": "The action couldn't be completed because you aren't a member of the related group.",
-        "invalidGroupPermissionsTitle": "Action not allowed.",
-        "invalidGroupPermissionsDescription": "The action couldn't be completed because you don't have the right permissions to the related group.",
+        "userNotInWorkspaceTitle": "Action not allowed.",
+        "userNotInWorkspaceDescription": "The action couldn't be completed because you aren't a member of the related workspace.",
+        "invalidWorkspacePermissionsTitle": "Action not allowed.",
+        "invalidWorkspacePermissionsDescription": "The action couldn't be completed because you don't have the right permissions to the related workspace.",
         "tableDoesNotExistTitle": "Table doesn't exist.",
         "tableDoesNotExistDescription": "The action couldn't be completed because the related table doesn't exist anymore.",
         "rowDoesNotExistTitle": "Row doesn't exist.",
@@ -234,8 +234,8 @@
         "cannotRestoreParentBeforeChildDescription": "You cannot restore this item because it depends on a deleted item. Please restore the parent item first.",
         "cannotRestoreAsRelatedTableTrashedTitle": "Please restore the related tables first.",
         "cannotRestoreAsRelatedTableTrashedDescription": "You cannot restore this field because it depends on other tables which are still trashed. Please restore the other related tables first.",
-        "groupUserIsLastAdminTitle": "Can't leave the group",
-        "groupUserIsLastAdminDescription": "It's not possible to leave the group because you're the last admin or because other admin's accounts are pending deletion. Please delete the group or give another user admin permissions.",
+        "workspaceUserIsLastAdminTitle": "Can't leave the workspace",
+        "workspaceUserIsLastAdminDescription": "It's not possible to leave the workspace because you're the last admin or because other admin's accounts are pending deletion. Please delete the workspace or give another user admin permissions.",
         "errorMaxJobCountExceededTitle": "Couldn't start action.",
         "errorMaxJobCountExceededDescription": "You cannot start any more of these actions as you have others still running in the background. Please try again once the previous actions complete.",
         "failedToLockFieldDueToConflictTitle": "Can't change field",
@@ -245,7 +245,7 @@
         "failedToUndoRedoDueToConflictTitle": "Can't undo/redo",
         "failedToUndoRedoDueToConflictDescription": "Another operation is currently running blocking your undo or redo, please wait until it finishes before trying again.",
         "maximumSnapshotsReachedTitle": "Snapshots limit reached",
-        "maximumSnapshotsReachedDescription": "The maximum number of snapshots in a group has been reached.",
+        "maximumSnapshotsReachedDescription": "The maximum number of snapshots in a workspace has been reached.",
         "snapshotBeingCreatedTitle": "A snapshot is already being created",
         "snapshotBeingCreatedDescription": "It is not possible to create multiple snapshots at the same time.",
         "snapshotBeingRestoredTitle": "The snapshot is being restored",
@@ -261,8 +261,8 @@
         "maxLocksPerTransactionExceededTitle": "PostgreSQL issue detected",
         "maxLocksPerTransactionExceededDescription": "Baserow attempted to permanently delete the trashed items, but exceeded the available locks specified in `max_locks_per_transaction`.",
         "disabledPasswordProviderMessage": "Please use another authentication provider.",
-        "lastAdminTitle": "Can't remove last group admin",
-        "lastAdminMessage": "A group has to have at least one admin."
+        "lastAdminTitle": "Can't remove last workspace admin",
+        "lastAdminMessage": "A workspace has to have at least one admin."
     },
     "importerType": {
         "csv": "Import a CSV file",

@@ -1,6 +1,6 @@
 <template>
   <Modal>
-    <h2 class="box__title">{{ $t('createGroupModal.createNew') }}</h2>
+    <h2 class="box__title">{{ $t('createWorkspaceModal.createNew') }}</h2>
     <Error :error="error"></Error>
     <GroupForm
       ref="groupForm"
@@ -14,7 +14,7 @@
             :class="{ 'button--loading': loading }"
             :disabled="loading"
           >
-            {{ $t('createGroupModal.add') }}
+            {{ $t('createWorkspaceModal.add') }}
           </button>
         </div>
       </div>
@@ -44,7 +44,7 @@ export default {
       const excludeNames = this.$store.getters['group/getAll'].map(
         (group) => group.name
       )
-      const baseName = this.$t('createGroupModal.defaultName')
+      const baseName = this.$t('createWorkspaceModal.defaultName')
       return getNextAvailableNameInSequence(baseName, excludeNames)
     },
     async submitted(values) {
@@ -62,8 +62,8 @@ export default {
         this.handleError(error, 'group')
         this.handleError(error, 'group', {
           PERMISSION_DENIED: new ResponseErrorMessage(
-            this.$t('createGroupModal.permissionDeniedTitle'),
-            this.$t('createGroupModal.permissionDeniedBody')
+            this.$t('createWorkspaceModal.permissionDeniedTitle'),
+            this.$t('createWorkspaceModal.permissionDeniedBody')
           ),
         })
       }

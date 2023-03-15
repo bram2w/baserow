@@ -11,8 +11,8 @@
         <template #invitedBy>
           <strong>{{ invitation.invited_by }}</strong>
         </template>
-        <template #group>
-          <strong>{{ invitation.group }}</strong>
+        <template #workspace>
+          <strong>{{ invitation.workspace }}</strong>
         </template>
       </i18n>
     </Alert>

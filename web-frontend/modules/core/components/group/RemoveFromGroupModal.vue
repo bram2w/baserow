@@ -1,15 +1,15 @@
 <template>
   <Modal>
     <h2 class="box__title">
-      {{ $t('removeFromGroupModal.title') }}
+      {{ $t('removeFromWorkspaceModal.title') }}
     </h2>
     <Error :error="error"></Error>
     <div>
       <p>
         {{
-          $t('removeFromGroupModal.confirmation', {
+          $t('removeFromWorkspaceModal.confirmation', {
             name: member.name,
-            group_name: group.name,
+            workspaceName: group.name,
           })
         }}
       </p>
@@ -21,7 +21,7 @@
             :disabled="loading"
             @click.prevent="remove()"
           >
-            {{ $t('removeFromGroupModal.remove') }}
+            {{ $t('removeFromWorkspaceModal.remove') }}
           </a>
         </div>
       </div>

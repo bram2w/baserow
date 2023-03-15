@@ -21,7 +21,9 @@
           class="trash-sidebar__group-link"
           @click="emitIfNotAlreadySelectedTrashGroup(group)"
         >
-          {{ group.name || $t('trashSidebar.unnamedGroup', { id: group.id }) }}
+          {{
+            group.name || $t('trashSidebar.unnamedWorkspace', { id: group.id })
+          }}
         </a>
         <ul class="trash-sidebar__applications">
           <li

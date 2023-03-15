@@ -20,12 +20,12 @@ export class ClientErrorMap {
     // Declare the default error messages.
     this.errorMap = {
       ERROR_USER_NOT_IN_GROUP: new ResponseErrorMessage(
-        app.i18n.t('clientHandler.userNotInGroupTitle'),
-        app.i18n.t('clientHandler.userNotInGroupDescription')
+        app.i18n.t('clientHandler.userNotInWorkspaceTitle'),
+        app.i18n.t('clientHandler.userNotInWorkspaceDescription')
       ),
       ERROR_USER_INVALID_GROUP_PERMISSIONS: new ResponseErrorMessage(
-        app.i18n.t('clientHandler.invalidGroupPermissionsTitle'),
-        app.i18n.t('clientHandler.invalidGroupPermissionsDescription')
+        app.i18n.t('clientHandler.invalidWorkspacePermissionsTitle'),
+        app.i18n.t('clientHandler.invalidWorkspacePermissionsDescription')
       ),
       // @TODO move these errors to the module.
       ERROR_TABLE_DOES_NOT_EXIST: new ResponseErrorMessage(
@@ -75,8 +75,8 @@ export class ClientErrorMap {
         )
       ),
       ERROR_GROUP_USER_IS_LAST_ADMIN: new ResponseErrorMessage(
-        app.i18n.t('clientHandler.groupUserIsLastAdminTitle'),
-        app.i18n.t('clientHandler.groupUserIsLastAdminDescription')
+        app.i18n.t('clientHandler.workspaceUserIsLastAdminTitle'),
+        app.i18n.t('clientHandler.workspaceUserIsLastAdminDescription')
       ),
       ERROR_MAX_JOB_COUNT_EXCEEDED: new ResponseErrorMessage(
         app.i18n.t('clientHandler.errorMaxJobCountExceededTitle'),

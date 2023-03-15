@@ -1,12 +1,12 @@
 <template>
   <Modal>
     <h2 class="box__title">
-      {{ $t('leaveGroupModal.title', { group: group.name }) }}
+      {{ $t('leaveWorkspaceModal.title', { workspace: group.name }) }}
     </h2>
     <Error :error="error"></Error>
     <div>
       <p>
-        {{ $t('leaveGroupModal.message', { group: group.name }) }}
+        {{ $t('leaveWorkspaceModal.message', { workspace: group.name }) }}
       </p>
       <div class="actions">
         <div class="align-right">
@@ -16,7 +16,7 @@
             :disabled="loading"
             @click="leaveGroup()"
           >
-            {{ $t('leaveGroupModal.leave') }}
+            {{ $t('leaveWorkspaceModal.leave') }}
           </button>
         </div>
       </div>

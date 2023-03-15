@@ -55,7 +55,7 @@ export default {
       ),
       new CrudTableColumn(
         'groups',
-        () => this.$t('usersAdminTable.groups'),
+        () => this.$t('usersAdminTable.workspaces'),
         UserGroupsField
       ),
       new CrudTableColumn(

@@ -12,7 +12,7 @@
         {{
           $t('membersSettings.membersTable.title', {
             userAmount: group.users.length || 0,
-            groupName: group.name,
+            workspaceName: group.name,
           })
         }}
       </template>

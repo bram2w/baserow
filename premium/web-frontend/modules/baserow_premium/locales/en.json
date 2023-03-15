@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "Is staff",
-            "isGroupAdmin": "Is group admin",
+            "isWorkspaceAdmin": "Is workspace admin",
             "active": "Active",
             "deactivated": "Deactivated"
         },
         "adminType": {
             "dashboard": "Dashboard",
             "users": "Users",
-            "groups": "Groups",
+            "workspaces": "Workspaces",
             "licenses": "Licenses"
         },
         "viewType": {
@@ -63,8 +63,8 @@
     "registerLicenseForm": {
         "licenseKey": "License key"
     },
-    "groupsAdminTable": {
-        "allGroups": "All groups",
+    "workspacesAdminTable": {
+        "allWorkspaces": "All workspaces",
         "id": "ID",
         "name": "Name",
         "members": "Members",
@@ -74,16 +74,16 @@
         "freeUsers": "Free users",
         "seatsTaken": "Seats taken",
         "storageUsage": "Storage Used (MB)",
-        "usageHelpText": "Calculated nightly when the track group usage setting is enabled"
+        "usageHelpText": "Calculated nightly when the track workspace usage setting is enabled"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Permanently delete"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Delete {name}",
-        "confirmation": "Are you sure you want to delete the group: {name}?",
-        "comment": "The group will be permanently deleted, including the related applications. It is not possible to undo this action.",
-        "delete": "Delete group {name}"
+        "confirmation": "Are you sure you want to delete the workspace: {name}?",
+        "comment": "The workspace will be permanently deleted, including the related applications. It is not possible to undo this action.",
+        "delete": "Delete workspace {name}"
     },
     "activeUsers": {
         "newUsers": "New users",
@@ -93,7 +93,7 @@
         "allUsers": "All users",
         "username": "Username",
         "name": "Name",
-        "groups": "Groups",
+        "workspaces": "Workspaces",
         "lastLogin": "Last login",
         "dateJoined": "Signed up",
         "active": "Active"
@@ -118,7 +118,7 @@
         "warning": {
             "changeEmail": "Changing this users email address means when they sign in they must use the new email address to do so. This must be communicated with that user.",
             "inactiveUser": "When a user is marked as inactive they are prevented from signing in.",
-            "userStaff": "Making the user staff gives them admin access to all users, all groups and the ability to revoke your own staff permissions."
+            "userStaff": "Making the user staff gives them admin access to all users, all workspaces and the ability to revoke your own staff permissions."
         },
         "error": {
             "invalidName": "Please enter a valid full name, it must be longer than 2 letters and less than 150.",
@@ -131,7 +131,7 @@
     "deleteUserModal": {
         "title": "Delete {username}",
         "confirmation": "Are you sure you want to delete the user: {name}?",
-        "comment1": "The user account will be deleted, however the groups that user is a member of will continue existing. The users group will not be deleted, even if this user is the last user in the group. Deleting the last user in a group prevents anyone being able to access that group.",
+        "comment1": "The user account will be deleted, however the workspaces that user is a member of will continue existing. The users workspace will not be deleted, even if this user is the last user in the workspace. Deleting the last user in a workspace prevents anyone being able to access that workspace.",
         "comment2": "After deleting a user it is possible for a new user to sign up again using the deleted users email address. To ensure they cannot sign up again instead deactivate the user and do not delete them.",
         "delete": "Delete user {username}"
     },
@@ -161,7 +161,7 @@
         "selectOption": "Select option"
     },
     "kanbanViewStakedBy": {
-        "title": "Group field",
+        "title": "Workspace field",
         "chooseField": "Which single select field should the cards be stacked by?"
     },
     "kanbanViewStack": {
@@ -173,7 +173,7 @@
         "title": "Dashboard",
         "totals": "Totals",
         "totalUsers": "Total users",
-        "totalGroups": "Total groups",
+        "totalWorkspaces": "Total workspaces",
         "totalApplications": "Total applications",
         "newUsers": "New users",
         "newUsers24h": "New users last 24 hours",

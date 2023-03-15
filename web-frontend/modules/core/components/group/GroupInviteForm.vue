@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="submit">
-    <h3>{{ $t('groupInviteForm.invitationFormTitle') }}</h3>
+    <h3>{{ $t('workspaceInviteForm.invitationFormTitle') }}</h3>
     <div class="row">
       <div class="col col-7">
         <FormElement :error="fieldHasErrors('email')" class="control">
@@ -14,7 +14,7 @@
               @blur="$v.values.email.$touch()"
             />
             <div v-if="fieldHasErrors('email')" class="error">
-              {{ $t('groupInviteForm.errorInvalidEmail') }}
+              {{ $t('workspaceInviteForm.errorInvalidEmail') }}
             </div>
           </div>
         </FormElement>
@@ -57,11 +57,13 @@
               v-model="values.message"
               type="text"
               class="input"
-              :placeholder="$t('groupInviteForm.optionalMessagePlaceholder')"
+              :placeholder="
+                $t('workspaceInviteForm.optionalMessagePlaceholder')
+              "
             />
             <div v-if="fieldHasErrors('message')" class="error">
               {{
-                $t('groupInviteForm.errorTooLongMessage', {
+                $t('workspaceInviteForm.errorTooLongMessage', {
                   amount: messageMaxLength,
                 })
               }}

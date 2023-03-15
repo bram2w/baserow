@@ -13,7 +13,7 @@
         {{
           $t('membersSettings.invitesTable.title', {
             invitesAmount,
-            groupName: group.name,
+            workspaceName: group.name,
           })
         }}
       </template>

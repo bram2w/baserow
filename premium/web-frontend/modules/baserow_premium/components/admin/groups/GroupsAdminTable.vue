@@ -6,7 +6,7 @@
     @row-context="onRowContext"
   >
     <template #title>
-      {{ $t('groupsAdminTable.allGroups') }}
+      {{ $t('workspacesAdminTable.allWorkspaces') }}
     </template>
     <template #menus="slotProps">
       <EditGroupContext
@@ -40,63 +40,63 @@ export default {
     this.columns = [
       new CrudTableColumn(
         'name',
-        () => this.$t('groupsAdminTable.name'),
+        () => this.$t('workspacesAdminTable.name'),
         GroupNameField,
         true,
         true
       ),
       new CrudTableColumn(
         'users',
-        () => this.$t('groupsAdminTable.members'),
+        () => this.$t('workspacesAdminTable.members'),
         GroupUsersField
       ),
       new CrudTableColumn(
         'application_count',
-        () => this.$t('groupsAdminTable.applications'),
+        () => this.$t('workspacesAdminTable.applications'),
         SimpleField,
         true
       ),
       new CrudTableColumn(
         'free_users',
-        () => this.$t('groupsAdminTable.freeUsers'),
+        () => this.$t('workspacesAdminTable.freeUsers'),
         SimpleField
       ),
       new CrudTableColumn(
         'seats_taken',
-        () => this.$t('groupsAdminTable.seatsTaken'),
+        () => this.$t('workspacesAdminTable.seatsTaken'),
         SimpleField,
         false,
         false,
         false,
         {},
         '',
-        this.$t('groupsAdminTable.usageHelpText')
+        this.$t('workspacesAdminTable.usageHelpText')
       ),
       new CrudTableColumn(
         'row_count',
-        () => this.$t('groupsAdminTable.rowCount'),
+        () => this.$t('workspacesAdminTable.rowCount'),
         SimpleField,
         true,
         false,
         false,
         {},
         '',
-        this.$t('groupsAdminTable.usageHelpText')
+        this.$t('workspacesAdminTable.usageHelpText')
       ),
       new CrudTableColumn(
         'storage_usage',
-        () => this.$t('groupsAdminTable.storageUsage'),
+        () => this.$t('workspacesAdminTable.storageUsage'),
         SimpleField,
         true,
         false,
         false,
         {},
         '',
-        this.$t('groupsAdminTable.usageHelpText')
+        this.$t('workspacesAdminTable.usageHelpText')
       ),
       new CrudTableColumn(
         'created_on',
-        () => this.$t('groupsAdminTable.created'),
+        () => this.$t('workspacesAdminTable.created'),
         LocalDateField,
         true
       ),

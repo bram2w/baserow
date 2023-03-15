@@ -75,7 +75,7 @@
           </div>
 
           <div class="dashboard__group-item-name">
-            {{ $t('dashboardGroup.createApplication') }}
+            {{ $t('dashboardWorkspace.createApplication') }}
           </div>
         </a>
         <CreateApplicationContext

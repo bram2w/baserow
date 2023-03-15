@@ -9,7 +9,7 @@
       <li v-if="$hasPermission('workspace.update', group, group.id)">
         <a @click="$emit('rename')">
           <i class="context__menu-icon fas fa-fw fa-pen"></i>
-          {{ $t('groupContext.renameGroup') }}
+          {{ $t('workspaceContext.renameWorkspace') }}
         </a>
       </li>
       <li v-if="$hasPermission('invitation.read', group, group.id)">
@@ -25,19 +25,19 @@
           "
         >
           <i class="context__menu-icon fas fa-fw fa-users"></i>
-          {{ $t('groupContext.members') }}
+          {{ $t('workspaceContext.members') }}
         </a>
       </li>
       <li v-if="$hasPermission('workspace.read_trash', group, group.id)">
         <a @click="showGroupTrashModal">
           <i class="context__menu-icon fas fa-fw fa-recycle"></i>
-          {{ $t('groupContext.viewTrash') }}
+          {{ $t('workspaceContext.viewTrash') }}
         </a>
       </li>
       <li>
         <a @click="$refs.leaveGroupModal.show()">
           <i class="context__menu-icon fas fa-fw fa-door-open"></i>
-          {{ $t('groupContext.leaveGroup') }}
+          {{ $t('workspaceContext.leaveWorkspace') }}
         </a>
       </li>
       <li v-if="$hasPermission('workspace.delete', group, group.id)">
@@ -46,7 +46,7 @@
           @click="deleteGroup"
         >
           <i class="context__menu-icon fas fa-fw fa-trash"></i>
-          {{ $t('groupContext.deleteGroup') }}
+          {{ $t('workspaceContext.deleteWorkspace') }}
         </a>
       </li>
     </ul>

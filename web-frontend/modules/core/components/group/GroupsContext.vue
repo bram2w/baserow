@@ -6,7 +6,7 @@
         v-model="query"
         type="text"
         class="select__search-input"
-        :placeholder="$t('groupsContext.search')"
+        :placeholder="$t('workspacesContext.search')"
       />
     </div>
     <div v-if="isLoading" class="context--loading">
@@ -29,7 +29,7 @@
       v-if="!isLoading && isLoaded && groups.length == 0"
       class="context__description"
     >
-      {{ $t('groupsContext.noResults') }}
+      {{ $t('workspacesContext.noResults') }}
     </div>
     <div class="select__footer">
       <a
@@ -38,7 +38,7 @@
         @click="$refs.createGroupModal.show()"
       >
         <i class="fas fa-plus"></i>
-        {{ $t('groupsContext.createGroup') }}
+        {{ $t('workspacesContext.createWorkspace') }}
       </a>
     </div>
     <CreateGroupModal ref="createGroupModal" @created="hide"></CreateGroupModal>

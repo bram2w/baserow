@@ -68,7 +68,7 @@ export class GroupsAdminType extends PremiumAdminType {
 
   getName() {
     const { i18n } = this.app
-    return i18n.t('premium.adminType.groups')
+    return i18n.t('premium.adminType.workspaces')
   }
 
   getRouteName() {
