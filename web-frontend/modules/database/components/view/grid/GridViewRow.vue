@@ -107,6 +107,7 @@
         @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
         @cell-mouseover="$emit('cell-mouseover', { row, field })"
         @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
+        @cell-shift-click="$emit('cell-shift-click', { row, field })"
         @add-row-after="$emit('add-row-after', $event)"
       ></GridViewCell>
     </div>

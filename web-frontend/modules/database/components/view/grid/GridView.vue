@@ -37,6 +37,7 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
+      @cell-shift-click="multiSelectShiftClick"
       @add-row="addRow()"
       @add-rows="$refs.rowsAddContext.toggleNextToMouse($event)"
       @add-row-after="addRowAfter($event)"
@@ -104,6 +105,7 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
+      @cell-shift-click="multiSelectShiftClick"
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
@@ -922,6 +924,16 @@ export default {
         this.fieldsUpdated()
       })
     },
+    multiSelectShiftClick({ event, row, field }) {
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/multiSelectShiftClick',
+        {
+          rowId: row.id,
+          fieldIndex:
+            this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        }
+      )
+    },
     /**
      * Called when mouse is clicked and held on a GridViewCell component.
      * Starts multi-select by setting the head and tail index to the currently
@@ -964,6 +976,7 @@ export default {
         this.$store.getters[
           this.storePrefix + 'view/grid/isMultiSelectActive'
         ] &&
+        !event.shiftKey &&
         (!isElement(this.$el, event.target) ||
           !['grid-view__row', 'grid-view__rows', 'grid-view'].includes(
             event.target.classList[0]
