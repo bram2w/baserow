@@ -20,7 +20,7 @@ def test_page_created_signal_sent(page_created_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_page_user_not_in_group(data_fixture):
+def test_create_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
 
@@ -41,7 +41,7 @@ def test_page_deleted_signal_sent(page_deleted_mock, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_delete_page_user_not_in_group(data_fixture):
+def test_delete_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     user_unrelated = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
@@ -55,7 +55,7 @@ def test_delete_page_user_not_in_group(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_page_user_not_in_group(data_fixture):
+def test_get_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder)
@@ -77,7 +77,7 @@ def test_page_updated_signal_sent(page_updated_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_page_user_not_in_group(data_fixture):
+def test_update_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder)
@@ -113,7 +113,7 @@ def test_pages_reordered_signal_sent(pages_reordered_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_pages_user_not_in_group(data_fixture):
+def test_order_pages_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page_one = data_fixture.create_builder_page(builder=builder, order=1)
@@ -148,7 +148,7 @@ def test_duplicate_page(data_fixture):
 
 
 @pytest.mark.django_db
-def test_duplicate_page_user_not_in_group(data_fixture):
+def test_duplicate_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page()
 

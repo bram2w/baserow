@@ -23,11 +23,13 @@ class BuilderPageObjectScopeType(ObjectScopeType):
         return context.builder
 
     def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related("builder", "builder__group")
+        return self.get_base_queryset().prefetch_related(
+            "builder", "builder__workspace"
+        )
 
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == WorkspaceObjectScopeType.type:
-            return Q(builder__group__in=[s.id for s in scopes])
+            return Q(builder__workspace__in=[s.id for s in scopes])
 
         if (
             scope_type.type == BuilderObjectScopeType.type
