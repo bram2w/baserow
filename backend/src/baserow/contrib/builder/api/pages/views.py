@@ -225,7 +225,7 @@ class AsyncDuplicatePageView(APIView):
         operation_id="duplicate_builder_page_async",
         description=(
             "Start a job to duplicate the page with the provided `page_id` parameter "
-            "if the authorized user has access to the builder's group."
+            "if the authorized user has access to the builder's workspace."
         ),
         responses={
             202: DuplicatePageJobTypeSerializer,

@@ -30,7 +30,7 @@ def test_create_page(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_create_page_user_not_in_group(api_client, data_fixture):
+def test_create_page_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
 
@@ -107,7 +107,7 @@ def test_order_pages(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_pages_user_not_in_group(api_client, data_fixture):
+def test_order_pages_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
     page_one = data_fixture.create_builder_page(builder=builder, order=1)
@@ -184,7 +184,7 @@ def test_delete_page(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_page_user_not_in_group(api_client, data_fixture):
+def test_delete_page_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder, order=1)
