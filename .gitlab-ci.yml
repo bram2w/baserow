@@ -622,7 +622,10 @@ build-cloudron-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && $BUILD_ALL_IN_ONE == "true" && $CLOUDRON_IMAGE_NAME != "disable"
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME && $CLOUDRON_IMAGE_NAME != "disable"
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME && $CLOUDRON_IMAGE_NAME != "disable"
+      # This rule and variable allows us to force build cloudron images on branches.
+      - $BUILD_ALL_IN_ONE == "true" && $CLOUDRON_IMAGE_NAME != "disable"
   variables:
     IMAGE_NAME: $CLOUDRON_IMAGE_NAME
     DOCKERFILE_PATH: $CLOUDRON_DOCKERFILE_PATH
