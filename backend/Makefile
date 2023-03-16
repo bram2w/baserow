@@ -24,6 +24,12 @@ sort:
 test:
 	pytest tests ../premium/backend/tests ../enterprise/backend/tests || exit;
 
+test-builder:
+	pytest tests/baserow/contrib/builder || exit
+
+test-builder-parallel:
+	pytest tests/baserow/contrib/builder -n 10 || exit
+
 test-compat:
 	pytest tests/baserow/compat --run-disabled-in-ci || exit;
 
