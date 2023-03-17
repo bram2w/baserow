@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
+from faker import Faker
+
 from baserow.contrib.database.fields.models import Field, SelectOption
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
@@ -103,6 +106,7 @@ def load_test_data():
                 ("Products", "link_row", {"link_row_table": products_table}),
                 ("Production", "rating", {}),
                 ("Certification", "multiple_select", {}),
+                ("Image", "file", {}),
                 ("Notes", "long_text", {"field_options": {"width": 400}}),
             ],
         )
@@ -132,12 +136,24 @@ def load_test_data():
         products_by_name = {p.name: p.id for p in products.objects.all()}
         certif_by_name = {p.value: p.id for p in select_field.select_options.all()}
 
+        image_field = Field.objects.get(table=suppliers_table, name="Image")
+        file_field_type = field_type_registry.get("file")
+
+        fake = Faker()
+        cache = {}
+
+        random_file_1 = file_field_type.random_value(image_field, fake, cache)
+        random_file_2 = file_field_type.random_value(image_field, fake, cache)
+        random_file_3 = file_field_type.random_value(image_field, fake, cache)
+        random_file_4 = file_field_type.random_value(image_field, fake, cache)
+
         data = [
             (
                 "The happy cow",
                 [products_by_name["Milk"], products_by_name["Butter"]],
                 3,
                 [certif_by_name["Animal protection"]],
+                random_file_1,
                 "Animals here are happy.",
             ),
             (
@@ -149,6 +165,7 @@ def load_test_data():
                 ],
                 5,
                 [certif_by_name["Organic"], certif_by_name["Equitable"]],
+                random_file_2,
                 "Good guy.",
             ),
             (
@@ -156,6 +173,7 @@ def load_test_data():
                 [products_by_name["Beef"]],
                 2,
                 [certif_by_name["Fair trade"]],
+                random_file_3,
                 "",
             ),
             (
@@ -166,6 +184,7 @@ def load_test_data():
                     certif_by_name["Organic"],
                     certif_by_name["Natural"],
                 ],
+                random_file_4,
                 "Excellent white & red wines.",
             ),
         ]

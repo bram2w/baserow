@@ -59,7 +59,6 @@ class PagesView(APIView):
             200: PageSerializer,
             400: get_error_schema(
                 [
-                    "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
@@ -101,7 +100,6 @@ class PageView(APIView):
             200: PageSerializer,
             400: get_error_schema(
                 [
-                    "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
@@ -140,7 +138,6 @@ class PageView(APIView):
             204: None,
             400: get_error_schema(
                 [
-                    "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                 ]
             ),
@@ -181,7 +178,6 @@ class OrderPagesView(APIView):
             204: None,
             400: get_error_schema(
                 [
-                    "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "ERROR_PAGE_NOT_IN_BUILDER",
                 ]

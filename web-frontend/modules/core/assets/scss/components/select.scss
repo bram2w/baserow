@@ -230,6 +230,13 @@
   line-height: 26px;
   font-size: 13px;
 
+  &:only-child {
+    width: 100%;
+    flex: unset;
+    margin-right: unset !important;
+    padding-left: 6px;
+  }
+
   &:nth-child(2n+1) {
     margin-right: 20px;
   }

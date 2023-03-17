@@ -281,3 +281,10 @@ class IdDoesNotExist(Exception):
             *args,
             **kwargs,
         )
+
+
+class CannotCalculateIntermediateOrder(Exception):
+    """
+    Raised when an intermediate order can't be calculated. This could be because the
+    fractions are equal.
+    """

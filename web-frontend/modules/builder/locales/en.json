@@ -22,6 +22,29 @@
         "errorNameNotUnique": "A page with this name already exists",
         "defaultName": "Page"
     },
+    "pageHeaderElements": {
+        "label": "Elements"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Search elements"
+    },
+    "elementType": {
+        "heading": "Heading",
+        "headingDescription": "Page heading title",
+        "paragraph": "Paragraph",
+        "paragraphDescription": "Single line text"
+    },
+    "addElementButton": {
+        "label": "Element"
+    },
+    "addElementModal": {
+        "title": "Add new element",
+        "searchPlaceholder": "Search elements"
+    },
+    "elementMenu": {
+        "moveUp": "Move up",
+        "moveDown": "Move down"
+    },
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
         "duplicatedTitle": "Page duplicated"

@@ -3,6 +3,14 @@ from baserow_premium.row_comments.operations import (
     ReadRowCommentsOperationType,
 )
 
+from baserow.contrib.builder.elements.operations import (
+    CreateElementOperationType,
+    DeleteElementOperationType,
+    ListElementsPageOperationType,
+    OrderElementsPageOperationType,
+    ReadElementOperationType,
+    UpdateElementOperationType,
+)
 from baserow.contrib.builder.operations import (
     ListPagesBuilderOperationType,
     OrderPagesBuilderOperationType,
@@ -270,6 +278,12 @@ BUILDER_OPS = EDITOR_OPS + [
     UseTokenOperationType,
     OrderTablesDatabaseTableOperationType,
     OrderApplicationsOperationType,
+    CreateElementOperationType,
+    UpdateElementOperationType,
+    DeleteElementOperationType,
+    ReadElementOperationType,
+    ListElementsPageOperationType,
+    OrderElementsPageOperationType,
 ]
 ADMIN_OPS = BUILDER_OPS + [
     UpdateWorkspaceOperationType,

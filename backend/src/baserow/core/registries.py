@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, TypeVar, Union
 from xmlrpc.client import Boolean
 from zipfile import ZipFile
 
@@ -173,7 +173,10 @@ class PluginRegistry(APIUrlsRegistryMixin, Registry):
 
 
 class ApplicationType(
-    APIUrlsInstanceMixin, ModelInstanceMixin, ImportExportMixin, Instance
+    APIUrlsInstanceMixin,
+    ModelInstanceMixin["Application"],
+    ImportExportMixin["Application"],
+    Instance,
 ):
     """
     This abstract class represents a custom application that can be added to the
@@ -342,7 +345,16 @@ class ApplicationType(
         return application
 
 
-class ApplicationTypeRegistry(APIUrlsRegistryMixin, ModelRegistryMixin, Registry):
+ApplicationSubClassInstance = TypeVar(
+    "ApplicationSubClassInstance", bound="Application"
+)
+
+
+class ApplicationTypeRegistry(
+    APIUrlsRegistryMixin,
+    ModelRegistryMixin[ApplicationSubClassInstance, ApplicationType],
+    Registry[ApplicationType],
+):
     """
     With the application registry it is possible to register new applications. An
     application is an abstraction made specifically for Baserow. If added to the

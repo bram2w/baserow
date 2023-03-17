@@ -6,6 +6,7 @@ import {
   isValidEmail,
   isSecureURL,
   isNumeric,
+  isSubstringOfStrings,
 } from '@baserow/modules/core/utils/string'
 
 describe('test string utils', () => {
@@ -137,5 +138,13 @@ describe('test string utils', () => {
     expect(isNumeric('1')).toBe(true)
     expect(isNumeric('9999')).toBe(true)
     expect(isNumeric('-100')).toBe(true)
+  })
+
+  test('test isSubstringOfStrings', () => {
+    expect(isSubstringOfStrings(['hello'], 'hell')).toBe(true)
+    expect(isSubstringOfStrings(['test'], 'hell')).toBe(false)
+    expect(isSubstringOfStrings(['hello', 'test'], 'hell')).toBe(true)
+    expect(isSubstringOfStrings([], 'hell')).toBe(false)
+    expect(isSubstringOfStrings(['hello'], '')).toBe(true)
   })
 })

@@ -1267,6 +1267,7 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
     for op in all_ops:
         if op.type not in all_ops_in_roles and op.type not in exceptions:
             missing_ops.append(op)
+
     assert missing_ops == [], "Non Assigned Ops:\n" + str(
         "\n".join([o.__class__.__name__ + "," for o in missing_ops])
     )
