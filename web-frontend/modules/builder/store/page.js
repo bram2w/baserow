@@ -13,7 +13,7 @@ export function populatePage(page) {
 const state = {
   // Holds the value of which page is currently selected
   selected: {},
-
+  deviceTypeSelected: null,
   // A job object that tracks the progress of a page duplication currently running
   duplicateJob: null,
 }
@@ -37,6 +37,12 @@ const mutations = {
     page._.selected = true
     state.selected = page
   },
+  UNSELECT(state) {
+    if (state.selected) {
+      state.selected._.selected = false
+    }
+    state.selected = {}
+  },
   SET_DUPLICATE_JOB(state, job) {
     state.duplicateJob = job
   },
@@ -46,6 +52,9 @@ const mutations = {
       const index = order.findIndex((value) => value === pageId)
       page.order = index === -1 ? 0 : index + 1
     })
+  },
+  SET_DEVICE_TYPE_SELECTED(state, deviceType) {
+    state.deviceTypeSelected = deviceType
   },
 }
 
@@ -81,6 +90,9 @@ const actions = {
     commit('SET_SELECTED', { builder, page })
 
     return { builder, page }
+  },
+  unselect({ commit }) {
+    commit('UNSELECT')
   },
   forceDelete({ commit }, { builder, page }) {
     if (page._.selected) {
@@ -130,6 +142,9 @@ const actions = {
       throw error
     }
   },
+  setDeviceTypeSelected({ commit }, deviceType) {
+    commit('SET_DEVICE_TYPE_SELECTED', deviceType)
+  },
   async duplicate({ commit, dispatch }, { page }) {
     const { data: job } = await PageService(this.$client).duplicate(page.id)
 
@@ -140,6 +155,12 @@ const actions = {
 }
 
 const getters = {
+  getSelected(state) {
+    return state.selected
+  },
+  getDeviceTypeSelected(state) {
+    return state.deviceTypeSelected
+  },
   getDuplicateJob(state) {
     return state.duplicateJob
   },

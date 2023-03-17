@@ -1816,7 +1816,7 @@ class PublicViewInfoView(APIView):
                 description="The slug of the view to get public information " "about.",
             )
         ],
-        tags=["Database table view"],
+        tags=["Database table views"],
         operation_id="get_public_view_info",
         description=(
             "Returns the required public information to display a single "

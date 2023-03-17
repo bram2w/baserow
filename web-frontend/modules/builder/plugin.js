@@ -11,7 +11,17 @@ import {
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
+import elementStore from '@baserow/modules/builder/store/element'
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
+import {
+  HeadingElementType,
+  ParagraphElementType,
+} from '@baserow/modules/builder/elementTypes'
+import {
+  DesktopDeviceType,
+  SmartphoneDeviceType,
+  TabletDeviceType,
+} from '@baserow/modules/builder/deviceTypes'
 import { DuplicatePageJobType } from '@baserow/modules/builder/jobTypes'
 import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
 import { PublicSiteErrorPageType } from '@baserow/modules/builder/errorPageTypes'
@@ -34,8 +44,11 @@ export default (context) => {
   registerRealtimeEvents(app.$realtime)
 
   store.registerModule('page', pageStore)
+  store.registerModule('element', elementStore)
 
   app.$registry.registerNamespace('builderSettings')
+  app.$registry.registerNamespace('element')
+  app.$registry.registerNamespace('device')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -50,4 +63,11 @@ export default (context) => {
   )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
+
+  app.$registry.register('element', new HeadingElementType(context))
+  app.$registry.register('element', new ParagraphElementType(context))
+
+  app.$registry.register('device', new DesktopDeviceType(context))
+  app.$registry.register('device', new TabletDeviceType(context))
+  app.$registry.register('device', new SmartphoneDeviceType(context))
 }

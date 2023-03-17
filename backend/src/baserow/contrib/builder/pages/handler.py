@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional, cast
 
 from django.db.models import QuerySet
 
@@ -8,6 +8,9 @@ from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import ChildProgressBuilder, find_unused_name
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.application_types import BuilderApplicationType
 
 
 class PageHandler:
@@ -110,7 +113,9 @@ class PageHandler:
         progress.increment(by=start_progress)
 
         builder = page.builder
-        builder_application_type = application_type_registry.get_by_model(builder)
+        builder_application_type = cast(
+            "BuilderApplicationType", application_type_registry.get_by_model(builder)
+        )
 
         [exported_page] = builder_application_type.export_pages_serialized([page])
 
@@ -126,6 +131,7 @@ class PageHandler:
             progress_builder=progress.create_child_builder(
                 represents_progress=import_progress
             ),
+            id_mapping={},
         )
 
         return new_page_clone

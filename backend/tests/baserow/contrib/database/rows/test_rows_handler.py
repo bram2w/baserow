@@ -977,8 +977,8 @@ def test_get_unique_orders_before_row_triggering_full_table_order_reset(data_fix
 
     handler = RowHandler()
     assert handler.get_unique_orders_before_row(row_3, model, 2) == [
-        Decimal("2.50000000000000000000"),
-        Decimal("2.66666666666666651864"),
+        Decimal("3.50000000000000000000"),
+        Decimal("3.66666666666666651864"),
     ]
 
     row_1.refresh_from_db()

@@ -141,6 +141,11 @@ class AuthProviderType(
             ],
         }
 
+    def import_serialized(
+        self, parent: Any, serialized_values: Dict[str, Any], id_mapping: Dict
+    ) -> Any:
+        raise NotImplementedError()
+
 
 class PasswordAuthProviderType(AuthProviderType):
     """
