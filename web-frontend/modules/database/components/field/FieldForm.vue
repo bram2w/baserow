@@ -11,6 +11,7 @@
           :placeholder="$t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
           @input="isPrefilledWithSuggestedFieldName = false"
+          @keydown.enter="handleKeydownEnter($event)"
         />
         <div
           v-if="$v.values.name.$dirty && !$v.values.name.required"
@@ -206,6 +207,11 @@ export default {
     getNextAvailableFieldName(baseName) {
       const excludeNames = this.fields.map((f) => f.name)
       return getNextAvailableNameInSequence(baseName, excludeNames)
+    },
+    handleKeydownEnter(event) {
+      event.preventDefault()
+      this.$emit('keydown-enter')
+      this.submit()
     },
   },
 }
