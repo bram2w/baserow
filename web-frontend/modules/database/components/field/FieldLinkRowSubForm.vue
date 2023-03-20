@@ -55,6 +55,7 @@ export default {
       initialLinkRowTableId: null,
     }
   },
+
   computed: {
     tables() {
       const applications = this.$store.getters['application/getAll']
@@ -105,6 +106,14 @@ export default {
         this.values?.link_row_table_id === null ||
         this.canDeleteInSelectedFieldTable
       )
+    },
+  },
+  watch: {
+    'values.link_row_table_id'(newValueType) {
+      const table = this.tablesWhereFieldsCanBeCreated.find(
+        (table) => table.id === newValueType
+      )
+      this.$emit('suggested-field-name', table.name)
     },
   },
   mounted() {
