@@ -82,6 +82,7 @@
       :fields="visibleFields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
+      :can-fit-in-two-columns="canFitInTwoColumns"
       :table="table"
       :view="view"
       :include-add-field="true"
@@ -940,9 +941,12 @@ export default {
      * selected cell.
      */
     multiSelectStart({ event, row, field }) {
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
+
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectStart', {
         rowId: row.id,
-        fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        fieldIndex,
       })
     },
     /**
@@ -951,9 +955,12 @@ export default {
      * with the last cell hovered over.
      */
     multiSelectHold({ event, row, field }) {
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
+
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectHold', {
         rowId: row.id,
-        fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        fieldIndex,
       })
     },
     /**
@@ -1040,8 +1047,8 @@ export default {
       const rowIndex = this.$store.getters[
         this.storePrefix + 'view/grid/getRowIndexById'
       ](row.id)
-      const fieldIndex =
-        this.visibleFields.findIndex((f) => f.id === field.id) + 1
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
       await this.pasteData(textData, jsonData, rowIndex, fieldIndex)
     },
     /**

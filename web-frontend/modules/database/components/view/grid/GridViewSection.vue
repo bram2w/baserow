@@ -60,6 +60,7 @@
             :all-fields="fields"
             :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
+            :can-fit-in-two-columns="canFitInTwoColumns"
             :include-row-details="includeRowDetails"
             :read-only="readOnly"
             :store-prefix="storePrefix"
@@ -187,6 +188,11 @@ export default {
       type: Boolean,
       required: false,
       default: () => false,
+    },
+    canFitInTwoColumns: {
+      type: Boolean,
+      required: false,
+      default: () => true,
     },
     readOnly: {
       type: Boolean,
