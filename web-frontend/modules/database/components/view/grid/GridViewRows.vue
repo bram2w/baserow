@@ -13,6 +13,7 @@
       :row="row"
       :fields="fields"
       :all-fields="allFields"
+      :can-fit-in-two-columns="canFitInTwoColumns"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
       :decorations-by-place="decorationsByPlace"
@@ -70,6 +71,11 @@ export default {
     groupId: {
       type: Number,
       required: true,
+    },
+    canFitInTwoColumns: {
+      type: Boolean,
+      required: false,
+      default: () => true,
     },
   },
   computed: {

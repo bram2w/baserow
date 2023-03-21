@@ -179,6 +179,11 @@ export default {
       type: Number,
       required: true,
     },
+    canFitInTwoColumns: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
   },
   data() {
     return {
@@ -281,7 +286,7 @@ export default {
 
         const allFieldIds = this.allFields.map((field) => field.id)
         let fieldIndex = allFieldIds.findIndex((id) => field.id === id)
-        fieldIndex += !field.primary ? 1 : 0
+        fieldIndex += !field.primary && this.canFitInTwoColumns ? 1 : 0
 
         const [minRow, maxRow] =
           this.$store.getters[
