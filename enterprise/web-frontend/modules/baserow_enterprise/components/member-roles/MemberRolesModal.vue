@@ -1,11 +1,10 @@
 <template>
   <Modal @show="onShow" @hidden="hideError">
     <Error v-if="error.visible" :error="error"></Error>
-    <Tabs v-else :selected-index.sync="selectedTabIndex">
+    <Tabs v-else :selected-index.sync="selectedTabIndex" :no-separation="true">
       <Tab
         v-if="canManageDatabase"
         :title="$t('memberRolesModal.memberRolesDatabaseTabTitle')"
-        class="margin-top-3"
       >
         <MemberRolesTab
           :loading="loading"
@@ -21,7 +20,6 @@
       </Tab>
       <Tab
         v-if="table && canManageTable"
-        class="margin-top-3"
         :title="$t('memberRolesModal.memberRolesTableTabTitle')"
       >
         <MemberRolesTab

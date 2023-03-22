@@ -51,5 +51,11 @@
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
         "duplicatedTitle": "Page duplicated"
+    },
+    "pageSidePanelType": {
+        "general": "General",
+        "style": "Style",
+        "visibility": "Visibility",
+        "events": "Events"
     }
 }

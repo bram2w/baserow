@@ -31,6 +31,12 @@ import {
   SettingsPageHeaderItemType,
   VariablesPageHeaderItemType,
 } from '@baserow/modules/builder/pageHeaderItemTypes'
+import {
+  EventsPageSidePanelType,
+  GeneralPageSidePanelType,
+  VisibilityPageSidePanelType,
+  StylePageSidePanelType,
+} from '@baserow/modules/builder/pageSidePanelTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -94,4 +100,11 @@ export default (context) => {
     'pageHeaderItem',
     new SettingsPageHeaderItemType(context)
   )
+  app.$registry.register('pageSidePanel', new GeneralPageSidePanelType(context))
+  app.$registry.register('pageSidePanel', new StylePageSidePanelType(context))
+  app.$registry.register(
+    'pageSidePanel',
+    new VisibilityPageSidePanelType(context)
+  )
+  app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 }

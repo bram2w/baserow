@@ -121,7 +121,7 @@ const actions = {
       throw error
     }
   },
-  async copy({ getters, dispatch }, { elementId, pageId }) {
+  async duplicate({ getters, dispatch }, { elementId, pageId }) {
     const element = getters.getElements.find((e) => e.id === elementId)
     await dispatch('create', {
       pageId,

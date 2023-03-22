@@ -1,5 +1,5 @@
 <template lang="html">
-  <div v-show="isActive">
+  <div v-if="isActive" class="tab">
     <slot></slot>
   </div>
 </template>
@@ -15,6 +15,16 @@ export default {
     disabled: {
       type: Boolean,
       default: () => false,
+    },
+    tooltip: {
+      type: String,
+      default: null,
+      required: false,
+    },
+    to: {
+      type: Object,
+      default: () => {},
+      required: false,
     },
   },
   data() {
