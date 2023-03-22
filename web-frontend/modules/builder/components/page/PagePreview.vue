@@ -108,7 +108,7 @@ export default {
 
       const currentWidth = preview.clientWidth
       const currentHeight = preview.clientHeight
-      const targetWidth = deviceType.minWidth
+      const targetWidth = deviceType?.minWidth
       let scale = 1
       let horizontal = 0
       let vertical = 0

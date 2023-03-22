@@ -1,10 +1,6 @@
 <template>
   <header class="layout__col-2-1 header header--space-between">
-    <ul class="header__filter">
-      <li class="header__filter-item">
-        <PageHeaderElements />
-      </li>
-    </ul>
+    <PageHeaderMenuItems />
     <DeviceSelector
       :device-type-selected="deviceTypeSelected"
       @selected="actionSetDeviceTypeSelected"
@@ -13,12 +9,16 @@
 </template>
 
 <script>
-import PageHeaderElements from '@baserow/modules/builder/components/elements/PageHeaderElements'
 import DeviceSelector from '@baserow/modules/builder/components/page/DeviceSelector'
+import PageHeaderMenuItems from '@baserow/modules/builder/components/page/PageHeaderMenuItems'
 import { mapActions, mapGetters } from 'vuex'
+
 export default {
   name: 'PageHeader',
-  components: { DeviceSelector, PageHeaderElements },
+  components: {
+    PageHeaderMenuItems,
+    DeviceSelector,
+  },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),
     deviceTypes() {
