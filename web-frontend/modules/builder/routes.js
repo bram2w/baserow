@@ -9,7 +9,7 @@ export const routes = [
   {
     name: 'builder-page',
     path: '/builder/:builderId/page/:pageId',
-    component: path.resolve(__dirname, 'pages/page.vue'),
+    component: path.resolve(__dirname, 'pages/pageEditor.vue'),
     props(route) {
       const p = { ...route.params }
       p.builderId = parseInt(p.builderId)

@@ -1,23 +1,21 @@
 <template>
-  <div class="page-preview__wrapper">
+  <div class="page-preview__wrapper" @click.self="selectElement(null)">
     <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
       <div ref="previewScaled" class="page-preview__scaled">
-        <div ref="elementContainer">
-          <ElementPreview
-            v-for="(element, index) in elements"
-            :key="element.id"
-            :element="element"
-            :active="element.id === elementSelectedId"
-            :is-first-element="index === 0"
-            :is-last-element="index === elements.length - 1"
-            :is-copying="copyingElementIndex === index"
-            @selected="selectElement(element)"
-            @delete="deleteElement(element)"
-            @move="moveElement(element, index, $event)"
-            @insert="showAddElementModal(element, index, $event)"
-            @copy="duplicateElement(element, index)"
-          />
-        </div>
+        <ElementPreview
+          v-for="(element, index) in elements"
+          :key="element.id"
+          :element="element"
+          :active="element.id === elementSelectedId"
+          :is-first-element="index === 0"
+          :is-last-element="index === elements.length - 1"
+          :is-copying="copyingElementIndex === index"
+          @selected="selectElement(element)"
+          @delete="deleteElement(element)"
+          @move="moveElement(element, index, $event)"
+          @insert="showAddElementModal(element, index, $event)"
+          @duplicate="duplicateElement(element, index)"
+        />
       </div>
     </div>
     <AddElementModal
@@ -48,6 +46,9 @@ export default {
 
       // The element that is currently being copied
       copyingElementIndex: null,
+
+      // The resize observer to resize the preview when the wrapper size change
+      resizeObserver: null,
     }
   },
   computed: {
@@ -81,15 +82,19 @@ export default {
     },
   },
   mounted() {
-    window.addEventListener('resize', this.onWindowResized)
+    this.resizeObserver = new ResizeObserver(() => {
+      this.onWindowResized()
+    })
+    this.resizeObserver.observe(this.$el)
+    this.onWindowResized()
   },
   destroyed() {
-    window.removeEventListener('resize', this.onWindowResized)
+    this.resizeObserver.unobserve(this.$el)
   },
   methods: {
     ...mapActions({
       actionCreateElement: 'element/create',
-      actionCopyElement: 'element/copy',
+      actionDuplicateElement: 'element/duplicate',
       actionMoveElement: 'element/move',
       actionDeleteElement: 'element/delete',
       actionSelectElement: 'element/select',
@@ -103,26 +108,23 @@ export default {
       // The widths are the minimum width the preview must have. If the preview dom
       // element becomes smaller than the target, it will be scaled down so that the
       // actual width remains the same, and it will preview the correct device.
-      const preview = this.$refs.preview
-      const previewScaled = this.$refs.previewScaled
 
-      const currentWidth = preview.clientWidth
-      const currentHeight = preview.clientHeight
+      const { clientWidth: currentWidth, clientHeight: currentHeight } =
+        this.$refs.preview
+
       const targetWidth = deviceType?.minWidth
       let scale = 1
-      let horizontal = 0
-      let vertical = 0
 
       if (currentWidth < targetWidth) {
+        // Round scale at 2 decimals
         scale = Math.round((currentWidth / targetWidth) * 100) / 100
-        horizontal = (currentWidth - currentWidth * scale) / 2 / scale
-        vertical = (currentHeight - currentHeight * scale) / 2 / scale
       }
 
+      const previewScaled = this.$refs.previewScaled
       previewScaled.style.transform = `scale(${scale})`
       previewScaled.style.transformOrigin = `0 0`
-      previewScaled.style.width = `${horizontal * 2 + currentWidth}px`
-      previewScaled.style.height = `${vertical * 2 + currentHeight}px`
+      previewScaled.style.width = `${currentWidth / scale}px`
+      previewScaled.style.height = `${currentHeight / scale}px`
     },
     async deleteElement(element) {
       try {
@@ -188,7 +190,7 @@ export default {
     async duplicateElement(element, index) {
       this.copyingElementIndex = index
       try {
-        await this.actionCopyElement({
+        await this.actionDuplicateElement({
           pageId: this.page.id,
           elementId: element.id,
         })

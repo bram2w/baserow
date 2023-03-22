@@ -1,10 +1,13 @@
 <template>
   <div class="element__menu">
-    <div v-if="isCopying" class="loading element__menu-copy-loading"></div>
-    <a v-else class="element__menu-item" @click="$emit('copy')">
+    <div
+      v-if="isDuplicating"
+      class="loading element__menu-duplicate-loading"
+    ></div>
+    <a v-else class="element__menu-item" @click="$emit('duplicate')">
       <i class="fas fa-copy"></i>
       <span class="element__menu-item-description">
-        {{ $t('action.copy') }}
+        {{ $t('action.duplicate') }}
       </span>
     </a>
     <a
@@ -52,7 +55,7 @@ export default {
       required: false,
       default: false,
     },
-    isCopying: {
+    isDuplicating: {
       type: Boolean,
       required: false,
       default: false,

@@ -1,16 +1,14 @@
 .page-preview__wrapper {
-  @include absolute(30px, 400px, 0, 40px);
-
+  padding: 10px 30px;
   display: flex;
   justify-content: center;
+  height: 100%;
 }
 
 .page-preview {
   position: relative;
   z-index: 1;
-  background-color: $white;
-  border-top-left-radius: 10px;
-  border-top-right-radius: 10px;
+  border-radius: 10px;
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -34,13 +32,25 @@
 
 .page-preview__scaled {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
+  background-color: $white;
   overflow: auto;
 
-  // We need to do this because the border of the preview is round on top and the first
-  // element has a blue border when selected. That border has to have the same shape.
-  > div:first-child::before {
-    border-top-right-radius: 15px;
-    border-top-left-radius: 15px;
+  // We need to do this because the border of the preview is round and we need to round
+  // the border of the selection box so that border has to have the same shape.
+  > div:first-child {
+    &::before {
+      border-top-right-radius: 15px;
+      border-top-left-radius: 15px;
+    }
+
+    & .element__menu-item-description {
+      @include absolute(30px, -2px, auto, auto);
+    }
+  }
+
+  > div:last-child::before {
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 15px;
   }
 }

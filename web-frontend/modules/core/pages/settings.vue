@@ -1,36 +1,16 @@
 <template>
-  <div>
-    <div class="layout__col-2-1">
-      <ul class="page-tabs">
-        <nuxt-link
-          v-for="page in pages"
-          :key="page.type"
-          v-slot="{ href, navigate, isExactActive }"
-          :to="page.to"
-        >
-          <li
-            v-tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
-            class="page-tabs__item"
-            :class="{
-              'page-tabs__item--active': isExactActive,
-              'page-tabs__item--disabled': !page.navigable,
-            }"
-          >
-            <a
-              :href="page.navigable ? href : null"
-              class="page-tabs__link"
-              v-on="page.navigable ? { click: navigate } : {}"
-            >
-              {{ page.name }}
-            </a>
-          </li>
-        </nuxt-link>
-      </ul>
-    </div>
-    <div class="layout__col-2-2">
+  <Tabs :full-height="true" :navigation="true" :large="true">
+    <tab
+      v-for="page in pages"
+      :key="page.type"
+      :title="page.name"
+      :disabled="!page.navigable"
+      :to="page.to"
+      :tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
+    >
       <NuxtChild :group="group" />
-    </div>
-  </div>
+    </tab>
+  </Tabs>
 </template>
 
 <script>

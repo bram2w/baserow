@@ -46,7 +46,7 @@
     </div>
     <div class="webhook__body">
       <Tabs>
-        <Tab class="margin-top-2" :title="$t('action.edit')">
+        <Tab :title="$t('action.edit')">
           <UpdateWebhook
             :webhook="webhook"
             :table="table"
@@ -54,7 +54,7 @@
             @deleted="$emit('deleted', $event)"
           />
         </Tab>
-        <Tab class="margin-top-2" :title="$t('webhook.callLog')">
+        <Tab :title="$t('webhook.callLog')">
           <p v-if="webhook.calls.length <= 0">{{ $t('webhook.noCalls') }}</p>
           <WebhookCall
             v-for="call in webhook.calls"

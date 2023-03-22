@@ -1,13 +1,11 @@
 .element__menu {
   display: flex;
-  flex-direction: column;
   flex-wrap: nowrap;
-  width: 26px;
   border: solid 1px $color-neutral-400;
   border-radius: 3px;
   z-index: 2;
 
-  @include absolute(6px, 6px, auto, auto);
+  @include absolute(5px, 5px, auto, auto);
 }
 
 .element__insert {
@@ -82,7 +80,7 @@
 }
 
 .element__menu-item-description {
-  @include absolute(2px, 30px, auto, auto);
+  @include absolute(-25px, -2px, auto, auto);
 
   display: none;
   background-color: $color-neutral-900;
@@ -111,11 +109,11 @@
 
   &:first-child {
     border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
+    border-bottom-left-radius: 3px;
   }
 
   &:last-child {
-    border-bottom-left-radius: 3px;
+    border-top-right-radius: 3px;
     border-bottom-right-radius: 3px;
   }
 
@@ -133,6 +131,6 @@
   margin: 0;
 }
 
-.element__menu-copy-loading {
+.element__menu-duplicate-loading {
   margin: 5px;
 }

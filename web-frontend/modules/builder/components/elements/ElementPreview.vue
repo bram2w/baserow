@@ -16,7 +16,7 @@
       :is-copying="isCopying"
       @delete="$emit('delete')"
       @move="$emit('move', $event)"
-      @copy="$emit('copy')"
+      @duplicate="$emit('duplicate')"
     />
     <component
       :is="elementType.component"

@@ -1,42 +1,84 @@
+
 .tabs {
-  list-style: none;
+  width: 100%;
+  background-color: $white;
+}
+
+.tabs--full-height {
+  height: 100%;
   display: flex;
-  margin: 0 0 20px 0;
-  padding: 0;
+  flex-direction: column;
+}
+
+.tabs__header {
+  display: flex;
+  flex-wrap: nowrap;
+  list-style: none;
+  padding: 0 0 0 15px;
+  margin: 0;
+  gap: 15px;
+  border-bottom: solid 1px $color-neutral-200;
+
+  .tabs--no-separation & {
+    border-bottom: unset;
+  }
+
+  .tabs--large & {
+    gap: 24px;
+    padding: 0 0 0 40px;
+  }
 }
 
 .tabs__item {
-  margin: 0;
-  padding: 0;
+  position: relative;
 
-  &:not(:last-child) {
-    margin-right: 16px;
+  &.tabs__item--disabled {
+    user-select: none;
+    color: $color-primary-900;
+    opacity: 0.6;
+    text-decoration: none;
+
+    a {
+      cursor: not-allowed;
+    }
   }
 
-  &--disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+  &.tabs__item--active::after {
+    content: "";
+    height: 1px;
+    background-color: $color-primary-600;
+
+    @include absolute(auto, 0, -1px, 0);
   }
 }
 
 .tabs__link {
+  color: $color-neutral-900;
   display: block;
-  font-size: 13px;
-  line-height: 32px;
-  padding: 0 16px;
-  border-radius: 3px;
-  color: $color-primary-900;
+  font-size: 12px;
+  padding: 12px 0;
+
+  .tabs--large & {
+    font-size: 14px;
+    padding: 18px 0;
+  }
 
   &:hover {
     text-decoration: none;
-    background-color: $color-neutral-100;
   }
 
+  &:hover,
   .tabs__item--active & {
-    background-color: $color-primary-100;
+    color: $color-primary-600;
   }
+}
 
-  &--disabled {
-    cursor: not-allowed;
+.tab {
+  padding: 14px 16px;
+  position: relative;
+
+  .tabs--full-height & {
+    overflow: auto;
+    height: 100%;
   }
 }
