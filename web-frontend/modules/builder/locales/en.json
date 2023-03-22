@@ -22,8 +22,11 @@
         "errorNameNotUnique": "A page with this name already exists",
         "defaultName": "Page"
     },
-    "pageHeaderElements": {
-        "label": "Elements"
+    "pageHeaderItemTypes": {
+        "labelElements": "Elements",
+        "labelDataSource": "Data",
+        "labelVariables": "Variables",
+        "labelSettings": "Page settings"
     },
     "elementsContext": {
         "searchPlaceholder": "Search elements"

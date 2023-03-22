@@ -25,6 +25,12 @@ import {
 import { DuplicatePageJobType } from '@baserow/modules/builder/jobTypes'
 import { BuilderApplicationType } from '@baserow/modules/builder/applicationTypes'
 import { PublicSiteErrorPageType } from '@baserow/modules/builder/errorPageTypes'
+import {
+  DataSourcesPageHeaderItemType,
+  ElementsPageHeaderItemType,
+  SettingsPageHeaderItemType,
+  VariablesPageHeaderItemType,
+} from '@baserow/modules/builder/pageHeaderItemTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -49,6 +55,7 @@ export default (context) => {
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
   app.$registry.registerNamespace('device')
+  app.$registry.registerNamespace('pageHeaderItem')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -70,4 +77,21 @@ export default (context) => {
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
   app.$registry.register('device', new SmartphoneDeviceType(context))
+
+  app.$registry.register(
+    'pageHeaderItem',
+    new ElementsPageHeaderItemType(context)
+  )
+  app.$registry.register(
+    'pageHeaderItem',
+    new DataSourcesPageHeaderItemType(context)
+  )
+  app.$registry.register(
+    'pageHeaderItem',
+    new VariablesPageHeaderItemType(context)
+  )
+  app.$registry.register(
+    'pageHeaderItem',
+    new SettingsPageHeaderItemType(context)
+  )
 }
