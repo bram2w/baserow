@@ -27,7 +27,7 @@ export class LicenseHandler {
     } else {
       // Otherwise only update the groups for whom their active licenses have changed.
       for (const groupId of Object.keys(
-        updatedUserData?.active_licenses?.per_group || {}
+        updatedUserData?.active_licenses?.per_workspace || {}
       )) {
         const group = this.getters['group/get'](parseInt(groupId))
         if (group) {
@@ -70,10 +70,10 @@ export class LicenseHandler {
    * Returns any licenses the current user might have active for the specific group.
    */
   getGroupLicenseTypes(groupId) {
-    const perGroupLicenses =
-      this.getters['auth/getAdditionalUserData']?.active_licenses?.per_group ||
-      {}
-    return Object.entries(perGroupLicenses[groupId] || {})
+    const perWorkspaceLicenses =
+      this.getters['auth/getAdditionalUserData']?.active_licenses
+        ?.per_workspace || {}
+    return Object.entries(perWorkspaceLicenses[groupId] || {})
       .filter(
         ([key, enabled]) => enabled && this.$registry.exists('license', key)
       )

@@ -186,7 +186,7 @@ def test_has_active_premium_license(data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_check_active_premium_license_for_group_with_valid_license(data_fixture):
+def test_check_active_premium_license_for_workspace_with_valid_license(data_fixture):
     user_in_license = data_fixture.create_user()
     group = data_fixture.create_workspace(user=user_in_license)
     license = License.objects.create(license=VALID_TWO_SEAT_LICENSE.decode())
@@ -206,30 +206,34 @@ def test_check_active_premium_license_for_group_with_valid_license(data_fixture)
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_check_active_premium_license_for_group_with_per_group_licenses(
+def test_check_active_premium_license_for_workspace_with_per_workspace_licenses(
     data_fixture, alternative_per_workspace_license_service
 ):
     user_in_license = data_fixture.create_user()
-    group_1 = data_fixture.create_workspace(user=user_in_license)
-    group_2 = data_fixture.create_workspace(user=user_in_license)
-    group_3 = data_fixture.create_workspace(user=user_in_license)
-    group_4 = data_fixture.create_workspace(user=user_in_license)
+    workspace_1 = data_fixture.create_workspace(user=user_in_license)
+    workspace_2 = data_fixture.create_workspace(user=user_in_license)
+    workspace_3 = data_fixture.create_workspace(user=user_in_license)
+    workspace_4 = data_fixture.create_workspace(user=user_in_license)
 
     alternative_per_workspace_license_service.restrict_user_premium_to(
-        user_in_license, [group_1.id, group_2.id]
+        user_in_license, [workspace_1.id, workspace_2.id]
     )
 
-    LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, user_in_license, group_1)
-    LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, user_in_license, group_2)
+    LicenseHandler.raise_if_user_doesnt_have_feature(
+        PREMIUM, user_in_license, workspace_1
+    )
+    LicenseHandler.raise_if_user_doesnt_have_feature(
+        PREMIUM, user_in_license, workspace_2
+    )
 
     with pytest.raises(FeaturesNotAvailableError):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            PREMIUM, user_in_license, group_3
+            PREMIUM, user_in_license, workspace_3
         )
 
     with pytest.raises(FeaturesNotAvailableError):
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            PREMIUM, user_in_license, group_4
+            PREMIUM, user_in_license, workspace_4
         )
 
 
@@ -951,7 +955,7 @@ def test_remove_all_users_from_license(mock_broadcast_to_users, data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_check_active_premium_license_for_group_with_license_pretending_to_be_site_wide(
+def test_check_active_premium_license_for_workspace_with_license_pretending_to_be_site_wide(
     data_fixture,
 ):
     user_in_license = data_fixture.create_user()

@@ -119,7 +119,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: {},
+              per_workspace: {},
             },
           },
           forGroup: 1,
@@ -133,7 +133,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: { 1: { [PremiumLicenseType.getType()]: true } },
+              per_workspace: { 1: { [PremiumLicenseType.getType()]: true } },
             },
           },
           forGroup: 2,
@@ -147,7 +147,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { not_prem: true },
                 3: { [PremiumLicenseType.getType()]: true },
@@ -165,7 +165,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { not_prem: true },
                 3: { [PremiumLicenseType.getType()]: true },
@@ -183,7 +183,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
               },
             },
@@ -199,7 +199,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { [PremiumLicenseType.getType()]: true },
               },
@@ -216,7 +216,7 @@ describe('Test premium licensing', () => {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { [PremiumLicenseType.getType()]: true },
                 3: { [PremiumLicenseType.getType()]: true },
