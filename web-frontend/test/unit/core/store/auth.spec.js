@@ -30,13 +30,13 @@ describe('Auth store', () => {
   test('can update a users additional data', () => {
     store.dispatch('auth/forceUpdateUserData', {
       active_licenses: {
-        per_group: { groupId: { test: true } },
+        per_workspace: { groupId: { test: true } },
       },
     })
     const additionalData = store.getters['auth/getAdditionalUserData']
     expect(JSON.parse(JSON.stringify(additionalData))).toStrictEqual({
       active_licenses: {
-        per_group: { groupId: { test: true } },
+        per_workspace: { groupId: { test: true } },
       },
     })
   })
@@ -44,18 +44,18 @@ describe('Auth store', () => {
   test('updating a users additional data merges with existing values', () => {
     store.dispatch('auth/forceUpdateUserData', {
       active_licenses: {
-        per_group: { groupId: { test: true } },
+        per_workspace: { groupId: { test: true } },
       },
     })
     store.dispatch('auth/forceUpdateUserData', {
       active_licenses: {
-        per_group: { groupId: { otherKey: true } },
+        per_workspace: { groupId: { otherKey: true } },
       },
     })
     const additionalData = store.getters['auth/getAdditionalUserData']
     expect(JSON.parse(JSON.stringify(additionalData))).toStrictEqual({
       active_licenses: {
-        per_group: { groupId: { test: true, otherKey: true } },
+        per_workspace: { groupId: { test: true, otherKey: true } },
       },
     })
   })

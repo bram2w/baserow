@@ -47,7 +47,7 @@ export class PremiumTestApp extends TestApp {
   giveCurrentUserPremiumFeatureForSpecificGroupOnly(groupId) {
     this.store.dispatch('auth/forceUpdateUserData', {
       active_licenses: {
-        per_group: { groupId: { [PremiumLicenseType.getType()]: true } },
+        per_workspace: { groupId: { [PremiumLicenseType.getType()]: true } },
       },
     })
   }
