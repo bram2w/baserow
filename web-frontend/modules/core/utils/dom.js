@@ -102,3 +102,25 @@ export const onClickOutside = (el, callback) => {
     document.body.removeEventListener('click', clickOutsideEvent)
   }
 }
+
+/**
+ * Return whether one of the ancestors of the given node matches the given predicate.
+ *
+ * @param {DomElement} node The node to start the search for.
+ * @param {function} predicate The predicate to test on every ancestor.
+ * @param {DomElement} stop If provided, the search will stop when this element is met.
+ *   It should an ancestor of the given node.
+ * @returns Whether one of the ancestors matches the predicate.
+ */
+export const doesAncestorMatchPredicate = (node, predicate, stop) => {
+  while (node != null) {
+    if (stop === node) {
+      return false
+    }
+    if (predicate(node)) {
+      return true
+    }
+    node = node.parentNode
+  }
+  return false
+}
