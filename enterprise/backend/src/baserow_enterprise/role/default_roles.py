@@ -3,6 +3,12 @@ from baserow_premium.row_comments.operations import (
     ReadRowCommentsOperationType,
 )
 
+from baserow.contrib.builder.domains.operations import (
+    CreateDomainOperationType,
+    DeleteDomainOperationType,
+    ReadDomainOperationType,
+    UpdateDomainOperationType,
+)
 from baserow.contrib.builder.elements.operations import (
     CreateElementOperationType,
     DeleteElementOperationType,
@@ -12,7 +18,9 @@ from baserow.contrib.builder.elements.operations import (
     UpdateElementOperationType,
 )
 from baserow.contrib.builder.operations import (
+    ListDomainsBuilderOperationType,
     ListPagesBuilderOperationType,
+    OrderDomainsBuilderOperationType,
     OrderPagesBuilderOperationType,
 )
 from baserow.contrib.builder.pages.operations import (
@@ -176,6 +184,8 @@ VIEWER_OPS = NO_ACCESS_OPS + [
     ReadPageOperationType,
     ListPagesBuilderOperationType,
     OrderPagesBuilderOperationType,
+    ListDomainsBuilderOperationType,
+    OrderDomainsBuilderOperationType,
     ReadWorkspaceOperationType,
     ReadTeamOperationType,
     ListTeamsOperationType,
@@ -284,6 +294,10 @@ BUILDER_OPS = EDITOR_OPS + [
     ReadElementOperationType,
     ListElementsPageOperationType,
     OrderElementsPageOperationType,
+    CreateDomainOperationType,
+    DeleteDomainOperationType,
+    ReadDomainOperationType,
+    UpdateDomainOperationType,
 ]
 ADMIN_OPS = BUILDER_OPS + [
     UpdateWorkspaceOperationType,

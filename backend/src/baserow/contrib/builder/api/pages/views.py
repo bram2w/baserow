@@ -166,7 +166,7 @@ class OrderPagesView(APIView):
                 name="builder_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The builder the application belongs to",
+                description="The builder the page belongs to",
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],

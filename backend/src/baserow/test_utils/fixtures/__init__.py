@@ -1,6 +1,7 @@
 from .airtable import AirtableFixtures
 from .application import ApplicationFixtures
 from .auth_provider import AuthProviderFixtures
+from .domain import DomainFixtures
 from .element import ElementFixtures
 from .field import FieldFixtures
 from .file_import import FileImportFixtures
@@ -39,6 +40,7 @@ class Fixtures(
     AuthProviderFixtures,
     PageFixtures,
     ElementFixtures,
+    DomainFixtures,
 ):
     def __init__(self, fake=None):
         self.fake = fake
