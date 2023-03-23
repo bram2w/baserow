@@ -9,17 +9,15 @@
       :builder="builder"
       @submitted="addPage"
     >
-      <FormElement>
-        <div class="actions actions--right">
-          <button
-            :class="{ 'button--loading': loading }"
-            class="button button--large"
-            type="submit"
-          >
-            {{ $t('createPageModal.submit') }}
-          </button>
-        </div>
-      </FormElement>
+      <div class="actions actions--right">
+        <button
+          :class="{ 'button--loading': loading }"
+          class="button button--large"
+          type="submit"
+        >
+          {{ $t('createPageModal.submit') }}
+        </button>
+      </div>
     </PageForm>
   </Modal>
 </template>
@@ -45,12 +43,13 @@ export default {
     }
   },
   methods: {
-    async addPage({ name }) {
+    async addPage({ name, path }) {
       this.loading = true
       try {
         const page = await this.$store.dispatch('page/create', {
           builder: this.builder,
           name,
+          path,
         })
         this.$refs.pageForm.$v.$reset()
         this.hide()

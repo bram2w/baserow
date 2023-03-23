@@ -15,16 +15,30 @@ from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.contrib.builder.api.pages.errors import (
+    ERROR_DUPLICATE_PATH_PARAMS_IN_PATH,
     ERROR_PAGE_DOES_NOT_EXIST,
+    ERROR_PAGE_NAME_NOT_UNIQUE,
     ERROR_PAGE_NOT_IN_BUILDER,
+    ERROR_PAGE_PATH_NOT_UNIQUE,
+    ERROR_PATH_PARAM_NOT_DEFINED,
+    ERROR_PATH_PARAM_NOT_IN_PATH,
 )
 from baserow.contrib.builder.api.pages.serializers import (
     CreatePageSerializer,
     OrderPagesSerializer,
     PageSerializer,
+    UpdatePageSerializer,
 )
 from baserow.contrib.builder.handler import BuilderHandler
-from baserow.contrib.builder.pages.exceptions import PageDoesNotExist, PageNotInBuilder
+from baserow.contrib.builder.pages.exceptions import (
+    DuplicatePathParamsInPath,
+    PageDoesNotExist,
+    PageNameNotUnique,
+    PageNotInBuilder,
+    PagePathNotUnique,
+    PathParamNotDefined,
+    PathParamNotInPath,
+)
 from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
 from baserow.contrib.builder.pages.service import PageService
 from baserow.core.exceptions import ApplicationDoesNotExist
@@ -60,6 +74,10 @@ class PagesView(APIView):
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_PAGE_NAME_NOT_UNIQUE",
+                    "ERROR_PAGE_PATH_NOT_UNIQUE",
+                    "ERROR_PATH_PARAM_NOT_IN_PATH",
+                    "ERROR_PATH_PARAM_NOT_DEFINED",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -69,13 +87,24 @@ class PagesView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            PageNameNotUnique: ERROR_PAGE_NAME_NOT_UNIQUE,
+            PagePathNotUnique: ERROR_PAGE_PATH_NOT_UNIQUE,
+            PathParamNotInPath: ERROR_PATH_PARAM_NOT_IN_PATH,
+            PathParamNotDefined: ERROR_PATH_PARAM_NOT_DEFINED,
+            DuplicatePathParamsInPath: ERROR_DUPLICATE_PATH_PARAMS_IN_PATH,
         }
     )
-    @validate_body(CreatePageSerializer)
+    @validate_body(CreatePageSerializer, return_validated=True)
     def post(self, request, data: Dict, builder_id: int):
         builder = BuilderHandler().get_builder(builder_id)
 
-        page = PageService().create_page(request.user, builder, data["name"])
+        page = PageService().create_page(
+            request.user,
+            builder,
+            data["name"],
+            path=data["path"],
+            path_params=data.get("path_params", None),
+        )
 
         serializer = PageSerializer(page)
         return Response(serializer.data)
@@ -95,24 +124,36 @@ class PageView(APIView):
         tags=["Builder pages"],
         operation_id="update_builder_page",
         description="Updates an existing page of an application builder",
-        request=CreatePageSerializer,
+        request=UpdatePageSerializer,
         responses={
             200: PageSerializer,
             400: get_error_schema(
                 [
                     "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_PAGE_NAME_NOT_UNIQUE",
+                    "ERROR_PAGE_PATH_NOT_UNIQUE",
+                    "ERROR_PATH_PARAM_NOT_IN_PATH",
+                    "ERROR_PATH_PARAM_NOT_DEFINED",
                 ]
             ),
-            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
+            404: get_error_schema(
+                ["ERROR_PAGE_DOES_NOT_EXIST", "ERROR_APPLICATION_DOES_NOT_EXIST"]
+            ),
         },
     )
     @transaction.atomic
     @map_exceptions(
         {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
             PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+            PageNameNotUnique: ERROR_PAGE_NAME_NOT_UNIQUE,
+            PagePathNotUnique: ERROR_PAGE_PATH_NOT_UNIQUE,
+            PathParamNotInPath: ERROR_PATH_PARAM_NOT_IN_PATH,
+            PathParamNotDefined: ERROR_PATH_PARAM_NOT_DEFINED,
+            DuplicatePathParamsInPath: ERROR_DUPLICATE_PATH_PARAMS_IN_PATH,
         }
     )
-    @validate_body(CreatePageSerializer)
+    @validate_body(UpdatePageSerializer, return_validated=True)
     def patch(self, request, data: Dict, page_id: int):
         page = PageService().get_page(request.user, page_id)
 
