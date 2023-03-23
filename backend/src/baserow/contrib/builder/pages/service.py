@@ -19,6 +19,7 @@ from baserow.contrib.builder.pages.signals import (
     page_updated,
     pages_reordered,
 )
+from baserow.contrib.builder.pages.types import PagePathParams
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import ChildProgressBuilder, extract_allowed
 
@@ -48,13 +49,22 @@ class PageService:
 
         return page
 
-    def create_page(self, user: AbstractUser, builder: Builder, name: str) -> Page:
+    def create_page(
+        self,
+        user: AbstractUser,
+        builder: Builder,
+        name: str,
+        path: str,
+        path_params: PagePathParams = None,
+    ) -> Page:
         """
         Creates a new page
 
         :param user: The user trying to create the page
         :param builder: The builder the page belongs to
         :param name: The name of the page
+        :param path: The path of the page
+        :param path_params: The params of the path provided
         :return: The newly created page instance
         """
 
@@ -65,7 +75,7 @@ class PageService:
             context=builder,
         )
 
-        page = self.handler.create_page(builder, name)
+        page = self.handler.create_page(builder, name, path, path_params)
 
         page_created.send(self, page=page, user=user)
 
@@ -107,7 +117,7 @@ class PageService:
             context=page,
         )
 
-        allowed_updates = extract_allowed(kwargs, ["name"])
+        allowed_updates = extract_allowed(kwargs, ["name", "path", "path_params"])
 
         self.handler.update_page(page, **allowed_updates)
 

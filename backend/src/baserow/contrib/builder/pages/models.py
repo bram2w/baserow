@@ -2,6 +2,7 @@ import typing
 
 from django.db import models
 
+from baserow.contrib.builder.pages.validators import path_validation
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
     JobWithUserIpAddress,
@@ -30,10 +31,12 @@ class Page(
     builder = models.ForeignKey("builder.Builder", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
+    path = models.CharField(max_length=255, validators=[path_validation])
+    path_params = models.JSONField(default=dict)
 
     class Meta:
         ordering = ("order",)
-        unique_together = [["builder", "name"]]
+        unique_together = [["builder", "name"], ["builder", "path"]]
 
     def get_parent(self):
         return self.builder

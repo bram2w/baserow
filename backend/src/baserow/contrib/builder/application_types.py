@@ -41,7 +41,9 @@ class BuilderApplicationType(ApplicationType):
         with translation.override(user.profile.language):
             first_page_name = _("Page")
 
-        PageService().create_page(user, application.specific, first_page_name)
+        PageService().create_page(
+            user, application.specific, first_page_name, path=f"/{first_page_name}"
+        )
 
     def export_pages_serialized(
         self,
@@ -71,6 +73,8 @@ class BuilderApplicationType(ApplicationType):
                     id=page.id,
                     name=page.name,
                     order=page.order,
+                    path=page.path,
+                    path_params=page.path_params,
                     elements=serialized_elements,
                 )
             )
@@ -156,6 +160,8 @@ class BuilderApplicationType(ApplicationType):
                 builder=builder,
                 name=serialized_page["name"],
                 order=serialized_page["order"],
+                path=serialized_page["path"],
+                path_params=serialized_page["path_params"],
             )
             id_mapping["builder_pages"][serialized_page["id"]] = page_instance.id
             serialized_page["_object"] = page_instance

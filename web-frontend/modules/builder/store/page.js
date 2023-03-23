@@ -102,10 +102,11 @@ const actions = {
 
     commit('DELETE_ITEM', { builder, id: page.id })
   },
-  async create({ commit, dispatch }, { builder, name }) {
+  async create({ commit, dispatch }, { builder, name, path }) {
     const { data: page } = await PageService(this.$client).create(
       builder.id,
-      name
+      name,
+      path
     )
 
     commit('ADD_ITEM', { builder, page })

@@ -40,6 +40,8 @@ def test_builder_application_export(data_fixture):
                 "id": page1.id,
                 "name": page1.name,
                 "order": page1.order,
+                "path": page1.path,
+                "path_params": page1.path_params,
                 "elements": [
                     {
                         "id": element1.id,
@@ -60,6 +62,8 @@ def test_builder_application_export(data_fixture):
                 "id": page2.id,
                 "name": page2.name,
                 "order": page2.order,
+                "path": page2.path,
+                "path_params": page2.path_params,
                 "elements": [
                     {
                         "id": element3.id,
@@ -84,6 +88,8 @@ IMPORT_REFERENCE = {
             "id": 999,
             "name": "Tammy Hall",
             "order": 1,
+            "path": "/test",
+            "path_params": {},
             "elements": [
                 {
                     "id": 998,
@@ -104,6 +110,8 @@ IMPORT_REFERENCE = {
             "id": 998,
             "name": "Megan Clark",
             "order": 2,
+            "path": "/test2",
+            "path_params": {},
             "elements": [
                 {
                     "id": 997,

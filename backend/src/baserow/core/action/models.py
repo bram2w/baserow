@@ -1,23 +1,10 @@
-import dataclasses
-import json
-from datetime import date, datetime
-from decimal import Decimal
-
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from baserow.core.encoders import JSONEncoderSupportingDataClasses
 from baserow.core.mixins import CreatedAndUpdatedOnMixin
 
 User = get_user_model()
-
-
-class JSONEncoderSupportingDataClasses(json.JSONEncoder):
-    def default(self, o):
-        if dataclasses.is_dataclass(o):
-            return dataclasses.asdict(o)
-        if isinstance(o, (Decimal, datetime, date)):
-            return str(o)
-        return super().default(o)
 
 
 class Action(CreatedAndUpdatedOnMixin, models.Model):

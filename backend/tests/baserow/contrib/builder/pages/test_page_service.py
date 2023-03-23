@@ -14,7 +14,7 @@ def test_page_created_signal_sent(page_created_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    page = PageService().create_page(user, builder, "test")
+    page = PageService().create_page(user, builder, "test", "/test")
 
     assert page_created_mock.called_with(page=page, user=user)
 
@@ -25,7 +25,7 @@ def test_create_page_user_not_in_workspace(data_fixture):
     builder = data_fixture.create_builder_application()
 
     with pytest.raises(UserNotInWorkspace):
-        PageService().create_page(user, builder, "test")
+        PageService().create_page(user, builder, "test", "/test")
 
 
 @patch("baserow.contrib.builder.pages.service.page_deleted")
@@ -46,7 +46,7 @@ def test_delete_page_user_not_in_workspace(data_fixture):
     user_unrelated = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    page = PageService().create_page(user, builder, "test")
+    page = PageService().create_page(user, builder, "test", "/test")
 
     with pytest.raises(UserNotInWorkspace):
         PageService().delete_page(user_unrelated, page)

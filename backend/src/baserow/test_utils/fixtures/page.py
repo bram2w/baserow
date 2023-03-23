@@ -1,3 +1,4 @@
+from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 
 
@@ -14,6 +15,11 @@ class PageFixtures:
 
         if "order" not in kwargs:
             kwargs["order"] = Page.get_last_order(kwargs["builder"])
+
+        if "path" not in kwargs:
+            kwargs["path"] = PageHandler().find_unused_page_name(
+                kwargs["builder"], f"{kwargs['name']}"
+            )
 
         page = Page.objects.create(**kwargs)
 

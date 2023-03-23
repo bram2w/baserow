@@ -5,13 +5,13 @@ from baserow.contrib.database.api.export.serializers import (
     SUPPORTED_CSV_COLUMN_SEPARATORS,
     SUPPORTED_EXPORT_CHARSETS,
 )
-from baserow.core.action.models import JSONEncoderSupportingDataClasses
 from baserow.core.action.registries import (
     ActionCommandType,
     ActionTypeDescription,
     action_type_registry,
     render_action_type_description,
 )
+from baserow.core.encoders import JSONEncoderSupportingDataClasses
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import CreatedAndUpdatedOnMixin
 
