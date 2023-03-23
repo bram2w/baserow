@@ -1,5 +1,6 @@
 from django.urls import include, path, re_path
 
+from .domains import urls as domain_urls
 from .elements import urls as element_urls
 from .pages import urls as page_urls
 
@@ -12,7 +13,14 @@ paths_with_builder_id = [
             (page_urls.urlpatterns_with_builder_id, page_urls.app_name),
             namespace="pages",
         ),
-    )
+    ),
+    path(
+        "domains/",
+        include(
+            (domain_urls.urlpatterns_with_builder_id, page_urls.app_name),
+            namespace="domains",
+        ),
+    ),
 ]
 
 paths_without_builder_id = [
@@ -28,6 +36,13 @@ paths_without_builder_id = [
         include(
             element_urls,
             namespace="element",
+        ),
+    ),
+    path(
+        "domains/",
+        include(
+            (domain_urls.urlpatterns_without_builder_id, page_urls.app_name),
+            namespace="domains",
         ),
     ),
 ]

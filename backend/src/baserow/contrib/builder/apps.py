@@ -13,6 +13,9 @@ class BuilderConfig(AppConfig):
 
         application_type_registry.register(BuilderApplicationType())
 
+        from baserow.contrib.builder.domains.object_scopes import (
+            BuilderDomainObjectScopeType,
+        )
         from baserow.contrib.builder.elements.object_scopes import (
             BuilderElementObjectScopeType,
         )
@@ -24,14 +27,19 @@ class BuilderConfig(AppConfig):
         object_scope_type_registry.register(BuilderObjectScopeType())
         object_scope_type_registry.register(BuilderPageObjectScopeType())
         object_scope_type_registry.register(BuilderElementObjectScopeType())
+        object_scope_type_registry.register(BuilderDomainObjectScopeType())
 
         from baserow.contrib.builder.operations import (
+            ListDomainsBuilderOperationType,
             ListPagesBuilderOperationType,
+            OrderDomainsBuilderOperationType,
             OrderPagesBuilderOperationType,
         )
 
         operation_type_registry.register(ListPagesBuilderOperationType())
         operation_type_registry.register(OrderPagesBuilderOperationType())
+        operation_type_registry.register(ListDomainsBuilderOperationType())
+        operation_type_registry.register(OrderDomainsBuilderOperationType())
 
         from baserow.contrib.builder.pages.operations import (
             CreatePageOperationType,
@@ -46,6 +54,18 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdatePageOperationType())
         operation_type_registry.register(ReadPageOperationType())
         operation_type_registry.register(DuplicatePageOperationType())
+
+        from baserow.contrib.builder.domains.operations import (
+            CreateDomainOperationType,
+            DeleteDomainOperationType,
+            ReadDomainOperationType,
+            UpdateDomainOperationType,
+        )
+
+        operation_type_registry.register(CreateDomainOperationType())
+        operation_type_registry.register(DeleteDomainOperationType())
+        operation_type_registry.register(ReadDomainOperationType())
+        operation_type_registry.register(UpdateDomainOperationType())
 
         from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
         from baserow.core.jobs.registries import job_type_registry

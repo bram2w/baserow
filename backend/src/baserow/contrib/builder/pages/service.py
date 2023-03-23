@@ -96,7 +96,7 @@ class PageService:
 
         :param user: The user trying to update the page
         :param page: The page that should be updated
-        :param values: The fields that should be updated with their corresponding value
+        :param kwargs: The fields that should be updated with their corresponding value
         :return: The updated page
         """
 

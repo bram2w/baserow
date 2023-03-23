@@ -61,7 +61,7 @@ class PageHandler:
         Updates fields of a page
 
         :param page: The page that should be updated
-        :param values: The fields that should be updated with their corresponding value
+        :param kwargs: The fields that should be updated with their corresponding value
         :return: The updated page
         """
 

@@ -13,3 +13,11 @@ class ListPagesBuilderOperationType(BuilderOperationType):
 
 class OrderPagesBuilderOperationType(BuilderOperationType):
     type = "builder.order_pages"
+
+
+class ListDomainsBuilderOperationType(BuilderOperationType):
+    type = "builder.list_domains"
+
+
+class OrderDomainsBuilderOperationType(BuilderOperationType):
+    type = "builder.order_domains"
