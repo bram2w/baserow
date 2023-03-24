@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "",
-            "isGroupAdmin": "",
+            "isWorkspaceAdmin": "",
             "active": "",
             "deactivated": ""
         },
         "adminType": {
             "dashboard": "",
             "users": "",
-            "groups": "",
+            "workspaces": "",
             "licenses": ""
         },
         "viewType": {
@@ -63,18 +63,18 @@
     "registerLicenseForm": {
         "licenseKey": ""
     },
-    "groupsAdminTable": {
-        "allGroups": "",
+    "workspacesAdminTable": {
+        "allWorkspaces": "",
         "id": "",
         "name": "",
         "members": "",
         "applications": "",
         "created": ""
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": ""
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "",
         "confirmation": "",
         "comment": "",
@@ -88,7 +88,7 @@
         "allUsers": "",
         "username": "",
         "name": "",
-        "groups": "",
+        "workspaces": "",
         "lastLogin": "",
         "dateJoined": "",
         "active": ""
@@ -168,7 +168,7 @@
         "title": "",
         "totals": "",
         "totalUsers": "",
-        "totalGroups": "",
+        "totalWorkspaces": "",
         "totalApplications": "",
         "newUsers": "",
         "newUsers24h": "",

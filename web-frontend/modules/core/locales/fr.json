@@ -17,10 +17,10 @@
         "delete": "Supprimer"
     },
     "sidebar": {
-        "createGroup": "Créer un groupe",
+        "createWorkspace": "Créer un projet",
         "inviteOthers": "Envoyer une invitation",
         "logoff": "Se déconnecter",
-        "errorNoGroup": "Vous n'avez aucun groupe.",
+        "errorNoWorkspace": "Vous n'avez aucun projet.",
         "admin": "Administration",
         "dashboard": "Accueil",
         "trash": "Corbeille",
@@ -59,9 +59,9 @@
         "passwordRequired": "Le mot de passe est obligatoire.",
         "invalidEmail": "Veuillez entrer une adresse électronique valide.",
         "disabledAccountTitle": "Compte désactivé",
-        "disabledAccountMessage": "Ce compte utilisateur est desactivé.",
+        "disabledAccountMessage": "Ce compte utilisateur est désactivé.",
         "incorrectCredentialTitle": "Identifiants incorrects",
-        "incorrectCredentialMessage": "L'adresse éléctronique et/ou le mot de passe sont incorrects.",
+        "incorrectCredentialMessage": "L'adresse électronique et/ou le mot de passe sont incorrects.",
         "inputRequired": "Ce champ est obligatoire.",
         "disabledPasswordProviderTitle": "L'authentification par mot de passe est désactivée.",
         "disabledPasswordProviderMessage": "Veuillez utiliser un autre fournisseur d'authentification."
@@ -71,61 +71,61 @@
         "emailAddress": "Adresse électronique",
         "name": "Votre nom",
         "password": "Mot de passe",
-        "passwordRepeat": "Répetez votre mot de passe"
+        "passwordRepeat": "Répétez votre mot de passe"
     },
     "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le groupe {group}.",
-    "groupForm": {
+    "invitationMessage": "{invitedBy} vous a invité·e à rejoindre le projet {workspace}.",
+    "workspaceForm": {
         "nameLabel": "Nom"
     },
-    "leaveGroupModal": {
-        "title": "Quitter {groupe}",
-        "message": "Êtes-vous sûr·e de vouloir quitter le groupe {group} ? Vous ne serez plus en mesure d'accéder aux applications associées et si vous souhaitez y accéder de nouveau, l'un des administrateurs du groupe devra vous envoyer une nouvelle invitation. Si vous quittez un groupe, celui-ci ne sera pas supprimé et les autres membres y auront toujours accès. Il n'est pas possible de quitter un groupe si vous êtes le dernier administrateur car il se retrouverait alors sans propriétaire.",
-        "leave": "Quitter le groupe"
+    "leaveWorkspaceModal": {
+        "title": "Quitter {workspace}",
+        "message": "Êtes-vous sûr·e de vouloir quitter le projet {workspace} ? Vous ne serez plus en mesure d'accéder aux applications associées et si vous souhaitez y accéder de nouveau, l'un des administrateurs du projet devra vous envoyer une nouvelle invitation. Si vous quittez un projet, celui-ci ne sera pas supprimé et les autres membres y auront toujours accès. Il n'est pas possible de quitter un projet si vous êtes le dernier administrateur car il se retrouverait alors sans propriétaire.",
+        "leave": "Quitter le projet"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Membres",
         "createApplication": "Créer"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Invitation",
-        "message": "{by} vous a invité à rejoindre le groupe {group}.",
+        "message": "{by} vous a invité à rejoindre le projet {workspace}.",
         "reject": "Refuser",
         "accept": "Accepter"
     },
-    "groupMemberModal": {
-        "membersModalTitle": "Membres de {group}",
+    "workspaceMemberModal": {
+        "membersModalTitle": "Membres de {workspace}",
         "userDescription": "{user} - membre depuis {since}",
         "invitationDescription": "invité·e depuis {since}",
         "sendInvite": "Envoyer l'invitation",
-        "userAlreadyInGroupTitle": "L'utilisateur est déjà dans le groupe.",
-        "userAlreadyInGroupText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le groupe.",
+        "userAlreadyInWorkspaceTitle": "L'utilisateur est déjà dans le projet.",
+        "userAlreadyInWorkspaceText": "Il n'est pas possible d'envoyer une invitation à un utilisateur déjà présent dans le projet.",
         "userDescriptionPendingDeletion": "{user} - en attente de suppression"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Inviter par email",
         "optionalMessagePlaceholder": "Message optionnel",
         "errorInvalidEmail": "Veuillez saisir une adresse email valide.",
         "errorTooLongMessage": "Les messages sont limités à {amount} caractères."
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "Rechercher",
         "noResults": "Aucun résultat",
-        "createGroup": "Créer un groupe"
+        "createWorkspace": "Créer un projet"
     },
-    "groupContext": {
-        "renameGroup": "Renommer le groupe",
+    "workspaceContext": {
+        "renameWorkspace": "Renommer le projet",
         "members": "Membres",
         "viewTrash": "Voir la corbeille",
-        "leaveGroup": "Quitter le groupe",
-        "deleteGroup": "Supprimer le groupe"
+        "leaveWorkspace": "Quitter le projet",
+        "deleteWorkspace": "Supprimer le projet"
     },
-    "createGroupModal": {
-        "createNew": "Nouveau groupe",
-        "add": "Ajouter le groupe",
-        "defaultName": "Groupe sans nom",
+    "createWorkspaceModal": {
+        "createNew": "Nouveau projet",
+        "add": "Ajouter le projet",
+        "defaultName": "Projet sans nom",
         "permissionDeniedTitle": "Permission refusée",
-        "permissionDeniedBody": "Vous n'avez pas les permissions nécessaires pour créer un nouveau groupe."
+        "permissionDeniedBody": "Vous n'avez pas les permissions nécessaires pour créer un nouveau projet."
     },
     "templateCategories": {
         "search": "Chercher des modèles",
@@ -136,7 +136,7 @@
     },
     "trashSidebar": {
         "title": "Corbeille",
-        "unnamedGroup": "Groupe sans nom {id}"
+        "unnamedWorkspace": "Projet sans nom {id}"
     },
     "trashContents": {
         "message": "Restaurer les éléments supprimés durant les {duration} derniers",
@@ -162,9 +162,9 @@
         "andMore": "... et {count} de plus"
     },
     "trashModal": {
-        "emptyTitle": "Aucun groupe trouvé",
-        "emptyMessage": "Vous n'êtes membre d'aucun groupe. Les applications comme les bases de données doivent appartenir à un groupe, par conséquent vous devez créer un groupe afin d'être capable d'en créer.",
-        "emptyMessageWithoutCreatePermission": "Vous n'êtes membre d'aucun groupe. Les applications comme les bases de données doivent appartenir à un groupe. Pour les créer, vous devez donc d'abord être invité à un groupe par un administrateur."
+        "emptyTitle": "Aucun projet trouvé",
+        "emptyMessage": "Vous n'êtes membre d'aucun projet. Les applications comme les bases de données doivent appartenir à un projet, par conséquent vous devez créer un projet afin d'être capable d'en créer.",
+        "emptyMessageWithoutCreatePermission": "Vous n'êtes membre d'aucun projet. Les applications comme les bases de données doivent appartenir à un projet. Pour les créer, vous devez donc d'abord être invité à un projet par un administrateur."
     },
     "uploadViaURLUserFileUpload": {
         "title": "À partir d'une URL",
@@ -200,7 +200,7 @@
     },
     "errorLayout": {
         "notFound": "La page que vous essayez de consulter n'a pas été trouvée. L'URL est incorrecte ou vous n'avez pas les permissions nécessaires pour voir cette page.",
-        "error": "Une erreur est survenue lors du chargement de la page. Nos developpeurs ont été notifiés de ce problème. Veuillez essayer de recharger la page ou retournez à l'accueil.",
+        "error": "Une erreur est survenue lors du chargement de la page. Nos développeurs ont été notifiés de ce problème. Veuillez essayer de recharger la page ou retournez à l'accueil.",
         "backDashboard": "Retourner à l'accueil",
         "backLogin": "Retourner à l'identification",
         "wrong": "Une erreur est survenue",
@@ -212,16 +212,16 @@
         "alertText": "Si vous trouvez Baserow utile, n'hésitez pas à rajouter une étoile sur Gitlab et à partager l'information avec vos relations. En partageant Baserow vous nous aidez à l'améliorer et à le rendre encore plus utile pour vous.",
         "tweetContent": "Découvrez @baserow, une base de données no-code libre, une alternative à Airtable !",
         "redditTitle": "Baserow - Une base de données no-code libre",
-        "noGroupTitle": "Aucun groupe",
-        "noGroupText": "Vous n'êtes membre d'aucun groupe. Les applications telles que les bases de données doivent appartenir à un groupe, donc pour pouvoir en créer, vous devez créer au moins un groupe.",
-        "createGroup": "Créer un groupe",
+        "noWorkspaceTitle": "Aucun projet",
+        "noWorkspaceText": "Vous n'êtes membre d'aucun projet. Les applications telles que les bases de données doivent appartenir à un projet, donc pour pouvoir en créer, vous devez créer au moins un projet.",
+        "createWorkspace": "Créer un projet",
         "becomeGithubSponsor": "Devenir sponsor Github",
         "starOnGitlab": "Nous aimer sur GitLab",
         "shareOnTwitter": "Tweeter à propos de Baserow",
         "shareOnReddit": "Partager sur Reddit",
         "shareOnFacebook": "Partager sur Facebook",
         "shareOnLinkedIn": "Partager sur LinkedIn",
-        "noGroupTextWithoutCreatePermission": "Vous n'êtes membre d'aucun groupe. Les applications comme les bases de données doivent appartenir à un groupe. Pour les créer, vous devez donc d'abord être invité à un groupe par un administrateur."
+        "noWorkspaceTextWithoutCreatePermission": "Vous n'êtes membre d'aucun projet. Les applications comme les bases de données doivent appartenir à un projet. Pour les créer, vous devez donc d'abord être invité à un projet par un administrateur."
     },
     "login": {
         "title": "Identification",
@@ -236,7 +236,7 @@
     "resetPassword": {
         "title": "Nouveau mot de passe",
         "newPassword": "Nouveau mot de passe",
-        "repeatNewPassword": "Répetez le mot de passe",
+        "repeatNewPassword": "Répétez le mot de passe",
         "submit": "Mettre à jour",
         "changed": "Mot de passe mis à jour",
         "errorInvalidLinkTitle": "Lien invalide",
@@ -249,7 +249,7 @@
     "signup": {
         "headTitle": "Création d'un nouveau compte",
         "title": "Création de compte",
-        "disabled": "Création de compte desactivée",
+        "disabled": "Création de compte désactivée",
         "disabledMessage": "Vous ne pouvez pas créer de compte car la création de compte a été désactivée.",
         "requireFirstUser": "Bienvenue sur Baserow !",
         "requireFirstUserMessage": "Veuillez remplir le formulaire ci-dessous afin de créer le compte administrateur.",
@@ -265,7 +265,7 @@
         "message": "Veuillez saisir votre adresse email dans le formulaire. Si nous trouvons un compte correspondant, nous vous enverrons un email avec un lien pour réinitialiser votre mot de passe.",
         "submit": "Envoyer le lien",
         "confirmation": "Si un compte correspond à votre adresse email, vous allez recevoir un lien de réinitialisation de mot de passe sur votre messagerie d'ici quelques minutes.",
-        "disabled": "Mot de passe oublié desactivé",
+        "disabled": "Mot de passe oublié désactivé",
         "disabledMessage": "Vous ne pouvez pas réinitialiser votre mot de passe car la réinitialisation de mot de passe a été désactivée.",
         "loginText": "Vous avez déjà un compte et un mot de passe ?"
     },
@@ -280,17 +280,17 @@
         "settingAllowNewAccountsName": "Autoriser la création de compte",
         "settingAllowNewAccountsDescription": "Par défaut, tout les visiteurs peuvent créer un compte sur votre instance de Baserow.",
         "enabled": "Autoriser",
-        "settingAllowSignupsViaGroupInvitationsName": "Autoriser la création de compte sur invitation",
-        "settingAllowSignupsViaGroupInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Autoriser la création de compte sur invitation",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Cette option permet aux utilisateurs invités par d'autres de créer des comptes même si la création de compte à été désactivée de manière globale.",
         "userDeletionGraceDelay": "Suppression d'utilisateurs",
         "settingUserDeletionGraceDelay": "Délai de grâce",
         "invalidAccountDeletionGraceDelay": "Cette valeur est obligatoire et doit être un nombre entier positif inférieur à 32000",
         "settingUserDeletionGraceDelayDescription": "Il s'agit du nombre de jours sans connexion après lequel un compte planifié pour être supprimé est définitivement supprimé.",
-        "settingAllowNonStaffCreateGroupOperation": "Autoriser tout le monde à créer de nouveaux groupes",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Par défaut, tout le monde peut créer de nouveaux groupes. Désactivez cette option pour permettre uniquement aux collaborateurs de créer de nouveaux groupes.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Un groupe sera automatiquement créé pour les nouveaux utilisateurs s'ils sont administrateurs.",
-        "settingTrackGroupUsage": "Suivi de l'utilisation du groupe",
-        "settingTrackGroupUsageDescription": "Active un travail nocturne qui compte l'utilisation des lignes et des fichiers par groupe, affiché sur la page d'administration du groupe premium.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Autoriser tout le monde à créer de nouveaux projets",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Par défaut, tout le monde peut créer de nouveaux projets. Désactivez cette option pour permettre uniquement aux collaborateurs de créer de nouveaux projets.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Un projet sera automatiquement créé pour les nouveaux utilisateurs s'ils sont administrateurs.",
+        "settingTrackWorkspaceUsage": "Suivi de l'utilisation du projet",
+        "settingTrackWorkspaceUsageDescription": "Active un travail nocturne qui compte l'utilisation des lignes et des fichiers par projet, affiché sur la page d'administration du projet premium.",
         "maintenance": "Maintenance"
     },
     "copyingNotification": {
@@ -385,8 +385,8 @@
         "prefillOrHideInfoLink": "Pré-remplir ou masquer dynamiquement"
     },
     "deleteAccountSettings": {
-        "groupNotice": "Les groupes sans propriétaires seront être supprimés",
-        "orphanGroups": "Seront également supprimés définitivement après le délais de grâce",
+        "workspaceNotice": "Les projets sans propriétaires seront être supprimés",
+        "orphanWorkspaces": "Seront également supprimés définitivement après le délais de grâce",
         "password": "Mot de passe",
         "passwordConfirm": "Répétez le mot de passe",
         "repeatPasswordMatchError": "Ce champ doit correspondre au premier champ de mot de passe.",
@@ -395,13 +395,13 @@
         "errorInvalidPasswordMessage": "Impossible de supprimer votre compte car le mot de passe est invalide.",
         "errorUserIsLastAdminMessage": "Impossible de supprimer votre compte car vous êtes le dernier administrateur de cette instance de Baserow.",
         "accountDeletedSuccessMessage": "La suppression de votre compte a été programmée.",
-        "groupLoadingError": "La vérification des groupes a échouée",
-        "groupLoadingErrorDescription": "La vérifications des groupes qui seront supprimés a échouée, veuillez rafraîchir la page.",
+        "workspaceLoadingError": "La vérification des projets a échouée",
+        "workspaceLoadingErrorDescription": "La vérifications des projets qui seront supprimés a échouée, veuillez rafraîchir la page.",
         "accountDeletedSuccessTitle": "Suppression de compte programmée",
         "description": "Vous pouvez programmé la suppression de votre compte en entrant votre mot de passe actuel et en cliquant sur le bouton. Votre compte sera définitivement supprimé après {days} jours. Pendant ce délais, si vous vous connectez de nouveau, la suppression de votre compte sera annulée.",
-        "orphanGroupMemberCount": "non partagé|partagé avec 1 utilisateur|partagé avec {count} utilisateurs",
+        "orphanWorkspaceMemberCount": "non partagé|partagé avec 1 utilisateur|partagé avec {count} utilisateurs",
         "title": "Supprimer le compte",
-        "groupNoticeDescription": "Quand votre compte est définitivement supprimé, tous les groupes et leurs données associées pour lesquels vous êtes le dernier administrateur actif sont également supprimés. Les groupes suivants sont ceux qui seront supprimés car vous êtes le seul administrateur. Afin d'éviter qu'ils soient supprimés, vous devez donner les droits d'administration à un autre utilisateur avant de supprimer votre compte.",
+        "workspaceNoticeDescription": "Quand votre compte est définitivement supprimé, tous les projets et leurs données associées pour lesquels vous êtes le dernier administrateur actif sont également supprimés. Les projets suivants sont ceux qui seront supprimés car vous êtes le seul administrateur. Afin d'éviter qu'ils soient supprimés, vous devez donner les droits d'administration à un autre utilisateur avant de supprimer votre compte.",
         "errorUserIsLastAdminTitle": "Dernier administrateur"
     },
     "pastingNotification": {
@@ -409,7 +409,7 @@
         "content": "Préparation des données"
     },
     "dashboardSidebar": {
-        "groups": "Groupes",
+        "workspaces": "Projets",
         "links": "Liens",
         "knowledgeBase": "Base de connaissances",
         "userSettings": "Paramètres utilisateur",
@@ -430,12 +430,12 @@
         "title": "Nettoyage..."
     },
     "datetime": {
-        "daysAgo": "Il y a 0 jour | Il y a 1 jour | Il y a {n} jours",
-        "yearsAgo": "il y a 0 an | il y a 1 an | il y a {n} ans",
+        "daysAgo": "Il y a 0 jour | Il y a 1 jour | Il y a {n} jours",
+        "yearsAgo": "il y a 0 an | il y a 1 an | il y a {n} ans",
         "monthsAgo": "il y a 0 mois | il y a 1 mois | il y a {n} mois",
-        "minutesAgo": "il y a 0 minute | il y a 1 minute | il y a {n} minutes",
-        "hoursAgo": "Il y a 0 heure | Il y a 1 heure | Il y a {n} heures",
-        "secondsAgo": "A l'instant | Il y a 1 seconde | Il y a {n} secondes"
+        "minutesAgo": "il y a 0 minute | il y a 1 minute | il y a {n} minutes",
+        "hoursAgo": "Il y a 0 heure | Il y a 1 heure | Il y a {n} heures",
+        "secondsAgo": "A l'instant | Il y a 1 seconde | Il y a {n} secondes"
     },
     "duplicateApplicationJobType": {
         "duplicating": "Duplication",
@@ -456,22 +456,22 @@
                 "copyEmail": "Copier l’e-mail",
                 "remove": "Annuler l'invitation"
             },
-            "title": "{invitesAmount} Invitations en attente dans {nom du groupe}"
+            "title": "{invitesAmount} Invitations en attente dans {workspaceName}"
         },
         "membersInviteModal": {
-            "title": "Inviter des membres du groupe",
+            "title": "Inviter des membres du projet",
             "submit": "Envoyer une invitation",
             "errors": {
-                "userAlreadyInGroup": {
-                    "title": "L’utilisateur est déjà dans le groupe.",
-                    "text": "Il n’est pas possible d’envoyer une invitation lorsque l’utilisateur est déjà membre du groupe."
+                "userAlreadyInWorkspace": {
+                    "title": "L’utilisateur est déjà dans le projet.",
+                    "text": "Il n’est pas possible d’envoyer une invitation lorsque l’utilisateur est déjà membre du projet."
                 }
             },
-            "helpIconText": "Le rôle sélectionné sera le rôle par défaut des utilisateurs dans ce groupe."
+            "helpIconText": "Le rôle sélectionné sera le rôle par défaut des utilisateurs dans ce projet."
         },
         "membersTable": {
             "actions": {
-                "remove": "Supprimer du groupe",
+                "remove": "Supprimer du projet",
                 "copyEmail": "Copier l’e-mail"
             },
             "columns": {
@@ -480,9 +480,9 @@
                 "email": "Courriel",
                 "teams": "Équipes",
                 "highestRole": "Rôle le plus élevé",
-                "highestRoleHelpText": "Le rôle le plus élevé attribué à cet utilisateur, directement ou par une équipe, sur tout ce qui se trouve dans ce groupe"
+                "highestRoleHelpText": "Le rôle le plus élevé attribué à cet utilisateur, directement ou par une équipe, sur tout ce qui se trouve dans ce projet"
             },
-            "title": "{userAmount} Membres dans {nom du groupe}",
+            "title": "{userAmount} Membres dans {workspaceName}",
             "inviteMember": "Inviter un membre"
         },
         "membersTabTitle": "Membres",
@@ -496,10 +496,10 @@
         "selectAll": "Sélectionner tout",
         "deselectAll": "Désélectionner tout"
     },
-    "removeFromGroupModal": {
-        "title": "Confirmer le retrait du groupe",
+    "removeFromWorkspaceModal": {
+        "title": "Confirmer le retrait du projet",
         "remove": "Supprimer",
-        "confirmation": "Voulez-vous vraiment supprimer {name} de {group_name} ? Cette action ne peut pas être annulée."
+        "confirmation": "Voulez-vous vraiment supprimer {name} de {workspaceName} ? Cette action ne peut pas être annulée."
     },
     "UserSessionExpiredNotification": {
         "title": "Session expirée",

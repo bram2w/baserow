@@ -17,10 +17,10 @@
         "delete": "Elimina"
     },
     "sidebar": {
-        "createGroup": "Crea gruppo",
+        "createWorkspace": "Crea gruppo",
         "inviteOthers": "Invita altri",
         "logoff": "Esci",
-        "errorNoGroup": "Non hai nessun gruppo.",
+        "errorNoWorkspace": "Non hai nessun gruppo.",
         "admin": "Admin",
         "dashboard": "Dashboard",
         "trash": "Cestino",
@@ -75,52 +75,52 @@
     },
     "invitationTitle": "Invito",
     "invitationMessage": "{invitedBy} ti ha invitato in {group}.",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": "Nome"
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "Lascia {group}",
         "message": "Sei sicuro di voler lasciare il gruppo {gruppo}? Non sarai più in grado di accedere alle applicazioni correlate e se vuoi riottenere l'accesso, uno degli amministratori deve invitarti di nuovo. Se lasci il gruppo, non verrà eliminato. Tutti gli altri membri vi avranno ancora accesso. Non è possibile lasciare un gruppo se sei l'ultimo amministratore perché questo lo lascerà privo di gestione.",
         "leave": "Lascia gruppo"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Membri",
         "createApplication": "Crea nuovo"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Invito",
         "message": "{by} ti ha invitato in {group}.",
         "reject": "Rifiuta",
         "accept": "Accetta"
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "membri di {group}",
         "userDescription": "{user} - membro da {since}",
         "invitationDescription": "invitato da {since}",
         "sendInvite": "Invia invito",
-        "userAlreadyInGroupTitle": "Utente già nel gruppo.",
-        "userAlreadyInGroupText": "Non è possibile inviare un invito quando l'utente è già membro del gruppo.",
+        "userAlreadyInWorkspaceTitle": "Utente già nel gruppo.",
+        "userAlreadyInWorkspaceText": "Non è possibile inviare un invito quando l'utente è già membro del gruppo.",
         "userDescriptionPendingDeletion": "{user} - eliminazione programmata"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Invita via e-mail",
         "optionalMessagePlaceholder": "Messaggio facoltativo",
         "errorInvalidEmail": "Inserisci un indirizzo e-mail valido.",
         "errorTooLongMessage": "I messaggi sono limitati a {amount} caratteri."
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "Cerca gruppo",
         "noResults": "Nessun risultato",
-        "createGroup": "Crea gruppo"
+        "createWorkspace": "Crea gruppo"
     },
-    "groupContext": {
-        "renameGroup": "Rinomina gruppo",
+    "workspaceContext": {
+        "renameWorkspace": "Rinomina gruppo",
         "members": "Membri",
         "viewTrash": "Visualizza cestino",
-        "leaveGroup": "Lascia gruppo",
-        "deleteGroup": "Elimina gruppo"
+        "leaveWorkspace": "Lascia gruppo",
+        "deleteWorkspace": "Elimina gruppo"
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "Crea nuovo gruppo",
         "add": "Aggiungi gruppo",
         "defaultName": "Nuovo Gruppo",
@@ -136,7 +136,7 @@
     },
     "trashSidebar": {
         "title": "Cestino",
-        "unnamedGroup": "Gruppo senza nome {id}"
+        "unnamedWorkspace": "Gruppo senza nome {id}"
     },
     "trashContents": {
         "message": "Ripristina gli elementi eliminati negli ultimi {duration}",
@@ -216,16 +216,16 @@
         "alertText": "Se trovi che Baserow sia utile, ci farebbe molto piacere se potessi condividere la tua opinione. Il tuo feedback è importante per noi, perchè ci aiuta a migliorare il prodotto e a renderlo migliore per te.",
         "tweetContent": "Dai un'occhiata a @baserow, uno strumento di database open source senza codice e un'alternativa a Airtable!",
         "redditTitle": "Baserow - Un database open source senza codice",
-        "noGroupTitle": "Nessun gruppo",
-        "noGroupText": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo.",
-        "createGroup": "Crea gruppo",
+        "noWorkspaceTitle": "Nessun gruppo",
+        "noWorkspaceText": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono a un gruppo, quindi per crearli devi creare un gruppo.",
+        "createWorkspace": "Crea gruppo",
         "becomeGithubSponsor": "Diventa uno sponsor GitHub",
         "starOnGitlab": "Valutaci su Gitlab",
         "shareOnTwitter": "Invia un tweet su Baserow",
         "shareOnReddit": "Condividi su Reddit",
         "shareOnFacebook": "Condividi su Facebook",
         "shareOnLinkedIn": "Condividi su LinkedIn",
-        "noGroupTextWithoutCreatePermission": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono ad un gruppo, quindi per crearli richiedi al tuo amministratore di essere invitato ad un gruppo."
+        "noWorkspaceTextWithoutCreatePermission": "Non sei membro di nessun gruppo. Applicazioni come i database appartengono ad un gruppo, quindi per crearli richiedi al tuo amministratore di essere invitato ad un gruppo."
     },
     "login": {
         "title": "Login",
@@ -283,16 +283,16 @@
         "settingAllowResetPasswordWarning": "Fai attenzione che potrebbe diventare impossibile eseguire l'accesso al sistema se dimentichi la password una volta disabilitata l'opzione per il reset.",
         "settingAllowNewAccountsName": "Consenti la creazione di nuovi account",
         "settingAllowNewAccountsDescription": "Per impostazione predefinita, qualsiasi utente che visita il tuo dominio Baserow può registrarsi per un nuovo account.",
-        "settingAllowSignupsViaGroupInvitationsName": "Consenti l'iscrizione tramite inviti di gruppo",
-        "settingAllowSignupsViaGroupInvitationDescription": "Anche se la creazione di nuovi account è disabilitata, questa opzione permette agli utenti invitati direttamente di creare un account.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Consenti l'iscrizione tramite inviti di gruppo",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Anche se la creazione di nuovi account è disabilitata, questa opzione permette agli utenti invitati direttamente di creare un account.",
         "enabled": "abilitato",
         "userDeletionGraceDelay": "Eliminazione account",
         "settingUserDeletionGraceDelay": "Tempo di grazia",
         "settingUserDeletionGraceDelayDescription": "Questo è il numero di giorni dopo i quali verrà definitivamente cancellato l'account.",
         "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000",
-        "settingAllowNonStaffCreateGroupOperation": "Permetti a chiunque di creare nuovi gruppi di lavoro",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Di default, chiunque puó creare gruppi di lavoro. Disabilitando questa opzione solo gli amministratori potranno creare nuovi gruppi.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo gruppo del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti."
+        "settingAllowNonStaffCreateWorkspaceOperation": "Permetti a chiunque di creare nuovi gruppi di lavoro",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Di default, chiunque puó creare gruppi di lavoro. Disabilitando questa opzione solo gli amministratori potranno creare nuovi gruppi.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo gruppo del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti."
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -383,10 +383,10 @@
     },
     "deleteAccountSettings": {
         "title": "Elimina account",
-        "groupNotice": "I gruppi orfani verranno cancellati",
-        "groupNoticeDescription": "Quando il tuo account verrà cancellato definitivamente, tutti i gruppi mostrati di seguito e i relativi dati verranno cancellati, in quanto il tuo account è l'unico amministratore del gruppo. Per evitare che i dati vengano persi, concedi i diritti di amministratore ad un altro utente prima di procedere alla cancellazione.",
-        "orphanGroups": "Verrà cancellato al termine del periodo di grazia",
-        "orphanGroupMemberCount": "non convidere|condividi con un utnte|condividi con {count} utenti",
+        "workspaceNotice": "I gruppi orfani verranno cancellati",
+        "workspaceNoticeDescription": "Quando il tuo account verrà cancellato definitivamente, tutti i gruppi mostrati di seguito e i relativi dati verranno cancellati, in quanto il tuo account è l'unico amministratore del gruppo. Per evitare che i dati vengano persi, concedi i diritti di amministratore ad un altro utente prima di procedere alla cancellazione.",
+        "orphanWorkspaces": "Verrà cancellato al termine del periodo di grazia",
+        "orphanWorkspaceMemberCount": "non convidere|condividi con un utnte|condividi con {count} utenti",
         "password": "Password",
         "passwordConfirm": "Ripeti password",
         "repeatPasswordMatchError": "Questo campo deve coincidere con il campo password.",
@@ -396,8 +396,8 @@
         "errorUserIsLastAdminTitle": "Ultimo amministratore",
         "errorUserIsLastAdminMessage": "Impossibile cancellare l'account perché il tuo account è l'ultimo amministratore nel sistema.",
         "accountDeletedSuccessMessage": "Il tuo account verrà cancellato al termine del periodo di grazia.",
-        "groupLoadingError": "Le verifiche sui gruppi sono fallite",
-        "groupLoadingErrorDescription": "I controlli sui gruppi da cancellare sono falliti, per favore aggiorna la pagina.",
+        "workspaceLoadingError": "Le verifiche sui gruppi sono fallite",
+        "workspaceLoadingErrorDescription": "I controlli sui gruppi da cancellare sono falliti, per favore aggiorna la pagina.",
         "description": "Puoi programmare la cancellazione del tuo account inserendo la tua password e premendo il pulsante. Il tuo account verrà cancellato definitivamente dopo {days} giorni senza alcun login. Nel frattempo, ti basterà accedere nuovamente con il tuo account per fermare il processo di cancellazione.",
         "accountDeletedSuccessTitle": "Cancellazione dell'account programmata"
     },
@@ -407,7 +407,7 @@
         "tutorials": "Tutorial",
         "userSettings": "Impostazioni utente",
         "knowledgeBase": "Documentazione",
-        "groups": "Gruppi",
+        "workspaces": "Gruppi",
         "links": "Link"
     },
     "job": {
@@ -477,7 +477,7 @@
         "membersInviteModal": {
             "title": "Invita membro nel gruppo",
             "errors": {
-                "userAlreadyInGroup": {
+                "userAlreadyInWorkspace": {
                     "text": "Non è possibile inviare un invito se l'utente non fa parte del gruppo.",
                     "title": "L'utente fa già parte del gruppo."
                 }
@@ -497,9 +497,9 @@
         "title": "Sessione scaduta",
         "content": "Sessione scaduta. Per favore, esegui nuovamente il login."
     },
-    "removeFromGroupModal": {
+    "removeFromWorkspaceModal": {
         "title": "Conferma la rimozione dal gruppo",
-        "confirmation": "Sei sicuro di voler rimuovere {name} dal {group_name}? Questa azione non potrà essere annullata.",
+        "confirmation": "Sei sicuro di voler rimuovere {name} dal {workspaceName}? Questa azione non potrà essere annullata.",
         "remove": "Rimuovi"
     },
     "permissionsUpdatedNotification": {

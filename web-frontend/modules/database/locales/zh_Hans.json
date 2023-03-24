@@ -117,7 +117,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "名称",
-        "groupLabel": "分组"
+        "workspaceLabel": "分组"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "您需要至少有一个数据库才能查看 API 文档。"

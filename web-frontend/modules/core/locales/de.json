@@ -17,10 +17,10 @@
         "duplicate": "Duplizieren"
     },
     "sidebar": {
-        "createGroup": "Gruppe erstellen",
+        "createWorkspace": "Arbeitsbereich erstellen",
         "inviteOthers": "Andere einladen",
         "logoff": "Abmeldung",
-        "errorNoGroup": "Sie haben keine Gruppen.",
+        "errorNoWorkspace": "Sie haben keine Arbeitsbereiche.",
         "admin": "Administrator",
         "dashboard": "Dashboard",
         "trash": "Papierkorb",
@@ -74,58 +74,58 @@
         "passwordRepeat": "Passwort wiederholen"
     },
     "invitationTitle": "Einladung",
-    "invitationMessage": "{invitedBy} hat Sie eingeladen, {group} beizutreten.",
-    "groupForm": {
+    "invitationMessage": "{invitedBy} hat Sie eingeladen, {workspace} beizutreten.",
+    "workspaceForm": {
         "nameLabel": "Name"
     },
-    "leaveGroupModal": {
-        "title": "Verlassen {Gruppe}",
-        "message": "Sind Sie sicher, dass Sie die Gruppe {group} verlassen wollen? Sie können dann nicht mehr auf die zugehörigen Anwendungen zugreifen. Wenn Sie wieder Zugang erhalten möchten, muss einer der Administratoren Sie erneut einladen. Wenn Sie die Gruppe verlassen, wird sie nicht gelöscht. Alle anderen Mitglieder haben weiterhin Zugang zu ihr. Es ist nicht möglich, eine Gruppe zu verlassen, wenn Sie der letzte Administrator sind, da die Gruppe dann nicht mehr gepflegt wird.",
-        "leave": "Gruppe verlassen"
+    "leaveWorkspaceModal": {
+        "title": "Verlassen {workspace}",
+        "message": "Sind Sie sicher, dass Sie den Arbeitsbereich {workspace} verlassen wollen? Sie können dann nicht mehr auf die zugehörigen Anwendungen zugreifen. Wenn Sie wieder Zugang erhalten möchten, muss einer der Administratoren Sie erneut einladen. Wenn Sie den Arbeitsbereich verlassen, wird sie nicht gelöscht. Alle anderen Mitglieder haben weiterhin Zugang zu ihr. Es ist nicht möglich, einen Arbeitsbereich zu verlassen, wenn Sie der letzte Administrator sind, da der Arbeitsbereich dann nicht mehr gepflegt wird.",
+        "leave": "Arbeitsbereich verlassen"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Mitglieder",
         "createApplication": "Neu erstellen"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Einladung",
-        "message": "{by} hat Sie eingeladen, der {group} beizutreten.",
+        "message": "{by} hat Sie eingeladen, der {workspace} beizutreten.",
         "reject": "Abgelehnt",
         "accept": "Akzeptiert"
     },
-    "groupMemberModal": {
-        "membersModalTitle": "{group} Mitglieder",
+    "workspaceMemberModal": {
+        "membersModalTitle": "{workspace} Mitglieder",
         "userDescription": "{user} - beigetreten vor {since}",
         "invitationDescription": "eingeladen vor {since}",
         "sendInvite": "Einladung senden",
-        "userAlreadyInGroupTitle": "Der Benutzer ist bereits Mitglied der Gruppe.",
-        "userAlreadyInGroupText": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied der Gruppe ist.",
+        "userAlreadyInWorkspaceTitle": "Der Benutzer ist bereits Mitglied des Arbeitsbereichs.",
+        "userAlreadyInWorkspaceText": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied des Arbeitsbereichs ist.",
         "userDescriptionPendingDeletion": "{user} - zur Löschung anstehend"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Einladen per E-Mail",
         "optionalMessagePlaceholder": "Optionale Nachricht",
         "errorInvalidEmail": "Bitte geben Sie eine gültige E-Mail Adresse ein.",
         "errorTooLongMessage": "Nachrichten sind auf {amount} Zeichen begrenzt."
     },
-    "groupsContext": {
-        "search": "Suche nach Gruppen",
+    "workspacesContext": {
+        "search": "Suche nach Arbeitsbereichen",
         "noResults": "Keine Ergebnisse gefunden",
-        "createGroup": "Gruppe erstellen"
+        "createWorkspace": "Arbeitsbereich erstellen"
     },
-    "groupContext": {
-        "renameGroup": "Gruppe umbenennen",
+    "workspaceContext": {
+        "renameWorkspace": "Arbeitsbereich umbenennen",
         "members": "Mitglieder",
         "viewTrash": "Papierkorb ansehen",
-        "leaveGroup": "Gruppe verlassen",
-        "deleteGroup": "Gruppe löschen"
+        "leaveWorkspace": "Arbeitsbereich verlassen",
+        "deleteWorkspace": "Arbeitsbereich löschen"
     },
-    "createGroupModal": {
-        "createNew": "Neue Gruppe erstellen",
-        "add": "Gruppe hinzufügen",
-        "defaultName": "Unbenannte Gruppe",
+    "createWorkspaceModal": {
+        "createNew": "Neuen Arbeitsbereich erstellen",
+        "add": "Arbeitsbereich hinzufügen",
+        "defaultName": "Unbenannter Arbeitsbereich",
         "permissionDeniedTitle": "Erlaubnis verweigert",
-        "permissionDeniedBody": "Sie haben nicht die erforderliche Berechtigung, um eine neue Gruppe zu erstellen."
+        "permissionDeniedBody": "Sie haben nicht die erforderliche Berechtigung, um einen neuen Arbeitsbereich zu erstellen."
     },
     "templateCategories": {
         "search": "Vorlagen suchen",
@@ -136,7 +136,7 @@
     },
     "trashSidebar": {
         "title": "Papierkorb",
-        "unnamedGroup": "Unbenannte Gruppe {id}"
+        "unnamedWorkspace": "Unbenannter Arbeitsbereich {id}"
     },
     "trashContents": {
         "message": "Gelöschte Objekte aus der Vergangenheit wiederherstellen {duration}",
@@ -162,9 +162,9 @@
         "andMore": "... und {count} mehr"
     },
     "trashModal": {
-        "emptyTitle": "Keine Gruppen gefunden",
-        "emptyMessage": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen.",
-        "emptyMessageWithoutCreatePermission": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in eine Gruppe eingeladen werden."
+        "emptyTitle": "Keine Arbeitsbereiche gefunden",
+        "emptyMessage": "Sie sind kein Mitglied eines Arbeitsbereichs. Anwendungen wie Datenbanken gehören zu einem Arbeitsbereichs. Um sie zu erstellen, müssen Sie also einen Arbeitsbereich erstellen.",
+        "emptyMessageWithoutCreatePermission": "Sie sind kein Mitglied eines Arbeitsbereichs. Anwendungen wie Datenbanken gehören zu einem Arbeitsbereichs. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in einen Arbeitsbereichs eingeladen werden."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Hochladen von einer URL",
@@ -220,16 +220,16 @@
         "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns einen Stern auf GitLab zu geben oder uns zu teilen. Indem Sie Baserow teilen helfen sie uns das Produkt zu verbessern und es nützlicher für Ihre Zwecke zu machen.",
         "tweetContent": "Entdecken Sie @baserow, ein Open-Source-Datenbank-Tool ohne Code und eine Alternative zu Airtable!",
         "redditTitle": "Baserow - Eine Open-Source no-code Datenbank",
-        "noGroupTitle": "Keine Gruppen gefunden",
-        "noGroupText": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also eine Gruppe erstellen.",
-        "createGroup": "Gruppe erstellen",
+        "noWorkspaceTitle": "Keine Arbeitsbereiche gefunden",
+        "noWorkspaceText": "Sie sind kein Mitglied eines Arbeitsbereichs. Anwendungen wie Datenbanken gehören zu einem Arbeitsbereich. Um sie zu erstellen, müssen Sie also einen Arbeitsbereich erstellen.",
+        "createWorkspace": "Arbeitsbereich erstellen",
         "becomeGithubSponsor": "Werden Sie ein GitHub-Sponsor",
         "starOnGitlab": "Geben sie uns einen Stern auf GitLab",
         "shareOnTwitter": "Tweet über Baserow",
         "shareOnReddit": "Teilen auf Reddit",
         "shareOnFacebook": "Teilen auf Facebook",
         "shareOnLinkedIn": "Teilen auf LinkedIn",
-        "noGroupTextWithoutCreatePermission": "Sie sind kein Mitglied einer Gruppe. Anwendungen wie Datenbanken gehören zu einer Gruppe. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in eine Gruppe eingeladen werden."
+        "noWorkspaceTextWithoutCreatePermission": "Sie sind kein Mitglied eines Arbeitsbereichs. Anwendungen wie Datenbanken gehören zu einer Arbeitsbereich. Um sie zu erstellen, müssen Sie also zuerst von einem Administrator in einen Arbeitsbereich eingeladen werden."
     },
     "login": {
         "title": "Anmeldung",
@@ -288,18 +288,18 @@
         "settingAllowNewAccountsName": "Erstellen neuer Konten zulassen",
         "settingAllowNewAccountsDescription": "Standardmäßig kann sich jeder Benutzer, der Ihre Baserow-Domain besucht, für ein neues Konto anmelden.",
         "enabled": "aktiviert",
-        "settingAllowSignupsViaGroupInvitationsName": "Erlaube Registrierungen durch Gruppeneinladungen",
-        "settingAllowSignupsViaGroupInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Erlaube Registrierungen durch Arbeitsbereicheinladungen",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Auch wenn die Erstellung von neuen Konten deaktiviert ist können Nutzer:innen durch Setzen dieser Option Nutzer:innen ein Konto erstellen.",
         "settingUserDeletionGraceDelayDescription": "Dies ist die Anzahl der Tage ohne Anmeldung, nach denen ein zur Löschung vorgesehenes Konto endgültig gelöscht wird.",
         "userDeletionGraceDelay": "Benutzerlöschung",
         "settingUserDeletionGraceDelay": "Gnadenfrist",
         "invalidAccountDeletionGraceDelay": "Dieser Wert ist erforderlich und muss eine positive ganze Zahl kleiner als 32000 sein",
-        "settingAllowNonStaffCreateGroupOperation": "Jedem die Möglichkeit geben, neue Gruppen zu erstellen",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Standardmäßig kann jeder neue Gruppen erstellen. Deaktivieren Sie diese Option, damit nur Mitglieder neue Gruppen erstellen können.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Für neue Benutzer wird automatisch eine Gruppe erstellt, in der sie Administrator sind.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Jedem die Möglichkeit geben, neue Arbeitsbereiche zu erstellen",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Standardmäßig kann jeder neue Arbeitsbereiche erstellen. Deaktivieren Sie diese Option, damit nur Mitglieder neue Arbeitsbereiche erstellen können.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Für neue Benutzer wird automatisch ein Arbeitsbereich erstellt, in der sie Administrator sind.",
         "maintenance": "Wartung",
-        "settingTrackGroupUsage": "Gruppennutzung verfolgen",
-        "settingTrackGroupUsageDescription": "Aktiviert einen nächtlichen Job, der die Zeilen- und Dateinutzung pro Gruppe zählt und auf der Verwaltungsseite für Premium-Gruppen angezeigt wird."
+        "settingTrackWorkspaceUsage": "Arbeitsbereichnutzung verfolgen",
+        "settingTrackWorkspaceUsageDescription": "Aktiviert einen nächtlichen Job, der die Zeilen- und Dateinutzung pro Arbeitsbereich zählt und auf der Verwaltungsseite für Premium-Arbeitsbereiche angezeigt wird."
     },
     "undoRedoNotification": {
         "redoingText": "Deine Aktion wird wieder hergestellt",
@@ -389,13 +389,13 @@
         "prefillOrHideInfoLink": "Dynamisches Vorfüllen oder Ausblenden"
     },
     "deleteAccountSettings": {
-        "groupNotice": "Verwaiste Gruppen werden gelöscht",
-        "groupNoticeDescription": "Wenn Ihr Konto endgültig gelöscht wird, werden auch alle Gruppen und zugehörigen Daten gelöscht, für die Sie der letzte aktive Benutzer mit Admin-Rechten sind. Die unten aufgeführten Gruppen werden gelöscht, weil Sie der einzige Administrator sind. Um zu verhindern, dass sie gelöscht werden, müssen Sie vor dem Löschen Ihres Kontos einem anderen Benutzer Adminrechte erteilen.",
+        "workspaceNotice": "Verwaiste Arbeitsbereiche werden gelöscht",
+        "workspaceNoticeDescription": "Wenn Ihr Konto endgültig gelöscht wird, werden auch alle Arbeitsbereiche und zugehörigen Daten gelöscht, für die Sie der letzte aktive Benutzer mit Admin-Rechten sind. Die unten aufgeführten Arbeitsbereiche werden gelöscht, weil Sie der einzige Administrator sind. Um zu verhindern, dass sie gelöscht werden, müssen Sie vor dem Löschen Ihres Kontos einem anderen Benutzer Adminrechte erteilen.",
         "passwordConfirm": "Passwort wiederholen",
         "repeatPasswordMatchError": "Dieses Feld muss mit dem ersten Passwortfeld übereinstimmen.",
         "submitButton": "Konto löschen",
         "errorInvalidPasswordMessage": "Ihr Konto konnte nicht gelöscht werden, da Ihr Passwort ungültig ist.",
-        "orphanGroupMemberCount": "Für niemanden freigegeben|für einen Benutzer freigegeben|freigegeben für {count} Benutzer",
+        "orphanWorkspaceMemberCount": "Für niemanden freigegeben|für einen Benutzer freigegeben|freigegeben für {count} Benutzer",
         "password": "Passwort",
         "errorUserIsLastAdminTitle": "Letzter Administrator",
         "errorUserIsLastAdminMessage": "Ihr Konto konnte nicht gelöscht werden, da Sie der letzte Administrator dieser Baserow-Instanz sind.",
@@ -403,14 +403,14 @@
         "description": "Sie können die Löschung Ihres Kontos planen, indem Sie Ihr aktuelles Passwort eingeben und auf die Schaltfläche klicken. Ihr Konto wird nach {days} Tagen endgültig gelöscht. Wenn Sie sich in der Zwischenzeit erneut anmelden, wird die Löschung Ihres Kontos rückgängig gemacht.",
         "accountDeletedSuccessTitle": "Kontolöschung geplant",
         "accountDeletedSuccessMessage": "Ihr Konto wurde zur Löschung vorgesehen.",
-        "orphanGroups": "Wird nach Ablauf der Schonfrist ebenfalls endgültig gelöscht",
+        "orphanWorkspaces": "Wird nach Ablauf der Schonfrist ebenfalls endgültig gelöscht",
         "errorInvalidPasswordTitle": "Ungültiges Passwort",
-        "groupLoadingError": "Die Gruppenprüfung ist fehlgeschlagen",
-        "groupLoadingErrorDescription": "Die Überprüfung der zu löschenden Gruppen ist fehlgeschlagen, bitte aktualisieren Sie die Seite."
+        "workspaceLoadingError": "Die Arbeitsbereichprüfung ist fehlgeschlagen",
+        "workspaceLoadingErrorDescription": "Die Überprüfung der zu löschenden Arbeitsbereiche ist fehlgeschlagen, bitte aktualisieren Sie die Seite."
     },
     "dashboardSidebar": {
         "links": "Links",
-        "groups": "Gruppen",
+        "workspaces": "Arbeitsbereiche",
         "knowledgeBase": "Wissensdatenbank",
         "tutorials": "Anleitungen",
         "userSettings": "Benutzereinstellungen",
@@ -452,10 +452,10 @@
         "membersTabTitle": "Mitglieder",
         "invitesTabTitle": "Einladungen",
         "membersTable": {
-            "title": "{userAmount} Mitglieder in {groupName}",
+            "title": "{userAmount} Mitglieder in {workspaceName}",
             "actions": {
                 "copyEmail": "E-Mail kopieren",
-                "remove": "Aus der Gruppe entfernen"
+                "remove": "Aus den Arbeitsbereich entfernen"
             },
             "inviteMember": "Mitglied einladen",
             "columns": {
@@ -464,7 +464,7 @@
                 "role": "Standard-Rolle",
                 "teams": "Teams",
                 "highestRole": "Höchste Rolle",
-                "highestRoleHelpText": "Die höchste Rolle, die diesem Benutzer direkt oder von einem Team für etwas in dieser Gruppe zugewiesen wurde"
+                "highestRoleHelpText": "Die höchste Rolle, die diesem Benutzer direkt oder von einem Team für etwas in diesem Arbeitsbereich zugewiesen wurde"
             }
         },
         "invitesTable": {
@@ -477,18 +477,18 @@
                 "copyEmail": "E-Mail kopieren",
                 "remove": "Einladung abbrechen"
             },
-            "title": "{invitesAmount} Ausstehende Einladungen in {groupName}"
+            "title": "{invitesAmount} Ausstehende Einladungen in {workspaceName}"
         },
         "membersInviteModal": {
-            "title": "Gruppenmitglieder einladen",
+            "title": "Arbeitsbereichmitglieder einladen",
             "submit": "Einladung senden",
             "errors": {
-                "userAlreadyInGroup": {
-                    "title": "Der Benutzer ist bereits Mitglied der Gruppe.",
-                    "text": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied der Gruppe ist."
+                "userAlreadyInWorkspace": {
+                    "title": "Der Benutzer ist bereits Mitglied des Arbeitsbereichs.",
+                    "text": "Es ist nicht möglich, eine Einladung zu senden, wenn der Benutzer bereits Mitglied des Arbeitsbereich ist."
                 }
             },
-            "helpIconText": "Die ausgewählte Rolle wird die Standardrolle des Benutzers in dieser Gruppe."
+            "helpIconText": "Die ausgewählte Rolle wird die Standardrolle des Benutzers in diesem Arbeitsbereich."
         }
     },
     "memberAssignmentModalFooter": {
@@ -496,9 +496,9 @@
         "deselectAll": "Alle abwählen",
         "selectAll": "Alle auswählen"
     },
-    "removeFromGroupModal": {
-        "title": "Entfernen aus Gruppe bestätigen",
-        "confirmation": "Sind Sie sicher, dass Sie {name} aus {group_name} entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "removeFromWorkspaceModal": {
+        "title": "Entfernen aus Arbeitsbereich bestätigen",
+        "confirmation": "Sind Sie sicher, dass Sie {name} aus {workspaceName} entfernen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
         "remove": "Entfernen"
     },
     "UserSessionExpiredNotification": {

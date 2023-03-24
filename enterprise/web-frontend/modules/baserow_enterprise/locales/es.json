@@ -60,21 +60,21 @@
     "auditLog": {
         "title": "Registro de auditoría",
         "filterUserTitle": "Usuario",
-        "filterGroupTitle": "Grupo",
+        "filterWorkspaceTitle": "Grupo",
         "filterActionTypeTitle": "Tipo de evento",
         "filterFromTimestampTitle": "De fecha",
         "filterFromTimestamp": "De fecha",
         "filterToTimestampTitle": "Hasta la fecha",
         "filterToTimestamp": "Hasta la fecha",
         "user": "Usuario",
-        "group": "Grupo",
+        "workspace": "Grupo",
         "actionType": "Tipo de evento",
         "description": "Descripción",
         "timestamp": "Marca de tiempo",
         "exportModalTitle": "Exportar a CSV",
         "clearFilters": "Despejar",
         "allUsers": "Todos los usuarios",
-        "allGroups": "Todos los grupos",
+        "allWorkspaces": "Todos los grupos",
         "allActionTypes": "Todos los tipos de actos",
         "ip_address": "Dirección IP",
         "exportToCsv": "Exportar a CSV"
@@ -139,7 +139,7 @@
         "errorDifferentProvider": "utilice el proveedor con el que se registró originalmente.",
         "errorSsoFeatureNotActive": "La función SSO no está activa. Consulta a tu administrador.",
         "errorSignupDisabled": "El administrador ha desactivado el registro.",
-        "errorGroupInvitationEmailMismatch": "su dirección de correo electrónico no coincide con la invitación."
+        "errorWorkspaceInvitationEmailMismatch": "su dirección de correo electrónico no coincide con la invitación."
     },
     "roles": {
         "builder": {
@@ -263,7 +263,7 @@
         "sso": "Inicio de sesión único",
         "rbac": "Control de acceso basado en funciones"
     },
-    "chatwootSuportSidebarGroup": {
+    "chatwootSupportSidebarWorkspace": {
         "directSupport": "Apoyo directo"
     },
     "userTeamsField": {

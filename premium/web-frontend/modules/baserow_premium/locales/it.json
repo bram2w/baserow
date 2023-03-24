@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "È staff",
-            "isGroupAdmin": "È amministratore del gruppo",
+            "isWorkspaceAdmin": "È amministratore del gruppo",
             "active": "Attivo",
             "deactivated": "Disattivato"
         },
         "adminType": {
             "dashboard": "Dashboard",
             "users": "Utenti",
-            "groups": "Gruppi",
+            "workspaces": "Gruppi",
             "licenses": "Licenze"
         },
         "viewType": {
@@ -58,8 +58,8 @@
     "registerLicenseForm": {
         "licenseKey": "Chiave di licenza"
     },
-    "groupsAdminTable": {
-        "allGroups": "Tutti i gruppi",
+    "workspacesAdminTable": {
+        "allWorkspaces": "Tutti i gruppi",
         "id": "ID",
         "name": "Nome",
         "members": "Membri",
@@ -71,10 +71,10 @@
         "rowCount": "Numero di righe",
         "storageUsage": "Spazio disco utilizzato (MB)"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Eliminato in modo permanente"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Elimina {name}",
         "confirmation": "Sei sicuro di voler eliminare il gruppo: {name}?",
         "comment": "Il gruppo verrà eliminato in modo permanente, così come tutte le applicazioni associate. Non è possibile annullare questa azione.",
@@ -89,7 +89,7 @@
         "id": "ID",
         "username": "Nome utente",
         "name": "Nome",
-        "groups": "Gruppi",
+        "workspaces": "Gruppi",
         "lastLogin": "Ultimo accesso",
         "dateJoined": "Registrato",
         "active": "Attivo"
@@ -170,7 +170,7 @@
         "title": "Dashboard",
         "totals": "Totali",
         "totalUsers": "Totale utenti",
-        "totalGroups": "Totale gruppi",
+        "totalWorkspaces": "Totale gruppi",
         "totalApplications": "Totale applicazioni",
         "newUsers": "Nuovi utenti",
         "newUsers24h": "Nuovi utenti nelle ultime 24 ore",

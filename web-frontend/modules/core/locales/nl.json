@@ -17,10 +17,10 @@
         "delete": "Verwijder"
     },
     "sidebar": {
-        "createGroup": "Groep aanmaken",
+        "createWorkspace": "Werkruimte aanmaken",
         "inviteOthers": "Nodig anderen uit",
         "logoff": "Afmelden",
-        "errorNoGroup": "Je hebt geen groepen.",
+        "errorNoWorkspace": "Je hebt geen werkruimtes.",
         "admin": "Beheerder",
         "dashboard": "Dashboard",
         "trash": "Prullenbak",
@@ -74,58 +74,58 @@
         "passwordRepeat": "Herhaal wachtwoord"
     },
     "invitationTitle": "Uitnodiging",
-    "invitationMessage": "{uitgenodigd door} heeft je uitgenodigd om lid te worden van {groep}.",
-    "groupForm": {
+    "invitationMessage": "{invitedBy} heeft je uitgenodigd om lid te worden van {workspace}.",
+    "workspaceForm": {
         "nameLabel": "Naam"
     },
-    "leaveGroupModal": {
-        "title": "Verlaat {groep}",
-        "message": "Weet je zeker dat je de groep {groep} wilt verlaten? Je hebt dan geen toegang meer tot de relevante applicaties. Als je opnieuw toegang wilt krijgen, moet een van de beheerders je opnieuw uitnodigen. Als je de groep verlaat, zal de groep niet worden verwijderd. Alle andere leden zullen er nog steeds toegang toe hebben. Het is niet mogelijk om een groep te verlaten als je de laatste beheerder bent, omdat deze dan niet meer wordt onderhouden.",
-        "leave": "Verlaat groep"
+    "leaveWorkspaceModal": {
+        "title": "Verlaat {workspace}",
+        "message": "Weet je zeker dat je de werkruimte {workspace} wilt verlaten? Je hebt dan geen toegang meer tot de relevante applicaties. Als je opnieuw toegang wilt krijgen, moet een van de beheerders je opnieuw uitnodigen. Als je de werkruimte verlaat, zal de werkruimte niet worden verwijderd. Alle andere leden zullen er nog steeds toegang toe hebben. Het is niet mogelijk om een werkruimte te verlaten als je de laatste beheerder bent, omdat deze dan niet meer wordt onderhouden.",
+        "leave": "Verlaat werkruimte"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Leden",
         "createApplication": "Nieuwe aanmaken"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Uitnodiging",
-        "message": "{by} heeft je uitgenodigd om lid te worden van {group}.",
+        "message": "{by} heeft je uitgenodigd om lid te worden van {workspace}.",
         "reject": "Weigeren",
         "accept": "Accepteren"
     },
-    "groupMemberModal": {
-        "membersModalTitle": "Leden van {group}",
+    "workspaceMemberModal": {
+        "membersModalTitle": "Leden van {workspace}",
         "userDescription": "{user} - lid geworden {since} geleden",
         "invitationDescription": "uitgenodigd {since} geleden",
         "sendInvite": "Uitnodiging versturen",
-        "userAlreadyInGroupTitle": "Gebruiker zit al in de groep.",
-        "userAlreadyInGroupText": "Het is niet mogelijk een uitnodiging te versturen als de gebruiker al lid is van de groep.",
+        "userAlreadyInWorkspaceTitle": "Gebruiker zit al in de werkruimte.",
+        "userAlreadyInWorkspaceText": "Het is niet mogelijk een uitnodiging te versturen als de gebruiker al lid is van de werkruimte.",
         "userDescriptionPendingDeletion": "{user} - in afwachting van verwijdering"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Uitnodigen per e-mail",
         "optionalMessagePlaceholder": "Optioneel bericht",
         "errorInvalidEmail": "Voer een geldig e-mail adres in.",
         "errorTooLongMessage": "Berichten zijn beperkt tot {amount} tekens."
     },
-    "groupsContext": {
-        "search": "Zoek groepen",
+    "workspacesContext": {
+        "search": "Zoek werkruimtes",
         "noResults": "Geen resultaten gevonden",
-        "createGroup": "Groep aanmaken"
+        "createWorkspace": "Werkruimte aanmaken"
     },
-    "groupContext": {
-        "renameGroup": "Hernoem groep",
+    "workspaceContext": {
+        "renameWorkspace": "Hernoem werkruimte",
         "members": "Leden",
         "viewTrash": "Bekijk Prullenbak",
-        "leaveGroup": "Verlaat groep",
-        "deleteGroup": "Groep verwijderen"
+        "leaveWorkspace": "Verlaat werkruimte",
+        "deleteWorkspace": "werkruimte verwijderen"
     },
-    "createGroupModal": {
-        "createNew": "Nieuwe groep aanmaken",
-        "add": "Groep toevoegen",
-        "defaultName": "Naamloze groep",
+    "createWorkspaceModal": {
+        "createNew": "Nieuwe werkruimte aanmaken",
+        "add": "werkruimte toevoegen",
+        "defaultName": "Naamloze werkruimte",
         "permissionDeniedTitle": "Toestemming geweigerd",
-        "permissionDeniedBody": "U heeft niet de vereiste rechten om een nieuwe groep te maken."
+        "permissionDeniedBody": "U heeft niet de vereiste rechten om een nieuwe werkruimte te maken."
     },
     "templateCategories": {
         "search": "Zoek sjablonen",
@@ -136,7 +136,7 @@
     },
     "trashSidebar": {
         "title": "Prullenbak",
-        "unnamedGroup": "Naamloze groep {id}"
+        "unnamedWorkspace": "Naamloze werkruimte {id}"
     },
     "trashContents": {
         "message": "Herstel items verwijderd in de afgelopen {duration}",
@@ -162,9 +162,9 @@
         "andMore": "... en {count} meer"
     },
     "trashModal": {
-        "emptyTitle": "Geen groepen gevonden",
-        "emptyMessage": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om die aan te maken moet je eerst een groep maken.",
-        "emptyMessageWithoutCreatePermission": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om ze aan te maken moet je eerst door een beheerder bij een groep worden uitgenodigd."
+        "emptyTitle": "Geen werkruimtes gevonden",
+        "emptyMessage": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om die aan te maken moet je eerst een werkruimte maken.",
+        "emptyMessageWithoutCreatePermission": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om ze aan te maken moet je eerst door een beheerder bij een werkruimte worden uitgenodigd."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Uploaden vanaf een URL",
@@ -212,16 +212,16 @@
         "alertText": "Als je Baserow nuttig vindt, dan waarderen we het zeer als je ons wilt sponsoren, sterren wilt geven of ons met anderen wilt delen. Door ons te sponsoren op GitHub krijg je vroegtijdige toegang tot de premium functies!",
         "tweetContent": "Check @baserow, een open source no-code database tool en Airtable alternatief!",
         "redditTitle": "'Baserow - Een open source no-code database",
-        "noGroupTitle": "Geen groepen gevonden",
-        "noGroupText": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om die te maken moet je eerst een groep aanmaken.",
-        "createGroup": "Groep aanmaken",
+        "noWorkspaceTitle": "Geen werkruimtes gevonden",
+        "noWorkspaceText": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om die te maken moet je eerst een werkruimte aanmaken.",
+        "createWorkspace": "Werkruimte aanmaken",
         "becomeGithubSponsor": "Word een GitHub sponsor",
         "starOnGitlab": "Geef ons een ster op Gitlab",
         "shareOnTwitter": "Tweet over Baserow",
         "shareOnReddit": "Deel op Reddit",
         "shareOnFacebook": "Deel op Facebook",
         "shareOnLinkedIn": "Deel op LinkedIn",
-        "noGroupTextWithoutCreatePermission": "Je bent geen lid van een groep. Toepassingen zoals databases horen bij een groep, dus om ze aan te maken moet je eerst door een beheerder bij een groep worden uitgenodigd."
+        "noWorkspaceTextWithoutCreatePermission": "Je bent geen lid van een werkruimte. Toepassingen zoals databases horen bij een werkruimte, dus om ze aan te maken moet je eerst door een beheerder bij een werkruimte worden uitgenodigd."
     },
     "login": {
         "title": "Inloggen",
@@ -280,18 +280,18 @@
         "settingAllowNewAccountsName": "Toestaan aanmaken van nieuwe accounts",
         "settingAllowNewAccountsDescription": "Standaard kan elke gebruiker die je Baserow-domein bezoekt zich aanmelden voor een nieuw account.",
         "enabled": "ingeschakeld",
-        "settingAllowSignupsViaGroupInvitationsName": "Aanmeldingen via groepsuitnodigingen toestaan",
-        "settingAllowSignupsViaGroupInvitationDescription": "Zelfs als het aanmaken van nieuwe accounts is uitgeschakeld, kunnen direct uitgenodigde gebruikers met deze optie toch een account aanmaken.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Aanmeldingen via werkruimte uitnodigingen toestaan",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Zelfs als het aanmaken van nieuwe accounts is uitgeschakeld, kunnen direct uitgenodigde gebruikers met deze optie toch een account aanmaken.",
         "userDeletionGraceDelay": "Gebruiker verwijderen",
         "settingUserDeletionGraceDelay": "Respijtperiode",
         "settingUserDeletionGraceDelayDescription": "Dit is het aantal dagen zonder login waarna een voor verwijdering geplande account permanent wordt verwijderd.",
         "invalidAccountDeletionGraceDelay": "Deze waarde is vereist en moet een positief geheel getal zijn kleiner dan 32000",
-        "settingAllowNonStaffCreateGroupOperation": "Laat iedereen nieuwe groepen maken",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Standaard kan iedereen nieuwe groepen aanmaken. Schakel dit uit om alleen staff toe te staan nieuwe groepen aan te maken.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Als deze instelling is ingeschakeld, wordt voor nieuwe gebruikers automatisch een groep aangemaakt waarin ze een beheerder zijn, zodat ze voor de facturering als beheerder worden gerapporteerd. Om dit te voorkomen, schakelt u deze instelling uit en nieuw uitgenodigde gebruikers beginnen alleen met de rol waarmee ze zijn uitgenodigd.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Laat iedereen nieuwe werkruimtes maken",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Standaard kan iedereen nieuwe werkruimtes aanmaken. Schakel dit uit om alleen staff toe te staan nieuwe werkruimtes aan te maken.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Als deze instelling is ingeschakeld, wordt voor nieuwe gebruikers automatisch een werkruimte aangemaakt waarin ze een beheerder zijn, zodat ze voor de facturering als beheerder worden gerapporteerd. Om dit te voorkomen, schakelt u deze instelling uit en nieuw uitgenodigde gebruikers beginnen alleen met de rol waarmee ze zijn uitgenodigd.",
         "maintenance": "Onderhoud",
-        "settingTrackGroupUsage": "Groepsgebruik bijhouden",
-        "settingTrackGroupUsageDescription": "Schakelt een nachtelijke taak in die het rij- en bestandsgebruik per groep telt, weergegeven op de beheerpagina van de premium groep."
+        "settingTrackWorkspaceUsage": "Werkruimte gebruik bijhouden",
+        "settingTrackWorkspaceUsageDescription": "Schakelt een nachtelijke taak in die het rij- en bestandsgebruik per werkruimte telt, weergegeven op de beheerpagina van de premium werkruimte."
     },
     "copyingNotification": {
         "title": "Kopiëren...",
@@ -385,18 +385,18 @@
         "prefillOrHideInfoLink": "Dynamisch invullen of verbergen"
     },
     "deleteAccountSettings": {
-        "orphanGroups": "Zal ook permanent worden verwijderd na de respijtperiode",
+        "orphanWorkspaces": "Zal ook permanent worden verwijderd na de respijtperiode",
         "passwordConfirm": "Herhaal wachtwoord",
         "repeatPasswordMatchError": "Dit veld moet overeenkomen met het eerste wachtwoordveld.",
         "submitButton": "Account verwijderen",
         "errorUserIsLastAdminTitle": "Laatste beheerder",
-        "groupLoadingError": "Groepen controle is mislukt",
-        "groupLoadingErrorDescription": "Het controleren van de te verwijderen groepen is mislukt, vernieuw de pagina.",
+        "workspaceLoadingError": "Werkruimtes controle is mislukt",
+        "workspaceLoadingErrorDescription": "Het controleren van de te verwijderen werkruimtes is mislukt, vernieuw de pagina.",
         "description": "U kunt de verwijdering van uw account plannen door uw huidige wachtwoord in te voeren en op de knop te klikken. Uw account zal permanent worden verwijderd na {days} dagen. In de tussentijd, als u opnieuw inlogt, zal de verwijdering van uw account worden geannuleerd.",
-        "groupNotice": "Weesgroepen worden verwijderd",
-        "orphanGroupMemberCount": "gedeeld met niemand|gedeeld met één gebruiker|gedeeld met {count} gebruikers",
+        "workspaceNotice": "Wees werkruimtes worden verwijderd",
+        "orphanWorkspaceMemberCount": "gedeeld met niemand|gedeeld met één gebruiker|gedeeld met {count} gebruikers",
         "title": "Account verwijderen",
-        "groupNoticeDescription": "Wanneer uw account permanent wordt verwijderd, worden alle groepen en bijbehorende gegevens waarvoor u de laatste actieve gebruiker met beheerdersrechten bent ook verwijderd. De hieronder getoonde groepen worden verwijderd omdat u de enige beheerder bent. Om te voorkomen dat ze worden verwijderd moet u eerst een andere gebruiker adminrechten geven voordat u uw account verwijdert.",
+        "workspaceNoticeDescription": "Wanneer uw account permanent wordt verwijderd, worden alle werkruimtes en bijbehorende gegevens waarvoor u de laatste actieve gebruiker met beheerdersrechten bent ook verwijderd. De hieronder getoonde werkruimtes worden verwijderd omdat u de enige beheerder bent. Om te voorkomen dat ze worden verwijderd moet u eerst een andere gebruiker adminrechten geven voordat u uw account verwijdert.",
         "password": "Wachtwoord",
         "errorInvalidPasswordTitle": "Ongeldig wachtwoord",
         "errorInvalidPasswordMessage": "Uw account kan niet worden verwijderd omdat uw wachtwoord ongeldig is.",
@@ -409,7 +409,7 @@
         "content": "Voorbereiding van uw gegevens"
     },
     "dashboardSidebar": {
-        "groups": "Groepen",
+        "workspaces": "Werkruimtes",
         "links": "Links",
         "knowledgeBase": "Kennisbank",
         "tutorials": "Tutorials",
@@ -453,11 +453,11 @@
                 "name": "Naam",
                 "teams": "Teams",
                 "highestRole": "Hoogste rol",
-                "highestRoleHelpText": "De hoogste rol die deze gebruiker rechtstreeks of vanuit een team aan hem is toegekend, op alles in deze groep"
+                "highestRoleHelpText": "De hoogste rol die deze gebruiker rechtstreeks of vanuit een team aan hem is toegekend, op alles in deze werkruimte"
             },
             "actions": {
                 "copyEmail": "E-mail kopiëren",
-                "remove": "Verwijderen uit groep"
+                "remove": "Verwijderen uit werkruimte"
             },
             "title": "{userAmount} Leden in {groupName}",
             "inviteMember": "Lid uitnodigen"
@@ -477,24 +477,24 @@
         },
         "membersInviteModal": {
             "errors": {
-                "userAlreadyInGroup": {
-                    "title": "Gebruiker zit al in de groep.",
-                    "text": "Het is niet mogelijk een uitnodiging te sturen wanneer de gebruiker al lid is van de groep."
+                "userAlreadyInWorkspace": {
+                    "title": "Gebruiker zit al in de werkruimtes.",
+                    "text": "Het is niet mogelijk een uitnodiging te sturen wanneer de gebruiker al lid is van de werkruimtes."
                 }
             },
             "submit": "Stuur uitnodiging",
-            "title": "Groepsleden uitnodigen",
-            "helpIconText": "De geselecteerde rol wordt de standaard rol van de gebruiker in deze groep."
+            "title": "Werkruimte leden uitnodigen",
+            "helpIconText": "De geselecteerde rol wordt de standaard rol van de gebruiker in deze werkruimte."
         },
         "invitesTabTitle": "Uitnodigingen"
     },
     "crudTableSearch": {
         "search": "Zoeken"
     },
-    "removeFromGroupModal": {
-        "title": "Bevestig verwijdering uit de groep",
+    "removeFromWorkspaceModal": {
+        "title": "Bevestig verwijdering uit de werkruimte",
         "remove": "Verwijderen",
-        "confirmation": "Weet u zeker dat u {naam} wilt verwijderen uit {group_name}? Deze actie kan niet ongedaan worden gemaakt."
+        "confirmation": "Weet u zeker dat u {naam} wilt verwijderen uit {workspaceName}? Deze actie kan niet ongedaan worden gemaakt."
     },
     "UserSessionExpiredNotification": {
         "title": "Sessie verlopen",

@@ -92,7 +92,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "Nom",
-        "groupLabel": "Groupe"
+        "workspaceLabel": "Projet"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "Vous devez avoir au moins une base de données afin de consulter la documentation de l'API."
@@ -662,7 +662,7 @@
         "title": "sauvegardes",
         "snapshotRestoredErrorMessage": "La sauvegarde n'a pas pu être restaurée. Veuillez réessayer plus tard.",
         "description": "Les sauvegardes sont une copie complète de votre base de données au moment où elles ont été créés. Une duplication des données sera créée lors de la restauration. Les sauvegardes sont automatiquement supprimées après un an.",
-        "descriptionLimits": "Vous pouvez avoir un maximum de 0 sauvegarde par groupe. | Vous pouvez avoir un maximum de 1 sauvegarde par groupe. | Vous pouvez avoir un maximum de {n} sauvegardes par groupe.",
+        "descriptionLimits": "Vous pouvez avoir un maximum de 0 sauvegarde par projet. | Vous pouvez avoir un maximum de 1 sauvegarde par projet. | Vous pouvez avoir un maximum de {n} sauvegardes par projet.",
         "createLabel": "Créer une nouvelle sauvegarde",
         "create": "Créer une sauvegarde",
         "snapshotDeletedErrorTitle": "Une erreur est survenue",

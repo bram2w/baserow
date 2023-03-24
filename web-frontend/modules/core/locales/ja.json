@@ -22,11 +22,11 @@
         "installedTitle": "テンプレートをインストールしました"
     },
     "sidebar": {
-        "createGroup": "グループ作成",
+        "createWorkspace": "グループ作成",
         "inviteOthers": "招待する",
         "members": "メンバー",
         "logoff": "ログオフ",
-        "errorNoGroup": "グループがありません。",
+        "errorNoWorkspace": "グループがありません。",
         "admin": "管理者",
         "dashboard": "ダッシュボード",
         "trash": "ゴミ箱",
@@ -61,10 +61,10 @@
     "deleteAccountSettings": {
         "title": "アカウント削除",
         "description": "パスワードを入力してボタンをクリックすることで、あなたのアカウントの削除をスケジュールします。あなたのアカウントは {days} 日後に完全に削除されます。その間にログインをすると、アカウントの削除はキャンセルされます。",
-        "groupNotice": "どこにも所属しないグループは削除されます",
-        "groupNoticeDescription": "アカウントが完全に削除されると、あなたしか管理者のいないグループも、一緒に削除されます。下記のグループが対象になります。グループを削除しないためには、あなたのアカウントを削除する前に、他のユーザーに管理権限を与える必要があります。",
-        "orphanGroups": "猶予期間後に一緒に完全に削除されます",
-        "orphanGroupMemberCount": "誰とも共有していません|１名のユーザーと共有しています| {count} 人のユーザーと共有しています",
+        "workspaceNotice": "どこにも所属しないグループは削除されます",
+        "workspaceNoticeDescription": "アカウントが完全に削除されると、あなたしか管理者のいないグループも、一緒に削除されます。下記のグループが対象になります。グループを削除しないためには、あなたのアカウントを削除する前に、他のユーザーに管理権限を与える必要があります。",
+        "orphanWorkspaces": "猶予期間後に一緒に完全に削除されます",
+        "orphanWorkspaceMemberCount": "誰とも共有していません|１名のユーザーと共有しています| {count} 人のユーザーと共有しています",
         "password": "パスワード",
         "passwordConfirm": "再度パスワードを入力して下さい",
         "repeatPasswordMatchError": "最初のパスワードに一致する必要があります。",
@@ -75,8 +75,8 @@
         "errorUserIsLastAdminMessage": "この Baserow インスタンスの最後の管理者なので、アカウントを削除出来ません。",
         "accountDeletedSuccessTitle": "アカウントの削除が予定されました",
         "accountDeletedSuccessMessage": "あなたのアカウントは削除予定されました。",
-        "groupLoadingError": "グループのチェックに失敗しました",
-        "groupLoadingErrorDescription": "グループ削除のチェックで失敗しました、ページを再読込して下さい。"
+        "workspaceLoadingError": "グループのチェックに失敗しました",
+        "workspaceLoadingErrorDescription": "グループ削除のチェックで失敗しました、ページを再読込して下さい。"
     },
     "error": {
         "alreadyExistsTitle": "ユーザーは既に存在します",
@@ -100,51 +100,51 @@
     },
     "invitationTitle": "招待",
     "invitationMessage": "{invitedBy} から {group} への招待が届きました。",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": "名前"
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "{group} を退出する",
         "message": "本当にグループ {group} を退出しますか？退出すると 関連するアプリケーションを使えなくなり、再度アクセスするためには、再度管理者からの招待をもらう必要があります。グループを退出しても、データは削除されません。他のメンバーはまだグループにアクセスできます。最後の管理者は、退出するとグループの管理ができなくなるので、グループを退出出来ません。",
         "leave": "グループ退出"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "createApplication": "新規作成"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "招待",
         "message": "{by} がグループ {group} へ招待しています。",
         "reject": "拒否",
         "accept": "承諾する"
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "{group} メンバー",
         "userDescription": "{user} - {since} 前から参加",
         "invitationDescription": "{since} 前に招待",
         "sendInvite": "招待を送る",
-        "userAlreadyInGroupTitle": "ユーザーは既にグループに参加しています。",
+        "userAlreadyInWorkspaceTitle": "ユーザーは既にグループに参加しています。",
         "userDescriptionPendingDeletion": "{user} - 削除処理中",
-        "userAlreadyInGroupText": "ユーザーは既にグループ・メンバーなので招待状を送付出来ません。"
+        "userAlreadyInWorkspaceText": "ユーザーは既にグループ・メンバーなので招待状を送付出来ません。"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Eメールで招待する",
         "optionalMessagePlaceholder": "追加のメッセージ",
         "errorInvalidEmail": "正しいEメールアドレスを入力して下さい。",
         "errorTooLongMessage": "メッセージは {amount} 文字以内にして下さい。"
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "グループ検索",
         "noResults": "何も見つかりませんでした",
-        "createGroup": "グループ作成"
+        "createWorkspace": "グループ作成"
     },
-    "groupContext": {
-        "renameGroup": "グループ名変更",
+    "workspaceContext": {
+        "renameWorkspace": "グループ名変更",
         "members": "メンバー",
         "viewTrash": "ゴミ箱を見る",
-        "leaveGroup": "グループ退出",
-        "deleteGroup": "グループ削除"
+        "leaveWorkspace": "グループ退出",
+        "deleteWorkspace": "グループ削除"
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "グループ新規作成",
         "defaultName": "新しいグループ",
         "add": "グループ追加",
@@ -160,7 +160,7 @@
     },
     "trashSidebar": {
         "title": "ゴミ箱",
-        "unnamedGroup": "新しいグループ {id}"
+        "unnamedWorkspace": "新しいグループ {id}"
     },
     "trashContents": {
         "message": "{duration} 前からの削除されたアイテムを復元する",
@@ -277,10 +277,10 @@
         "alertText": "Baserow が役に立つと思って頂ける方は、スターを付けるかシェアしてもらえると幸いです。 Baserow をシェアしてもらうと、製品をよりよく便利に改良することが出来るようになります。",
         "tweetContent": "Airtableライクな、オープン・ソースのノーコード・データベース・ツール、@baserow に注目して下さい！",
         "redditTitle": "Baserow - オープン・ソース・ノーコード・データベース",
-        "noGroupTitle": "グループが見つかりません",
-        "noGroupText": "あなたはどのグループにも属していません。データベースなどのアプリケーションはグループの持ち物です。利用するには、グループを作成する必要があります。",
-        "noGroupTextWithoutCreatePermission": "あなたはどのグループにも属していません。データベースなどのアプリケーションはグループの持ち物です。利用するには、まず管理者よりグループへ招待してもらう必要があります。",
-        "createGroup": "グループ作成",
+        "noWorkspaceTitle": "グループが見つかりません",
+        "noWorkspaceText": "あなたはどのグループにも属していません。データベースなどのアプリケーションはグループの持ち物です。利用するには、グループを作成する必要があります。",
+        "noWorkspaceTextWithoutCreatePermission": "あなたはどのグループにも属していません。データベースなどのアプリケーションはグループの持ち物です。利用するには、まず管理者よりグループへ招待してもらう必要があります。",
+        "createWorkspace": "グループ作成",
         "becomeGithubSponsor": "GitHub スポンサになる",
         "starOnGitlab": "GitLab でスターをつける",
         "shareOnTwitter": "Baserow についてツイート",
@@ -289,7 +289,7 @@
         "shareOnLinkedIn": "LinkedIn でシェア"
     },
     "dashboardSidebar": {
-        "groups": "グループ",
+        "workspaces": "グループ",
         "links": "リンク",
         "knowledgeBase": "ナレッジ・ベース",
         "tutorials": "チュートリアル",
@@ -353,16 +353,19 @@
         "settingAllowResetPasswordWarning": "パスワードを忘れると、システムに二度とログインできなくなる可能性があります。忘れないようにして下さい。",
         "settingAllowNewAccountsName": "新規アカウント登録を許可する",
         "settingAllowNewAccountsDescription": "デフォルトでは、Baserow のサイトを訪れる誰でも新規アカウントを登録出来ます。",
-        "settingAllowSignupsViaGroupInvitationsName": "グループからの招待でのアカウント登録を許可する",
-        "settingAllowSignupsViaGroupInvitationDescription": "アカウントの新規登録が利用できなくても、このオプション設定を使えば、招待されたユーザーはアカウントを作成出来るようになります。",
-        "settingAllowNonStaffCreateGroupOperation": "新しいグループの登録を全ユーザーに許可する",
-        "settingAllowNonStaffCreateGroupOperationDescription": "デフォルトでは、誰でも新しいグループを作成出来ます。この機能を使えなくすると、管理者だけが新しいグループを作成出来るようになります。",
-        "settingAllowNonStaffCreateGroupOperationWarning": "この設定を利用すると、新しいユーザーには新しいグループが割り振られ、管理者権限を持つことになります。管理者権限のあるユーザーには課金情報が送信されます。これを防ぐには、この設定は利用せず、招待機能を利用して、ユーザーを招待したグループへ、招待した役割で、追加するようにします。",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "グループからの招待でのアカウント登録を許可する",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "アカウントの新規登録が利用できなくても、このオプション設定を使えば、招待されたユーザーはアカウントを作成出来るようになります。",
+        "settingAllowNonStaffCreateWorkspaceOperation": "新しいグループの登録を全ユーザーに許可する",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "デフォルトでは、誰でも新しいグループを作成出来ます。この機能を使えなくすると、管理者だけが新しいグループを作成出来るようになります。",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "新しいユーザーには新しいグループが割り振られ、管理者権限になります。",
         "userDeletionGraceDelay": "ユーザー削除",
         "settingUserDeletionGraceDelay": "猶予期間",
         "settingUserDeletionGraceDelayDescription": "削除されたユーザーが、再度ログインされずに、完全に削除されるまでの猶予期間。",
         "invalidAccountDeletionGraceDelay": "必須項目で、正の整数で32000以下の値にして下さい",
-        "enabled": "利用可能"
+        "enabled": "利用可能",
+        "settingTrackWorkspaceUsage": "グループの利用を分析する",
+        "maintenance": "メンテナンス",
+        "settingTrackWorkspaceUsageDescription": "夜間にグループごとの利用行数とファイルの利用量を計算して、プレミアム・グループ・管理者ページに表示出来るようにします。"
     },
     "formSidebar": {
         "actions": {
@@ -459,7 +462,9 @@
                 "name": "名前",
                 "email": "Eメール",
                 "role": "既定のロール",
-                "teams": "チーム"
+                "teams": "チーム",
+                "highestRole": "最も高いロール",
+                "highestRoleHelpText": "このユーザに割り当てられた、最も高い役割"
             },
             "actions": {
                 "copyEmail": "Eメールをコピー",
@@ -483,7 +488,7 @@
             "submit": "招待を送信",
             "helpIconText": "選択されたロールが、このグループのユーザーの既定のロールになります。",
             "errors": {
-                "userAlreadyInGroup": {
+                "userAlreadyInWorkspace": {
                     "title": "ユーザーはすでにグループに所属しています。",
                     "text": "ユーザーがすでにグループのメンバーなので招待を送信出来ません。"
                 }
@@ -499,12 +504,15 @@
         "deselectAll": "全ての選択を解除する",
         "selectAll": "全てを選択する"
     },
-    "removeFromGroupModal": {
+    "removeFromWorkspaceModal": {
         "title": "グループからの削除を確定",
-        "confirmation": "本当に {name} を {group_name} から削除しますか？ この処理はやり直し出来ません。",
+        "confirmation": "本当に {name} を {workspaceName} から削除しますか？ この処理はやり直し出来ません。",
         "remove": "削除"
     },
     "editRoleContext": {
         "billableRolesLink": "課金ロール・ドキュメント"
+    },
+    "highestPaidRoleField": {
+        "billable": "課金可能"
     }
 }

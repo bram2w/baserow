@@ -87,7 +87,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "",
-        "groupLabel": ""
+        "workspaceLabel": ""
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": ""

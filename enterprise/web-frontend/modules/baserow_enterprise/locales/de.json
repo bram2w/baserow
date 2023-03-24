@@ -1,12 +1,12 @@
 {
     "enterprise": {
         "license": "Enterprise",
-        "overflowWarning": "Sie haben zu viele Nicht-Beobachter-Benutzer und haben alle Ihre bezahlten Plätze aufgebraucht. Ändern Sie die Benutzer auf der Mitgliederseite jeder Gruppe, damit sie zu Beobachtern werden.",
+        "overflowWarning": "Sie haben zu viele Nicht-Beobachter-Benutzer und haben alle Ihre bezahlten Plätze aufgebraucht. Ändern Sie die Benutzer auf der Mitgliederseite jeder Arbeitsbereich, damit sie zu Beobachtern werden.",
         "rbac": "RBAC",
         "sidebarTooltip": "Ihr Konto hat Zugriff auf die Enterprise-Funktionen",
         "deactivated": "Verfügbar in der Enterprise-Version",
         "sso": "SSO",
-        "licenseDescription": "Betrachter sind bei Baserow Enterprise kostenlos. Wenn ein Benutzer eine andere Rolle in einer Gruppe hat, wird er automatisch einen kostenpflichtigen Platz verwenden."
+        "licenseDescription": "Betrachter sind bei Baserow Enterprise kostenlos. Wenn ein Benutzer eine andere Rolle in einer Arbeitsbereich hat, wird er automatisch einen kostenpflichtigen Platz verwenden."
     },
     "clientHandler": {
         "cannotDisableAllAuthProvidersTitle": "Zuletzt aktivierter Anbieter",
@@ -17,7 +17,7 @@
     },
     "updateTeamModal": {
         "invalidNameTitle": "Bitte verwenden Sie einen anderen Namen",
-        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Gruppe verwendet.",
+        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Arbeitsbereich verwendet.",
         "title": "{teamName} aktualisieren"
     },
     "manageTeamForm": {
@@ -51,14 +51,14 @@
     "auditLog": {
         "title": "Audit-Log",
         "filterUserTitle": "Benutzer",
-        "filterGroupTitle": "Gruppe",
+        "filterWorkspaceTitle": "Arbeitsbereich",
         "filterActionTypeTitle": "Ereignistyp",
         "filterFromTimestampTitle": "Ab Datum",
         "filterFromTimestamp": "Von Datum",
         "filterToTimestampTitle": "Bis Datum",
         "filterToTimestamp": "Bis Datum",
         "user": "Benutzer",
-        "group": "Gruppe",
+        "workspace": "Arbeitsbereich",
         "actionType": "Ereignistyp",
         "description": "Beschreibung",
         "ip_address": "IP-Adresse",
@@ -66,7 +66,7 @@
         "exportModalTitle": "Exportieren in CSV",
         "clearFilters": "Zurücksetzen",
         "allUsers": "Alle Nutzer",
-        "allGroups": "Alle Gruppen",
+        "allWorkspaces": "Alle Arbeitsbereiche",
         "allActionTypes": "Alle Ereignistypen",
         "timestamp": "Zeitstempel"
     },
@@ -115,7 +115,7 @@
         "errorSsoFeatureNotActive": "SSO Funktion ist nicht aktiv. Bitte kontaktieren Sie Ihren Administrator.",
         "errorInvalidSamlResponse": "SAML-Antwort ist ungültig.",
         "errorUserDeactivated": "Benutzer wurde deaktiviert.",
-        "errorGroupInvitationEmailMismatch": "ihre e-mail-adresse stimmt nicht mit der einladung überein.",
+        "errorWorkspaceInvitationEmailMismatch": "ihre e-mail-adresse stimmt nicht mit der einladung überein.",
         "errorSignupDisabled": "Die Registrierung wurde vom Administrator deaktiviert.",
         "errorDifferentProvider": "verwenden Sie bitte den Anbieter, bei dem Sie sich ursprünglich angemeldet haben.",
         "help": "Bitte kontaktieren Sie Ihren Administrator für Hilfe.",
@@ -126,7 +126,7 @@
     "roles": {
         "admin": {
             "name": "Administrator",
-            "description": "Sie können Gruppen und Anwendungen vollständig konfigurieren und bearbeiten."
+            "description": "Sie können Arbeitsbereiche und Anwendungen vollständig konfigurieren und bearbeiten."
         },
         "builder": {
             "name": "Ersteller",
@@ -134,7 +134,7 @@
         },
         "editor": {
             "name": "Bearbeiter",
-            "description": "Kann Daten vollständig bearbeiten, aber keine Anwendungen oder Gruppen konfigurieren."
+            "description": "Kann Daten vollständig bearbeiten, aber keine Anwendungen oder Arbeitsbereiche konfigurieren."
         },
         "viewer": {
             "name": "Betrachter",
@@ -150,7 +150,7 @@
         },
         "noRoleLowPriority": {
             "name": "Keine Rolle",
-            "description": "Holen Sie sich die Standard-Gruppenrolle aus ihren Teams."
+            "description": "Holen Sie sich die Standard-Arbeitsbereichrolle aus ihren Teams."
         }
     },
     "memberRolesModal": {
@@ -165,7 +165,7 @@
         "subheading": "Mit Teams können Sie Berechtigungen in großen Mengen an mehrere Personen vergeben oder einschränken."
     },
     "createTeamModal": {
-        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Gruppe verwendet.",
+        "invalidNameMessage": "Dieser Teamname wird bereits in der angegebenen Arbeitsbereich verwendet.",
         "title": "Team erstellen",
         "invalidNameTitle": "Bitte verwenden Sie einen anderen Namen"
     },
@@ -189,17 +189,17 @@
             "everyoneHasAccess": "Jeder im Workspace {name} kann auf diese Datenbank zugreifen.",
             "onlyYouHaveAccess": "Nur Sie können auf diese Datenbank zugreifen.",
             "warningTitle": "Andere Benutzer könnten den Zugang erben!",
-            "warningMessage": "Andere Benutzer erben möglicherweise den Zugriff über ihre jeweiligen Rollen in der übergeordneten Gruppe.",
-            "headerTooltip": "Datenbankrollen überschreiben Gruppenrollen."
+            "warningMessage": "Andere Benutzer erben möglicherweise den Zugriff über ihre jeweiligen Rollen in der übergeordneten Arbeitsbereich.",
+            "headerTooltip": "Datenbankrollen überschreiben Arbeitsbereichnrollen."
         },
         "table": {
             "title": "{name} Tabelle",
             "selectMembers": "Mitglieder auswählen",
-            "warningMessage": "Andere Benutzer können den Zugriff über ihre jeweiligen Rollen in der übergeordneten Datenbank oder Gruppe erben.",
+            "warningMessage": "Andere Benutzer können den Zugriff über ihre jeweiligen Rollen in der übergeordneten Datenbank oder Arbeitsbereich erben.",
             "everyoneHasAccess": "Jeder im Workspace {name} kann auf diese Datenbank zugreifen.",
             "onlyYouHaveAccess": "Nur Sie können auf diese Tabelle zugreifen.",
             "warningTitle": "Andere Benutzer könnten den Zugriff erben!",
-            "headerTooltip": "Tabellenrollen haben Vorrang vor Gruppen- und Datenbankrollen."
+            "headerTooltip": "Tabellenrollen haben Vorrang vor Arbeitsbereich- und Datenbankrollen."
         }
     },
     "memberRolesShareToggle": {
@@ -259,7 +259,7 @@
         "sso": "Single Sign On",
         "rbac": "Role-based access control"
     },
-    "chatwootSuportSidebarGroup": {
+    "chatwootSupportSidebarWorkspace": {
         "directSupport": "Direkte Unterstützung"
     },
     "userTeamsField": {

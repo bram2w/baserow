@@ -22,11 +22,11 @@
         "installedTitle": ""
     },
     "sidebar": {
-        "createGroup": "",
+        "createWorkspace": "",
         "inviteOthers": "",
         "members": "",
         "logoff": "",
-        "errorNoGroup": "",
+        "errorNoWorkspace": "",
         "admin": "",
         "dashboard": "",
         "trash": "",
@@ -61,10 +61,10 @@
     "deleteAccountSettings": {
         "title": "",
         "description": "",
-        "groupNotice": "",
-        "groupNoticeDescription": "",
-        "orphanGroups": "",
-        "orphanGroupMemberCount": "",
+        "workspaceNotice": "",
+        "workspaceNoticeDescription": "",
+        "orphanWorkspaces": "",
+        "orphanWorkspaceMemberCount": "",
         "password": "",
         "passwordConfirm": "",
         "repeatPasswordMatchError": "",
@@ -75,8 +75,8 @@
         "errorUserIsLastAdminMessage": "",
         "accountDeletedSuccessTitle": "",
         "accountDeletedSuccessMessage": "",
-        "groupLoadingError": "",
-        "groupLoadingErrorDescription": ""
+        "workspaceLoadingError": "",
+        "workspaceLoadingErrorDescription": ""
     },
     "error": {
         "alreadyExistsTitle": "",
@@ -100,51 +100,51 @@
     },
     "invitationTitle": "",
     "invitationMessage": "",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": ""
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "",
         "message": "",
         "leave": ""
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "createApplication": ""
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "",
         "message": "",
         "reject": "",
         "accept": ""
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "",
         "userDescription": "",
         "invitationDescription": "",
         "sendInvite": "",
-        "userAlreadyInGroupTitle": "",
+        "userAlreadyInWorkspaceTitle": "",
         "userDescriptionPendingDeletion": "",
-        "userAlreadyInGroupText": ""
+        "userAlreadyInWorkspaceText": ""
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "",
         "optionalMessagePlaceholder": "",
         "errorInvalidEmail": "",
         "errorTooLongMessage": ""
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "",
         "noResults": "",
-        "createGroup": ""
+        "createWorkspace": ""
     },
-    "groupContext": {
-        "renameGroup": "",
+    "workspaceContext": {
+        "renameWorkspace": "",
         "members": "",
         "viewTrash": "",
-        "leaveGroup": "",
-        "deleteGroup": ""
+        "leaveWorkspace": "",
+        "deleteWorkspace": ""
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "",
         "defaultName": "",
         "add": "",
@@ -160,7 +160,7 @@
     },
     "trashSidebar": {
         "title": "",
-        "unnamedGroup": ""
+        "unnamedWorkspace": ""
     },
     "trashContents": {
         "message": "",
@@ -277,10 +277,10 @@
         "alertText": "",
         "tweetContent": "",
         "redditTitle": "",
-        "noGroupTitle": "",
-        "noGroupText": "",
-        "noGroupTextWithoutCreatePermission": "",
-        "createGroup": "",
+        "noWorkspaceTitle": "",
+        "noWorkspaceText": "",
+        "noWorkspaceTextWithoutCreatePermission": "",
+        "createWorkspace": "",
         "becomeGithubSponsor": "",
         "starOnGitlab": "",
         "shareOnTwitter": "",
@@ -289,7 +289,7 @@
         "shareOnLinkedIn": ""
     },
     "dashboardSidebar": {
-        "groups": "",
+        "workspaces": "",
         "links": "",
         "knowledgeBase": "",
         "tutorials": "",
@@ -353,11 +353,11 @@
         "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "",
         "settingAllowNewAccountsDescription": "",
-        "settingAllowSignupsViaGroupInvitationsName": "",
-        "settingAllowSignupsViaGroupInvitationDescription": "",
-        "settingAllowNonStaffCreateGroupOperation": "",
-        "settingAllowNonStaffCreateGroupOperationDescription": "",
-        "settingAllowNonStaffCreateGroupOperationWarning": "",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "",
+        "settingAllowNonStaffCreateWorkspaceOperation": "",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "",
         "userDeletionGraceDelay": "",
         "settingUserDeletionGraceDelay": "",
         "settingUserDeletionGraceDelayDescription": "",
@@ -483,7 +483,7 @@
             "submit": "",
             "helpIconText": "",
             "errors": {
-                "userAlreadyInGroup": {
+                "userAlreadyInWorkspace": {
                     "title": "",
                     "text": ""
                 }
@@ -499,7 +499,7 @@
         "deselectAll": "",
         "selectAll": ""
     },
-    "removeFromGroupModal": {
+    "removeFromWorkspaceModal": {
         "title": "",
         "confirmation": "",
         "remove": ""

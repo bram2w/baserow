@@ -92,7 +92,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "Name",
-        "groupLabel": "Gruppe"
+        "workspaceLabel": "Arbeitsbereich"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "Sie müssen mindestens eine Datenbank haben, um die API-Dokumentation anzuzeigen."
@@ -659,7 +659,7 @@
         "readOnlyField": "Die Zellenwerte werden automatisch ausgefüllt."
     },
     "snapshotsModal": {
-        "descriptionLimits": "Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben. | Sie können maximal {n} Snapshots pro Gruppe haben.",
+        "descriptionLimits": "Sie können maximal {n} Snapshots pro Arbeitsbereich haben. | Sie können maximal {n} Snapshots pro Arbeitsbereich haben. | Sie können maximal {n} Snapshots pro Arbeitsbereich haben.",
         "createLabel": "Erstelle einen neuen Snapshot",
         "description": "Snapshots sind eine vollständige Kopie Ihrer Datenbank zu dem Zeitpunkt, an dem sie erstellt wurden. Bei der Wiederherstellung wird ein Duplikat dieser Daten erstellt. Snapshots werden nach einem Jahr automatisch gelöscht.",
         "create": "Snapshot erstellen",
