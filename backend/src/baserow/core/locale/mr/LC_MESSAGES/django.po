@@ -119,24 +119,12 @@ msgid ""
 "IDs %(installed_application_ids)s"
 msgstr ""
 
-#: src/baserow/core/actions.py:734
-#, fuzzy
-#| msgid "Group invitation"
-msgid "Create group invitation"
-msgstr "Invitation à un groupe"
-
 #: src/baserow/core/actions.py:736
 #, python-format
 msgid ""
 "Group invitation created for \"%(email)s\" to join \"%(group_name)s"
 "\" (%(group_id)s) as %(permissions)s."
 msgstr ""
-
-#: src/baserow/core/actions.py:787
-#, fuzzy
-#| msgid "Group invitation"
-msgid "Delete group invitation"
-msgstr "Invitation à un groupe"
 
 #: src/baserow/core/actions.py:789
 #, python-format
@@ -157,12 +145,6 @@ msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
 msgstr ""
-
-#: src/baserow/core/actions.py:897
-#, fuzzy
-#| msgid "Group invitation"
-msgid "Reject group invitation"
-msgstr "Invitation à un groupe"
 
 #: src/baserow/core/actions.py:899
 #, python-format

@@ -125,6 +125,3 @@ msgstr ""
 #, python-format
 msgid "%(name)s's group"
 msgstr ""
-
-#~ msgid "Group invitation"
-#~ msgstr "Invitation à un groupe"

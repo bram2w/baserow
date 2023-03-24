@@ -352,6 +352,3 @@ msgstr "Usunięcie konta anulowane - Baserow"
 #, python-format
 msgid "%(name)s's group"
 msgstr "Grupa %(name)s"
-
-#~ msgid "Group invitation"
-#~ msgstr "Invitation à un groupe"
