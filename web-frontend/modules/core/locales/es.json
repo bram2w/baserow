@@ -17,10 +17,10 @@
         "delete": "Borrar"
     },
     "sidebar": {
-        "createGroup": "Crea un grupo",
+        "createWorkspace": "Crea un grupo",
         "inviteOthers": "Invitar a otros",
         "logoff": "Desconectarse",
-        "errorNoGroup": "No tienes ningún grupo.",
+        "errorNoWorkspace": "No tienes ningún grupo.",
         "admin": "Admin",
         "dashboard": "Tablero",
         "trash": "Papelera",
@@ -75,52 +75,52 @@
     },
     "invitationTitle": "Invitación",
     "invitationMessage": "{invitedBy} te ha invitado a unirte a {group}.",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": "Nombre"
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "Abandonar {group}",
         "message": "¿Está seguro de que desea abandonar el grupo {group}? Ya no podrá acceder a las aplicaciones relacionadas y, si desea recuperar el acceso, uno de los administradores debe invitarlo nuevamente. Si abandona el grupo, no se eliminará. Todos los demás miembros seguirán teniendo acceso a él. No es posible abandonar un grupo si eres el último administrador porque eso lo dejará sin mantenimiento.",
         "leave": "Dejar grupo"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Miembros",
         "createApplication": "Crear nuevo"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Invitación",
         "message": "{by} te ha invitado a unirte a {group}.",
         "reject": "Rechazar",
         "accept": "Aceptar"
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "{group} miembros",
         "userDescription": "{user} - se unió hace {since}",
         "invitationDescription": "invitado {since} hace",
         "sendInvite": "Enviar invitación",
-        "userAlreadyInGroupTitle": "El usuario ya está en el grupo.",
-        "userAlreadyInGroupText": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo.",
+        "userAlreadyInWorkspaceTitle": "El usuario ya está en el grupo.",
+        "userAlreadyInWorkspaceText": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo.",
         "userDescriptionPendingDeletion": "{usuario} - pendiente de borrar"
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Invitar por correo electrónico",
         "optionalMessagePlaceholder": "Mensaje opcional",
         "errorInvalidEmail": "Por favor, introduce una dirección de correo electrónico válida.",
         "errorTooLongMessage": "Los mensajes están limitados a {cantidad} caracteres."
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "Buscar grupos",
         "noResults": "No se han encontrado resultados",
-        "createGroup": "Crea un grupo"
+        "createWorkspace": "Crea un grupo"
     },
-    "groupContext": {
-        "renameGroup": "Renombrar grupo",
+    "workspaceContext": {
+        "renameWorkspace": "Renombrar grupo",
         "members": "Miembros",
         "viewTrash": "Ver papelera",
-        "leaveGroup": "Dejar grupo",
-        "deleteGroup": "Eliminar grupo"
+        "leaveWorkspace": "Dejar grupo",
+        "deleteWorkspace": "Eliminar grupo"
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "Crear grupo nuevo",
         "add": "Añadir grupo",
         "defaultName": "Grupo sin titulo",
@@ -136,7 +136,7 @@
     },
     "trashSidebar": {
         "title": "Papelera",
-        "unnamedGroup": "Grupo sin nombre {id}"
+        "unnamedWorkspace": "Grupo sin nombre {id}"
     },
     "trashContents": {
         "message": "Restaurar elementos eliminados del pasado {duration}",
@@ -212,16 +212,16 @@
         "alertText": "Si considera que Baserow es útil, le agradeceríamos que nos haga participes o compartiera. Al compartir Baserow, nos ayuda a mejorar el producto y hacerlo más útil para usted.",
         "tweetContent": "¡Eche un vistazo a @baserow, una herramienta de base de datos sin código de código abierto y una alternativa a Airtable!",
         "redditTitle": "'Baserow: una base de datos sin código de código abierto",
-        "noGroupTitle": "No se encontraron grupos",
-        "noGroupText": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo.",
-        "createGroup": "Crea un grupo",
+        "noWorkspaceTitle": "No se encontraron grupos",
+        "noWorkspaceText": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo.",
+        "createWorkspace": "Crea un grupo",
         "becomeGithubSponsor": "Conviértase en un patrocinador de GitHub",
         "starOnGitlab": "Márcanos con una estrella en GitLab",
         "shareOnTwitter": "Tuitea sobre Baserow",
         "shareOnReddit": "Compartir en Reddit",
         "shareOnFacebook": "Compartir en Facebook",
         "shareOnLinkedIn": "Compartir en LinkedIn",
-        "noGroupTextWithoutCreatePermission": "No eres miembro de ningún grupo. Las aplicaciones como las bases de datos pertenecen a un grupo, así que para crearlas tendrás que ser invitado primero a un grupo por un administrador."
+        "noWorkspaceTextWithoutCreatePermission": "No eres miembro de ningún grupo. Las aplicaciones como las bases de datos pertenecen a un grupo, así que para crearlas tendrás que ser invitado primero a un grupo por un administrador."
     },
     "login": {
         "title": "Acceso",
@@ -280,18 +280,18 @@
         "settingAllowNewAccountsName": "Permitir crear nuevas cuentas",
         "settingAllowNewAccountsDescription": "De forma predeterminada, cualquier usuario que visite su dominio de Baserow puede registrarse para obtener una nueva cuenta.",
         "enabled": "activado",
-        "settingAllowSignupsViaGroupInvitationsName": "Permitir suscripciones a través de invitaciones grupales",
-        "settingAllowSignupsViaGroupInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Permitir suscripciones a través de invitaciones grupales",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Incluso si la creación de nuevas cuentas está deshabilitada, esta opción permite que los usuarios invitados directamente sigan creando una cuenta.",
         "userDeletionGraceDelay": "Eliminación de usuarios",
         "settingUserDeletionGraceDelay": "Retraso de gracia",
         "settingUserDeletionGraceDelayDescription": "Este es el número de días sin iniciar sesión después de los cuales una cuenta programada para ser eliminada se borra permanentemente.",
         "invalidAccountDeletionGraceDelay": "Este valor es obligatorio y debe ser un entero positivo menor que 32000",
-        "settingAllowNonStaffCreateGroupOperation": "Permitir a todos crear nuevos grupos",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Por defecto, todos pueden crear grupos nuevos. Desactívalo para que sólo el equipo pueda crear nuevos grupos.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "A los nuevos usuarios se les creará automáticamente un grupo en el que serán administradores.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Permitir a todos crear nuevos grupos",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Por defecto, todos pueden crear grupos nuevos. Desactívalo para que sólo el equipo pueda crear nuevos grupos.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "A los nuevos usuarios se les creará automáticamente un grupo en el que serán administradores.",
         "maintenance": "Mantenimiento",
-        "settingTrackGroupUsage": "Seguimiento del uso del grupo",
-        "settingTrackGroupUsageDescription": "Activa un trabajo nocturno que cuenta el uso de filas y archivos por grupo, mostrado en la página de administración de grupos premium."
+        "settingTrackWorkspaceUsage": "Seguimiento del uso del grupo",
+        "settingTrackWorkspaceUsageDescription": "Activa un trabajo nocturno que cuenta el uso de filas y archivos por grupo, mostrado en la página de administración de grupos premium."
     },
     "copyingNotification": {
         "title": "Copiando...",
@@ -386,9 +386,9 @@
     },
     "deleteAccountSettings": {
         "title": "Borrar cuenta",
-        "groupNotice": "Los grupos huérfanos se borraran",
-        "orphanGroups": "También se borrará permanentemente después del tiempo de gracia",
-        "orphanGroupMemberCount": "compartido con nadie|compartido con un usuario|compartido con {cuenta} usuarios",
+        "workspaceNotice": "Los grupos huérfanos se borraran",
+        "orphanWorkspaces": "También se borrará permanentemente después del tiempo de gracia",
+        "orphanWorkspaceMemberCount": "compartido con nadie|compartido con un usuario|compartido con {cuenta} usuarios",
         "password": "Contraseña",
         "passwordConfirm": "Repetir contraseña",
         "repeatPasswordMatchError": "Este campo debe coincidir con el primer campo de contraseña.",
@@ -399,10 +399,10 @@
         "errorUserIsLastAdminMessage": "No se ha podido eliminar tu cuenta porque eres el último administrador de esta instancia de Baserow.",
         "accountDeletedSuccessTitle": "Eliminación de la cuenta programada",
         "accountDeletedSuccessMessage": "Se ha programado la eliminación de tu cuenta.",
-        "groupLoadingError": "La comprobación de los grupos ha fallado",
-        "groupLoadingErrorDescription": "La comprobación de los grupos a eliminar ha fallado, favor de actualizar la página.",
+        "workspaceLoadingError": "La comprobación de los grupos ha fallado",
+        "workspaceLoadingErrorDescription": "La comprobación de los grupos a eliminar ha fallado, favor de actualizar la página.",
         "description": "Puedes programar la eliminación de tu cuenta introduciendo tu contraseña y haciendo clic en el botón. Tu cuenta será eliminada permanentemente después de {días}. Mientras tanto, si vuelves a conectarte, se cancelará la eliminación de tu cuenta.",
-        "groupNoticeDescription": "Cuando tu cuenta se elimina permanentemente, todos los grupos y datos asociados para los que eres el último usuario activo con permisos de administrador también se eliminarán. Los grupos que se muestran a continuación son los que se borrarán porque tú eres el único administrador. Para evitar que se borren, primero dale a otro usuario permisos de administrador antes de borrar tu cuenta."
+        "workspaceNoticeDescription": "Cuando tu cuenta se elimina permanentemente, todos los grupos y datos asociados para los que eres el último usuario activo con permisos de administrador también se eliminarán. Los grupos que se muestran a continuación son los que se borrarán porque tú eres el único administrador. Para evitar que se borren, primero dale a otro usuario permisos de administrador antes de borrar tu cuenta."
     },
     "clearingNotification": {
         "title": "Borrando...",
@@ -414,7 +414,7 @@
         "tutorials": "Tutoriales",
         "userSettings": "Configuración de usuario",
         "logoff": "Cerrar sesión",
-        "groups": "Grupos",
+        "workspaces": "Grupos",
         "trash": "Basura"
     },
     "pastingNotification": {
@@ -480,7 +480,7 @@
         "membersInviteModal": {
             "title": "Invitar a miembros del grupo",
             "errors": {
-                "userAlreadyInGroup": {
+                "userAlreadyInWorkspace": {
                     "title": "El usuario ya está en el grupo.",
                     "text": "No es posible enviar una invitación cuando el usuario ya es miembro del grupo."
                 }
@@ -504,8 +504,8 @@
         "searchPlaceholder": "Encuentra...",
         "selectedAmountLabel": "{count} seleccionado"
     },
-    "removeFromGroupModal": {
-        "confirmation": "¿Estás seguro de que quieres eliminar a {name} de {group_name}? Esta acción no se puede deshacer.",
+    "removeFromWorkspaceModal": {
+        "confirmation": "¿Estás seguro de que quieres eliminar a {name} de {workspaceName}? Esta acción no se puede deshacer.",
         "title": "Confirmar la eliminación del grupo",
         "remove": "Quitar"
     },

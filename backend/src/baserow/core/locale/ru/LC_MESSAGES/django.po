@@ -159,7 +159,6 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:897
-#, fuzzy
 #| msgid "Group invitation"
 msgid "Reject group invitation"
 msgstr "Invitation à un groupe"

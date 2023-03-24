@@ -12,10 +12,10 @@
         "deleteApplication": "Smazat {type}"
     },
     "sidebar": {
-        "createGroup": "Vytvořit skupinu",
+        "createWorkspace": "Vytvořit skupinu",
         "inviteOthers": "Pozvat ostatní",
         "logoff": "Odhlásit",
-        "errorNoGroup": "Nemáte žádné skupiny.",
+        "errorNoWorkspace": "Nemáte žádné skupiny.",
         "admin": "Administrace",
         "dashboard": "Nástěnka",
         "trash": "Koš",
@@ -67,50 +67,50 @@
     },
     "invitationTitle": "",
     "invitationMessage": "",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": ""
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "",
         "message": "",
         "leave": ""
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "",
         "createApplication": ""
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "",
         "message": "",
         "reject": "",
         "accept": ""
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "",
         "userDescription": "",
         "invitationDescription": "",
         "sendInvite": "",
-        "userAlreadyInGroupTitle": "",
-        "userAlreadyInGroupText": ""
+        "userAlreadyInWorkspaceTitle": "",
+        "userAlreadyInWorkspaceText": ""
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "",
         "optionalMessagePlaceholder": "",
         "errorInvalidEmail": ""
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "",
         "noResults": "",
-        "createGroup": ""
+        "createWorkspace": ""
     },
-    "groupContext": {
-        "renameGroup": "",
+    "workspaceContext": {
+        "renameWorkspace": "",
         "members": "",
         "viewTrash": "",
-        "leaveGroup": "",
-        "deleteGroup": ""
+        "leaveWorkspace": "",
+        "deleteWorkspace": ""
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "",
         "add": ""
     },
@@ -123,7 +123,7 @@
     },
     "trashSidebar": {
         "title": "",
-        "unnamedGroup": ""
+        "unnamedWorkspace": ""
     },
     "trashContents": {
         "message": "",
@@ -200,9 +200,9 @@
         "alertText": "",
         "tweetContent": "",
         "redditTitle": "",
-        "noGroupTitle": "",
-        "noGroupText": "",
-        "createGroup": "",
+        "noWorkspaceTitle": "",
+        "noWorkspaceText": "",
+        "createWorkspace": "",
         "becomeGithubSponsor": "",
         "starOnGitlab": "",
         "shareOnTwitter": "",
@@ -251,8 +251,8 @@
         "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "",
         "settingAllowNewAccountsDescription": "",
-        "settingAllowSignupsViaGroupInvitationsName": "",
-        "settingAllowSignupsViaGroupInvitationDescription": "",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "",
         "enabled": ""
     },
     "formSidebar": {

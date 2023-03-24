@@ -150,7 +150,7 @@
         "deactivated": ""
     },
     "trashType": {
-        "group": "",
+        "workspace": "",
         "application": "",
         "table": "",
         "field": "",
@@ -181,10 +181,10 @@
         "tooManyRequestsDescription": "",
         "notCompletedTitle": "",
         "notCompletedDescription": "",
-        "userNotInGroupTitle": "",
-        "userNotInGroupDescription": "",
-        "invalidGroupPermissionsTitle": "",
-        "invalidGroupPermissionsDescription": "",
+        "userNotInWorkspaceTitle": "",
+        "userNotInWorkspaceDescription": "",
+        "invalidWorkspacePermissionsTitle": "",
+        "invalidWorkspacePermissionsDescription": "",
         "tableDoesNotExistTitle": "",
         "tableDoesNotExistDescription": "",
         "rowDoesNotExistTitle": "",
@@ -207,8 +207,8 @@
         "cannotRestoreParentBeforeChildDescription": "",
         "cannotRestoreAsRelatedTableTrashedTitle": "",
         "cannotRestoreAsRelatedTableTrashedDescription": "",
-        "groupUserIsLastAdminTitle": "",
-        "groupUserIsLastAdminDescription": ""
+        "workspaceUserIsLastAdminTitle": "",
+        "workspaceUserIsLastAdminDescription": ""
     },
     "importerType": {
         "csv": "",

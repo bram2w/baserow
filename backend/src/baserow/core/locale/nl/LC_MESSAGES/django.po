@@ -15,48 +15,48 @@ msgstr ""
 "X-Generator: Weblate 4.15.1-dev\n"
 
 #: src/baserow/core/action/scopes.py:9
-#, fuzzy, python-format
+#, python-format
 msgid "in group \"%(group_name)s\" (%(group_id)s)."
-msgstr "in groep \"%(group_name)s\" (%(group_id)s)."
+msgstr "in werkruimte \"%(group_name)s\" (%(group_id)s)."
 
 #: src/baserow/core/actions.py:36
 msgid "Delete group"
-msgstr "Groep verwijderen"
+msgstr "Werkruimte verwijderen"
 
 #: src/baserow/core/actions.py:37
-#, fuzzy, python-format
+#, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
-msgstr "Groep \"%(group_name)s\" (%(group_id)s) verwijderd."
+msgstr "Werkruimte \"%(group_name)s\" (%(group_id)s) verwijderd."
 
 #: src/baserow/core/actions.py:97
 msgid "Create group"
-msgstr "Groep aanmaken"
+msgstr "Werkruimte aanmaken"
 
 #: src/baserow/core/actions.py:98
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) created."
-msgstr "Groep \"%(group_name)s\" (%(group_id)s) aangemaakt."
+msgstr "Werkruimte \"%(group_name)s\" (%(group_id)s) aangemaakt."
 
 #: src/baserow/core/actions.py:156
 msgid "Update group"
-msgstr "Groep bijwerken"
+msgstr "Werkruimte bijwerken"
 
 #: src/baserow/core/actions.py:158
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
-"Groep (%(group_id)s) naam veranderd van \"%(original_group_name)s\" naar "
+"Werkruimte (%(group_id)s) naam veranderd van \"%(original_group_name)s\" naar "
 "\"%(group_name)s.\""
 
 #: src/baserow/core/actions.py:237
 msgid "Order groups"
-msgstr "Order groepen"
+msgstr "Order werkruimtes"
 
 #: src/baserow/core/actions.py:238
 msgid "Groups order changed."
-msgstr "Groepsvolgorde gewijzigd."
+msgstr "Werkruimte volgorde gewijzigd."
 
 #: src/baserow/core/actions.py:297
 msgid "Order applications"
@@ -71,7 +71,7 @@ msgid "Create application"
 msgstr "Applicatie maken"
 
 #: src/baserow/core/actions.py:361
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "\"%(application_name)s\" (%(application_id)s) %(application_type)s created"
 msgstr ""
@@ -82,7 +82,7 @@ msgid "Delete application"
 msgstr "Applicatie verwijderen"
 
 #: src/baserow/core/actions.py:440
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
 "%(application_type)s deleted"
@@ -95,7 +95,7 @@ msgid "Update application"
 msgstr "Applicatie bijwerken"
 
 #: src/baserow/core/actions.py:504
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Application (%(application_id)s) of type %(application_type)s renamed from "
 "\"%(original_application_name)s\" to \"%(application_name)s\""
@@ -108,7 +108,7 @@ msgid "Duplicate application"
 msgstr "Applicatie dupliceren"
 
 #: src/baserow/core/actions.py:577
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Application \"%(application_name)s\" (%(application_id)s) of type "
 "%(application_type)s duplicated from \"%(original_application_name)s"
@@ -158,7 +158,6 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:842
-#, fuzzy
 #| msgid "Accept invitation"
 msgid "Accept group invitation"
 msgstr "Uitnodiging accepteren"
@@ -196,21 +195,18 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:1011
-#, fuzzy
-#| msgid "Create group"
 msgid "Leave group"
-msgstr "Groep aanmaken"
+msgstr "Werkruimte verlaten"
 
 #: src/baserow/core/actions.py:1012
-#, fuzzy, python-format
+#, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
-msgstr "Groep \"%(group_name)s\" (%(group_id)s) verwijderd."
+msgstr "Werkruimte \"%(group_name)s\" (%(group_id)s) verwijderd."
 
 #: src/baserow/core/emails.py:96
-#, fuzzy, python-format
-#| msgid "%(by)s invited you to %(group_name)s - Baserow"
+#, python-format
 msgid "%(by)s invited you to %(workspace_name)s - Baserow"
-msgstr "%(by)s heeft je uitgenodigd voor %(group_name)s - Baserow"
+msgstr "%(by)s heeft je uitgenodigd voor %(workspace_name)s - Baserow"
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -530,4 +526,4 @@ msgstr "Accountverwijdering geannuleerd - Baserow"
 #, fuzzy, python-format
 #| msgid "%(name)s's group"
 msgid "%(name)s's workspace"
-msgstr "Groep van %(name)s"
+msgstr "Werkruimte van %(name)s"

@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "工作人员与否",
-            "isGroupAdmin": "组管理员与否",
+            "isWorkspaceAdmin": "组管理员与否",
             "active": "生效的",
             "deactivated": "停用的"
         },
         "adminType": {
             "dashboard": "仪表板",
             "users": "用户",
-            "groups": "团队",
+            "workspaces": "团队",
             "licenses": "许可证"
         },
         "viewType": {
@@ -58,18 +58,18 @@
     "registerLicenseForm": {
         "licenseKey": "许可证码"
     },
-    "groupsAdminTable": {
-        "allGroups": "所有集体",
+    "workspacesAdminTable": {
+        "allWorkspaces": "所有集体",
         "id": "ID",
         "name": "名字",
         "members": "成员",
         "applications": "应用",
         "created": "创建"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "永久删除"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "删除 {name}",
         "confirmation": "你确定要删除集体：{name}？",
         "comment": "该组将被永久删除,包括相关应用程序.此操作无法撤销.",
@@ -84,7 +84,7 @@
         "id": "",
         "username": "用户名",
         "name": "名字",
-        "groups": "集体",
+        "workspaces": "集体",
         "lastLogin": "上次登录",
         "dateJoined": "注册",
         "active": "活跃的"
@@ -164,7 +164,7 @@
         "title": "仪表盘",
         "totals": "总计",
         "totalUsers": "用户总数",
-        "totalGroups": "组总数",
+        "totalWorkspaces": "组总数",
         "totalApplications": "应用程序总数",
         "newUsers": "新用户",
         "newUsers24h": "最新 24 小时的新用户",

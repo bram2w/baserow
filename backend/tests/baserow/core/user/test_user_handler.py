@@ -141,7 +141,8 @@ def test_create_user(data_fixture):
         )
         assert user2.profile.language == "fr"
         assert (
-            Workspace.objects.filter(users__in=[user2.id])[0].name == "Groupe de Test2"
+            Workspace.objects.filter(users__in=[user2.id])[0].name
+            == "Projet de « Test2 »"
         )
 
         with pytest.raises(UserAlreadyExist):

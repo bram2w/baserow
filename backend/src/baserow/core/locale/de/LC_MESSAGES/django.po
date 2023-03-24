@@ -17,29 +17,29 @@ msgstr ""
 #: src/baserow/core/action/scopes.py:9
 #, python-format
 msgid "in group \"%(group_name)s\" (%(group_id)s)."
-msgstr "in der Gruppe \"%(group_name)s\" (%(group_id)s)."
+msgstr "in dem Arbeitsbereich \"%(group_name)s\" (%(group_id)s)."
 
 #: src/baserow/core/actions.py:36
 msgid "Delete group"
-msgstr "Gruppe löschen"
+msgstr "Arbeitsbereich löschen"
 
 #: src/baserow/core/actions.py:37
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
-msgstr "Gruppe \"%(group_name)s\" (%(group_id)s) gelöscht."
+msgstr "Arbeitsbereich \"%(group_name)s\" (%(group_id)s) gelöscht."
 
 #: src/baserow/core/actions.py:97
 msgid "Create group"
-msgstr "Neue Gruppe erstellen"
+msgstr "Neuen Arbeitsbereich erstellen"
 
 #: src/baserow/core/actions.py:98
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) created."
-msgstr "Gruppe \"%(group_name)s\" (%(group_id)s) erstellt."
+msgstr "Arbeitsbereich \"%(group_name)s\" (%(group_id)s) erstellt."
 
 #: src/baserow/core/actions.py:156
 msgid "Update group"
-msgstr "Gruppe aktualisieren"
+msgstr "Arbeitsbereich aktualisieren"
 
 #: src/baserow/core/actions.py:158
 #, python-format
@@ -47,16 +47,16 @@ msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
-"Der Name der Gruppe (%(group_id)s) wurde von \"%(original_group_name)s\" in "
+"Der Name des Arbeitsbereichs (%(group_id)s) wurde von \"%(original_group_name)s\" in "
 "\"%(group_name)s\" geändert"
 
 #: src/baserow/core/actions.py:237
 msgid "Order groups"
-msgstr "Gruppen sortieren"
+msgstr "Arbeitsbereiche sortieren"
 
 #: src/baserow/core/actions.py:238
 msgid "Groups order changed."
-msgstr "Gruppenreihenfolge geändert."
+msgstr "Arbeitsbereichreihenfolge geändert."
 
 #: src/baserow/core/actions.py:297
 msgid "Order applications"
@@ -199,13 +199,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Create group"
 msgid "Leave group"
-msgstr "Neue Gruppe erstellen"
+msgstr "Neuen Arbeitsbereich erstellen"
 
 #: src/baserow/core/actions.py:1012
 #, fuzzy, python-format
 #| msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
-msgstr "Gruppe \"%(group_name)s\" (%(group_id)s) gelöscht."
+msgstr "Arbeitsbereich \"%(group_name)s\" (%(group_id)s) gelöscht."
 
 #: src/baserow/core/emails.py:96
 #, fuzzy, python-format
@@ -523,4 +523,4 @@ msgstr "Kontolöschung abgebrochen - Baserow"
 #, fuzzy, python-format
 #| msgid "%(name)s's group"
 msgid "%(name)s's workspace"
-msgstr "%(name)s's Gruppe"
+msgstr "%(name)s's Arbeitsbereich"

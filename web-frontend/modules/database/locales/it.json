@@ -92,7 +92,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "Nome",
-        "groupLabel": "Gruppo"
+        "workspaceLabel": "Gruppo"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "È necessario avere almeno un database per visualizzare la documentazione API."

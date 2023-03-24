@@ -17,29 +17,29 @@ msgstr ""
 #: src/baserow/core/action/scopes.py:9
 #, python-format
 msgid "in group \"%(group_name)s\" (%(group_id)s)."
-msgstr "dans le groupe \"%(group_name)s\" (%(group_id)s)."
+msgstr "dans le projet \"%(group_name)s\" (%(group_id)s)."
 
 #: src/baserow/core/actions.py:36
 msgid "Delete group"
-msgstr "Suppression d'un groupe"
+msgstr "Suppression d'un projet"
 
 #: src/baserow/core/actions.py:37
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
-msgstr "Groupe \"%(group_name)s\" (%(group_id)s) supprimé."
+msgstr "Projet « \"%(group_name)s\" » (%(group_id)s) supprimé."
 
 #: src/baserow/core/actions.py:97
 msgid "Create group"
-msgstr "Création d'un groupe"
+msgstr "Création d'un projet"
 
 #: src/baserow/core/actions.py:98
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) created."
-msgstr "Groupe « %(group_name)s » (%(group_id)s) créé."
+msgstr "Projet « %(group_name)s » (%(group_id)s) créé."
 
 #: src/baserow/core/actions.py:156
 msgid "Update group"
-msgstr "Mise à jour d'un groupe"
+msgstr "Mise à jour d'un projet"
 
 #: src/baserow/core/actions.py:158
 #, python-format
@@ -47,16 +47,16 @@ msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
-"Le nom du groupe (%(group_id)s) est passé de « %(original_group_name)s » à « "
+"Le nom du projet (%(group_id)s) est passé de « %(original_group_name)s » à « "
 "%(group_name)s »."
 
 #: src/baserow/core/actions.py:237
 msgid "Order groups"
-msgstr "Réorganisation de groupes"
+msgstr "Réorganisation de projets"
 
 #: src/baserow/core/actions.py:238
 msgid "Groups order changed."
-msgstr "L'ordre des groupes a changé."
+msgstr "L'ordre des projets a changé."
 
 #: src/baserow/core/actions.py:297
 msgid "Order applications"
@@ -132,10 +132,9 @@ msgstr ""
 "applications avec les identifiants : %(installed_application_ids)s."
 
 #: src/baserow/core/actions.py:734
-#, fuzzy
 #| msgid "Group invitation"
 msgid "Create group invitation"
-msgstr "Invitation à un groupe"
+msgstr "Invitation à un projet"
 
 #: src/baserow/core/actions.py:736
 #, python-format
@@ -145,10 +144,9 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:787
-#, fuzzy
 #| msgid "Group invitation"
 msgid "Delete group invitation"
-msgstr "Invitation à un groupe"
+msgstr "Invitation à un projet"
 
 #: src/baserow/core/actions.py:789
 #, python-format
@@ -158,7 +156,6 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:842
-#, fuzzy
 #| msgid "Accept invitation"
 msgid "Accept group invitation"
 msgstr "Accepter l’invitation"
@@ -171,10 +168,9 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:897
-#, fuzzy
 #| msgid "Group invitation"
 msgid "Reject group invitation"
-msgstr "Invitation à un groupe"
+msgstr "Invitation à un projet"
 
 #: src/baserow/core/actions.py:899
 #, python-format
@@ -196,16 +192,14 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:1011
-#, fuzzy
-#| msgid "Create group"
 msgid "Leave group"
-msgstr "Création d'un groupe"
+msgstr "Création d'un projet"
 
 #: src/baserow/core/actions.py:1012
-#, fuzzy, python-format
+#, python-format
 #| msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
-msgstr "Groupe \"%(group_name)s\" (%(group_id)s) supprimé."
+msgstr "Projet « \"%(group_name)s\" » (%(group_id)s) supprimé."
 
 #: src/baserow/core/emails.py:96
 #, python-format
@@ -350,16 +344,13 @@ msgid "Invitation"
 msgstr "Invitation"
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:152
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(group_name)s</strong>."
+#, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(workspace_name)s</strong>."
 msgstr ""
-"<strong>%(first_name)s</strong> vous a invité à collaborer au groupe <strong>"
-"%(group_name)s</strong>."
+"<strong>%(first_name)s</strong> vous a invité à collaborer au projet <strong>"
+"%(workspace_name)s</strong>."
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:166
 msgid "Accept invitation"
@@ -370,16 +361,12 @@ msgid "Empty trash"
 msgstr ""
 
 #: src/baserow/core/trash/actions.py:22
-#, fuzzy, python-format
-#| msgid ""
-#| "Application \"%(application_name)s\" (%(application_id)s) of type "
-#| "%(application_type)s deleted"
+#, python-format
 msgid ""
 "Trash for application \"%(application_name)s\" (%(application_id)s) has been "
 "emptied"
 msgstr ""
-"L'application \"%(application_name)s\" (%(application_id)s) de type "
-"%(application_type)s a été supprimée."
+"L'application \"%(application_name)s\" (%(application_id)s) a été supprimée."
 
 #: src/baserow/core/trash/actions.py:79
 #, python-format
@@ -389,7 +376,6 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/trash/actions.py:90
-#, fuzzy
 #| msgid "Restore Snapshot"
 msgid "Restore from trash"
 msgstr "Restauration d'une sauvegarde"
@@ -469,31 +455,28 @@ msgstr ""
 "processus de suppression"
 
 #: src/baserow/core/user/actions.py:275
-#, fuzzy
 #| msgid "Reset password"
 msgid "Send reset user password"
 msgstr "Réinitialiser le mot de passe"
 
 #: src/baserow/core/user/actions.py:276
-#, fuzzy, python-format
+#, python-format
 #| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr "Utilisateur « %(user_email)s » (%(user_id)s) mis à jour"
 
 #: src/baserow/core/user/actions.py:306
-#, fuzzy
 #| msgid "Reset password"
 msgid "Change user password"
 msgstr "Réinitialiser le mot de passe"
 
 #: src/baserow/core/user/actions.py:307
-#, fuzzy, python-format
+#, python-format
 #| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
 msgstr "Utilisateur « %(user_email)s » (%(user_id)s) mis à jour"
 
 #: src/baserow/core/user/actions.py:343
-#, fuzzy
 #| msgid "Reset password"
 msgid "Reset user password"
 msgstr "Réinitialiser le mot de passe"
@@ -523,4 +506,4 @@ msgstr "Suppression du compte annulée - Baserow"
 #: src/baserow/core/user/handler.py:213
 #, python-format
 msgid "%(name)s's workspace"
-msgstr "Groupe de %(name)s"
+msgstr "Projet de « %(name)s »"

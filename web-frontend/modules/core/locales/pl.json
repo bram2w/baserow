@@ -17,10 +17,10 @@
         "duplicate": "Duplikuj"
     },
     "sidebar": {
-        "createGroup": "Utwórz grupę",
+        "createWorkspace": "Utwórz grupę",
         "inviteOthers": "Zaproś innych",
         "logoff": "Wyloguj",
-        "errorNoGroup": "Nie masz żadnych grup.",
+        "errorNoWorkspace": "Nie masz żadnych grup.",
         "admin": "Admin",
         "dashboard": "Pulpit",
         "trash": "Śmieci",
@@ -56,10 +56,10 @@
     "deleteAccountSettings": {
         "title": "Usuń konto",
         "description": "Możesz zaplanować usunięcie swojego konta wpisując aktualne hasło i klikając przycisk. Twoje konto zostanie trwale usunięte po upływie {days} dni. W tym czasie, jeśli zalogujesz się ponownie, usunięcie konta zostanie anulowane.",
-        "groupNotice": "Osierocone grupy zostaną usunięte",
-        "groupNoticeDescription": "Kiedy Twoje konto zostanie trwale usunięte, wszystkie grupy i powiązane dane, dla których jesteś ostatnim aktywnym użytkownikiem z uprawnieniami Administratora, również zostaną usunięte. Grupy pokazane poniżej to te, które zostaną usunięte, ponieważ jesteś jedynym adminem. Aby zapobiec ich usunięciu, musisz najpierw dać innemu użytkownikowi uprawnienia administratora, zanim usuniesz swoje konto.",
-        "orphanGroups": "Zostanie również trwale usunięty po upływie czasu karencji",
-        "orphanGroupMemberCount": "udostępnione nikomu|udostępnione jednemu użytkownikowi|udostępnione {count} użytkownikom",
+        "workspaceNotice": "Osierocone grupy zostaną usunięte",
+        "workspaceNoticeDescription": "Kiedy Twoje konto zostanie trwale usunięte, wszystkie grupy i powiązane dane, dla których jesteś ostatnim aktywnym użytkownikiem z uprawnieniami Administratora, również zostaną usunięte. Grupy pokazane poniżej to te, które zostaną usunięte, ponieważ jesteś jedynym adminem. Aby zapobiec ich usunięciu, musisz najpierw dać innemu użytkownikowi uprawnienia administratora, zanim usuniesz swoje konto.",
+        "orphanWorkspaces": "Zostanie również trwale usunięty po upływie czasu karencji",
+        "orphanWorkspaceMemberCount": "udostępnione nikomu|udostępnione jednemu użytkownikowi|udostępnione {count} użytkownikom",
         "password": "Hasło",
         "passwordConfirm": "Powtórz hasło",
         "repeatPasswordMatchError": "To pole musi być zgodne z pierwszym polem hasła.",
@@ -70,8 +70,8 @@
         "errorUserIsLastAdminMessage": "Nie można usunąć konta, ponieważ jesteś ostatnim administratorem tej instancji Baserow.",
         "accountDeletedSuccessTitle": "Zaplanowano usunięcie konta",
         "accountDeletedSuccessMessage": "Twoje konto zostało zaplanowane do usunięcia.",
-        "groupLoadingError": "Sprawdzanie grup nie powiodło się",
-        "groupLoadingErrorDescription": "Sprawdzenie grup do usunięcia nie powiodło się, odśwież stronę."
+        "workspaceLoadingError": "Sprawdzanie grup nie powiodło się",
+        "workspaceLoadingErrorDescription": "Sprawdzenie grup do usunięcia nie powiodło się, odśwież stronę."
     },
     "error": {
         "alreadyExistsTitle": "Użytkownik już istnieje",
@@ -95,52 +95,52 @@
     },
     "invitationTitle": "Zaproszenie",
     "invitationMessage": "{invitedBy} zaprosił Cię do dołączenia do {group}.",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": "Nazwa"
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "Opuść {group}",
         "message": "Czy na pewno chcesz opuścić grupę {group}? Nie będziesz miał już dostępu do powiązanych aplikacji, a jeśli chcesz odzyskać dostęp, jeden z adminów musi Cię ponownie zaprosić. Jeśli opuścisz grupę, nie zostanie ona usunięta. Wszyscy pozostali członkowie nadal będą mieli do niej dostęp. Nie jest możliwe opuszczenie grupy, jeśli jesteś ostatnim adminem, ponieważ pozostawi to ją bez opieki.",
         "leave": "Opuścić grupę"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Członkowie",
         "createApplication": "Utwórz nowy"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Zaproszenie",
         "message": "{by} zaprosił Cię do dołączenia do {group}.",
         "reject": "Odrzuć",
         "accept": "Przyjmij"
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "Członkowie {group}",
         "userDescription": "{user} - dołączył {since} temu",
         "invitationDescription": "zaproszony {since} temu",
         "sendInvite": "Wyślij zaproszenie",
-        "userAlreadyInGroupTitle": "Użytkownik jest już w grupie.",
+        "userAlreadyInWorkspaceTitle": "Użytkownik jest już w grupie.",
         "userDescriptionPendingDeletion": "{user} - oczekiwanie na usunięcie",
-        "userAlreadyInGroupText": "Nie jest możliwe wysłanie zaproszenia, gdy użytkownik jest już członkiem grupy."
+        "userAlreadyInWorkspaceText": "Nie jest możliwe wysłanie zaproszenia, gdy użytkownik jest już członkiem grupy."
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Zaproś przez e-mail",
         "optionalMessagePlaceholder": "Opcjonalna wiadomość",
         "errorInvalidEmail": "Podaj poprawny adres e-mail.",
         "errorTooLongMessage": "Wiadomości są ograniczone do {amount} znaków."
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "Wyszukaj grupy",
         "noResults": "Nie znaleziono wyników",
-        "createGroup": "Utwórz grupę"
+        "createWorkspace": "Utwórz grupę"
     },
-    "groupContext": {
-        "renameGroup": "Zmień nazwę grupy",
+    "workspaceContext": {
+        "renameWorkspace": "Zmień nazwę grupy",
         "members": "Członkowie",
         "viewTrash": "Wyświetl kosz",
-        "leaveGroup": "Opuść grupę",
-        "deleteGroup": "Usuń grupę"
+        "leaveWorkspace": "Opuść grupę",
+        "deleteWorkspace": "Usuń grupę"
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "Utwórz nową grupę",
         "add": "Dodaj grupę",
         "defaultName": "Grupa bez nazwy",
@@ -156,7 +156,7 @@
     },
     "trashSidebar": {
         "title": "Śmieci",
-        "unnamedGroup": "Grupa bez nazwy {id}"
+        "unnamedWorkspace": "Grupa bez nazwy {id}"
     },
     "trashContents": {
         "message": "Przywróć usunięte elementy z przeszłości {duration}",
@@ -264,19 +264,19 @@
         "alertText": "Jeśli uważasz, że Baserow jest przydatny, to podzielenie się z nami gwiazdką jest bardzo cenne. Udzielając Baserow pomagasz nam ulepszać produkt i czynić go bardziej użytecznym dla Ciebie.",
         "tweetContent": "Sprawdź @baserow, narzędzie open source do bazy danych typu no-code i alternatywę dla Airtable!",
         "redditTitle": "'Baserow - Baza danych open source bez kodu",
-        "noGroupTitle": "Nie znaleziono grup",
-        "noGroupText": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
-        "createGroup": "Utwórz grupę",
+        "noWorkspaceTitle": "Nie znaleziono grup",
+        "noWorkspaceText": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
+        "createWorkspace": "Utwórz grupę",
         "becomeGithubSponsor": "Zostań sponsorem GitHub",
         "starOnGitlab": "Oznacz nas gwiazdką na GitLab",
         "shareOnTwitter": "Tweetuj o Baserow",
         "shareOnReddit": "Udostępnij na Reddicie",
         "shareOnFacebook": "Udostępnij na Facebooku",
         "shareOnLinkedIn": "Udostępnij na LinkedIn",
-        "noGroupTextWithoutCreatePermission": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć, musisz najpierw zostać zaproszony do grupy przez administratora."
+        "noWorkspaceTextWithoutCreatePermission": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć, musisz najpierw zostać zaproszony do grupy przez administratora."
     },
     "dashboardSidebar": {
-        "groups": "Grupy",
+        "workspaces": "Grupy",
         "links": "Linki",
         "knowledgeBase": "Baza wiedzy",
         "tutorials": "Poradniki",
@@ -340,18 +340,18 @@
         "settingAllowResetPasswordWarning": "Pamiętaj, że możesz zablokować sobie dostęp do systemu i dostępu nie można przywrócić, jeśli zapomnisz hasła.",
         "settingAllowNewAccountsName": "Umożliwienie tworzenia nowych kont",
         "settingAllowNewAccountsDescription": "Domyślnie każdy użytkownik odwiedzający Twoją domenę Baserow może zarejestrować się na nowym koncie.",
-        "settingAllowSignupsViaGroupInvitationsName": "Zezwalaj na rejestracje za pomocą zaproszeń grupowych",
-        "settingAllowSignupsViaGroupInvitationDescription": "Nawet jeśli tworzenie nowych kont jest wyłączone, ta opcja pozwala bezpośrednio zaproszonym użytkownikom nadal tworzyć konta.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Zezwalaj na rejestracje za pomocą zaproszeń grupowych",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Nawet jeśli tworzenie nowych kont jest wyłączone, ta opcja pozwala bezpośrednio zaproszonym użytkownikom nadal tworzyć konta.",
         "userDeletionGraceDelay": "Usuwanie użytkowników",
         "settingUserDeletionGraceDelay": "Okres karencji",
         "settingUserDeletionGraceDelayDescription": "Jest to liczba dni bez logowania, po których konto zaplanowane do usunięcia zostaje trwale usunięte.",
         "invalidAccountDeletionGraceDelay": "Ta wartość jest wymagana i musi być dodatnią liczbą całkowitą mniejszą niż 32000",
         "enabled": "włączony",
-        "settingAllowNonStaffCreateGroupOperationDescription": "Domyślnie każdy może tworzyć nowe grupy. Wyłącz to, aby umożliwić tworzenie nowych grup tylko pracownikom.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "Nowi użytkownicy będą mieli automatycznie utworzoną dla nich grupę, w której są Adminami.",
-        "settingAllowNonStaffCreateGroupOperation": "Pozwól każdemu na tworzenie nowych grup",
-        "settingTrackGroupUsage": "Śledź użycie grupy",
-        "settingTrackGroupUsageDescription": "Włącza nocne zadanie zliczające użycie wierszy i plików dla grupy, wyświetlane na stronie administratora grupy premium.",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "Domyślnie każdy może tworzyć nowe grupy. Wyłącz to, aby umożliwić tworzenie nowych grup tylko pracownikom.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Nowi użytkownicy będą mieli automatycznie utworzoną dla nich grupę, w której są Adminami.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Pozwól każdemu na tworzenie nowych grup",
+        "settingTrackWorkspaceUsage": "Śledź użycie grupy",
+        "settingTrackWorkspaceUsageDescription": "Włącza nocne zadanie zliczające użycie wierszy i plików dla grupy, wyświetlane na stronie administratora grupy premium.",
         "maintenance": "Konserwacja"
     },
     "formSidebar": {
@@ -478,7 +478,7 @@
         "membersInviteModal": {
             "submit": "Wyślij zaproszenie",
             "errors": {
-                "userAlreadyInGroup": {
+                "userAlreadyInWorkspace": {
                     "text": "Nie można wysłać zaproszenia, gdy użytkownik jest już członkiem grupy.",
                     "title": "Użytkownik jest już w grupie."
                 }
@@ -504,9 +504,9 @@
         "selectAll": "Wybierz wszystko",
         "deselectAll": "Odznacz wszystkie"
     },
-    "removeFromGroupModal": {
+    "removeFromWorkspaceModal": {
         "title": "Potwierdź usunięcie z grupy",
-        "confirmation": "Czy na pewno chcesz usunąć {name} z {group_name}? Tej czynności nie można cofnąć.",
+        "confirmation": "Czy na pewno chcesz usunąć {name} z {workspaceName}? Tej czynności nie można cofnąć.",
         "remove": "Usuń"
     },
     "permissionsUpdatedNotification": {

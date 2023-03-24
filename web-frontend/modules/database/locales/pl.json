@@ -92,7 +92,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "Nazwa",
-        "groupLabel": "Grupa"
+        "workspaceLabel": "Grupa"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "Musisz mieć co najmniej jedną bazę danych, aby wyświetlić dokumentację API."
@@ -222,7 +222,12 @@
         "includeTimeLabel": "Uwzględnić czas",
         "timeFormatLabel": "Format czasu",
         "24Hour": "24 godziny",
-        "12Hour": "12 godzin"
+        "12Hour": "12 godzin",
+        "showTimezoneLabel": "Pokaż strefę czasową",
+        "forceTimezoneLabel": "Ustaw strefę czasową dla wszystkich współpracowników",
+        "addTimezoneOffsetLabel": "Przelicz wartości (dodaj {utcOffsetDiff} minut)",
+        "subTimezoneOffsetLabel": "Przelicz wartości (odejmij {utcOffsetDiff} minut)",
+        "forceTimezoneValue": "Strefa czasowa"
     },
     "fieldLinkRowSubForm": {
         "noTable": "Potrzebujesz co najmniej jednej innej tabeli w tej samej bazie danych, aby połączyć się z nią.",
