@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 from django.contrib.auth.models import AbstractUser
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import (
     InstallTemplateJobApplicationsSerializer,
@@ -118,11 +119,21 @@ class InstallTemplateJobType(JobType):
         TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
     }
 
-    request_serializer_field_names = ["group_id", "template_id"]
+    request_serializer_field_names = [
+        "group_id",  # GroupDeprecation
+        "workspace_id",
+        "database_id",
+        "airtable_share_url",
+    ]
 
     request_serializer_field_overrides = {
         "group_id": serializers.IntegerField(
+            required=False,
             help_text="The ID of the group where the template will be installed.",
+        ),
+        "workspace_id": serializers.IntegerField(
+            required=False,
+            help_text="The ID of the workspace where the template will be installed.",
         ),
         "template_id": serializers.IntegerField(
             help_text="The template ID that will be installed.",
@@ -148,8 +159,16 @@ class InstallTemplateJobType(JobType):
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
 
+        # GroupDeprecation
+        workspace_id = values.pop("workspace_id", values.pop("group_id", None))
+        if workspace_id is None:
+            raise ValidationError(
+                "A `workspace_id` or `group_id` is required to "
+                "execute an InstallTemplateJobType."
+            )
+
         handler = CoreHandler()
-        workspace = handler.get_workspace(values["workspace_id"])
+        workspace = handler.get_workspace(workspace_id)
         CoreHandler().check_permissions(
             user,
             CreateApplicationsWorkspaceOperationType.type,

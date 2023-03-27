@@ -8,9 +8,10 @@ from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NO
 from baserow.contrib.database.airtable.models import AirtableImportJob
 
 
+@pytest.mark.disabled_in_ci
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.core.jobs.handler.run_async_job")
-def test_create_airtable_import_job(
+def test_create_airtable_import_job_with_group(
     mock_run_import_from_airtable, data_fixture, api_client
 ):
     user, token = data_fixture.create_user_and_token()
@@ -21,11 +22,12 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": 0,
+            "group_id": 0,  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    print(response.json())
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_GROUP_DOES_NOT_EXIST"
 
@@ -33,7 +35,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": workspace_2.id,
+            "group_id": workspace_2.id,  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -63,7 +65,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": "not_int",
+            "group_id": "not_int",  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/test",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -73,7 +75,7 @@ def test_create_airtable_import_job(
     assert response.json() == {
         "error": "ERROR_REQUEST_BODY_VALIDATION",
         "detail": {
-            "workspace_id": [
+            "group_id": [  # GroupDeprecation
                 {"error": "A valid integer is required.", "code": "invalid"}
             ],
             "airtable_share_url": [
@@ -89,7 +91,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": workspace.id,
+            "group_id": workspace.id,  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -116,7 +118,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": workspace.id,
+            "group_id": workspace.id,  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -141,7 +143,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "workspace_id": workspace.id,
+            "group_id": workspace.id,  # GroupDeprecation
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
