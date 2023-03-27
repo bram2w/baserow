@@ -132,7 +132,7 @@ def test_audit_log_export_csv_in_the_user_language(
 
     assert data == (
         bom
-        + f'{user.email},{user.id},{workspace_1.name},{workspace_1.id},Crea gruppo,"Gruppo ""{workspace_1.name}"" ({workspace_1.id}) creato.",2023-01-01 12:00:00+00:00,\r\n'
+        + f'{user.email},{user.id},{workspace_1.name},{workspace_1.id},Crea progetto,"Progetto ""{workspace_1.name}"" ({workspace_1.id}) creato.",2023-01-01 12:00:00+00:00,\r\n'
     )
 
     close()

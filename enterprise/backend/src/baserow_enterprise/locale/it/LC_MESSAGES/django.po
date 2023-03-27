@@ -29,11 +29,11 @@ msgstr "ID utente"
 
 #: audit_log/job_types.py:145
 msgid "Group Name"
-msgstr "Nome gruppo"
+msgstr "Nome progetto"
 
 #: audit_log/job_types.py:146
 msgid "Group ID"
-msgstr "ID gruppo"
+msgstr "ID progetto"
 
 #: audit_log/job_types.py:147
 msgid "Action Type"
@@ -57,11 +57,11 @@ msgstr "FATTO"
 
 #: audit_log/models.py:31
 msgid "UNDONE"
-msgstr "UNDONE"
+msgstr "ANNULLATO"
 
 #: audit_log/models.py:32
 msgid "REDONE"
-msgstr "REDONE"
+msgstr "RIFATTO"
 
 #: role/actions.py:28
 msgid "Assign multiple roles"

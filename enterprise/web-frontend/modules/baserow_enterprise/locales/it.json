@@ -18,15 +18,15 @@
     "createTeamModal": {
         "title": "Crea team",
         "invalidNameTitle": "Per favore, usa un nome diverso",
-        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del progetto."
     },
     "updateTeamModal": {
         "title": "Modifica {teamName}",
         "invalidNameTitle": "Per favore, usa un nome diverso",
-        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del progetto."
     },
     "manageTeamModals": {
-        "subheading": "I Team permettono di dare gli stessi permessi a gruppi di persone."
+        "subheading": "I Team permettono di dare gli stessi permessi a progetti di persone."
     },
     "manageTeamForm": {
         "submit": "Salva",
@@ -42,7 +42,7 @@
         "edit": "Modifica team"
     },
     "teamsTable": {
-        "title": "{teamCount} team in {groupName}",
+        "title": "{teamCount} team in {workspaceName}",
         "createNew": "Crea team",
         "nameColumn": "Nome",
         "createdColumn": "Creato il",
@@ -60,7 +60,7 @@
     "auditLog": {
         "title": "Audit log",
         "filterUserTitle": "Utente",
-        "filterWorkspaceTitle": "Gruppo",
+        "filterWorkspaceTitle": "Progetto",
         "filterActionTypeTitle": "Tipo Evento",
         "filterFromTimestampTitle": "Data inizio",
         "filterFromTimestamp": "Data fine",
@@ -75,8 +75,8 @@
         "clearFilters": "Pulisci",
         "allUsers": "Tutti gli utenti",
         "actionType": "Tipo di evento",
-        "workspace": "Gruppo",
-        "allWorkspaces": "Tutti i gruppi",
+        "workspace": "Progetto",
+        "allWorkspaces": "Tutti i progetti",
         "allActionTypes": "Tutti gli eventi"
     },
     "auditLogExportModal": {

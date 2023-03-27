@@ -69,7 +69,7 @@
     },
     "permission": {
         "admin": "Admin",
-        "adminDescription": "Può configurare e modificare completamente gruppi e applicazioni.",
+        "adminDescription": "Può configurare e modificare completamente progetti e applicazioni.",
         "member": "Membro",
         "memberDescription": "Può configurare e modificare completamente le applicazioni."
     },
@@ -170,7 +170,7 @@
         "deactivated": "Disponibile nella versione premium"
     },
     "trashType": {
-        "workspace": "gruppo",
+        "workspace": "progetto",
         "application": "applicazione",
         "table": "tabella",
         "field": "campo",
@@ -210,9 +210,9 @@
         "notCompletedTitle": "Azione non completata.",
         "notCompletedDescription": "L'azione non può essere completata a causa di un errore sconosciuto.",
         "userNotInWorkspaceTitle": "Azione non consentita.",
-        "userNotInWorkspaceDescription": "L'azione non può essere completata perché non sei membro del gruppo relativo.",
+        "userNotInWorkspaceDescription": "L'azione non può essere completata perché non sei membro del progetto relativo.",
         "invalidWorkspacePermissionsTitle": "Azione non consentita.",
-        "invalidWorkspacePermissionsDescription": "L'azione non può essere completata perché non disponi delle giuste autorizzazioni per il relativo gruppo.",
+        "invalidWorkspacePermissionsDescription": "L'azione non può essere completata perché non disponi delle giuste autorizzazioni per il relativo progetto.",
         "tableDoesNotExistTitle": "La tabella non esiste.",
         "tableDoesNotExistDescription": "L'azione non può essere completata perché la tabella relativa non esiste più.",
         "rowDoesNotExistTitle": "La riga non esiste.",
@@ -235,8 +235,8 @@
         "cannotRestoreParentBeforeChildDescription": "Non puoi ripristinare questo elemento perché dipende da un elemento eliminato. Ripristina prima l'elemento padre.",
         "cannotRestoreAsRelatedTableTrashedTitle": "Ripristina prima le tabelle relative.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Non puoi ripristinare questo campo perché dipende da altre tabelle che sono ancora nel cestino. Ripristina prima le altre tabelle relative.",
-        "workspaceUserIsLastAdminTitle": "Non è possibile lasciare il gruppo",
-        "workspaceUserIsLastAdminDescription": "Non è possibile lasciare il gruppo perché sei l'ultimo amministratore o perché gli altri admin verranno cancellati a breve. Elimina il gruppo o dai le autorizzazioni di amministrazione a un altro utente.",
+        "workspaceUserIsLastAdminTitle": "Non è possibile lasciare il progetto",
+        "workspaceUserIsLastAdminDescription": "Non è possibile lasciare il progetto perché sei l'ultimo amministratore o perché gli altri admin verranno cancellati a breve. Elimina il progetto o dai le autorizzazioni di amministrazione a un altro utente.",
         "failedToLockTableDueToConflictTitle": "Impossibile creare un nuovo campo",
         "failedToLockTableDueToConflictDescription": "Un'altra operazione è aggiornando o utilizzando la tabella. Attendi che termini prima di riprovare.",
         "failedToUndoRedoDueToConflictDescription": "Un'altra operazione sta bloccando l'annullamento o il ripristino, attendi prima di riprovare.",
@@ -245,7 +245,7 @@
         "errorMaxJobCountExceededDescription": "Non puoi avviare altre azioni dello stesso tipo finché le precedenti non sono terminate. Per favore, riprova più tardi.",
         "failedToLockFieldDueToConflictTitle": "Non è possibile modificare il campo",
         "failedToUndoRedoDueToConflictTitle": "Non è possibile annullare/ripristinare",
-        "maximumSnapshotsReachedDescription": "Il numero massimo di snapshot nel gruppo è stato raggiunto.",
+        "maximumSnapshotsReachedDescription": "Il numero massimo di snapshot nel progetto è stato raggiunto.",
         "snapshotBeingCreatedTitle": "Uno snapshot è già stato creato",
         "snapshotBeingDeletedDescription": "Non è possibile utilizzare snapshot che sono stati eliminati.",
         "maximumSnapshotsReachedTitle": "Limite snapshot raggiunto",
@@ -260,7 +260,7 @@
         "disabledPasswordProviderTitle": "Autenticazione tramite password disabilitata.",
         "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione.",
         "lastAdminTitle": "L'ultimo ammistratore non può essere rimosso",
-        "lastAdminMessage": "Un gruppo di lavoro deve avere almeno un amministratore."
+        "lastAdminMessage": "Un progetto deve avere almeno un amministratore."
     },
     "importerType": {
         "csv": "Importa un file CSV",

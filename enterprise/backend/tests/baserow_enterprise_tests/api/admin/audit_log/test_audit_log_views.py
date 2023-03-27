@@ -256,7 +256,10 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
 
     # the search works in the user language
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:action_types") + f"?search=crea+gruppo",
+        (
+            reverse("api:enterprise:admin:audit_log:action_types")
+            + f"?search=crea+progetto"
+        ),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -265,7 +268,7 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [{"id": "create_group", "value": "Crea gruppo"}],
+        "results": [{"id": "create_group", "value": "Crea progetto"}],
     }
 
 
@@ -384,24 +387,24 @@ def test_audit_log_entries_are_translated_in_the_user_language(
         "results": [
             {
                 "action_type": "create_group",
-                "description": f'Gruppo "{workspace_2.name}" ({workspace_2.id}) creato.',
+                "description": f'Progetto "{workspace_2.name}" ({workspace_2.id}) creato.',
                 "group": f"{workspace_2.name} ({workspace_2.id})",  # GroupDeprecation
                 "workspace": f"{workspace_2.name} ({workspace_2.id})",
                 "id": AnyInt(),
                 "ip_address": None,
                 "timestamp": "2023-01-01T12:00:01Z",
-                "type": "Crea gruppo",
+                "type": "Crea progetto",
                 "user": f"{admin_user.email} ({admin_user.id})",
             },
             {
                 "action_type": "create_group",
-                "description": f'Gruppo "{workspace_1.name}" ({workspace_1.id}) creato.',
+                "description": f'Progetto "{workspace_1.name}" ({workspace_1.id}) creato.',
                 "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
                 "workspace": f"{workspace_1.name} ({workspace_1.id})",
                 "id": AnyInt(),
                 "ip_address": None,
                 "timestamp": "2023-01-01T12:00:00Z",
-                "type": "Crea gruppo",
+                "type": "Crea progetto",
                 "user": f"{admin_user.email} ({admin_user.id})",
             },
         ],

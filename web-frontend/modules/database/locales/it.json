@@ -92,7 +92,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "Nome",
-        "workspaceLabel": "Gruppo"
+        "workspaceLabel": "Progetto"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "È necessario avere almeno un database per visualizzare la documentazione API."
@@ -666,7 +666,7 @@
         "snapshot": "Snapshot",
         "importingState": "Creando",
         "reset": "Creane un'altro",
-        "descriptionLimits": "Puoi avere un massimo di {n} snapshot per gruppo. | Puoi avere un massimo di {n} snapshot per gruppo. | Puoi avere un massimo di {n} snapshot per gruppo.",
+        "descriptionLimits": "Puoi avere un massimo di {n} snapshot per progetto. | Puoi avere un massimo di {n} snapshot per progetto. | Puoi avere un massimo di {n} snapshot per progetto.",
         "create": "Crea uno snapshot"
     },
     "deleteSnapshotModal": {
