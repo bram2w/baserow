@@ -1,5 +1,6 @@
 from requests.exceptions import RequestException
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
@@ -50,9 +51,11 @@ class AirtableImportJobType(JobType):
 
     request_serializer_field_overrides = {
         "group_id": serializers.IntegerField(
+            required=False,
             help_text="The group ID where the Airtable base must be imported into.",
         ),  # GroupDeprecation
         "workspace_id": serializers.IntegerField(
+            required=False,
             help_text="The workspace ID where the Airtable base must be imported into.",
         ),
         "airtable_share_url": serializers.URLField(
@@ -85,7 +88,15 @@ class AirtableImportJobType(JobType):
 
     def prepare_values(self, values, user):
 
-        workspace = CoreHandler().get_workspace(values.pop("workspace_id"))
+        # GroupDeprecation
+        workspace_id = values.pop("workspace_id", values.pop("group_id", None))
+        if workspace_id is None:
+            raise ValidationError(
+                "A `workspace_id` or `group_id` is required to "
+                "execute an AirtableImportJob."
+            )
+
+        workspace = CoreHandler().get_workspace(workspace_id)
         CoreHandler().check_permissions(
             user,
             RunAirtableImportJobOperationType.type,

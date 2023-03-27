@@ -13,6 +13,7 @@ import responses
 
 from baserow.contrib.database.airtable.exceptions import AirtableShareIsNotABase
 from baserow.contrib.database.airtable.handler import AirtableHandler
+from baserow.contrib.database.airtable.job_types import AirtableImportJobType
 from baserow.contrib.database.airtable.models import AirtableImportJob
 from baserow.contrib.database.fields.models import TextField
 from baserow.core.exceptions import UserNotInWorkspace
@@ -463,14 +464,14 @@ def test_create_and_start_airtable_import_job(mock_run_async_job, data_fixture):
     with pytest.raises(UserNotInWorkspace):
         JobHandler().create_and_start_job(
             user,
-            "airtable",
+            AirtableImportJobType.type,
             workspace_id=workspace_2.id,
             airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
         )
 
     job = JobHandler().create_and_start_job(
         user,
-        "airtable",
+        AirtableImportJobType.type,
         workspace_id=workspace.id,
         airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
     )
@@ -496,7 +497,7 @@ def test_create_and_start_airtable_import_job_while_other_job_is_running(data_fi
     with pytest.raises(MaxJobCountExceeded):
         JobHandler().create_and_start_job(
             user,
-            "airtable",
+            AirtableImportJobType.type,
             workspace_id=workspace.id,
             airtable_share_url="https://airtable.com/shrXxmp0WmqsTkFWTz",
         )

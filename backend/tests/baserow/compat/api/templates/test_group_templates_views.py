@@ -253,7 +253,7 @@ def test_async_install_template_serializer(api_client, data_fixture):
     job = JobHandler().create_and_start_job(
         user,
         InstallTemplateJobType.type,
-        workspace_id=workspace.id,
+        group_id=workspace.id,
         template_id=template.id,
     )
 
