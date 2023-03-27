@@ -17,29 +17,29 @@ msgstr ""
 #: src/baserow/core/action/scopes.py:9
 #, python-format
 msgid "in group \"%(group_name)s\" (%(group_id)s)."
-msgstr "nel gruppo \"%(group_name)s\" (%(group_id)s)."
+msgstr "nel progetto \"%(group_name)s\" (%(group_id)s)."
 
 #: src/baserow/core/actions.py:36
 msgid "Delete group"
-msgstr "Elimina gruppo"
+msgstr "Elimina progetto"
 
 #: src/baserow/core/actions.py:37
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
-msgstr "Il gruppo \"%(group_name)s\" (%(group_id)s) è stato eliminato."
+msgstr "Il progetto \"%(group_name)s\" (%(group_id)s) è stato eliminato."
 
 #: src/baserow/core/actions.py:97
 msgid "Create group"
-msgstr "Crea gruppo"
+msgstr "Crea progetto"
 
 #: src/baserow/core/actions.py:98
 #, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) created."
-msgstr "Gruppo \"%(group_name)s\" (%(group_id)s) creato."
+msgstr "Progetto \"%(group_name)s\" (%(group_id)s) creato."
 
 #: src/baserow/core/actions.py:156
 msgid "Update group"
-msgstr "Gruppo modificato"
+msgstr "Progetto modificato"
 
 #: src/baserow/core/actions.py:158
 #, python-format
@@ -47,16 +47,16 @@ msgid ""
 "Group (%(group_id)s) name changed from \"%(original_group_name)s\" to "
 "\"%(group_name)s.\""
 msgstr ""
-"Nome del gruppo (%(group_id)s) modificato da \"%(original_group_name)s\" a"
+"Nome del progetto (%(group_id)s) modificato da \"%(original_group_name)s\" a"
 "\"%(group_name)s.\""
 
 #: src/baserow/core/actions.py:237
 msgid "Order groups"
-msgstr "Riordina gruppi"
+msgstr "Riordina progetti"
 
 #: src/baserow/core/actions.py:238
 msgid "Groups order changed."
-msgstr "Ordine gruppi modificato."
+msgstr "Ordine progetti modificato."
 
 #: src/baserow/core/actions.py:297
 msgid "Order applications"
@@ -180,22 +180,20 @@ msgid ""
 msgstr ""
 
 #: src/baserow/core/actions.py:1011
-#, fuzzy
-#| msgid "Create group"
 msgid "Leave group"
-msgstr "Crea gruppo"
+msgstr "Abbandona progetto"
 
 #: src/baserow/core/actions.py:1012
 #, fuzzy, python-format
 #| msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
-msgstr "Il gruppo \"%(group_name)s\" (%(group_id)s) è stato eliminato."
+msgstr "Il progetto \"%(group_name)s\" (%(group_id)s) è stato abbandonato."
 
 #: src/baserow/core/emails.py:96
 #, fuzzy, python-format
 #| msgid "%(by)s invited you to %(group_name)s - Baserow"
 msgid "%(by)s invited you to %(workspace_name)s - Baserow"
-msgstr "%(by)s ti ha invitato ad unirti al gruppo %(group_name)s - Baserow"
+msgstr "%(by)s ti ha invitato ad unirti al progetto %(group_name)s - Baserow"
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -505,7 +503,7 @@ msgid "Account deletion cancelled - Baserow"
 msgstr "Cancellazione account interrotta - Baserow"
 
 #: src/baserow/core/user/handler.py:213
-#, fuzzy, python-format
+#, python-format
 #| msgid "%(name)s's group"
 msgid "%(name)s's workspace"
-msgstr "%(name)s del gruppo"
+msgstr "%(name)s del progetto"
