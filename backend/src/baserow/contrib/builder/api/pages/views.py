@@ -48,7 +48,9 @@ from baserow.core.jobs.registries import job_type_registry
 
 DuplicatePageJobTypeSerializer = job_type_registry.get(
     DuplicatePageJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleDuplicatePageJobTypeSerializer"
+)
 
 
 class PagesView(APIView):
@@ -264,6 +266,7 @@ class AsyncDuplicatePageView(APIView):
             "Start a job to duplicate the page with the provided `page_id` parameter "
             "if the authorized user has access to the builder's workspace."
         ),
+        request=None,
         responses={
             202: DuplicatePageJobTypeSerializer,
             400: get_error_schema(

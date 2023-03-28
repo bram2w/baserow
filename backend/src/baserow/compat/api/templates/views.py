@@ -7,7 +7,6 @@ from baserow.api.applications.views import application_type_serializers
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.jobs.errors import ERROR_MAX_JOB_COUNT_EXCEEDED
-from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import (
     CLIENT_SESSION_ID_SCHEMA_PARAMETER,
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
@@ -20,6 +19,7 @@ from baserow.api.templates.errors import (
 from baserow.api.templates.serializers import TemplateCategoriesSerializer
 from baserow.api.templates.views import (
     AsyncInstallTemplateView,
+    InstallTemplateJobTypeSerializer,
     InstallTemplateView,
     TemplatesView,
 )
@@ -33,13 +33,7 @@ from baserow.core.exceptions import (
     UserNotInWorkspace,
     WorkspaceDoesNotExist,
 )
-from baserow.core.job_types import InstallTemplateJobType
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
-from baserow.core.jobs.registries import job_type_registry
-
-InstallTemplateJobTypeSerializer = job_type_registry.get(
-    InstallTemplateJobType.type
-).get_serializer_class(base_class=JobSerializer)
 
 
 class TemplatesCompatView(TemplatesView):
@@ -90,6 +84,7 @@ class InstallTemplateCompatView(InstallTemplateView):
             "access to that group. The response contains those newly created "
             "applications."
         ),
+        request=None,
         responses={
             200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
@@ -145,6 +140,7 @@ class AsyncInstallTemplateCompatView(AsyncInstallTemplateView):
             "group if the user has access to that group. The response contains those "
             "newly created applications."
         ),
+        request=None,
         responses={
             202: InstallTemplateJobTypeSerializer,
             400: get_error_schema(

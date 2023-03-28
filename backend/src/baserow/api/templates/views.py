@@ -39,7 +39,9 @@ from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_
 
 InstallTemplateJobTypeSerializer = job_type_registry.get(
     InstallTemplateJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleInstallTemplateJobTypeSerializer"
+)
 
 
 class TemplatesView(APIView):
@@ -93,6 +95,7 @@ class InstallTemplateView(APIView):
             "the given workspace if the user has access to that workspace. The response "
             "contains those newly created applications."
         ),
+        request=None,
         responses={
             200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
@@ -159,6 +162,7 @@ class AsyncInstallTemplateView(APIView):
             "the given workspace if the user has access to that workspace. The response "
             "contains those newly created applications."
         ),
+        request=None,
         responses={
             202: InstallTemplateJobTypeSerializer,
             400: get_error_schema(

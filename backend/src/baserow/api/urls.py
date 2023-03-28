@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.urls import include, path
 
-from drf_spectacular.views import SpectacularJSONAPIView, SpectacularRedocView
+from drf_spectacular.views import SpectacularRedocView
 
 from baserow.compat.api.applications import urls as application_compat_urls
 from baserow.compat.api.groups import urls as group_compat_urls
@@ -14,6 +14,7 @@ from .auth_provider import urls as auth_provider_urls
 from .jobs import urls as jobs_urls
 from .settings import urls as settings_urls
 from .snapshots import urls as snapshots_urls
+from .spectacular.views import CachedSpectacularJSONAPIView
 from .templates import urls as templates_urls
 from .trash import urls as trash_urls
 from .user import urls as user_urls
@@ -29,7 +30,7 @@ def public_health_check(request):
 
 urlpatterns = (
     [
-        path("schema.json", SpectacularJSONAPIView.as_view(), name="json_schema"),
+        path("schema.json", CachedSpectacularJSONAPIView.as_view(), name="json_schema"),
         path(
             "redoc/",
             SpectacularRedocView.as_view(url_name="api:json_schema"),

@@ -109,7 +109,9 @@ from .serializers import (
 
 DuplicateFieldJobTypeSerializer = job_type_registry.get(
     DuplicateFieldJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleDuplicateFieldJobTypeSerializer"
+)
 
 
 class FieldsView(APIView):
@@ -561,6 +563,7 @@ class AsyncDuplicateFieldView(APIView):
             "Duplicates the table with the provided `table_id` parameter "
             "if the authorized user has access to the database's workspace."
         ),
+        request=None,
         responses={
             202: DuplicateFieldJobTypeSerializer,
             400: get_error_schema(

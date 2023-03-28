@@ -40,14 +40,12 @@ from baserow.core.handler import CoreHandler
 from baserow.core.models import WorkspaceUser
 from baserow.core.operations import ListWorkspaceUsersWorkspaceOperationType
 
+from .generated_serializers import ListWorkspaceUsersWithMemberDataSerializer
 from .serializers import (
     GetWorkspaceUsersViewParamsSerializer,
     UpdateWorkspaceUserSerializer,
     WorkspaceUserSerializer,
-    get_list_workspace_user_serializer,
 )
-
-ListWorkspaceUsersWithMemberDataSerializer = get_list_workspace_user_serializer()
 
 
 class WorkspaceUsersView(APIView, SearchableViewMixin, SortableViewMixin):

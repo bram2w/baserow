@@ -8,9 +8,7 @@ from baserow.api.applications.errors import (
 from baserow.api.decorators import map_exceptions
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
-from baserow.api.serializers import get_example_pagination_serializer_class
-from baserow.api.trash.serializers import TrashContentsSerializer
-from baserow.api.trash.views import TrashContentsView
+from baserow.api.trash.views import ExampleTrashContentsSerializer, TrashContentsView
 from baserow.compat.api.conf import TRASH_DEPRECATION_PREFIXES as DEPRECATION_PREFIXES
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
@@ -51,7 +49,7 @@ class TrashContentsCompatView(TrashContentsView):
             "contents for a group optionally filtered to a specific application."
         ),
         responses={
-            200: get_example_pagination_serializer_class(TrashContentsSerializer),
+            200: ExampleTrashContentsSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

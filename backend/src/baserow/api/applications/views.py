@@ -67,7 +67,10 @@ application_type_serializers = {
 
 DuplicateApplicationJobTypeSerializer = job_type_registry.get(
     DuplicateApplicationJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer,
+    meta_ref_name="SingleDuplicateApplicationJobTypeSerializer",
+)
 
 
 class AllApplicationsView(APIView):
@@ -494,6 +497,7 @@ class AsyncDuplicateApplicationView(APIView):
             "in case of a database application all the underlying tables, fields, "
             "views and rows are going to be duplicated."
         ),
+        request=None,
         responses={
             202: DuplicateApplicationJobTypeSerializer,
             400: get_error_schema(
