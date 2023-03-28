@@ -1,6 +1,6 @@
 <template>
   <SidebarApplication
-    :group="group"
+    :workspace="workspace"
     :application="application"
     @selected="selected"
   >
@@ -33,7 +33,7 @@
             enabled: $hasPermission(
               'database.order_tables',
               application,
-              application.group.id
+              application.workspace.id
             ),
           }"
           :database="application"
@@ -54,7 +54,7 @@
           $hasPermission(
             'database.create_table',
             application,
-            application.group.id
+            application.workspace.id
           )
         "
         class="tree__sub-add"
@@ -89,7 +89,7 @@ export default {
       type: Object,
       required: true,
     },
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -114,7 +114,7 @@ export default {
       try {
         await this.$store.dispatch('application/select', application)
       } catch (error) {
-        notifyIf(error, 'group')
+        notifyIf(error, 'workspace')
       }
     },
     async orderTables(order, oldOrder) {

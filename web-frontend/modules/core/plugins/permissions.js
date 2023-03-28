@@ -5,28 +5,28 @@ export default function ({ app }, inject) {
    * This function uses all the registered permissions to check the permission.
    * @param {string} operation
    * @param {object} context
-   * @param {number|null} groupId
+   * @param {number|null} workspaceId
    * @returns True if the operation is permitted, false otherwise.
    */
-  const hasPermission = (operation, context, groupId = null) => {
+  const hasPermission = (operation, context, workspaceId = null) => {
     const { store, $registry } = app
 
     let perms = []
 
-    // If we receive a null `groupId`, then we're testing an operation
-    // that is outside the scope of a group, so we'll need to use the
+    // If we receive a null `workspaceId`, then we're testing an operation
+    // that is outside the scope of a workspace, so we'll need to use the
     // user's permissions for our `perms`.
-    if (groupId === null) {
+    if (workspaceId === null) {
       perms = store.getters['auth/getGlobalUserPermissions']
     } else {
-      // If we receive a `groupId`, then we can use the
-      // permissions which are specific to this group.
-      const group = store.getters['group/get'](groupId)
-      // If the group is not found, you don't have permissions to it.
-      if (group === undefined || !group._.permissionsLoaded) {
+      // If we receive a `workspaceId`, then we can use the
+      // permissions which are specific to this workspace.
+      const workspace = store.getters['workspace/get'](workspaceId)
+      // If the workspace is not found, you don't have permissions to it.
+      if (workspace === undefined || !workspace._.permissionsLoaded) {
         return false
       }
-      perms = group._.permissions
+      perms = workspace._.permissions
     }
 
     // Check all permission managers whether one accepts or refuses the operation

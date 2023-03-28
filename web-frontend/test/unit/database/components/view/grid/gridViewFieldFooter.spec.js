@@ -49,7 +49,7 @@ describe('Field footer component', () => {
 
     const database = {
       id: 1,
-      group: { id: 1 },
+      workspace: { id: 1 },
     }
 
     // field with no aggregation
@@ -99,7 +99,7 @@ describe('Field footer component', () => {
 
     const database = {
       id: 1,
-      group: { id: 1 },
+      workspace: { id: 1 },
     }
 
     mockServer.getAllFieldAggregationData(view.id, {

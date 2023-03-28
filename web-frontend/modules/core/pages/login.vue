@@ -11,7 +11,7 @@
 
 <script>
 import Login from '@baserow/modules/core/components/auth/Login'
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import workspaceInvitationToken from '@baserow/modules/core/mixins/workspaceInvitationToken'
 
 export default {
   components: { Login },
@@ -23,7 +23,7 @@ export default {
       return redirect({ name: 'dashboard' })
     }
     await store.dispatch('authProvider/fetchLoginOptions')
-    return await groupInvitationToken.asyncData({ route, app })
+    return await workspaceInvitationToken.asyncData({ route, app })
   },
   head() {
     return {

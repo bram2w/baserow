@@ -5,7 +5,7 @@
       !parent.$hasPermission(
         'workspace_user.update',
         props.row,
-        props.column.additionalProps.groupId
+        props.column.additionalProps.workspaceId
       )
     "
   >

@@ -5,7 +5,7 @@
         !$hasPermission(
           'enterprise.teams.team.update',
           row,
-          column.additionalProps.groupId
+          column.additionalProps.workspaceId
         )
       "
     >
@@ -51,15 +51,15 @@ export default {
     },
   },
   computed: {
-    group() {
-      return this.$store.getters['group/get'](
-        this.column.additionalProps.groupId
+    workspace() {
+      return this.$store.getters['workspace/get'](
+        this.column.additionalProps.workspaceId
       )
     },
     roles() {
-      // filters out role not for Team subject and not for group level
-      return this.group
-        ? filterRoles(this.group._.roles, {
+      // filters out role not for Team subject and not for workspace level
+      return this.workspace
+        ? filterRoles(this.workspace._.roles, {
             scopeType: this.scopeType,
             subjectType: 'baserow_enterprise.Team',
           })
@@ -82,8 +82,8 @@ export default {
         await RoleAssignmentsService(this.$client).assignRole(
           newTeam.id,
           'baserow_enterprise.Team',
-          this.column.additionalProps.groupId,
-          this.column.additionalProps.groupId,
+          this.column.additionalProps.workspaceId,
+          this.column.additionalProps.workspaceId,
           'workspace',
           permissionsNew
         )

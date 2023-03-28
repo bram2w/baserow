@@ -180,7 +180,7 @@ export class RealTimeHandler {
   }
 
   /**
-   * Registers all the core event handlers, which is for the groups and applications.
+   * Registers all the core event handlers, which is for the workspaces and applications.
    */
   registerCoreEvents() {
     // When the authentication is successful we want to store the web socket id in
@@ -200,7 +200,7 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('user_updated', ({ store }, data) => {
-      store.dispatch('group/forceUpdateGroupUserAttributes', {
+      store.dispatch('workspace/forceUpdateWorkspaceUserAttributes', {
         userId: data.user.id,
         values: {
           name: data.user.first_name,
@@ -209,7 +209,7 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('user_deleted', ({ store }, data) => {
-      store.dispatch('group/forceUpdateGroupUserAttributes', {
+      store.dispatch('workspace/forceUpdateWorkspaceUserAttributes', {
         userId: data.user.id,
         values: {
           to_be_deleted: true,
@@ -218,7 +218,7 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('user_restored', ({ store }, data) => {
-      store.dispatch('group/forceUpdateGroupUserAttributes', {
+      store.dispatch('workspace/forceUpdateWorkspaceUserAttributes', {
         userId: data.user.id,
         values: {
           to_be_deleted: false,
@@ -227,58 +227,61 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('user_permanently_deleted', ({ store }, data) => {
-      store.dispatch('group/forceDeleteUser', {
+      store.dispatch('workspace/forceDeleteUser', {
         userId: data.user_id,
       })
     })
 
     this.registerEvent('group_created', ({ store }, data) => {
-      store.dispatch('group/forceCreate', data.group)
+      store.dispatch('workspace/forceCreate', data.workspace)
     })
 
     this.registerEvent('group_restored', ({ store }, data) => {
-      store.dispatch('group/forceCreate', data.group)
+      store.dispatch('workspace/forceCreate', data.workspace)
       store.dispatch('application/forceCreateAll', data.applications)
     })
 
     this.registerEvent('group_updated', ({ store }, data) => {
-      const group = store.getters['group/get'](data.group_id)
-      if (group !== undefined) {
-        store.dispatch('group/forceUpdate', { group, values: data.group })
+      const workspace = store.getters['workspace/get'](data.workspace_id)
+      if (workspace !== undefined) {
+        store.dispatch('workspace/forceUpdate', {
+          workspace,
+          values: data.workspace,
+        })
       }
     })
 
     this.registerEvent('group_deleted', ({ store }, data) => {
-      const group = store.getters['group/get'](data.group_id)
-      if (group !== undefined) {
-        store.dispatch('group/forceDelete', group)
+      const workspace = store.getters['workspace/get'](data.workspace_id)
+      if (workspace !== undefined) {
+        store.dispatch('workspace/forceDelete', workspace)
       }
     })
 
     this.registerEvent('groups_reordered', ({ store }, data) => {
-      store.dispatch('group/forceOrder', data.group_ids)
+      store.dispatch('workspace/forceOrder', data.workspace_ids)
     })
 
     this.registerEvent('group_user_added', ({ store }, data) => {
-      store.dispatch('group/forceAddGroupUser', {
-        groupId: data.group_id,
-        values: data.group_user,
+      store.dispatch('workspace/forceAddWorkspaceUser', {
+        workspaceId: data.workspace_id,
+        values: data.workspace_user,
       })
     })
 
     this.registerEvent('group_user_updated', ({ store }, data) => {
-      store.dispatch('group/forceUpdateGroupUser', {
+      store.dispatch('workspace/forceUpdateWorkspaceUser', {
         id: data.id,
-        groupId: data.group_id,
-        values: data.group_user,
+        workspaceId: data.workspace_id,
+        values: data.workspace_user,
       })
     })
 
     this.registerEvent('group_user_deleted', ({ store }, data) => {
-      store.dispatch('group/forceDeleteGroupUser', {
+      store.dispatch('workspace/forceDeleteWorkspaceUser', {
         id: data.id,
-        groupId: data.group_id,
-        values: data.group_user,
+        workspaceId: data.workspace_id,
+        values: data.workspace_user,
       })
     })
 
@@ -304,10 +307,10 @@ export class RealTimeHandler {
     })
 
     this.registerEvent('applications_reordered', ({ store }, data) => {
-      const group = store.getters['group/get'](data.group_id)
-      if (group !== undefined) {
+      const workspace = store.getters['workspace/get'](data.workspace_id)
+      if (workspace !== undefined) {
         store.commit('application/ORDER_ITEMS', {
-          group,
+          workspace,
           order: data.order,
           isHashed: true,
         })

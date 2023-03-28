@@ -1,8 +1,8 @@
 export default (client, $hasFeature) => {
   return {
     // TODO implement once endpoint exists
-    get(group) {
-      if ($hasFeature('RBAC', group.id)) {
+    get(workspace) {
+      if ($hasFeature('RBAC', workspace.id)) {
         return {
           data: [
             { uid: 'ADMIN', isBillable: true },
@@ -13,7 +13,7 @@ export default (client, $hasFeature) => {
             { uid: 'NO_ACCESS', isBillable: false },
             {
               uid: 'NO_ROLE_LOW_PRIORITY',
-              allowed_scope_types: ['group'],
+              allowed_scope_types: ['workspace'],
               allowed_subject_types: ['auth.User'],
               isBillable: false,
             },

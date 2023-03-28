@@ -21,8 +21,8 @@ export class PersonalViewOwnershipType extends ViewOwnershipType {
     return 'fas fa-lock'
   }
 
-  isDeactivated(groupId) {
-    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
   }
 
   getDeactivatedText() {

@@ -82,7 +82,7 @@ export default {
         this.$hasPermission(
           'database.table.create_field',
           table,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },
@@ -92,7 +92,7 @@ export default {
         this.$hasPermission(
           'database.table.field.delete_related_link_row_field',
           this.selectedFieldTable,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },

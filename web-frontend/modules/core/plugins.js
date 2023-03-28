@@ -34,9 +34,9 @@ export class BaserowPlugin extends Registerable {
 
   /**
    * Every registered plugin can display an additional item in the sidebar within
-   * the group context.
+   * the workspace context.
    */
-  getSidebarGroupComponent(group) {
+  getSidebarWorkspaceComponent(workspace) {
     return null
   }
 
@@ -49,24 +49,24 @@ export class BaserowPlugin extends Registerable {
   }
 
   /*
-   * Every registered plugin can display a component in the `DashboardGroup`
-   * component directly after the group name.
+   * Every registered plugin can display a component in the `DashboardWorkspace`
+   * component directly after the workspace name.
    */
-  getDashboardGroupExtraComponent() {
+  getDashboardWorkspaceExtraComponent() {
     return null
   }
 
   /*
-   * Every registered plugin can display a component in the `DashboardGroup`
-   * component directly below the group name.
+   * Every registered plugin can display a component in the `DashboardWorkspace`
+   * component directly below the workspace name.
    */
-  getDashboardGroupComponent() {
+  getDashboardWorkspaceComponent() {
     return null
   }
 
   /**
-   * Because the dashboard could contain dynamic `getDashboardGroupComponent` and
-   * `getDashboardGroupExtraComponent` components, it could be that additional data
+   * Because the dashboard could contain dynamic `getDashboardWorkspaceComponent` and
+   * `getDashboardWorkspaceExtraComponent` components, it could be that additional data
    * must be fetched from the backend when the page first loads. This method can be
    * overwritten to do that.
    */
@@ -114,7 +114,7 @@ export class BaserowPlugin extends Registerable {
    * database.
    * @returns {*[]}
    */
-  getAdditionalDatabaseContextComponents(group, database) {
+  getAdditionalDatabaseContextComponents(workspace, database) {
     return []
   }
 
@@ -124,7 +124,7 @@ export class BaserowPlugin extends Registerable {
    * table.
    * @returns {*[]}
    */
-  getAdditionalTableContextComponents(group, table) {
+  getAdditionalTableContextComponents(workspace, table) {
     return []
   }
 }

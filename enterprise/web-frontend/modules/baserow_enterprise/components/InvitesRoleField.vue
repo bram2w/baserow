@@ -21,7 +21,7 @@
 import { mapGetters } from 'vuex'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 import { clone } from '@baserow/modules/core/utils/object'
-import GroupService from '@baserow/modules/core/services/group'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
@@ -39,13 +39,13 @@ export default {
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
-    group() {
-      return this.$store.getters['group/get'](
-        this.column.additionalProps.groupId
+    workspace() {
+      return this.$store.getters['workspace/get'](
+        this.column.additionalProps.workspaceId
       )
     },
     roles() {
-      return this.group ? this.group._.roles : []
+      return this.workspace ? this.workspace._.roles : []
     },
     rowSanitised() {
       return {
@@ -68,13 +68,13 @@ export default {
       this.$emit('row-update', newInvitation)
 
       try {
-        await GroupService(this.$client).updateInvitation(
+        await WorkspaceService(this.$client).updateInvitation(
           newInvitation.id,
           newInvitation
         )
       } catch (error) {
         this.$emit('row-update', oldInvitation)
-        notifyIf(error, 'group')
+        notifyIf(error, 'workspace')
       }
     },
   },

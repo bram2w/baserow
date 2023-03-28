@@ -77,7 +77,7 @@ import decamelize from 'decamelize'
 import { required, email } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import workspaceInvitationToken from '@baserow/modules/core/mixins/workspaceInvitationToken'
 import { SamlAuthProviderType } from '@baserow_enterprise/authProviderTypes'
 import samlAuthProviderService from '@baserow_enterprise/services/samlAuthProvider'
 
@@ -104,9 +104,12 @@ export default {
       return redirect({ name: 'login', query: route.query }) // no SAML provider enabled
     }
 
-    // in case the email is not necessary or provided via group invitation,
+    // in case the email is not necessary or provided via workspace invitation,
     // redirect the user directly to the SAML provider
-    const { invitation } = await groupInvitationToken.asyncData({ route, app })
+    const { invitation } = await workspaceInvitationToken.asyncData({
+      route,
+      app,
+    })
     if (!samlLoginOptions.domainRequired || invitation?.email) {
       try {
         const { data } = await samlAuthProviderService(
@@ -174,8 +177,15 @@ export default {
     },
     getRedirectUrlWithValidQueryParams(url) {
       const parsedUrl = new URL(url)
+      // GroupDeprecation
       for (const [key, value] of Object.entries(this.$route.query)) {
-        if (['language', 'groupInvitationToken'].includes(key)) {
+        if (
+          [
+            'language',
+            'groupInvitationToken',
+            'workspaceInvitationToken',
+          ].includes(key)
+        ) {
           parsedUrl.searchParams.append(decamelize(key), value)
         }
       }

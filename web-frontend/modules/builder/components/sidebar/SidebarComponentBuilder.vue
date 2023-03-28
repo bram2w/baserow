@@ -2,7 +2,7 @@
   <div>
     <SidebarApplication
       ref="sidebarApplication"
-      :group="group"
+      :workspace="workspace"
       :application="application"
       @selected="selected"
     >
@@ -12,7 +12,7 @@
             $hasPermission(
               'application.update',
               application,
-              application.group.id
+              application.workspace.id
             )
           "
         >
@@ -36,7 +36,7 @@
               enabled: $hasPermission(
                 'builder.order_pages',
                 application,
-                application.group.id
+                application.workspace.id
               ),
             }"
             :builder="application"
@@ -57,7 +57,7 @@
             $hasPermission(
               'builder.create_page',
               application,
-              application.group.id
+              application.workspace.id
             )
           "
           class="tree__sub-add"
@@ -97,7 +97,7 @@ export default {
       type: Object,
       required: true,
     },
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -122,7 +122,7 @@ export default {
       try {
         this.$store.dispatch('application/select', application)
       } catch (error) {
-        notifyIf(error, 'group')
+        notifyIf(error, 'workspace')
       }
     },
     settingsClicked() {

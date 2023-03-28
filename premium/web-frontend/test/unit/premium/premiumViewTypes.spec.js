@@ -6,11 +6,11 @@ import CreateViewModal from '@baserow/modules/database/components/view/CreateVie
 
 async function openViewContextAndClickOnCreateKanbanView(
   testApp,
-  { userGroupId = 1 } = {}
+  { userWorkspaceId = 1 } = {}
 ) {
   const viewsContext = await testApp.mount(ViewsContext, {
     propsData: {
-      database: { group: { id: userGroupId } },
+      database: { workspace: { id: userWorkspaceId } },
       views: [],
       table: {},
       readOnly: false,

@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     isDeactivated(mode) {
-      return mode.isDeactivated(this.database.group.id)
+      return mode.isDeactivated(this.database.workspace.id)
     },
     hasDeactivatedClickModal(mode) {
       return mode.getDeactivatedClickModal() !== null

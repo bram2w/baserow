@@ -1,15 +1,15 @@
 export function createApplication(
   mock,
-  { applicationId = 1, groupId = 1, tables = [] }
+  { applicationId = 1, workspaceId = 1, tables = [] }
 ) {
   const application = {
     id: applicationId,
     name: 'Test Database App',
     order: applicationId,
     type: 'database',
-    group: {
-      id: groupId,
-      name: 'Test group',
+    workspace: {
+      id: workspaceId,
+      name: 'Test workspace',
     },
     tables: tables.map((t) => ({
       ...t,

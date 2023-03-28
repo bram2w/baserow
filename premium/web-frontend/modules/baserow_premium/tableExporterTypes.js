@@ -14,8 +14,8 @@ class PremiumTableExporterType extends TableExporterType {
     return PremiumModal
   }
 
-  isDeactivated(groupId) {
-    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
   }
 }
 

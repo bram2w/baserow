@@ -74,7 +74,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      selectedGroupId: 'group/selectedId',
+      selectedWorkspaceId: 'workspace/selectedId',
     }),
   },
   beforeDestroy() {
@@ -92,7 +92,7 @@ export default {
 
       try {
         const { data } = await AirtableService(this.$client).create(
-          this.selectedGroupId,
+          this.selectedWorkspaceId,
           this.airtableUrl
         )
         this.startJobPoller(data)

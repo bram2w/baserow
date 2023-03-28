@@ -62,7 +62,7 @@ import PasswordRegister from '@baserow/modules/core/components/auth/PasswordRegi
 import LangPicker from '@baserow/modules/core/components/LangPicker'
 import LoginButtons from '@baserow/modules/core/components/auth/LoginButtons'
 import LoginActions from '@baserow/modules/core/components/auth/LoginActions'
-import groupInvitationToken from '@baserow/modules/core/mixins/groupInvitationToken'
+import workspaceInvitationToken from '@baserow/modules/core/mixins/workspaceInvitationToken'
 
 export default {
   components: { PasswordRegister, LangPicker, LoginButtons, LoginActions },
@@ -72,7 +72,7 @@ export default {
       return redirect({ name: 'dashboard' })
     }
     await store.dispatch('authProvider/fetchLoginOptions')
-    return await groupInvitationToken.asyncData({ route, app })
+    return await workspaceInvitationToken.asyncData({ route, app })
   },
   data() {
     return {
@@ -88,7 +88,7 @@ export default {
     isSignupEnabled() {
       return (
         this.settings.allow_new_signups ||
-        (this.settings.allow_signups_via_group_invitations &&
+        (this.settings.allow_signups_via_workspace_invitations &&
           this.invitation?.id)
       )
     },

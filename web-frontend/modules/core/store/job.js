@@ -206,11 +206,11 @@ export const actions = {
     commit('DELETE_ITEM', job.id)
   },
   /**
-   * Deletes all the jobs belonging to the given group.
+   * Deletes all the jobs belonging to the given workspace.
    */
-  deleteForGroup({ commit, state }, group) {
+  deleteForWorkspace({ commit, state }, workspace) {
     const jobs = state.items.filter((job) =>
-      this.$registry.get('job', job.type).isJobPartOfGroup(job, group)
+      this.$registry.get('job', job.type).isJobPartOfWorkspace(job, workspace)
     )
     jobs.forEach((job) => commit('DELETE_ITEM', job.id))
   },

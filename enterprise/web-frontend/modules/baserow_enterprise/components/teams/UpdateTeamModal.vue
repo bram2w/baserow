@@ -7,7 +7,7 @@
     <Error :error="error"></Error>
     <ManageTeamForm
       ref="manageForm"
-      :group="group"
+      :workspace="workspace"
       :loading="loading"
       :default-values="team"
       :subjects-loading="subjectsLoading"
@@ -31,7 +31,7 @@ import error from '@baserow/modules/core/mixins/error'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import ManageTeamForm from '@baserow_enterprise/components/teams/ManageTeamForm'
 import TeamService from '@baserow_enterprise/services/team'
-import MemberAssignmentModal from '@baserow/modules/core/components/group/MemberAssignmentModal'
+import MemberAssignmentModal from '@baserow/modules/core/components/workspace/MemberAssignmentModal'
 
 export {}
 
@@ -45,7 +45,7 @@ export default {
       required: false,
       default: () => {},
     },
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -61,8 +61,8 @@ export default {
     uninvitedUserSubjects() {
       // Pluck out the user IDs in the objects of the `selections` array.
       const invitedSubjectIds = this.invitedUserSubjects.map((subj) => subj.id)
-      // Return an array of group users who aren't already invited.
-      return this.group.users.filter(
+      // Return an array of workspace users who aren't already invited.
+      return this.workspace.users.filter(
         (user) => !invitedSubjectIds.includes(user.id)
       )
     },
@@ -81,7 +81,7 @@ export default {
     },
     async parseSubjectsAndMembers() {
       this.subjectsLoading = true
-      // Fetch the subjects in this team, and the users in the group in parallel.
+      // Fetch the subjects in this team, and the users in the workspace in parallel.
       const { data } = await TeamService(this.$client).fetchAllSubjects(
         this.team.id
       )
@@ -95,11 +95,11 @@ export default {
       // Extract the user subject PKs.
       const userIds = userSubjects.map((subject) => subject.subject_id)
 
-      // Using those user PKs, find the members records in `this.group.user`.
-      const invitedMembers = this.group.users.filter((member) =>
+      // Using those user PKs, find the members records in `this.workspace.user`.
+      const invitedMembers = this.workspace.users.filter((member) =>
         userIds.includes(member.user_id)
       )
-      // Assign `invitedUserSubjects` our list of GroupUser records who are NOT subjects in this team.
+      // Assign `invitedUserSubjects` our list of WorkspaceUser records who are NOT subjects in this team.
       this.invitedUserSubjects = invitedMembers
     },
     storeSelectedUsers(selections) {

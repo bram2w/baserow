@@ -1,0 +1,69 @@
+<template>
+  <Modal>
+    <h2 class="box__title">
+      {{ $t('deleteWorkspaceModal.title', workspace) }}
+    </h2>
+    <Error :error="error"></Error>
+    <div>
+      <i18n path="deleteWorkspaceModal.confirmation" tag="p">
+        <template #name>
+          <strong>{{ workspace.name }}</strong>
+        </template>
+      </i18n>
+      <p>
+        {{ $t('deleteWorkspaceModal.comment') }}
+      </p>
+      <div class="actions">
+        <div class="align-right">
+          <a
+            class="button button--large button--error button--overflow"
+            :class="{ 'button--loading': loading }"
+            :disabled="loading"
+            :title="workspace.name"
+            @click.prevent="deleteGroup()"
+          >
+            {{ $t('deleteWorkspaceModal.delete', workspace) }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </Modal>
+</template>
+
+<script>
+import modal from '@baserow/modules/core/mixins/modal'
+import error from '@baserow/modules/core/mixins/error'
+import WorkspacesAdminService from '@baserow_premium/services/admin/workspaces'
+
+export default {
+  name: 'DeleteWorkspaceModal',
+  mixins: [modal, error],
+  props: {
+    workspace: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      loading: false,
+    }
+  },
+  methods: {
+    async deleteGroup() {
+      this.hideError()
+      this.loading = true
+
+      try {
+        await WorkspacesAdminService(this.$client).delete(this.workspace.id)
+        this.$emit('workspace-deleted', this.workspace.id)
+        this.hide()
+      } catch (error) {
+        this.handleError(error, 'workspace')
+      }
+
+      this.loading = false
+    },
+  },
+}
+</script>

@@ -52,7 +52,11 @@
       <a
         v-if="
           !readOnly &&
-          $hasPermission('database.table.create_row', table, database.group.id)
+          $hasPermission(
+            'database.table.create_row',
+            table,
+            database.workspace.id
+          )
         "
         ref="addOptionContextLink"
         class="kanban-view__add-stack"
@@ -94,7 +98,11 @@
       :rows="allRows"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"
@@ -191,7 +199,7 @@ export default {
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
     /**
-     * Returns the single select field object that the kanban view uses to group the
+     * Returns the single select field object that the kanban view uses to workspace the
      * cards in stacks.
      */
     singleSelectField() {

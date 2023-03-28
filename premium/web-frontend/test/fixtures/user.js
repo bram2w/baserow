@@ -2,10 +2,10 @@ export function aUser({
   id = 1,
   username = 'user@baserow.io',
   name = 'user_name',
-  groups = [
+  workspaces = [
     {
       id: 1,
-      name: 'some_group',
+      name: 'some_workspace',
       permissions: 'ADMIN',
     },
   ],
@@ -18,7 +18,7 @@ export function aUser({
     id,
     username,
     name,
-    groups,
+    workspaces,
     last_login: lastLogin,
     date_joined: dateJoined,
     is_active: isActive,

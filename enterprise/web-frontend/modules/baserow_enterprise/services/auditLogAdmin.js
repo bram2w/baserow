@@ -8,10 +8,16 @@ export default (client) => {
       const userPaginatedService = baseService(client, usersUrl)
       return userPaginatedService.fetch(usersUrl, page, search, [], [])
     },
-    fetchGroups(page, search) {
-      const groupsUrl = '/admin/audit-log/workspaces/'
-      const groupPaginatedService = baseService(client, groupsUrl)
-      return groupPaginatedService.fetch(groupsUrl, page, search, [], [])
+    fetchWorkspaces(page, search) {
+      const workspacesUrl = '/admin/audit-log/workspaces/'
+      const workspacePaginatedService = baseService(client, workspacesUrl)
+      return workspacePaginatedService.fetch(
+        workspacesUrl,
+        page,
+        search,
+        [],
+        []
+      )
     },
     fetchActionTypes(page, search) {
       const actionTypesUrl = '/admin/audit-log/action-types/'

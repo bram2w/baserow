@@ -11,7 +11,7 @@
         <li
           v-if="
             member.user_id !== userId &&
-            $hasPermission('workspace_user.delete', member, group.id)
+            $hasPermission('workspace_user.delete', member, workspace.id)
           "
         >
           <a class="color-error" @click.prevent="showRemoveModal">
@@ -21,12 +21,12 @@
         </li>
       </ul>
     </template>
-    <RemoveFromGroupModal
-      ref="removeFromGroupModal"
-      :group="group"
+    <RemoveFromWorkspaceModal
+      ref="removeFromWorkspaceModal"
+      :workspace="workspace"
       :member="member"
       @remove-user="$emit('remove-user', $event)"
-    ></RemoveFromGroupModal>
+    ></RemoveFromWorkspaceModal>
   </Context>
 </template>
 
@@ -34,16 +34,16 @@
 import { mapGetters } from 'vuex'
 
 import context from '@baserow/modules/core/mixins/context'
-import RemoveFromGroupModal from '@baserow/modules/core/components/group/RemoveFromGroupModal'
+import RemoveFromWorkspaceModal from '@baserow/modules/core/components/workspace/RemoveFromWorkspaceModal'
 
 export default {
   name: 'EditMemberContext',
   components: {
-    RemoveFromGroupModal,
+    RemoveFromWorkspaceModal,
   },
   mixins: [context],
   props: {
-    group: {
+    workspace: {
       required: true,
       type: Object,
     },
@@ -60,7 +60,7 @@ export default {
   methods: {
     showRemoveModal() {
       this.hide()
-      this.$refs.removeFromGroupModal.show()
+      this.$refs.removeFromWorkspaceModal.show()
     },
     async copyEmail({ email }) {
       await navigator.clipboard.writeText(email)

@@ -25,7 +25,11 @@
       :include-grid-view-identifier-dropdown="true"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
@@ -72,7 +76,7 @@
       :width="leftFieldsWidth"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.move_row', table, database.group.id)
+        !$hasPermission('database.table.move_row', table, database.workspace.id)
       "
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
@@ -89,7 +93,11 @@
       :can-order-fields="true"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
@@ -156,7 +164,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -171,7 +179,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -186,7 +194,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -211,7 +219,7 @@
             $hasPermission(
               'database.table.delete_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -231,11 +239,19 @@
       :rows="allRows"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :enable-navigation="
         !readOnly &&
-        $hasPermission('database.table.update_row', table, database.group.id)
+        $hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
@@ -1082,7 +1098,7 @@ export default {
         !this.$hasPermission(
           'database.table.update_row',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       ) {
         return

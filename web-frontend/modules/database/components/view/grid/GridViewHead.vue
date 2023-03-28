@@ -8,7 +8,11 @@
       <GridViewRowIdentifierDropdown
         v-if="
           !readOnly &&
-          $hasPermission('database.table.view.update', view, database.group.id)
+          $hasPermission(
+            'database.table.view.update',
+            view,
+            database.workspace.id
+          )
         "
         :row-identifier-type-selected="view.row_identifier_type"
         @change="onChangeIdentifierDropdown"
@@ -34,7 +38,11 @@
       v-if="
         includeAddField &&
         !readOnly &&
-        $hasPermission('database.table.create_field', table, database.group.id)
+        $hasPermission(
+          'database.table.create_field',
+          table,
+          database.workspace.id
+        )
       "
       class="grid-view__column"
       :style="{ width: 100 + 'px' }"

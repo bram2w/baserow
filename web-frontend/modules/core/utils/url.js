@@ -16,10 +16,10 @@ export function addQueryParamsToRedirectUrl(url, params) {
     parsedUrl.searchParams.append('original', params.original)
   }
 
-  if (params.groupInvitationToken) {
+  if (params.invitationToken) {
     parsedUrl.searchParams.append(
-      'group_invitation_token',
-      params.groupInvitationToken
+      'workspace_invitation_token',
+      params.invitationToken
     )
   }
 

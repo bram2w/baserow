@@ -1,7 +1,7 @@
 export default (client) => {
   return {
-    get(group) {
-      return client.get(`/groups/${group.id}/permissions/`)
+    get(workspace) {
+      return client.get(`/workspaces/${workspace.id}/permissions/`)
     },
   }
 }

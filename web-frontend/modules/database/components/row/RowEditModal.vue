@@ -72,7 +72,7 @@
           $hasPermission(
             'database.table.create_field',
             table,
-            database.group.id
+            database.workspace.id
           )
         "
         class="actions"

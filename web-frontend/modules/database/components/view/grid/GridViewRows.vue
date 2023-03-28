@@ -9,7 +9,7 @@
       v-for="(row, index) in rows"
       :key="`row-${row._.persistentId}`"
       :view="view"
-      :group-id="groupId"
+      :workspace-id="workspaceId"
       :row="row"
       :fields="fields"
       :all-fields="allFields"
@@ -68,7 +68,7 @@ export default {
       type: Boolean,
       required: true,
     },
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
     },

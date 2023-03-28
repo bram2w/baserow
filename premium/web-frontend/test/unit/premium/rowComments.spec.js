@@ -5,11 +5,11 @@ import flushPromises from 'flush-promises'
 
 async function openRowCommentSidebar(
   testApp,
-  { tableId = 10, rowId = 20, groupId = 30 } = {}
+  { tableId = 10, rowId = 20, workspaceId = 30 } = {}
 ) {
   return await testApp.mount(RowCommentsSidebar, {
     propsData: {
-      database: { group: { id: groupId } },
+      database: { workspace: { id: workspaceId } },
       row: { id: rowId },
       table: { id: tableId },
       readOnly: false,

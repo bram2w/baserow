@@ -32,7 +32,7 @@ export default {
           )
 
           deco.component = deco.decoratorType.getComponent(
-            this.database.group.id
+            this.database.workspace.id
           )
           deco.place = deco.decoratorType.getPlace()
 
@@ -57,7 +57,7 @@ export default {
         })
         .filter(
           ({ decoratorType }) =>
-            !decoratorType.isDeactivated(this.database.group.id)
+            !decoratorType.isDeactivated(this.database.workspace.id)
         )
     },
     decorationsByPlace() {

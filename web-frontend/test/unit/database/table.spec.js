@@ -126,7 +126,7 @@ describe('Table Component Tests', () => {
 
   async function givenASingleSimpleTableInTheServer() {
     const table = mockServer.createTable()
-    const { application } = await mockServer.createAppAndGroup(table)
+    const { application } = await mockServer.createAppAndWorkspace(table)
     const gridView = mockServer.createGridView(application, table, {})
     const fields = mockServer.createFields(application, table, [
       {

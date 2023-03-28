@@ -57,9 +57,9 @@ export class UsersAdminType extends PremiumAdminType {
   }
 }
 
-export class GroupsAdminType extends PremiumAdminType {
+export class WorkspacesAdminType extends PremiumAdminType {
   static getType() {
-    return 'groups'
+    return 'workspaces'
   }
 
   getIconClass() {
@@ -72,7 +72,7 @@ export class GroupsAdminType extends PremiumAdminType {
   }
 
   getRouteName() {
-    return 'admin-groups'
+    return 'admin-workspaces'
   }
 
   getOrder() {

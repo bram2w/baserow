@@ -41,7 +41,7 @@
             $hasPermission(
               'database.table.run_export',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -55,7 +55,7 @@
             $hasPermission(
               'database.table.create_webhook',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -66,7 +66,11 @@
         </li>
         <li
           v-if="
-            $hasPermission('database.table.update', table, database.group.id)
+            $hasPermission(
+              'database.table.update',
+              table,
+              database.workspace.id
+            )
           "
         >
           <a @click="enableRename()">
@@ -76,7 +80,11 @@
         </li>
         <li
           v-if="
-            $hasPermission('database.table.duplicate', table, database.group.id)
+            $hasPermission(
+              'database.table.duplicate',
+              table,
+              database.workspace.id
+            )
           "
         >
           <SidebarDuplicateTableContextItem
@@ -88,7 +96,11 @@
         </li>
         <li
           v-if="
-            $hasPermission('database.table.delete', table, database.group.id)
+            $hasPermission(
+              'database.table.delete',
+              table,
+              database.workspace.id
+            )
           "
         >
           <a
@@ -144,22 +156,22 @@ export default {
         this.$hasPermission(
           'database.table.run_export',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.create_webhook',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.update',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.duplicate',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },
@@ -169,7 +181,7 @@ export default {
           (components, plugin) =>
             components.concat(
               plugin.getAdditionalTableContextComponents(
-                this.database.group,
+                this.database.workspace,
                 this.table
               )
             ),

@@ -122,7 +122,7 @@ export default {
         this.$hasPermission(
           'database.table.list_fields',
           this.linkedToTable,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },

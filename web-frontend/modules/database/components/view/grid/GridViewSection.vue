@@ -56,7 +56,7 @@
             ref="rows"
             :view="view"
             :fields="fieldsToRender"
-            :group-id="database.group.id"
+            :workspace-id="database.workspace.id"
             :all-fields="fields"
             :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
@@ -72,7 +72,7 @@
               $hasPermission(
                 'database.table.create_row',
                 table,
-                database.group.id
+                database.workspace.id
               )
             "
             :fields="fields"
@@ -140,7 +140,7 @@ export default {
   mixins: [gridViewHelpers],
   provide() {
     return {
-      group: this.database.group,
+      workspace: this.database.workspace,
     }
   },
   props: {

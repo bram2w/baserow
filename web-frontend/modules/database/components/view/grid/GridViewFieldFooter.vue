@@ -8,7 +8,7 @@
         !$hasPermission(
           'database.table.view.update_field_options',
           view,
-          database.group.id
+          database.workspace.id
         ),
     }"
     @click.prevent="
@@ -16,7 +16,7 @@
         $hasPermission(
           'database.table.view.update_field_options',
           view,
-          database.group.id
+          database.workspace.id
         ) &&
         $refs[`fieldContext`].toggle(
           $refs.fieldContextAnchor,
@@ -191,7 +191,7 @@ export default {
             readOnly: !this.$hasPermission(
               'database.table.view.update_field_options',
               this.view,
-              this.database.group.id
+              this.database.workspace.id
             ),
           }
         )

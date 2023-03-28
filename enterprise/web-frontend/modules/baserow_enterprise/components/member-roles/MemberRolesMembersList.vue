@@ -84,7 +84,7 @@ export default {
       type: String,
       required: true,
     },
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
     },
@@ -96,11 +96,11 @@ export default {
   },
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
-    group() {
-      return this.$store.getters['group/get'](this.groupId)
+    workspace() {
+      return this.$store.getters['workspace/get'](this.workspaceId)
     },
     roles() {
-      return this.group._.roles
+      return this.workspace._.roles
     },
     roleAssignmentsSorted() {
       return [...this.roleAssignments].sort((a, b) =>

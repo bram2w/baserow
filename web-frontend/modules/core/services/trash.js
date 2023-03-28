@@ -4,18 +4,23 @@ export default (client) => {
       /**
        * Corresponding Backend View: baserow.api.trash.views.TrashStructureView.get
        *
-       * Queries the backend for the groups and applications that the current user can
+       * Queries the backend for the workspaces and applications that the current user can
        * see and manage trash for.
        */
       return client.get(`/trash/`)
     },
-    fetchContents({ groupId, applicationId = null, page = null }) {
+    fetchContents({
+      workspaceId,
+      applicationId = null,
+      page = null,
+      adoptWorkspace = true,
+    }) {
       /**
        * Corresponding Backend View: baserow.api.trash.views.TrashContentsView.get
        *
-       * Queries the backend for a page of trashed items in the provided group or
-       * application. If application is specified it must be in the group with the
-       * id of the groupId parameter.
+       * Queries the backend for a page of trashed items in the provided workspace or
+       * application. If application is specified it must be in the workspace with the
+       * id of the workspaceId parameter.
        */
       const config = {
         params: {},
@@ -25,20 +30,24 @@ export default (client) => {
         config.params.page = page
       }
 
+      if (adoptWorkspace === true) {
+        config.params.respond_with_workspace_rename = true
+      }
+
       if (applicationId !== null) {
         config.params.application_id = applicationId
       }
 
-      return client.get(`/trash/group/${groupId}/`, config)
+      return client.get(`/trash/workspace/${workspaceId}/`, config)
     },
-    emptyContents({ groupId, applicationId = null }) {
+    emptyContents({ workspaceId, applicationId = null }) {
       /**
        * Corresponding Backend View: baserow.api.trash.views.TrashContentsView.delete
        *
        * Sends a delete request to the backend which will empty any trash items either
-       * for the entire group is the applicationId is null. Or only trash in the
-       * application if applicationId is not null. The groupId must match the
-       * applications group.
+       * for the entire workspace is the applicationId is null. Or only trash in the
+       * application if applicationId is not null. The workspaceId must match the
+       * applications workspace.
        */
       const config = {
         params: {},
@@ -48,7 +57,7 @@ export default (client) => {
         config.params.application_id = applicationId
       }
 
-      return client.delete(`/trash/group/${groupId}/`, config)
+      return client.delete(`/trash/workspace/${workspaceId}/`, config)
     },
     restore(restoreData) {
       /**

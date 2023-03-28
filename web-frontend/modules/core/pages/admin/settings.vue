@@ -65,10 +65,12 @@
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.allow_signups_via_group_invitations"
+              :value="settings.allow_signups_via_workspace_invitations"
               :large="true"
               @input="
-                updateSettings({ allow_signups_via_group_invitations: $event })
+                updateSettings({
+                  allow_signups_via_workspace_invitations: $event,
+                })
               "
               >{{ $t('settings.enabled') }}</SwitchInput
             >
@@ -110,12 +112,17 @@
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.allow_global_group_creation"
+              :value="settings.allow_global_workspace_creation"
               :large="true"
-              @input="updateSettings({ allow_global_group_creation: $event })"
+              @input="
+                updateSettings({ allow_global_workspace_creation: $event })
+              "
               >{{ $t('settings.enabled') }}</SwitchInput
             >
-            <div v-show="settings.allow_global_group_creation" class="warning">
+            <div
+              v-show="settings.allow_global_workspace_creation"
+              class="warning"
+            >
               {{
                 $t(
                   'settings.settingAllowNonStaffCreateWorkspaceOperationWarning'

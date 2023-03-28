@@ -30,7 +30,7 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   store.$client = app.client
   store.app = app
   app.$store = store
-  app.$hasFeature = function (feature, group) {
+  app.$hasFeature = function (feature, workspace) {
     return true
   }
   app.$licenseHandler = {

@@ -79,7 +79,7 @@
           $hasPermission(
             'database.table.view.create_decoration',
             view,
-            database.group.id
+            database.workspace.id
           )
         "
         class="decorator-context__footer"

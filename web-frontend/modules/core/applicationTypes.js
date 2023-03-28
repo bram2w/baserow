@@ -42,7 +42,7 @@ export class ApplicationType extends Registerable {
 
   /**
    * The sidebar component will be rendered in the sidebar if the application is
-   * in the selected group. All the applications of a group are listed in the
+   * in the selected workspace. All the applications of a workspace are listed in the
    * sidebar and this component should give the user the possibility to select
    * that application.
    */

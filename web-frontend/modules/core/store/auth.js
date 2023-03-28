@@ -4,7 +4,7 @@ import _ from 'lodash'
 
 import AuthService from '@baserow/modules/core/services/auth'
 import { setToken, unsetToken } from '@baserow/modules/core/utils/auth'
-import { unsetGroupCookie } from '@baserow/modules/core/utils/group'
+import { unsetWorkspaceCookie } from '@baserow/modules/core/utils/workspace'
 import { v4 as uuidv4 } from 'uuid'
 
 export const state = () => ({
@@ -120,7 +120,7 @@ export const actions = {
       name,
       password,
       language,
-      groupInvitationToken = null,
+      workspaceInvitationToken = null,
       templateId = null,
     }
   ) {
@@ -130,7 +130,7 @@ export const actions = {
       password,
       language,
       true,
-      groupInvitationToken,
+      workspaceInvitationToken,
       templateId
     )
     setToken(this.app, data.refresh_token)
@@ -142,15 +142,15 @@ export const actions = {
    */
   logoff({ commit }) {
     unsetToken(this.app)
-    unsetGroupCookie(this.app)
+    unsetWorkspaceCookie(this.app)
     commit('LOGOFF')
   },
   /**
    * Clears all the user data present in any other stores.
    */
   async clearAllStoreUserData({ commit, dispatch }) {
-    await dispatch('group/clearAll', {}, { root: true })
-    await dispatch('group/unselect', {}, { root: true })
+    await dispatch('workspace/clearAll', {}, { root: true })
+    await dispatch('workspace/unselect', {}, { root: true })
     await dispatch('job/clearAll', {}, { root: true })
     commit('CLEAR_USER_DATA')
   },
@@ -181,7 +181,7 @@ export const actions = {
     } catch (error) {
       if (error.response?.status === 401) {
         unsetToken(this.app)
-        unsetGroupCookie(this.app)
+        unsetWorkspaceCookie(this.app)
         if (getters.isAuthenticated) {
           dispatch('setUserSessionExpired', true)
         }
@@ -204,7 +204,7 @@ export const actions = {
     const { data } = await AuthService(this.$client).update(values)
     dispatch('forceUpdateUserData', { user: data })
     dispatch(
-      'group/forceUpdateGroupUserAttributes',
+      'workspace/forceUpdateWorkspaceUserAttributes',
       {
         userId: getters.getUserId,
         values: {
@@ -229,7 +229,7 @@ export const actions = {
   },
   setUserSessionExpired({ commit }, value) {
     unsetToken(this.app)
-    unsetGroupCookie(this.app)
+    unsetWorkspaceCookie(this.app)
     commit('SET_USER_SESSION_EXPIRED', value)
   },
 }

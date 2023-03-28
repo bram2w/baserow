@@ -25,9 +25,9 @@ export const CORE_ACTION_SCOPES = {
       root: enabled,
     }
   },
-  group(groupId) {
+  workspace(workspaceId) {
     return {
-      group: groupId,
+      workspace: workspaceId,
     }
   },
   application(applicationId) {

@@ -92,7 +92,7 @@ export default {
               !this.$hasPermission(
                 'database.table.view.update_field_options',
                 this.grid,
-                this.database.group.id
+                this.database.workspace.id
               ),
           }
         )

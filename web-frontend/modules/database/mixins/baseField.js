@@ -5,9 +5,9 @@
 export default {
   props: {
     /**
-     * The group ID of the group where parent table and database are in.
+     * The workspace ID of the workspace where parent table and database are in.
      */
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
     },
