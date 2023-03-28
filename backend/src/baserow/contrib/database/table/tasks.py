@@ -31,7 +31,7 @@ def run_row_count_job():
 
     from baserow.contrib.database.table.handler import TableHandler
 
-    if CoreHandler().get_settings().track_group_usage:
+    if CoreHandler().get_settings().track_workspace_usage:
         TableHandler.count_rows()
 
 
