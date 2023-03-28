@@ -32,7 +32,7 @@ class WorkspacesAdminResponseSerializer(ModelSerializer):
     @extend_schema_field(OpenApiTypes.INT)
     def get_free_users(self, instance):
         if instance.seats_taken:
-            return instance.groupuser_set.count() - instance.seats_taken
+            return instance.workspaceuser_set.count() - instance.seats_taken
         else:
             return None
 

@@ -103,10 +103,10 @@ class Settings(models.Model):
         help_text="Indicates that there are no admin users in the database yet, "
         "so in the frontend the signup form will be shown instead of the login page.",
     )
-    track_group_usage = models.BooleanField(
+    track_workspace_usage = models.BooleanField(
         default=False,
-        help_text="Runs a job once per day which calculates per group row counts and "
-        "file storage usage, displayed on the admin group page.",
+        help_text="Runs a job once per day which calculates per workspace row counts "
+        "and file storage usage, displayed on the admin workspace page.",
     )
 
 

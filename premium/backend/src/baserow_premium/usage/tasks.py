@@ -8,7 +8,7 @@ from baserow.core.handler import CoreHandler
 
 @app.task(queue=settings.BASEROW_ROLE_USAGE_QUEUE)
 def run_calculate_seats():
-    if CoreHandler().get_settings().track_group_usage:
+    if CoreHandler().get_settings().track_workspace_usage:
         PremiumUsageHandler.calculate_per_workspace_seats_taken()
 
 

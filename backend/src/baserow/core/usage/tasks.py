@@ -13,7 +13,7 @@ def run_calculate_storage():
 
     from baserow.core.usage.handler import UsageHandler
 
-    if CoreHandler().get_settings().track_group_usage:
+    if CoreHandler().get_settings().track_workspace_usage:
         UsageHandler.calculate_storage_usage()
 
 

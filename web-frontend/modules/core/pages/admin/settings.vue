@@ -176,9 +176,9 @@
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.track_group_usage"
+              :value="settings.track_workspace_usage"
               :large="true"
-              @input="updateSettings({ track_group_usage: $event })"
+              @input="updateSettings({ track_workspace_usage: $event })"
               >{{ $t('settings.enabled') }}</SwitchInput
             >
           </div>
