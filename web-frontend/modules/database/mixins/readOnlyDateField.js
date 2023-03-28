@@ -14,9 +14,9 @@ export default {
       }
 
       const timezone = getFieldTimezone(field)
-      let existing = moment.utc(value, moment.ISO_8601, true)
+      const existing = moment.utc(value, moment.ISO_8601, true)
       if (timezone) {
-        existing = existing.utcOffset(moment.tz(timezone).utcOffset())
+        existing.tz(timezone)
       }
 
       const dateFormat = getDateMomentFormat(field.date_format)
@@ -28,9 +28,9 @@ export default {
       }
 
       const timezone = getFieldTimezone(field)
-      let existing = moment.utc(value, moment.ISO_8601, true)
+      const existing = moment.utc(value, moment.ISO_8601, true)
       if (timezone) {
-        existing = existing.utcOffset(moment.tz(timezone).utcOffset())
+        existing.tz(timezone)
       }
 
       const timeFormat = getTimeMomentFormat(field.date_time_format)
