@@ -1,5 +1,26 @@
 # Changelog
 
+## Released 1.16.0
+
+### New features
+* Pre-fill name field after the linked table name [#1619](https://gitlab.com/bramw/baserow/-/issues/1619)
+* Add calendar view [#140](https://gitlab.com/bramw/baserow/-/issues/140)
+* Add multiple cells selection with shift+click [#1157](https://gitlab.com/bramw/baserow/-/issues/1157)
+
+### Bug fixes
+* Fix bug causing the frontend send wrong datetime values to the backend when using date/time pickers [#1667](https://gitlab.com/bramw/baserow/-/issues/1667)
+* Fix clicking on the download link of an image randomly opened the file instead. [#1652](https://gitlab.com/bramw/baserow/-/issues/1652)
+* Fix date picker grid breaking on smaller zoom levels [#1640](https://gitlab.com/bramw/baserow/-/issues/1640)
+* Fix grid multiselect on small resolutions
+* Fixed DRF Spectacular memory leak by caching the response and various warnings.
+* fix airtable importer crashing for rich text field containing user mention [#1660](https://gitlab.com/bramw/baserow/-/issues/1660)
+* Prevent validation error message to be displayed when adding a new field
+
+### Refactors
+* Renamed group to workspace in the frontend translations. [#1642](https://gitlab.com/bramw/baserow/-/issues/1642)
+* Renamed 'group' to 'workspace'. [#1303](https://gitlab.com/bramw/baserow/-/issues/1303)
+
+
 ## Released 1.15.2
 
 ### Bug fixes
@@ -34,6 +55,7 @@
   * Open field type dropdown when field context menu is opened
   * Set field name after field type when empty
   * Increase field context menu dropdown height
+* Ensure that e2e tests have staff users to work with on post_migrate. [#1614](https://gitlab.com/bramw/baserow/-/issues/1614)
 * Added new templates for 1.15
   * Business Goal Tracker (OKRs)
   * Health Inspection Reports
