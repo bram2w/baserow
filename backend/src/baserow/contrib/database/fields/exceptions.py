@@ -23,6 +23,10 @@ class FieldDoesNotExist(Exception):
     """Raised when the requested field does not exist."""
 
 
+class IncompatibleField(Exception):
+    """Raised when the field doesn't have the required field type."""
+
+
 class PrimaryFieldAlreadyExists(Exception):
     """Raised if a primary field is created, but is already exists for the table."""
 

@@ -138,6 +138,10 @@ export const registerRealtimeEvents = (realtime) => {
         app.$bus.$emit('table-refresh', {
           callback,
           tableId: store.getters['table/getSelectedId'],
+          sourceEvent: {
+            type: 'field_updated',
+            data,
+          },
         })
       } else {
         // If the current page is not the table we don't have to wait for the
@@ -157,6 +161,10 @@ export const registerRealtimeEvents = (realtime) => {
         })
         app.$bus.$emit('table-refresh', {
           tableId: store.getters['table/getSelectedId'],
+          sourceEvent: {
+            type: 'field_deleted',
+            data,
+          },
         })
       }
     }

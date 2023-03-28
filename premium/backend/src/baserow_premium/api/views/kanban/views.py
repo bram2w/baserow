@@ -1,3 +1,5 @@
+from baserow_premium.api.views.errors import ERROR_INVALID_SELECT_OPTION_PARAMETER
+from baserow_premium.api.views.exceptions import InvalidSelectOptionParameter
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.views.exceptions import KanbanViewHasNoSingleSelectField
@@ -35,11 +37,9 @@ from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .errors import (
-    ERROR_INVALID_SELECT_OPTION_PARAMETER,
     ERROR_KANBAN_DOES_NOT_EXIST,
     ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD,
 )
-from .exceptions import InvalidSelectOptionParameter
 from .serializers import KanbanViewExampleResponseSerializer
 from .utils import prepare_kanban_view_parameters
 

@@ -13,7 +13,8 @@
             "licenses": "Licenses"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendar"
         },
         "exporterType": {
             "json": "Export to JSON",
@@ -169,6 +170,20 @@
         "tryAgain": "Try again",
         "new": "New"
     },
+    "calendarViewHeader": {
+        "displayBy": "Display by",
+        "displayedBy": "Displayed by “{fieldName}” field",
+        "labels": "Labels"
+    },
+    "calendarDateSelector": {
+        "today": "Today"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 more... | {hiddenRowsCount} more..."
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "try again"
+    },
     "dashboard": {
         "title": "Dashboard",
         "totals": "Totals",
@@ -188,6 +203,7 @@
     "premiumFeatures": {
         "rowComments": "Row comments",
         "kanbanView": "Kanban view",
+        "calendarView": "Calendar view",
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
@@ -291,5 +307,13 @@
     },
     "viewsContext": {
         "personal": "Personal"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Which field would you like to use for this view?",
+        "noCompatibleDateFields": "There are no date fields in this table, please create one first."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Choose date field",
+        "save": "Save"
     }
 }

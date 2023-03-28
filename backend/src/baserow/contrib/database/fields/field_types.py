@@ -707,6 +707,7 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
+    can_represent_date = True
 
     def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
         date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
