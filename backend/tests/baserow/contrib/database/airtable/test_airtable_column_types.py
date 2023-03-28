@@ -715,6 +715,48 @@ def test_airtable_import_rich_text_column(data_fixture, api_client):
 
 @pytest.mark.django_db
 @responses.activate
+def test_airtable_import_rich_text_column_with_mention(data_fixture, api_client):
+    airtable_field = {
+        "id": "fldG9y88Zw7q7u4Z7i4",
+        "name": "Name",
+        "type": "richText",
+    }
+    (
+        baserow_field,
+        airtable_column_type,
+    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
+        {}, airtable_field
+    )
+    assert isinstance(baserow_field, LongTextField)
+    assert isinstance(airtable_column_type, RichTextTextAirtableColumnType)
+
+    content = {
+        "otDocumentId": "otdHtbNg2tJKWj62WMn",
+        "revision": 4,
+        "documentValue": [
+            {"insert": "Vestibulum", "attributes": {"bold": True}},
+            {"insert": " ante ipsum primis in faucibus orci luctus et ultrices "},
+            {
+                "insert": {
+                    "mention": {
+                        "mentionId": "menvWlZAaLd2v052j",
+                        "userId": "usrr5CVJ5Lz8ErVZS",
+                    }
+                }
+            },
+            {"insert": " cubilia curae; Class aptent taciti sociosqu ad litora."},
+        ],
+    }
+    assert airtable_column_type.to_baserow_export_serialized_value(
+        {}, airtable_field, baserow_field, content, {}
+    ) == (
+        "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices "
+        "@usrr5CVJ5Lz8ErVZS cubilia curae; Class aptent taciti sociosqu ad litora."
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
 def test_airtable_import_multi_select_column(
     data_fixture, api_client, django_assert_num_queries
 ):
