@@ -38,7 +38,7 @@ class BaserowPremiumConfig(AppConfig):
             SelectColorValueProviderType,
         )
         from .views.form_view_mode_types import FormViewModeTypeSurvey
-        from .views.view_types import KanbanViewType
+        from .views.view_types import CalendarViewType, KanbanViewType
 
         plugin_registry.register(PremiumPlugin())
 
@@ -50,6 +50,7 @@ class BaserowPremiumConfig(AppConfig):
         user_data_registry.register(ActiveLicensesDataType())
 
         view_type_registry.register(KanbanViewType())
+        view_type_registry.register(CalendarViewType())
 
         form_view_mode_registry.register(FormViewModeTypeSurvey())
 

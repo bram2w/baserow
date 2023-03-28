@@ -50,3 +50,117 @@ export const getHumanPeriodAgoCount = (dateTime) => {
     count: diffSeconds,
   }
 }
+
+export function getMonthName(dateTime) {
+  return moment(dateTime).format('MMMM YYYY')
+}
+
+export function getCapitalizedMonthName(dateTime) {
+  const name = getMonthName(dateTime)
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
+/**
+ * Returns translated short names for week days
+ * starting Monday
+ */
+export function weekDaysShort() {
+  const weekDays = moment.weekdaysShort()
+  weekDays.push(weekDays.shift())
+  return weekDays
+}
+
+/**
+ * Helper to construct correct moment datetime representing date in a
+ * given timezone.
+ *
+ * Time is set to 0:0. Months are numbered from 0.
+ */
+export function getDateInTimezone({ year, month, day, timezone }) {
+  return moment.tz(
+    {
+      year,
+      month,
+      day,
+      hour: 0,
+      minute: 0,
+      second: 0,
+      millisecond: 0,
+    },
+    timezone
+  )
+}
+
+/**
+ * Given a datetime returns [from and to) timestamps for a monthly calendar
+ * view surrounding the provided datetime, including days before and after the
+ * datetime's month.
+ *
+ * @param {moment} dateTime
+ */
+export function getMonthlyTimestamps(dateTime) {
+  const firstDayOfMonth = getDateInTimezone({
+    year: dateTime.year(),
+    month: dateTime.month(),
+    day: 1,
+    timezone: dateTime.tz(),
+  })
+  const firstDayOfMonthWeekday = moment(firstDayOfMonth).isoWeekday()
+  const firstDayPreviousMonth = moment(firstDayOfMonth).subtract(1, 'month')
+  const visibleNumberOfDaysFromPreviousMonth = firstDayOfMonthWeekday
+    ? firstDayOfMonthWeekday - 1
+    : 6
+  const firstMondayDayOfRange = moment(firstDayOfMonth)
+    .subtract(visibleNumberOfDaysFromPreviousMonth, 'day')
+    .date()
+  const fromTimestamp =
+    visibleNumberOfDaysFromPreviousMonth === 0
+      ? firstDayOfMonth
+      : getDateInTimezone({
+          year: firstDayPreviousMonth.year(),
+          month: firstDayPreviousMonth.month(),
+          day: firstMondayDayOfRange,
+          timezone: dateTime.tz(),
+        })
+
+  const daysInMonth = dateTime.daysInMonth()
+  const lastDayOfMonth = getDateInTimezone({
+    year: dateTime.year(),
+    month: dateTime.month(),
+    day: daysInMonth,
+    timezone: dateTime.tz(),
+  })
+  const lastDayOfMonthWeekday = lastDayOfMonth.isoWeekday()
+  const firstDayNextMonth = getDateInTimezone({
+    year: dateTime.year(),
+    month: dateTime.month(),
+    day: 1,
+    timezone: dateTime.tz(),
+  }).add(1, 'month')
+  const visibleNumberOfDaysFromNextMonth = lastDayOfMonthWeekday
+    ? 7 - lastDayOfMonthWeekday
+    : lastDayOfMonthWeekday
+  const toTimestamp = getDateInTimezone({
+    year: firstDayNextMonth.year(),
+    month: firstDayNextMonth.month(),
+    day: visibleNumberOfDaysFromNextMonth + 1,
+    timezone: dateTime.tz(),
+  })
+  return {
+    fromTimestamp,
+    toTimestamp,
+    visibleNumberOfDaysFromNextMonth,
+    visibleNumberOfDaysFromPreviousMonth,
+    firstMondayDayOfRange,
+    firstDayPreviousMonth,
+    firstDayNextMonth,
+  }
+}
+
+export function getUserTimeZone() {
+  if (process.server) {
+    return 'UTC'
+  } else {
+    return moment.tz.guess()
+  }
+}

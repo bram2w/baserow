@@ -67,7 +67,9 @@ exports[`Dropdown component With items 1`] = `
   <a
     class="dropdown__selected"
   >
-    action.makeChoice 
+    
+        action.makeChoice
+       
     <i
       class="dropdown__toggle-icon fas fa-caret-down"
     />
@@ -343,7 +345,9 @@ exports[`Dropdown component basics 1`] = `
   <a
     class="dropdown__selected"
   >
-    action.makeChoice 
+    
+        action.makeChoice
+       
     <i
       class="dropdown__toggle-icon fas fa-caret-down"
     />
@@ -383,7 +387,9 @@ exports[`Dropdown component basics 2`] = `
   <a
     class="dropdown__selected"
   >
-    action.makeChoice 
+    
+        action.makeChoice
+       
     <i
       class="dropdown__toggle-icon fas fa-caret-down"
     />
@@ -410,7 +416,9 @@ exports[`Dropdown component basics 3`] = `
   <a
     class="dropdown__selected"
   >
-    action.makeChoice 
+    
+        action.makeChoice
+       
     <i
       class="dropdown__toggle-icon fas fa-caret-down"
     />

@@ -1,5 +1,10 @@
 from baserow_premium.license.models import License, LicenseUser
-from baserow_premium.views.models import KanbanView, KanbanViewFieldOptions
+from baserow_premium.views.models import (
+    CalendarView,
+    CalendarViewFieldOptions,
+    KanbanView,
+    KanbanViewFieldOptions,
+)
 
 from baserow.contrib.database.fields.models import Field
 
@@ -94,4 +99,34 @@ class PremiumFixtures:
     def create_kanban_view_field_option(self, kanban_view, field, **kwargs):
         return KanbanViewFieldOptions.objects.create(
             kanban_view=kanban_view, field=field, **kwargs
+        )
+
+    def create_calendar_view(self, user=None, **kwargs):
+        if "table" not in kwargs:
+            kwargs["table"] = self.create_database_table(user=user)
+
+        if "name" not in kwargs:
+            kwargs["name"] = self.fake.name()
+
+        if "order" not in kwargs:
+            kwargs["order"] = 0
+
+        if "date_field" not in kwargs:
+            kwargs["date_field"] = self.create_date_field(
+                table=kwargs["table"],
+            )
+
+        calendar_view = CalendarView.objects.create(**kwargs)
+        self.create_calendar_view_field_options(calendar_view)
+        return calendar_view
+
+    def create_calendar_view_field_options(self, calendar_view, **kwargs):
+        return [
+            self.create_calendar_view_field_option(calendar_view, field, **kwargs)
+            for field in Field.objects.filter(table=calendar_view.table)
+        ]
+
+    def create_calendar_view_field_option(self, calendar_view, field, **kwargs):
+        return CalendarViewFieldOptions.objects.create(
+            calendar_view=calendar_view, field=field, **kwargs
         )

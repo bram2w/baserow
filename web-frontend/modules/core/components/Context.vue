@@ -364,7 +364,7 @@ export default {
       const canTop = targetRect.top - contextRect.height - verticalOffset > 0
       const canBottom =
         window.innerHeight -
-          targetRect.top -
+          targetRect.bottom -
           contextRect.height -
           verticalOffset >
         0

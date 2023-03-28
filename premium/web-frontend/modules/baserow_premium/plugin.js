@@ -11,10 +11,11 @@ import {
 } from '@baserow_premium/adminTypes'
 import rowCommentsStore from '@baserow_premium/store/row_comments'
 import kanbanStore from '@baserow_premium/store/view/kanban'
+import calendarStore from '@baserow_premium/store/view/calendar'
 import impersonatingStore from '@baserow_premium/store/impersonating'
 import { PremiumDatabaseApplicationType } from '@baserow_premium/applicationTypes'
 import { registerRealtimeEvents } from '@baserow_premium/realtime'
-import { KanbanViewType } from '@baserow_premium/viewTypes'
+import { KanbanViewType, CalendarViewType } from '@baserow_premium/viewTypes'
 
 import {
   LeftBorderColorViewDecoratorType,
@@ -60,7 +61,9 @@ export default (context) => {
 
   store.registerModule('row_comments', rowCommentsStore)
   store.registerModule('page/view/kanban', kanbanStore)
+  store.registerModule('page/view/calendar', calendarStore)
   store.registerModule('template/view/kanban', kanbanStore)
+  store.registerModule('template/view/calendar', calendarStore)
   store.registerModule('impersonating', impersonatingStore)
 
   app.$registry.register('plugin', new PremiumPlugin(context))
@@ -71,6 +74,7 @@ export default (context) => {
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))
   app.$registry.register('view', new KanbanViewType(context))
+  app.$registry.register('view', new CalendarViewType(context))
 
   app.$registry.register(
     'viewDecorator',

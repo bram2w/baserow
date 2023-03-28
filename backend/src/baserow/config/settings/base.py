@@ -354,6 +354,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table gallery view"},
         {"name": "Database table form view"},
         {"name": "Database table kanban view"},
+        {"name": "Database table calendar view"},
         {"name": "Database table rows"},
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
@@ -376,6 +377,7 @@ SPECTACULAR_SETTINGS = {
             "gallery",
             "form",
             "kanban",
+            "calendar",
         ],
         "FieldTypesEnum": [
             "text",
@@ -798,6 +800,8 @@ BASEROW_NOWAIT_FOR_LOCKS = not bool(
 )
 
 LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
+
+MAX_NUMBER_CALENDAR_DAYS = 45
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

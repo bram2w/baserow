@@ -176,6 +176,7 @@
         :database="database"
         :table="table"
         :view="view"
+        :loading="viewLoading"
         :fields="fields"
         :read-only="readOnly"
         :store-prefix="storePrefix"
@@ -431,7 +432,8 @@ export default {
           this.view,
           fieldsToRefresh,
           this.storePrefix,
-          includeFieldOptions
+          includeFieldOptions,
+          event?.sourceEvent
         )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {

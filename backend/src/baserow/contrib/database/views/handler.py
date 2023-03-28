@@ -162,7 +162,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             user,
             ListViewsOperationType.type,
             views,
-            table.database.group,
+            table.database.workspace,
             allow_if_template=True,
         )
         views = views.select_related("content_type", "table")

@@ -78,12 +78,14 @@ class PremiumViewAttributesView(APIView):
 
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id).specific
-        group = view.table.database.group
+        workspace = view.table.database.workspace
 
-        if group.has_template():
+        if workspace.has_template():
             raise CannotUpdatePremiumAttributesOnTemplate()
 
-        LicenseHandler.raise_if_user_doesnt_have_feature(PREMIUM, request.user, group)
+        LicenseHandler.raise_if_user_doesnt_have_feature(
+            PREMIUM, request.user, workspace
+        )
 
         view_type = view_type_registry.get_by_model(view)
 

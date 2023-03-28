@@ -1,4 +1,4 @@
-from .exceptions import InvalidSelectOptionParameter
+from baserow_premium.api.views.exceptions import InvalidSelectOptionParameter
 
 
 def prepare_kanban_view_parameters(request):

@@ -1,0 +1,64 @@
+.calendar-month-day {
+  font-size: 13px;
+  color: $color-primary-900;
+  border-bottom: 1px solid $color-neutral-200;
+  border-right: 1px solid $color-neutral-200;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 7px;
+}
+
+.calendar-month-day__cards {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-top: 25px;
+}
+
+.calendar-month-day--weekend {
+  background-color: $color-neutral-50;
+}
+
+.calendar-month-day__week-day {
+  border-top: solid 1px $color-neutral-200;
+  border-bottom: solid 1px $color-neutral-200;
+  height: 32px;
+  line-height: 32px;
+  color: $color-primary-900;
+  text-align: right;
+  padding-right: 15px;
+  font-size: 13px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: $white;
+}
+
+.calendar-month-day__date-label {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+
+.calendar-month-day--not-current {
+  color: $color-neutral-300;
+}
+
+.calendar-month-day--today .calendar-month-day__date-label {
+  border-radius: 100%;
+  background-color: $color-primary-500;
+  color: $white;
+
+  @include center-text(24px, 13px);
+}
+
+.calendar-month-day__more {
+  @extend %ellipsis;
+
+  font-size: 11px;
+  line-height: 12px;
+  color: $color-neutral-600;
+  margin-top: auto;
+  margin-bottom: 0;
+}

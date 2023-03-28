@@ -245,6 +245,14 @@ export class FieldType extends Registerable {
     return true
   }
 
+  /**
+   * When true, indicates a field type that can be used to
+   * represent a date.
+   */
+  canRepresentDate() {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -1513,6 +1521,10 @@ class BaseDateFieldType extends FieldType {
   }
 
   getCanImport() {
+    return true
+  }
+
+  canRepresentDate() {
     return true
   }
 }
