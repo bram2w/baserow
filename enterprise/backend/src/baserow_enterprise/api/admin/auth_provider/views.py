@@ -124,6 +124,7 @@ class AdminAuthProviderView(APIView):
             "Updates a new authentication provider. This can be used to enable "
             "authentication with a third party service like Google or Facebook."
         ),
+        request=None,
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
                 auth_provider_type_registry, AuthProviderSerializer

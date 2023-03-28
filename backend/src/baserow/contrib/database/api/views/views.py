@@ -577,6 +577,7 @@ class DuplicateViewView(APIView):
             "\n- If the original view is publicly shared, the new view will not be"
             " shared anymore"
         ),
+        request=None,
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer

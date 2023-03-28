@@ -444,6 +444,7 @@ class ScheduleAccountDeletionView(APIView):
             "The user will be permanently deleted after the grace delay defined "
             "by the instance administrator."
         ),
+        request=None,
         responses={
             204: None,
             400: get_error_schema(

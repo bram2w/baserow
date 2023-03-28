@@ -45,6 +45,10 @@ from .serializers import (
     TrashStructureSerializer,
 )
 
+ExampleTrashContentsSerializer = get_example_pagination_serializer_class(
+    TrashContentsSerializer
+)
+
 
 class TrashItemView(APIView):
     permission_classes = (IsAuthenticated,)
@@ -124,7 +128,7 @@ class TrashContentsView(APIView):
         description="Responds with trash contents for a workspace optionally "
         "filtered to a specific application.",
         responses={
-            200: get_example_pagination_serializer_class(TrashContentsSerializer),
+            200: ExampleTrashContentsSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",

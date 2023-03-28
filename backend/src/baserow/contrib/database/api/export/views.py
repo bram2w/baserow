@@ -151,6 +151,7 @@ class ExportJobView(APIView):
             "exported file for the specified export job, only if the requesting user "
             "has access."
         ),
+        request=None,
         responses={
             200: ExportJobSerializer,
             404: get_error_schema(["ERROR_EXPORT_JOB_DOES_NOT_EXIST"]),

@@ -279,6 +279,15 @@ def type_from_data_or_registry(
         return registry.get_by_model(model_instance.specific_class).type
 
 
+def generate_meta_ref_name_based_on_model(model_, base_class=None):
+    meta_ref_name = model_.__name__
+
+    if base_class is not None:
+        meta_ref_name += base_class.__name__
+
+    return meta_ref_name
+
+
 def get_serializer_class(
     model,
     field_names,
@@ -321,11 +330,8 @@ def get_serializer_class(
     if not field_overrides:
         field_overrides = {}
 
-    if not meta_ref_name:
-        meta_ref_name = model_.__name__
-
-        if base_class:
-            meta_ref_name += base_class.__name__
+    if meta_ref_name is None:
+        meta_ref_name = generate_meta_ref_name_based_on_model(model_, base_class)
 
     if not base_class:
         base_class = ModelSerializer

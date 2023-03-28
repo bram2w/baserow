@@ -20,7 +20,12 @@ from django.db import models
 
 from rest_framework import serializers
 
-from baserow.api.utils import ExceptionMappingType, get_serializer_class, map_exceptions
+from baserow.api.utils import (
+    ExceptionMappingType,
+    generate_meta_ref_name_based_on_model,
+    get_serializer_class,
+    map_exceptions,
+)
 
 from .exceptions import InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
 
@@ -136,7 +141,7 @@ class CustomFieldsInstanceMixin:
             )
 
     def get_serializer_class(
-        self, *args, request_serializer: bool = False, **kwargs
+        self, *args, request_serializer: bool = False, meta_ref_name=None, **kwargs
     ) -> serializers.ModelSerializer:
         """
         Returns a model serializer class based on this type field names and overrides.
@@ -157,12 +162,20 @@ class CustomFieldsInstanceMixin:
 
         mixins = [] if request_serializer else self.serializer_mixins
 
+        # Prepend the word "Request" to the ref name, so that when this serializer is
+        # generated for the request and response, it doesn't result in a name conflict.
+        if request_serializer and meta_ref_name is None:
+            meta_ref_name = "Request" + generate_meta_ref_name_based_on_model(
+                self.model_class, base_class=kwargs.get("base_class")
+            )
+
         return get_serializer_class(
             self.model_class,
             field_names,
             field_overrides=field_overrides,
             base_mixins=mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
+            meta_ref_name=meta_ref_name,
             *args,
             **kwargs,
         )

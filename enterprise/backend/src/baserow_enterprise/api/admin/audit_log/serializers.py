@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.utils.functional import lazy
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.core.action.registries import action_type_registry
@@ -32,18 +34,23 @@ class AuditLogSerializer(serializers.ModelSerializer):
     description = serializers.SerializerMethodField()
     timestamp = serializers.DateTimeField(source="action_timestamp")
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_group(self, instance):  # GroupDeprecation
         return self.get_workspace(instance)
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_workspace(self, instance):
         return render_workspace(instance.workspace_id, instance.workspace_name)
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_user(self, instance):
         return render_user(instance.user_id, instance.user_email)
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         return instance.type
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_description(self, instance):
         return instance.description
 
@@ -86,17 +93,25 @@ class AuditLogActionTypeSerializer(serializers.Serializer):
     )
     value = serializers.SerializerMethodField()
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_value(self, instance):
         return render_action_type(instance.type)
 
 
 AuditLogExportJobRequestSerializer = job_type_registry.get(
     AuditLogExportJobType.type
-).get_serializer_class(base_class=serializers.Serializer, request_serializer=True)
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="SingleAuditLogExportJobRequestSerializer",
+)
 
 AuditLogExportJobResponseSerializer = job_type_registry.get(
     AuditLogExportJobType.type
-).get_serializer_class(base_class=serializers.Serializer)
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    meta_ref_name="SingleAuditLogExportJobResponseSerializer",
+)
 
 
 class AuditLogQueryParamsSerializer(serializers.Serializer):

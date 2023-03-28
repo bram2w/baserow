@@ -24,11 +24,13 @@ from baserow.api.workspaces.users.errors import (
     ERROR_CANNOT_DELETE_YOURSELF_FROM_GROUP,
     ERROR_GROUP_USER_DOES_NOT_EXIST,
 )
+from baserow.api.workspaces.users.generated_serializers import (
+    ListWorkspaceUsersWithMemberDataSerializer,
+)
 from baserow.api.workspaces.users.serializers import (
     GetWorkspaceUsersViewParamsSerializer,
     UpdateWorkspaceUserSerializer,
     WorkspaceUserSerializer,
-    get_list_workspace_user_serializer,
 )
 from baserow.api.workspaces.users.views import WorkspaceUsersView, WorkspaceUserView
 from baserow.compat.api.conf import (
@@ -41,8 +43,6 @@ from baserow.core.exceptions import (
     WorkspaceDoesNotExist,
     WorkspaceUserDoesNotExist,
 )
-
-ListWorkspaceUsersWithMemberDataSerializer = get_list_workspace_user_serializer()
 
 
 class GroupUsersCompatView(WorkspaceUsersView):

@@ -84,11 +84,15 @@ from .serializers import (
 
 FileImportJobSerializerClass = job_type_registry.get(
     FileImportJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleFileImportJobSerializerClass"
+)
 
 DuplicateTableJobTypeSerializer = job_type_registry.get(
     DuplicateTableJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleDuplicateTableJobTypeSerializer"
+)
 
 
 class TablesView(APIView):
@@ -580,6 +584,7 @@ class AsyncDuplicateTableView(APIView):
             "Start a job to duplicate the table with the provided `table_id` parameter "
             "if the authorized user has access to the database's workspace."
         ),
+        request=None,
         responses={
             202: DuplicateTableJobTypeSerializer,
             400: get_error_schema(
