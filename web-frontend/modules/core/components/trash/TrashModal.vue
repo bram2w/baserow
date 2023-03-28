@@ -8,15 +8,15 @@
     <template #sidebar>
       <TrashSidebar
         v-if="!loading"
-        :groups="groups"
-        :selected-trash-group="selectedTrashGroup"
+        :workspaces="workspaces"
+        :selected-trash-workspace="selectedTrashWorkspace"
         :selected-trash-application="selectedTrashApplication"
-        @selected="selectGroupOrApp"
+        @selected="selectWorkspaceOrApp"
       ></TrashSidebar>
     </template>
     <template #content>
       <div v-if="loading" class="loading-absolute-center"></div>
-      <div v-else-if="groups.length === 0" class="placeholder">
+      <div v-else-if="workspaces.length === 0" class="placeholder">
         <div class="placeholder__icon">
           <i class="fas fa-layer-group"></i>
         </div>
@@ -33,7 +33,7 @@
       </div>
       <TrashContent
         v-else
-        :selected-trash-group="selectedTrashGroup"
+        :selected-trash-workspace="selectedTrashWorkspace"
         :selected-trash-application="selectedTrashApplication"
         :trash-contents="trashContents"
         :loading-contents="loadingContents"
@@ -63,7 +63,7 @@ export default {
   components: { TrashSidebar, TrashContent },
   mixins: [modal],
   props: {
-    initialGroup: {
+    initialWorkspace: {
       type: Object,
       required: false,
       default: null,
@@ -79,50 +79,50 @@ export default {
       loading: true,
       loadingContents: true,
       loadingNextPage: false,
-      groups: [],
+      workspaces: [],
       trashContents: [],
-      selectedTrashGroup: null,
+      selectedTrashWorkspace: null,
       selectedTrashApplication: null,
       totalServerSideTrashContentsCount: 0,
     }
   },
   computed: {
     ...mapState({
-      selectedGroup: (state) => state.group.selected,
+      selectedWorkspace: (state) => state.workspace.selected,
       selectedApplication: (state) => state.application.selected,
     }),
   },
   methods: {
     /**
-     * Chooses which group to show when the modal is shown.
+     * Chooses which workspace to show when the modal is shown.
      **/
-    pickInitialGroupToSelect() {
-      // The initial or selected groups will not contain the trashed flag as they so
-      // we must look them up in the groups fetched from the trash api.
-      const initialGroupWithTrashInfo = this.initialGroup
-        ? this.groups.find((i) => i.id === this.initialGroup.id)
+    pickInitialWorkspaceToSelect() {
+      // The initial or selected workspaces will not contain the trashed flag as they so
+      // we must look them up in the workspaces fetched from the trash api.
+      const initialWorkspaceWithTrashInfo = this.initialWorkspace
+        ? this.workspaces.find((i) => i.id === this.initialWorkspace.id)
         : null
-      const selectedGroupWithTrashInfo = this.selectedGroup
-        ? this.groups.find((i) => i.id === this.selectedGroup.id)
+      const selectedWorkspaceWithTrashInfo = this.selectedWorkspace
+        ? this.workspaces.find((i) => i.id === this.selectedWorkspace.id)
         : null
       return (
-        initialGroupWithTrashInfo ||
-        selectedGroupWithTrashInfo ||
-        this.groups[0] || // When all groups are trashed we want to pick the first one.
+        initialWorkspaceWithTrashInfo ||
+        selectedWorkspaceWithTrashInfo ||
+        this.workspaces[0] || // When all workspaces are trashed we want to pick the first one.
         null
       )
     },
     /**
      * Chooses which app to show when the modal is shown.
      **/
-    pickInitialApplicationToSelect(firstGroupToShow) {
-      if (firstGroupToShow === null) {
+    pickInitialApplicationToSelect(firstWorkspaceToShow) {
+      if (firstWorkspaceToShow === null) {
         return null
       } else {
         // The initial or selected apps will not contain the trashed flag as they so
-        // we must look them up in the groups fetched from the trash api.
-        const applications = firstGroupToShow.applications
-        if (this.initialApplication || this.initialGroup) {
+        // we must look them up in the workspaces fetched from the trash api.
+        const applications = firstWorkspaceToShow.applications
+        if (this.initialApplication || this.initialWorkspace) {
           // When either of the initial props are set we have been opened via a context
           // menu shortcut.
           return this.initialApplication
@@ -137,23 +137,23 @@ export default {
     },
     /**
      * Loads the structure of the trash modal from the server, selects an initial
-     * group or application depending on the props and shows the trash modal.
+     * workspace or application depending on the props and shows the trash modal.
      **/
     async show(...args) {
       modal.methods.show.call(this, ...args)
 
       this.loading = true
-      this.groups = []
-      this.selectedTrashGroup = null
+      this.workspaces = []
+      this.selectedTrashWorkspace = null
       this.selectedTrashApplication = null
 
       try {
         const { data } = await TrashService(this.$client).fetchStructure()
-        this.groups = data.groups
-        const initialGroup = this.pickInitialGroupToSelect()
-        await this.selectGroupOrApp({
-          group: initialGroup,
-          application: this.pickInitialApplicationToSelect(initialGroup),
+        this.workspaces = data.workspaces
+        const initialWorkspace = this.pickInitialWorkspaceToSelect()
+        await this.selectWorkspaceOrApp({
+          workspace: initialWorkspace,
+          application: this.pickInitialApplicationToSelect(initialWorkspace),
         })
       } catch (error) {
         notifyIf(error, 'trash')
@@ -166,7 +166,7 @@ export default {
      */
     async loadTrashContentsPage(nextPage) {
       if (
-        this.selectedTrashGroup === null &&
+        this.selectedTrashWorkspace === null &&
         this.selectedTrashApplication === null
       ) {
         return
@@ -174,7 +174,7 @@ export default {
       try {
         const { data } = await TrashService(this.$client).fetchContents({
           page: nextPage,
-          groupId: this.selectedTrashGroup.id,
+          workspaceId: this.selectedTrashWorkspace.id,
           applicationId:
             this.selectedTrashApplication !== null
               ? this.selectedTrashApplication.id
@@ -190,11 +190,11 @@ export default {
       }
     },
     /**
-     * Switches to a different group or application to display the trash contents for
+     * Switches to a different workspace or application to display the trash contents for
      * and triggers the fetch for the first page of contents.
      */
-    async selectGroupOrApp({ group, application = null }) {
-      this.selectedTrashGroup = group
+    async selectWorkspaceOrApp({ workspace, application = null }) {
+      this.selectedTrashWorkspace = workspace
       this.selectedTrashApplication = application
       this.loadingContents = true
       this.trashContents = []
@@ -215,7 +215,7 @@ export default {
     /**
      * Triggered when a user requests a trashEntry be restored. Sends the request to
      * the server, updates the client side state if successful and updates the trash
-     * structure if say a group or application was restored.
+     * structure if say a workspace or application was restored.
      */
     async onRestore(trashEntry) {
       try {
@@ -230,36 +230,38 @@ export default {
         )
         this.trashContents.splice(index, 1)
         this.totalServerSideTrashContentsCount--
-        this.updateStructureIfGroupOrAppRestored(trashEntry)
+        this.updateStructureIfWorkspaceOrAppRestored(trashEntry)
       } catch (error) {
         notifyIf(error, 'trash')
       }
       trashEntry.loading = false
     },
-    updateStructureIfGroupOrAppRestored(trashEntry) {
+    updateStructureIfWorkspaceOrAppRestored(trashEntry) {
       /**
-       * If a group or app is trashed it is displayed with a strike through it's text.
-       * This method checks if a restored trash entry is a group or application and
-       * if so updates the state of said group/app so it no longer is displayed as
+       * If a workspace or app is trashed it is displayed with a strike through it's text.
+       * This method checks if a restored trash entry is a workspace or application and
+       * if so updates the state of said workspace/app so it no longer is displayed as
        * trashed.
        */
       const trashItemId = trashEntry.trash_item_id
       const trashItemType = trashEntry.trash_item_type
-      if (trashItemType === 'group') {
-        const index = this.groups.findIndex((group) => group.id === trashItemId)
-        this.groups[index].trashed = false
+      if (trashItemType === 'workspace') {
+        const index = this.workspaces.findIndex(
+          (workspace) => workspace.id === trashItemId
+        )
+        this.workspaces[index].trashed = false
       } else if (trashItemType === 'application') {
-        const index = this.selectedTrashGroup.applications.findIndex(
+        const index = this.selectedTrashWorkspace.applications.findIndex(
           (app) => app.id === trashItemId
         )
-        this.selectedTrashGroup.applications[index].trashed = false
+        this.selectedTrashWorkspace.applications[index].trashed = false
       }
     },
     /**
-     * Triggered when the user has requested the currently selected group or app
+     * Triggered when the user has requested the currently selected workspace or app
      * should be emptied. If the selected item is trashed itself the empty operation
      * will permanently delete the selected item also. Once emptied this method will
-     * ensure that any now permanently deleted groups or apps are removed from the
+     * ensure that any now permanently deleted workspaces or apps are removed from the
      * sidebar.
      */
     async onEmpty() {
@@ -270,10 +272,10 @@ export default {
             ? this.selectedTrashApplication.id
             : null
         await TrashService(this.$client).emptyContents({
-          groupId: this.selectedTrashGroup.id,
+          workspaceId: this.selectedTrashWorkspace.id,
           applicationId: applicationIdOrNull,
         })
-        this.removeGroupOrAppFromSidebarIfNowPermDeleted()
+        this.removeWorkspaceOrAppFromSidebarIfNowPermDeleted()
         this.trashContents = []
         this.totalServerSideTrashContentsCount = 0
       } catch (error) {
@@ -284,56 +286,57 @@ export default {
     removeSelectedAppFromSidebar() {
       const applicationId = this.selectedTrashApplication.id
 
-      const indexToDelete = this.selectedTrashGroup.applications.findIndex(
+      const indexToDelete = this.selectedTrashWorkspace.applications.findIndex(
         (app) => app.id === applicationId
       )
-      this.selectedTrashGroup.applications.splice(indexToDelete, 1)
-      if (this.selectedTrashGroup.applications.length > 0) {
-        this.selectedTrashApplication = this.selectedTrashGroup.applications[0]
+      this.selectedTrashWorkspace.applications.splice(indexToDelete, 1)
+      if (this.selectedTrashWorkspace.applications.length > 0) {
+        this.selectedTrashApplication =
+          this.selectedTrashWorkspace.applications[0]
       } else {
         this.selectedTrashApplication = null
       }
     },
-    removeSelectedTrashGroupFromSidebar() {
-      const indexToDelete = this.groups.findIndex(
-        (group) => group.id === this.selectedTrashGroup.id
+    removeSelectedTrashWorkspaceFromSidebar() {
+      const indexToDelete = this.workspaces.findIndex(
+        (workspace) => workspace.id === this.selectedTrashWorkspace.id
       )
-      this.groups.splice(indexToDelete, 1)
-      if (this.groups.length > 0) {
-        this.selectedTrashGroup = this.groups[0]
+      this.workspaces.splice(indexToDelete, 1)
+      if (this.workspaces.length > 0) {
+        this.selectedTrashWorkspace = this.workspaces[0]
       } else {
-        this.selectedTrashGroup = null
+        this.selectedTrashWorkspace = null
       }
     },
     /**
-     * Updates the trash structure to remove any deleted groups or applications after
+     * Updates the trash structure to remove any deleted workspaces or applications after
      * an empty is performed.
      */
-    removeGroupOrAppFromSidebarIfNowPermDeleted() {
+    removeWorkspaceOrAppFromSidebarIfNowPermDeleted() {
       if (
         this.selectedTrashApplication !== null &&
         this.selectedTrashApplication.trashed
       ) {
         this.removeSelectedAppFromSidebar()
-        this.selectGroupOrApp({
-          group: this.selectedTrashGroup,
+        this.selectWorkspaceOrApp({
+          workspace: this.selectedTrashWorkspace,
           application: this.selectedTrashApplication,
         })
-      } else if (this.selectedTrashGroup.trashed) {
-        this.removeSelectedTrashGroupFromSidebar()
-        this.selectGroupOrApp({
-          group: this.selectedTrashGroup,
+      } else if (this.selectedTrashWorkspace.trashed) {
+        this.removeSelectedTrashWorkspaceFromSidebar()
+        this.selectWorkspaceOrApp({
+          workspace: this.selectedTrashWorkspace,
           application: this.selectedTrashApplication,
         })
       } else if (this.selectedTrashApplication === null) {
-        // The group was emptied, it might have contained trashed applications hence
+        // The workspace was emptied, it might have contained trashed applications hence
         // we need to search through the trash and remove any now deleted applications.
-        for (const app of this.selectedTrashGroup.applications.slice()) {
+        for (const app of this.selectedTrashWorkspace.applications.slice()) {
           if (app.trashed) {
-            const index = this.selectedTrashGroup.applications.findIndex(
+            const index = this.selectedTrashWorkspace.applications.findIndex(
               (i) => i.id === app.id
             )
-            this.selectedTrashGroup.applications.splice(index, 1)
+            this.selectedTrashWorkspace.applications.splice(index, 1)
           }
         }
       }

@@ -131,7 +131,7 @@ export default {
   name: 'ManageTeamForm',
   mixins: [form],
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -160,8 +160,8 @@ export default {
   },
   computed: {
     roles() {
-      return filterRoles(this.group._.roles, {
-        scopeType: 'group',
+      return filterRoles(this.workspace._.roles, {
+        scopeType: 'workspace',
         subjectType: 'baserow_enterprise.Team',
       })
     },

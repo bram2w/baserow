@@ -6,7 +6,7 @@
           $hasPermission(
             'database.table.field.update',
             field,
-            database.group.id
+            database.workspace.id
           )
         "
       >
@@ -40,7 +40,7 @@
           $hasPermission(
             'database.table.field.delete',
             field,
-            database.group.id
+            database.workspace.id
           )
         "
       >

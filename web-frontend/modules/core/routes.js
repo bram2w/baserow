@@ -39,7 +39,12 @@ export const routes = [
   {
     name: 'group-invitation',
     path: '/group-invitation/:token',
-    component: path.resolve(__dirname, 'pages/groupInvitation.vue'),
+    component: path.resolve(__dirname, 'pages/workspaceInvitation.vue'),
+  }, // GroupDeprecation
+  {
+    name: 'workspace-invitation',
+    path: '/workspace-invitation/:token',
+    component: path.resolve(__dirname, 'pages/workspaceInvitation.vue'),
   },
   {
     name: 'admin-settings',
@@ -58,7 +63,7 @@ export const routes = [
   },
   {
     name: 'settings',
-    path: '/settings/:groupId',
+    path: '/settings/:workspaceId',
     component: path.resolve(__dirname, 'pages/settings.vue'),
     children: [
       {

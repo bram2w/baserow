@@ -1,5 +1,5 @@
 import { BaserowPlugin } from '@baserow/modules/core/plugins'
-import ChatwootSupportSidebarGroup from '@baserow_enterprise/components/ChatwootSupportSidebarGroup'
+import ChatwootSupportSidebarWorkspace from '@baserow_enterprise/components/ChatwootSupportSidebarWorkspace'
 import MemberRolesDatabaseContextItem from '@baserow_enterprise/components/member-roles/MemberRolesDatabaseContextItem'
 import MemberRolesTableContextItem from '@baserow_enterprise/components/member-roles/MemberRolesTableContextItem'
 import EnterpriseFeatures from '@baserow_enterprise/features'
@@ -9,18 +9,18 @@ export class EnterprisePlugin extends BaserowPlugin {
     return 'enterprise'
   }
 
-  getSidebarGroupComponent(group) {
+  getSidebarWorkspaceComponent(workspace) {
     const supportEnabled = this.app.$hasFeature(
       EnterpriseFeatures.SUPPORT,
-      group.id
+      workspace.id
     )
-    return supportEnabled ? ChatwootSupportSidebarGroup : null
+    return supportEnabled ? ChatwootSupportSidebarWorkspace : null
   }
 
-  getAdditionalDatabaseContextComponents(group, database) {
+  getAdditionalDatabaseContextComponents(workspace, database) {
     if (
-      this.app.$hasFeature(EnterpriseFeatures.RBAC, group.id) &&
-      this.app.$hasPermission('application.read_role', database, group.id)
+      this.app.$hasFeature(EnterpriseFeatures.RBAC, workspace.id) &&
+      this.app.$hasPermission('application.read_role', database, workspace.id)
     ) {
       return [MemberRolesDatabaseContextItem]
     } else {
@@ -28,10 +28,10 @@ export class EnterprisePlugin extends BaserowPlugin {
     }
   }
 
-  getAdditionalTableContextComponents(group, table) {
+  getAdditionalTableContextComponents(workspace, table) {
     if (
-      this.app.$hasFeature(EnterpriseFeatures.RBAC, group.id) &&
-      this.app.$hasPermission('database.table.read_role', table, group.id)
+      this.app.$hasFeature(EnterpriseFeatures.RBAC, workspace.id) &&
+      this.app.$hasPermission('database.table.read_role', table, workspace.id)
     ) {
       return [MemberRolesTableContextItem]
     } else {

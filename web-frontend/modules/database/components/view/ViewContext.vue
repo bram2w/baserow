@@ -5,7 +5,11 @@
       <li
         v-if="
           hasValidExporter &&
-          $hasPermission('database.table.run_export', table, database.group.id)
+          $hasPermission(
+            'database.table.run_export',
+            table,
+            database.workspace.id
+          )
         "
       >
         <a @click="exportView()">
@@ -15,7 +19,11 @@
       </li>
       <li
         v-if="
-          $hasPermission('database.table.import_rows', table, database.group.id)
+          $hasPermission(
+            'database.table.import_rows',
+            table,
+            database.workspace.id
+          )
         "
       >
         <a @click="importFile()">
@@ -28,7 +36,7 @@
           $hasPermission(
             'database.table.view.duplicate',
             table,
-            database.group.id
+            database.workspace.id
           )
         "
       >
@@ -42,7 +50,7 @@
           $hasPermission(
             'database.table.create_webhook',
             table,
-            database.group.id
+            database.workspace.id
           )
         "
       >
@@ -53,7 +61,11 @@
       </li>
       <li
         v-if="
-          $hasPermission('database.table.view.update', view, database.group.id)
+          $hasPermission(
+            'database.table.view.update',
+            view,
+            database.workspace.id
+          )
         "
       >
         <a @click="enableRename()">
@@ -63,7 +75,11 @@
       </li>
       <li
         v-if="
-          $hasPermission('database.table.view.delete', view, database.group.id)
+          $hasPermission(
+            'database.table.view.delete',
+            view,
+            database.workspace.id
+          )
         "
       >
         <a @click="deleteView()">

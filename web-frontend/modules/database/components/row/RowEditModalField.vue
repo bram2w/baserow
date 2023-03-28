@@ -40,7 +40,7 @@
     <component
       :is="getFieldComponent(field.type)"
       ref="field"
-      :group-id="database.group.id"
+      :workspace-id="database.workspace.id"
       :field="field"
       :value="row['field_' + field.id]"
       :read-only="readOnly"

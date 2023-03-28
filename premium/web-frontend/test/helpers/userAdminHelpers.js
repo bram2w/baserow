@@ -36,7 +36,7 @@ export default class UserAdminUserHelpers {
     return {
       usernameCell: cells.at(offset),
       nameCell: cells.at(offset + 1),
-      groupsCell: cells.at(offset + 2),
+      workspacesCell: cells.at(offset + 2),
       lastLoginCell: cells.at(offset + 3),
       signedUpCell: cells.at(offset + 4),
       isActiveCell: cells.at(offset + 5),
@@ -59,12 +59,12 @@ export default class UserAdminUserHelpers {
     return usernameCell.find('.user-admin-username__icon').exists()
   }
 
-  getGroups(groupsCell) {
-    return groupsCell.findAll('.expand-overflow-list__item')
+  getWorkspaces(workspacesCell) {
+    return workspacesCell.findAll('.expand-overflow-list__item')
   }
 
-  groupCellShowsThisUserIsGroupAdmin(groupCell) {
-    return groupCell.find('.user-admin-group__icon').exists()
+  workspaceCellShowsThisUserIsWorkspaceAdmin(workspaceCell) {
+    return workspaceCell.find('.user-admin-group__icon').exists()
   }
 
   async openFirstUserActionsMenu() {

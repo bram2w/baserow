@@ -8,7 +8,7 @@
       >
         <MemberRolesTab
           :loading="loading"
-          :group="group"
+          :workspace="workspace"
           :scope="database"
           :role-assignments="databaseRoleAssignments"
           :teams="teams"
@@ -24,7 +24,7 @@
       >
         <MemberRolesTab
           :loading="loading"
-          :group="group"
+          :workspace="workspace"
           :scope="table"
           :role-assignments="tableRoleAssignments"
           :teams="teams"
@@ -72,14 +72,14 @@ export default {
     }
   },
   computed: {
-    group() {
-      return this.$store.getters['group/get'](this.database.group.id)
+    workspace() {
+      return this.$store.getters['workspace/get'](this.database.workspace.id)
     },
     canManageDatabase() {
       return this.$hasPermission(
         'application.read_role',
         this.database,
-        this.group.id
+        this.workspace.id
       )
     },
     canManageTable() {
@@ -88,7 +88,7 @@ export default {
         this.$hasPermission(
           'database.table.read_role',
           this.table,
-          this.group.id
+          this.workspace.id
         )
       )
     },
@@ -111,7 +111,7 @@ export default {
         if (this.canManageDatabase) {
           const { data: databaseRoleAssignments } =
             await RoleAssignmentsService(this.$client).getRoleAssignments(
-              this.group.id,
+              this.workspace.id,
               this.database.id,
               'application'
             )
@@ -121,7 +121,11 @@ export default {
         if (this.canManageTable) {
           const { data: tableRoleAssignments } = await RoleAssignmentsService(
             this.$client
-          ).getRoleAssignments(this.group.id, this.table.id, 'database_table')
+          ).getRoleAssignments(
+            this.workspace.id,
+            this.table.id,
+            'database_table'
+          )
           this.tableRoleAssignments = tableRoleAssignments
         }
       } catch (error) {
@@ -136,7 +140,7 @@ export default {
     async fetchTeams() {
       try {
         const { data: teams } = await TeamService(this.$client).fetchAll(
-          this.group.id
+          this.workspace.id
         )
         this.teams = teams
       } catch (error) {
@@ -211,7 +215,7 @@ export default {
       try {
         const { data: roleAssignments } = await RoleAssignmentsService(
           this.$client
-        ).assignRoleBatch(this.group.id, items)
+        ).assignRoleBatch(this.workspace.id, items)
 
         this.loading = false
         return roleAssignments
@@ -247,7 +251,7 @@ export default {
         await RoleAssignmentsService(this.$client).assignRole(
           roleAssignment.subject.id,
           roleAssignment.subject_type,
-          this.group.id,
+          this.workspace.id,
           roleAssignment.scope_id,
           roleAssignment.scope_type,
           newRole

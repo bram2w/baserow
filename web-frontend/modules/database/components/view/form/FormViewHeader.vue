@@ -2,7 +2,11 @@
   <ul v-if="!tableLoading" class="header__filter header__filter--full-width">
     <li
       v-if="
-        $hasPermission('database.table.view.update', view, database.group.id)
+        $hasPermission(
+          'database.table.view.update',
+          view,
+          database.workspace.id
+        )
       "
       class="header__filter-item"
     >

@@ -32,7 +32,7 @@
         :role-assignments="roleAssignments"
         :scope-type="scopeType"
         :scope-id="scopeId"
-        :group-id="group.id"
+        :workspace-id="workspace.id"
         :teams="teams"
         @role-updated="
           (roleAssignment, newRole) =>
@@ -42,7 +42,7 @@
       <RoleAssignmentModal
         ref="roleAssignmentModal"
         :scope-type="scopeType"
-        :users="groupUsersNotInvited"
+        :users="workspaceUsersNotInvited"
         :teams="teamsNotInvited"
         @invite-teams="(teams, role) => $emit('invite-teams', teams, role)"
         @invite-members="
@@ -65,7 +65,7 @@ export default {
     MemberRolesMembersList,
   },
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -134,12 +134,12 @@ export default {
           roleAssignment.subject_type === 'baserow_enterprise.Team'
       )
     },
-    groupUsers() {
-      return this.group.users || []
+    workspaceUsers() {
+      return this.workspace.users || []
     },
-    groupUsersNotInvited() {
+    workspaceUsersNotInvited() {
       const userIds = this.userRoleAssignments.map(({ subject }) => subject.id)
-      return this.groupUsers.filter(
+      return this.workspaceUsers.filter(
         ({ user_id: userId }) =>
           !userIds.includes(userId) && userId !== this.userId
       )

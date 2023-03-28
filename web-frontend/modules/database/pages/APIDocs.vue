@@ -50,7 +50,7 @@ export default {
   name: 'APIDocs',
   components: { SettingsModal, APIDocsSelectDatabase },
   layout: 'login',
-  middleware: ['groupsAndApplications'],
+  middleware: ['workspacesAndApplications'],
   head() {
     return {
       title: 'REST API documentation',

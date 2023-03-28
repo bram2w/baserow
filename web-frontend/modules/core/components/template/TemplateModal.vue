@@ -3,7 +3,7 @@
     <div v-if="loading" class="loading-absolute-center"></div>
     <template v-else>
       <TemplateHeader
-        :group="group"
+        :workspace="workspace"
         :template="selectedTemplate"
         :category="selectedTemplateCategory"
         @installed="hide()"
@@ -40,7 +40,7 @@ export default {
   components: { TemplateHeader, TemplateCategories, TemplatePreview },
   mixins: [modal],
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },

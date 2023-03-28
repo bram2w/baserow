@@ -3,7 +3,7 @@ import { callGrouper } from '@baserow/modules/core/utils/function'
 
 const GRACE_DELAY = 50 // ms before querying the backend with a get query
 
-const groupGetNameCalls = callGrouper(GRACE_DELAY)
+const workspaceGetNameCalls = callGrouper(GRACE_DELAY)
 
 export default (client) => {
   return {
@@ -28,7 +28,7 @@ export default (client) => {
      * Returns the name of specified table row. Batch consecutive queries into one
      * during the defined GRACE_TIME.
      */
-    getName: groupGetNameCalls(async (argList) => {
+    getName: workspaceGetNameCalls(async (argList) => {
       // [[tableId, id], ...] -> { table__<id>: Array<row ids> }
       const tableMap = argList.reduce((acc, [tableId, rowId]) => {
         if (!acc[`table__${tableId}`]) {

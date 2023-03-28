@@ -66,7 +66,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters({ group: 'group/getSelected' }),
+    ...mapGetters({ workspace: 'workspace/getSelected' }),
     subjectTypeLabel() {
       switch (this.subjectType) {
         case 'auth.User':
@@ -78,8 +78,8 @@ export default {
       }
     },
     roles() {
-      return this.group
-        ? filterRoles(this.group._.roles, {
+      return this.workspace
+        ? filterRoles(this.workspace._.roles, {
             scopeType: this.scopeType,
             subjectType: this.subjectType,
           })

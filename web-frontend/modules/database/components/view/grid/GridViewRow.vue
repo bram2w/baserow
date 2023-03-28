@@ -64,7 +64,7 @@
             <component
               :is="rowExpandButton"
               :row="row"
-              :group-id="groupId"
+              :workspace-id="workspaceId"
               :table="view.table"
               @edit-modal="$emit('edit-modal', row)"
             ></component>
@@ -85,7 +85,7 @@
       <GridViewCell
         v-for="field in fieldsToRender"
         :key="'row-field-' + row._.persistentId + '-' + field.id.toString()"
-        :group-id="groupId"
+        :workspace-id="workspaceId"
         :field="field"
         :row="row"
         :state="state"
@@ -134,7 +134,7 @@ export default {
       type: Object,
       required: true,
     },
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
     },

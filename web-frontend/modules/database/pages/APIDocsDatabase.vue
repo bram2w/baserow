@@ -179,7 +179,7 @@ export default {
     APIDocsErrors,
     APIDocsMenu,
   },
-  middleware: ['authenticated', 'groupsAndApplications'],
+  middleware: ['authenticated', 'workspacesAndApplications'],
   async asyncData({ store, params, error, app }) {
     const databaseId = parseInt(params.databaseId)
     const database = store.getters['application/get'](databaseId)

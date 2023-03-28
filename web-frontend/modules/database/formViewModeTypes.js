@@ -50,7 +50,7 @@ export class FormViewModeType extends Registerable {
   /**
    * Indicates if the decorator type is disabled.
    */
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 

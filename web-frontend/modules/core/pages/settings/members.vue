@@ -1,5 +1,5 @@
 <template>
-  <MembersTable :group="group" />
+  <MembersTable :workspace="workspace" />
 </template>
 
 <script>
@@ -9,7 +9,7 @@ export default {
   name: 'Members',
   components: { MembersTable },
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },

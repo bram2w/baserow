@@ -2,13 +2,17 @@ import baseService from '@baserow/modules/core/crudTable/baseService'
 
 export default (client) => {
   return Object.assign(
-    baseService(client, ({ groupId }) => `/teams/group/${groupId}/`, false),
+    baseService(
+      client,
+      ({ workspaceId }) => `/teams/workspace/${workspaceId}/`,
+      false
+    ),
     {
-      fetchAll(groupId) {
-        return client.get(`/teams/group/${groupId}/`)
+      fetchAll(workspaceId) {
+        return client.get(`/teams/workspace/${workspaceId}/`)
       },
-      create(groupId, values) {
-        return client.post(`/teams/group/${groupId}/`, values)
+      create(workspaceId, values) {
+        return client.post(`/teams/workspace/${workspaceId}/`, values)
       },
       update(id, values) {
         return client.put(`/teams/${id}/`, values)

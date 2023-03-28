@@ -214,7 +214,8 @@ export default {
       return (
         // If we're in read only mode, then it doesn't matter whether the mode is
         // disabled because we then always want to demo the survey.
-        !this.readOnly && this.modeType.isDeactivated(this.database.group.id)
+        !this.readOnly &&
+        this.modeType.isDeactivated(this.database.workspace.id)
       )
     },
   },

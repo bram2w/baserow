@@ -49,12 +49,12 @@ export default {
     ...mapGetters({
       additionalUserData: 'auth/getAdditionalUserData',
     }),
-    group() {
+    workspace() {
       return this.$store.getters['application/get'](this.view.table.database_id)
-        .group
+        .workspace
     },
     hasPremiumFeatures() {
-      return this.$hasFeature(PremiumFeatures.PREMIUM, this.group.id)
+      return this.$hasFeature(PremiumFeatures.PREMIUM, this.workspace.id)
     },
     tooltipText() {
       if (this.hasPremiumFeatures) {

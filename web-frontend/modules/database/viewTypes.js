@@ -289,7 +289,7 @@ export class ViewType extends Registerable {
   /**
    * Indicates if the view type is disabled.
    */
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 

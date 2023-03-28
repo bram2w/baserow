@@ -135,7 +135,7 @@ export default {
         this.$hasPermission(
           'database.table.view.update',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },
@@ -191,7 +191,7 @@ export default {
               !this.$hasPermission(
                 'database.table.view.update_field_options',
                 this.view,
-                this.database.group.id
+                this.database.workspace.id
               ),
           }
         )
@@ -212,7 +212,7 @@ export default {
               !this.$hasPermission(
                 'database.table.view.update_field_options',
                 this.view,
-                this.database.group.id
+                this.database.workspace.id
               ),
           }
         )

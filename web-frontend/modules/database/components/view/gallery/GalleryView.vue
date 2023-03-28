@@ -3,7 +3,11 @@
     <a
       v-if="
         !readOnly &&
-        $hasPermission('database.table.create_view', table, database.group.id)
+        $hasPermission(
+          'database.table.create_view',
+          table,
+          database.workspace.id
+        )
       "
       class="gallery-view__add"
       @click="$refs.rowCreateModal.show()"
@@ -56,7 +60,7 @@
                 !$hasPermission(
                   'database.table.move_row',
                   table,
-                  database.group.id
+                  database.workspace.id
                 )
             )
           "
@@ -68,7 +72,11 @@
     <RowCreateModal
       v-if="
         !readOnly &&
-        $hasPermission('database.table.create_row', table, database.group.id)
+        $hasPermission(
+          'database.table.create_row',
+          table,
+          database.workspace.id
+        )
       "
       ref="rowCreateModal"
       :database="database"
@@ -97,7 +105,11 @@
       :rows="allRows"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @hidden="$emit('selected-row', undefined)"

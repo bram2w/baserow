@@ -1,5 +1,5 @@
 <template>
-  <TeamsTable :group="group" />
+  <TeamsTable :workspace="workspace" />
 </template>
 
 <script>
@@ -10,7 +10,7 @@ export default {
   name: 'Teams',
   components: { TeamsTable },
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -18,13 +18,13 @@ export default {
   mounted() {
     this.$store.dispatch(
       'undoRedo/updateCurrentScopeSet',
-      ENTERPRISE_ACTION_SCOPES.teams_in_group(this.group.id)
+      ENTERPRISE_ACTION_SCOPES.teams_in_workspace(this.workspace.id)
     )
   },
   beforeDestroy() {
     this.$store.dispatch(
       'undoRedo/updateCurrentScopeSet',
-      ENTERPRISE_ACTION_SCOPES.teams_in_group(null)
+      ENTERPRISE_ACTION_SCOPES.teams_in_workspace(null)
     )
   },
 }

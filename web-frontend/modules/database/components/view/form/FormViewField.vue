@@ -61,7 +61,7 @@
           :is="getFieldComponent()"
           ref="field"
           :slug="view.slug"
-          :group-id="database.group.id"
+          :workspace-id="database.workspace.id"
           :field="field"
           :value="value"
           :read-only="readOnly"

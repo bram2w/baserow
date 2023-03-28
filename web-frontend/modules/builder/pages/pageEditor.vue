@@ -41,7 +41,7 @@ export default {
         builderId,
         pageId,
       })
-      await store.dispatch('group/selectById', builder.group.id)
+      await store.dispatch('workspace/selectById', builder.workspace.id)
       data.builder = builder
       data.page = page
 

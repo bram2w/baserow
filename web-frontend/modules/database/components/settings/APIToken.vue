@@ -94,7 +94,7 @@
           </Context>
         </div>
         <div class="api-token__details">
-          <div class="api-token__group">{{ group.name }}</div>
+          <div class="api-token__group">{{ workspace.name }}</div>
           <a class="api-token__expand" @click.prevent="open = !open">
             {{ $t('apiToken.showDatabases') }}
             <i
@@ -161,7 +161,7 @@
                   $hasPermission(
                     `database.table.${operation}_row`,
                     table,
-                    group.id
+                    workspace.id
                   )
                 "
                 :value="isTableActive(table, database, operation)"
@@ -206,12 +206,12 @@ export default {
     }
   },
   computed: {
-    group() {
-      return this.$store.getters['group/get'](this.token.group)
+    workspace() {
+      return this.$store.getters['workspace/get'](this.token.workspace)
     },
     databases() {
-      return this.$store.getters['application/getAllOfGroup'](
-        this.group
+      return this.$store.getters['application/getAllOfWorkspace'](
+        this.workspace
       ).filter(
         (application) => application.type === DatabaseApplicationType.getType()
       )
@@ -415,7 +415,7 @@ export default {
     toggle(operation, value) {
       const oldPermissions = JSON.parse(JSON.stringify(this.token.permissions))
       // We can easily change the value to true or false because the permissions are
-      // now going to be controlled on global (group) level.
+      // now going to be controlled on global (workspace) level.
       this.token.permissions[operation] = value
       this.updateToken(
         this.token,

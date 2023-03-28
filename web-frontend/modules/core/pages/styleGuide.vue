@@ -603,7 +603,7 @@
             <ul v-auto-overflow-scroll class="select__items">
               <li class="select__item active">
                 <a href="#" class="select__item-link">
-                  <div class="select__item-name">Group name 1</div>
+                  <div class="select__item-name">Workspace name 1</div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
@@ -611,7 +611,7 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <div class="select__item-name">Group name 2</div>
+                  <div class="select__item-name">Workspace name 2</div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>
@@ -619,7 +619,7 @@
               </li>
               <li class="select__item select__item--loading">
                 <a href="#" class="select__item-link">
-                  <div class="select__item-name">Group name 3</div>
+                  <div class="select__item-name">Workspace name 3</div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="fas fa-ellipsis-v"></i>

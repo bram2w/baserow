@@ -1,8 +1,8 @@
-import groupStore from '@baserow/modules/core/store/group'
+import workspaceStore from '@baserow/modules/core/store/workspace'
 import { TestApp } from '@baserow/test/helpers/testApp'
 import { expect } from '@jest/globals'
 
-describe('Group store', () => {
+describe('Workspace store', () => {
   let testApp = null
   let store = null
 
@@ -15,19 +15,19 @@ describe('Group store', () => {
     testApp.afterEach()
   })
 
-  test('forceAddGroupUser adds user to a group', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('forceAddWorkspaceUser adds user to a workspace', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -38,15 +38,15 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceAddGroupUser', {
-      groupId: 1,
+    await store.dispatch('test/forceAddWorkspaceUser', {
+      workspaceId: 1,
       values: {
         id: 74,
         user_id: 257,
-        group: 1,
+        workspace: 1,
         name: 'Adam',
         email: 'adam@example.com',
         permissions: 'MEMBER',
@@ -55,25 +55,25 @@ describe('Group store', () => {
       },
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users.length).toBe(2)
-    expect(group.users[1].user_id).toBe(257)
-    expect(group.users[1].permissions).toBe('MEMBER')
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users.length).toBe(2)
+    expect(workspace.users[1].user_id).toBe(257)
+    expect(workspace.users[1].permissions).toBe('MEMBER')
   })
 
-  test('forceUpdateGroupUser updates a user from the group', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('forceUpdateWorkspaceUser updates a user from the workspace', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -84,16 +84,16 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceUpdateGroupUser', {
-      groupId: 1,
+    await store.dispatch('test/forceUpdateWorkspaceUser', {
+      workspaceId: 1,
       id: 73,
       values: {
         id: 73,
         user_id: 256,
-        group: 1,
+        workspace: 1,
         name: 'Petr',
         email: 'petr@example.com',
         permissions: 'MEMBER',
@@ -102,13 +102,13 @@ describe('Group store', () => {
       },
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users.length).toBe(1)
-    expect(group.users[0].name).toBe('Petr')
-    expect(group.users[0].permissions).toBe('MEMBER')
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users.length).toBe(1)
+    expect(workspace.users[0].name).toBe('Petr')
+    expect(workspace.users[0].permissions).toBe('MEMBER')
   })
 
-  test(`forceUpdateGroupUser updates a current group permissions 
+  test(`forceUpdateWorkspaceUser updates a current workspace permissions
         when the current user is updated`, async () => {
     await store.dispatch('auth/forceSetUserData', {
       user: {
@@ -121,18 +121,18 @@ describe('Group store', () => {
         `iwidXNlcl9wcm9maWxlX2lkIjpbMl0sIm9yaWdfaWF0IjoxNjYwMjkxMDg2fQ.RQ-M` +
         `NQdDR9zTi8CbbQkRrwNsyDa5CldQI83Uid1l9So`,
     })
-    const state = Object.assign(groupStore.state(), {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -143,16 +143,16 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceUpdateGroupUser', {
-      groupId: 1,
+    await store.dispatch('test/forceUpdateWorkspaceUser', {
+      workspaceId: 1,
       id: 73,
       values: {
         id: 73,
         user_id: 256,
-        group: 1,
+        workspace: 1,
         name: 'Petr',
         email: 'petr@example.com',
         permissions: 'MEMBER',
@@ -161,27 +161,27 @@ describe('Group store', () => {
       },
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users.length).toBe(1)
-    expect(group.users[0].name).toBe('Petr')
-    expect(group.users[0].permissions).toBe('MEMBER')
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users.length).toBe(1)
+    expect(workspace.users[0].name).toBe('Petr')
+    expect(workspace.users[0].permissions).toBe('MEMBER')
 
-    expect(group.permissions).toBe('MEMBER')
+    expect(workspace.permissions).toBe('MEMBER')
   })
 
-  test('forceUpdateGroupUserAttributes updates a user across all groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('forceUpdateWorkspaceUserAttributes updates a user across all workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -192,14 +192,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -209,7 +209,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -220,14 +220,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2132,
               user_id: 456,
-              group: 3,
+              workspace: 3,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -238,10 +238,10 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceUpdateGroupUserAttributes', {
+    await store.dispatch('test/forceUpdateWorkspaceUserAttributes', {
       userId: 256,
       values: {
         name: 'John renamed',
@@ -249,34 +249,34 @@ describe('Group store', () => {
       },
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users[0].name).toBe('John renamed')
-    expect(group.users[0].to_be_deleted).toBe(true)
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users[0].name).toBe('John renamed')
+    expect(workspace.users[0].to_be_deleted).toBe(true)
 
-    const group2 = store.getters['test/get'](2)
-    expect(group2.users[0].name).toBe('Peter')
-    expect(group2.users[0].to_be_deleted).toBe(false)
-    expect(group2.users[1].name).toBe('John renamed')
-    expect(group2.users[1].to_be_deleted).toBe(true)
+    const workspace2 = store.getters['test/get'](2)
+    expect(workspace2.users[0].name).toBe('Peter')
+    expect(workspace2.users[0].to_be_deleted).toBe(false)
+    expect(workspace2.users[1].name).toBe('John renamed')
+    expect(workspace2.users[1].to_be_deleted).toBe(true)
 
-    const group3 = store.getters['test/get'](3)
-    expect(group3.users[0].name).toBe('Peter')
-    expect(group3.users[0].to_be_deleted).toBe(false)
+    const workspace3 = store.getters['test/get'](3)
+    expect(workspace3.users[0].name).toBe('Peter')
+    expect(workspace3.users[0].to_be_deleted).toBe(false)
   })
 
-  test('forceDeleteGroupUser removes a user from the group', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('forceDeleteWorkspaceUser removes a user from the workspace', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -287,16 +287,16 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceDeleteGroupUser', {
-      groupId: 1,
+    await store.dispatch('test/forceDeleteWorkspaceUser', {
+      workspaceId: 1,
       id: 73,
       values: {
         id: 73,
         user_id: 256,
-        group: 1,
+        workspace: 1,
         name: 'John',
         email: 'john@example.com',
         permissions: 'ADMIN',
@@ -305,11 +305,11 @@ describe('Group store', () => {
       },
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users.length).toBe(0)
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users.length).toBe(0)
   })
 
-  test(`forceDeleteGroupUser removes the whole group if the 
+  test(`forceDeleteWorkspaceUser removes the whole workspace if the
         current user is being removed`, async () => {
     await store.dispatch('auth/forceSetUserData', {
       user: {
@@ -323,18 +323,18 @@ describe('Group store', () => {
         `NQdDR9zTi8CbbQkRrwNsyDa5CldQI83Uid1l9So`,
     })
 
-    const state = Object.assign(groupStore.state(), {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -345,16 +345,16 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
-    await store.dispatch('test/forceDeleteGroupUser', {
-      groupId: 1,
+    await store.dispatch('test/forceDeleteWorkspaceUser', {
+      workspaceId: 1,
       id: 73,
       values: {
         id: 73,
         user_id: 256,
-        group: 1,
+        workspace: 1,
         name: 'John',
         email: 'john@example.com',
         permissions: 'ADMIN',
@@ -363,23 +363,23 @@ describe('Group store', () => {
       },
     })
 
-    const groups = store.getters['test/getAll']
-    expect(groups.length).toBe(0)
+    const workspaces = store.getters['test/getAll']
+    expect(workspaces.length).toBe(0)
   })
 
-  test('forceDeleteUser deletes all group users across all groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('forceDeleteUser deletes all workspace users across all workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -390,14 +390,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -407,7 +407,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -418,14 +418,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2132,
               user_id: 456,
-              group: 3,
+              workspace: 3,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -436,38 +436,38 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
     await store.dispatch('test/forceDeleteUser', {
       userId: 256,
     })
 
-    const group = store.getters['test/get'](1)
-    expect(group.users.length).toBe(0)
+    const workspace = store.getters['test/get'](1)
+    expect(workspace.users.length).toBe(0)
 
-    const group2 = store.getters['test/get'](2)
-    expect(group2.users[0].name).toBe('Peter')
-    expect(group2.users[0].to_be_deleted).toBe(false)
-    expect(group2.users.length).toBe(1)
+    const workspace2 = store.getters['test/get'](2)
+    expect(workspace2.users[0].name).toBe('Peter')
+    expect(workspace2.users[0].to_be_deleted).toBe(false)
+    expect(workspace2.users.length).toBe(1)
 
-    const group3 = store.getters['test/get'](3)
-    expect(group3.users.length).toBe(1)
+    const workspace3 = store.getters['test/get'](3)
+    expect(workspace3.users.length).toBe(1)
   })
 
-  test('getAllUsers collects users from all groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('getAllUsers collects users from all workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -478,14 +478,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -495,7 +495,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -506,14 +506,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2144,
               user_id: 556,
-              group: 3,
+              workspace: 3,
               name: 'Mark',
               email: 'mark@example.com',
               permissions: 'ADMIN',
@@ -524,8 +524,8 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
     const allUsers = await store.getters['test/getAllUsers']
     expect(allUsers[256].name).toBe('John')
@@ -533,19 +533,19 @@ describe('Group store', () => {
     expect(allUsers[556].name).toBe('Mark')
   })
 
-  test('getAllUsersByEmail collects users by email from all groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('getAllUsersByEmail collects users by email from all workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -556,14 +556,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -573,7 +573,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -584,14 +584,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2144,
               user_id: 556,
-              group: 3,
+              workspace: 3,
               name: 'Mark',
               email: 'mark@example.com',
               permissions: 'ADMIN',
@@ -602,8 +602,8 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
     const allUsers = await store.getters['test/getAllUsersByEmail']
     expect(allUsers['john@example.com'].name).toBe('John')
@@ -611,19 +611,19 @@ describe('Group store', () => {
     expect(allUsers['mark@example.com'].name).toBe('Mark')
   })
 
-  test('getUserById returns user by id from any of the groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('getUserById returns user by id from any of the workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -634,14 +634,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -651,7 +651,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -662,14 +662,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2144,
               user_id: 556,
-              group: 3,
+              workspace: 3,
               name: 'Mark',
               email: 'mark@example.com',
               permissions: 'ADMIN',
@@ -680,26 +680,26 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
     const mark = await store.getters['test/getUserById'](556)
     expect(mark.name).toBe('Mark')
   })
 
-  test('getUserByEmail returns user by email from any of the groups', async () => {
-    const state = Object.assign(groupStore.state(), {
+  test('getUserByEmail returns user by email from any of the workspaces', async () => {
+    const state = Object.assign(workspaceStore.state(), {
       items: [
         {
           id: 1,
-          name: 'Group 1',
+          name: 'Workspace 1',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 73,
               user_id: 256,
-              group: 1,
+              workspace: 1,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -710,14 +710,14 @@ describe('Group store', () => {
         },
         {
           id: 2,
-          name: 'Group 2',
+          name: 'Workspace 2',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2136,
               user_id: 456,
-              group: 2,
+              workspace: 2,
               name: 'Peter',
               email: 'peter@example.com',
               permissions: 'ADMIN',
@@ -727,7 +727,7 @@ describe('Group store', () => {
             {
               id: 173,
               user_id: 256,
-              group: 2,
+              workspace: 2,
               name: 'John',
               email: 'john@example.com',
               permissions: 'ADMIN',
@@ -738,14 +738,14 @@ describe('Group store', () => {
         },
         {
           id: 3,
-          name: 'Group 3',
+          name: 'Workspace 3',
           order: 1,
           permissions: 'ADMIN',
           users: [
             {
               id: 2144,
               user_id: 556,
-              group: 3,
+              workspace: 3,
               name: 'Mark',
               email: 'mark@example.com',
               permissions: 'ADMIN',
@@ -756,8 +756,8 @@ describe('Group store', () => {
         },
       ],
     })
-    groupStore.state = () => state
-    store.registerModule('test', groupStore)
+    workspaceStore.state = () => state
+    store.registerModule('test', workspaceStore)
 
     const mark = await store.getters['test/getUserByEmail']('mark@example.com')
     expect(mark.name).toBe('Mark')

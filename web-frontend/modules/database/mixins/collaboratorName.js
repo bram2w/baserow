@@ -5,14 +5,14 @@ export default {
         store = this.$store
       }
 
-      // If groups are unavailable, public views are served
-      const groups = store.getters['group/getAll']
-      if (groups.length === 0) {
+      // If workspaces are unavailable, public views are served
+      const workspaces = store.getters['workspace/getAll']
+      if (workspaces.length === 0) {
         return collaboratorValue.name
       }
 
       // Otherwise, get name from the store to reflect real-time updates
-      const user = store.getters['group/getUserById'](collaboratorValue.id)
+      const user = store.getters['workspace/getUserById'](collaboratorValue.id)
       if (user) {
         return user.name
       }

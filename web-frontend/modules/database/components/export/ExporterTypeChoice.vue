@@ -54,7 +54,7 @@ export default {
     deactivated() {
       return this.$registry
         .get('exporter', this.exporterType.type)
-        .isDeactivated(this.database.group.id)
+        .isDeactivated(this.database.workspace.id)
     },
     deactivatedClickModal() {
       return this.$registry

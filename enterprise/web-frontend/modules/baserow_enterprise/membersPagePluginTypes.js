@@ -29,7 +29,7 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
       false,
       false,
       false,
-      { groupId: context.group.id },
+      { workspaceId: context.workspace.id },
       20,
       this.app.i18n.t(
         'membersSettings.membersTable.columns.highestRoleHelpText'
@@ -60,11 +60,11 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
     )
   }
 
-  isDeactivated(groupId) {
-    return !this.app.$hasFeature(EnterpriseFeatures.RBAC, groupId)
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(EnterpriseFeatures.RBAC, workspaceId)
   }
 
-  _replaceRoleColumn(columns, FieldComponent, key, { group }) {
+  _replaceRoleColumn(columns, FieldComponent, key, { workspace }) {
     const existingRoleColumnIndex = columns.findIndex(
       (column) => column.key === 'permissions'
     )
@@ -80,7 +80,7 @@ export class EnterpriseMembersPagePluginType extends MembersPagePluginType {
           false,
           false,
           {
-            groupId: group.id,
+            workspaceId: workspace.id,
           },
           this.app.i18n.t('membersPagePlugin.roleHelpText')
         )

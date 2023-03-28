@@ -5,7 +5,7 @@ import {
 } from '@baserow_premium/tableExporterTypes'
 import {
   DashboardType,
-  GroupsAdminType,
+  WorkspacesAdminType,
   UsersAdminType,
   LicensesAdminType,
 } from '@baserow_premium/adminTypes'
@@ -69,7 +69,7 @@ export default (context) => {
   app.$registry.register('plugin', new PremiumPlugin(context))
   app.$registry.register('admin', new DashboardType(context))
   app.$registry.register('admin', new UsersAdminType(context))
-  app.$registry.register('admin', new GroupsAdminType(context))
+  app.$registry.register('admin', new WorkspacesAdminType(context))
   app.$registry.register('admin', new LicensesAdminType(context))
   app.$registry.register('exporter', new JSONTableExporter(context))
   app.$registry.register('exporter', new XMLTableExporter(context))

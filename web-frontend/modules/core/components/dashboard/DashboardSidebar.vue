@@ -4,20 +4,20 @@
       <li class="dashboard__sidebar-title">
         {{ $t('dashboardSidebar.workspaces') }}
       </li>
-      <li v-for="group in groups" :key="group.id">
+      <li v-for="workspace in workspaces" :key="workspace.id">
         <a
           class="dashboard__sidebar-link"
-          @click="$emit('group-selected', group)"
+          @click="$emit('workspace-selected', workspace)"
         >
           <i class="fas fa-fw fa-layer-group"></i>
-          {{ group.name }}
+          {{ workspace.name }}
         </a>
       </li>
       <li>
         <a
           v-if="$hasPermission('create_workspace')"
           class="dashboard__sidebar-link dashboard__sidebar-link--light"
-          @click="$emit('create-group-clicked')"
+          @click="$emit('create-workspace-clicked')"
         >
           <i class="fas fa-fw fa-plus"></i>
           {{ $t('dashboard.createWorkspace') }}
@@ -86,7 +86,7 @@ export default {
   name: 'DashboardSidebar',
   components: { SettingsModal, TrashModal },
   props: {
-    groups: {
+    workspaces: {
       type: Array,
       required: true,
     },

@@ -1,6 +1,6 @@
 <template>
   <FieldCollaboratorDropdown
-    :collaborators="groupCollaborators"
+    :collaborators="workspaceCollaborators"
     :disabled="disabled"
     :value="copy"
     :show-empty-value="false"

@@ -19,19 +19,20 @@ export class LicenseHandler {
    */
   async afterUserDataUpdate(updatedUserData) {
     if (updatedUserData?.active_licenses?.instance_wide) {
-      // There has been some update to an instance wide license, force all groups
+      // There has been some update to an instance wide license, force all workspaces
       // to refresh their roles
-      for (const group of this.getters['group/getAll']) {
-        await this.dispatch('group/forceRefreshRoles', group)
+      for (const workspace of this.getters['workspace/getAll']) {
+        await this.dispatch('workspace/forceRefreshRoles', workspace)
       }
     } else {
-      // Otherwise only update the groups for whom their active licenses have changed.
-      for (const groupId of Object.keys(
+      // Otherwise only update the workspaces for whom their active licenses have
+      // changed.
+      for (const workspaceId of Object.keys(
         updatedUserData?.active_licenses?.per_workspace || {}
       )) {
-        const group = this.getters['group/get'](parseInt(groupId))
-        if (group) {
-          await this.dispatch('group/forceRefreshRoles', group)
+        const workspace = this.getters['workspace/get'](parseInt(workspaceId))
+        if (workspace) {
+          await this.dispatch('workspace/forceRefreshRoles', workspace)
         }
       }
     }
@@ -67,13 +68,13 @@ export class LicenseHandler {
   }
 
   /**
-   * Returns any licenses the current user might have active for the specific group.
+   * Returns any licenses the current user might have active for the specific workspace.
    */
-  getGroupLicenseTypes(groupId) {
+  getWorkspaceLicenseTypes(workspaceId) {
     const perWorkspaceLicenses =
       this.getters['auth/getAdditionalUserData']?.active_licenses
         ?.per_workspace || {}
-    return Object.entries(perWorkspaceLicenses[groupId] || {})
+    return Object.entries(perWorkspaceLicenses[workspaceId] || {})
       .filter(
         ([key, enabled]) => enabled && this.$registry.exists('license', key)
       )
@@ -86,17 +87,20 @@ export class LicenseHandler {
     )
   }
 
-  userHasFeatureEnabledForGroupOnly(feature, groupId) {
-    return this.getGroupLicenseTypes(groupId).some((t) =>
+  userHasFeatureEnabledForWorkspaceOnly(feature, workspaceId) {
+    return this.getWorkspaceLicenseTypes(workspaceId).some((t) =>
       t.getFeatures().includes(feature)
     )
   }
 
-  hasFeature(feature, forSpecificGroup = null) {
+  hasFeature(feature, forSpecificWorkspace = null) {
     return (
       this.userHasFeatureEnabledInstanceWide(feature) ||
-      (forSpecificGroup
-        ? this.userHasFeatureEnabledForGroupOnly(feature, forSpecificGroup)
+      (forSpecificWorkspace
+        ? this.userHasFeatureEnabledForWorkspaceOnly(
+            feature,
+            forSpecificWorkspace
+          )
         : false)
     )
   }

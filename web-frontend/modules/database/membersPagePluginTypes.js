@@ -26,7 +26,7 @@ export class MembersPagePluginType extends Registerable {
   /**
    * Set to false in order to enable the plugin
    */
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 }

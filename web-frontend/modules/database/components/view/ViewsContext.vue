@@ -37,7 +37,7 @@
                 $hasPermission(
                   'database.table.order_views',
                   table,
-                  database.group.id
+                  database.workspace.id
                 ),
               id: view.id,
               update: createOrderCall(view.ownership_type),
@@ -58,7 +58,11 @@
     <div
       v-if="
         !readOnly &&
-        $hasPermission('database.table.create_view', table, database.group.id)
+        $hasPermission(
+          'database.table.create_view',
+          table,
+          database.workspace.id
+        )
       "
       class="select__footer"
     >

@@ -12,7 +12,7 @@ export class FakeDecoratorType extends ViewDecoratorType {
     return 'first_cell'
   }
 
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 
@@ -121,7 +121,7 @@ describe('GridView component with decoration', () => {
 
   const populateStore = async (decorations) => {
     const table = mockServer.createTable()
-    const { application } = await mockServer.createAppAndGroup(table)
+    const { application } = await mockServer.createAppAndWorkspace(table)
     const view = mockServer.createGridView(application, table, {
       decorations,
     })

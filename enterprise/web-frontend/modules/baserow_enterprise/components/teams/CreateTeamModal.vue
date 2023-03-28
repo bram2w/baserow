@@ -5,7 +5,7 @@
     <Error :error="error"></Error>
     <ManageTeamForm
       ref="manageForm"
-      :group="group"
+      :workspace="workspace"
       :loading="loading"
       :invited-user-subjects="invitedUserSubjects"
       @submitted="createTeam"
@@ -27,14 +27,14 @@ import error from '@baserow/modules/core/mixins/error'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import ManageTeamForm from '@baserow_enterprise/components/teams/ManageTeamForm'
 import TeamService from '@baserow_enterprise/services/team'
-import MemberAssignmentModal from '@baserow/modules/core/components/group/MemberAssignmentModal'
+import MemberAssignmentModal from '@baserow/modules/core/components/workspace/MemberAssignmentModal'
 
 export default {
   name: 'CreateTeamModal',
   components: { ManageTeamForm, MemberAssignmentModal },
   mixins: [modal, error],
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -49,8 +49,8 @@ export default {
     uninvitedUserSubjects() {
       // Pluck out the user IDs in the objects of the `selections` array.
       const invitedSubjectIds = this.invitedUserSubjects.map((subj) => subj.id)
-      // Return an array of group users who aren't already invited.
-      return this.group.users.filter(
+      // Return an array of workspace users who aren't already invited.
+      return this.workspace.users.filter(
         (user) => !invitedSubjectIds.includes(user.id)
       )
     },
@@ -76,7 +76,7 @@ export default {
 
       try {
         const { data } = await TeamService(this.$client).create(
-          this.group.id,
+          this.workspace.id,
           values
         )
         this.loading = false

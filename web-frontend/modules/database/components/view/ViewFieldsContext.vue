@@ -12,7 +12,7 @@
               !$hasPermission(
                 'database.table.view.update',
                 view,
-                database.group.id
+                database.workspace.id
               )
             "
             @input="

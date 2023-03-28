@@ -16,7 +16,7 @@ export default (client) => {
       password,
       language,
       authenticate = true,
-      groupInvitationToken = null,
+      workspaceInvitationToken = null,
       templateId = null
     ) {
       const values = {
@@ -27,8 +27,8 @@ export default (client) => {
         language,
       }
 
-      if (groupInvitationToken !== null) {
-        values.group_invitation_token = groupInvitationToken
+      if (workspaceInvitationToken !== null) {
+        values.workspace_invitation_token = workspaceInvitationToken
       }
 
       if (templateId !== null) {

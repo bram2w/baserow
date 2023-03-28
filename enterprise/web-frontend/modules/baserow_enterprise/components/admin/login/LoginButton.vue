@@ -44,12 +44,15 @@ export default {
   },
   computed: {
     loginUrl() {
-      const { groupInvitationToken } = this.$route.query
+      // GroupDeprecation
+      const { groupInvitationToken, workspaceInvitationToken } =
+        this.$route.query
+      const invitationToken = workspaceInvitationToken || groupInvitationToken
       const parsedUrl = new URL(this.redirectUrl)
-      if (groupInvitationToken) {
+      if (invitationToken) {
         parsedUrl.searchParams.append(
-          'group_invitation_token',
-          groupInvitationToken
+          'workspace_invitation_token',
+          invitationToken
         )
       }
       return parsedUrl.toString()

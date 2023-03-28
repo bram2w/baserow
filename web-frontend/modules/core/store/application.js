@@ -47,9 +47,9 @@ export const mutations = {
       Object.assign(state.items[index], state.items[index], values)
     }
   },
-  ORDER_ITEMS(state, { group, order, isHashed = false }) {
+  ORDER_ITEMS(state, { workspace, order, isHashed = false }) {
     state.items
-      .filter((item) => item.group.id === group.id)
+      .filter((item) => item.workspace.id === workspace.id)
       .forEach((item) => {
         const itemId = isHashed ? generateHash(item.id) : item.id
         const index = order.findIndex((value) => value === itemId)
@@ -62,8 +62,8 @@ export const mutations = {
       state.items.splice(index, 1)
     }
   },
-  DELETE_ITEMS_FOR_GROUP(state, groupId) {
-    state.items = state.items.filter((app) => app.group.id !== groupId)
+  DELETE_ITEMS_FOR_WORKSPACE(state, workspaceId) {
+    state.items = state.items.filter((app) => app.workspace.id !== workspaceId)
   },
   SET_SELECTED(state, application) {
     Object.values(state.items).forEach((item) => {
@@ -125,10 +125,10 @@ export const actions = {
   },
   /**
    * Clears all the currently selected applications, this could be called when
-   * the group is deleted of when the user logs off.
+   * the workspace is deleted of when the user logs off.
    */
-  clearAll({ commit }, group) {
-    commit('DELETE_ITEMS_FOR_GROUP', group)
+  clearAll({ commit }, workspace) {
+    commit('DELETE_ITEMS_FOR_WORKSPACE', workspace)
     commit('UNSELECT')
     commit('SET_LOADED', false)
   },
@@ -144,9 +144,9 @@ export const actions = {
   },
   /**
    * Creates a new application with the given type and values for the currently
-   * selected group.
+   * selected workspace.
    */
-  async create({ dispatch }, { type, group, values, initWithData = true }) {
+  async create({ dispatch }, { type, workspace, values, initWithData = true }) {
     if (Object.prototype.hasOwnProperty.call(values, 'type')) {
       throw new Error(
         'The key "type" is a reserved, but is already set on the ' +
@@ -165,7 +165,7 @@ export const actions = {
     postData.init_with_data = initWithData
 
     const { data } = await ApplicationService(this.$client).create(
-      group.id,
+      workspace.id,
       postData
     )
     return dispatch('forceCreate', data)
@@ -209,18 +209,18 @@ export const actions = {
     commit('UPDATE_ITEM', { id: application.id, values: data })
   },
   /**
-   * Updates the order of all the applications in a group.
+   * Updates the order of all the applications in a workspace.
    */
   async order(
     { commit, getters },
-    { group, order, oldOrder, isHashed = false }
+    { workspace, order, oldOrder, isHashed = false }
   ) {
-    commit('ORDER_ITEMS', { group, order, isHashed })
+    commit('ORDER_ITEMS', { workspace, order, isHashed })
 
     try {
-      await ApplicationService(this.$client).order(group.id, order)
+      await ApplicationService(this.$client).order(workspace.id, order)
     } catch (error) {
-      commit('ORDER_ITEMS', { group, order: oldOrder, isHashed })
+      commit('ORDER_ITEMS', { workspace, order: oldOrder, isHashed })
       throw error
     }
   },
@@ -304,9 +304,9 @@ export const getters = {
   getAll(state) {
     return state.items
   },
-  getAllOfGroup: (state) => (group) => {
+  getAllOfWorkspace: (state) => (workspace) => {
     return state.items.filter(
-      (application) => application.group.id === group.id
+      (application) => application.workspace.id === workspace.id
     )
   },
 }

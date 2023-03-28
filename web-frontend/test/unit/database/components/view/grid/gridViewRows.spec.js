@@ -63,7 +63,7 @@ describe('GridViewRows component', () => {
 
   const populateStore = async () => {
     const table = mockServer.createTable()
-    const { application } = await mockServer.createAppAndGroup(table)
+    const { application } = await mockServer.createAppAndWorkspace(table)
     const view = mockServer.createGridView(application, table, {})
     const fields = mockServer.createFields(application, table, fieldData)
 

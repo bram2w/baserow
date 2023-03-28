@@ -38,14 +38,14 @@ export default {
     roleIsBillable() {
       return this?.role.isBillable
     },
-    group() {
-      return this.$store.getters['group/get'](
-        this.column.additionalProps.groupId
+    workspace() {
+      return this.$store.getters['workspace/get'](
+        this.column.additionalProps.workspaceId
       )
     },
     roles() {
-      // filters out role not for Team subject and not for group level
-      return this.group ? this.group._.roles : []
+      // filters out role not for Team subject and not for workspace level
+      return this.workspace ? this.workspace._.roles : []
     },
   },
   methods: {

@@ -1,11 +1,12 @@
 export default (client) => {
   return {
-    fetchAll(groupId = null) {
-      const groupUrl = groupId !== null ? `group/${groupId}/` : ''
-      return client.get(`/applications/${groupUrl}`)
+    fetchAll(workspaceId = null) {
+      const workspaceUrl =
+        workspaceId !== null ? `workspace/${workspaceId}/` : ''
+      return client.get(`/applications/${workspaceUrl}`)
     },
-    create(groupId, values) {
-      return client.post(`/applications/group/${groupId}/`, values)
+    create(workspaceId, values) {
+      return client.post(`/applications/workspace/${workspaceId}/`, values)
     },
     asyncDuplicate(applicationId) {
       return client.post(`/applications/${applicationId}/duplicate/async/`)
@@ -16,8 +17,8 @@ export default (client) => {
     update(applicationId, values) {
       return client.patch(`/applications/${applicationId}/`, values)
     },
-    order(groupId, order) {
-      return client.post(`/applications/group/${groupId}/order/`, {
+    order(workspaceId, order) {
+      return client.post(`/applications/workspace/${workspaceId}/order/`, {
         application_ids: order,
       })
     },
