@@ -51,11 +51,11 @@ export default {
     this.setDateAndTime(this.field, this.value)
   },
   methods: {
-    updateDateValue() {
+    updateFormattedDateValue() {
       this.pickerDate = this.momentDate.format(DATE_PICKER_FORMAT)
       this.date = this.momentDate.format(this.fieldDateFormat)
     },
-    updateTimeValue() {
+    updateFormattedTimeValue() {
       const timeFormat = getTimeMomentFormat(this.field.date_time_format)
       this.time = this.momentDate.format(timeFormat)
     },
@@ -66,21 +66,32 @@ export default {
      */
     updateDate(field, value) {
       const dateFormats = [DATE_PICKER_FORMAT, this.fieldDateFormat]
+      const newDate = moment.utc(value, dateFormats, true)
       const timezone = getFieldTimezone(field)
-      let newDate = moment.utc(value, dateFormats, true)
+      // default to now if no time is set
+      const now = moment.utc()
+
       if (timezone !== null) {
-        newDate = newDate.clone().tz(timezone, true)
+        newDate.tz(timezone, true)
+        now.tz(timezone)
       }
 
       if (newDate.isValid()) {
-        this.updateCopy(field, {
-          year: newDate.year(),
-          month: newDate.month(),
-          date: newDate.date(),
+        const momentDate = this.momentDate || now
+        newDate.set({
+          hour: momentDate.hour(),
+          minute: momentDate.minute(),
+          second: momentDate.second(),
         })
-        this.updateDateValue()
-      } else {
-        this.date = value
+
+        // needed again to be able to format correctly the moment date
+        // composed by the date and time parts separately
+        if (timezone !== null) {
+          newDate.tz(timezone)
+        }
+
+        this.updateCopy(field, newDate)
+        this.updateFormattedDateValue()
       }
     },
     /**
@@ -89,20 +100,30 @@ export default {
      * value that is actually going to be saved.
      */
     updateTime(field, value) {
-      const timeFormats = ['hh:mm a', 'HH:mm']
+      const newTime = moment.utc(value, ['hh:mm a', 'HH:mm'], true)
+
       const timezone = getFieldTimezone(field)
-      let newTime = moment.utc(value, timeFormats, true)
       if (timezone !== null) {
-        newTime = newTime.clone().tz(timezone, true)
+        newTime.tz(timezone, true)
       }
 
       if (newTime.isValid()) {
-        this.updateCopy(field, {
-          hour: newTime.hour(),
-          minute: newTime.minute(),
-          second: 0,
-        })
-        this.updateTimeValue()
+        if (this.momentDate !== null) {
+          newTime.set({
+            year: this.momentDate.year(),
+            month: this.momentDate.month(),
+            date: this.momentDate.date(),
+          })
+
+          // needed again to be able to format correctly the moment date
+          // composed by the date and time parts separately
+          if (timezone !== null) {
+            newTime.tz(timezone)
+          }
+        }
+
+        this.updateCopy(field, newTime)
+        this.updateFormattedTimeValue()
       } else {
         this.time = value
       }
@@ -112,12 +133,7 @@ export default {
      * date data and the copy so that the correct date is visible for the user.
      */
     chooseDate(field, value) {
-      const timezone = getFieldTimezone(field)
-      let pickerDate = moment.utc(value)
-      if (timezone !== null) {
-        pickerDate = pickerDate.clone().tz(timezone, true)
-      }
-      this.updateDate(field, pickerDate.format(DATE_PICKER_FORMAT))
+      this.updateDate(field, moment.utc(value).format(DATE_PICKER_FORMAT))
     },
     /**
      * When the user uses the time context to choose a time, we also need to update
@@ -131,37 +147,30 @@ export default {
      * A helper method that allows updating the copy data by only changing certain
      * properties of a datetime. For example only the month could be updated.
      */
-    updateCopy(field, values) {
-      const existing = this.momentDate.set(values)
+    updateCopy(field, newMomentDate) {
+      this.momentDate = newMomentDate
       this.copy = field.date_include_time
-        ? existing.format()
-        : existing.format('YYYY-MM-DD')
+        ? this.momentDate.format()
+        : this.momentDate.format('YYYY-MM-DD')
     },
     /**
      * Updates the date and time data by converting the value to the correct formats.
      */
     setDateAndTime(field, value) {
-      const timezone = getFieldTimezone(field)
       if (value === null) {
-        this.date = this.time = ''
-        this.momentDate = moment.utc()
+        this.momentDate = null
+        this.date = this.time = this.pickerDate = ''
+      } else {
+        const timezone = getFieldTimezone(field)
+        this.momentDate = moment.utc(value, moment.ISO_8601, true)
+
         if (timezone) {
-          this.momentDate = this.momentDate
-            .clone()
-            .utcOffset(moment.tz(timezone).utcOffset())
+          this.momentDate.tz(timezone)
         }
-        this.pickerDate = ''
-        return
-      }
 
-      let existing = moment.utc(value, moment.ISO_8601, true)
-      if (timezone) {
-        existing = existing.clone().utcOffset(moment.tz(timezone).utcOffset())
+        this.updateFormattedDateValue()
+        this.updateFormattedTimeValue()
       }
-
-      this.momentDate = existing
-      this.updateDateValue()
-      this.updateTimeValue()
     },
     getCellTimezoneAbbr(field, value, force) {
       return getCellTimezoneAbbr(field, value, { force })
