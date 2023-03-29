@@ -1,4 +1,3 @@
-from random import randrange
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -17,6 +16,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.fields.field_types import TextFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import View
 from baserow.test_utils.helpers import is_dict_subset
@@ -33,9 +33,6 @@ def get_list_url(calendar_view_id: int) -> str:
         )
         + f"?{queryparams_ts_jan2023}"
     )
-
-
-# premium licenses
 
 
 @pytest.mark.django_db
@@ -566,7 +563,6 @@ def test_create_calendar_view_different_field_types(api_client, premium_data_fix
     }
     all_field_types = field_type_registry.get_all()
     date_field_types = [t for t in all_field_types if t.can_represent_date]
-    other_field_types = [t for t in all_field_types if not t.can_represent_date]
 
     for date_field_type in date_field_types:
         field = date_field_type.model_class.objects.create(**kwargs)
@@ -584,7 +580,7 @@ def test_create_calendar_view_different_field_types(api_client, premium_data_fix
         )
         assert response.status_code == HTTP_200_OK
 
-    not_compatible_field_type = other_field_types[randrange(0, len(other_field_types))]
+    not_compatible_field_type = field_type_registry.get(TextFieldType.type)
     field = not_compatible_field_type.model_class.objects.create(**kwargs)
     premium_data_fixture.create_model_field(kwargs["table"], field)
 
