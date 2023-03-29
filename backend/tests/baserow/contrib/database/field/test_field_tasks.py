@@ -6,6 +6,7 @@ import pytest
 import pytz
 from freezegun import freeze_time
 
+from baserow.contrib.database.fields.field_types import FormulaFieldType
 from baserow.contrib.database.fields.tasks import run_periodic_fields_updates
 
 
@@ -144,7 +145,7 @@ def test_run_field_type_updates_dependant_fields(data_fixture):
 def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
     user = data_fixture.create_user()
 
-    def create_table_with_row_in_workspace(workspace):
+    def create_table_with_now_in_workspace(workspace):
         database = data_fixture.create_database_application(workspace=workspace)
         table = data_fixture.create_database_table(database=database)
         formula_field = data_fixture.create_formula_field(
@@ -157,7 +158,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
     workspace_updated_most_recently = data_fixture.create_workspace(user=user)
     workspace_updated_most_recently.now = now
     workspace_updated_most_recently.save()
-    table_model, formula_field = create_table_with_row_in_workspace(
+    table_model, formula_field = create_table_with_now_in_workspace(
         workspace_updated_most_recently
     )
     row = table_model.objects.create()
@@ -168,7 +169,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
     )
     workspace_that_should_be_updated_first_this_time.now = a_day_ago
     workspace_that_should_be_updated_first_this_time.save()
-    table_model_2, formula_field_2 = create_table_with_row_in_workspace(
+    table_model_2, formula_field_2 = create_table_with_now_in_workspace(
         workspace_that_should_be_updated_first_this_time
     )
     row_2 = table_model_2.objects.create()
@@ -198,7 +199,7 @@ def test_workspace_updated_last_will_be_updated_first_this_time(data_fixture):
 def test_one_formula_failing_doesnt_block_others(data_fixture):
     user = data_fixture.create_user()
 
-    def create_table_with_row_in_workspace(workspace):
+    def create_table_with_now_in_workspace(workspace):
         database = data_fixture.create_database_application(workspace=workspace)
         table = data_fixture.create_database_table(database=database)
         formula_field = data_fixture.create_formula_field(
@@ -211,7 +212,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     second_updated_workspace = data_fixture.create_workspace(user=user)
     second_updated_workspace.now = now
     second_updated_workspace.save()
-    table_model, working_other_formula = create_table_with_row_in_workspace(
+    table_model, working_other_formula = create_table_with_now_in_workspace(
         second_updated_workspace
     )
     row = table_model.objects.create()
@@ -220,7 +221,7 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     first_updated_workspace = data_fixture.create_workspace(user=user)
     first_updated_workspace.now = a_day_ago
     first_updated_workspace.save()
-    table_model_2, broken_first_formula = create_table_with_row_in_workspace(
+    table_model_2, broken_first_formula = create_table_with_now_in_workspace(
         first_updated_workspace
     )
     row_2 = table_model_2.objects.create()
@@ -249,3 +250,29 @@ def test_one_formula_failing_doesnt_block_others(data_fixture):
     assert first_updated_workspace.now != a_day_ago
     assert second_updated_workspace.now != now
     assert first_updated_workspace.now < second_updated_workspace.now
+
+
+@pytest.mark.django_db
+def test_all_formula_that_needs_updates_are_periodically_updated(data_fixture):
+    workspace = data_fixture.create_workspace()
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    with freeze_time("2023-02-27 10:15"):
+        now_field = data_fixture.create_formula_field(
+            table=table, formula="now()", date_include_time=True
+        )
+        data_fixture.create_formula_field(
+            table=table,
+            formula=f"field('{now_field.name}')",
+            date_include_time=True,
+        )
+
+        date_field = data_fixture.create_date_field(table=table, date_include_time=True)
+        data_fixture.create_formula_field(
+            table=table,
+            formula=f"now() > field('{date_field.name}')",
+            date_include_time=True,
+        )
+
+        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 3

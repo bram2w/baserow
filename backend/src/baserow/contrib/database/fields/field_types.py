@@ -15,16 +15,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import (
-    CharField,
-    Count,
-    DateTimeField,
-    F,
-    Func,
-    Q,
-    QuerySet,
-    Value,
-)
+from django.db.models import CharField, DateTimeField, F, Func, Q, QuerySet, Value
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -3275,12 +3266,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             return False
 
     def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
-
-        return (
-            FormulaField.objects.filter(needs_periodic_update=True)
-            .annotate(num_dependencies=Count("field_dependencies"))
-            .filter(num_dependencies=0)
-        )
+        return FormulaField.objects.filter(needs_periodic_update=True)
 
     def run_periodic_update(
         self,
