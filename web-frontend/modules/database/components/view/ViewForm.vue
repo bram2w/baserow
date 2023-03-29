@@ -29,6 +29,7 @@
           v-for="type in viewOwnershipTypes"
           :key="type.getType()"
           :view-ownership-type="type"
+          :database="database"
           :selected-type="values.ownershipType"
           @input="(value) => (values.ownershipType = value)"
         ></component>

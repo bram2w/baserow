@@ -1,17 +1,13 @@
 <template>
   <Radio
-    v-tooltip="
-      viewOwnershipType.isDeactivated()
-        ? viewOwnershipType.getDeactivatedText()
-        : null
-    "
+    v-tooltip="isDeactivated ? viewOwnershipType.getDeactivatedText() : null"
     :model-value="selectedType"
     :value="viewOwnershipType.getType()"
     @input="input"
   >
     <i :class="viewOwnershipType.getIconClass()"></i>
     {{ viewOwnershipType.getName() }}
-    <div v-if="viewOwnershipType.isDeactivated()" class="deactivated-label">
+    <div v-if="isDeactivated" class="deactivated-label">
       <i class="fas fa-lock"></i>
     </div>
     <component
@@ -38,10 +34,19 @@ export default {
       type: String,
       required: true,
     },
+    database: {
+      type: Object,
+      required: true,
+    },
+  },
+  computed: {
+    isDeactivated() {
+      return this.viewOwnershipType.isDeactivated(this.database?.workspace?.id)
+    },
   },
   methods: {
     input(value) {
-      if (!this.viewOwnershipType.isDeactivated()) {
+      if (!this.isDeactivated) {
         this.$emit('input', value)
       } else if (this.viewOwnershipType.getDeactivatedModal()) {
         this.$refs.deactivatedClickModal.show()
