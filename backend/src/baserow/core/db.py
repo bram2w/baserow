@@ -211,6 +211,9 @@ def get_unique_orders_before_item(
     :param queryset: The base queryset used to compute the value.
     :param amount: The number of orders that must be requested. Can be higher if
         multiple items are inserted or moved.
+    :raises CannotCalculateIntermediateOrder: If it's not possible to recalculate an
+        intermediate order. The full order of the items must be recalculated in this
+        case before calling this function again.
     :return: A list of decimals containing safe to use orders in order.
     """
 

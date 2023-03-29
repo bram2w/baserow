@@ -136,24 +136,16 @@ export default {
       }
     },
     moveElement(element, index, placement) {
-      let elementToMoveId = null
+      const elementToMoveId = element.id
+
+      // BeforeElementId remains null if we are moving the element at the end of the
+      // list
       let beforeElementId = null
 
-      if (placement === PLACEMENTS.BEFORE && index !== 0) {
-        elementToMoveId = element.id
+      if (placement === PLACEMENTS.BEFORE) {
         beforeElementId = this.elements[index - 1].id
-      } else if (
-        placement === PLACEMENTS.AFTER &&
-        index !== this.elements.length - 1
-      ) {
-        elementToMoveId = this.elements[index + 1].id
-        beforeElementId = element.id
-      }
-
-      // If either is null then we are on the top or bottom end of the elements
-      // and therefore the element can't be moved anymore
-      if (elementToMoveId === null || beforeElementId === null) {
-        return
+      } else if (index + 2 < this.elements.length) {
+        beforeElementId = this.elements[index + 2].id
       }
 
       try {

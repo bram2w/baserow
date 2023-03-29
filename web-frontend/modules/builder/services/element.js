@@ -17,9 +17,9 @@ export default (client) => {
     delete(elementId) {
       return client.delete(`builder/element/${elementId}/`)
     },
-    order(pageId, newOrder) {
-      return client.post(`builder/page/${pageId}/elements/order/`, {
-        element_ids: newOrder,
+    move(elementId, beforeId) {
+      return client.patch(`builder/element/${elementId}/move/`, {
+        before_id: beforeId,
       })
     },
   }

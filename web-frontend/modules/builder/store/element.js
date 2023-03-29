@@ -21,7 +21,9 @@ const mutations = {
     const index = state.elements.findIndex(
       (element) => element.id === elementId
     )
-    state.elements.splice(index, 1)
+    if (index > -1) {
+      state.elements.splice(index, 1)
+    }
   },
   MOVE_ITEM(state, { index, oldIndex }) {
     state.elements.splice(index, 0, state.elements.splice(oldIndex, 1)[0])
@@ -41,8 +43,20 @@ const actions = {
   forceDelete({ commit }, { elementId }) {
     commit('DELETE_ITEM', { elementId })
   },
-  forceMove({ commit }, { index, oldIndex }) {
-    commit('MOVE_ITEM', { index, oldIndex })
+  forceMove({ commit, getters }, { elementId, beforeElementId }) {
+    const currentOrder = getters.getElements.map((element) => element.id)
+    const oldIndex = currentOrder.findIndex((id) => id === elementId)
+    const index = beforeElementId
+      ? currentOrder.findIndex((id) => id === beforeElementId)
+      : getters.getElements.length
+
+    // If the element is before the beforeElement we must decrease the target index by
+    // one to compensate the removed element.
+    if (oldIndex < index) {
+      commit('MOVE_ITEM', { index: index - 1, oldIndex })
+    } else {
+      commit('MOVE_ITEM', { index, oldIndex })
+    }
   },
   select({ commit }, { element }) {
     commit('SELECT_ITEM', { element })
@@ -92,31 +106,18 @@ const actions = {
 
     return elements
   },
-  async move({ getters, dispatch }, { elementId, pageId, beforeElementId }) {
-    const originalOrder = getters.getElements.map((element) => element.id)
-    const newOrder = [...originalOrder]
-    const elementIndex = newOrder.findIndex((id) => id === elementId)
-    const indexToSwapWith = newOrder.findIndex((id) => id === beforeElementId)
-
-    // The element could be the last or the first one which we need to handle
-    if (indexToSwapWith === -1 || indexToSwapWith === newOrder.length) {
-      return
-    }
-
-    newOrder[elementIndex] = newOrder[indexToSwapWith]
-    newOrder[indexToSwapWith] = elementId
-
+  async move({ dispatch }, { elementId, beforeElementId }) {
     await dispatch('forceMove', {
-      index: indexToSwapWith,
-      oldIndex: elementIndex,
+      elementId,
+      beforeElementId,
     })
 
     try {
-      await ElementService(this.$client).order(pageId, newOrder)
+      await ElementService(this.$client).move(elementId, beforeElementId)
     } catch (error) {
       await dispatch('forceMove', {
-        index: elementIndex,
-        oldIndex: indexToSwapWith,
+        elementId: beforeElementId,
+        beforeElementId: elementId,
       })
       throw error
     }

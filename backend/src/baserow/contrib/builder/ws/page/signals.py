@@ -6,6 +6,8 @@ from django.dispatch import receiver
 
 from baserow.contrib.builder.api.pages.serializers import PageSerializer
 from baserow.contrib.builder.models import Builder
+from baserow.contrib.builder.object_scopes import BuilderObjectScopeType
+from baserow.contrib.builder.operations import ListPagesBuilderOperationType
 from baserow.contrib.builder.pages import signals as page_signals
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.object_scopes import BuilderPageObjectScopeType
@@ -50,9 +52,9 @@ def page_deleted(sender, builder: Builder, page_id: int, user: AbstractUser, **k
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
             builder.workspace_id,
-            ReadPageOperationType.type,
-            BuilderPageObjectScopeType.type,
-            page_id,
+            ListPagesBuilderOperationType.type,
+            BuilderObjectScopeType.type,
+            builder.id,
             {"type": "page_deleted", "page_id": page_id, "builder_id": builder.id},
             getattr(user, "web_socket_id", None),
         )

@@ -22,21 +22,20 @@ from baserow.api.utils import (
 )
 from baserow.contrib.builder.api.elements.errors import (
     ERROR_ELEMENT_DOES_NOT_EXIST,
-    ERROR_ELEMENT_NOT_IN_PAGE,
+    ERROR_ELEMENT_NOT_IN_SAME_PAGE,
 )
 from baserow.contrib.builder.api.elements.serializers import (
     CreateElementSerializer,
     ElementSerializer,
-    OrderElementsSerializer,
+    MoveElementSerializer,
     UpdateElementSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.elements.exceptions import (
     ElementDoesNotExist,
-    ElementNotInPage,
+    ElementNotInSamePage,
 )
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
@@ -149,52 +148,6 @@ class ElementsView(APIView):
         return Response(serializer.data)
 
 
-class OrderElementsPageView(APIView):
-    @extend_schema(
-        parameters=[
-            OpenApiParameter(
-                name="page_id",
-                location=OpenApiParameter.PATH,
-                type=OpenApiTypes.INT,
-                description="The page id we want to order the elements for.",
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
-        ],
-        tags=["Builder page elements"],
-        operation_id="order_builder_page_elements",
-        description="Apply a new order to the elements of the given page.",
-        request=OrderElementsSerializer,
-        responses={
-            204: None,
-            400: get_error_schema(
-                [
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                    "ERROR_ELEMENT_NOT_IN_PAGE",
-                ]
-            ),
-            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
-        },
-    )
-    @transaction.atomic
-    @map_exceptions(
-        {
-            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
-            ElementNotInPage: ERROR_ELEMENT_NOT_IN_PAGE,
-        }
-    )
-    @validate_body(OrderElementsSerializer)
-    def post(self, request, data: Dict, page_id: int):
-        """
-        Change order of the pages to the given order.
-        """
-
-        page = PageHandler().get_page(page_id)
-
-        ElementService().order_elements(request.user, page, data["element_ids"])
-
-        return Response(status=204)
-
-
 class ElementView(APIView):
     @extend_schema(
         parameters=[
@@ -240,10 +193,7 @@ class ElementView(APIView):
         Update an element.
         """
 
-        element = ElementHandler().get_element(
-            element_id,
-            base_queryset=Element.objects.select_for_update(of=("self",)),
-        )
+        element = ElementHandler().get_element_for_update(element_id)
         type_name = type_from_data_or_registry(
             request.data, element_type_registry, element
         )
@@ -296,11 +246,71 @@ class ElementView(APIView):
         Deletes an element.
         """
 
-        element = ElementHandler().get_element(
-            element_id,
-            base_queryset=Element.objects.select_for_update(of=("self",)),
-        )
+        element = ElementHandler().get_element_for_update(element_id)
 
         ElementService().delete_element(request.user, element)
 
         return Response(status=204)
+
+
+class MoveElementView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="element_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the element to move",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder page elements"],
+        operation_id="move_builder_page_element",
+        description=(
+            "Moves the element in the page before another element or at the end of "
+            "the page if no before element is given. The elements must belong to the "
+            "same page."
+        ),
+        request=MoveElementSerializer,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                element_type_registry, ElementSerializer
+            ),
+            400: get_error_schema(
+                ["ERROR_REQUEST_BODY_VALIDATION", "ERROR_ELEMENT_NOT_IN_SAME_PAGE"]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_ELEMENT_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
+            ElementNotInSamePage: ERROR_ELEMENT_NOT_IN_SAME_PAGE,
+        }
+    )
+    @validate_body(MoveElementSerializer)
+    def patch(self, request, data: Dict, element_id: int):
+        """
+        Moves the element in the page before another element or at the end of
+        the page if no before element is given.
+        """
+
+        element = ElementHandler().get_element_for_update(element_id)
+
+        before_id = data.get("before_id", None)
+
+        before = None
+        if before_id:
+            before = ElementHandler().get_element(before_id)
+
+        moved_element = ElementService().move_element(request.user, element, before)
+
+        serializer = element_type_registry.get_serializer(
+            moved_element, ElementSerializer
+        )
+        return Response(serializer.data)

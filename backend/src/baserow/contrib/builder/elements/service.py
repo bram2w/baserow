@@ -1,15 +1,14 @@
-from typing import List, Optional, cast
+from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.contrib.builder.elements.exceptions import ElementNotInPage
+from baserow.contrib.builder.elements.exceptions import ElementNotInSamePage
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.operations import (
     CreateElementOperationType,
     DeleteElementOperationType,
     ListElementsPageOperationType,
-    OrderElementsPageOperationType,
     ReadElementOperationType,
     UpdateElementOperationType,
 )
@@ -17,10 +16,11 @@ from baserow.contrib.builder.elements.registries import ElementType
 from baserow.contrib.builder.elements.signals import (
     element_created,
     element_deleted,
+    element_moved,
     element_orders_recalculated,
     element_updated,
-    elements_reordered,
 )
+from baserow.contrib.builder.elements.types import ElementForUpdate
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
@@ -102,37 +102,34 @@ class ElementService:
             context=page,
         )
 
-        model_class = cast(Element, element_type.model_class)
+        try:
+            new_element = self.handler.create_element(
+                element_type, page, before=before, **kwargs
+            )
+        except CannotCalculateIntermediateOrder:
+            self.recalculate_full_orders(user, page)
+            # If the `find_intermediate_order` fails with a
+            # `CannotCalculateIntermediateOrder`, it means that it's not possible
+            # calculate an intermediate fraction. Therefore, must reset all the
+            # orders of the elements (while respecting their original order),
+            # so that we can then can find the fraction any many more after.
+            before.refresh_from_db()
+            new_element = self.handler.create_element(
+                element_type, page, before=before, **kwargs
+            )
 
-        if before:
-            try:
-                element_order = model_class.get_unique_order_before_element(
-                    page, before
-                )
-            except CannotCalculateIntermediateOrder:
-                # If the `find_intermediate_order` fails with a
-                # `CannotCalculateIntermediateOrder`, it means that it's not possible
-                # calculate an intermediate fraction. Therefore, must reset all the
-                # orders of the elements (while respecting their original order),
-                # so that we can then can find the fraction any many more after.
-                self.recalculate_full_orders(user, page)
-                # Refresh the before element as the order might have changed.
-                before.refresh_from_db()
-                element_order = model_class.get_unique_order_before_element(
-                    page, before
-                )
-        else:
-            element_order = model_class.get_last_order(page)
-
-        new_element = self.handler.create_element(
-            element_type, page, order=element_order, **kwargs
+        element_created.send(
+            self,
+            element=new_element,
+            user=user,
+            before_id=before.id if before else None,
         )
-
-        element_created.send(self, element=new_element, user=user)
 
         return new_element
 
-    def update_element(self, user: AbstractUser, element: Element, **kwargs) -> Element:
+    def update_element(
+        self, user: AbstractUser, element: ElementForUpdate, **kwargs
+    ) -> Element:
         """
         Updates and element with values. Will also check if the values are allowed
         to be set on the element first.
@@ -157,7 +154,7 @@ class ElementService:
 
         return element
 
-    def delete_element(self, user: AbstractUser, element: Element):
+    def delete_element(self, user: AbstractUser, element: ElementForUpdate):
         """
         Deletes an element.
 
@@ -178,48 +175,45 @@ class ElementService:
 
         element_deleted.send(self, element_id=element.id, page=page, user=user)
 
-    def order_elements(
-        self, user: AbstractUser, page: Page, new_order: List[int]
-    ) -> List[int]:
+    def move_element(
+        self,
+        user: AbstractUser,
+        element: ElementForUpdate,
+        before: Optional[Element] = None,
+    ) -> Element:
         """
-        Orders the elements of a page in a new order. The user must have the permissions
-        over all elements matching the given ids.
+        Moves an element in the page before another element. If the `before` element is
+        omitted the element is moved at the end of the page.
 
-        :param user: The user trying to re-order the elements.
-        :param page: The page the elements exist on.
-        :param new_order: The new order which they should have.
-        :return: The full order of all elements after they have been ordered.
+        :param user: The user who move the element.
+        :param element: The element we want to move.
+        :param before: The element before which we want to move the given element.
+        :return: The element with an updated order.
         """
 
         CoreHandler().check_permissions(
             user,
-            OrderElementsPageOperationType.type,
-            workspace=page.builder.workspace,
-            context=page,
+            UpdateElementOperationType.type,
+            workspace=element.page.builder.workspace,
+            context=element,
         )
 
-        all_elements = Element.objects.filter(page=page)
+        # Check we are on the same page.
+        if before and element.page_id != before.page_id:
+            raise ElementNotInSamePage()
 
-        user_elements = CoreHandler().filter_queryset(
-            user,
-            OrderElementsPageOperationType.type,
-            all_elements,
-            workspace=page.builder.workspace,
-            context=page,
-        )
+        try:
+            element = self.handler.move_element(element, before=before)
+        except CannotCalculateIntermediateOrder:
+            # If it's failing, we need to recalculate all orders then move again.
+            self.recalculate_full_orders(user, element.page)
+            # Refresh the before element as the order might have changed.
+            before.refresh_from_db()
+            element = self.handler.move_element(element, before=before)
 
-        element_ids = set(user_elements.values_list("id", flat=True))
+        element_moved.send(self, element=element, before=before, user=user)
 
-        # Check if all ids belong to the page and if the user has access to it
-        for element_id in new_order:
-            if element_id not in element_ids:
-                raise ElementNotInPage(element_id)
-
-        full_order = self.handler.order_elements(page, new_order)
-
-        elements_reordered.send(self, page=page, order=full_order, user=user)
-
-        return full_order
+        return element
 
     def recalculate_full_orders(self, user: AbstractUser, page: Page):
         """
@@ -229,4 +223,4 @@ class ElementService:
 
         self.handler.recalculate_full_orders(page)
 
-        element_orders_recalculated.send(self, page=page, user=user)
+        element_orders_recalculated.send(self, page=page)

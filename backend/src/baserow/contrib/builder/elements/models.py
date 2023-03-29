@@ -68,16 +68,19 @@ class Element(
         return cls.get_highest_order_of_queryset(queryset)[0]
 
     @classmethod
-    def get_unique_order_before_element(cls, page: Page, before: "Element"):
+    def get_unique_order_before_element(cls, before: "Element"):
         """
         Returns a safe order value before the given element in the given page.
 
         :param page: The page we want the order for.
         :param before: The element before which we want the safe order
+        :raises CannotCalculateIntermediateOrder: If it's not possible to find an
+            intermediate order. The full order of the items must be recalculated in this
+            case before calling this method again.
         :return: The order value.
         """
 
-        queryset = Element.objects.filter(page=page)
+        queryset = Element.objects.filter(page=before.page)
         return cls.get_unique_orders_before_item(before, queryset)[0]
 
 

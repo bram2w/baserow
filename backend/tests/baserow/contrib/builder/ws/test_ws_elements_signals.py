@@ -60,22 +60,15 @@ def test_element_deleted(mock_broadcast_to_permitted_users, data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.contrib.builder.ws.element.signals.broadcast_to_group")
-def test_element_reorder(mock_broadcast_to_group, data_fixture):
+def test_element_orders_recalculated(mock_broadcast_to_group, data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
-    element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(page=page)
 
-    ElementService().order_elements(
-        user=user, page=page, new_order=[element3.id, element1.id]
-    )
+    ElementService().recalculate_full_orders(user=user, page=page)
 
     mock_broadcast_to_group.delay.assert_called_once()
     args = mock_broadcast_to_group.delay.call_args
 
-    assert args[0][1]["type"] == "elements_reordered"
-    assert args[0][1]["order"] == [
-        generate_hash(e) for e in [element2.id, element3.id, element1.id]
-    ]
+    assert args[0][1]["type"] == "element_orders_recalculated"
     assert args[0][1]["page_id"] == generate_hash(page.id)

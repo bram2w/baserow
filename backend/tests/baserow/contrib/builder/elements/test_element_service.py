@@ -5,7 +5,7 @@ import pytest
 
 from baserow.contrib.builder.elements.exceptions import (
     ElementDoesNotExist,
-    ElementNotInPage,
+    ElementNotInSamePage,
 )
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
@@ -234,56 +234,61 @@ def test_update_element_permission_denied(data_fixture, stub_check_permissions):
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.builder.elements.service.elements_reordered")
-def test_order_elements(element_updated_mock, data_fixture):
+@patch("baserow.contrib.builder.elements.service.element_updated")
+def test_move_element(element_updated_mock, data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_paragraph_element(page=page)
 
-    ElementService().order_elements(user, page, [element3.id, element1.id])
+    element_moved = ElementService().move_element(user, element3, before=element2)
 
-    assert element_updated_mock.called_with(
-        full_order=[element2.id, element3.id, element1.id], page=page, user=user
-    )
+    assert element_updated_mock.called_with(element=element_moved, user=user)
 
 
 @pytest.mark.django_db
-def test_order_elements_permission_denied(data_fixture, stub_check_permissions):
+def test_move_element_not_same_page(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+    element2 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_paragraph_element(page=page2)
+
+    with pytest.raises(ElementNotInSamePage):
+        ElementService().move_element(user, element3, before=element2)
+
+
+@pytest.mark.django_db
+def test_move_element_permission_denied(data_fixture, stub_check_permissions):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_paragraph_element(page=page)
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        ElementService().order_elements(user, page, [element3.id, element1.id])
+        ElementService().move_element(user, element3, before=element2)
 
 
 @pytest.mark.django_db
-def test_order_elements_not_in_page(data_fixture, stub_check_permissions):
+@patch("baserow.contrib.builder.elements.service.element_orders_recalculated")
+def test_move_element_trigger_order_recalculed(
+    element_orders_recalculated_mock, data_fixture
+):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    element1 = data_fixture.create_builder_heading_element(page=page)
-    element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(user=user)
+    element1 = data_fixture.create_builder_heading_element(
+        page=page, order="2.99999999999999999998"
+    )
+    element2 = data_fixture.create_builder_heading_element(
+        page=page, order="2.99999999999999999999"
+    )
+    element3 = data_fixture.create_builder_heading_element(page=page, order="3.0000")
 
-    with pytest.raises(ElementNotInPage):
-        ElementService().order_elements(user, page, [element3.id, element1.id])
+    ElementService().move_element(user, element3, before=element2)
 
-    def filter_queryset(
-        actor,
-        operation_name,
-        queryset,
-        workspace=None,
-        context=None,
-        allow_if_template=False,
-    ):
-        return queryset.exclude(id=element1.id)
-
-    with stub_check_permissions() as stub, pytest.raises(ElementNotInPage):
-        stub.filter_queryset = filter_queryset
-        ElementService().order_elements(user, page, [element3.id, element1.id])
+    assert element_orders_recalculated_mock.called_with(page=page, user=user)
