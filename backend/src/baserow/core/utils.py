@@ -767,7 +767,8 @@ def find_intermediate_order(
         be before this one.
     :param max_denominator: The max denominator of the fraction calculator from the
         order.
-    :raises ValueError: If the fractions of the orders are equal.
+    :raises CannotCalculateIntermediateOrder: If the fractions of the orders are equal
+        or if it's impossible to calculate an intermediate fraction.
     :return: The new order that can safely be used and will be a unique value.
     """
 

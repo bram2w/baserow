@@ -143,6 +143,9 @@ class FractionOrderableMixin(OrderableMixin):
         :param amount: The number of orders that must be requested. Can be higher if
             multiple items are inserted or moved.
         :param field: The order field name.
+        :raises CannotCalculateIntermediateOrder: If it's not possible to find an
+            intermediate order. The full order of the items must be recalculated in this
+            case before calling this method again.
         :return: A list of decimals containing safe to use orders in order.
         """
 

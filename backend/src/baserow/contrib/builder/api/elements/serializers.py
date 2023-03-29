@@ -71,8 +71,12 @@ class UpdateElementSerializer(serializers.ModelSerializer):
         fields = []
 
 
-class OrderElementsSerializer(serializers.Serializer):
-    element_ids = serializers.ListField(
-        child=serializers.IntegerField(),
-        help_text="The ids of the elements in the order they are supposed to be set in",
+class MoveElementSerializer(serializers.Serializer):
+    before_id = serializers.IntegerField(
+        allow_null=True,
+        required=False,
+        help_text=(
+            "If provided, the element is moved before the element with this Id. "
+            "Otherwise the element is placed at the end of the page."
+        ),
     )

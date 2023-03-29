@@ -10,6 +10,7 @@ from baserow.contrib.builder.elements.models import (
     ParagraphElement,
 )
 from baserow.contrib.builder.elements.registries import element_type_registry
+from baserow.core.exceptions import CannotCalculateIntermediateOrder
 
 
 def pytest_generate_tests(metafunc):
@@ -82,11 +83,9 @@ def test_update_element(data_fixture):
     user = data_fixture.create_user()
     element = data_fixture.create_builder_heading_element(user=user)
 
-    element_updated = ElementHandler().update_element(
-        element, value={"type": "plain", "expression": "newValue"}
-    )
+    element_updated = ElementHandler().update_element(element, value="newValue")
 
-    assert element_updated.value == {"type": "plain", "expression": "newValue"}
+    assert element_updated.value == "newValue"
 
 
 @pytest.mark.django_db
@@ -99,19 +98,46 @@ def test_update_element_invalid_values(data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_elements(data_fixture):
+def test_move_element_end_of_page(data_fixture):
     page = data_fixture.create_builder_page()
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_heading_element(page=page)
 
-    ElementHandler().order_elements(page, [element3.id, element1.id])
+    element_moved = ElementHandler().move_element(element1)
 
-    first, second, third = Element.objects.all()
+    assert Element.objects.filter(page=page).last().id == element_moved.id
 
-    assert first.id == element2.id
-    assert second.id == element3.id
-    assert third.id == element1.id
+
+@pytest.mark.django_db
+def test_move_element_before(data_fixture):
+    page = data_fixture.create_builder_page()
+    element1 = data_fixture.create_builder_heading_element(page=page)
+    element2 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_heading_element(page=page)
+
+    ElementHandler().move_element(element3, before=element2)
+
+    assert [e.id for e in Element.objects.filter(page=page).all()] == [
+        element1.id,
+        element3.id,
+        element2.id,
+    ]
+
+
+@pytest.mark.django_db
+def test_move_element_before_fails(data_fixture):
+    page = data_fixture.create_builder_page()
+    element1 = data_fixture.create_builder_heading_element(
+        page=page, order="2.99999999999999999998"
+    )
+    element2 = data_fixture.create_builder_heading_element(
+        page=page, order="2.99999999999999999999"
+    )
+    element3 = data_fixture.create_builder_heading_element(page=page, order="3.0000")
+
+    with pytest.raises(CannotCalculateIntermediateOrder):
+        ElementHandler().move_element(element3, before=element2)
 
 
 @pytest.mark.django_db

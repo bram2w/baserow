@@ -9,6 +9,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.builder.elements.models import Element
+
 
 @pytest.mark.django_db
 def test_get_elements(api_client, data_fixture):
@@ -176,62 +178,101 @@ def test_update_element_does_not_exist(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_elements(api_client, data_fixture):
+def test_move_element_empty_payload(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_heading_element(page=page)
 
-    url = reverse("api:builder:element:order", kwargs={"page_id": page.id})
-    response = api_client.post(
+    url = reverse("api:builder:element:move", kwargs={"element_id": element1.id})
+    response = api_client.patch(
         url,
-        {"element_ids": [element3.id, element1.id]},
+        {},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
+    assert response.status_code == HTTP_200_OK
 
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert Element.objects.last().id == element1.id
 
 
 @pytest.mark.django_db
-def test_order_elements_element_not_in_page(api_client, data_fixture):
+def test_move_element_null_before_id(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(user=user)
+    element3 = data_fixture.create_builder_heading_element(page=page)
 
-    url = reverse("api:builder:element:order", kwargs={"page_id": page.id})
-    response = api_client.post(
+    url = reverse("api:builder:element:move", kwargs={"element_id": element1.id})
+    response = api_client.patch(
         url,
-        {"element_ids": [element3.id, element1.id]},
+        {"before_id": None},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    assert Element.objects.last().id == element1.id
+
+
+@pytest.mark.django_db
+def test_move_element_before(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+    element2 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse("api:builder:element:move", kwargs={"element_id": element3.id})
+    response = api_client.patch(
+        url,
+        {"before_id": element2.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["id"] == element3.id
+
+    assert list(Element.objects.all())[1].id == element3.id
+
+
+@pytest.mark.django_db
+def test_move_element_before_not_in_same_page(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    page2 = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+    element2 = data_fixture.create_builder_heading_element(page=page)
+    element3 = data_fixture.create_builder_heading_element(page=page2)
+
+    url = reverse("api:builder:element:move", kwargs={"element_id": element3.id})
+    response = api_client.patch(
+        url,
+        {"before_id": element2.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_ELEMENT_NOT_IN_PAGE"
+    assert response.json()["error"] == "ERROR_ELEMENT_NOT_IN_SAME_PAGE"
 
 
 @pytest.mark.django_db
-def test_order_elements_page_does_not_exist(api_client, data_fixture):
+def test_move_element_bad_before_id(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
-    element2 = data_fixture.create_builder_heading_element(page=page)
-    element3 = data_fixture.create_builder_heading_element(user=user)
 
-    url = reverse("api:builder:element:order", kwargs={"page_id": 0})
-    response = api_client.post(
+    url = reverse("api:builder:element:move", kwargs={"element_id": element1.id})
+    response = api_client.patch(
         url,
-        {"element_ids": [element3.id, element1.id]},
+        {"before_id": 9999},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
-
     assert response.status_code == HTTP_404_NOT_FOUND
-    assert response.json()["error"] == "ERROR_PAGE_DOES_NOT_EXIST"
 
 
 @pytest.mark.django_db

@@ -6,8 +6,8 @@ ERROR_ELEMENT_DOES_NOT_EXIST = (
     "The requested element does not exist.",
 )
 
-ERROR_ELEMENT_NOT_IN_PAGE = (
-    "ERROR_ELEMENT_NOT_IN_PAGE",
+ERROR_ELEMENT_NOT_IN_SAME_PAGE = (
+    "ERROR_ELEMENT_NOT_IN_SAME_PAGE",
     HTTP_400_BAD_REQUEST,
-    "The element id {e.element_id} does not belong to the page.",
+    "The given elements do not belong to the same page.",
 )

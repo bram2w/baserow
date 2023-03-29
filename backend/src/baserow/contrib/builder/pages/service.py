@@ -96,9 +96,11 @@ class PageService:
             context=page,
         )
 
+        page_id = page.id
+
         self.handler.delete_page(page)
 
-        page_deleted.send(self, builder=page.builder, page_id=page.id, user=user)
+        page_deleted.send(self, builder=page.builder, page_id=page_id, user=user)
 
     def update_page(self, user: AbstractUser, page: Page, **kwargs) -> Page:
         """
@@ -181,6 +183,6 @@ class PageService:
 
         page_clone = PageHandler().duplicate_page(page, progress_builder)
 
-        page_created.send(self, page=page, user=user)
+        page_created.send(self, page=page_clone, user=user)
 
         return page_clone

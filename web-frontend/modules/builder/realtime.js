@@ -1,6 +1,7 @@
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export const registerRealtimeEvents = (realtime) => {
+  // Page events
   realtime.registerEvent('page_created', ({ store }, data) => {
     const builder = store.getters['application/get'](data.page.builder_id)
     store.dispatch('page/forceCreate', { builder, page: data.page })
@@ -45,4 +46,46 @@ export const registerRealtimeEvents = (realtime) => {
       })
     }
   })
+
+  // Element events
+  realtime.registerEvent('element_created', ({ store }, data) => {
+    const selectedPage = store.getters['page/getSelected']
+    if (selectedPage.id === data.element.page_id) {
+      store.dispatch('element/forceCreate', {
+        element: data.element,
+        beforeId: data.before_id,
+      })
+    }
+  })
+
+  realtime.registerEvent('element_deleted', ({ store }, data) => {
+    const selectedPage = store.getters['page/getSelected']
+    if (selectedPage.id === data.page_id) {
+      store.dispatch('element/forceDelete', {
+        elementId: data.element_id,
+      })
+    }
+  })
+
+  realtime.registerEvent('element_moved', ({ store }, data) => {
+    const selectedPage = store.getters['page/getSelected']
+    if (selectedPage.id === data.page_id) {
+      store.dispatch('element/forceMove', {
+        elementId: data.element_id,
+        beforeElementId: data.before_id,
+      })
+    }
+  })
+
+  realtime.registerEvent(
+    'element_orders_recalculated',
+    ({ store, app }, data) => {
+      const selectedPage = store.getters['page/getSelected']
+      if (generateHash(selectedPage.id) === data.page_id) {
+        store.dispatch('element/fetch', {
+          page: selectedPage,
+        })
+      }
+    }
+  )
 }

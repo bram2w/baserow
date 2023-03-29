@@ -1,4 +1,4 @@
-from typing import Iterable, List, Optional, Union, cast
+from typing import Iterable, Optional, Union, cast
 
 from django.db.models import QuerySet
 
@@ -11,6 +11,8 @@ from baserow.contrib.builder.elements.registries import (
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
 from baserow.core.utils import extract_allowed
+
+from .types import ElementForUpdate
 
 
 class ElementHandler:
@@ -38,6 +40,26 @@ class ElementHandler:
 
         return element
 
+    def get_element_for_update(
+        self, element_id: int, base_queryset=None
+    ) -> ElementForUpdate:
+        """
+        Returns an element instance from the database that can be safely updated.
+
+        :param element_id: The ID of the element.
+        :raises ElementDoesNotExist: If the element can't be found.
+        :return: The element instance.
+        """
+
+        queryset = base_queryset if base_queryset is not None else Element.objects.all()
+
+        queryset = queryset.select_for_update(of=("self",))
+
+        return self.get_element(
+            element_id,
+            base_queryset=queryset,
+        )
+
     def get_elements(
         self,
         page: Page,
@@ -64,7 +86,7 @@ class ElementHandler:
             return queryset
 
     def create_element(
-        self, element_type: ElementType, page: Page, **kwargs
+        self, element_type: ElementType, page: Page, before=None, **kwargs
     ) -> Element:
         """
         Creates a new element for a page.
@@ -72,17 +94,25 @@ class ElementHandler:
         :param element_type: The type of the element.
         :param page: The page the element exists in.
         :param kwargs: Additional attributes of the element.
+        :raises CannotCalculateIntermediateOrder: If it's not possible to find an
+            intermediate order. The full order of the element of the page must be
+            recalculated in this case before calling this method again.
         :return: The created element.
         """
 
-        model_class = cast(Element, element_type.model_class)
+        if before:
+            order = Element.get_unique_order_before_element(before)
+        else:
+            order = Element.get_last_order(page)
 
         shared_allowed_fields = ["type", "order"]
         allowed_values = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
 
-        element = model_class(page=page, **allowed_values)
+        model_class = cast(Element, element_type.model_class)
+
+        element = model_class(page=page, order=order, **allowed_values)
         element.save()
 
         return element
@@ -96,7 +126,7 @@ class ElementHandler:
 
         element.delete()
 
-    def update_element(self, element: Element, **kwargs) -> Element:
+    def update_element(self, element: ElementForUpdate, **kwargs) -> Element:
         """
         Updates and element with values. Will also check if the values are allowed
         to be set on the element first.
@@ -120,20 +150,29 @@ class ElementHandler:
 
         return element
 
-    def order_elements(self, page: Page, new_order: List[int]) -> List[int]:
+    def move_element(
+        self, element: ElementForUpdate, before: Optional[Element] = None
+    ) -> Element:
         """
-        Changes the order of the elements of a page.
+        Moves the given element before the specified `before` element in the same page.
 
-        :param page: The page the elements exist on.
-        :param new_order: The new order which they should have.
-        :return: The full order of all elements after they have been ordered.
+        :param element: The element to move.
+        :param before: The element before which to move the `element`. If before is not
+            specified, the element is moved at the end of the list.
+        :raises CannotCalculateIntermediateOrder: If it's not possible to find an
+            intermediate order. The full order of the element of the page must be
+            recalculated in this case before calling this method again.
+        :return: The moved element.
         """
 
-        all_elements = Element.objects.filter(page=page)
+        if before:
+            element.order = Element.get_unique_order_before_element(before)
+        else:
+            element.order = Element.get_last_order(element.page)
 
-        full_order = Element.order_objects(all_elements, new_order)
+        element.save()
 
-        return full_order
+        return element
 
     def recalculate_full_orders(
         self,
