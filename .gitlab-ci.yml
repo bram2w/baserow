@@ -698,6 +698,8 @@ publish-backend-develop-latest-image:
 publish-backend-release-tagged-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -709,10 +711,29 @@ publish-backend-release-tagged-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
+# Push $CI_REGISTRY/baserow/web-frontend:$VERSION_GIT_TAG
+publish-backend-ci-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  except:
+    - $MASTER_BRANCH_NAME
+    - $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SOURCE_IMAGE: $TESTED_BACKEND_CI_IMAGE
+    TARGET_IMAGE: "$CI_IMAGE_REPO/$BACKEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
 # Push baserow/backend:latest
 publish-backend-latest-release-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -746,6 +767,8 @@ publish-webfrontend-develop-latest-image:
 publish-webfrontend-release-tagged-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -761,6 +784,8 @@ publish-webfrontend-release-tagged-image:
 publish-webfrontend-latest-release-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -772,6 +797,23 @@ publish-webfrontend-latest-release-image:
     TARGET_REGISTRY: $RELEASE_REGISTRY
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
+
+# Push $CI_REGISTRY/baserow/web-frontend:$VERSION_GIT_TAG
+publish-webfrontend-ci-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  except:
+    - $MASTER_BRANCH_NAME
+    - $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SOURCE_IMAGE: $TESTED_WEBFRONTEND_CI_IMAGE
+    TARGET_IMAGE: "$CI_IMAGE_REPO/$WEBFRONTEND_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
 # ================================ PUSHING ALL-IN-ONE ===============================
 
@@ -794,6 +836,8 @@ publish-allinone-develop-latest-image:
 publish-allinone-release-tagged-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -805,10 +849,29 @@ publish-allinone-release-tagged-image:
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
 
+# Push $CI_REGISTRY/baserow/web-frontend:$VERSION_GIT_TAG
+publish-allinone-ci-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  except:
+    - $MASTER_BRANCH_NAME
+    - $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SOURCE_IMAGE: $TESTED_ALLINONE_CI_IMAGE
+    TARGET_IMAGE: "$CI_IMAGE_REPO/$ALLINONE_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
+
 # Push baserow/baserow:latest
 publish-allinone-latest-release-image:
   extends: .publish-baserow-image
   only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
     refs:
       - tags
   dependencies: []
@@ -841,7 +904,7 @@ publish-cloudron-release-tagged-image:
   extends: .publish-baserow-image
   only:
     variables:
-      - $CLOUDRON_IMAGE_NAME != "disable"
+      - $CLOUDRON_IMAGE_NAME != "disable" && ($CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME)
     refs:
       - tags
   dependencies: []
@@ -852,6 +915,23 @@ publish-cloudron-release-tagged-image:
     TARGET_REGISTRY: $RELEASE_REGISTRY
     TARGET_REGISTRY_PASSWORD: $RELEASE_REGISTRY_PASSWORD
     TARGET_REGISTRY_USER: $RELEASE_REGISTRY_USER
+
+# Push $CI_REGISTRY/baserow/web-frontend:$VERSION_GIT_TAG
+publish-cloudron-ci-tagged-image:
+  extends: .publish-baserow-image
+  only:
+    refs:
+      - tags
+  except:
+    - $MASTER_BRANCH_NAME
+    - $DEVELOP_BRANCH_NAME
+  dependencies: []
+  variables:
+    SOURCE_IMAGE: $TESTED_CLOUDRON_CI_IMAGE
+    TARGET_IMAGE: "$CI_IMAGE_REPO/$CLOUDRON_IMAGE_NAME:$CI_COMMIT_TAG"
+    TARGET_REGISTRY: $CI_REGISTRY
+    TARGET_REGISTRY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TARGET_REGISTRY_USER: $CI_REGISTRY_USER
 
 # We don't push any heroku images as Heroku itself will build and use heroku.Dockerfile
 
