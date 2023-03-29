@@ -140,7 +140,10 @@ export default {
       return Object.fromEntries(
         Object.entries(this.viewOwnershipTypes)
           .filter(
-            ([key]) => this.viewOwnershipTypes[key].isDeactivated() === false
+            ([key]) =>
+              this.viewOwnershipTypes[key].isDeactivated(
+                this.database.workspace.id
+              ) === false
           )
           .sort(
             (a, b) => a[1].getListViewTypeSort() - b[1].getListViewTypeSort()
