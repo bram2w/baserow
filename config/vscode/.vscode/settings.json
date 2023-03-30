@@ -96,4 +96,7 @@
         "BASEROW",
         "debugpy"
     ],
+    "search.exclude": {
+        "/changelog/entries": true
+    }
 }

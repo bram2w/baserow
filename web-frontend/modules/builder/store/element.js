@@ -8,6 +8,12 @@ const state = {
   selected: null,
 }
 
+const updateContext = {
+  updateTimeout: null,
+  promiseResolve: null,
+  lastUpdatedValues: null,
+}
+
 const mutations = {
   ADD_ITEM(state, { element, beforeId = null }) {
     if (beforeId === null) {
@@ -16,6 +22,13 @@ const mutations = {
       const insertionIndex = state.elements.findIndex((e) => e.id === beforeId)
       state.elements.splice(insertionIndex, 0, element)
     }
+  },
+  UPDATE_ITEM(state, { element: elementToUpdate, values }) {
+    state.elements.forEach((element) => {
+      if (element.id === elementToUpdate.id) {
+        Object.assign(element, values)
+      }
+    })
   },
   DELETE_ITEM(state, { elementId }) {
     const index = state.elements.findIndex(
@@ -40,6 +53,9 @@ const actions = {
   forceCreate({ commit }, { element, beforeId = null }) {
     commit('ADD_ITEM', { element, beforeId })
   },
+  forceUpdate({ commit }, { element, values }) {
+    commit('UPDATE_ITEM', { element, values })
+  },
   forceDelete({ commit }, { elementId }) {
     commit('DELETE_ITEM', { elementId })
   },
@@ -59,6 +75,7 @@ const actions = {
     }
   },
   select({ commit }, { element }) {
+    updateContext.lastUpdatedValues = null
     commit('SELECT_ITEM', { element })
   },
   async create({ dispatch }, { pageId, elementType, beforeId = null }) {
@@ -69,6 +86,70 @@ const actions = {
     )
 
     await dispatch('forceCreate', { element, beforeId })
+  },
+  async update({ dispatch }, { element, values }) {
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(element, name)) {
+        oldValues[name] = element[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    await dispatch('forceUpdate', { element, values: newValues })
+
+    try {
+      await ElementService(this.$client).update(element.id, values)
+    } catch (error) {
+      await dispatch('forceUpdate', { element, values: oldValues })
+      throw error
+    }
+  },
+
+  async debouncedUpdateSelected({ dispatch, getters }, { values }) {
+    const element = getters.getSelected
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(element, name)) {
+        oldValues[name] = element[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    await dispatch('forceUpdate', { element, values: newValues })
+
+    return new Promise((resolve, reject) => {
+      const fire = async () => {
+        try {
+          await ElementService(this.$client).update(element.id, values)
+          updateContext.lastUpdatedValues = values
+          resolve()
+        } catch (error) {
+          // Revert to old values on error
+          await dispatch('forceUpdate', {
+            element,
+            values: updateContext.lastUpdatedValues,
+          })
+          reject(error)
+        }
+      }
+
+      if (updateContext.promiseResolve) {
+        updateContext.promiseResolve()
+        updateContext.promiseResolve = null
+      }
+
+      clearTimeout(updateContext.updateTimeout)
+
+      if (!updateContext.lastUpdatedValues) {
+        updateContext.lastUpdatedValues = oldValues
+      }
+
+      updateContext.updateTimeout = setTimeout(fire, 500)
+      updateContext.promiseResolve = resolve
+    })
   },
   async delete({ dispatch, getters }, { elementId }) {
     const elementsOfPage = getters.getElements
