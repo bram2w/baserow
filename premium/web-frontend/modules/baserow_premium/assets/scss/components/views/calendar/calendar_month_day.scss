@@ -6,14 +6,14 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 7px;
+  padding: 8px;
 }
 
 .calendar-month-day__cards {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-top: 25px;
+  margin-top: 30px;
 }
 
 .calendar-month-day--weekend {
@@ -49,6 +49,7 @@
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;
+  top: 6px;
 
   @include center-text(24px, 13px);
 }
@@ -56,9 +57,11 @@
 .calendar-month-day__more {
   @extend %ellipsis;
 
+  max-height: 16px;
   font-size: 11px;
   line-height: 12px;
   color: $color-neutral-600;
-  margin-top: auto;
-  margin-bottom: 0;
+  padding-left: 8px;
+  padding-top: 5px;
+  margin-bottom: auto;
 }
