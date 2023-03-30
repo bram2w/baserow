@@ -27,6 +27,7 @@ class BaseTextElementType(ElementType, ABC):
             "value": ExpressionField(
                 help_text="The value of the element. Must be an expression.",
                 required=False,
+                allow_blank=True,
                 default="",
             ),
         }

@@ -14,6 +14,9 @@ export default (client) => {
 
       return client.post(`builder/page/${pageId}/elements/`, payload)
     },
+    update(elementId, values) {
+      return client.patch(`builder/element/${elementId}/`, values)
+    },
     delete(elementId) {
       return client.delete(`builder/element/${elementId}/`)
     },

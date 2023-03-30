@@ -1,6 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import ParagraphElement from '@baserow/modules/builder/components/elements/components/ParagraphElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
+import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/ParagraphElementForm'
+import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/HeadingElementForm'
 
 export class ElementType extends Registerable {
   get name() {
@@ -16,6 +18,10 @@ export class ElementType extends Registerable {
   }
 
   get component() {
+    return null
+  }
+
+  get formComponent() {
     return null
   }
 
@@ -63,9 +69,13 @@ export class HeadingElementType extends ElementType {
     return HeadingElement
   }
 
+  get formComponent() {
+    return HeadingElementForm
+  }
+
   getComponentProps(element) {
     return {
-      value: 'some test value for now',
+      value: element.value,
       level: element.level,
     }
   }
@@ -92,9 +102,13 @@ export class ParagraphElementType extends ElementType {
     return ParagraphElement
   }
 
+  get formComponent() {
+    return ParagraphElementForm
+  }
+
   getComponentProps(element) {
     return {
-      value: 'some test value for now',
+      value: element.value,
     }
   }
 }

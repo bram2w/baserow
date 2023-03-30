@@ -61,5 +61,26 @@
         "style": "Style",
         "visibility": "Visibility",
         "events": "Events"
+    },
+    "emptySidePanelState": {
+        "message": "Click on one of the elements to see more details"
+    },
+    "headingElement": {
+        "noValue": "No title..."
+    },
+    "headingElementForm": {
+        "levelTitle": "Level",
+        "textTitle": "Text",
+        "textPlaceholder": "Enter text...",
+        "headingName": "Heading {level} <h{level}>",
+        "textError": "The value is invalid."
+    },
+    "paragraphElement": {
+        "noValue": "Empty paragraph..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Text",
+        "textPlaceholder": "Enter text...",
+        "textError": "The value is invalid."
     }
 }

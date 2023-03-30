@@ -1,5 +1,11 @@
 <template>
-  <component :is="`h${level}`">{{ value }}</component>
+  <component
+    :is="`h${level}`"
+    class="heading-element"
+    :class="{ 'element--no-value': !value }"
+  >
+    {{ value || $t('headingElement.noValue') }}
+  </component>
 </template>
 
 <script>
