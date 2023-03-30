@@ -106,7 +106,7 @@ export default {
       return this.dayStack.count
     },
     cardHeight() {
-      return 30
+      return 28
     },
     contextHeight() {
       const minHeight = this.parentHeight + 4

@@ -109,12 +109,12 @@ export default {
   },
   methods: {
     updateVisibleRowsCount() {
-      const itemHeight = 30
+      const itemHeight = 28
       this.width = this.$refs.calendarMonthDay.clientWidth
       this.height = this.$refs.calendarMonthDay.clientHeight
-      let currentHeightWithItems = 28 + 4
+      let currentHeightWithItems = 30 + 8
       let count = 0
-      while (currentHeightWithItems + itemHeight < this.height - 12 - 7) {
+      while (currentHeightWithItems + itemHeight < this.height - 16 - 8) {
         count = count + 1
         currentHeightWithItems = currentHeightWithItems + itemHeight
       }
