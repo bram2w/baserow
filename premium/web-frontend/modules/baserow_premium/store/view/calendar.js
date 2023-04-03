@@ -31,6 +31,7 @@ export function populateDateStack(stack) {
 
 export const state = () => ({
   loading: false,
+  loadingRows: false,
   // The calendar view id that is being displayed
   lastCalendarId: null,
   // The chosen date field that the
@@ -51,7 +52,7 @@ export const state = () => ({
 })
 
 export const mutations = {
-  RESET(state, getters) {
+  RESET(state) {
     state.loadingRows = false
     state.lastCalendarId = null
     state.dateFieldId = null
