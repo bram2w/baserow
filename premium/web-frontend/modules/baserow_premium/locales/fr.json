@@ -13,7 +13,8 @@
             "licenses": "Licences"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendrier"
         },
         "exporterType": {
             "json": "Exporter vers JSON",
@@ -279,7 +280,8 @@
         "rowColoring": "Coloration des lignes",
         "surveyForm": "Sondage",
         "publicLogoRemoval": "Suppression du logo public",
-        "personalViews": "Vues privées"
+        "personalViews": "Vues privées",
+        "calendarView": "Vue Calendrier"
     },
     "formViewModePreviewSurvey": {
         "deactivated": "Les sondage sont disponibles dans la version premium.",
@@ -299,5 +301,27 @@
     },
     "viewsContext": {
         "personal": "Privée"
+    },
+    "calendarViewHeader": {
+        "displayBy": "Afficher par",
+        "displayedBy": "Affiché par le champ « {fieldName} »",
+        "labels": "Étiquettes"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 de plus... | {hiddenRowsCount} de plus..."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Choix du champ de date",
+        "save": "Enregistrer"
+    },
+    "calendarDateSelector": {
+        "today": "Aujourd'hui"
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "Réessayez"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Quel champ souhaitez-vous utiliser pour cette vue ?",
+        "noCompatibleDateFields": "Il n’y a pas de champs de date dans ce tableau, veuillez d’abord en créer un."
     }
 }

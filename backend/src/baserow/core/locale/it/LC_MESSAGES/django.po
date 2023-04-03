@@ -3,16 +3,16 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-27 10:23+0000\n"
-"PO-Revision-Date: 2023-01-18 11:38+0000\n"
+"PO-Revision-Date: 2023-04-01 12:37+0000\n"
 "Last-Translator: Davide Silvestri <davide@baserow.io>\n"
-"Language-Team: Italian <https://hosted.weblate.org/projects/baserow/backend-"
-"core/it/>\n"
+"Language-Team: Italian <https://hosted.weblate.org/projects/baserow/"
+"backend-core/it/>\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.15.1-dev\n"
+"X-Generator: Weblate 4.17-dev\n"
 
 #: src/baserow/core/action/scopes.py:9
 #, python-format
@@ -139,6 +139,8 @@ msgid ""
 "Group invitation created for \"%(email)s\" to join \"%(group_name)s"
 "\" (%(group_id)s) as %(permissions)s."
 msgstr ""
+"Invito creato per l'utente\"%(email)s\" per far parte del progetto \""
+"%(group_name)s\" (%(group_id)s) come %(permissions)s."
 
 #: src/baserow/core/actions.py:789
 #, python-format
@@ -146,10 +148,10 @@ msgid ""
 "Group invitation (%(invitation_id)s) deleted for \"%(email)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s."
 msgstr ""
+"Invito (%(invitation_id)s) cancellato per l'utente\"%(email)s\" per il "
+"progetto \"%(group_name)s\" (%(group_id)s) come %(permissions)s."
 
 #: src/baserow/core/actions.py:842
-#, fuzzy
-#| msgid "Accept invitation"
 msgid "Accept group invitation"
 msgstr "Accetta invito"
 
@@ -159,6 +161,9 @@ msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was accepted."
 msgstr ""
+"L'nvito (%(invitation_id)s) inviato da \"%(sender)s\" per far parte del "
+"progetto \"%(group_name)s\" (%(group_id)s) come %(permissions)s è stato "
+"accettato."
 
 #: src/baserow/core/actions.py:899
 #, python-format
@@ -166,10 +171,13 @@ msgid ""
 "Invitation (%(invitation_id)s) sent by \"%(sender)s\" to join "
 "\"%(group_name)s\" (%(group_id)s) as %(permissions)s was rejected."
 msgstr ""
+"L'nvito (%(invitation_id)s) inviato da \"%(sender)s\" per far parte del "
+"progetto \"%(group_name)s\" (%(group_id)s) come %(permissions)s è stato "
+"rifiutato."
 
 #: src/baserow/core/actions.py:952
 msgid "Update group invitation permissions"
-msgstr ""
+msgstr "Modifica i permessi dell'invito"
 
 #: src/baserow/core/actions.py:954
 #, python-format
@@ -178,22 +186,24 @@ msgid ""
 "%(original_permissions)s to %(permissions)s for %(email)s  on group "
 "\"%(group_name)s\" (%(group_id)s)."
 msgstr ""
+"I permessi dell'invito (%(invitation_id)s) sono cambiati da "
+"%(original_permissions)s a %(permissions)s per %(email)s nel progetto \""
+"%(group_name)s\" (%(group_id)s)."
 
 #: src/baserow/core/actions.py:1011
 msgid "Leave group"
 msgstr "Abbandona progetto"
 
 #: src/baserow/core/actions.py:1012
-#, fuzzy, python-format
-#| msgid "Group \"%(group_name)s\" (%(group_id)s) deleted."
+#, python-format
 msgid "Group \"%(group_name)s\" (%(group_id)s) left."
 msgstr "Il progetto \"%(group_name)s\" (%(group_id)s) è stato abbandonato."
 
 #: src/baserow/core/emails.py:96
-#, fuzzy, python-format
-#| msgid "%(by)s invited you to %(group_name)s - Baserow"
+#, python-format
 msgid "%(by)s invited you to %(workspace_name)s - Baserow"
-msgstr "%(by)s ti ha invitato ad unirti al progetto %(group_name)s - Baserow"
+msgstr ""
+"%(by)s ti ha invitato ad unirti al progetto %(workspace_name)s - Baserow"
 
 #: src/baserow/core/snapshots/actions.py:21
 msgid "Create Snapshot"
@@ -332,16 +342,13 @@ msgid "Invitation"
 msgstr "Invito"
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:152
-#, fuzzy, python-format
-#| msgid ""
-#| "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
-#| "%(group_name)s</strong>."
+#, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(workspace_name)s</strong>."
 msgstr ""
-"<strong>%(first_name)s</strong> ti ha invitato a collaborare a <strong>"
-"%(group_name)s</strong>."
+"<strong>%(first_name)s</strong> ti ha invitato a collaborare a "
+"<strong>%(workspace_name)s</strong>."
 
 #: src/baserow/core/templates/baserow/core/workspace_invitation.html:166
 msgid "Accept invitation"
@@ -349,19 +356,16 @@ msgstr "Accetta invito"
 
 #: src/baserow/core/trash/actions.py:20
 msgid "Empty trash"
-msgstr ""
+msgstr "Svuota cestino"
 
 #: src/baserow/core/trash/actions.py:22
-#, fuzzy, python-format
-#| msgid ""
-#| "Application \"%(application_name)s\" (%(application_id)s) of type "
-#| "%(application_type)s deleted"
+#, python-format
 msgid ""
 "Trash for application \"%(application_name)s\" (%(application_id)s) has been "
 "emptied"
 msgstr ""
-"Applicazione \"%(application_name)s\" (%(application_id)s) di tipo "
-"%(application_type)s eliminata"
+"Il cestino per l'applicazione \"%(application_name)s\" (%(application_id)s) "
+"è stato svuotato"
 
 #: src/baserow/core/trash/actions.py:79
 #, python-format
@@ -369,35 +373,33 @@ msgid ""
 "Trash for workspace \"%(workspace_name)s\" (%(workspace_id)s) has been "
 "emptied."
 msgstr ""
+"Il cestino per il progetto \"%(workspace_name)s\" (%(workspace_id)s) è stato "
+"svuotato."
 
 #: src/baserow/core/trash/actions.py:90
-#, fuzzy
-#| msgid "Restore Snapshot"
 msgid "Restore from trash"
-msgstr "Ripristina snapshot"
+msgstr "Ripristina dal cestino"
 
 #: src/baserow/core/trash/actions.py:91
 #, python-format
 msgid ""
 "Item of type \"%(item_type)s\" (%(item_id)s) has been restored from trash"
-msgstr ""
+msgstr "\"%(item_type)s\" (%(item_id)s) è stato ripristinato dal cestino"
 
 #: src/baserow/core/user/actions.py:23
 msgid "Create User"
 msgstr "Crea Utente"
 
 #: src/baserow/core/user/actions.py:25
-#, fuzzy, python-format
-#| msgid ""
-#| "User \"%(user_email)s\" (%(user_id)s) created (via invitation: "
-#| "%(with_invitation_token)s, from template: %(template_id)s)"
+#, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) created via \"%(auth_provider_type)s"
 "\" (%(auth_provider_id)s) auth provider (invitation: "
 "%(with_invitation_token)s)"
 msgstr ""
-"L'utente\"%(user_email)s\" (%(user_id)s) è stato creato (tramite invito: "
-"%(with_invitation_token)s, con template: %(template_id)s)"
+"L'utente\"%(user_email)s\" (%(user_id)s) è stato creato tramite provider \""
+"%(auth_provider_type)s\" (%(auth_provider_id)s) (su invito: "
+"%(with_invitation_token)s)"
 
 #: src/baserow/core/user/actions.py:110
 msgid "Update User"
@@ -436,55 +438,44 @@ msgstr ""
 
 #: src/baserow/core/user/actions.py:221
 msgid "Sign In User"
-msgstr ""
+msgstr "Login utente"
 
 #: src/baserow/core/user/actions.py:223
-#, fuzzy, python-format
-#| msgid ""
-#| "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
-#| "process"
+#, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
 "\" (%(auth_provider_id)s) auth provider"
 msgstr ""
-"L'utente \"%(user_email)s\" (%(user_id)s) ha effettuato il login fermando la "
-"cancellazione dell'account"
+"L'utente \"%(user_email)s\" (%(user_id)s) ha effettuato il login tramite il "
+"provider \"%(auth_provider_type)s\" (%(auth_provider_id)s)"
 
 #: src/baserow/core/user/actions.py:275
-#, fuzzy
-#| msgid "Reset password"
 msgid "Send reset user password"
 msgstr "Reimposta password"
 
 #: src/baserow/core/user/actions.py:276
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
-msgstr "Utente \"%(user_email)s\" (%(user_id)s) modificato"
+msgstr ""
+"Utente \"%(user_email)s\" (%(user_id)s) ha richiesto il reset della password"
 
 #: src/baserow/core/user/actions.py:306
-#, fuzzy
-#| msgid "Reset password"
 msgid "Change user password"
-msgstr "Reimposta password"
+msgstr "Reimposta password utente"
 
 #: src/baserow/core/user/actions.py:307
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
-msgstr "Utente \"%(user_email)s\" (%(user_id)s) modificato"
+msgstr "Utente \"%(user_email)s\" (%(user_id)s) ha modificato la password"
 
 #: src/baserow/core/user/actions.py:343
-#, fuzzy
-#| msgid "Reset password"
 msgid "Reset user password"
-msgstr "Reimposta password"
+msgstr "Reimposta password utente"
 
 #: src/baserow/core/user/actions.py:344
-#, fuzzy, python-format
-#| msgid "User \"%(user_email)s\" (%(user_id)s) updated"
+#, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
-msgstr "Utente \"%(user_email)s\" (%(user_id)s) modificato"
+msgstr "Utente \"%(user_email)s\" (%(user_id)s) ha reimpostato la password"
 
 #: src/baserow/core/user/emails.py:16
 msgid "Reset password - Baserow"

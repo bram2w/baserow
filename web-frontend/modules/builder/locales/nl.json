@@ -13,7 +13,11 @@
     "pageForm": {
         "nameLabel": "Naam",
         "defaultName": "Pagina",
-        "errorNameNotUnique": "Een pagina met deze naam bestaat al"
+        "errorNameNotUnique": "Een pagina met deze naam bestaat al",
+        "pathLabel": "Pad",
+        "errorPathNotUnique": "Een pagina met deze naam bestaat al",
+        "errorStartingSlash": "Een pad moet beginnen met een '/'",
+        "errorValidPathCharacters": "Het pad bevat ongeldige tekens"
     },
     "builderForm": {
         "submit": "Applicatie toevoegen"
@@ -21,5 +25,62 @@
     "builderSettingTypes": {
         "themeName": "Thema",
         "integrationsName": "Integraties"
+    },
+    "elementMenu": {
+        "moveUp": "Verplaats omhoog",
+        "moveDown": "Verplaats omlaag"
+    },
+    "pageHeaderItemTypes": {
+        "labelElements": "Elementen",
+        "labelDataSource": "Data",
+        "labelVariables": "Variabelen",
+        "labelSettings": "Pagina-instellingen"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Zoek elementen"
+    },
+    "elementType": {
+        "heading": "Kop",
+        "headingDescription": "Titel paginakop",
+        "paragraph": "Paragraaf",
+        "paragraphDescription": "Tekst op één regel"
+    },
+    "addElementButton": {
+        "label": "Element"
+    },
+    "addElementModal": {
+        "title": "Nieuw element toevoegen",
+        "searchPlaceholder": "Zoek elementen"
+    },
+    "duplicatePageJobType": {
+        "duplicating": "Dupliceren",
+        "duplicatedTitle": "Pagina gedupliceerd"
+    },
+    "pageSidePanelType": {
+        "general": "Algemeen",
+        "style": "Stijl",
+        "visibility": "Zichtbaarheid",
+        "events": "Gebeurtenissen"
+    },
+    "emptySidePanelState": {
+        "message": "Klik op een van de elementen om meer details te zien"
+    },
+    "headingElement": {
+        "noValue": "Geen titel..."
+    },
+    "headingElementForm": {
+        "levelTitle": "Niveau",
+        "textTitle": "Tekst",
+        "headingName": "Kop {level} <h{level}>",
+        "textError": "De waarde is ongeldig.",
+        "textPlaceholder": "Tekst invoeren..."
+    },
+    "paragraphElement": {
+        "noValue": "Lege paragraaf..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Tekst",
+        "textPlaceholder": "Tekst invoeren...",
+        "textError": "De waarde is ongeldig."
     }
 }

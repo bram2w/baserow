@@ -35,7 +35,7 @@
         "remove": "Supprimer l'équipe"
     },
     "teamsTable": {
-        "title": "{teamCount} équipes dans {groupName}",
+        "title": "{teamCount} équipes dans {workspaceName}",
         "createNew": "Créer une équipe",
         "nameColumn": "Nom",
         "createdColumn": "Création",
@@ -171,7 +171,7 @@
         },
         "noRoleLowPriority": {
             "name": "Aucun rôle",
-            "description": "Obtient le rôle définit par les équipes auxquelles il appartient."
+            "description": "Obtient le rôle par défaut pour le Projet définit par les équipes auxquelles il appartient."
         }
     },
     "memberRolesModal": {

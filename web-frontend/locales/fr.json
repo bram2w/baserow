@@ -395,7 +395,11 @@
         "signDescription": "Renvoie 1 si l'argument est un nombre positif, -1 si l'argument est un nombre négatif, 0 sinon.",
         "isNullDescription": "Retourne true si l'argument est null, false sinon.",
         "wheNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le deuxième argument si le premier argument est 'NaN'",
-        "isNanDescription": "Retourne true si l'argument est 'NaN', retourne false sinon."
+        "isNanDescription": "Retourne true si l'argument est 'NaN', retourne false sinon.",
+        "nowDescription": "Renvoie la date et l’heure actuelles en UTC.",
+        "todayDescription": "Retourne la date actuelle en UTC.",
+        "toDateTzDescription": "Renvoie le premier argument converti en date à partir de la chaîne de caractères représentant le format de cette date en deuxième argument et du fuseau horaire fourni en troisième argument.",
+        "whenNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le second argument si le premier argument est 'NaN'"
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
