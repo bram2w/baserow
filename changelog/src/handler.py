@@ -69,7 +69,10 @@ class ChangelogHandler:
         for category_dir_name in os.listdir(base_path):
             category_dir = f"{base_path}/{category_dir_name}"
 
-            for entry_file_name in os.listdir(category_dir):
+            entry_file_names = os.listdir(category_dir)
+            entry_file_names.sort()
+
+            for entry_file_name in entry_file_names:
                 entry_file_path = f"{category_dir}/{entry_file_name}"
 
                 with open(entry_file_path, "r") as entry_file:
