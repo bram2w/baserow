@@ -41,6 +41,7 @@ The command will do the following:
 2. Add a meta entry to the `releases.json` file
 3. Generate a new `changelog.md`
 
+After you made a release you can move the `changelog.md` file to the root of the project.
 
 ## Additional commands
 ### Purge
@@ -54,6 +55,12 @@ This command will delete:
 - `releases.json`
 
 Be careful when running `purge` since it will delete these files permanently!
+
+### Generate
+```shell
+python3 ./src/changelog.py generate
+```
+This command will generate a new `changelog.md` file without making a new release.
 
 ## FAQ
 ### Why do we need this tool?
@@ -86,3 +93,8 @@ of a changelog entry.
 You can only do this by directly editing the `.json` file at the moment since it's a
 fringe use case and wouldn't make sense to add as a prompt when creating the entry
 via the CLI.
+
+### What should I do if I need to make changes to an existing release?
+If you have generated a new release, and you notice afterwards that you meant to change
+one of the entries before making the release you can change the content of the changelog
+entry in the JSON file directly and then run `python3 ./src/changelog.py generate`
