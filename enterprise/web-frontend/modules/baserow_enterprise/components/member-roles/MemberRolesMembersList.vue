@@ -1,5 +1,8 @@
 <template>
-  <ul class="list">
+  <div v-if="roleAssignmentsSorted.length === 0">
+    {{ $t('memberRolesMembersList.noMembers') }}
+  </div>
+  <ul v-else class="list list margin-bottom-0">
     <li
       v-for="roleAssignment in roleAssignmentsSorted"
       :key="roleAssignment.subject.id"

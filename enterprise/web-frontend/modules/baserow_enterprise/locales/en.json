@@ -215,7 +215,8 @@
     "memberRolesMembersList": {
         "remove": "Remove",
         "teamMembersCount": "{count} team members",
-        "adminHelpText": "Admins can restrict other admins roles."
+        "adminHelpText": "Admins can restrict other admins roles.",
+        "noMembers": "No members have been selected. Use the select button to add one."
     },
     "roleAssignmentModal": {
         "membersTab": "Members",

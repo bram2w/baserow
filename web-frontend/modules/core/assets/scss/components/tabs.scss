@@ -14,13 +14,14 @@
   display: flex;
   flex-wrap: nowrap;
   list-style: none;
-  padding: 0 0 0 15px;
+  padding: 0 15px;
   margin: 0;
   gap: 15px;
   border-bottom: solid 1px $color-neutral-200;
 
   .tabs--no-separation & {
     border-bottom: unset;
+    padding: 0;
   }
 
   .tabs--large & {
@@ -74,11 +75,16 @@
 }
 
 .tab {
-  padding: 14px 16px;
+  padding: 14px 15px;
   position: relative;
 
   .tabs--full-height & {
     overflow: auto;
     height: 100%;
+  }
+
+  .tabs--no-separation & {
+    padding-left: 0;
+    padding-right: 0;
   }
 }

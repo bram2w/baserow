@@ -1,6 +1,6 @@
 <template>
   <Tabs :full-height="true" :navigation="true" :large="true">
-    <tab
+    <Tab
       v-for="page in pages"
       :key="page.type"
       :title="page.name"
@@ -9,7 +9,7 @@
       :tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
     >
       <NuxtChild :workspace="workspace" />
-    </tab>
+    </Tab>
   </Tabs>
 </template>
 
