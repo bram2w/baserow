@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "baserow realtime collaboration broken in heroku after channels upgrade",
+    "issue_number": 1676,
+    "bullet_points": [],
+    "created_at": "2023-04-03"
+}
