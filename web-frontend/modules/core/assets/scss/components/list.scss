@@ -6,11 +6,14 @@
 .list__item {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid $color-neutral-200;
   padding-bottom: 15px;
   padding-top: 15px;
   font-size: 14px;
   align-items: center;
+
+  &:not(:first-child) {
+    border-top: 1px solid $color-neutral-200;
+  }
 }
 
 .list__left-side {
