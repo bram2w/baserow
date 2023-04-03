@@ -210,7 +210,12 @@
         "includeTimeLabel": "Zeit einbeziehen",
         "timeFormatLabel": "Zeitformat",
         "24Hour": "24 Stunden",
-        "12Hour": "12 Stunden"
+        "12Hour": "12 Stunden",
+        "showTimezoneLabel": "Zeitzone anzeigen",
+        "forceTimezoneLabel": "Legen Sie die Zeitzone für alle Mitarbeiter fest",
+        "forceTimezoneValue": "Zeitzone",
+        "addTimezoneOffsetLabel": "Werte umrechnen ({utcOffsetDiff} Minuten hinzufügen)",
+        "subTimezoneOffsetLabel": "Werte umrechnen ({utcOffsetDiff} Minuten subtrahieren)"
     },
     "fieldLinkRowSubForm": {
         "noTable": "Sie benötigen mindestens eine weitere Tabelle in derselben Datenbank, auf die Sie verweisen können.",

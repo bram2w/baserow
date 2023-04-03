@@ -395,7 +395,11 @@
         "floorDescription": "Gibt die größte ganze Zahl zurück, die kleiner oder gleich der angegebenen Argumentnummer ist.",
         "isNullDescription": "Gibt true zurück, wenn das Argument null ist, andernfalls false.",
         "isNanDescription": "Gibt true zurück, wenn das Argument 'NaN' ist, andernfalls false.",
-        "wheNanDescription": "Gibt das erste Argument zurück, wenn es nicht 'NaN' ist. Gibt das zweite Argument zurück, wenn das erste Argument 'NaN' ist"
+        "wheNanDescription": "Gibt das erste Argument zurück, wenn es nicht 'NaN' ist. Gibt das zweite Argument zurück, wenn das erste Argument 'NaN' ist",
+        "nowDescription": "Gibt das aktuelle Datum und die aktuelle Uhrzeit in UTC zurück.",
+        "todayDescription": "Gibt das aktuelle Datum in utc zurück.",
+        "whenNanDescription": "Gibt das erste Argument zurück, wenn es nicht 'NaN' ist. Gibt das zweite Argument zurück, wenn das erste Argument 'NaN' ist",
+        "toDateTzDescription": "Gibt das erste Argument in ein Datum umgewandelt zurück, wenn als zweites Argument eine Zeichenkette im Datumsformat und als drittes Argument die Zeitzone angegeben wird."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unbenannte Zeile {value}"

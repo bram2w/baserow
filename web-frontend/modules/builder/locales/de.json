@@ -16,10 +16,71 @@
     "pageForm": {
         "nameLabel": "Name",
         "errorNameNotUnique": "Eine Seite mit diesem Namen existiert bereits",
-        "defaultName": "Seite"
+        "defaultName": "Seite",
+        "errorValidPathCharacters": "Der Pfad enthält ungültige Zeichen",
+        "errorStartingSlash": "Ein Pfad muss mit einem '/' beginnen",
+        "pathLabel": "Pfad",
+        "errorPathNotUnique": "Ein Pfad mit diesem Namen existiert bereits"
     },
     "builderSettingTypes": {
         "integrationsName": "Integrationen",
         "themeName": "Theme"
+    },
+    "elementType": {
+        "paragraphDescription": "Einzeiliger Text",
+        "heading": "Überschrift",
+        "headingDescription": "Titel der Seitenüberschrift",
+        "paragraph": "Paragraph"
+    },
+    "addElementButton": {
+        "label": "Element"
+    },
+    "duplicatePageJobType": {
+        "duplicating": "Duplizieren",
+        "duplicatedTitle": "Seite dupliziert"
+    },
+    "pageHeaderItemTypes": {
+        "labelElements": "Elemente",
+        "labelDataSource": "Daten",
+        "labelVariables": "Variablen",
+        "labelSettings": "Seiteneinstellungen"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Elemente suchen"
+    },
+    "addElementModal": {
+        "title": "Neues Element hinzufügen",
+        "searchPlaceholder": "Elemente suchen"
+    },
+    "elementMenu": {
+        "moveUp": "Nach oben verschieben",
+        "moveDown": "Nach unten verschieben"
+    },
+    "pageSidePanelType": {
+        "general": "Allgemein",
+        "style": "Style",
+        "visibility": "Sichtbarkeit",
+        "events": "Ereignisse"
+    },
+    "emptySidePanelState": {
+        "message": "Klicken Sie auf eines der Elemente, um weitere Details zu sehen"
+    },
+    "headingElement": {
+        "noValue": "Kein Titel..."
+    },
+    "headingElementForm": {
+        "levelTitle": "Ebene",
+        "textTitle": "Text",
+        "headingName": "Überschrift {level} <h{level}>",
+        "textError": "Der Wert ist ungültig.",
+        "textPlaceholder": "Text eingeben..."
+    },
+    "paragraphElement": {
+        "noValue": "Leerer Absatz..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Text",
+        "textPlaceholder": "Text eingeben...",
+        "textError": "Der Wert ist ungültig."
     }
 }

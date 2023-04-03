@@ -10,7 +10,11 @@
     "pageForm": {
         "errorNameNotUnique": "Une page avec le même nom existe déjà",
         "defaultName": "Page",
-        "nameLabel": "Titre"
+        "nameLabel": "Titre",
+        "errorPathNotUnique": "Un chemin similaire existe déjà",
+        "errorValidPathCharacters": "Le chemin contient des caractères invalides",
+        "errorStartingSlash": "Un chemin doit commencer par un '/'",
+        "pathLabel": "Chemin"
     },
     "builderSettingTypes": {
         "integrationsName": "Intégrations",
@@ -21,5 +25,62 @@
     },
     "builderSettingsModal": {
         "title": "Application"
+    },
+    "pageHeaderItemTypes": {
+        "labelDataSource": "Données",
+        "labelVariables": "Variables",
+        "labelSettings": "Configuration",
+        "labelElements": "Éléments"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Chercher des éléments"
+    },
+    "elementType": {
+        "heading": "Titre",
+        "paragraph": "Paragraphe",
+        "paragraphDescription": "Texte simple",
+        "headingDescription": "Titre de page"
+    },
+    "elementMenu": {
+        "moveDown": "Descendre",
+        "moveUp": "Monter"
+    },
+    "addElementButton": {
+        "label": "Élément"
+    },
+    "addElementModal": {
+        "title": "Ajouter un élément",
+        "searchPlaceholder": "Chercher des éléments"
+    },
+    "duplicatePageJobType": {
+        "duplicating": "Duplication",
+        "duplicatedTitle": "Page dupliquée"
+    },
+    "pageSidePanelType": {
+        "general": "Général",
+        "visibility": "Visibilité",
+        "events": "Événements",
+        "style": "Style"
+    },
+    "emptySidePanelState": {
+        "message": "Cliquez sur l'un des éléments pour obtenir plus de détails"
+    },
+    "headingElement": {
+        "noValue": "Aucun titre..."
+    },
+    "headingElementForm": {
+        "levelTitle": "Niveau",
+        "textTitle": "Texte",
+        "textPlaceholder": "Saisir le texte...",
+        "headingName": "Titre {level} <h{level}>",
+        "textError": "La valeur est invalide."
+    },
+    "paragraphElement": {
+        "noValue": "Paragraphe vide..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Texte",
+        "textPlaceholder": "Saisir le texte...",
+        "textError": "La valeur est invalide."
     }
 }

@@ -13,7 +13,8 @@
             "licenses": "Licenties"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Kalender"
         },
         "exporterType": {
             "json": "Exporteren naar JSON",
@@ -157,7 +158,7 @@
         "selectOption": "Selecteer optie"
     },
     "kanbanViewStakedBy": {
-        "title": "Groepsveld",
+        "title": "Groepeer veld",
         "chooseField": "Op welk enkelvoudig keuzeveld moeten de kaarten gestapeld worden?"
     },
     "kanbanViewStack": {
@@ -274,7 +275,8 @@
         "admin": "Admin functionaliteit",
         "surveyForm": "Enquêteformulier",
         "publicLogoRemoval": "Publiek logo verwijderen",
-        "personalViews": "Persoonlijke weergave"
+        "personalViews": "Persoonlijke weergave",
+        "calendarView": "Kalenderweergave"
     },
     "premiumModal": {
         "title": "Upgrade om de {name} te gebruiken",
@@ -299,5 +301,27 @@
     },
     "viewsContext": {
         "personal": "Persoonlijk"
+    },
+    "calendarViewHeader": {
+        "displayBy": "Weergeven door",
+        "displayedBy": "Weergegeven door \"{fieldName}\" veld",
+        "labels": "Labels"
+    },
+    "calendarDateSelector": {
+        "today": "Vandaag"
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "probeer opnieuw"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Welk veld wilt u voor deze weergave gebruiken?",
+        "noCompatibleDateFields": "Er zijn geen datumvelden in deze tabel, maak er eerst een aan."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Kies een datumveld",
+        "save": "Opslaan"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 meer... | {hiddenRowsCount} meer..."
     }
 }

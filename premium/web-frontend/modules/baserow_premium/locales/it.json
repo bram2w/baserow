@@ -13,7 +13,8 @@
             "licenses": "Licenze"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendario"
         },
         "exporterType": {
             "json": "Esporta in JSON",
@@ -157,8 +158,8 @@
         "selectOption": "Seleziona opzione"
     },
     "kanbanViewStakedBy": {
-        "title": "Campo progetto",
-        "chooseField": "Per quale campo di selezione singola le schede devono essere impilate?",
+        "title": "Raggruppa per campo",
+        "chooseField": "Per quale campo di selezione singola le schede devono essere raggruppate?",
         "addSelectField": "aggiungi campo di selezione singola"
     },
     "kanbanViewStack": {
@@ -274,7 +275,9 @@
         "rowComments": "Commenti di riga",
         "exports": "Esportazione in formato JSON e XML",
         "surveyForm": "Sondaggio",
-        "publicLogoRemoval": "Rimozione logo"
+        "publicLogoRemoval": "Rimozione logo",
+        "calendarView": "Vista calendario",
+        "personalViews": "Vista personale"
     },
     "premiumModal": {
         "title": "Fai l'upgrade per usare {name}",
@@ -296,5 +299,30 @@
             "label": "Nascondi il logo di Baserow nella viste pubbliche",
             "premiumModalName": "rimozione logo"
         }
+    },
+    "calendarViewHeader": {
+        "displayedBy": "Visto da “{fieldName}”",
+        "labels": "Etichette",
+        "displayBy": "Visto da"
+    },
+    "calendarDateSelector": {
+        "today": "Oggi"
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "Riprova"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1+... | {hiddenRowsCount}+..."
+    },
+    "viewsContext": {
+        "personal": "Personale"
+    },
+    "dateFieldSelectForm": {
+        "noCompatibleDateFields": "Non ci sono campi con date in questa tabella, per favore creane uno prima.",
+        "dateField": "Quale campo vuoi usare per questa vista?"
+    },
+    "selectDateFieldModal": {
+        "save": "Salva",
+        "chooseDateField": "Scegli il campo data"
     }
 }

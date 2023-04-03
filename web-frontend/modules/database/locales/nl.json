@@ -210,7 +210,12 @@
         "includeTimeLabel": "Tijd invoegen",
         "timeFormatLabel": "Tijdformaat",
         "24Hour": "24 uur",
-        "12Hour": "12 uur"
+        "12Hour": "12 uur",
+        "showTimezoneLabel": "Toon tijdzone",
+        "forceTimezoneLabel": "Tijdzone instellen voor alle bijdragers",
+        "forceTimezoneValue": "Tijdzone",
+        "addTimezoneOffsetLabel": "Waarden converteren ({utcOffsetDiff} minuten toevoegen)",
+        "subTimezoneOffsetLabel": "Converteer waarden (trek {utcOffsetDiff} minuten af)"
     },
     "fieldLinkRowSubForm": {
         "noTable": "Je hebt minstens één andere tabel in dezelfde database nodig om naar te linken.",

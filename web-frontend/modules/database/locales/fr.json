@@ -210,7 +210,12 @@
         "includeTimeLabel": "Inclure l'heure",
         "timeFormatLabel": "Format de l'heure",
         "24Hour": "24 heures",
-        "12Hour": "12 heures"
+        "12Hour": "12 heures",
+        "showTimezoneLabel": "Afficher le fuseau horaire",
+        "forceTimezoneLabel": "Définir le fuseau horaire pour tous les collaborateurs",
+        "forceTimezoneValue": "Fuseau horaire",
+        "addTimezoneOffsetLabel": "Convertir les valeurs (ajouter {utcOffsetDiff} minutes)",
+        "subTimezoneOffsetLabel": "Convertir les valeurs (soustraire {utcOffsetDiff} minutes)"
     },
     "fieldLinkRowSubForm": {
         "noTable": "Vous devez créer au moins une autre table dans la même base de données pour pouvoir créer un lien.",

@@ -395,7 +395,11 @@
         "floorDescription": "Geeft het grootste gehele getal dat kleiner of gelijk is aan het opgegeven argumentnummer.",
         "wheNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is.",
         "isNanDescription": "Geeft true als het argument 'NaN' is, anders false.",
-        "isNullDescription": "Geeft true als het argument nul is, anders false."
+        "isNullDescription": "Geeft true als het argument nul is, anders false.",
+        "nowDescription": "Geeft de huidige datum en tijd terug in UTC.",
+        "todayDescription": "Geeft de huidige datum terug in UTC.",
+        "toDateTzDescription": "Retourneert het eerste argument geconverteerd naar een datum met als tweede argument een tekenreeks voor datumnotatie en de tijdzone als derde argument.",
+        "whenNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

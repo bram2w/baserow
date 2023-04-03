@@ -36,7 +36,7 @@
         "subjectsColumn": "Mitglieder",
         "roleColumn": "Standard-Rolle",
         "roleHelpText": "Kann mit Rollen für Datenbanken und Tabellen überschrieben werden.",
-        "title": "{teamCount} Teams in {groupName}"
+        "title": "{teamCount} Teams in {workspaceName}"
     },
     "subjectSampleField": {
         "titleAttr": "{subjectCount} Mitglieder in diesem Team."

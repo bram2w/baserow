@@ -292,7 +292,10 @@
         "invalidAccountDeletionGraceDelay": "Questo campo è obbligatorio e deve essere un valore intero positivo più piccolo di 32000",
         "settingAllowNonStaffCreateWorkspaceOperation": "Permetti a chiunque di creare nuovi progetti di lavoro",
         "settingAllowNonStaffCreateWorkspaceOperationDescription": "Di default, chiunque puó creare progetti di lavoro. Disabilitando questa opzione solo gli amministratori potranno creare nuovi progetti.",
-        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo progetto del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti."
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "Quando questa impostazione è abilitata, i nuovi utenti verranno assegnati automaticamente ad un nuovo progetto del quale saranno amministratori, e quindi conteggiati al termine della giornata come licenze paganti. Per evitare costi inaspettati, disabilita questa impostazione e invita nuovi utenti con ruoli predefiniti.",
+        "settingTrackWorkspaceUsage": "Monitora l'utilizzo delle risorse per progetto",
+        "maintenance": "Manutenzione",
+        "settingTrackWorkspaceUsageDescription": "Abilita un task periodico che monitora il numero di righe e lo spazio disco utilizzato per ogni progetto, visibile nella pagina di riepilogo dei progetti."
     },
     "undoRedoNotification": {
         "undoingTitle": "Annullando..",
@@ -455,7 +458,9 @@
                 "name": "Nome",
                 "email": "Email",
                 "role": "Ruolo di default",
-                "teams": "Team"
+                "teams": "Team",
+                "highestRoleHelpText": "Il ruolo più alto che quest'utente ha assegnato direttamente o tramite un team nel progetto",
+                "highestRole": "Ruolo più alto"
             },
             "actions": {
                 "remove": "Rimuovi dal progetto",
@@ -491,7 +496,9 @@
         "selectedAmountLabel": "{count} selezionati"
     },
     "memberAssignmentModalFooter": {
-        "invite": "Inviti {count}"
+        "invite": "Inviti {count}",
+        "deselectAll": "Deseleziona tutto",
+        "selectAll": "Seleziona tutto"
     },
     "UserSessionExpiredNotification": {
         "title": "Sessione scaduta",
@@ -506,5 +513,11 @@
         "title": "Permessi aggiornati",
         "content": "Questo potrebbe avere effetti su quello che stai guardando, si prega di ricaricare la pagina.",
         "action": "Ricarica"
+    },
+    "highestPaidRoleField": {
+        "billable": "Paganti"
+    },
+    "editRoleContext": {
+        "billableRolesLink": "Documentazione per i ruoli a pagamento"
     }
 }

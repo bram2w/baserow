@@ -155,7 +155,9 @@
         "isYearsAgo": "è anni fa",
         "inThisWeek": "in questa settimana",
         "beforeToday": "È prima di oggi",
-        "afterToday": "È dopo di oggi"
+        "afterToday": "È dopo di oggi",
+        "doesntContainWord": "non contiene la parola",
+        "containsWord": "contiene la parola"
     },
     "viewType": {
         "grid": "Griglia",
@@ -259,8 +261,10 @@
         "snapshotOperationLimitExceededDescription": "Hai raggiunto il limite delle operazioni contemporanee possibili. Attenti finché le operazioni precedenti sono concluse.",
         "disabledPasswordProviderTitle": "Autenticazione tramite password disabilitata.",
         "disabledPasswordProviderMessage": "Per favore, utilizza un altro provider per l'autenticazione.",
-        "lastAdminTitle": "L'ultimo ammistratore non può essere rimosso",
-        "lastAdminMessage": "Un progetto deve avere almeno un amministratore."
+        "lastAdminTitle": "L'ultimo ammistratore del progetto non può essere rimosso",
+        "lastAdminMessage": "Un progetto deve avere almeno un amministratore.",
+        "maxLocksPerTransactionExceededDescription": "Baserow ha cercato di eliminare definitivamente gli oggetti nel cestino, ma il limite`max_locks_per_transaction` del database è stato superato.",
+        "maxLocksPerTransactionExceededTitle": "Problema imprevisto con il database PostgreSQL"
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -388,7 +392,13 @@
         "lnDescription": "Logaritmo natuale: ritorna l'esponente da dare alla costante e ≈ 2.718 per ottenere il valore fornito.",
         "logDescription": "Funziona logaritmo: ritorna l'esponente da dare al primo valore per ottenere il secondo valore.",
         "signDescription": "Ritorna 1 se il valore fornito è positivo, -1 se negativo, 0 altrimenti.",
-        "ceilDescription": "Ritorna il più piccolo numero intero più grande del numero fornito come argomento."
+        "ceilDescription": "Ritorna il più piccolo numero intero più grande del numero fornito come argomento.",
+        "isNullDescription": "Ritorna true se l'argomento è null, falso altrimenti.",
+        "nowDescription": "Ritorna la data e l'ora correnti.",
+        "todayDescription": "Ritorna la data corrente.",
+        "toDateTzDescription": "Ritorna il primo argomento convertito in una data a partire dal una stringa per il formato come secondo argomento e un fuso orario come terzo argomento.",
+        "isNanDescription": "Ritorna true se l'argomento è 'NaN', falso altrimenti.",
+        "whenNanDescription": "Ritorna il primo argomento se l'argomento non è 'NaN',il secondo argomento altrimenti"
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

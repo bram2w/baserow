@@ -210,7 +210,12 @@
         "includeTimeLabel": "Includi ora",
         "timeFormatLabel": "Formato ora",
         "24Hour": "24 ore",
-        "12Hour": "12 ore"
+        "12Hour": "12 ore",
+        "addTimezoneOffsetLabel": "Converti i dati (aggiungi {utcOffsetDiff} minuti)",
+        "subTimezoneOffsetLabel": "Converti i dati (sottrai {utcOffsetDiff} minuti)",
+        "showTimezoneLabel": "Mostra fuso orario",
+        "forceTimezoneLabel": "Imposta un fuso orario per tutti i collaboratori",
+        "forceTimezoneValue": "Fuso orario"
     },
     "fieldLinkRowSubForm": {
         "noTable": "Serve almeno un'altra tabella nello stesso database a cui collegarsi.",
@@ -374,7 +379,8 @@
     },
     "viewsContext": {
         "searchView": "Viste di ricerca",
-        "noViews": "Nessuna vista trovata"
+        "noViews": "Nessuna vista trovata",
+        "collaborative": "Collaborativa"
     },
     "viewFilterTypeLinkRow": {
         "unnamed": "righe senza nome {value}",
@@ -455,7 +461,8 @@
         "delete": "Elimina vista"
     },
     "viewForm": {
-        "name": "Nome"
+        "name": "Nome",
+        "whoCanEdit": "Chi può modificare"
     },
     "galleryViewHeader": {
         "customizeCards": "Personalizza schede"
@@ -485,7 +492,9 @@
         "duplicateRow": "Duplica riga",
         "selectRow": "Seleziona riga",
         "deleteRows": "Elimina righe",
-        "copyCells": "Copia celle"
+        "copyCells": "Copia celle",
+        "hiddenRowsInsertedMessage": "{number} nuove righe sono state aggiunte, ma non sono visibili a causa dei filtri attivi.",
+        "hiddenRowsInsertedTitle": "Righe aggiunte"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
@@ -741,5 +750,13 @@
     "fileField": {
         "errorEmptyFileNameMessage": "Non puoi impostare un nome vuoto.",
         "errorEmptyFileNameTitle": "Nome file invalido"
+    },
+    "viewOwnershipType": {
+        "collaborative": "Collaborativa",
+        "personal": "Personale"
+    },
+    "gridViewRowsAddContext": {
+        "title": "Crea più righe",
+        "choice": "Aggiungi {rowAmountChoice} righe"
     }
 }
