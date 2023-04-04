@@ -1,7 +1,0 @@
-{
-    "type": "refactor",
-    "message": "Renamed 'group' to 'workspace'.",
-    "issue_number": 1303,
-    "bullet_points": [],
-    "created_at": "2023-03-14"
-}

@@ -21,12 +21,38 @@ the new endpoints, our [API specification](https://api.baserow.io/api/redoc/) ha
 updated so that each deprecated "group" endpoint will suggest the functionally identical
 "workspace" equivalent.
 
-### Breaking changes
+## REST API changes
 
-1. The command `import_group_applications` was renamed to `import_workspace_applications`.
-2. The command `export_group_applications` was renamed to `export_workspace_applications`. 
-Additionally, the filename it creates is now `workspace_{id}`.
-3. The command `fill_group` was renamed to `fill_workspace`.
+The most significant change to our API is that we've duplicated all "group"
+endpoints so that there is a functionally identical "workspace" one.
+
+For example, the [`create_group`](https://api.baserow.io/api/redoc/#tag/Groups/operation/create_group)
+endpoint (which is now marked as deprecated) has a functionally identical
+[`create_workspace`](https://api.baserow.io/api/redoc/#tag/Workspaces/operation/list_workspaces) endpoint.
+
+In any API or WebSocket response which previously serialized a "group" ID, name or
+nested object, there will be an identical "workspace" one.
+
+This means that there will be no intentional breaking changes in our API responses.
+There are, however, some codebase changes to be aware of.
+
+## Minor changes
+
+- The directory `baserow.api.groups` has been renamed to `baserow.api.workspaces`.
+- The directory `baserow_premium.admin.groups` has been renamed to `baserow_premium`.
+  `admin.workspaces`.
+
+## Major changes
+
+- All "group" endpoints now have a corresponding "workspace" endpoint.
+- All "group" endpoint views have been moved to a [`compat` directory](https://gitlab.com/bramw/baserow/-/tree/develop/backend/src/baserow/compat).
+
+## Non-REST API breaking changes
+
+- The command `fill_group` was renamed to `fill_workspace`.
+- The command `import_group_applications` was renamed to `import_workspace_applications`.
+- The command `export_group_applications` was renamed to
+  `export_workspace_applications`.
 
 ### Migration timeline
 
