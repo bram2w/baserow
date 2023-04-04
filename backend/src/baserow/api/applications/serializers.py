@@ -4,7 +4,7 @@ from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.api.groups.serializers import GroupSerializer
+from baserow.api.workspaces.serializers import WorkspaceSerializer
 from baserow.core.db import specific_iterator
 from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
@@ -12,11 +12,27 @@ from baserow.core.registries import application_type_registry
 
 class ApplicationSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
-    group = GroupSerializer(help_text="The group that the application belongs to.")
+    # GroupDeprecation
+    group = WorkspaceSerializer(
+        source="workspace",
+        help_text="DEPRECATED: Please use the functionally identical "
+        "`workspace` instead as this field is "
+        "being removed in the future.",
+    )
+    workspace = WorkspaceSerializer(
+        help_text="The workspace that the application belongs to."
+    )
 
     class Meta:
         model = Application
-        fields = ("id", "name", "order", "type", "group")
+        fields = (
+            "id",
+            "name",
+            "order",
+            "type",
+            "group",  # GroupDeprecation
+            "workspace",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
     @extend_schema_field(OpenApiTypes.STR)
@@ -86,8 +102,8 @@ class InstallTemplateJobApplicationsSerializer(serializers.JSONField):
             return None
 
         applications = specific_iterator(
-            Application.objects.select_related("content_type", "group").filter(
-                pk__in=application_ids, group__trashed=False
+            Application.objects.select_related("content_type", "workspace").filter(
+                pk__in=application_ids, workspace__trashed=False
             )
         )
         return [get_application_serializer(app).data for app in applications]

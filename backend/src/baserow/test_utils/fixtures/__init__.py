@@ -1,11 +1,10 @@
-from faker import Faker
-
 from .airtable import AirtableFixtures
 from .application import ApplicationFixtures
 from .auth_provider import AuthProviderFixtures
+from .domain import DomainFixtures
+from .element import ElementFixtures
 from .field import FieldFixtures
 from .file_import import FileImportFixtures
-from .group import GroupFixtures
 from .job import JobFixtures
 from .page import PageFixtures
 from .row import RowFixture
@@ -18,13 +17,14 @@ from .user import UserFixtures
 from .user_file import UserFileFixtures
 from .view import ViewFixtures
 from .webhook import TableWebhookFixture
+from .workspace import WorkspaceFixtures
 
 
 class Fixtures(
     SettingsFixtures,
     UserFixtures,
     UserFileFixtures,
-    GroupFixtures,
+    WorkspaceFixtures,
     ApplicationFixtures,
     TableFixtures,
     ViewFixtures,
@@ -39,5 +39,8 @@ class Fixtures(
     SnapshotFixtures,
     AuthProviderFixtures,
     PageFixtures,
+    ElementFixtures,
+    DomainFixtures,
 ):
-    fake = Faker()
+    def __init__(self, fake=None):
+        self.fake = fake

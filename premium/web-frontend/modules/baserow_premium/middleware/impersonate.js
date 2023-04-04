@@ -2,7 +2,7 @@ import UserService from '@baserow_premium/services/admin/users'
 
 /**
  * We only want to allow impersonation when a page loads for the first time because
- * on first load several endpoints are called to fetch initial data like group,
+ * on first load several endpoints are called to fetch initial data like workspace,
  * applications, etc. Starting the impersonation when the page first loads, makes
  * sure that we never have to take this situation into account because it only
  * happens on first page load before everything is fetched.

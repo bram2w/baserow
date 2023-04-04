@@ -1,0 +1,56 @@
+.page-preview__wrapper {
+  padding: 10px 30px;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+}
+
+.page-preview {
+  position: relative;
+  z-index: 1;
+  border-radius: 10px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.page-preview__add {
+  @include center-text(26px, 10px);
+
+  display: block;
+  border-radius: 100%;
+  border: solid 1px $color-neutral-300;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
+  color: $color-primary-900;
+  background-color: $white;
+
+  &:hover {
+    background-color: $color-neutral-50;
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.32);
+  }
+}
+
+.page-preview__scaled {
+  width: 100%;
+  min-height: 100%;
+  background-color: $white;
+  overflow: auto;
+
+  // We need to do this because the border of the preview is round and we need to round
+  // the border of the selection box so that border has to have the same shape.
+  > div:first-child {
+    &::before {
+      border-top-right-radius: 15px;
+      border-top-left-radius: 15px;
+    }
+
+    & .element__menu-item-description {
+      @include absolute(30px, -2px, auto, auto);
+    }
+  }
+
+  > div:last-child::before {
+    border-bottom-right-radius: 15px;
+    border-bottom-left-radius: 15px;
+  }
+}

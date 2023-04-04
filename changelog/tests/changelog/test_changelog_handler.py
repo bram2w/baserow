@@ -23,6 +23,20 @@ def test_get_changelog_entries(fs):
     ] in changelog_entries.values()
 
 
+def test_get_changelog_entries_order(fs):
+    handler = ChangelogHandler()
+    handler.add_entry(BugChangelogEntry.type, "2")
+    handler.add_entry(BugChangelogEntry.type, "1")
+
+    changelog_entries = handler.get_changelog_entries()
+
+    assert BugChangelogEntry.type in changelog_entries
+    assert [
+        BugChangelogEntry().generate_entry_dict("1"),
+        BugChangelogEntry().generate_entry_dict("2"),
+    ] in changelog_entries.values()
+
+
 def test_get_release_meta_data(fs):
     handler = ChangelogHandler()
     data = {"releases": [{"name": "1.0"}]}

@@ -31,8 +31,8 @@ class EnterpriseFixtures:
     def create_team(self, **kwargs):
         if "name" not in kwargs:
             kwargs["name"] = self.fake.name()
-        if "group" not in kwargs:
-            kwargs["group"] = self.create_group()
+        if "workspace" not in kwargs:
+            kwargs["workspace"] = self.create_workspace()
         members = kwargs.pop("members", [])
 
         team = Team.objects.create(**kwargs)
@@ -56,20 +56,20 @@ class EnterpriseFixtures:
     def create_role_assignment(self, **kwargs):
         user = kwargs.get("user", None)
         role_uid = kwargs.get("role_uid", "builder")
-        group = kwargs.get("group", None)
+        workspace = kwargs.get("workspace", None)
         scope = kwargs.get("scope", None)
 
         if "user" not in kwargs:
             user = super().create_user()
 
-        if group is None:
-            group = super().create_group(user=user)
+        if workspace is None:
+            workspace = super().create_workspace(user=user)
 
         if scope is None:
-            scope = group
+            scope = workspace
 
         role = Role.objects.get(uid=role_uid)
 
         return RoleAssignment.objects.create(
-            subject=user, role=role, group=group, scope=scope
+            subject=user, role=role, workspace=workspace, scope=scope
         )

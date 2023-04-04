@@ -35,14 +35,14 @@
               @input="filterUser"
             ></PaginatedDropdown>
           </FilterWrapper>
-          <FilterWrapper :name="$t('auditLog.filterGroupTitle')">
+          <FilterWrapper :name="$t('auditLog.filterWorkspaceTitle')">
             <PaginatedDropdown
-              ref="groupFilter"
-              :value="filters.group_id"
-              :fetch-page="fetchGroups"
-              :empty-item-display-name="$t('auditLog.allGroups')"
-              :not-selected-text="$t('auditLog.allGroups')"
-              @input="filterGroup"
+              ref="workspaceFilter"
+              :value="filters.workspace_id"
+              :fetch-page="fetchWorkspaces"
+              :empty-item-display-name="$t('auditLog.allWorkspaces')"
+              :not-selected-text="$t('auditLog.allWorkspaces')"
+              @input="filterWorkspace"
             ></PaginatedDropdown>
           </FilterWrapper>
           <FilterWrapper :name="$t('auditLog.filterActionTypeTitle')">
@@ -121,8 +121,8 @@ export default {
         '15'
       ),
       new CrudTableColumn(
-        'group',
-        () => this.$t('auditLog.group'),
+        'workspace',
+        () => this.$t('auditLog.workspace'),
         SimpleField,
         true,
         false,
@@ -191,7 +191,7 @@ export default {
     clearFilters() {
       for (const filterRef of [
         'userFilter',
-        'groupFilter',
+        'workspaceFilter',
         'typeFilter',
         'fromTimestampFilter',
         'toTimestampFilter',
@@ -217,11 +217,11 @@ export default {
     fetchUsers(page, search) {
       return this.service.fetchUsers(page, search)
     },
-    filterGroup(group) {
-      this.setFilter('group_id', group.id)
+    filterWorkspace(workspace) {
+      this.setFilter('workspace_id', workspace.id)
     },
-    fetchGroups(page, search) {
-      return this.service.fetchGroups(page, search)
+    fetchWorkspaces(page, search) {
+      return this.service.fetchWorkspaces(page, search)
     },
     fetchActionTypes(page, search) {
       return this.service.fetchActionTypes(page, search)

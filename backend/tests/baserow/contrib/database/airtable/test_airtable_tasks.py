@@ -19,12 +19,12 @@ from baserow.core.utils import ChildProgressBuilder
 @responses.activate
 @patch(
     "baserow.contrib.database.airtable.handler"
-    ".AirtableHandler.import_from_airtable_to_group"
+    ".AirtableHandler.import_from_airtable_to_workspace"
 )
 @patch("baserow.core.signals.application_created.send")
 @pytest.mark.timeout(10)
 def test_run_import_from_airtable(
-    send_mock, mock_import_from_airtable_to_group, data_fixture
+    send_mock, mock_import_from_airtable_to_workspace, data_fixture
 ):
     # Somehow needed to activate the second connection.
     connections["default-copy"]
@@ -40,7 +40,7 @@ def test_run_import_from_airtable(
 
         return created_database
 
-    mock_import_from_airtable_to_group.side_effect = update_progress_slow
+    mock_import_from_airtable_to_workspace.side_effect = update_progress_slow
 
     job = data_fixture.create_airtable_import_job()
 
@@ -49,8 +49,8 @@ def test_run_import_from_airtable(
 
     run_async_job(job.id)
 
-    mock_import_from_airtable_to_group.assert_called_once()
-    args = mock_import_from_airtable_to_group.call_args
+    mock_import_from_airtable_to_workspace.assert_called_once()
+    args = mock_import_from_airtable_to_workspace.call_args
     assert args[0][0].id == job.group.id
     assert args[0][1] == job.airtable_share_id
     assert isinstance(args[1]["progress_builder"], ChildProgressBuilder)
@@ -80,13 +80,13 @@ def test_run_import_from_airtable(
 @responses.activate
 @patch(
     "baserow.contrib.database.airtable.handler.AirtableHandler"
-    ".import_from_airtable_to_group"
+    ".import_from_airtable_to_workspace"
 )
-def test_run_import_shared_view(mock_import_from_airtable_to_group, data_fixture):
+def test_run_import_shared_view(mock_import_from_airtable_to_workspace, data_fixture):
     def update_progress_slow(*args, **kwargs):
         raise AirtableShareIsNotABase("The `shared_id` is not a base.")
 
-    mock_import_from_airtable_to_group.side_effect = update_progress_slow
+    mock_import_from_airtable_to_workspace.side_effect = update_progress_slow
 
     job = data_fixture.create_airtable_import_job()
 

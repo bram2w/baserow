@@ -30,16 +30,16 @@ from baserow.contrib.database.table.operations import (
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Application
 from baserow.core.operations import (
-    CreateGroupOperationType,
+    CreateWorkspaceOperationType,
     DeleteApplicationOperationType,
-    DeleteGroupOperationType,
-    ListApplicationsGroupOperationType,
-    ListGroupsOperationType,
+    DeleteWorkspaceOperationType,
+    ListApplicationsWorkspaceOperationType,
+    ListWorkspacesOperationType,
     ReadApplicationOperationType,
-    ReadGroupOperationType,
+    ReadWorkspaceOperationType,
     UpdateApplicationOperationType,
-    UpdateGroupOperationType,
     UpdateSettingsOperationType,
+    UpdateWorkspaceOperationType,
 )
 from baserow.core.registries import operation_type_registry
 from baserow.core.types import PermissionCheck
@@ -65,11 +65,11 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
     no_access = data_fixture.create_user(email="no_access@test.net")
     another_admin = data_fixture.create_user(email="another_admin@test.net")
 
-    group_1 = data_fixture.create_group(
+    workspace_1 = data_fixture.create_workspace(
         user=admin,
         members=[builder, viewer, editor, viewer_plus, builder_less, no_access],
     )
-    group_2 = data_fixture.create_group(
+    workspace_2 = data_fixture.create_workspace(
         user=another_admin,
         custom_permissions=[
             (admin, "NO_ACCESS"),
@@ -82,9 +82,15 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
         ],
     )
 
-    database_1 = data_fixture.create_database_application(group=group_1, order=1)
-    database_2 = data_fixture.create_database_application(group=group_2, order=2)
-    database_3 = data_fixture.create_database_application(group=group_2, order=3)
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    database_2 = data_fixture.create_database_application(
+        workspace=workspace_2, order=2
+    )
+    database_3 = data_fixture.create_database_application(
+        workspace=workspace_2, order=3
+    )
 
     table_1_1, _, _ = data_fixture.build_table(
         columns=[("number", "number"), ("text", "text")],
@@ -117,23 +123,23 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
     role_editor = Role.objects.get(uid="EDITOR")
     role_no_access = Role.objects.get(uid="NO_ACCESS")
 
-    # Group level assignments
-    RoleAssignmentHandler().assign_role(builder, group_1, role=role_builder)
-    RoleAssignmentHandler().assign_role(viewer, group_1, role=role_viewer)
-    RoleAssignmentHandler().assign_role(editor, group_1, role=role_editor)
-    RoleAssignmentHandler().assign_role(viewer_plus, group_1, role=role_viewer)
-    RoleAssignmentHandler().assign_role(builder_less, group_1, role=role_builder)
-    RoleAssignmentHandler().assign_role(no_access, group_1, role=role_no_access)
+    # Workspace level assignments
+    RoleAssignmentHandler().assign_role(builder, workspace_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(viewer, workspace_1, role=role_viewer)
+    RoleAssignmentHandler().assign_role(editor, workspace_1, role=role_editor)
+    RoleAssignmentHandler().assign_role(viewer_plus, workspace_1, role=role_viewer)
+    RoleAssignmentHandler().assign_role(builder_less, workspace_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(no_access, workspace_1, role=role_no_access)
 
     # Table level assignments
     RoleAssignmentHandler().assign_role(
-        builder, group_2, role=role_builder, scope=table_2_1
+        builder, workspace_2, role=role_builder, scope=table_2_1
     )
     RoleAssignmentHandler().assign_role(
-        viewer_plus, group_1, role=role_builder, scope=table_1_1
+        viewer_plus, workspace_1, role=role_builder, scope=table_1_1
     )
     RoleAssignmentHandler().assign_role(
-        builder_less, group_1, role=role_viewer, scope=table_1_1
+        builder_less, workspace_1, role=role_viewer, scope=table_1_1
     )
 
     return (
@@ -144,8 +150,8 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -170,8 +176,8 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -186,16 +192,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     def check_perms(user, test_list):
         for (permission, context, result) in test_list:
             if isinstance(context, Table):
-                group = context.database.group
+                workspace = context.database.workspace
             elif isinstance(context, Database):
-                group = context.group
+                workspace = context.workspace
             else:
-                group = context
+                workspace = context
 
             if result:
                 try:
                     assert perm_manager.check_permissions(
-                        user, permission.type, group=group, context=context
+                        user, permission.type, workspace=workspace, context=context
                     ), f"User {user} should have permission {permission.type} on context {context}"
                 except PermissionException:
                     print(
@@ -212,21 +218,21 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
             else:
                 with pytest.raises(PermissionException):
                     perm_manager.check_permissions(
-                        user, permission.type, group=group, context=context
+                        user, permission.type, workspace=workspace, context=context
                     )
                     print(
                         f"User {user} shouldn't have permission {permission.type} on context {context}"
                     )
 
     no_access_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, False),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, False),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
         # database1
-        (ReadApplicationOperationType, group_1, False),
+        (ReadApplicationOperationType, workspace_1, False),
         (ReadDatabaseTableOperationType, table_1_1, False),
         (UpdateDatabaseTableOperationType, table_1_1, False),
         (DeleteDatabaseTableOperationType, table_1_1, False),
@@ -256,16 +262,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("ADMIN")
 
     admin_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, True),
-        (DeleteGroupOperationType, group_1, True),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, True),
+        (DeleteWorkspaceOperationType, workspace_1, True),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -281,7 +287,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, group_2, False),
+        (ReadApplicationOperationType, workspace_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -319,18 +325,18 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("BUILDER")
 
     builder_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        (ListApplicationsGroupOperationType, group_1, True),
-        # Group 2
-        (ReadGroupOperationType, group_2, True),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
-        (ListApplicationsGroupOperationType, group_2, True),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        (ListApplicationsWorkspaceOperationType, workspace_1, True),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, True),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
+        (ListApplicationsWorkspaceOperationType, workspace_2, True),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -346,7 +352,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, group_2, True),
+        (ReadApplicationOperationType, workspace_2, True),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, True),
         # Table_2_1
@@ -384,16 +390,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("EDITOR")
 
     editor_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -409,7 +415,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, group_2, False),
+        (ReadApplicationOperationType, workspace_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -447,16 +453,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("VIEWER")
 
     viewer_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -472,7 +478,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, False),
         # Database_2
-        (ReadApplicationOperationType, group_2, False),
+        (ReadApplicationOperationType, workspace_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -510,16 +516,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("viewer+")
 
     viewer_plus_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, False),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -535,7 +541,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, False),
         # Database_2
-        (ReadApplicationOperationType, group_2, False),
+        (ReadApplicationOperationType, workspace_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -573,16 +579,16 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     print("builder_less")
 
     builder_less_tests = [
-        # Group 1
-        (ReadGroupOperationType, group_1, True),
-        (UpdateGroupOperationType, group_1, False),
-        (DeleteGroupOperationType, group_1, False),
-        # Group 2
-        (ReadGroupOperationType, group_2, False),
-        (UpdateGroupOperationType, group_2, False),
-        (DeleteGroupOperationType, group_2, False),
+        # Workspace 1
+        (ReadWorkspaceOperationType, workspace_1, True),
+        (UpdateWorkspaceOperationType, workspace_1, False),
+        (DeleteWorkspaceOperationType, workspace_1, False),
+        # Workspace 2
+        (ReadWorkspaceOperationType, workspace_2, False),
+        (UpdateWorkspaceOperationType, workspace_2, False),
+        (DeleteWorkspaceOperationType, workspace_2, False),
         # Database_1
-        (ReadApplicationOperationType, group_1, True),
+        (ReadApplicationOperationType, workspace_1, True),
         (CreateTableDatabaseTableOperationType, database_1, True),
         (ListTablesDatabaseTableOperationType, database_1, True),
         # Table_1_1
@@ -598,7 +604,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
         (ListRowsDatabaseTableOperationType, table_1_2, True),
         (CreateRowDatabaseTableOperationType, table_1_2, True),
         # Database_2
-        (ReadApplicationOperationType, group_2, False),
+        (ReadApplicationOperationType, workspace_2, False),
         (CreateTableDatabaseTableOperationType, database_2, False),
         (ListTablesDatabaseTableOperationType, database_2, False),
         # Table_2_1
@@ -640,8 +646,10 @@ def test_check_permissions_with_teams(
     enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
 
-    group_1 = data_fixture.create_group(members=[user])
-    database_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(members=[user])
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
 
     table_1_1, _, _ = data_fixture.build_table(
         columns=[("number", "number"), ("text", "text")],
@@ -657,7 +665,7 @@ def test_check_permissions_with_teams(
         order=2,
     )
 
-    team1 = enterprise_data_fixture.create_team(group=group_1, members=[user])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace_1, members=[user])
 
     role_builder = Role.objects.get(uid="BUILDER")
     role_viewer = Role.objects.get(uid="VIEWER")
@@ -667,38 +675,38 @@ def test_check_permissions_with_teams(
     perm_manager = RolePermissionManagerType()
 
     # The low priority role gives no permissions
-    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=low_priority_role)
 
     with pytest.raises(PermissionException):
         perm_manager.check_permissions(
             user,
             ReadApplicationOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=database_1,
         )
 
     # The user role should take the precedence
-    RoleAssignmentHandler().assign_role(user, group_1, role=role_builder)
-    RoleAssignmentHandler().assign_role(team1, group_1, role=role_viewer)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(team1, workspace_1, role=role_viewer)
 
     assert (
         perm_manager.check_permissions(
             user,
             UpdateApplicationOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=database_1.application_ptr,
         )
         is True
     )
 
     # Now the user role is low_priority the team role should work
-    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=low_priority_role)
 
     assert (
         perm_manager.check_permissions(
             user,
             ReadApplicationOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=database_1.application_ptr,
         )
         is True
@@ -708,20 +716,20 @@ def test_check_permissions_with_teams(
         perm_manager.check_permissions(
             user,
             UpdateApplicationOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=database_1.application_ptr,
         )
 
     # Prevent from accessing the table at team level
     RoleAssignmentHandler().assign_role(
-        team1, group_1, role=role_no_access, scope=table_1_1
+        team1, workspace_1, role=role_no_access, scope=table_1_1
     )
 
     with pytest.raises(PermissionException):
         perm_manager.check_permissions(
             user,
             ReadDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_1,
         )
 
@@ -729,7 +737,7 @@ def test_check_permissions_with_teams(
         perm_manager.check_permissions(
             user,
             ReadDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_2,
         )
         is True
@@ -737,14 +745,14 @@ def test_check_permissions_with_teams(
 
     # And now user level table role should override the team role
     RoleAssignmentHandler().assign_role(
-        user, group_1, role=role_builder, scope=table_1_1
+        user, workspace_1, role=role_builder, scope=table_1_1
     )
 
     assert (
         perm_manager.check_permissions(
             user,
             UpdateDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_1,
         )
         is True
@@ -754,21 +762,21 @@ def test_check_permissions_with_teams(
         perm_manager.check_permissions(
             user,
             UpdateDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_2,
         )
 
     # User is now BUILDER at database level. Team most precise role should be used
-    RoleAssignmentHandler().assign_role(user, group_1, role=None, scope=table_1_1)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=None, scope=table_1_1)
     RoleAssignmentHandler().assign_role(
-        user, group_1, role=role_builder, scope=database_1
+        user, workspace_1, role=role_builder, scope=database_1
     )
 
     with pytest.raises(PermissionException):
         perm_manager.check_permissions(
             user,
             ReadDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_1,
         )
 
@@ -776,7 +784,7 @@ def test_check_permissions_with_teams(
         perm_manager.check_permissions(
             user,
             ReadDatabaseTableOperationType.type,
-            group=group_1,
+            workspace=workspace_1,
             context=table_1_2,
         )
         is True
@@ -789,17 +797,25 @@ def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
-    group = data_fixture.create_group(user=admin, members=[user_2, user_3, user_4])
-    database1 = data_fixture.create_database_application(user=admin, group=group)
+    workspace = data_fixture.create_workspace(
+        user=admin, members=[user_2, user_3, user_4]
+    )
+    database1 = data_fixture.create_database_application(
+        user=admin, workspace=workspace
+    )
     table11 = data_fixture.create_database_table(user=admin, database=database1)
     table12 = data_fixture.create_database_table(user=admin, database=database1)
-    database2 = data_fixture.create_database_application(user=admin, group=group)
+    database2 = data_fixture.create_database_application(
+        user=admin, workspace=workspace
+    )
     table21 = data_fixture.create_database_table(user=admin, database=database2)
     table22 = data_fixture.create_database_table(user=admin, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user_3])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user_4])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user_3, user_4])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace, members=[user_3])
+    team2 = enterprise_data_fixture.create_team(workspace=workspace, members=[user_4])
+    team3 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user_3, user_4]
+    )
 
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
@@ -807,33 +823,57 @@ def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
     no_role_role = Role.objects.get(uid="NO_ACCESS")
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
-    RoleAssignmentHandler().assign_role(user_2, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(user_3, group, role=no_role_role, scope=group)
     RoleAssignmentHandler().assign_role(
-        user_4, group, role=low_priority_role, scope=group
+        user_2, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        user_3, workspace, role=no_role_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=low_priority_role, scope=workspace
     )
 
     # User 2 assignments
     RoleAssignmentHandler().assign_role(
-        user_2, group, role=editor_role, scope=database1
+        user_2, workspace, role=editor_role, scope=database1
     )
-    RoleAssignmentHandler().assign_role(user_2, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user_2, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=no_role_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=viewer_role, scope=table22
+    )
 
     # User 4 assignments
     RoleAssignmentHandler().assign_role(
-        user_4, group, role=no_role_role, scope=database1
+        user_4, workspace, role=no_role_role, scope=database1
     )
-    RoleAssignmentHandler().assign_role(user_4, group, role=builder_role, scope=table11)
-    RoleAssignmentHandler().assign_role(user_4, group, role=no_role_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=builder_role, scope=table11
+    )
+    RoleAssignmentHandler().assign_role(
+        user_4, workspace, role=no_role_role, scope=table22
+    )
 
     # Team assignments
-    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=viewer_role, scope=database2
+    )
 
     permission_manager = RolePermissionManagerType()
 
@@ -856,7 +896,7 @@ def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
         PermissionCheck(
             actor=user_3,
             operation_name=DeleteApplicationOperationType.type,
-            context=group,
+            context=workspace,
         ),
         PermissionCheck(
             actor=user_3,
@@ -880,7 +920,7 @@ def test_check_multiple_permissions(data_fixture, enterprise_data_fixture):
         ),
     ]
 
-    result = permission_manager.check_multiple_permissions(checks, group=group)
+    result = permission_manager.check_multiple_permissions(checks, workspace=workspace)
 
     assert len(result) == len(checks)
     assert [v is True for v in result.values()] == [
@@ -908,8 +948,8 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -921,32 +961,34 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
 
     perm_manager = RolePermissionManagerType()
 
-    perms = perm_manager.get_permissions_object(admin, group=group_1)
+    perms = perm_manager.get_permissions_object(admin, workspace=workspace_1)
 
-    assert perms[UpdateGroupOperationType.type]["default"] is True
-    assert perms[UpdateGroupOperationType.type]["exceptions"] == []
+    assert perms[UpdateWorkspaceOperationType.type]["default"] is True
+    assert perms[UpdateWorkspaceOperationType.type]["exceptions"] == []
 
-    perms = perm_manager.get_permissions_object(builder, group=group_1)
+    perms = perm_manager.get_permissions_object(builder, workspace=workspace_1)
 
-    assert perms[UpdateGroupOperationType.type]["default"] is False
-    assert perms[UpdateGroupOperationType.type]["exceptions"] == []
+    assert perms[UpdateWorkspaceOperationType.type]["default"] is False
+    assert perms[UpdateWorkspaceOperationType.type]["exceptions"] == []
 
-    perms = perm_manager.get_permissions_object(builder, group=group_2)
+    perms = perm_manager.get_permissions_object(builder, workspace=workspace_2)
 
     assert perms[ReadApplicationOperationType.type]["default"] is False
     assert perms[ReadApplicationOperationType.type]["exceptions"] == [
         database_2.application_ptr_id
     ]
 
-    assert perms[ListApplicationsGroupOperationType.type]["default"] is False
-    assert perms[ListApplicationsGroupOperationType.type]["exceptions"] == [group_2.id]
+    assert perms[ListApplicationsWorkspaceOperationType.type]["default"] is False
+    assert perms[ListApplicationsWorkspaceOperationType.type]["exceptions"] == [
+        workspace_2.id
+    ]
 
     assert perms[ReadFieldOperationType.type]["default"] is False
     assert sorted(perms[ReadFieldOperationType.type]["exceptions"]) == sorted(
         list(table_2_1.field_set.all().values_list("id", flat=True))
     )
 
-    perms = perm_manager.get_permissions_object(viewer_plus, group=group_1)
+    perms = perm_manager.get_permissions_object(viewer_plus, workspace=workspace_1)
 
     assert perms[UpdateDatabaseRowOperationType.type]["default"] is False
     assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == [table_1_1.id]
@@ -956,7 +998,7 @@ def test_get_permissions_object(data_fixture, enterprise_data_fixture, synced_ro
         list(table_1_1.field_set.all().values_list("id", flat=True))
     )
 
-    perms = perm_manager.get_permissions_object(builder_less, group=group_1)
+    perms = perm_manager.get_permissions_object(builder_less, workspace=workspace_1)
 
     assert perms[UpdateDatabaseRowOperationType.type]["default"] is True
     assert perms[UpdateDatabaseRowOperationType.type]["exceptions"] == [table_1_1.id]
@@ -969,10 +1011,12 @@ def test_get_permissions_object_with_teams(
     enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
 
-    group_1 = data_fixture.create_group(
+    workspace_1 = data_fixture.create_workspace(
         members=[user],
     )
-    database_1 = data_fixture.create_database_application(group=group_1, order=1)
+    database_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
 
     table_1_1, _, _ = data_fixture.build_table(
         columns=[("number", "number"), ("text", "text")],
@@ -988,8 +1032,8 @@ def test_get_permissions_object_with_teams(
         order=2,
     )
 
-    team1 = enterprise_data_fixture.create_team(group=group_1, members=[user])
-    team2 = enterprise_data_fixture.create_team(group=group_1, members=[user])
+    team1 = enterprise_data_fixture.create_team(workspace=workspace_1, members=[user])
+    team2 = enterprise_data_fixture.create_team(workspace=workspace_1, members=[user])
 
     role_builder = Role.objects.get(uid="BUILDER")
     role_viewer = Role.objects.get(uid="VIEWER")
@@ -998,61 +1042,61 @@ def test_get_permissions_object_with_teams(
 
     perm_manager = RolePermissionManagerType()
 
-    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=low_priority_role)
 
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert all([not perm["default"] for perm in perms.values()])
     assert all([not perm["exceptions"] for perm in perms.values()])
 
     # The user role should take the precedence
-    RoleAssignmentHandler().assign_role(user, group_1, role=role_builder)
-    RoleAssignmentHandler().assign_role(team1, group_1, role=role_viewer)
-    RoleAssignmentHandler().assign_role(team2, group_1, role=role_viewer)
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=role_builder)
+    RoleAssignmentHandler().assign_role(team1, workspace_1, role=role_viewer)
+    RoleAssignmentHandler().assign_role(team2, workspace_1, role=role_viewer)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[UpdateApplicationOperationType.type]["default"] is True
     assert perms[UpdateApplicationOperationType.type]["exceptions"] == []
 
     # Now the user role is low_priority the team role should work
-    RoleAssignmentHandler().assign_role(user, group_1, role=low_priority_role)
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=low_priority_role)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[UpdateApplicationOperationType.type]["default"] is False
     assert perms[UpdateApplicationOperationType.type]["exceptions"] == []
 
     # Prevent from accessing the table at team level
     RoleAssignmentHandler().assign_role(
-        team1, group_1, role=role_no_access, scope=table_1_1
+        team1, workspace_1, role=role_no_access, scope=table_1_1
     )
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[ReadDatabaseTableOperationType.type]["default"] is True
     assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == [table_1_1.id]
 
     # And now user level table role should override the team role
     RoleAssignmentHandler().assign_role(
-        user, group_1, role=role_builder, scope=table_1_1
+        user, workspace_1, role=role_builder, scope=table_1_1
     )
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[ReadDatabaseTableOperationType.type]["default"] is True
     assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == []
 
     # User is now BUILDER at database level. Team most precise role should be used
-    RoleAssignmentHandler().assign_role(user, group_1, role=None, scope=table_1_1)
+    RoleAssignmentHandler().assign_role(user, workspace_1, role=None, scope=table_1_1)
     RoleAssignmentHandler().assign_role(
-        user, group_1, role=role_builder, scope=database_1.application_ptr
+        user, workspace_1, role=role_builder, scope=database_1.application_ptr
     )
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[ReadDatabaseTableOperationType.type]["default"] is True
     assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == [table_1_1.id]
 
     RoleAssignmentHandler().assign_role(
-        team2, group_1, role=role_builder, scope=table_1_1
+        team2, workspace_1, role=role_builder, scope=table_1_1
     )
-    perms = perm_manager.get_permissions_object(user, group=group_1)
+    perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
     assert perms[ReadDatabaseTableOperationType.type]["default"] is True
     assert perms[ReadDatabaseTableOperationType.type]["exceptions"] == []
@@ -1071,8 +1115,8 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -1084,15 +1128,15 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
 
     perm_manager = RolePermissionManagerType()
 
-    table_1_queryset = Table.objects.filter(database__group=group_1)
-    table_2_queryset = Table.objects.filter(database__group=group_2)
-    application_2_queryset = Application.objects.filter(group=group_2)
+    table_1_queryset = Table.objects.filter(database__workspace=workspace_1)
+    table_2_queryset = Table.objects.filter(database__workspace=workspace_2)
+    application_2_queryset = Application.objects.filter(workspace=workspace_2)
 
     admin_table_queryset = perm_manager.filter_queryset(
         admin,
         ListTablesDatabaseTableOperationType.type,
         table_1_queryset,
-        group=group_1,
+        workspace=workspace_1,
         context=database_1,
     )
 
@@ -1102,7 +1146,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         admin,
         ListTablesDatabaseTableOperationType.type,
         table_2_queryset,
-        group=group_2,
+        workspace=workspace_2,
         context=database_2,
     )
 
@@ -1112,7 +1156,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         no_access,
         ListTablesDatabaseTableOperationType.type,
         table_1_queryset,
-        group=group_1,
+        workspace=workspace_1,
         context=database_1,
     )
 
@@ -1122,7 +1166,7 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         builder,
         ListTablesDatabaseTableOperationType.type,
         table_2_queryset,
-        group=group_2,
+        workspace=workspace_2,
         context=database_2,
     )
 
@@ -1132,31 +1176,31 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     role_no_access = Role.objects.get(uid="NO_ACCESS")
 
     # In this scenario the user is:
-    # - no_access at group_2 level
+    # - no_access at workspace_2 level
     # - Builder at table_2_1 level
     # -> should be able to see application_2 because it's parent of table_2_1
     builder_application_queryset = perm_manager.filter_queryset(
         builder,
-        ListApplicationsGroupOperationType.type,
+        ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
-        group=group_2,
-        context=group_2,
+        workspace=workspace_2,
+        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [database_2.application_ptr]
 
     # In this scenario the user is:
-    # - Viewer at group_2 level
+    # - Viewer at workspace_2 level
     # - builder at at table_2_1 level
     # -> should be able to see application_2 and application_3
-    RoleAssignmentHandler().assign_role(builder, group_2, role=viewer_role)
+    RoleAssignmentHandler().assign_role(builder, workspace_2, role=viewer_role)
 
     builder_application_queryset = perm_manager.filter_queryset(
         builder,
-        ListApplicationsGroupOperationType.type,
+        ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
-        group=group_2,
-        context=group_2,
+        workspace=workspace_2,
+        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [
@@ -1165,20 +1209,20 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     ]
 
     # In this scenario the user is:
-    # - Viewer at group_2 level
+    # - Viewer at workspace_2 level
     # - no_access at application_2 level
     # - builder at at table_2_1 level
     # -> should still be able to see application_2 and application_3
     RoleAssignmentHandler().assign_role(
-        builder, group_2, role=role_no_access, scope=database_2.application_ptr
+        builder, workspace_2, role=role_no_access, scope=database_2.application_ptr
     )
 
     builder_application_queryset = perm_manager.filter_queryset(
         builder,
-        ListApplicationsGroupOperationType.type,
+        ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
-        group=group_2,
-        context=group_2,
+        workspace=workspace_2,
+        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [
@@ -1187,17 +1231,17 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
     ]
 
     # In this scenario the user is:
-    # - Viewer at group_2 level
+    # - Viewer at workspace_2 level
     # - no_access at application_2 level
     # -> should be able to see application_3 only
-    RoleAssignmentHandler().assign_role(builder, group_2, scope=table_2_1)
+    RoleAssignmentHandler().assign_role(builder, workspace_2, scope=table_2_1)
 
     builder_application_queryset = perm_manager.filter_queryset(
         builder,
-        ListApplicationsGroupOperationType.type,
+        ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
-        group=group_2,
-        context=group_2,
+        workspace=workspace_2,
+        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [
@@ -1208,8 +1252,8 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_all_operations_are_in_at_least_one_default_role(data_fixture):
     exceptions = [
-        CreateGroupOperationType.type,
-        ListGroupsOperationType.type,
+        CreateWorkspaceOperationType.type,
+        ListWorkspacesOperationType.type,
         UpdateSettingsOperationType.type,
     ]
 
@@ -1223,6 +1267,7 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
     for op in all_ops:
         if op.type not in all_ops_in_roles and op.type not in exceptions:
             missing_ops.append(op)
+
     assert missing_ops == [], "Non Assigned Ops:\n" + str(
         "\n".join([o.__class__.__name__ + "," for o in missing_ops])
     )
@@ -1237,17 +1282,23 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
 def test_check_permission_performance(data_fixture, enterprise_data_fixture, profiler):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database1 = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, workspace=workspace)
     table11 = data_fixture.create_database_table(user=user, database=database1)
     table12 = data_fixture.create_database_table(user=user, database=database1)
-    database2 = data_fixture.create_database_application(user=user, group=group)
+    database2 = data_fixture.create_database_application(user=user, workspace=workspace)
     table21 = data_fixture.create_database_table(user=user, database=database2)
     table22 = data_fixture.create_database_table(user=user, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team1 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team2 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team3 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
 
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
@@ -1256,25 +1307,46 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
     RoleAssignmentHandler().assign_role(
-        user2, group, role=low_priority_role, scope=group
+        user2, workspace, role=low_priority_role, scope=workspace
     )
-    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database1)
-    RoleAssignmentHandler().assign_role(user2, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=editor_role, scope=database1
+    )
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=no_role_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=viewer_role, scope=table22
+    )
 
-    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=viewer_role, scope=database2
+    )
 
     permission_manager = RolePermissionManagerType()
 
     print("----------- first call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
         permission_manager.check_permissions(
-            user2, ReadDatabaseTableOperationType.type, group=group, context=table11
+            user2,
+            ReadDatabaseTableOperationType.type,
+            workspace=workspace,
+            context=table11,
         )
 
     for q in captured.captured_queries:
@@ -1284,7 +1356,10 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     print("----------- second call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
         permission_manager.check_permissions(
-            user2, ReadDatabaseTableOperationType.type, group=group, context=table11
+            user2,
+            ReadDatabaseTableOperationType.type,
+            workspace=workspace,
+            context=table11,
         )
 
     for q in captured.captured_queries:
@@ -1295,7 +1370,10 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
     with profiler(html_report_name="enterprise_check_permissions"):
         for i in range(1000):
             permission_manager.check_permissions(
-                user2, ReadDatabaseTableOperationType.type, group=group, context=table11
+                user2,
+                ReadDatabaseTableOperationType.type,
+                workspace=workspace,
+                context=table11,
             )
 
 
@@ -1310,17 +1388,23 @@ def test_get_permission_object_performance(
 ):
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user, members=[user2])
-    database1 = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user, members=[user2])
+    database1 = data_fixture.create_database_application(user=user, workspace=workspace)
     table11 = data_fixture.create_database_table(user=user, database=database1)
     table12 = data_fixture.create_database_table(user=user, database=database1)
-    database2 = data_fixture.create_database_application(user=user, group=group)
+    database2 = data_fixture.create_database_application(user=user, workspace=workspace)
     table21 = data_fixture.create_database_table(user=user, database=database2)
     table22 = data_fixture.create_database_table(user=user, database=database2)
 
-    team1 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team2 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
-    team3 = enterprise_data_fixture.create_team(group=group, members=[user, user2])
+    team1 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team2 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
+    team3 = enterprise_data_fixture.create_team(
+        workspace=workspace, members=[user, user2]
+    )
 
     editor_role = Role.objects.get(uid="EDITOR")
     builder_role = Role.objects.get(uid="BUILDER")
@@ -1329,24 +1413,42 @@ def test_get_permission_object_performance(
     low_priority_role = Role.objects.get(uid="NO_ROLE_LOW_PRIORITY")
 
     RoleAssignmentHandler().assign_role(
-        user2, group, role=low_priority_role, scope=group
+        user2, workspace, role=low_priority_role, scope=workspace
     )
-    RoleAssignmentHandler().assign_role(user2, group, role=editor_role, scope=database1)
-    RoleAssignmentHandler().assign_role(user2, group, role=no_role_role, scope=table12)
-    RoleAssignmentHandler().assign_role(user2, group, role=viewer_role, scope=table22)
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=editor_role, scope=database1
+    )
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=no_role_role, scope=table12
+    )
+    RoleAssignmentHandler().assign_role(
+        user2, workspace, role=viewer_role, scope=table22
+    )
 
-    RoleAssignmentHandler().assign_role(team1, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team1, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team2, group, role=editor_role, scope=group)
-    RoleAssignmentHandler().assign_role(team2, group, role=viewer_role, scope=database2)
-    RoleAssignmentHandler().assign_role(team3, group, role=builder_role, scope=group)
-    RoleAssignmentHandler().assign_role(team3, group, role=viewer_role, scope=database2)
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team1, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=editor_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team2, workspace, role=viewer_role, scope=database2
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=builder_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        team3, workspace, role=viewer_role, scope=database2
+    )
 
     permission_manager = RolePermissionManagerType()
 
     print("----------- first call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
-        permission_manager.get_permissions_object(user2, group=group)
+        permission_manager.get_permissions_object(user2, workspace=workspace)
 
     for q in captured.captured_queries:
         print(q)
@@ -1354,7 +1456,7 @@ def test_get_permission_object_performance(
 
     print("----------- second call queries ---------------")
     with CaptureQueriesContext(connection) as captured:
-        permission_manager.get_permissions_object(user2, group=group)
+        permission_manager.get_permissions_object(user2, workspace=workspace)
 
     for q in captured.captured_queries:
         print(q)
@@ -1363,7 +1465,7 @@ def test_get_permission_object_performance(
     print("----------- get_permission_object perfs ---------------")
     with profiler(html_report_name="enterprise_get_permissions_object"):
         for i in range(1000):
-            permission_manager.get_permissions_object(user2, group=group)
+            permission_manager.get_permissions_object(user2, workspace=workspace)
 
 
 @pytest.mark.disabled_in_ci
@@ -1387,11 +1489,13 @@ def test_check_multiple_permissions_perf(
         except IntegrityError:
             pass
 
-    group = data_fixture.create_group(user=admin, members=users)
+    workspace = data_fixture.create_workspace(user=admin, members=users)
 
     data = {}
     for _ in tqdm(range(10), desc="Database"):
-        database = data_fixture.create_database_application(user=admin, group=group)
+        database = data_fixture.create_database_application(
+            user=admin, workspace=workspace
+        )
         data[database] = []
         for _ in range(10):
             data[database].append(
@@ -1402,7 +1506,7 @@ def test_check_multiple_permissions_perf(
     for max in range(10):
         teams.append(
             enterprise_data_fixture.create_team(
-                group=group,
+                workspace=workspace,
                 members=users,  # members=users[max * 10 : (max + 1) * 10 - 5]
             )
         )
@@ -1429,29 +1533,34 @@ def test_check_multiple_permissions_perf(
     role_generator = role_gen()
 
     for user in tqdm(users, "User roles"):
-        group_role = next(role_generator)
-        if group_role is None:
-            group_role = low_priority_role
+        workspace_role = next(role_generator)
+        if workspace_role is None:
+            workspace_role = low_priority_role
 
-        role_assignment_handler.assign_role(user, group, role=group_role, scope=group)
+        role_assignment_handler.assign_role(
+            user, workspace, role=workspace_role, scope=workspace
+        )
 
         for database, tables in data.items():
             role_assignment_handler.assign_role(
-                user, group, role=next(role_generator), scope=database.application_ptr
+                user,
+                workspace,
+                role=next(role_generator),
+                scope=database.application_ptr,
             )
             for table in tables:
                 role_assignment_handler.assign_role(
-                    user, group, role=next(role_generator), scope=table
+                    user, workspace, role=next(role_generator), scope=table
                 )
 
     for team in tqdm(teams, "Team roles"):
         for database, tables in data.items():
             role_assignment_handler.assign_role(
-                team, group, role=next(role_generator), scope=database
+                team, workspace, role=next(role_generator), scope=database
             )
             for table in tables:
                 role_assignment_handler.assign_role(
-                    team, group, role=next(role_generator), scope=table
+                    team, workspace, role=next(role_generator), scope=table
                 )
 
     reset_queries()
@@ -1484,7 +1593,7 @@ def test_check_multiple_permissions_perf(
 
     with CaptureQueriesContext(connection) as captured:
         with profiler(html_report_name="enterprise_check_multiple_permissions"):
-            perm_manager.check_multiple_permissions(checks, group=group)
+            perm_manager.check_multiple_permissions(checks, workspace=workspace)
 
     for q in captured.captured_queries:
         print(q)

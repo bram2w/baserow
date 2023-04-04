@@ -1,7 +1,10 @@
 from django.db.models import Q
 
 from baserow.contrib.builder.models import Builder
-from baserow.core.object_scopes import ApplicationObjectScopeType, GroupObjectScopeType
+from baserow.core.object_scopes import (
+    ApplicationObjectScopeType,
+    WorkspaceObjectScopeType,
+)
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
@@ -18,11 +21,11 @@ class BuilderObjectScopeType(ObjectScopeType):
         return context.application_ptr
 
     def get_enhanced_queryset(self):
-        return self.get_base_queryset().prefetch_related("group")
+        return self.get_base_queryset().prefetch_related("workspace")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-        if scope_type.type == GroupObjectScopeType.type:
-            return Q(group__in=[s.id for s in scopes])
+        if scope_type.type == WorkspaceObjectScopeType.type:
+            return Q(workspace__in=[s.id for s in scopes])
         if scope_type.type == ApplicationObjectScopeType.type:
             return Q(id__in=[s.id for s in scopes])
         if scope_type.type == self.type:

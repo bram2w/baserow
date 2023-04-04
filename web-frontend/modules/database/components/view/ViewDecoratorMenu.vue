@@ -4,7 +4,7 @@
       $hasPermission(
         'database.table.view.list_decoration',
         view,
-        database.group.id
+        database.workspace.id
       )
     "
   >
@@ -34,7 +34,7 @@
         !$hasPermission(
           'database.table.view.create_decoration',
           view,
-          database.group.id
+          database.workspace.id
         )
       "
       @changed="$emit('changed')"
@@ -75,7 +75,7 @@ export default {
       return this.view.decorations.filter(({ type }) => {
         return !this.$registry
           .get('viewDecorator', type)
-          .isDeactivated(this.database.group.id)
+          .isDeactivated(this.database.workspace.id)
       }).length
     },
   },

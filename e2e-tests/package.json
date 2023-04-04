@@ -6,6 +6,7 @@
   "scripts": {
     "test": "playwright test --project=chrome",
     "test-fast-only": "playwright test --project=chrome --grep @fast",
+    "test-enterprise-only": "playwright test --project=chrome --grep @enterprise",
     "test-headed": "playwright test --project=chrome --headed",
     "test-all-browsers": "playwright test"
   },

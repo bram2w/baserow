@@ -29,7 +29,7 @@ msgstr "Identifiant"
 
 #: audit_log/job_types.py:145
 msgid "Group Name"
-msgstr "Nom du groupe"
+msgstr "Nom du projet"
 
 #: audit_log/job_types.py:146
 msgid "Group ID"

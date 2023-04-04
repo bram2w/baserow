@@ -27,7 +27,7 @@ from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.contrib.database.tokens.models import Token
 from baserow.contrib.database.tokens.operations import UpdateTokenOperationType
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .authentications import TokenAuthentication
@@ -44,7 +44,7 @@ class TokensView(APIView):
         description=(
             "Lists all the database tokens that belong to the authorized user. A token "
             "can be used to create, read, update and delete rows in the tables of the "
-            "token's group. It only works on the tables if the token has the correct "
+            "token's workspace. It only works on the tables if the token has the correct "
             "permissions. The **Database table rows** endpoints can be used for these "
             "operations."
         ),
@@ -65,7 +65,7 @@ class TokensView(APIView):
         tags=["Database tokens"],
         operation_id="create_database_token",
         description=(
-            "Creates a new database token for a given group and for the authorized user."
+            "Creates a new database token for a given workspace and for the authorized user."
         ),
         request=TokenCreateSerializer,
         responses={
@@ -76,14 +76,15 @@ class TokensView(APIView):
         },
     )
     @transaction.atomic
-    @map_exceptions({UserNotInGroup: ERROR_USER_NOT_IN_GROUP})
+    @map_exceptions({UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP})
     @validate_body(TokenCreateSerializer)
     def post(self, request, data):
         """Creates a new database token for the authorized user."""
 
-        data["group"] = CoreHandler().get_group(data.pop("group"))
+        workspace_id = data.pop("workspace", data.pop("group"))  # GroupDeprecation
+        data["workspace"] = CoreHandler().get_workspace(workspace_id)
         token = action_type_registry.get(CreateDbTokenActionType.type).do(
-            request.user, data["group"], data["name"]
+            request.user, data["workspace"], data["name"]
         )
         serializer = TokenSerializer(token)
         return Response(serializer.data)
@@ -105,7 +106,7 @@ class TokenView(APIView):
         operation_id="get_database_token",
         description=(
             "Returns the requested database token if it is owned by the authorized user and"
-            "if the user has access to the related group."
+            "if the user has access to the related workspace."
         ),
         responses={
             200: TokenSerializer,
@@ -116,7 +117,7 @@ class TokenView(APIView):
     @map_exceptions(
         {
             TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, token_id):
@@ -139,7 +140,7 @@ class TokenView(APIView):
         operation_id="update_database_token",
         description=(
             "Updates the existing database token if it is owned by the authorized user and if"
-            "the user has access to the related group."
+            "the user has access to the related workspace."
         ),
         request=TokenUpdateSerializer,
         responses={
@@ -159,7 +160,7 @@ class TokenView(APIView):
     @map_exceptions(
         {
             TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             DatabaseDoesNotBelongToGroup: ERROR_DATABASE_DOES_NOT_BELONG_TO_GROUP,
             TableDoesNotBelongToGroup: ERROR_TABLE_DOES_NOT_BELONG_TO_GROUP,
         }
@@ -177,7 +178,7 @@ class TokenView(APIView):
         CoreHandler().check_permissions(
             request.user,
             UpdateTokenOperationType.type,
-            group=token.group,
+            workspace=token.workspace,
             context=token,
         )
 
@@ -215,7 +216,7 @@ class TokenView(APIView):
         operation_id="delete_database_token",
         description=(
             "Deletes the existing database token if it is owned by the authorized user and if"
-            "the user has access to the related group."
+            "the user has access to the related workspace."
         ),
         responses={
             204: None,
@@ -227,7 +228,7 @@ class TokenView(APIView):
     @map_exceptions(
         {
             TokenDoesNotExist: ERROR_TOKEN_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request, token_id):

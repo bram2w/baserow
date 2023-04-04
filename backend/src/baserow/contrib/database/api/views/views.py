@@ -99,7 +99,7 @@ from baserow.contrib.database.views.registries import (
 )
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
 from .errors import (
@@ -213,7 +213,7 @@ class ViewsView(APIView):
         operation_id="list_database_table_views",
         description=(
             "Lists all views of the table related to the provided `table_id` if the "
-            "user has access to the related database's group. If the group is "
+            "user has access to the related database's workspace. If the workspace is "
             "related to a template, then this endpoint will be publicly accessible. A "
             "table can have multiple views. Each view can display the data in a "
             "different way. For example the `grid` view shows the in a spreadsheet "
@@ -232,7 +232,7 @@ class ViewsView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     @validate_query_parameters(ListQueryParamatersSerializer)
@@ -240,14 +240,14 @@ class ViewsView(APIView):
     def get(self, request, table_id, query_params, filters, sortings, decorations):
         """
         Responds with a list of serialized views that belong to the table if the user
-        has access to that group.
+        has access to that workspace.
         """
 
         table = TableHandler().get_table(table_id)
         CoreHandler().check_permissions(
             request.user,
             ListViewsOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
             allow_if_template=True,
         )
@@ -304,7 +304,7 @@ class ViewsView(APIView):
         description=(
             "Creates a new view for the table related to the provided `table_id` "
             "parameter if the authorized user has access to the related database's "
-            "group. Depending on the type, different properties can optionally be "
+            "workspace. Depending on the type, different properties can optionally be "
             "set."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
@@ -331,7 +331,7 @@ class ViewsView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewOwnershipTypeDoesNotExist: ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST,
         }
     )
@@ -389,7 +389,7 @@ class ViewView(APIView):
         operation_id="get_database_table_view",
         description=(
             "Returns the existing view if the authorized user has access to the "
-            "related database's group. Depending on the type different properties"
+            "related database's workspace. Depending on the type different properties"
             "could be returned."
         ),
         responses={
@@ -403,7 +403,7 @@ class ViewView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     @allowed_includes("filters", "sortings", "decorations")
@@ -449,8 +449,8 @@ class ViewView(APIView):
         operation_id="update_database_table_view",
         description=(
             "Updates the existing view if the authorized user has access to the "
-            "related database's group. The type cannot be changed. It depends on the "
-            "existing type which properties can be changed."
+            "related database's workspace. The type cannot be changed. It depends "
+            "on the existing type which properties can be changed."
         ),
         request=CustomFieldRegistryMappingSerializer(
             view_type_registry, UpdateViewSerializer
@@ -473,7 +473,7 @@ class ViewView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     @allowed_includes("filters", "sortings", "decorations")
@@ -485,7 +485,7 @@ class ViewView(APIView):
         sortings: bool,
         decorations: bool,
     ) -> Response:
-        """Updates the view if the user belongs to the group."""
+        """Updates the view if the user belongs to the workspace."""
 
         view = ViewHandler().get_view_for_update(request.user, view_id).specific
         view_type = view_type_registry.get_by_model(view)
@@ -526,7 +526,7 @@ class ViewView(APIView):
         operation_id="delete_database_table_view",
         description=(
             "Deletes the existing view if the authorized user has access to the "
-            "related database's group. Note that all the related settings of the "
+            "related database's workspace. Note that all the related settings of the "
             "view are going to be deleted also. The data stays intact after deleting "
             "the view because this is related to the table and not the view."
         ),
@@ -540,11 +540,11 @@ class ViewView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request: Request, view_id: int):
-        """Deletes an existing view if the user belongs to the group."""
+        """Deletes an existing view if the user belongs to the workspace."""
 
         view = ViewHandler().get_view(view_id)
 
@@ -573,10 +573,11 @@ class DuplicateViewView(APIView):
             "Duplicates an existing view if the user has access to it. "
             "When a view is duplicated everything is copied except:"
             "\n- The name is appended with the copy number. "
-            "Ex: `View Name` -> `View Name (2)` and `View (2)` -> `View (3)`"
+            "Ex: `ViewName`->`ViewName(2)` and `View(2)`->`View(3)`"
             "\n- If the original view is publicly shared, the new view will not be"
             " shared anymore"
         ),
+        request=None,
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
                 view_type_registry, ViewSerializer
@@ -589,7 +590,7 @@ class DuplicateViewView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def post(self, request, view_id):
@@ -634,7 +635,7 @@ class OrderViewsView(APIView):
         description=(
             "Changes the order of the provided view ids to the matching position that "
             "the id has in the list. If the authorized user does not belong to the "
-            "group it will be ignored. The order of the not provided views will be "
+            "workspace it will be ignored. The order of the not provided views will be "
             "set to `0`."
         ),
         request=OrderViewsSerializer,
@@ -651,7 +652,7 @@ class OrderViewsView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewNotInTable: ERROR_VIEW_NOT_IN_TABLE,
         }
     )
@@ -682,7 +683,7 @@ class ViewFiltersView(APIView):
         operation_id="list_database_table_view_filters",
         description=(
             "Lists all filters of the view related to the provided `view_id` if the "
-            "user has access to the related database's group. A view can have "
+            "user has access to the related database's workspace. A view can have "
             "multiple filters. When all the rows are requested for the view only those "
             "that apply to the filters are returned."
         ),
@@ -695,13 +696,13 @@ class ViewFiltersView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, view_id):
         """
         Responds with a list of serialized filters that belong to the view if the user
-        has access to that group.
+        has access to that workspace.
         """
 
         filters = ViewHandler().list_filters(request.user, view_id)
@@ -725,7 +726,7 @@ class ViewFiltersView(APIView):
         description=(
             "Creates a new filter for the view related to the provided `view_id` "
             "parameter if the authorized user has access to the related database's "
-            "group. When the rows of a view are requested, for example via the "
+            "workspace. When the rows of a view are requested, for example via the "
             "`list_database_table_grid_view_rows` endpoint, then only the rows that "
             "apply to all the filters are going to be returned. A filter compares the "
             "value of a field to the value of a filter. It depends on the type how "
@@ -751,7 +752,7 @@ class ViewFiltersView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
             ViewFilterNotSupported: ERROR_VIEW_FILTER_NOT_SUPPORTED,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
@@ -791,7 +792,7 @@ class ViewFilterView(APIView):
         operation_id="get_database_table_view_filter",
         description=(
             "Returns the existing view filter if the authorized user has access to the"
-            " related database's group."
+            " related database's workspace."
         ),
         responses={
             200: ViewFilterSerializer(),
@@ -802,7 +803,7 @@ class ViewFilterView(APIView):
     @map_exceptions(
         {
             ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, view_filter_id):
@@ -827,7 +828,7 @@ class ViewFilterView(APIView):
         operation_id="update_database_table_view_filter",
         description=(
             "Updates the existing filter if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         request=UpdateViewFilterSerializer(),
         responses={
@@ -848,13 +849,13 @@ class ViewFilterView(APIView):
     @map_exceptions(
         {
             ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
             ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
         }
     )
     def patch(self, request, data, view_filter_id):
-        """Updates the view filter if the user belongs to the group."""
+        """Updates the view filter if the user belongs to the workspace."""
 
         handler = ViewHandler()
         view_filter = handler.get_filter(
@@ -897,7 +898,7 @@ class ViewFilterView(APIView):
         operation_id="delete_database_table_view_filter",
         description=(
             "Deletes the existing filter if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         responses={
             204: None,
@@ -909,11 +910,11 @@ class ViewFilterView(APIView):
     @map_exceptions(
         {
             ViewFilterDoesNotExist: ERROR_VIEW_FILTER_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request, view_filter_id):
-        """Deletes an existing filter if the user belongs to the group."""
+        """Deletes an existing filter if the user belongs to the workspace."""
 
         view_filter = ViewHandler().get_filter(request.user, view_filter_id)
 
@@ -943,7 +944,7 @@ class ViewDecorationsView(APIView):
         operation_id="list_database_table_view_decorations",
         description=(
             "Lists all decorations of the view related to the provided `view_id` if "
-            "the user has access to the related database's group. A view can have "
+            "the user has access to the related database's workspace. A view can have "
             "multiple decorations. View decorators can be used to decorate rows. This "
             "can, for example, be used to change the border or background color of "
             "a row if it matches certain conditions."
@@ -957,13 +958,13 @@ class ViewDecorationsView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, view_id):
         """
         Responds with a list of serialized decorations that belong to the view
-        if the user has access to that group.
+        if the user has access to that workspace.
         """
 
         decorations = ViewHandler().list_decorations(request.user, view_id)
@@ -987,7 +988,7 @@ class ViewDecorationsView(APIView):
         description=(
             "Creates a new decoration for the view related to the provided `view_id` "
             "parameter if the authorized user has access to the related database's "
-            "group."
+            "workspace."
         ),
         request=get_decoration_mapping_serializer(CreateViewDecorationSerializer),
         responses={
@@ -1011,7 +1012,7 @@ class ViewDecorationsView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDecorationNotSupported: ERROR_VIEW_DECORATION_NOT_SUPPORTED,
             DecoratorValueProviderTypeNotCompatible: ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
         }
@@ -1054,7 +1055,7 @@ class ViewDecorationView(APIView):
         operation_id="get_database_table_view_decoration",
         description=(
             "Returns the existing view decoration if the current user has access to "
-            "the related database's group."
+            "the related database's workspace."
         ),
         responses={
             200: get_decoration_mapping_serializer(ViewDecorationSerializer),
@@ -1064,7 +1065,7 @@ class ViewDecorationView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
         }
     )
@@ -1090,7 +1091,7 @@ class ViewDecorationView(APIView):
         operation_id="update_database_table_view_decoration",
         description=(
             "Updates the existing decoration if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         request=get_decoration_mapping_serializer(UpdateViewDecorationSerializer),
         responses={
@@ -1107,12 +1108,12 @@ class ViewDecorationView(APIView):
     @map_exceptions(
         {
             ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             DecoratorValueProviderTypeNotCompatible: ERROR_VIEW_DECORATION_VALUE_PROVIDER_NOT_COMPATIBLE,
         }
     )
     def patch(self, request, view_decoration_id):
-        """Updates the view decoration if the user belongs to the group."""
+        """Updates the view decoration if the user belongs to the workspace."""
 
         handler = ViewHandler()
         view_decoration = handler.get_decoration(
@@ -1174,7 +1175,7 @@ class ViewDecorationView(APIView):
         operation_id="delete_database_table_view_decoration",
         description=(
             "Deletes the existing decoration if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         responses={
             204: None,
@@ -1186,19 +1187,19 @@ class ViewDecorationView(APIView):
     @map_exceptions(
         {
             ViewDecorationDoesNotExist: ERROR_VIEW_DECORATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request, view_decoration_id):
-        """Deletes an existing decoration if the user belongs to the group."""
+        """Deletes an existing decoration if the user belongs to the workspace."""
 
         view_decoration = ViewHandler().get_decoration(request.user, view_decoration_id)
 
-        group = view_decoration.view.table.database.group
+        workspace = view_decoration.view.table.database.workspace
         CoreHandler().check_permissions(
             request.user,
             DeleteViewDecorationOperationType.type,
-            group=group,
+            workspace=workspace,
             context=view_decoration,
         )
 
@@ -1226,7 +1227,7 @@ class ViewSortingsView(APIView):
         operation_id="list_database_table_view_sortings",
         description=(
             "Lists all sortings of the view related to the provided `view_id` if the "
-            "user has access to the related database's group. A view can have "
+            "user has access to the related database's workspace. A view can have "
             "multiple sortings. When all the rows are requested they will be in the "
             "desired order."
         ),
@@ -1239,13 +1240,13 @@ class ViewSortingsView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, view_id):
         """
         Responds with a list of serialized sortings that belong to the view if the user
-        has access to that group.
+        has access to that workspace.
         """
 
         sortings = ViewHandler().list_sorts(request.user, view_id)
@@ -1269,7 +1270,7 @@ class ViewSortingsView(APIView):
         description=(
             "Creates a new sort for the view related to the provided `view_id` "
             "parameter if the authorized user has access to the related database's "
-            "group. When the rows of a view are requested, for example via the "
+            "workspace. When the rows of a view are requested, for example via the "
             "`list_database_table_grid_view_rows` endpoint, they will be returned in "
             "the respected order defined by all the sortings."
         ),
@@ -1294,7 +1295,7 @@ class ViewSortingsView(APIView):
     @map_exceptions(
         {
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
             ViewSortNotSupported: ERROR_VIEW_SORT_NOT_SUPPORTED,
             ViewSortFieldAlreadyExist: ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
@@ -1331,7 +1332,7 @@ class ViewSortView(APIView):
         operation_id="get_database_table_view_sort",
         description=(
             "Returns the existing view sort if the authorized user has access to the"
-            " related database's group."
+            " related database's workspace."
         ),
         responses={
             200: ViewSortSerializer(),
@@ -1342,7 +1343,7 @@ class ViewSortView(APIView):
     @map_exceptions(
         {
             ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, view_sort_id):
@@ -1367,7 +1368,7 @@ class ViewSortView(APIView):
         operation_id="update_database_table_view_sort",
         description=(
             "Updates the existing sort if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         request=UpdateViewSortSerializer(),
         responses={
@@ -1387,14 +1388,14 @@ class ViewSortView(APIView):
     @map_exceptions(
         {
             ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
             ViewSortFieldAlreadyExist: ERROR_VIEW_SORT_FIELD_ALREADY_EXISTS,
             ViewSortFieldNotSupported: ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED,
         }
     )
     def patch(self, request, data, view_sort_id):
-        """Updates the view sort if the user belongs to the group."""
+        """Updates the view sort if the user belongs to the workspace."""
 
         handler = ViewHandler()
         view_sort = handler.get_sort(
@@ -1433,7 +1434,7 @@ class ViewSortView(APIView):
         operation_id="delete_database_table_view_sort",
         description=(
             "Deletes the existing sort if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         responses={
             204: None,
@@ -1445,11 +1446,11 @@ class ViewSortView(APIView):
     @map_exceptions(
         {
             ViewSortDoesNotExist: ERROR_VIEW_SORT_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def delete(self, request, view_sort_id):
-        """Deletes an existing sort if the user belongs to the group."""
+        """Deletes an existing sort if the user belongs to the workspace."""
 
         view_sort = ViewHandler().get_sort(request.user, view_sort_id)
         action_type_registry.get_by_type(DeleteViewSortActionType).do(
@@ -1483,7 +1484,7 @@ class ViewFieldOptionsView(APIView):
         tags=["Database table views"],
         operation_id="get_database_table_view_field_options",
         description="Responds with the fields options of the provided view if the "
-        "authenticated user has access to the related group.",
+        "authenticated user has access to the related workspace.",
         responses={
             200: view_field_options_mapping_serializer,
             400: get_error_schema(
@@ -1497,7 +1498,7 @@ class ViewFieldOptionsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
         }
@@ -1506,6 +1507,7 @@ class ViewFieldOptionsView(APIView):
         """Returns the field options of the view."""
 
         view = ViewHandler().get_view(view_id).specific
+
         view_type = ViewHandler().get_field_options_as_user(request.user, view)
         try:
             serializer_class = view_type.get_field_options_serializer_class(
@@ -1548,7 +1550,7 @@ class ViewFieldOptionsView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             UnrelatedFieldError: ERROR_UNRELATED_FIELD,
             ViewDoesNotSupportFieldOptions: ERROR_VIEW_DOES_NOT_SUPPORT_FIELD_OPTIONS,
@@ -1613,7 +1615,7 @@ class RotateViewSlugView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             CannotShareViewTypeError: ERROR_CANNOT_SHARE_VIEW_TYPE,
         }
@@ -1655,11 +1657,11 @@ class PublicViewLinkRowFieldLookupView(APIView):
         operation_id="database_table_public_view_link_row_field_lookup",
         description=(
             "If the view is publicly shared or if an authenticated user has access to "
-            "the related group, then this endpoint can be used to do a value lookup of "
-            "the link row fields that are included in the view. Normally it is not "
-            "possible for a not authenticated visitor to fetch the rows of a table. "
-            "This endpoint makes it possible to fetch the id and primary field value "
-            "of the related table of a link row included in the view."
+            "the related workspace, then this endpoint can be used to do a value "
+            "lookup of the link row fields that are included in the view. Normally it "
+            "is not possible for a not authenticated visitor to fetch the rows of a "
+            "table. This endpoint makes it possible to fetch the id and primary field "
+            "value of the related table of a link row included in the view."
         ),
         responses={
             200: get_example_pagination_serializer_class(LinkRowValueSerializer),
@@ -1815,7 +1817,7 @@ class PublicViewInfoView(APIView):
                 description="The slug of the view to get public information " "about.",
             )
         ],
-        tags=["Database table view"],
+        tags=["Database table views"],
         operation_id="get_public_view_info",
         description=(
             "Returns the required public information to display a single "
@@ -1831,7 +1833,7 @@ class PublicViewInfoView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }

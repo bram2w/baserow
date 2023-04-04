@@ -21,7 +21,7 @@ def test_deleting_many_of_rows_is_fast(data_fixture):
     model = table.get_model()
     for row in model.objects.all():
         TrashHandler.trash(
-            user, table.database.group, table.database, row, parent_id=table.id
+            user, table.database.workspace, table.database, row, parent_id=table.id
         )
 
     TrashEntry.objects.update(should_be_permanently_deleted=True)

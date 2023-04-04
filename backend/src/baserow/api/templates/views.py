@@ -23,10 +23,10 @@ from baserow.api.utils import DiscriminatorMappingSerializer
 from baserow.core.action.registries import action_type_registry
 from baserow.core.actions import InstallTemplateActionType
 from baserow.core.exceptions import (
-    GroupDoesNotExist,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
-    UserNotInGroup,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import InstallTemplateJobType
@@ -39,7 +39,9 @@ from .errors import ERROR_TEMPLATE_DOES_NOT_EXIST, ERROR_TEMPLATE_FILE_DOES_NOT_
 
 InstallTemplateJobTypeSerializer = job_type_registry.get(
     InstallTemplateJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleInstallTemplateJobTypeSerializer"
+)
 
 
 class TemplatesView(APIView):
@@ -50,9 +52,9 @@ class TemplatesView(APIView):
         operation_id="list_templates",
         description=(
             "Lists all the template categories and the related templates that are in "
-            "that category. The template's `group_id` can be used for previewing "
-            "purposes because that group contains the applications that are in the "
-            "template. All the `get` and `list` endpoints related to that group are "
+            "that category. The template's `workspace_id` can be used for previewing "
+            "purposes because that workspace contains the applications that are in the "
+            "template. All the `get` and `list` endpoints related to that workspace are "
             "publicly accessible."
         ),
         responses={200: TemplateCategoriesSerializer(many=True)},
@@ -73,10 +75,10 @@ class InstallTemplateView(APIView):
         operation_id="install_template",
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The id related to the group where the template "
+                description="The id related to the workspace where the template "
                 "applications must be installed into.",
             ),
             OpenApiParameter(
@@ -90,9 +92,10 @@ class InstallTemplateView(APIView):
         ],
         description=(
             "(Deprecated) Installs the applications of the given template into "
-            "the given group if the user has access to that group. The response "
+            "the given workspace if the user has access to that workspace. The response "
             "contains those newly created applications."
         ),
+        request=None,
         responses={
             200: DiscriminatorMappingSerializer(
                 "Applications", application_type_serializers, many=True
@@ -107,22 +110,22 @@ class InstallTemplateView(APIView):
     )
     @map_exceptions(
         {
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
             TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
         }
     )
     @transaction.atomic
-    def post(self, request, group_id, template_id):
-        """Install a template into a group."""
+    def post(self, request, workspace_id, template_id):
+        """Install a template into a workspace."""
 
         handler = CoreHandler()
-        group = handler.get_group(group_id)
+        workspace = handler.get_workspace(workspace_id)
         template = handler.get_template(template_id)
         installed_applications = action_type_registry.get_by_type(
             InstallTemplateActionType
-        ).do(request.user, group, template)
+        ).do(request.user, workspace, template)
 
         data = [
             get_application_serializer(application).data
@@ -139,10 +142,10 @@ class AsyncInstallTemplateView(APIView):
         operation_id="install_template_async",
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The id related to the group where the template "
+                description="The id related to the workspace where the template "
                 "applications must be installed into.",
             ),
             OpenApiParameter(
@@ -156,9 +159,10 @@ class AsyncInstallTemplateView(APIView):
         ],
         description=(
             "Start an async job to install the applications of the given template into "
-            "the given group if the user has access to that group. The response "
+            "the given workspace if the user has access to that workspace. The response "
             "contains those newly created applications."
         ),
+        request=None,
         responses={
             202: InstallTemplateJobTypeSerializer,
             400: get_error_schema(
@@ -175,21 +179,21 @@ class AsyncInstallTemplateView(APIView):
     )
     @map_exceptions(
         {
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TemplateDoesNotExist: ERROR_TEMPLATE_DOES_NOT_EXIST,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
             TemplateFileDoesNotExist: ERROR_TEMPLATE_FILE_DOES_NOT_EXIST,
         }
     )
     @transaction.atomic
-    def post(self, request, group_id, template_id):
-        """Start an async job to install a template into a group."""
+    def post(self, request, workspace_id, template_id):
+        """Start an async job to install a template into a workspace."""
 
         job = JobHandler().create_and_start_job(
             request.user,
             InstallTemplateJobType.type,
-            group_id=group_id,
+            workspace_id=workspace_id,
             template_id=template_id,
         )
 

@@ -12,22 +12,26 @@ from rest_framework.status import (
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.core.models import Application, Group, TrashEntry
+from baserow.core.models import Application, TrashEntry, Workspace
 from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
-def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fixture):
+def test_deleting_a_workspace_moves_it_to_the_trash_and_hides_it(
+    api_client, data_fixture
+):
     user, token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
     response = api_client.get(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
@@ -37,9 +41,10 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
         reverse(
             "api:trash:contents",
             kwargs={
-                "group_id": group_to_delete.id,
+                "workspace_id": workspace_to_delete.id,
             },
         ),
+        {"respond_with_workspace_rename": True},
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
@@ -51,14 +56,15 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
         "results": [
             {
                 "application": None,
-                "group": group_to_delete.id,
+                "group": workspace_to_delete.id,  # GroupDeprecation
+                "workspace": workspace_to_delete.id,
                 "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,
-                "trash_item_id": group_to_delete.id,
-                "trash_item_type": "group",
+                "trash_item_id": workspace_to_delete.id,
+                "trash_item_type": "workspace",
                 "trashed_at": "2020-01-01T12:00:00Z",
                 "user_who_trashed": user.first_name,
-                "name": group_to_delete.name,
+                "name": workspace_to_delete.name,
                 "parent_name": None,
                 "names": None,
             }
@@ -69,9 +75,11 @@ def test_deleting_a_group_moves_it_to_the_trash_and_hides_it(api_client, data_fi
 @pytest.mark.django_db
 def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -81,22 +89,22 @@ def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
             "api:trash:restore",
         ),
         {
-            "trash_item_type": "group",
-            "trash_item_id": group_to_delete.id,
+            "trash_item_type": "workspace",
+            "trash_item_id": workspace_to_delete.id,
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_204_NO_CONTENT
 
-    assert Group.objects.count() == 1
-    assert Group.trash.count() == 0
+    assert Workspace.objects.count() == 1
+    assert Workspace.trash.count() == 0
 
     response = api_client.get(
         reverse(
             "api:trash:contents",
             kwargs={
-                "group_id": group_to_delete.id,
+                "workspace_id": workspace_to_delete.id,
             },
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -112,12 +120,16 @@ def test_can_restore_a_deleted_trash_item(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_cant_restore_a_deleted_trash_item_if_not_in_group(api_client, data_fixture):
+def test_cant_restore_a_deleted_trash_item_if_not_in_workspace(
+    api_client, data_fixture
+):
     user, token = data_fixture.create_user_and_token()
     other_user, other_token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -127,8 +139,8 @@ def test_cant_restore_a_deleted_trash_item_if_not_in_group(api_client, data_fixt
             "api:trash:restore",
         ),
         {
-            "trash_item_type": "group",
-            "trash_item_id": group_to_delete.id,
+            "trash_item_type": "workspace",
+            "trash_item_id": workspace_to_delete.id,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {other_token}",
@@ -147,7 +159,7 @@ def test_cant_restore_a_non_existent_trashed_item(api_client, data_fixture):
             "api:trash:restore",
         ),
         {
-            "trash_item_type": "group",
+            "trash_item_type": "workspace",
             "trash_item_id": 99999,
         },
         format="json",
@@ -161,8 +173,10 @@ def test_cant_restore_a_non_existent_trashed_item(api_client, data_fixture):
 @pytest.mark.django_db
 def test_cant_restore_a_trashed_item_with_a_missing_parent(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(
+        user=user, workspace=workspace
+    )
     table = data_fixture.create_database_table(user=user, database=application)
     model = table.get_model()
     row = model.objects.create()
@@ -196,7 +210,7 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
     api_client, data_fixture, settings
 ):
     user, token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
     trashed_at = timezone.now()
     time_when_trash_item_old_enough = trashed_at + timezone.timedelta(
@@ -204,7 +218,9 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
     )
 
     with freeze_time(trashed_at):
-        url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+        url = reverse(
+            "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+        )
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
 
@@ -217,8 +233,8 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
             "api:trash:restore",
         ),
         {
-            "trash_item_type": "group",
-            "trash_item_id": group_to_delete.id,
+            "trash_item_type": "workspace",
+            "trash_item_id": workspace_to_delete.id,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -231,20 +247,24 @@ def test_cant_restore_a_trash_item_marked_for_perm_deletion(
 @pytest.mark.django_db
 def test_can_get_trash_structure(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group()
-    normal_group = data_fixture.create_group()
-    data_fixture.create_user_group(user=user, group=group_to_delete, order=1)
-    data_fixture.create_user_group(user=user, group=normal_group, order=2)
-    # Another group for a different user which should not be displayed below
-    data_fixture.create_group()
+    workspace_to_delete = data_fixture.create_workspace()
+    normal_workspace = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace_to_delete, order=1
+    )
+    data_fixture.create_user_workspace(user=user, workspace=normal_workspace, order=2)
+    # Another workspace for a different user which should not be displayed below
+    data_fixture.create_workspace()
     application = data_fixture.create_database_application(
-        user=user, group=group_to_delete
+        user=user, workspace=workspace_to_delete
     )
     trashed_application = data_fixture.create_database_application(
-        user=user, group=normal_group
+        user=user, workspace=normal_workspace
     )
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -265,19 +285,19 @@ def test_can_get_trash_structure(api_client, data_fixture):
 
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
-        "groups": [
+        "groups": [  # GroupDeprecation
             {
-                "id": group_to_delete.id,
+                "id": workspace_to_delete.id,
                 "trashed": True,
-                "name": group_to_delete.name,
+                "name": workspace_to_delete.name,
                 "applications": [
                     {"id": application.id, "name": application.name, "trashed": False}
                 ],
             },
             {
-                "id": normal_group.id,
+                "id": normal_workspace.id,
                 "trashed": False,
-                "name": normal_group.name,
+                "name": normal_workspace.name,
                 "applications": [
                     {
                         "id": trashed_application.id,
@@ -286,18 +306,40 @@ def test_can_get_trash_structure(api_client, data_fixture):
                     }
                 ],
             },
-        ]
+        ],
+        "workspaces": [
+            {
+                "id": workspace_to_delete.id,
+                "trashed": True,
+                "name": workspace_to_delete.name,
+                "applications": [
+                    {"id": application.id, "name": application.name, "trashed": False}
+                ],
+            },
+            {
+                "id": normal_workspace.id,
+                "trashed": False,
+                "name": normal_workspace.name,
+                "applications": [
+                    {
+                        "id": trashed_application.id,
+                        "name": trashed_application.name,
+                        "trashed": True,
+                    }
+                ],
+            },
+        ],
     }
 
 
 @pytest.mark.django_db
-def test_getting_a_non_existent_group_returns_404(api_client, data_fixture):
+def test_getting_a_non_existent_workspace_returns_404(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
     response = api_client.get(
         reverse(
             "api:trash:contents",
-            kwargs={"group_id": 99999},
+            kwargs={"workspace_id": 99999},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -309,11 +351,11 @@ def test_getting_a_non_existent_group_returns_404(api_client, data_fixture):
 @pytest.mark.django_db
 def test_getting_a_non_existent_app_returns_404(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:trash:contents",
-        kwargs={"group_id": group.id},
+        kwargs={"workspace_id": workspace.id},
     )
     response = api_client.get(
         f"{url}?application_id=99999",
@@ -325,16 +367,16 @@ def test_getting_a_non_existent_app_returns_404(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_getting_a_app_for_diff_group_returns_400(api_client, data_fixture):
+def test_getting_a_app_for_diff_workspace_returns_400(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    other_group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    other_workspace = data_fixture.create_workspace(user=user)
 
-    app = data_fixture.create_database_application(user=user, group=other_group)
+    app = data_fixture.create_database_application(user=user, workspace=other_workspace)
 
     url = reverse(
         "api:trash:contents",
-        kwargs={"group_id": group.id},
+        kwargs={"workspace_id": workspace.id},
     )
     response = api_client.get(
         f"{url}?application_id={app.id}",
@@ -346,7 +388,7 @@ def test_getting_a_app_for_diff_group_returns_400(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_user_cant_get_trash_contents_for_group_they_are_not_a_member_of(
+def test_user_cant_get_trash_contents_for_workspace_they_are_not_a_member_of(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -355,9 +397,11 @@ def test_user_cant_get_trash_contents_for_group_they_are_not_a_member_of(
         unpermissioned_token,
     ) = data_fixture.create_user_and_token()
 
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -365,7 +409,7 @@ def test_user_cant_get_trash_contents_for_group_they_are_not_a_member_of(
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group_to_delete.id,
+            "workspace_id": workspace_to_delete.id,
         },
     )
     response = api_client.get(
@@ -378,15 +422,15 @@ def test_user_cant_get_trash_contents_for_group_they_are_not_a_member_of(
 
 
 @pytest.mark.django_db
-def test_can_get_trash_contents_for_undeleted_group(api_client, data_fixture):
+def test_can_get_trash_contents_for_undeleted_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group.id,
+            "workspace_id": workspace.id,
         },
     )
     response = api_client.get(
@@ -407,13 +451,13 @@ def test_can_get_trash_contents_for_undeleted_group(api_client, data_fixture):
 def test_can_get_trash_contents_for_undeleted_app(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
-    group = data_fixture.create_group(user=user)
-    app = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(user=user, workspace=workspace)
 
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group.id,
+            "workspace_id": workspace.id,
         },
     )
     response = api_client.get(
@@ -431,11 +475,15 @@ def test_can_get_trash_contents_for_undeleted_app(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_emptying_a_trashed_group_marks_it_for_perm_deletion(api_client, data_fixture):
+def test_emptying_a_trashed_workspace_marks_it_for_perm_deletion(
+    api_client, data_fixture
+):
     user, token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -443,7 +491,7 @@ def test_emptying_a_trashed_group_marks_it_for_perm_deletion(api_client, data_fi
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group_to_delete.id,
+            "workspace_id": workspace_to_delete.id,
         },
     )
     response = api_client.delete(
@@ -453,17 +501,17 @@ def test_emptying_a_trashed_group_marks_it_for_perm_deletion(api_client, data_fi
 
     assert response.status_code == HTTP_204_NO_CONTENT
 
-    assert Group.objects.count() == 0
-    assert Group.trash.count() == 1
+    assert Workspace.objects.count() == 0
+    assert Workspace.trash.count() == 1
     assert TrashEntry.objects.get(
-        trash_item_id=group_to_delete.id
+        trash_item_id=workspace_to_delete.id
     ).should_be_permanently_deleted
 
     response = api_client.get(
         reverse(
             "api:trash:contents",
             kwargs={
-                "group_id": group_to_delete.id,
+                "workspace_id": workspace_to_delete.id,
             },
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -474,13 +522,13 @@ def test_emptying_a_trashed_group_marks_it_for_perm_deletion(api_client, data_fi
 
 
 @pytest.mark.django_db
-def test_emptying_a_non_existent_group_returns_404(api_client, data_fixture):
+def test_emptying_a_non_existent_workspace_returns_404(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
 
     response = api_client.delete(
         reverse(
             "api:trash:contents",
-            kwargs={"group_id": 99999},
+            kwargs={"workspace_id": 99999},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -492,11 +540,11 @@ def test_emptying_a_non_existent_group_returns_404(api_client, data_fixture):
 @pytest.mark.django_db
 def test_emptying_a_non_existent_app_returns_404(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     url = reverse(
         "api:trash:contents",
-        kwargs={"group_id": group.id},
+        kwargs={"workspace_id": workspace.id},
     )
     response = api_client.delete(
         f"{url}?application_id=99999",
@@ -508,16 +556,16 @@ def test_emptying_a_non_existent_app_returns_404(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_emptying_a_app_for_diff_group_returns_400(api_client, data_fixture):
+def test_emptying_a_app_for_diff_workspace_returns_400(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    other_group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    other_workspace = data_fixture.create_workspace(user=user)
 
-    app = data_fixture.create_database_application(user=user, group=other_group)
+    app = data_fixture.create_database_application(user=user, workspace=other_workspace)
 
     url = reverse(
         "api:trash:contents",
-        kwargs={"group_id": group.id},
+        kwargs={"workspace_id": workspace.id},
     )
     response = api_client.delete(
         f"{url}?application_id={app.id}",
@@ -529,7 +577,7 @@ def test_emptying_a_app_for_diff_group_returns_400(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_user_cant_empty_trash_contents_for_group_they_are_not_a_member_of(
+def test_user_cant_empty_trash_contents_for_workspace_they_are_not_a_member_of(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -538,9 +586,11 @@ def test_user_cant_empty_trash_contents_for_group_they_are_not_a_member_of(
         unpermissioned_token,
     ) = data_fixture.create_user_and_token()
 
-    group_to_delete = data_fixture.create_group(user=user)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -548,7 +598,7 @@ def test_user_cant_empty_trash_contents_for_group_they_are_not_a_member_of(
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group_to_delete.id,
+            "workspace_id": workspace_to_delete.id,
         },
     )
     response = api_client.delete(
@@ -563,8 +613,10 @@ def test_user_cant_empty_trash_contents_for_group_they_are_not_a_member_of(
 @pytest.mark.django_db
 def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    trashed_database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    trashed_database = data_fixture.create_database_application(
+        user=user, workspace=workspace
+    )
 
     url = reverse(
         "api:applications:item", kwargs={"application_id": trashed_database.id}
@@ -576,7 +628,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group.id,
+            "workspace_id": workspace.id,
         },
     )
     response = api_client.delete(
@@ -595,7 +647,7 @@ def test_emptying_a_trashed_app_marks_it_for_perm_deletion(api_client, data_fixt
     url = reverse(
         "api:trash:contents",
         kwargs={
-            "group_id": group.id,
+            "workspace_id": workspace.id,
         },
     )
     response = api_client.get(
@@ -613,10 +665,12 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
 ):
     user, token = data_fixture.create_user_and_token()
     other_user, other_token = data_fixture.create_user_and_token()
-    group_to_delete = data_fixture.create_group(user=user)
-    data_fixture.create_user_group(user=other_user, group=group_to_delete)
+    workspace_to_delete = data_fixture.create_workspace(user=user)
+    data_fixture.create_user_workspace(user=other_user, workspace=workspace_to_delete)
 
-    url = reverse("api:groups:item", kwargs={"group_id": group_to_delete.id})
+    url = reverse(
+        "api:workspaces:item", kwargs={"workspace_id": workspace_to_delete.id}
+    )
     with freeze_time("2020-01-01 12:00"):
         response = api_client.delete(url, HTTP_AUTHORIZATION=f"JWT {token}")
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -627,9 +681,10 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
         reverse(
             "api:trash:contents",
             kwargs={
-                "group_id": group_to_delete.id,
+                "workspace_id": workspace_to_delete.id,
             },
         ),
+        {"respond_with_workspace_rename": True},
         HTTP_AUTHORIZATION=f"JWT {other_token}",
     )
 
@@ -641,14 +696,15 @@ def test_deleting_a_user_who_trashed_something_returns_null_user_who_trashed(
         "results": [
             {
                 "application": None,
-                "group": group_to_delete.id,
+                "group": workspace_to_delete.id,  # GroupDeprecation
+                "workspace": workspace_to_delete.id,
                 "id": TrashEntry.objects.first().id,
                 "parent_trash_item_id": None,
-                "trash_item_id": group_to_delete.id,
-                "trash_item_type": "group",
+                "trash_item_id": workspace_to_delete.id,
+                "trash_item_type": "workspace",
                 "trashed_at": "2020-01-01T12:00:00Z",
                 "user_who_trashed": None,
-                "name": group_to_delete.name,
+                "name": workspace_to_delete.name,
                 "parent_name": None,
                 "names": None,
             }
@@ -661,8 +717,10 @@ def test_restoring_an_item_which_doesnt_need_parent_id_with_one_returns_error(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(
+        user=user, workspace=workspace
+    )
 
     url = reverse("api:applications:item", kwargs={"application_id": application.id})
     with freeze_time("2020-01-01 12:00"):
@@ -691,8 +749,10 @@ def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(
+        user=user, workspace=workspace
+    )
     table = data_fixture.create_database_table(user=user, database=application)
     model = table.get_model()
     row = model.objects.create()
@@ -723,7 +783,7 @@ def test_cant_restore_a_trashed_item_requiring_a_parent_id_without_providing_it(
 @pytest.mark.django_db
 def test_cant_delete_same_item_twice(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(user=user)
@@ -732,8 +792,10 @@ def test_cant_delete_same_item_twice(api_client, data_fixture):
     )
     row = rows[0]
 
-    url = reverse("api:groups:item", kwargs={"group_id": group.id})
-    _assert_delete_called_twice_returns_correct_api_error(api_client, group, token, url)
+    url = reverse("api:workspaces:item", kwargs={"workspace_id": workspace.id})
+    _assert_delete_called_twice_returns_correct_api_error(
+        api_client, workspace, token, url
+    )
 
     url = reverse("api:applications:item", kwargs={"application_id": database.id})
     _assert_delete_called_twice_returns_correct_api_error(
@@ -813,9 +875,9 @@ def test_restoring_a_field_which_depends_on_trashed_table_fails(
         name="Customer",
         link_row_table=table_2,
     )
-    TrashHandler.trash(user, database.group, database, link_field_1)
-    TrashHandler.trash(user, database.group, database, table_1)
-    TrashHandler.trash(user, database.group, database, table_2)
+    TrashHandler.trash(user, database.workspace, database, link_field_1)
+    TrashHandler.trash(user, database.workspace, database, table_1)
+    TrashHandler.trash(user, database.workspace, database, table_2)
     TrashHandler.restore_item(user, "table", table_1.id)
 
     response = api_client.patch(

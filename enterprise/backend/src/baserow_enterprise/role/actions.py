@@ -12,8 +12,8 @@ from baserow.core.action.registries import (
     ActionTypeDescription,
     UndoableActionType,
 )
-from baserow.core.action.scopes import GroupActionScopeType
-from baserow.core.models import Group
+from baserow.core.action.scopes import WorkspaceActionScopeType
+from baserow.core.models import Workspace
 from baserow.core.registries import object_scope_type_registry, subject_type_registry
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.types import NewRoleAssignment
@@ -35,7 +35,7 @@ class BatchAssignRoleActionType(UndoableActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
+        workspace_id: int
         assignments: List[AssignmentTuple]
 
     @classmethod
@@ -66,7 +66,7 @@ class BatchAssignRoleActionType(UndoableActionType):
         cls,
         user,
         new_role_assignments: List[NewRoleAssignment],
-        group: Group,
+        workspace: Workspace,
     ) -> List[Optional[RoleAssignment]]:
         """
         Apply the given role assignments in an undoable action.
@@ -87,11 +87,11 @@ class BatchAssignRoleActionType(UndoableActionType):
         # get current roles to be able to store them alongside with action
         # for a later undo/redo
         previous_roles = role_assignment_handler.get_current_role_assignments(
-            group, user_and_scope_set
+            workspace, user_and_scope_set
         )
 
         role_assignments = role_assignment_handler.assign_role_batch_for_user(
-            user, group, new_role_assignments
+            user, workspace, new_role_assignments
         )
 
         # Build the list of assignment tuples we want to save in the action to be able
@@ -118,16 +118,16 @@ class BatchAssignRoleActionType(UndoableActionType):
 
         cls.register_action(
             user=user,
-            params=cls.Params(group.id, param_assignments),
-            scope=cls.scope(group.id),
-            group=group,
+            params=cls.Params(workspace.id, param_assignments),
+            scope=cls.scope(workspace.id),
+            workspace=workspace,
         )
 
         return role_assignments
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo_redo(cls, user: AbstractUser, params: Params, undo=True):
@@ -141,7 +141,7 @@ class BatchAssignRoleActionType(UndoableActionType):
         """
 
         role_assignment_handler = RoleAssignmentHandler()
-        group = Group.objects.get(id=params.group_id)
+        workspace = Workspace.objects.get(id=params.workspace_id)
 
         # Gather all scopes ids and subjects ids grouped by their type to query them
         # all at once per type
@@ -190,7 +190,9 @@ class BatchAssignRoleActionType(UndoableActionType):
             roles_to_assign.append(NewRoleAssignment(subject, role, scope))
 
         # And finally assign roles
-        role_assignment_handler.assign_role_batch_for_user(user, group, roles_to_assign)
+        role_assignment_handler.assign_role_batch_for_user(
+            user, workspace, roles_to_assign
+        )
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):

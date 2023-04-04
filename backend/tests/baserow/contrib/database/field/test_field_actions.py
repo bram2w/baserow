@@ -29,7 +29,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.models import Action
 from baserow.core.action.registries import action_type_registry
-from baserow.core.models import GROUP_USER_PERMISSION_ADMIN
+from baserow.core.models import WORKSPACE_USER_PERMISSION_ADMIN
 from baserow.core.trash.handler import TrashHandler
 from baserow.test_utils.helpers import (
     assert_serialized_field_values_are_the_same,
@@ -104,10 +104,10 @@ def test_updating_field_name_only_and_undoing_after_naming_collisions_works(
     user = data_fixture.create_user(session_id=session_id)
     field = data_fixture.create_boolean_field(user=user, name=starting_field_name)
     user2 = data_fixture.create_user()
-    data_fixture.create_user_group(
+    data_fixture.create_user_workspace(
         user=user2,
-        group=field.table.database.group,
-        permissions=GROUP_USER_PERMISSION_ADMIN,
+        workspace=field.table.database.workspace,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
 
     action_type_registry.get_by_type(UpdateFieldActionType).do(user, field, name="test")
@@ -137,10 +137,10 @@ def test_updating_field_name_only_and_redoing_after_naming_collisions_works(
     user2 = data_fixture.create_user()
     starting_field_name = "field"
     field = data_fixture.create_boolean_field(user=user, name=starting_field_name)
-    data_fixture.create_user_group(
+    data_fixture.create_user_workspace(
         user=user2,
-        group=field.table.database.group,
-        permissions=GROUP_USER_PERMISSION_ADMIN,
+        workspace=field.table.database.workspace,
+        permissions=WORKSPACE_USER_PERMISSION_ADMIN,
     )
 
     new_field_name = "test"
@@ -919,8 +919,8 @@ def test_can_undo_redo_adding_select_option(data_fixture):
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    data_fixture.create_user_group(
-        user=user2, group=table.database.group, permissions="ADMIN"
+    data_fixture.create_user_workspace(
+        user=user2, workspace=table.database.workspace, permissions="ADMIN"
     )
 
     option_field = data_fixture.create_single_select_field(
@@ -1039,8 +1039,8 @@ def test_can_undo_redo_removing_select_option(data_fixture):
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    data_fixture.create_user_group(
-        user=user2, group=table.database.group, permissions="ADMIN"
+    data_fixture.create_user_workspace(
+        user=user2, workspace=table.database.workspace, permissions="ADMIN"
     )
 
     option_field = data_fixture.create_single_select_field(
@@ -1148,8 +1148,8 @@ def test_can_undo_redo_updating_single_select(data_fixture):
     user = data_fixture.create_user(session_id=session_id)
     user2 = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
-    data_fixture.create_user_group(
-        user=user2, group=table.database.group, permissions="ADMIN"
+    data_fixture.create_user_workspace(
+        user=user2, workspace=table.database.workspace, permissions="ADMIN"
     )
 
     option_field = data_fixture.create_single_select_field(

@@ -120,3 +120,18 @@ export const getNextAvailableNameInSequence = (baseName, excludeNames) => {
   }
   return name
 }
+
+/**
+ * Checks if a search term is a substring of at least one string within a given list of
+ * strings.
+ *
+ * @param strings
+ * @param searchTerm
+ * @returns boolean
+ */
+export const isSubstringOfStrings = (strings, searchTerm) => {
+  const stringsSanitised = strings.map((s) => s.toLowerCase().trim())
+  const searchTermSanitised = searchTerm.toLowerCase().trim()
+
+  return stringsSanitised.some((s) => s.includes(searchTermSanitised))
+}

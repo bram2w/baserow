@@ -34,7 +34,7 @@ def test_get_user_info_from_authn_user_identity():
     assert user_info.email == "some@email.com"
     assert user_info.name == "John Doe"
     assert user_info.language is None
-    assert user_info.group_invitation_token is None
+    assert user_info.workspace_invitation_token is None
 
     user_info = SamlAuthProviderHandler.get_user_info_from_authn_user_identity(
         {"user.email": ["some@email.com"]}
@@ -44,12 +44,12 @@ def test_get_user_info_from_authn_user_identity():
 
     user_info = SamlAuthProviderHandler.get_user_info_from_authn_user_identity(
         {"user.email": ["some@email.com"], "user.name": ["John Doe"]},
-        {"language": "it", "group_invitation_token": "1234"},
+        {"language": "it", "workspace_invitation_token": "1234"},
     )
     assert user_info.email == "some@email.com"
     assert user_info.name == "John Doe"
     assert user_info.language == "it"
-    assert user_info.group_invitation_token == "1234"
+    assert user_info.workspace_invitation_token == "1234"
 
 
 @pytest.mark.django_db()

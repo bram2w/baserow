@@ -67,5 +67,11 @@ def purge(working_dir: Optional[str] = typer.Option(default=default_path)):
         pass
 
 
+@app.command()
+def generate(working_dir: Optional[str] = typer.Option(default=default_path)):
+    changelog_handler = ChangelogHandler(working_dir)
+    changelog_handler.generate_changelog_markdown_file()
+
+
 if __name__ == "__main__":
     app()

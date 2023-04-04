@@ -323,20 +323,25 @@ SIMPLE_JWT = {
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Baserow API spec",
-    "DESCRIPTION": "",
+    "DESCRIPTION": "For more information about our REST API, please visit "
+    "[this page](https://baserow.io/docs/apis%2Frest-api).\n\n"
+    "For more information about our deprecation policy, please visit "
+    "[this page](https://baserow.io/docs/apis%2Fdeprecations).",
     "CONTACT": {"url": "https://baserow.io/contact"},
     "LICENSE": {
         "name": "MIT",
         "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.15.2",
+    "VERSION": "1.16.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
         {"name": "User"},
         {"name": "User files"},
-        {"name": "Groups"},
-        {"name": "Group invitations"},
+        {"name": "Groups"},  # GroupDeprecation
+        {"name": "Group invitations"},  # GroupDeprecation
+        {"name": "Workspaces"},
+        {"name": "Workspace invitations"},
         {"name": "Templates"},
         {"name": "Trash"},
         {"name": "Applications"},
@@ -352,11 +357,13 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table gallery view"},
         {"name": "Database table form view"},
         {"name": "Database table kanban view"},
+        {"name": "Database table calendar view"},
         {"name": "Database table rows"},
         {"name": "Database table export"},
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
         {"name": "Builder pages"},
+        {"name": "Builder page elements"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -373,6 +380,7 @@ SPECTACULAR_SETTINGS = {
             "gallery",
             "form",
             "kanban",
+            "calendar",
         ],
         "FieldTypesEnum": [
             "text",
@@ -591,6 +599,7 @@ USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 16
 APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # The template that must be selected when the user first opens the templates select
 # modal.
+# IF CHANGING KEEP IN SYNC WITH e2e-tests/wait-for-services.sh
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
 MAX_FIELD_LIMIT = 1500
@@ -792,6 +801,10 @@ BASEROW_DISABLE_MODEL_CACHE = bool(os.getenv("BASEROW_DISABLE_MODEL_CACHE", ""))
 BASEROW_NOWAIT_FOR_LOCKS = not bool(
     os.getenv("BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR", False)
 )
+
+LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
+
+MAX_NUMBER_CALENDAR_DAYS = 45
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

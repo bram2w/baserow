@@ -45,12 +45,12 @@ def test_multiple_collaborators_field_type_create(data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_multiple_collaborators
 def test_multiple_collaborators_field_type_update(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, name="Placeholder", group=group
+        user=user, name="Placeholder", workspace=workspace
     )
     table = data_fixture.create_database_table(name="Example", database=database)
 
@@ -84,13 +84,13 @@ def test_get_set_export_serialized_value_multiple_collaborators_field(data_fixtu
     user = data_fixture.create_user(email="user1@baserow.io")
     user_2 = data_fixture.create_user(email="user2@baserow.io")
     user_3 = data_fixture.create_user(email="user3@baserow.io")
-    group = data_fixture.create_group(user=user)
-    data_fixture.create_user_group(group=group, user=user_2)
-    data_fixture.create_user_group(group=group, user=user_3)
+    workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_user_workspace(workspace=workspace, user=user_2)
+    data_fixture.create_user_workspace(workspace=workspace, user=user_3)
 
-    imported_group = data_fixture.create_group(user=user)
-    data_fixture.create_user_group(group=imported_group, user=user_2)
-    database = data_fixture.create_database_application(group=group)
+    imported_workspace = data_fixture.create_workspace(user=user)
+    data_fixture.create_user_workspace(workspace=imported_workspace, user=user_2)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     field_handler = FieldHandler()
     row_handler = RowHandler()
@@ -131,9 +131,11 @@ def test_get_set_export_serialized_value_multiple_collaborators_field(data_fixtu
         },
     )
 
-    exported_applications = core_handler.export_group_applications(group, BytesIO())
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    exported_applications = core_handler.export_workspace_applications(
+        workspace, BytesIO()
+    )
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]
@@ -174,8 +176,8 @@ def test_multiple_collaborators_field_type_sorting(
     user_2 = data_fixture.create_user(email="user2@baserow.io", first_name="User 2")
     user_3 = data_fixture.create_user(email="user3@baserow.io", first_name="User 3")
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    data_fixture.create_user_group(group=database.group, user=user_2)
-    data_fixture.create_user_group(group=database.group, user=user_3)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_2)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_3)
     table = data_fixture.create_database_table(name="Example", database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
@@ -251,8 +253,10 @@ def test_multiple_collaborators_model_field(data_fixture):
     user_2 = data_fixture.create_user(email="user2@baserow.io", first_name="User 2")
     user_3 = data_fixture.create_user(email="user3@baserow.io", first_name="User 3")
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    data_fixture.create_user_group(group=database.group, user=user_2)
-    group_user_3 = data_fixture.create_user_group(group=database.group, user=user_3)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_2)
+    workspace_user_3 = data_fixture.create_user_workspace(
+        workspace=database.workspace, user=user_3
+    )
     table = data_fixture.create_database_table(name="Example", database=database)
 
     field_handler = FieldHandler()
@@ -297,8 +301,9 @@ def test_multiple_collaborators_model_field(data_fixture):
     row_3_relation_ids = [u.id for u in row_3_relations]
     assert row_3_relation_ids == [user_3.id, user_2.id, user.id]
 
-    # After deleting group user 3, we don't expect user_3 to be returned here anymore.
-    group_user_3.delete()
+    # After deleting workspace user 3, we don't expect user_3 to be returned here
+    # anymore.
+    workspace_user_3.delete()
 
     rows = list(model.objects.all().order_by("id"))
 
@@ -323,8 +328,10 @@ def test_multiple_collaborators_model_enhanced_field(
     user_2 = data_fixture.create_user(email="user2@baserow.io", first_name="User 2")
     user_3 = data_fixture.create_user(email="user3@baserow.io", first_name="User 3")
     database = data_fixture.create_database_application(user=user, name="Placeholder")
-    data_fixture.create_user_group(group=database.group, user=user_2)
-    group_user_3 = data_fixture.create_user_group(group=database.group, user=user_3)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_2)
+    workspace_user_3 = data_fixture.create_user_workspace(
+        workspace=database.workspace, user=user_3
+    )
     table = data_fixture.create_database_table(name="Example", database=database)
 
     field_handler = FieldHandler()
@@ -371,8 +378,9 @@ def test_multiple_collaborators_model_enhanced_field(
         row_3_relation_ids = [u.id for u in row_3_relations]
         assert row_3_relation_ids == [user_3.id, user_2.id, user.id]
 
-    # After deleting group user 3, we don't expect user_3 to be returned here anymore.
-    group_user_3.delete()
+    # After deleting workspace user 3, we don't expect user_3 to be
+    # returned here anymore.
+    workspace_user_3.delete()
 
     with django_assert_num_queries(2):
         rows = list(model.objects.all().order_by("id").enhance_by_fields())
@@ -392,12 +400,12 @@ def test_multiple_collaborators_model_enhanced_field(
 
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_random_value(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, group=group, name="database"
+        user=user, workspace=workspace, name="database"
     )
     table = data_fixture.create_database_table(name="table", database=database)
     field_handler = FieldHandler()
@@ -429,12 +437,12 @@ def test_multiple_collaborators_field_type_random_value(data_fixture):
 
 @pytest.mark.django_db
 def test_multiple_collaborators_field_adjacent_row(data_fixture):
-    group = data_fixture.create_group()
-    user = data_fixture.create_user(group=group, first_name="User 1")
-    user_2 = data_fixture.create_user(group=group, first_name="User 2")
-    user_3 = data_fixture.create_user(group=group, first_name="User 3")
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace, first_name="User 1")
+    user_2 = data_fixture.create_user(workspace=workspace, first_name="User 2")
+    user_3 = data_fixture.create_user(workspace=workspace, first_name="User 3")
     database = data_fixture.create_database_application(
-        user=user, group=group, name="database"
+        user=user, workspace=workspace, name="database"
     )
     table = data_fixture.create_database_table(name="table", database=database)
     grid_view = data_fixture.create_grid_view(table=table)

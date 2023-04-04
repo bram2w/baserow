@@ -38,7 +38,7 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import ViewDoesNotExist, ViewNotInTable
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 User = get_user_model()
 
@@ -105,7 +105,7 @@ class ExportTableView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
             TableOnlyExportUnsupported: ERROR_TABLE_ONLY_EXPORT_UNSUPPORTED,
@@ -151,6 +151,7 @@ class ExportJobView(APIView):
             "exported file for the specified export job, only if the requesting user "
             "has access."
         ),
+        request=None,
         responses={
             200: ExportJobSerializer,
             404: get_error_schema(["ERROR_EXPORT_JOB_DOES_NOT_EXIST"]),

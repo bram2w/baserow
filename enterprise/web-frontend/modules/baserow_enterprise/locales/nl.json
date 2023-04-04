@@ -5,8 +5,8 @@
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Beschikbaar in enterprise-versie",
-        "licenseDescription": "Kijkers zijn gratis met Baserow Enterprise. Als een gebruiker een andere rol heeft, in een groep, dan gebruikt hij automatisch een betaalde seat.",
-        "overflowWarning": "Je hebt te veel niet-kijkers en hebt al je betaalde plaatsen opgebruikt. Verander gebruikers in kijkers op de ledenpagina van elke groep."
+        "licenseDescription": "Kijkers zijn gratis met Baserow Enterprise. Als een gebruiker een andere rol heeft, in een werkruimte, dan gebruikt hij automatisch een betaalde seat.",
+        "overflowWarning": "Je hebt te veel niet-kijkers en hebt al je betaalde plaatsen opgebruikt. Verander gebruikers in kijkers op de ledenpagina van elke werkruimte."
     },
     "trashType": {
         "team": "team"
@@ -14,12 +14,12 @@
     "createTeamModal": {
         "title": "Team maken",
         "invalidNameTitle": "Gebruik alsjeblieft een andere naam",
-        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven groep."
+        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven werkruimte."
     },
     "updateTeamModal": {
         "title": "{teamName} bijwerken",
         "invalidNameTitle": "Gebruik alsjeblieft een andere naam",
-        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven groep."
+        "invalidNameMessage": "Deze teamnaam wordt al gebruikt in de opgegeven werkruimte."
     },
     "manageTeamModals": {
         "subheading": "Met teams kun je machtigingen in bulk aan meerdere mensen geven of beperken."
@@ -59,12 +59,12 @@
     "auditLog": {
         "title": "Audit log",
         "filterUserTitle": "Gebruiker",
-        "filterGroupTitle": "Groep",
+        "filterWorkspaceTitle": "Werkruimte",
         "filterActionTypeTitle": "Type evenement",
         "filterToTimestampTitle": "Tot Datum",
         "filterToTimestamp": "Tot Datum",
         "user": "Gebruiker",
-        "group": "Groep",
+        "workspace": "Werkruimte",
         "actionType": "Type event",
         "description": "Beschrijving",
         "timestamp": "Timestamp",
@@ -75,7 +75,7 @@
         "filterFromTimestamp": "Van Datum",
         "exportToCsv": "Exporteren naar CSV",
         "exportModalTitle": "Exporteren naar CSV",
-        "allGroups": "Alle groepen",
+        "allWorkspaces": "Alle werkruimtes",
         "allActionTypes": "Alle soorten events"
     },
     "auditLogExportModal": {
@@ -129,7 +129,7 @@
         "errorProviderDoesNotExist": "deze authenticatie provider bestaat niet of is niet beschikbaar.",
         "errorAuthFlowError": "er is een fout opgetreden tijdens de authenticatie flow met de geselecteerde provider.",
         "errorDifferentProvider": "gebruik de provider waarmee u zich oorspronkelijk hebt aangemeld.",
-        "errorGroupInvitationEmailMismatch": "je e-mailadres komt niet overeen met de uitnodiging.",
+        "errorWorkspaceInvitationEmailMismatch": "je e-mailadres komt niet overeen met de uitnodiging.",
         "loginText": "Heb je al een account?",
         "errorSsoFeatureNotActive": "De SSO-functie is niet actief. Neem contact op met je beheerder.",
         "errorInvalidSamlResponse": "SAML antwoord is ongeldig.",
@@ -139,19 +139,19 @@
     },
     "roles": {
         "admin": {
-            "description": "Kan groepen en applicaties volledig configureren en bewerken.",
+            "description": "Kan werkruimtes en applicaties volledig configureren en bewerken.",
             "name": "Beheerder"
         },
         "editor": {
             "name": "Editor",
-            "description": "Kan gegevens volledig bewerken, maar geen applicaties of groepen configureren."
+            "description": "Kan gegevens volledig bewerken, maar geen applicaties of werkruimtes configureren."
         },
         "viewer": {
             "description": "Kan alleen gegevens lezen.",
             "name": "Kijker"
         },
         "noRoleLowPriority": {
-            "description": "Krijg standaard groepsrol van hun teams.",
+            "description": "Krijg standaard werkruimte srol van hun teams.",
             "name": "Geen rol"
         },
         "noAccess": {
@@ -170,20 +170,20 @@
     "memberRolesTab": {
         "database": {
             "warningTitle": "Andere gebruikers kunnen toegang erven!",
-            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende groep.",
-            "headerTooltip": "Databaserollen overschrijven groepsrollen.",
+            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende werkruimtes.",
+            "headerTooltip": "Databaserollen overschrijven werkruimte rollen.",
             "title": "{name} database",
             "selectMembers": "Selecteer leden",
             "everyoneHasAccess": "Iedereen in de werkruimte {name} heeft toegang tot deze database.",
             "onlyYouHaveAccess": "Alleen jij hebt toegang tot deze database."
         },
         "table": {
-            "headerTooltip": "Tabel rollen gaan boven groeps- en databaserollen.",
+            "headerTooltip": "Tabel rollen gaan boven werkruimtes- en databaserollen.",
             "selectMembers": "Selecteer leden",
             "title": "{name} tabel",
             "onlyYouHaveAccess": "Alleen u heeft toegang tot deze tabel.",
             "warningTitle": "Andere gebruikers kunnen toegang erven!",
-            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende database of groep.",
+            "warningMessage": "Andere gebruikers kunnen toegang erven via hun respectieve rollen in de bovenliggende database of werkruimte.",
             "everyoneHasAccess": "Iedereen in {name} werkruimte heeft toegang tot deze tabel."
         }
     },
@@ -235,7 +235,7 @@
         "sso": "Single Sign On",
         "rbac": "Rol gebaseerde toegangscontrole"
     },
-    "chatwootSuportSidebarGroup": {
+    "chatwootSupportSidebarWorkspace": {
         "directSupport": "Directe ondersteuning"
     },
     "userTeamsField": {

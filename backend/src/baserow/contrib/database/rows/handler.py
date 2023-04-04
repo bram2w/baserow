@@ -2,18 +2,16 @@ import re
 from collections import defaultdict
 from copy import copy
 from decimal import Decimal
-from math import ceil
 from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import connection, transaction
-from django.db.models import Max, Q, QuerySet
+from django.db import transaction
+from django.db.models import Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.utils.encoding import force_str
 
 from opentelemetry import metrics, trace
-from psycopg2 import sql
 
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
@@ -33,6 +31,12 @@ from baserow.contrib.database.table.operations import (
     ImportRowsDatabaseTableOperationType,
 )
 from baserow.contrib.database.trash.models import TrashedRows
+from baserow.core.db import (
+    get_highest_order_of_queryset,
+    get_unique_orders_before_item,
+    recalculate_full_orders,
+)
+from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
@@ -40,11 +44,7 @@ from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
-from .exceptions import (
-    CannotCalculateIntermediateOrder,
-    RowDoesNotExist,
-    RowIdsNotUnique,
-)
+from .exceptions import RowDoesNotExist, RowIdsNotUnique
 from .operations import (
     DeleteDatabaseRowOperationType,
     MoveRowDatabaseRowOperationType,
@@ -59,7 +59,6 @@ from .signals import (
     rows_deleted,
     rows_updated,
 )
-from .utils import find_intermediate_order
 
 tracer = trace.get_tracer(__name__)
 
@@ -286,42 +285,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return values, manytomany_values
 
-    def _get_unique_orders_before_row(
-        self,
-        before_row: GeneratedTableModel,
-        model: Type[GeneratedTableModel],
-        amount: int = 1,
-    ) -> List[Decimal]:
-        """
-        Calculates a list of unique decimal orders that can safely be used before the
-        provided `before_row`.
-
-        :param before_row: The row instance where the before orders must be
-            calculated for.
-        :param model: The model of the related table
-        :param amount: The number of orders that must be requested. Can be higher if
-            multiple rows are inserted or moved.
-        :return: A list of decimals containing safe to use orders in order.
-        """
-
-        # In order to find the intermediate order, we need to figure out what the
-        # order of the before adjacent row is. This queryset finds it in an
-        # efficient way.
-        adjacent_order = (
-            model.objects.filter(order__lt=before_row.order)
-            .aggregate(max=Max("order"))
-            .get("max")
-        ) or Decimal("0")
-        new_orders = []
-        new_order = adjacent_order
-        for i in range(0, amount):
-            float_order = find_intermediate_order(new_order, before_row.order)
-            # Row orders "only" store 20 decimal places. We're already rounding it,
-            # so that the `order` will be set immediately.
-            new_order = round(Decimal(float_order), 20)
-            new_orders.append(new_order)
-        return new_orders
-
     def get_unique_orders_before_row(
         self,
         before_row: Optional[GeneratedTableModel],
@@ -345,9 +308,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: A list of decimals containing safe to use orders in order.
         """
 
+        queryset = model.objects
+
         if before_row:
             try:
-                return self._get_unique_orders_before_row(before_row, model, amount)
+                return get_unique_orders_before_item(
+                    before_row, queryset, amount=amount
+                )
             except CannotCalculateIntermediateOrder:
                 # If the `find_intermediate_order` fails with a
                 # `CannotCalculateIntermediateOrder`, it means that it's not possible
@@ -355,15 +322,15 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 # orders of the table (while respecting their original order),
                 # so that we can then can find the fraction any many more after.
                 self.recalculate_row_orders(model.baserow_table, model)
-                return self._get_unique_orders_before_row(before_row, model, amount)
+                # Refresh the row element as its order might have changed
+                before_row.refresh_from_db()
+                return get_unique_orders_before_item(
+                    before_row, queryset, amount=amount
+                )
         else:
-            # If no `before_row` is provided, we can just find the highest value and
+            # If no `before` is provided, we can just find the highest value and
             # add one to it.
-            step = Decimal("1.00000000000000000000")
-            order_last_row = ceil(
-                model.objects.aggregate(max=Max("order")).get("max") or Decimal("0")
-            )
-            return [order_last_row + (step * i) for i in range(1, amount + 1)]
+            return get_highest_order_of_queryset(queryset, amount=amount)
 
     def get_row(
         self,
@@ -393,11 +360,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if base_queryset is None:
             base_queryset = model.objects
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             ReadDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -605,7 +572,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :type model: Model
         :raises RowDoesNotExist: When the row with the provided id does not exist
             and raise_error is set to True.
-        :raises UserNotInGroup: If the user does not belong to the group.
+        :raises UserNotInWorkspace: If the user does not belong to the workspace.
         :return: If raise_error is False then a boolean indicating if the row does or
             does not exist.
         :rtype: bool
@@ -614,7 +581,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             ReadDatabaseRowOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -638,7 +605,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> GeneratedTableModel:
         """
         Creates a new row for a given table with the provided values if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the row is created.
         :param table: The table for which to create a row for.
@@ -659,7 +626,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user,
             CreateRowDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -852,9 +819,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The updated row instance.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, UpdateDatabaseRowOperationType.type, group=group, context=table
+            user,
+            UpdateDatabaseRowOperationType.type,
+            workspace=workspace,
+            context=table,
         )
 
         if model is None:
@@ -967,7 +937,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
-        belongs to the related group. It also calls the rows_created signal.
+        belongs to the related workspace. It also calls the rows_created signal.
 
         :param user: The user of whose behalf the rows are created.
         :param table: The table for which the rows should be created.
@@ -979,11 +949,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created row instances.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             CreateRowDatabaseTableOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1239,8 +1209,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     ) -> Tuple[List[GeneratedTableModel], Dict[str, Dict[str, Any]]]:
         """
         Creates new rows for a given table if the user
-        belongs to the related group. It also calls the rows_created if send_signal is
-        `True`. The data are validated before the creation if validate is True.
+        belongs to the related workspace. It also calls the rows_created if send_signal
+        is `True`. The data are validated before the creation if validate is True.
         when a row fails to import, it doesn't stop the import. Instead an error report
         is created with the raised error for each field of each failing rows.
 
@@ -1254,9 +1224,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created row instances and the error report.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
-            user, ImportRowsDatabaseTableOperationType.type, group=group, context=table
+            user,
+            ImportRowsDatabaseTableOperationType.type,
+            workspace=workspace,
+            context=table,
         )
 
         error_report = RowErrorReport(data)
@@ -1376,11 +1349,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The updated row instances.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             UpdateDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1669,11 +1642,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             provided so that it does not have to be generated for a second time.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             MoveRowDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1773,11 +1746,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             provided so that it does not have to be generated for a second time.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             DeleteDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1788,7 +1761,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             self, rows=[row], user=user, table=table, model=model
         )
 
-        TrashHandler.trash(user, group, table.database, row, parent_id=table.id)
+        TrashHandler.trash(user, workspace, table.database, row, parent_id=table.id)
         rows_deleted_counter.add(
             1,
             {
@@ -1858,11 +1831,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :raises RowDoesNotExist: When the row with the provided id does not exist.
         """
 
-        group = table.database.group
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             DeleteDatabaseRowOperationType.type,
-            group=group,
+            workspace=workspace,
             context=table,
         )
 
@@ -1890,7 +1863,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         trashed_rows.rows = rows
 
         TrashHandler.trash(
-            user, group, table.database, trashed_rows, parent_id=table.id
+            user, workspace, table.database, trashed_rows, parent_id=table.id
         )
         rows_deleted_counter.add(
             len(row_ids),
@@ -1954,50 +1927,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         3      0.7500       1.0000
 
         :param table: The table object for which the rows orders must be recalculated.
-        :param model: The already
+        :param model: The already generated model if any.
         """
 
         if model is None:
             model = table.get_model()
 
-        table_name = table.get_database_table_name()
-        ordering = model._meta.ordering
-
-        if len(ordering) != 2:
-            raise Exception(
-                "The ordering of the auto generated model has changed and must be "
-                "updated in the `recalculate_row_orders` method."
-            )
-
-        # Unfortunately, it's not possible to do this via the Django ORM. I've
-        # tried various ways, but ran into "Window expressions are not allowed" or
-        # 'NoneType' object has no attribute 'get_source_expressions' errors.
-        # More information can be found here:
-        # https://stackoverflow.com/questions/66022483/update-django-model-based-on-the-row-number-of-rows-produced-by-a-subquery-on-th
-        #
-        # model.objects_and_trash.annotate(
-        #     row_number=Window(
-        #         expression=RowNumber(),
-        #         order_by=[F(order) for order in model._meta.ordering],
-        #         )
-        #     ).update(order=F('row_number')
-        # )
-        with connection.cursor() as cursor:
-            raw_query = """
-                update {table_name} c1
-                  set "order" = c2.seqnum from (
-                    select c2.*, row_number() over (
-                        ORDER BY c2.{order_1}, c2.{order_2}
-                    ) as seqnum from {table_name} c2
-                  ) c2
-                where c2.id = c1.id
-            """
-            sql_query = sql.SQL(raw_query).format(
-                table_name=sql.Identifier(table_name),
-                order_1=sql.Identifier(ordering[0]),
-                order_2=sql.Identifier(ordering[1]),
-            )
-            cursor.execute(sql_query)
+        recalculate_full_orders(model)
 
         row_orders_recalculated.send(
             self,

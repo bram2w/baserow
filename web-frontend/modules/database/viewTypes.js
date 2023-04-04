@@ -171,7 +171,8 @@ export class ViewType extends Registerable {
     view,
     fields,
     storePrefix = '',
-    includeFieldOptions = false
+    includeFieldOptions = false,
+    sourceEvent = null
   ) {}
 
   /**
@@ -288,7 +289,7 @@ export class ViewType extends Registerable {
   /**
    * Indicates if the view type is disabled.
    */
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 
@@ -358,7 +359,8 @@ export class GridViewType extends ViewType {
     view,
     fields,
     storePrefix = '',
-    includeFieldOptions = false
+    includeFieldOptions = false,
+    sourceEvent = null
   ) {
     await store.dispatch(storePrefix + 'view/grid/refresh', {
       view,
@@ -573,7 +575,8 @@ class BaseBufferedRowView extends ViewType {
     view,
     fields,
     storePrefix = '',
-    includeFieldOptions = false
+    includeFieldOptions = false,
+    sourceEvent = null
   ) {
     await store.dispatch(storePrefix + 'view/' + this.getType() + '/refresh', {
       fields,
@@ -848,7 +851,8 @@ export class FormViewType extends ViewType {
     view,
     fields,
     storePrefix = '',
-    includeFieldOptions = false
+    includeFieldOptions = false,
+    sourceEvent = null
   ) {
     await store.dispatch(storePrefix + 'view/form/fetchInitial', {
       formId: view.id,

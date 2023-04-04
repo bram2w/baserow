@@ -3,7 +3,7 @@
     v-if="open"
     ref="modalWrapper"
     class="modal__wrapper file-field-modal__wrapper"
-    @click="outside($event)"
+    @mousedown="outside($event)"
   >
     <div class="file-field-modal">
       <div class="file-field-modal__head">
@@ -25,7 +25,7 @@
               v-if="!readOnly"
               v-show="!renaming"
               class="file-field-modal__rename"
-              @click.stop="$refs.rename.edit()"
+              @click="$refs.rename.edit()"
             >
               <i class="fa fa-pen"></i>
             </a>
@@ -40,13 +40,13 @@
           class="
             file-field-modal__body-nav file-field-modal__body-nav--previous
           "
-          @click.stop="previous()"
+          @click="previous()"
         >
           <i class="fas fa-chevron-left"></i>
         </a>
         <a
           class="file-field-modal__body-nav file-field-modal__body-nav--next"
-          @click.stop="next()"
+          @click="next()"
         >
           <i class="fas fa-chevron-right"></i>
         </a>
@@ -74,7 +74,7 @@
             <a
               class="file-field-modal__nav-link"
               :class="{ active: index === selected }"
-              @click.stop="selected = index"
+              @click="selected = index"
             >
               <img
                 v-if="file.is_image"
@@ -95,12 +95,13 @@
             :url="preview.url"
             :filename="preview.visible_name"
             :loading-class="'file-field-modal__action--loading'"
-            ><i class="fas fa-download" @click.stop=""></i
-          ></DownloadLink>
+          >
+            <i class="fas fa-download" />
+          </DownloadLink>
           <a
             v-if="!readOnly"
             class="file-field-modal__action"
-            @click.stop="remove(selected)"
+            @click="remove(selected)"
           >
             <i class="fas fa-trash"></i>
           </a>
@@ -114,6 +115,10 @@
 import baseModal from '@baserow/modules/core/mixins/baseModal'
 import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
 import PreviewAny from '@baserow/modules/database/components/preview/PreviewAny'
+import {
+  isElement,
+  doesAncestorMatchPredicate,
+} from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'FileFieldModal',
@@ -135,7 +140,6 @@ export default {
     return {
       renaming: false,
       selected: 0,
-      canClose: true,
     }
   },
   computed: {
@@ -149,6 +153,7 @@ export default {
   methods: {
     show(index = 0) {
       this.selected = index
+      this.renaming = false
       return baseModal.methods.show.call(this)
     },
     getIconClass(mimeType) {
@@ -192,14 +197,21 @@ export default {
       return baseModal.methods.keyup.call(this, event)
     },
     outside(event) {
-      if (event.target === this.$refs.rename.$el) {
-        return
-      }
-      const modalPreview = this.$refs.modalPreview.$el
-      const targetClassname = event.target.className
-      const isPreviewImage =
-        !!modalPreview.getElementsByClassName(targetClassname).length
-      if (!isPreviewImage && this.canClose) {
+      const isChildOfAnchor = () =>
+        doesAncestorMatchPredicate(
+          event.target,
+          (el) => el.tagName === 'A',
+          this.$el
+        )
+
+      const protectedElements = [
+        this.$refs.rename.$el,
+        ...this.$refs.modalPreview.$el.children,
+      ]
+      const isProtectedElement = () =>
+        protectedElements.some((element) => isElement(element, event.target))
+
+      if (!this.renaming && !isProtectedElement() && !isChildOfAnchor()) {
         this.hide()
       }
     },

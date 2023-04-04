@@ -1,9 +1,9 @@
 from django.conf import settings
 
 DEFAULT_ROLE_ASSIGNABLE_OBJECT_MAP = {
-    "group": {
-        "READ": "group.read_role",
-        "UPDATE": "group.assign_role",
+    "workspace": {
+        "READ": "workspace.read_role",
+        "UPDATE": "workspace.assign_role",
     },
     "application": {
         "READ": "application.read_role",

@@ -20,7 +20,7 @@ from baserow.contrib.database.views.exceptions import (
 
 
 @pytest.mark.django_db
-def test_group_user_get_next_order(data_fixture):
+def test_workspace_user_get_next_order(data_fixture):
     database = data_fixture.create_database_application()
     database_2 = data_fixture.create_database_application()
     data_fixture.create_database_table(order=1, database=database)
@@ -828,14 +828,14 @@ def test_order_by_field_string_with_multiple_field_types_requiring_aggregations(
 @pytest.mark.django_db
 def test_table_hierarchy(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    app = data_fixture.create_database_application(group=group, name="Test 1")
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
     table = data_fixture.create_database_table(name="Cars", database=app)
 
     assert table.get_parent() == app
-    assert table.get_root() == group
+    assert table.get_root() == workspace
 
     table_model = table.get_model()
     row = table_model.objects.create()
     assert row.get_parent() == table
-    assert row.get_root() == group
+    assert row.get_root() == workspace

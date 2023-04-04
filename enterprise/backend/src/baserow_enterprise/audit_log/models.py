@@ -5,13 +5,13 @@ from baserow.contrib.database.api.export.serializers import (
     SUPPORTED_CSV_COLUMN_SEPARATORS,
     SUPPORTED_EXPORT_CHARSETS,
 )
-from baserow.core.action.models import JSONEncoderSupportingDataClasses
 from baserow.core.action.registries import (
     ActionCommandType,
     ActionTypeDescription,
     action_type_registry,
     render_action_type_description,
 )
+from baserow.core.encoders import JSONEncoderSupportingDataClasses
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import CreatedAndUpdatedOnMixin
 
@@ -34,8 +34,8 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
     user_id = models.PositiveIntegerField(null=True)
     user_email = models.CharField(max_length=150, null=True, blank=True)
 
-    group_id = models.PositiveIntegerField(null=True)
-    group_name = models.CharField(max_length=160, null=True, blank=True)
+    workspace_id = models.PositiveIntegerField(null=True)
+    workspace_name = models.CharField(max_length=160, null=True, blank=True)
 
     action_type = models.TextField()
     action_timestamp = models.DateTimeField()
@@ -90,9 +90,12 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
 
     class Meta:
         ordering = ["-action_timestamp"]
+        # Note: the index name will be `baserow_ent_action__8db5d6_idx`
+        # (when `workspace_id` used to be called `group_id`), but its true name
+        # is `baserow_ent_action__ca13aa_idx`. See enterprise migration 0016.
         indexes = [
             models.Index(
-                fields=["-action_timestamp", "user_id", "group_id", "action_type"]
+                fields=["-action_timestamp", "user_id", "workspace_id", "action_type"]
             )
         ]
 
@@ -122,9 +125,9 @@ class AuditLogExportJob(Job):
         null=True,
         help_text="Optional: The user to filter the audit log by.",
     )
-    filter_group_id = models.PositiveIntegerField(
+    filter_workspace_id = models.PositiveIntegerField(
         null=True,
-        help_text="Optional: The group to filter the audit log by.",
+        help_text="Optional: The workspace to filter the audit log by.",
     )
     filter_action_type = models.CharField(
         max_length=32,

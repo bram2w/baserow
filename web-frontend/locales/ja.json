@@ -169,7 +169,7 @@
         }
     },
     "trashType": {
-        "group": "グループ",
+        "workspace": "グループ",
         "application": "アプリケーション",
         "table": "テーブル",
         "field": "フィールド",
@@ -208,10 +208,10 @@
         "tooManyRequestsDescription": "リクエスト数が多すぎます。しばらく待ってから実行して下さい。",
         "notCompletedTitle": "アクションは完了しませんでした。",
         "notCompletedDescription": "不明なエラーが発生して操作は完了しませんでした。",
-        "userNotInGroupTitle": "操作は許可されていません。",
-        "userNotInGroupDescription": "グループのメンバーではないので操作を完了することができませんでした。",
-        "invalidGroupPermissionsTitle": "操作は許可されていません。",
-        "invalidGroupPermissionsDescription": "グループにパーミッションがないため操作を完了することができませんでした。",
+        "userNotInWorkspaceTitle": "操作は許可されていません。",
+        "userNotInWorkspaceDescription": "グループのメンバーではないので操作を完了することができませんでした。",
+        "invalidWorkspacePermissionsTitle": "操作は許可されていません。",
+        "invalidWorkspacePermissionsDescription": "グループにパーミッションがないため操作を完了することができませんでした。",
         "tableDoesNotExistTitle": "テーブルは存在しません。",
         "tableDoesNotExistDescription": "テーブルが存在しないため操作は完了できませんでした。",
         "rowDoesNotExistTitle": "行が存在しません。",
@@ -234,8 +234,8 @@
         "cannotRestoreParentBeforeChildDescription": "このアイテムをは削除されたアイテムに依存しているため復元出来ません。先に親アイテムを復元して下さい。",
         "cannotRestoreAsRelatedTableTrashedTitle": "関連するテーブルを先に復元して下さい。",
         "cannotRestoreAsRelatedTableTrashedDescription": "このフィールドは削除されたテーブルに依存しているため復元出来ません。先に削除されたテーブルを復元して下さい。",
-        "groupUserIsLastAdminTitle": "グループから外すことができません",
-        "groupUserIsLastAdminDescription": "グループの最後の管理者はグループから外せません。グループを削除するか、他のメンバーを管理者にしてから外して下さい。",
+        "workspaceUserIsLastAdminTitle": "グループから外すことができません",
+        "workspaceUserIsLastAdminDescription": "グループの最後の管理者はグループから外せません。グループを削除するか、他のメンバーを管理者にしてから外して下さい。",
         "errorMaxJobCountExceededTitle": "操作を開始出来ませんでした。",
         "errorMaxJobCountExceededDescription": "バックグラウンドで実行中の操作があるため、他の操作を開始出来ません。実行中の操作が完了してから再度やり直して下さい。",
         "failedToLockFieldDueToConflictTitle": "フィールドを変更出来ません",
@@ -390,7 +390,12 @@
         "ceilDescription": "引数の値に繰り上げて返却します。",
         "floorDescription": "引数の値に切り下げて返却します。",
         "isNanDescription": "値が 'NaN' ならば正の値を返します。それ以外の場合は false を返します。",
-        "wheNanDescription": "値が 'NaN' でなければ、最初の引数の値を返します。それ以外の場合は、２つ目の引数の値を返します"
+        "wheNanDescription": "値が 'NaN' でなければ、最初の引数の値を返します。それ以外の場合は、２つ目の引数の値を返します",
+        "isNullDescription": "引数が null ならば真、そうでなければ false を返します。",
+        "nowDescription": "UTCでの、現在日時を返します。",
+        "todayDescription": "UTCでの、現在日付を返します。",
+        "toDateTzDescription": "第一引数を日付に変換して返却します。第二引数で書式、第三引数でタイムゾーンを指定出来ます。",
+        "whenNanDescription": "最初の引数が NaN 以外ならば、第一引数の値をそのまま返します。 NaN ならば、第二引数の値を返します。"
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "名称のない行 {value}"

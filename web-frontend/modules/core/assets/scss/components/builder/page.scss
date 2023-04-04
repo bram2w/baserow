@@ -1,0 +1,8 @@
+.page-editor__content {
+  display: flex;
+}
+
+.page-editor__side-panel {
+  flex: 1;
+  border-left: 1px solid $color-neutral-200;
+}

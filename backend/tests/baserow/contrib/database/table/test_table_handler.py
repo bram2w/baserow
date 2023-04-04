@@ -32,7 +32,7 @@ from baserow.contrib.database.table.exceptions import (
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import GridView, GridViewFieldOptions
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
@@ -58,14 +58,14 @@ def test_get_database_table(data_fixture):
     table_copy = handler.get_table(table_id=table.id)
     assert table_copy.id == table.id
 
-    TrashHandler.trash(user, table.database.group, table.database, table.database)
+    TrashHandler.trash(user, table.database.workspace, table.database, table.database)
 
     with pytest.raises(TableDoesNotExist):
         handler.get_table(table_id=table.id)
 
     TrashHandler.restore_item(user, "application", table.database.id)
 
-    TrashHandler.trash(user, table.database.group, None, table.database.group)
+    TrashHandler.trash(user, table.database.workspace, None, table.database.workspace)
     with pytest.raises(TableDoesNotExist):
         handler.get_table(table_id=table.id)
 
@@ -97,7 +97,7 @@ def test_create_database_minimum_table(send_mock, data_fixture):
     assert send_mock.call_args[1]["table"].id == table.id
     assert send_mock.call_args[1]["user"] == user
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_table(user=user_2, database=database, name="")
 
     assert f"database_table_{table.id}" in connection.introspection.table_names()
@@ -277,13 +277,13 @@ def test_fill_table_with_initial_data(data_fixture):
 def test_update_database_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_table(user=user_2, table=table, name="Test 1")
 
     handler.update_table(user=user, table=table, name="Test 1")
@@ -309,7 +309,7 @@ def test_order_tables(send_mock, data_fixture):
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.order_tables(user=user_2, database=database, order=[])
 
     with pytest.raises(TableNotInDatabase):
@@ -354,13 +354,13 @@ def test_order_tables(send_mock, data_fixture):
 def test_delete_database_table(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
 
     handler = TableHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_table(user=user_2, table=table)
 
     assert Table.objects.all().count() == 1
@@ -616,20 +616,20 @@ def test_counting_many_rows_in_many_tables(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_total_row_count_of_group(data_fixture):
-    group = data_fixture.create_group()
-    database = data_fixture.create_database_application(group=group)
+def test_get_total_row_count_of_workspace(data_fixture):
+    workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    table_not_in_group = data_fixture.create_database_table()
+    table_not_in_workspace = data_fixture.create_database_table()
 
-    assert TableHandler.get_total_row_count_of_group(group.id) == 0
+    assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 0
 
     fill_table_rows(10, table)
-    fill_table_rows(10, table_not_in_group)
+    fill_table_rows(10, table_not_in_workspace)
 
     TableHandler.count_rows()
 
-    assert TableHandler.get_total_row_count_of_group(group.id) == 10
+    assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 10
 
 
 @pytest.mark.django_db

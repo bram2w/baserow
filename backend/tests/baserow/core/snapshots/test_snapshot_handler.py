@@ -21,8 +21,8 @@ from baserow.test_utils.fixtures import Fixtures
 @pytest.mark.django_db
 def test_perform_create(data_fixture: Fixtures):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(group=group, order=1)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
     table = data_fixture.create_database_table(user=user, database=application)
     field = data_fixture.create_text_field(user=user, table=table)
     model = table.get_model()
@@ -51,9 +51,12 @@ def test_perform_create_export_serialized_raises_operationalerror(
     application_type_serialized_raising_operationalerror,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     database = CoreHandler().create_application(
-        user=user, group=group, type_name=DatabaseApplicationType.type, name="Database"
+        user=user,
+        workspace=workspace,
+        type_name=DatabaseApplicationType.type,
+        name="Database",
     )
     snapshot = data_fixture.create_snapshot(
         user=user,
@@ -78,9 +81,11 @@ def test_perform_create_export_serialized_raises_operationalerror(
 @pytest.mark.django_db
 def test_perform_restore(data_fixture: Fixtures):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(group=group, order=1)
-    application_snapshot = data_fixture.create_database_application(group=None, order=2)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
+    application_snapshot = data_fixture.create_database_application(
+        workspace=None, order=2
+    )
     table = data_fixture.create_database_table(user=user, database=application_snapshot)
     field = data_fixture.create_text_field(user=user, table=table)
     model = table.get_model()
@@ -111,8 +116,8 @@ def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
         now - datetime.timedelta(days=exp_days) - datetime.timedelta(seconds=10)
     )
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(group=group, order=1)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
 
     with freeze_time(now):
         recent_snapshot = data_fixture.create_snapshot(
@@ -147,8 +152,8 @@ def test_delete_expired_snapshots(data_fixture: Fixtures, settings):
 @pytest.mark.django_db
 def test_skip_schedule_deletion_when_snapshot_not_created_yet(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    application = data_fixture.create_database_application(group=group, order=1)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_database_application(workspace=workspace, order=1)
     snapshot = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application,

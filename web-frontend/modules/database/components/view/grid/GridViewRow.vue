@@ -64,7 +64,7 @@
             <component
               :is="rowExpandButton"
               :row="row"
-              :group-id="groupId"
+              :workspace-id="workspaceId"
               :table="view.table"
               @edit-modal="$emit('edit-modal', row)"
             ></component>
@@ -85,7 +85,7 @@
       <GridViewCell
         v-for="field in fieldsToRender"
         :key="'row-field-' + row._.persistentId + '-' + field.id.toString()"
-        :group-id="groupId"
+        :workspace-id="workspaceId"
         :field="field"
         :row="row"
         :state="state"
@@ -107,6 +107,7 @@
         @cell-mousedown-left="$emit('cell-mousedown-left', { row, field })"
         @cell-mouseover="$emit('cell-mouseover', { row, field })"
         @cell-mouseup-left="$emit('cell-mouseup-left', { row, field })"
+        @cell-shift-click="$emit('cell-shift-click', { row, field })"
         @add-row-after="$emit('add-row-after', $event)"
       ></GridViewCell>
     </div>
@@ -133,7 +134,7 @@ export default {
       type: Object,
       required: true,
     },
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
     },
@@ -177,6 +178,11 @@ export default {
     count: {
       type: Number,
       required: true,
+    },
+    canFitInTwoColumns: {
+      type: Boolean,
+      required: false,
+      default: () => true,
     },
   },
   data() {
@@ -280,7 +286,7 @@ export default {
 
         const allFieldIds = this.allFields.map((field) => field.id)
         let fieldIndex = allFieldIds.findIndex((id) => field.id === id)
-        fieldIndex += !field.primary ? 1 : 0
+        fieldIndex += !field.primary && this.canFitInTwoColumns ? 1 : 0
 
         const [minRow, maxRow] =
           this.$store.getters[

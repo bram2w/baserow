@@ -245,6 +245,14 @@ export class FieldType extends Registerable {
     return true
   }
 
+  /**
+   * When true, indicates a field type that can be used to
+   * represent a date.
+   */
+  canRepresentDate() {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -1515,6 +1523,10 @@ class BaseDateFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  canRepresentDate() {
+    return true
+  }
 }
 
 export class DateFieldType extends BaseDateFieldType {
@@ -2759,22 +2771,24 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       let stringA = ''
       let stringB = ''
 
-      const groups = this.app.store.getters['group/getAll']
+      const workspaces = this.app.store.getters['workspace/getAll']
 
-      if (valuesA.length > 0 && groups.length > 0) {
+      if (valuesA.length > 0 && workspaces.length > 0) {
         stringA = valuesA
           .map(
-            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+            (obj) =>
+              this.app.store.getters['workspace/getUserById'](obj.id).name
           )
           .join('')
       } else if (valuesA.length > 0) {
         stringA = valuesA.map((obj) => obj.name).join('')
       }
 
-      if (valuesB.length > 0 && groups.length > 0) {
+      if (valuesB.length > 0 && workspaces.length > 0) {
         stringB = valuesB
           .map(
-            (obj) => this.app.store.getters['group/getUserById'](obj.id).name
+            (obj) =>
+              this.app.store.getters['workspace/getUserById'](obj.id).name
           )
           .join('')
       } else if (valuesB.length > 0) {
@@ -2792,14 +2806,16 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       return ''
     }
 
-    const groups = this.app.store.getters['group/getAll']
+    const workspaces = this.app.store.getters['workspace/getAll']
 
     let nameList = []
 
-    if (groups.length > 0) {
+    if (workspaces.length > 0) {
       nameList = value.map((value) => {
-        const groupUser = this.app.store.getters['group/getUserById'](value.id)
-        return groupUser.name
+        const workspaceUser = this.app.store.getters['workspace/getUserById'](
+          value.id
+        )
+        return workspaceUser.name
       })
     } else {
       // public views
@@ -2840,12 +2856,14 @@ export class MultipleCollaboratorsFieldType extends FieldType {
 
         return uniqueValuesOnly
           .map((emailOrName) => {
-            const groupUser =
-              this.app.store.getters['group/getUserByEmail'](emailOrName)
-            if (groupUser !== undefined) {
-              return groupUser
+            const workspaceUser =
+              this.app.store.getters['workspace/getUserByEmail'](emailOrName)
+            if (workspaceUser !== undefined) {
+              return workspaceUser
             }
-            return this.app.store.getters['group/getUserByName'](emailOrName)
+            return this.app.store.getters['workspace/getUserByName'](
+              emailOrName
+            )
           })
           .filter((obj) => obj !== null)
           .map((obj) => {

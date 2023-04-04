@@ -856,7 +856,7 @@ def test_link_row_field_type_api_row_views(api_client, data_fixture):
 @pytest.mark.field_link_row
 def test_import_export_link_row_field(data_fixture):
     user = data_fixture.create_user()
-    imported_group = data_fixture.create_group(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
     customers_table = data_fixture.create_database_table(
@@ -881,11 +881,11 @@ def test_import_export_link_row_field(data_fixture):
         values={f"field_{link_row_field.id}": [c_row.id, c_row_2.id]},
     )
 
-    exported_applications = core_handler.export_group_applications(
-        database.group, BytesIO()
+    exported_applications = core_handler.export_workspace_applications(
+        database.workspace, BytesIO()
     )
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()
@@ -972,7 +972,7 @@ def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_displa
     )
     TrashHandler.trash(
         user,
-        database.group,
+        database.workspace,
         database,
         trashed_row,
         parent_id=table_with_trashed_row.id,

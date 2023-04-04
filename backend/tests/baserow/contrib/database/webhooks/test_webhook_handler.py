@@ -12,7 +12,7 @@ from baserow.contrib.database.webhooks.exceptions import (
 )
 from baserow.contrib.database.webhooks.handler import WebhookHandler
 from baserow.contrib.database.webhooks.models import TableWebhook, TableWebhookCall
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 
 @pytest.mark.django_db
@@ -152,7 +152,7 @@ def test_get_webhook(data_fixture):
 
     # user with no permission to the table will not be able to access webhook
     user_2 = data_fixture.create_user()
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         webhook_handler.get_table_webhook(user_2, webhook.id)
 
     with pytest.raises(AttributeError):
@@ -182,7 +182,7 @@ def test_get_all_table_webhooks(data_fixture, django_assert_num_queries):
 
     handler = WebhookHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.get_all_table_webhooks(user_2, table)
 
     webhooks = handler.get_all_table_webhooks(user, table)
@@ -213,7 +213,7 @@ def test_create_webhook(data_fixture):
         "request_method": "POST",
     }
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         webhook_handler.create_table_webhook(user=user_2, table=table, **webhook_data)
 
     webhook = webhook_handler.create_table_webhook(
@@ -289,7 +289,7 @@ def test_update_webhook(data_fixture):
 
     handler = WebhookHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_table_webhook(user=user_2, webhook=webhook, name="Test")
 
     webhook = handler.update_table_webhook(
@@ -363,7 +363,7 @@ def test_delete_webhook(data_fixture):
 
     handler = WebhookHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_table_webhook(user=user_2, webhook=webhook)
 
     handler.delete_table_webhook(user=user, webhook=webhook)
@@ -380,7 +380,7 @@ def test_trigger_test_call(data_fixture):
 
     handler = WebhookHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.trigger_test_call(user=user_2, table=table, event_type="rows.created")
 
     responses.add(responses.POST, "http://localhost", json={}, status=200)

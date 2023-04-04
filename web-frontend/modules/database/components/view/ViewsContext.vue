@@ -37,7 +37,7 @@
                 $hasPermission(
                   'database.table.order_views',
                   table,
-                  database.group.id
+                  database.workspace.id
                 ),
               id: view.id,
               update: createOrderCall(view.ownership_type),
@@ -58,7 +58,11 @@
     <div
       v-if="
         !readOnly &&
-        $hasPermission('database.table.create_view', table, database.group.id)
+        $hasPermission(
+          'database.table.create_view',
+          table,
+          database.workspace.id
+        )
       "
       class="select__footer"
     >
@@ -136,7 +140,10 @@ export default {
       return Object.fromEntries(
         Object.entries(this.viewOwnershipTypes)
           .filter(
-            ([key]) => this.viewOwnershipTypes[key].isDeactivated() === false
+            ([key]) =>
+              this.viewOwnershipTypes[key].isDeactivated(
+                this.database.workspace.id
+              ) === false
           )
           .sort(
             (a, b) => a[1].getListViewTypeSort() - b[1].getListViewTypeSort()

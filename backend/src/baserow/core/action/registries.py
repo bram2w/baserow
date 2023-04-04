@@ -15,7 +15,7 @@ from baserow.api.sessions import (
     get_client_undo_redo_action_group_id,
     get_untrusted_client_session_id,
 )
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registry import Instance, Registry
 from baserow.core.telemetry.utils import add_baserow_trace_attrs, baserow_trace_methods
 
@@ -38,8 +38,8 @@ class ActionScopeType(abc.ABC, Instance):
     scope. An ActionScopeType is a possible type of scope an action can be
     categorized into, ultimately represented by a string and stored in the db.
 
-    For example, there is a GroupActionScopeType. When stored in the database
-    actions in this scope have a scope value of "group10", "group999", etc.
+    For example, there is a WorkspaceActionScopeType. When stored in the database
+    actions in this scope have a scope value of "workspace10", "workspace999", etc.
     """
 
     @property
@@ -123,6 +123,21 @@ def render_action_type_description(
     and the params dict is {"table_name": "My table"} then the result will be
     "Created table My table".
     """
+
+    # The action type description translations currently still point to "group"
+    # variables. To ensure that existing log entries can be rendered, we'll
+    # update `params_dict` with the value of `group_compat_map` if the key exists
+    # in `params_dict`.
+    group_compat_map = {  # GroupDeprecation
+        "workspace_id": "group_id",
+        "workspace_name": "group_name",
+        "original_workspace_name": "original_group_name",
+    }
+    for workspace_field, group_compat_field in group_compat_map.items():
+        # `workspace_field` will be in `params_dict` if we're rendering an
+        #  action type description after we renamed group to workspace.
+        if workspace_field in params_dict:
+            params_dict[group_compat_field] = params_dict[workspace_field]
 
     if not description.long:
         return f"{description.short}: {params_dict}"
@@ -217,7 +232,7 @@ class ActionType(
         user: AbstractUser,
         params: Dict[str, Any],
         scope: ActionScopeStr,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
         timestamp: Optional[datetime] = None,
         action_command_type: ActionCommandType = ActionCommandType.DO,
     ):
@@ -233,7 +248,7 @@ class ActionType(
 
         add_baserow_trace_attrs(
             action_user_id=user.id,
-            group_id=getattr(group, "id", None),
+            workspace_id=getattr(workspace, "id", None),
             action_scope=scope,
             action_type=cls.type,
         )
@@ -245,7 +260,7 @@ class ActionType(
             action_params=params,
             action_command_type=action_command_type,
             action_timestamp=action_timestamp,
-            group=group,
+            workspace=workspace,
             session=session,
             scope=scope,
             action_group=action_group,
@@ -257,7 +272,7 @@ class ActionType(
         user: AbstractUser,
         params: Any,
         scope: ActionScopeStr,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
     ) -> Optional[Action]:
         """
         Registers a new action in the database using the untrusted client session id
@@ -267,11 +282,11 @@ class ActionType(
         :param params: A dataclass to serialize and store with the action which will be
             provided when undoing and redoing it.
         :param scope: The scope in which this action occurred.
-        :param group: The group this action is associated with.
+        :param workspace: The workspace this action is associated with.
         :return: The created action if any.
         """
 
-        cls.send_action_done_signal(user, dataclasses.asdict(params), scope, group)
+        cls.send_action_done_signal(user, dataclasses.asdict(params), scope, workspace)
 
 
 class UndoableActionTypeMixin:
@@ -311,7 +326,7 @@ class UndoableActionTypeMixin:
         user: AbstractUser,
         params: Any,
         scope: ActionScopeStr,
-        group: Optional[Group] = None,
+        workspace: Optional[Workspace] = None,
     ) -> Optional[Action]:
         """
         Registers a new action in the database using the untrusted client session id
@@ -321,7 +336,7 @@ class UndoableActionTypeMixin:
         :param params: A dataclass to serialize and store with the action which will be
             provided when undoing and redoing it.
         :param scope: The scope in which this action occurred.
-        :param group: The group this action is associated with.
+        :param workspace: The workspace this action is associated with.
         :return: The created action.
         """
 
@@ -330,7 +345,7 @@ class UndoableActionTypeMixin:
 
         action = Action.objects.create(
             user=user,
-            group=group,
+            workspace=workspace,
             type=cls.type,
             params=cls.params_to_serializable(params),
             scope=scope,
@@ -339,7 +354,7 @@ class UndoableActionTypeMixin:
         )
 
         cls.send_action_done_signal(
-            user, dataclasses.asdict(params), scope, group, action.created_on
+            user, dataclasses.asdict(params), scope, workspace, action.created_on
         )
 
         return action

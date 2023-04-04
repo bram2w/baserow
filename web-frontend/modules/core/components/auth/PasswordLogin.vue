@@ -11,8 +11,8 @@
         <template #invitedBy>
           <strong>{{ invitation.invited_by }}</strong>
         </template>
-        <template #group>
-          <strong>{{ invitation.group }}</strong>
+        <template #workspace>
+          <strong>{{ invitation.workspace }}</strong>
         </template>
       </i18n>
     </Alert>
@@ -90,7 +90,7 @@
 import { required, email } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import error from '@baserow/modules/core/mixins/error'
-import GroupService from '@baserow/modules/core/services/group'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 
 export default {
   name: 'PasswordLogin',
@@ -164,7 +164,9 @@ export default {
         // If there is an invitation we can immediately accept that one after the user
         // successfully signs in.
         if (this.invitation?.email === email) {
-          await GroupService(this.$client).acceptInvitation(this.invitation.id)
+          await WorkspaceService(this.$client).acceptInvitation(
+            this.invitation.id
+          )
         }
 
         this.$i18n.setLocale(data.language)

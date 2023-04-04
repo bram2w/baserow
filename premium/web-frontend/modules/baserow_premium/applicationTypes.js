@@ -7,7 +7,7 @@ export class PremiumDatabaseApplicationType extends DatabaseApplicationType {
     return this.app.$hasPermission(
       'database.table.list_comments',
       table,
-      database.group.id
+      database.workspace.id
     )
       ? RowCommentsSidebar
       : null

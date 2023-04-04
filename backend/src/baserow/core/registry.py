@@ -1,5 +1,6 @@
 import contextlib
 import typing
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import (
     Any,
@@ -19,15 +20,17 @@ from django.db import models
 
 from rest_framework import serializers
 
-from baserow.api.utils import ExceptionMappingType, get_serializer_class, map_exceptions
+from baserow.api.utils import (
+    ExceptionMappingType,
+    generate_meta_ref_name_based_on_model,
+    get_serializer_class,
+    map_exceptions,
+)
 
 from .exceptions import InstanceTypeAlreadyRegistered, InstanceTypeDoesNotExist
 
 if typing.TYPE_CHECKING:
     from django.contrib.contenttypes.models import ContentType
-
-
-T = TypeVar("T")
 
 
 class Instance(object):
@@ -39,18 +42,25 @@ class Instance(object):
     type: str
     """A unique string that identifies the instance."""
 
+    compat_type: str = ""
+    """ If this instance has been renamed, and we want to support
+        compatibility of the original `type`, implement it with `compat_type`. """
+
     def __init__(self):
         if not self.type:
             raise ImproperlyConfigured("The type of an instance must be set.")
 
 
-class ModelInstanceMixin(Generic[T]):
+DjangoModel = TypeVar("DjangoModel", bound=models.Model)
+
+
+class ModelInstanceMixin(Generic[DjangoModel]):
     """
     This mixin introduces a model_class that will be related to the instance. It is to
     be used in combination with a registry that extends the ModelRegistryMixin.
     """
 
-    model_class: Type[T]
+    model_class: Type[DjangoModel]
 
     def __init__(self):
         if not self.model_class:
@@ -65,14 +75,14 @@ class ModelInstanceMixin(Generic[T]):
 
         return ContentType.objects.get_for_model(self.model_class)
 
-    def get_object_for_this_type(self, **kwargs) -> T:
+    def get_object_for_this_type(self, **kwargs) -> DjangoModel:
         """
         Returns the object given the filters in parameter.
         """
 
         return self.get_content_type().get_object_for_this_type(**kwargs)
 
-    def get_all_objects_for_this_type(self, **kwargs) -> models.QuerySet:
+    def get_all_objects_for_this_type(self, **kwargs) -> models.QuerySet[DjangoModel]:
         """
         Returns a queryset to get the objects given the filters in parameter.
         """
@@ -131,7 +141,7 @@ class CustomFieldsInstanceMixin:
             )
 
     def get_serializer_class(
-        self, *args, request_serializer: bool = False, **kwargs
+        self, *args, request_serializer: bool = False, meta_ref_name=None, **kwargs
     ) -> serializers.ModelSerializer:
         """
         Returns a model serializer class based on this type field names and overrides.
@@ -152,12 +162,20 @@ class CustomFieldsInstanceMixin:
 
         mixins = [] if request_serializer else self.serializer_mixins
 
+        # Prepend the word "Request" to the ref name, so that when this serializer is
+        # generated for the request and response, it doesn't result in a name conflict.
+        if request_serializer and meta_ref_name is None:
+            meta_ref_name = "Request" + generate_meta_ref_name_based_on_model(
+                self.model_class, base_class=kwargs.get("base_class")
+            )
+
         return get_serializer_class(
             self.model_class,
             field_names,
             field_overrides=field_overrides,
             base_mixins=mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
+            meta_ref_name=meta_ref_name,
             *args,
             **kwargs,
         )
@@ -260,8 +278,12 @@ class MapAPIExceptionsInstanceMixin:
             yield
 
 
-class ImportExportMixin:
-    def export_serialized(self, instance):
+T = TypeVar("T")
+
+
+class ImportExportMixin(Generic[T], ABC):
+    @abstractmethod
+    def export_serialized(self, instance: T) -> Dict[str, Any]:
         """
         Should return with a serialized version of the provided instance. It must be
         JSON serializable and it must be possible to the import via the
@@ -270,38 +292,30 @@ class ImportExportMixin:
         :param instance: The instance that must be serialized and exported. Could be
             any object type because it depends on the type instance that uses this
             mixin.
-        :type instance: Object
         :return: Serialized version of the instance.
-        :rtype: dict
         """
 
-        raise NotImplementedError("The export_serialized method must be implemented.")
-
-    def import_serialized(self, parent, serialized_values, id_mapping):
+    @abstractmethod
+    def import_serialized(
+        self, parent: Any, serialized_values: Dict[str, Any], id_mapping: Dict
+    ) -> T:
         """
         Should import and create the correct instances in the database based on the
         serialized values exported by the `export_serialized` method. It should create
         a copy. An entry to the mapping could be made if a new instance is created.
 
         :param parent: Optionally a parent instance can be provided here.
-        :type parent: Object
         :param serialized_values: The values that must be inserted.
-        :type serialized_values: dict
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
-        :type id_mapping: dict
         :return: The newly created instance.
-        :rtype: Object
         """
 
-        raise NotImplementedError("The import_serialized method must be implemented.")
+
+InstanceSubClass = TypeVar("InstanceSubClass", bound=Instance)
 
 
-T = TypeVar("T", bound=Instance)
-K = TypeVar("K")
-
-
-class Registry(Generic[T]):
+class Registry(Generic[InstanceSubClass]):
     name: str
     """The unique name that is used when raising exceptions."""
 
@@ -318,9 +332,9 @@ class Registry(Generic[T]):
                 "InstanceModelRegistry to raise proper errors."
             )
 
-        self.registry: Dict[str, T] = {}
+        self.registry: Dict[str, InstanceSubClass] = {}
 
-    def get(self, type_name: str) -> T:
+    def get(self, type_name: str) -> InstanceSubClass:
         """
         Returns a registered instance of the given type name.
 
@@ -332,17 +346,34 @@ class Registry(Generic[T]):
         :rtype: InstanceModelInstance
         """
 
+        # If the `type_name` isn't in the registry, we may raise DoesNotExist.
         if type_name not in self.registry:
-            raise self.does_not_exist_exception_class(
-                type_name, f"The {self.name} type {type_name} does not exist."
-            )
+
+            # But first, we'll test to see if it matches an Instance's
+            # `compat_name`. If it does, we'll use that Instance's `type`.
+            type_name_via_compat = self.get_by_type_name_by_compat(type_name)
+            if type_name_via_compat:
+                type_name = type_name_via_compat
+            else:
+                raise self.does_not_exist_exception_class(
+                    type_name, f"The {self.name} type {type_name} does not exist."
+                )
 
         return self.registry[type_name]
 
-    def get_by_type(self, instance_type: Type[K]) -> K:
+    def get_by_type_name_by_compat(self, compat_name: str) -> Optional[str]:
+        """
+        Returns a registered instance's `type` by using the compatibility name.
+        """
+
+        for instance in self.get_all():
+            if instance.compat_type == compat_name:
+                return instance.type
+
+    def get_by_type(self, instance_type: Type[InstanceSubClass]) -> InstanceSubClass:
         return self.get(instance_type.type)
 
-    def get_all(self) -> ValuesView[T]:
+    def get_all(self) -> ValuesView[InstanceSubClass]:
         """
         Returns all registered instances
 
@@ -372,7 +403,7 @@ class Registry(Generic[T]):
 
         return [(k, k) for k in self.registry.keys()]
 
-    def register(self, instance: T):
+    def register(self, instance: InstanceSubClass):
         """
         Registers a new instance in the registry.
 
@@ -393,7 +424,7 @@ class Registry(Generic[T]):
 
         self.registry[instance.type] = instance
 
-    def unregister(self, value: T):
+    def unregister(self, value: InstanceSubClass):
         """
         Removes a registered instance from the registry. An instance or type name can be
         provided as value.
@@ -417,11 +448,10 @@ class Registry(Generic[T]):
             )
 
 
-P = TypeVar("P")
-
-
-class ModelRegistryMixin(Generic[P, T]):
-    def get_by_model(self, model_instance: Union[P, type]) -> T:
+class ModelRegistryMixin(Generic[DjangoModel, InstanceSubClass]):
+    def get_by_model(
+        self, model_instance: Union[DjangoModel, Type[DjangoModel]]
+    ) -> InstanceSubClass:
         """
         Returns a registered instance of the given model class.
 
@@ -440,7 +470,7 @@ class ModelRegistryMixin(Generic[P, T]):
         return self.get_for_class(clazz)
 
     @lru_cache
-    def get_for_class(self, clazz: type) -> T:
+    def get_for_class(self, clazz: Type[DjangoModel]) -> InstanceSubClass:
         """
         Returns a registered instance of the given model class.
 
@@ -474,7 +504,9 @@ class ModelRegistryMixin(Generic[P, T]):
             f"The {self.name} model {clazz} does not exist."
         )
 
-    def get_all_by_model_isinstance(self, model_instance: P) -> List[T]:
+    def get_all_by_model_isinstance(
+        self, model_instance: DjangoModel
+    ) -> List[InstanceSubClass]:
         """
         Returns all registered types which are an instance of the provided
         model_instance.
@@ -491,8 +523,14 @@ class ModelRegistryMixin(Generic[P, T]):
         return all_matching_non_abstract_types
 
 
-class CustomFieldsRegistryMixin:
-    def get_serializer(self, model_instance, base_class=None, context=None, **kwargs):
+class CustomFieldsRegistryMixin(Generic[DjangoModel]):
+    def get_serializer(
+        self,
+        model_instance: DjangoModel,
+        base_class: Optional[Type[serializers.ModelSerializer]] = None,
+        context: Optional[Dict[str, any]] = None,
+        **kwargs,
+    ):
         """
         Based on the provided model_instance and base_class a unique serializer
         containing the correct field type is generated.

@@ -54,7 +54,7 @@ def test_list_templates(api_client, data_fixture):
     assert response_json[0]["templates"][0]["name"] == template_1.name
     assert response_json[0]["templates"][0]["icon"] == template_1.icon
     assert response_json[0]["templates"][0]["keywords"] == "test1,test2"
-    assert response_json[0]["templates"][0]["group_id"] == template_1.group_id
+    assert response_json[0]["templates"][0]["workspace_id"] == template_1.workspace_id
     assert response_json[0]["templates"][0]["is_default"] is True
     assert len(response_json[1]["templates"]) == 2
     assert response_json[1]["templates"][0]["id"] == template_2.id
@@ -71,8 +71,8 @@ def test_list_templates(api_client, data_fixture):
 def test_install_template(api_client, data_fixture):
 
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
 
     handler = CoreHandler()
     handler.sync_templates()
@@ -83,7 +83,7 @@ def test_install_template(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install",
-            kwargs={"group_id": group.id, "template_id": template_2.id},
+            kwargs={"workspace_id": workspace.id, "template_id": template_2.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -93,7 +93,7 @@ def test_install_template(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install",
-            kwargs={"group_id": group_2.id, "template_id": template.id},
+            kwargs={"workspace_id": workspace_2.id, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -102,7 +102,8 @@ def test_install_template(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            "api:templates:install", kwargs={"group_id": 0, "template_id": template.id}
+            "api:templates:install",
+            kwargs={"workspace_id": 0, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -111,7 +112,8 @@ def test_install_template(api_client, data_fixture):
 
     response = api_client.post(
         reverse(
-            "api:templates:install", kwargs={"group_id": group.id, "template_id": 0}
+            "api:templates:install",
+            kwargs={"workspace_id": workspace.id, "template_id": 0},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -121,7 +123,7 @@ def test_install_template(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install",
-            kwargs={"group_id": group.id, "template_id": template.id},
+            kwargs={"workspace_id": workspace.id, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -129,10 +131,10 @@ def test_install_template(api_client, data_fixture):
     response_json = response.json()
 
     assert len(response_json) == 1
-    assert response_json[0]["group"]["id"] == group.id
+    assert response_json[0]["workspace"]["id"] == workspace.id
     application = Application.objects.all().order_by("id").last()
     assert response_json[0]["id"] == application.id
-    assert response_json[0]["group"]["id"] == application.group_id
+    assert response_json[0]["workspace"]["id"] == application.workspace_id
 
 
 @pytest.mark.django_db
@@ -140,8 +142,8 @@ def test_install_template(api_client, data_fixture):
 def test_async_install_template_errors(api_client, data_fixture):
 
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
 
     handler = CoreHandler()
     handler.sync_templates()
@@ -152,7 +154,7 @@ def test_async_install_template_errors(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install_async",
-            kwargs={"group_id": group.id, "template_id": template_2.id},
+            kwargs={"workspace_id": workspace.id, "template_id": template_2.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -162,7 +164,7 @@ def test_async_install_template_errors(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install_async",
-            kwargs={"group_id": group_2.id, "template_id": template.id},
+            kwargs={"workspace_id": workspace_2.id, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -172,7 +174,7 @@ def test_async_install_template_errors(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install_async",
-            kwargs={"group_id": 0, "template_id": template.id},
+            kwargs={"workspace_id": 0, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -182,7 +184,7 @@ def test_async_install_template_errors(api_client, data_fixture):
     response = api_client.post(
         reverse(
             "api:templates:install_async",
-            kwargs={"group_id": group.id, "template_id": 0},
+            kwargs={"workspace_id": workspace.id, "template_id": 0},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -198,7 +200,7 @@ def test_async_install_template_schedule_job(
 ):
 
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     handler = CoreHandler()
     handler.sync_templates()
@@ -208,7 +210,7 @@ def test_async_install_template_schedule_job(
     response = api_client.post(
         reverse(
             "api:templates:install_async",
-            kwargs={"group_id": group.id, "template_id": template.id},
+            kwargs={"workspace_id": workspace.id, "template_id": template.id},
         ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -236,7 +238,7 @@ def test_async_install_template_serializer(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     handler = CoreHandler()
     handler.sync_templates()
@@ -246,7 +248,7 @@ def test_async_install_template_serializer(api_client, data_fixture):
     job = JobHandler().create_and_start_job(
         user,
         InstallTemplateJobType.type,
-        group_id=group.id,
+        workspace_id=workspace.id,
         template_id=template.id,
     )
 
@@ -262,12 +264,12 @@ def test_async_install_template_serializer(api_client, data_fixture):
     job_rsp = response.json()
     assert job_rsp["state"] == "finished"
     assert job_rsp["type"] == "install_template"
-    assert job_rsp["group"]["id"] == group.id
+    assert job_rsp["workspace"]["id"] == workspace.id
     assert job_rsp["template"]["id"] == template.id
     assert job_rsp["template"]["name"] == template.name
     assert len(job_rsp["installed_applications"]) == 1
     installed_app = job_rsp["installed_applications"][0]
     assert installed_app["name"] == "Event marketing"
     assert installed_app["order"] == 1
-    assert installed_app["group"]["id"] == group.id
+    assert installed_app["workspace"]["id"] == workspace.id
     assert installed_app["type"] == "database"

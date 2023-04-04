@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "É staff",
-            "isGroupAdmin": "É administrador do grupo",
+            "isWorkspaceAdmin": "É administrador do grupo",
             "active": "Ativo",
             "deactivated": "Desativado"
         },
         "adminType": {
             "dashboard": "Painel",
             "users": "Usuários",
-            "groups": "Grupos",
+            "workspaces": "Grupos",
             "licenses": "Licenças"
         },
         "viewType": {
@@ -54,18 +54,18 @@
     "registerLicenseForm": {
         "licenseKey": "Chave de licença"
     },
-    "groupsAdminTable": {
-        "allGroups": "Todos grupos",
+    "workspacesAdminTable": {
+        "allWorkspaces": "Todos grupos",
         "id": "ID",
         "name": "Nome",
         "members": "Membros",
         "applications": "Aplicações",
         "created": "Criado"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Excluído permanentemente"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Deletar {name}",
         "confirmation": "Tem certeza de que deseja excluir o grupo: {name}?",
         "comment": "O grupo será excluído permanentemente, incluindo os aplicativos relacionados. Não é possível desfazer esta ação.",
@@ -80,7 +80,7 @@
         "id": "ID",
         "username": "Nome de usuário",
         "name": "Nome",
-        "groups": "Grupos",
+        "workspaces": "Grupos",
         "lastLogin": "Último login",
         "dateJoined": "Inscrito",
         "active": "Ativo"
@@ -160,7 +160,7 @@
         "title": "Painel de controle",
         "totals": "Totais",
         "totalUsers": "Total de usuários",
-        "totalGroups": "Total de grupos",
+        "totalWorkspaces": "Total de grupos",
         "totalApplications": "Total de aplicações",
         "newUsers": "Novos usuários",
         "newUsers24h": "Novos usuários nas últimas 24 horas",

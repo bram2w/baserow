@@ -19,28 +19,34 @@ def enable_enterprise_for_all_tests_here(enable_enterprise):
 
 @pytest.mark.django_db
 def test_delete_user_cascades_to_teamsubject(enterprise_data_fixture):
-    groupuser = enterprise_data_fixture.create_user_group()
-    team = enterprise_data_fixture.create_team(group=groupuser.group)
-    subject = enterprise_data_fixture.create_subject(team=team, subject=groupuser.user)
-    groupuser.user.delete()
+    workspaceuser = enterprise_data_fixture.create_user_workspace()
+    team = enterprise_data_fixture.create_team(workspace=workspaceuser.workspace)
+    subject = enterprise_data_fixture.create_subject(
+        team=team, subject=workspaceuser.user
+    )
+    workspaceuser.user.delete()
     assert TeamSubject.objects.filter(pk=subject.id).exists() is False
 
 
 @pytest.mark.django_db
-def test_delete_groupuser_cascades_to_teamsubject(enterprise_data_fixture):
+def test_delete_workspaceuser_cascades_to_teamsubject(enterprise_data_fixture):
     user = enterprise_data_fixture.create_user()
 
-    group_a = enterprise_data_fixture.create_group()
-    groupuser_a = enterprise_data_fixture.create_user_group(user=user, group=group_a)
-    team_a = enterprise_data_fixture.create_team(group=groupuser_a.group)
-    enterprise_data_fixture.create_subject(team=team_a, subject=groupuser_a.user)
+    workspace_a = enterprise_data_fixture.create_workspace()
+    workspaceuser_a = enterprise_data_fixture.create_user_workspace(
+        user=user, workspace=workspace_a
+    )
+    team_a = enterprise_data_fixture.create_team(workspace=workspaceuser_a.workspace)
+    enterprise_data_fixture.create_subject(team=team_a, subject=workspaceuser_a.user)
 
-    group_b = enterprise_data_fixture.create_group()
-    groupuser_b = enterprise_data_fixture.create_user_group(user=user, group=group_b)
-    team_b = enterprise_data_fixture.create_team(group=groupuser_b.group)
-    enterprise_data_fixture.create_subject(team=team_b, subject=groupuser_b.user)
+    workspace_b = enterprise_data_fixture.create_workspace()
+    workspaceuser_b = enterprise_data_fixture.create_user_workspace(
+        user=user, workspace=workspace_b
+    )
+    team_b = enterprise_data_fixture.create_team(workspace=workspaceuser_b.workspace)
+    enterprise_data_fixture.create_subject(team=team_b, subject=workspaceuser_b.user)
 
-    groupuser_a.delete()
+    workspaceuser_a.delete()
 
     assert TeamSubject.objects.filter(team=team_a, subject_id=user.id).exists() is False
     assert TeamSubject.objects.filter(team=team_b, subject_id=user.id).exists() is True

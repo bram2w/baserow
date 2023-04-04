@@ -85,20 +85,20 @@ describe('Test premium licensing', () => {
       ],
       [
         'when user has instance-wide premium they have premium features for any specific' +
-          ' group',
+          ' workspace',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { [PremiumLicenseType.getType()]: true },
             },
           },
-          forGroup: 1,
+          forWorkspace: 1,
           thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
         'when user has does not have global premium they dont have premium features' +
-          ' for any specific group',
+          ' for any specific workspace',
         {
           whenUserDataIs: {
             active_licenses: {
@@ -108,122 +108,122 @@ describe('Test premium licensing', () => {
               },
             },
           },
-          forGroup: 1,
+          forWorkspace: 1,
           thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has license for no specific groups then other groups dont have ' +
+        'when user has license for no specific workspaces then other workspaces dont have ' +
           ' active premium features',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: {},
+              per_workspace: {},
             },
           },
-          forGroup: 1,
+          forWorkspace: 1,
           thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has license for one specific group then other groups dont have ' +
+        'when user has license for one specific workspace then other workspaces dont have ' +
           ' active premium features',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: { 1: { [PremiumLicenseType.getType()]: true } },
+              per_workspace: { 1: { [PremiumLicenseType.getType()]: true } },
             },
           },
-          forGroup: 2,
+          forWorkspace: 2,
           thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has license for specific groups then other groups dont have ' +
+        'when user has license for specific workspaces then other workspaces dont have ' +
           ' active premium features',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: { other_license: true },
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { not_prem: true },
                 3: { [PremiumLicenseType.getType()]: true },
               },
             },
           },
-          forGroup: 2,
+          forWorkspace: 2,
           thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has license for specific groups then they wont have global premium' +
+        'when user has license for specific workspaces then they wont have global premium' +
           ' active ',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { not_prem: true },
                 3: { [PremiumLicenseType.getType()]: true },
               },
             },
           },
-          forGroup: undefined,
+          forWorkspace: undefined,
           thenUserHasPremiumFeatureIs: false,
         },
       ],
       [
-        'when user has prem license for a specific group then for that group they' +
+        'when user has prem license for a specific workspace then for that workspace they' +
           ' will have active premium features.',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
               },
             },
           },
-          forGroup: 1,
+          forWorkspace: 1,
           thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
-        'when user has prem license for two groups then for one of those ' +
-          ' groups they will have have active premium features.',
+        'when user has prem license for two workspaces then for one of those ' +
+          ' workspaces they will have have active premium features.',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { [PremiumLicenseType.getType()]: true },
               },
             },
           },
-          forGroup: 2,
+          forWorkspace: 2,
           thenUserHasPremiumFeatureIs: true,
         },
       ],
       [
-        'when user has prem license for multiple groups then for one of those ' +
-          ' groups they will have have active premium features.',
+        'when user has prem license for multiple workspaces then for one of those ' +
+          ' workspaces they will have have active premium features.',
         {
           whenUserDataIs: {
             active_licenses: {
               instance_wide: {},
-              per_group: {
+              per_workspace: {
                 1: { [PremiumLicenseType.getType()]: true },
                 2: { [PremiumLicenseType.getType()]: true },
                 3: { [PremiumLicenseType.getType()]: true },
               },
             },
           },
-          forGroup: 1,
+          forWorkspace: 1,
           thenUserHasPremiumFeatureIs: true,
         },
       ],
@@ -234,11 +234,14 @@ describe('Test premium licensing', () => {
         ...fakeUserData,
         ...testCaseSpecification.whenUserDataIs,
       })
-      if (testCaseSpecification.forGroup) {
-        const hasPerGroupPremium = testApp
+      if (testCaseSpecification.forWorkspace) {
+        const hasPerWorkspacePremium = testApp
           .getApp()
-          .$hasFeature(PremiumFeatures.PREMIUM, testCaseSpecification.forGroup)
-        expect(hasPerGroupPremium).toBe(
+          .$hasFeature(
+            PremiumFeatures.PREMIUM,
+            testCaseSpecification.forWorkspace
+          )
+        expect(hasPerWorkspacePremium).toBe(
           testCaseSpecification.thenUserHasPremiumFeatureIs
         )
       } else {

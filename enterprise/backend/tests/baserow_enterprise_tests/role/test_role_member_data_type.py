@@ -5,7 +5,7 @@ from baserow_enterprise_tests.role.test_role_permission_manager import (
     _populate_test_data,
 )
 
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.member_data_types import EnterpriseRolesDataType
 
@@ -28,8 +28,8 @@ def test_roles_member_data_type(data_fixture, enterprise_data_fixture, synced_ro
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -42,12 +42,12 @@ def test_roles_member_data_type(data_fixture, enterprise_data_fixture, synced_ro
     users = [admin, builder, editor, viewer, viewer_plus, builder_less, no_access]
 
     result = EnterpriseRolesDataType().annotate_serialized_data(
-        group_1,
+        workspace_1,
         [
             {
                 "user_id": u.id,
                 "permissions": RoleAssignmentHandler()
-                .get_current_role_assignment(u, group_1)
+                .get_current_role_assignment(u, workspace_1)
                 .role.uid,
             }
             for u in users
@@ -100,17 +100,17 @@ def test_roles_member_data_type(data_fixture, enterprise_data_fixture, synced_ro
     ]
 
     result = EnterpriseRolesDataType().annotate_serialized_data(
-        group_2,
+        workspace_2,
         [
             {
                 "user_id": u.id,
                 "permissions": RoleAssignmentHandler()
-                .get_current_role_assignment(u, group_2)
+                .get_current_role_assignment(u, workspace_2)
                 .role.uid,
             }
             for u in users
         ],
-        GroupUser.objects.get(permissions="ADMIN", group=group_2).user,
+        WorkspaceUser.objects.get(permissions="ADMIN", workspace=workspace_2).user,
     )
     assert result == [
         {
@@ -173,8 +173,8 @@ def test_roles_member_data_type_doesnt_expose_to_users_without_read_role(
         viewer_plus,
         builder_less,
         no_access,
-        group_1,
-        group_2,
+        workspace_1,
+        workspace_2,
         database_1,
         database_2,
         database_3,
@@ -190,13 +190,13 @@ def test_roles_member_data_type_doesnt_expose_to_users_without_read_role(
         {
             "user_id": u.id,
             "permissions": RoleAssignmentHandler()
-            .get_current_role_assignment(u, group_1)
+            .get_current_role_assignment(u, workspace_1)
             .role.uid,
         }
         for u in users
     ]
     result = EnterpriseRolesDataType().annotate_serialized_data(
-        group_1,
+        workspace_1,
         list(serialized_users_pre_annotation),
         viewer,
     )

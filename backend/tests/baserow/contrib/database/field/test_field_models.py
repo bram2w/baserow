@@ -118,10 +118,10 @@ def test_link_row_field(data_fixture):
 @pytest.mark.django_db
 def test_field_hierarchy(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    app = data_fixture.create_database_application(group=group, name="Test 1")
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
     table = data_fixture.create_database_table(name="Cars", database=app)
     field = TextField.objects.create(name="Test1", table=table, order=1)
 
     assert field.get_parent() == table
-    assert field.get_root() == group
+    assert field.get_root() == workspace

@@ -6,17 +6,28 @@ from typing import Dict, Optional
 
 from django.conf import settings
 from django.core.management import call_command
-from django.db import DEFAULT_DB_ALIAS, OperationalError
+from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
+from django.db.migrations.executor import MigrationExecutor
+from django.utils.timezone import now
 
 import pytest
+from faker import Faker
 from pyinstrument import Profiler
 
+from baserow.compat.api.conf import GROUP_DEPRECATION
 from baserow.contrib.database.application_types import DatabaseApplicationType
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.permission_manager import CorePermissionManagerType
-from baserow.core.trash.trash_types import GroupTrashableItemType
+from baserow.core.trash.trash_types import WorkspaceTrashableItemType
 
 SKIP_FLAGS = ["disabled-in-ci", "once-per-day-in-ci"]
 COMMAND_LINE_FLAG_PREFIX = "--run-"
+
+
+# Provides a new fake instance for each class. Solve uniqueness problem sometimes.
+@pytest.fixture(scope="class", autouse=True)
+def fake():
+    yield Faker()
 
 
 # We need to manually deal with the event loop since we are using asyncio in the
@@ -30,10 +41,10 @@ def async_event_loop():
 
 
 @pytest.fixture
-def data_fixture():
+def data_fixture(fake):
     from .fixtures import Fixtures
 
-    return Fixtures()
+    return Fixtures(fake)
 
 
 @pytest.fixture()
@@ -43,8 +54,8 @@ def api_client():
     return APIClient()
 
 
-@pytest.fixture(scope="module")
-def reset_schema_after_module(request, django_db_setup, django_db_blocker):
+@pytest.fixture
+def reset_schema(django_db_blocker):
     yield
     with django_db_blocker.unblock():
         call_command("migrate", verbosity=0, database=DEFAULT_DB_ALIAS)
@@ -250,6 +261,16 @@ def profiler():
     return profile_this
 
 
+@pytest.fixture
+def group_compat_timebomb():
+    if now() >= GROUP_DEPRECATION:
+        pytest.fail(
+            "Group compatibility ended on "
+            f"{GROUP_DEPRECATION.strftime('%Y-%m-%d')}, please migrate to"
+            "using the Workspace endpoints."
+        )
+
+
 class BaseMaxLocksPerTransactionStub:
     # Determines whether we raise an `OperationalError` about
     # `max_locks_per_transaction` or something else.
@@ -270,7 +291,7 @@ class MaxLocksPerTransactionExceededApplicationType(
 
 
 class MaxLocksPerTransactionExceededGroupTrashableItemType(
-    GroupTrashableItemType, BaseMaxLocksPerTransactionStub
+    WorkspaceTrashableItemType, BaseMaxLocksPerTransactionStub
 ):
     def permanently_delete_item(self, *args, **kwargs):
         raise OperationalError(self.get_message())
@@ -317,7 +338,7 @@ def trash_item_type_perm_delete_item_raising_operationalerror(
         stub_trash_item_type.raise_transaction_exception = raise_transaction_exception
         mutable_trash_item_type_registry.get_for_class.cache_clear()
         mutable_trash_item_type_registry.registry[
-            GroupTrashableItemType.type
+            WorkspaceTrashableItemType.type
         ] = stub_trash_item_type
 
         yield stub_trash_item_type
@@ -326,10 +347,23 @@ def trash_item_type_perm_delete_item_raising_operationalerror(
 
 
 class StubbedCorePermissionManagerType(CorePermissionManagerType):
-    def check_permissions(
-        self, actor, operation, group=None, context=None, include_trash=False
-    ):
-        return True
+    """
+    Stub for the first permission manager.
+    """
+
+    def __init__(self, raise_permission_denied: bool = False):
+        self.raise_permission_denied = raise_permission_denied
+
+    def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
+
+        result = {}
+        for check in checks:
+            if self.raise_permission_denied:
+                result[check] = PermissionDenied()
+            else:
+                result[check] = True
+
+        return result
 
 
 @pytest.fixture
@@ -347,3 +381,91 @@ def bypass_check_permissions(
         first_manager
     ] = stub_core_permission_manager
     yield stub_core_permission_manager
+
+
+@pytest.fixture
+def stub_check_permissions() -> callable:
+    """
+    Overrides the existing `CorePermissionManagerType` so that
+    we can return True or raise a PermissionDenied exception on a `check_permissions`
+    call.
+    """
+
+    @contextlib.contextmanager
+    def _perform_stub(
+        raise_permission_denied: bool = False,
+    ) -> CorePermissionManagerType:
+        from baserow.core.registries import permission_manager_type_registry
+
+        before = permission_manager_type_registry.registry.copy()
+        stub_core_permission_manager = StubbedCorePermissionManagerType(
+            raise_permission_denied
+        )
+        first_manager = settings.PERMISSION_MANAGERS[0]
+        permission_manager_type_registry.registry[
+            first_manager
+        ] = stub_core_permission_manager
+        yield stub_core_permission_manager
+        permission_manager_type_registry.registry = before
+
+    return _perform_stub
+
+
+@pytest.fixture
+def teardown_table_metadata():
+    """
+    If you are creating `database_table` metadata rows in your tests without actually
+    making the real user tables, this fixture will automatically clean them up for you
+    so later tests won't crash due to the weird metadata state.
+    """
+
+    try:
+        yield
+    finally:
+        with connection.cursor() as cursor:
+            cursor.execute("truncate table database_table cascade;")
+
+
+class TestMigrator:
+    def migrate(self, target):
+        executor = MigrationExecutor(connection)
+        executor.loader.build_graph()  # reload.
+        executor.migrate(target)
+        new_state = executor.loader.project_state(target)
+        return new_state
+
+
+@pytest.fixture(scope="session")
+def second_separate_database_for_migrations(
+    request,
+    django_test_environment: None,
+    django_db_blocker,
+) -> None:
+    from django.test.utils import setup_databases, teardown_databases
+
+    setup_databases_args = {}
+
+    with django_db_blocker.unblock():
+        db_cfg = setup_databases(
+            verbosity=request.config.option.verbose,
+            interactive=False,
+            **setup_databases_args,
+        )
+
+    def teardown_database() -> None:
+        with django_db_blocker.unblock():
+            try:
+                teardown_databases(db_cfg, verbosity=request.config.option.verbose)
+            except Exception as exc:
+                request.node.warn(
+                    pytest.PytestWarning(
+                        f"Error when trying to teardown test databases: {exc!r}"
+                    )
+                )
+
+    request.addfinalizer(teardown_database)
+
+
+@pytest.fixture
+def migrator(second_separate_database_for_migrations, transactional_db, reset_schema):
+    yield TestMigrator()

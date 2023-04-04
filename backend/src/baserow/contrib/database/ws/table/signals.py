@@ -19,7 +19,7 @@ from baserow.ws.tasks import broadcast_to_group, broadcast_to_permitted_users
 def table_created(sender, table, user, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            table.database.group_id,
+            table.database.workspace_id,
             ReadDatabaseTableOperationType.type,
             DatabaseTableObjectScopeType.type,
             table.id,
@@ -39,7 +39,7 @@ def table_updated(
 ):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            table.database.group_id,
+            table.database.workspace_id,
             ReadDatabaseTableOperationType.type,
             DatabaseTableObjectScopeType.type,
             table.id,
@@ -58,7 +58,7 @@ def table_updated(
 def table_deleted(sender, table_id, table, user, **kwargs):
     transaction.on_commit(
         lambda: broadcast_to_permitted_users.delay(
-            table.database.group_id,
+            table.database.workspace_id,
             ReadDatabaseTableOperationType.type,
             DatabaseTableObjectScopeType.type,
             table.id,
@@ -79,7 +79,7 @@ def tables_reordered(sender, database, order, user, **kwargs):
     order = [generate_hash(o) for o in order]
     transaction.on_commit(
         lambda: broadcast_to_group.delay(
-            database.group_id,
+            database.workspace_id,
             {
                 "type": "tables_reordered",
                 # A user might also not have access to the database itself
@@ -91,12 +91,12 @@ def tables_reordered(sender, database, order, user, **kwargs):
     )
 
 
-@receiver(core_signals.group_user_deleted)
+@receiver(core_signals.workspace_user_deleted)
 def user_deleted_unsubscribe_from_page(
-    sender, group_user_id, group_user, user, **kwargs
+    sender, workspace_user_id, workspace_user, user, **kwargs
 ):
     transaction.on_commit(
         lambda: unsubscribe_user_from_table_currently_subscribed_to.delay(
-            group_user.user_id, group_user.group_id
+            workspace_user.user_id, workspace_user.workspace_id
         )
     )

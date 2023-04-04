@@ -63,12 +63,14 @@ def test_application_get_api_urls():
 @pytest.mark.django_db
 def test_duplicate_application_name_collision(data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_name = "app"
 
-    app = data_fixture.create_database_application(group=group, name=application_name)
+    app = data_fixture.create_database_application(
+        workspace=workspace, name=application_name
+    )
     app_2 = data_fixture.create_database_application(
-        group=group, name=f"{application_name} 2"
+        workspace=workspace, name=f"{application_name} 2"
     )
 
     # choose a new unique name

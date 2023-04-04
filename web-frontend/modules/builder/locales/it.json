@@ -20,6 +20,67 @@
     "pageForm": {
         "nameLabel": "Nome",
         "errorNameNotUnique": "Una pagina con questo nome esiste già",
-        "defaultName": "Page"
+        "defaultName": "Page",
+        "errorStartingSlash": "Un percorso valido deve iniziare con '/'",
+        "errorValidPathCharacters": "Il percorso contiene caratteri non validi",
+        "pathLabel": "Percorso",
+        "errorPathNotUnique": "Un percorso con questo nome esiste giá"
+    },
+    "pageHeaderItemTypes": {
+        "labelElements": "Elementi",
+        "labelDataSource": "Dati",
+        "labelSettings": "Impostazioni pagina",
+        "labelVariables": "Variabili"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Ricerca elementi"
+    },
+    "elementType": {
+        "heading": "Intestazione",
+        "paragraph": "Paragrafo",
+        "paragraphDescription": "Linea di testo singola",
+        "headingDescription": "Titolo intestazione"
+    },
+    "addElementButton": {
+        "label": "Elemento"
+    },
+    "addElementModal": {
+        "title": "Aggiungi un nuovo elemento",
+        "searchPlaceholder": "Cerca elementi"
+    },
+    "elementMenu": {
+        "moveUp": "Muovi in alto",
+        "moveDown": "Muovi in basso"
+    },
+    "duplicatePageJobType": {
+        "duplicating": "Duplicando",
+        "duplicatedTitle": "Pagina duplicata"
+    },
+    "pageSidePanelType": {
+        "style": "Stile",
+        "visibility": "Visibilità",
+        "general": "Generale",
+        "events": "Eventi"
+    },
+    "emptySidePanelState": {
+        "message": "Clicca su uno degli elementi per vedere maggiori dettagli"
+    },
+    "headingElement": {
+        "noValue": "Nessun titolo..."
+    },
+    "headingElementForm": {
+        "textTitle": "Testo",
+        "textPlaceholder": "Inserisci testo...",
+        "headingName": "Intestazione {level} <h{level}>",
+        "textError": "Il valore non è valido.",
+        "levelTitle": "Livello"
+    },
+    "paragraphElement": {
+        "noValue": "Paragrafo vuoto..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Testo",
+        "textError": "Il valore non è valido.",
+        "textPlaceholder": "Inserisci testo..."
     }
 }

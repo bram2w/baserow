@@ -4,9 +4,9 @@
       v-if="
         userId === row.user_id ||
         !$hasPermission(
-          'group_user.update',
+          'workspace_user.update',
           row,
-          column.additionalProps.groupId
+          column.additionalProps.workspaceId
         )
       "
     >
@@ -63,15 +63,15 @@ export default {
     },
   },
   computed: {
-    group() {
-      return this.$store.getters['group/get'](
-        this.column.additionalProps.groupId
+    workspace() {
+      return this.$store.getters['workspace/get'](
+        this.column.additionalProps.workspaceId
       )
     },
     roles() {
-      return this.group
-        ? filterRoles(this.group._.roles, {
-            scopeType: 'group',
+      return this.workspace
+        ? filterRoles(this.workspace._.roles, {
+            scopeType: 'workspace',
             subjectType: 'auth.User',
           })
         : []
@@ -96,9 +96,9 @@ export default {
         await RoleAssignmentsService(this.$client).assignRole(
           newMember.user_id,
           'auth.User',
-          this.column.additionalProps.groupId,
-          this.column.additionalProps.groupId,
-          'group',
+          this.column.additionalProps.workspaceId,
+          this.column.additionalProps.workspaceId,
+          'workspace',
           permissionsNew
         )
         this.$emit('refresh')

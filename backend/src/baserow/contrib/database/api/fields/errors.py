@@ -24,6 +24,11 @@ ERROR_FIELD_NOT_IN_TABLE = (
     HTTP_400_BAD_REQUEST,
     "The provided field does not belong in the related table.",
 )
+ERROR_INCOMPATIBLE_FIELD = (
+    "ERROR_INCOMPATIBLE_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided field is not compatible.",
+)
 ERROR_ORDER_BY_FIELD_NOT_FOUND = (
     "ERROR_ORDER_BY_FIELD_NOT_FOUND",
     HTTP_400_BAD_REQUEST,

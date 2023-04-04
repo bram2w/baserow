@@ -10,10 +10,10 @@ from baserow_premium.license.registries import SeatUsageSummary
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
 from baserow.core.models import (
-    GROUP_USER_PERMISSION_MEMBER,
+    WORKSPACE_USER_PERMISSION_MEMBER,
     Application,
-    Group,
-    GroupUser,
+    Workspace,
+    WorkspaceUser,
 )
 from baserow_enterprise.role.constants import BUILDER_ROLE_UID, FREE_ROLE_UIDS
 from baserow_enterprise.role.default_roles import default_roles
@@ -25,26 +25,26 @@ User = get_user_model()
 
 class RoleBasedSeatUsageSummaryCalculator:
     @classmethod
-    def get_seat_usage_for_group(cls, group: Group) -> SeatUsageSummary:
-        return cls._get_seat_usage(group)
+    def get_seat_usage_for_workspace(cls, workspace: Workspace) -> SeatUsageSummary:
+        return cls._get_seat_usage(workspace)
 
     @classmethod
     def get_seat_usage_for_entire_instance(cls) -> SeatUsageSummary:
         return cls._get_seat_usage(None)
 
     @classmethod
-    def _get_seat_usage(cls, group: Optional[Group]) -> SeatUsageSummary:
+    def _get_seat_usage(cls, workspace: Optional[Workspace]) -> SeatUsageSummary:
         """
-        Checks all the various sources of role information (GroupUser.permissions and
-        the RoleAssignments) and calculates how many free/paid/per role seats are in
+        Checks all the various sources of role information (WorkspaceUser.permissions
+        and the RoleAssignments) and calculates how many free/paid/per role seats are in
         use instance wide.
 
         If a user has a role directly or indirectly from a team which isn't free on
-        any scope (group, database, table) then they are counted as needing a paid
+        any scope (workspace, database, table) then they are counted as needing a paid
         user seat.
 
-        :param group: The summary can be restricted to only looking at roles,
-            users and teams in one specific group if provided in this parameter. If
+        :param workspace: The summary can be restricted to only looking at roles,
+            users and teams in one specific workspace if provided in this parameter. If
             not provided then the entire instance is checked.
         """
 
@@ -57,29 +57,33 @@ class RoleBasedSeatUsageSummaryCalculator:
             Database, Application
         ).values()
         table_content_type = ContentType.objects.get_for_model(Table)
-        group_content_type = ContentType.objects.get_for_model(Group)
+        workspace_content_type = ContentType.objects.get_for_model(Workspace)
 
         valid_applications = Application.objects
         valid_tables = Table.objects.filter(database__trashed=False)
         valid_teams = Team.objects.all()
-        valid_groups = Group.objects.all()
+        valid_workspaces = Workspace.objects.all()
 
         activated_user_ids = User.objects.filter(
             profile__to_be_deleted=False, is_active=True
         )
 
-        # This queryset lists all the user ids and permissions set on group level.
-        all_group_permission = GroupUser.objects.filter(
+        # This queryset lists all the user ids and permissions set on workspace level.
+        all_workspace_permission = WorkspaceUser.objects.filter(
             user__profile__to_be_deleted=False, user__is_active=True
         )
 
-        if group:
-            all_group_permission = all_group_permission.filter(group=group.id)
-            activated_user_ids = activated_user_ids.filter(groupuser__group=group)
-            valid_tables = valid_tables.filter(database__group=group)
-            valid_applications = valid_applications.filter(group=group)
-            valid_teams = valid_teams.filter(group=group)
-            valid_groups = valid_groups.filter(id=group.id)
+        if workspace:
+            all_workspace_permission = all_workspace_permission.filter(
+                workspace=workspace.id
+            )
+            activated_user_ids = activated_user_ids.filter(
+                workspaceuser__workspace=workspace
+            )
+            valid_tables = valid_tables.filter(database__workspace=workspace)
+            valid_applications = valid_applications.filter(workspace=workspace)
+            valid_teams = valid_teams.filter(workspace=workspace)
+            valid_workspaces = valid_workspaces.filter(id=workspace.id)
 
         # These querysets list all the user ids and the related permissions stored in
         # the role assignment table. This works with direct assignments, but also via
@@ -96,20 +100,20 @@ class RoleBasedSeatUsageSummaryCalculator:
                 scope_type=table_content_type,
             )
             | Q(
-                scope_id__in=valid_groups.values_list("id", flat=True),
-                scope_type=group_content_type,
+                scope_id__in=valid_workspaces.values_list("id", flat=True),
+                scope_type=workspace_content_type,
             ),
-            group__trashed=False,
+            workspace__trashed=False,
         )
-        if group:
+        if workspace:
             base_role_assignment_permission_queryset = (
-                base_role_assignment_permission_queryset.filter(group=group)
+                base_role_assignment_permission_queryset.filter(workspace=workspace)
             )
 
-        all_group_permission = all_group_permission.annotate(
+        all_workspace_permission = all_workspace_permission.annotate(
             role_uid=Case(
                 When(
-                    permissions=GROUP_USER_PERMISSION_MEMBER,
+                    permissions=WORKSPACE_USER_PERMISSION_MEMBER,
                     then=Value(BUILDER_ROLE_UID),
                 ),
                 output_field=TextField(),
@@ -136,7 +140,7 @@ class RoleBasedSeatUsageSummaryCalculator:
             .values("user_id", "role_uid")
         )
 
-        user_roles = all_group_permission.union(
+        user_roles = all_workspace_permission.union(
             all_role_assignment_permission, all=True
         ).union(all_team_assignment_role_uid, all=True)
 

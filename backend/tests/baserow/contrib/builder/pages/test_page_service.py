@@ -5,7 +5,7 @@ import pytest
 from baserow.contrib.builder.pages.exceptions import PageNotInBuilder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 
 @patch("baserow.contrib.builder.pages.service.page_created")
@@ -14,18 +14,18 @@ def test_page_created_signal_sent(page_created_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    page = PageService().create_page(user, builder, "test")
+    page = PageService().create_page(user, builder, "test", "/test")
 
     assert page_created_mock.called_with(page=page, user=user)
 
 
 @pytest.mark.django_db
-def test_create_page_user_not_in_group(data_fixture):
+def test_create_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
 
-    with pytest.raises(UserNotInGroup):
-        PageService().create_page(user, builder, "test")
+    with pytest.raises(UserNotInWorkspace):
+        PageService().create_page(user, builder, "test", "/test")
 
 
 @patch("baserow.contrib.builder.pages.service.page_deleted")
@@ -41,26 +41,26 @@ def test_page_deleted_signal_sent(page_deleted_mock, data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_delete_page_user_not_in_group(data_fixture):
+def test_delete_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     user_unrelated = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    page = PageService().create_page(user, builder, "test")
+    page = PageService().create_page(user, builder, "test", "/test")
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         PageService().delete_page(user_unrelated, page)
 
     assert Page.objects.count() == 1
 
 
 @pytest.mark.django_db
-def test_get_page_user_not_in_group(data_fixture):
+def test_get_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         PageService().get_page(user, page.id)
 
 
@@ -77,12 +77,12 @@ def test_page_updated_signal_sent(page_updated_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_update_page_user_not_in_group(data_fixture):
+def test_update_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         PageService().update_page(user, page, name="test")
 
 
@@ -113,13 +113,13 @@ def test_pages_reordered_signal_sent(pages_reordered_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_pages_user_not_in_group(data_fixture):
+def test_order_pages_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
     page_one = data_fixture.create_builder_page(builder=builder, order=1)
     page_two = data_fixture.create_builder_page(builder=builder, order=2)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         PageService().order_pages(user, builder, [page_two.id, page_one.id])
 
 
@@ -148,9 +148,9 @@ def test_duplicate_page(data_fixture):
 
 
 @pytest.mark.django_db
-def test_duplicate_page_user_not_in_group(data_fixture):
+def test_duplicate_page_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         PageService().duplicate_page(user, page)

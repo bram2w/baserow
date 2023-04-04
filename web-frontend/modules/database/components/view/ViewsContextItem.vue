@@ -83,7 +83,8 @@ export default {
     },
     deactivated() {
       return (
-        !this.readOnly && this.viewType.isDeactivated(this.database.group.id)
+        !this.readOnly &&
+        this.viewType.isDeactivated(this.database.workspace.id)
       )
     },
     deactivatedClickModal() {
@@ -94,32 +95,32 @@ export default {
         this.$hasPermission(
           'database.table.run_export',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.import_rows',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.duplicate',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.create_webhook',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.update',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.delete',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },

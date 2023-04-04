@@ -92,8 +92,8 @@ class CreateRoleAssignmentSerializer(serializers.Serializer):
         required=True,
         allow_null=True,
         help_text=(
-            "The uid of the role you want to assign to the user or team in the given group. "
-            "You can omit this property if you want to remove the role."
+            "The uid of the role you want to assign to the user or team in the given "
+            "workspace. You can omit this property if you want to remove the role."
         ),
     )
 
@@ -159,7 +159,7 @@ class RoleAssignmentSerializer(serializers.ModelSerializer):
     role = RoleField(
         model=Role,
         help_text=(
-            "The uid of the role assigned to the user or team in the given group."
+            "The uid of the role assigned to the user or team in the given workspace."
         ),
     )
 

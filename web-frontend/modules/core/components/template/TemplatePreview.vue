@@ -89,7 +89,7 @@ export default {
 
       try {
         const { data } = await ApplicationService(this.$client).fetchAll(
-          template.group_id
+          template.workspace_id
         )
         data.forEach((application) => {
           populateApplication(application, this.$registry)

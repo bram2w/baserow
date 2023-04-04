@@ -15,16 +15,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import (
-    CharField,
-    Count,
-    DateTimeField,
-    F,
-    Func,
-    Q,
-    QuerySet,
-    Value,
-)
+from django.db.models import CharField, DateTimeField, F, Func, Q, QuerySet, Value
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -75,7 +66,7 @@ from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.handler import CoreHandler
-from baserow.core.models import GroupUser, UserFile
+from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
@@ -707,6 +698,7 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
+    can_represent_date = True
 
     def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
         date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
@@ -1613,7 +1605,7 @@ class LinkRowFieldType(FieldType):
             CoreHandler().check_permissions(
                 user,
                 CreateFieldOperationType.type,
-                group=table.database.group,
+                workspace=table.database.workspace,
                 context=table,
             )
             values["link_row_table"] = table
@@ -1658,7 +1650,7 @@ class LinkRowFieldType(FieldType):
         CoreHandler().check_permissions(
             user,
             CreateFieldOperationType.type,
-            table.database.group,
+            table.database.workspace,
             context=link_row_table,
         )
 
@@ -1771,7 +1763,7 @@ class LinkRowFieldType(FieldType):
             CoreHandler().check_permissions(
                 user,
                 CreateFieldOperationType.type,
-                to_field.table.database.group,
+                to_field.table.database.workspace,
                 context=to_field.link_row_table,
             )
 
@@ -1779,7 +1771,7 @@ class LinkRowFieldType(FieldType):
             CoreHandler().check_permissions(
                 user,
                 DeleteRelatedLinkRowFieldOperationType.type,
-                from_field.table.database.group,
+                from_field.table.database.workspace,
                 context=from_field.link_row_table,
             )
 
@@ -3274,12 +3266,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             return False
 
     def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
-
-        return (
-            FormulaField.objects.filter(needs_periodic_update=True)
-            .annotate(num_dependencies=Count("field_dependencies"))
-            .filter(num_dependencies=0)
-        )
+        return FormulaField.objects.filter(needs_periodic_update=True)
 
     def run_periodic_update(
         self,
@@ -3801,12 +3788,12 @@ class MultipleCollaboratorsFieldType(FieldType):
             return []
 
         user_ids = [v["id"] for v in value]
-        group = instance.table.database.group
-        group_users_count = GroupUser.objects.filter(
-            user_id__in=user_ids, group_id=group.id
+        workspace = instance.table.database.workspace
+        workspace_users_count = WorkspaceUser.objects.filter(
+            user_id__in=user_ids, workspace_id=workspace.id
         ).count()
 
-        if group_users_count != len(user_ids):
+        if workspace_users_count != len(user_ids):
             raise AllProvidedCollaboratorIdsMustBeValidUsers(user_ids)
 
         return user_ids
@@ -3824,10 +3811,10 @@ class MultipleCollaboratorsFieldType(FieldType):
             all_user_ids = all_user_ids.union(user_ids)
             values_by_row[row_index] = user_ids
 
-        group = instance.table.database.group
+        workspace = instance.table.database.workspace
 
-        selected_ids = GroupUser.objects.filter(
-            user_id__in=all_user_ids, group_id=group.id
+        selected_ids = WorkspaceUser.objects.filter(
+            user_id__in=all_user_ids, workspace_id=workspace.id
         ).values_list("user_id", flat=True)
 
         if len(selected_ids) != len(all_user_ids):
@@ -3886,10 +3873,10 @@ class MultipleCollaboratorsFieldType(FieldType):
             str(f"MultipleCollaboratorsField{instance.id}User"),
             (AbstractUser,),
             {
-                # We need to override the `groups` and `user_permissions` here
+                # We need to override the `workspaces` and `user_permissions` here
                 # because they're normally many to many relationships with the
-                # `Group` and `Permission` model. This is something that we do not need
-                # and we don't want to create reversed relationships for generated
+                # `Workspace` and `Permission` model. This is something that we do not
+                # need and we don't want to create reversed relationships for generated
                 # model.
                 "groups": None,
                 "user_permissions": None,
@@ -3907,8 +3894,8 @@ class MultipleCollaboratorsFieldType(FieldType):
             "db_constraint": False,
         }
         additional_filters = {
-            "id__in": GroupUser.objects.filter(
-                group_id=instance.table.database.group_id
+            "id__in": WorkspaceUser.objects.filter(
+                workspace_id=instance.table.database.workspace_id
             ).values_list("user_id", flat=True)
         }
 
@@ -3964,7 +3951,7 @@ class MultipleCollaboratorsFieldType(FieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        group_id = id_mapping["import_group_id"]
+        workspace_id = id_mapping["import_workspace_id"]
         cache_entry = f"{field_name}_relations_import"
         if cache_entry not in cache:
             # In order to prevent a lot of lookup queries in the through table, we want
@@ -3972,12 +3959,12 @@ class MultipleCollaboratorsFieldType(FieldType):
             # containing a mapping of the row ids to collaborator emails.
             cache[cache_entry] = defaultdict(list)
 
-            groupusers_from_group = GroupUser.objects.filter(
-                group_id=group_id
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
             ).select_related("user")
 
-            for groupuser in groupusers_from_group:
-                cache[cache_entry][groupuser.user.email] = groupuser.user.id
+            for workspaceuser in workspaceusers_from_workspace:
+                cache[cache_entry][workspaceuser.user.email] = workspaceuser.user.id
 
         user_ids = []
         for email in value:
@@ -3996,11 +3983,11 @@ class MultipleCollaboratorsFieldType(FieldType):
 
         if cache_entry_name not in cache:
             table = Table.objects.get(id=instance.table_id)
-            groupusers_from_group = GroupUser.objects.filter(
-                group=table.database.group
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace=table.database.workspace
             ).select_related("user")
             cache[cache_entry_name] = [
-                groupuser.user for groupuser in groupusers_from_group
+                workspaceuser.user for workspaceuser in workspaceusers_from_workspace
             ]
 
         collaborators = cache[cache_entry_name]

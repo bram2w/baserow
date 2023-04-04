@@ -839,7 +839,7 @@ def test_can_undo_redo_insert_field_in_action_group(data_fixture):
         },
     )
 
-    # insert left/right is an action group composed of two actions:
+    # insert left/right is an action workspace composed of two actions:
     # 1. create field
     # 2. update fields options
 

@@ -12,18 +12,24 @@ from baserow.core.action.registries import (
     UndoableActionType,
 )
 from baserow.core.action.scopes import (
-    GROUP_ACTION_CONTEXT,
-    GroupActionScopeType,
+    WORKSPACE_ACTION_CONTEXT,
     RootActionScopeType,
+    WorkspaceActionScopeType,
 )
-from baserow.core.handler import CoreHandler, GroupForUpdate
-from baserow.core.models import Application, Group, GroupInvitation, GroupUser, Template
+from baserow.core.handler import CoreHandler, WorkspaceForUpdate
+from baserow.core.models import (
+    Application,
+    Template,
+    Workspace,
+    WorkspaceInvitation,
+    WorkspaceUser,
+)
 from baserow.core.registries import application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder
 
 
-class DeleteGroupActionType(UndoableActionType):
+class DeleteWorkspaceActionType(UndoableActionType):
     type = "delete_group"
 
     description = ActionTypeDescription(
@@ -33,29 +39,29 @@ class DeleteGroupActionType(UndoableActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, group: GroupForUpdate):
+    def do(cls, user: AbstractUser, workspace: WorkspaceForUpdate):
         """
-        Deletes an existing group and related applications if the user has admin
-        permissions for the group. See baserow.core.handler.CoreHandler.delete_group
-        for more details. Undoing this action restores the group, redoing it deletes it
-        again.
+        Deletes an existing workspace and related applications if the user has admin
+        permissions for the workspace.
+        See baserow.core.handler.CoreHandler.delete_workspace for more details.
+        Undoing this action restores the workspace, redoing it deletes it again.
 
-        :param user: The user performing the delete.
-        :param group: A LockedGroup obtained from CoreHandler.get_group_for_update which
-            will be deleted.
+        :param user: The user performing the deletion.
+        :param workspace: A LockedWorkspace obtained from
+            CoreHandler.get_workspace_for_update which will be deleted.
         """
 
-        CoreHandler().delete_group(user, group)
+        CoreHandler().delete_workspace(user, workspace)
 
         cls.register_action(
             user=user,
-            params=cls.Params(group.id, group.name),
+            params=cls.Params(workspace.id, workspace.name),
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
 
     @classmethod
@@ -71,8 +77,8 @@ class DeleteGroupActionType(UndoableActionType):
     ):
         TrashHandler.restore_item(
             user,
-            "group",
-            params.group_id,
+            "workspace",
+            params.workspace_id,
         )
 
     @classmethod
@@ -82,10 +88,10 @@ class DeleteGroupActionType(UndoableActionType):
         params: Params,
         action_to_redo: Action,
     ):
-        CoreHandler().delete_group_by_id(user, params.group_id)
+        CoreHandler().delete_workspace_by_id(user, params.workspace_id)
 
 
-class CreateGroupActionType(UndoableActionType):
+class CreateWorkspaceActionType(UndoableActionType):
     type = "create_group"
     description = ActionTypeDescription(
         _("Create group"),
@@ -94,30 +100,30 @@ class CreateGroupActionType(UndoableActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, group_name: str) -> GroupUser:
+    def do(cls, user: AbstractUser, workspace_name: str) -> WorkspaceUser:
         """
-        Creates a new group for an existing user. See
-        baserow.core.handler.CoreHandler.create_group for more details. Undoing this
-        action deletes the created group, redoing it restores it from the trash.
+        Creates a new workspace for an existing user. See
+        baserow.core.handler.CoreHandler.create_workspace for more details. Undoing this
+        action deletes the created workspace, redoing it restores it from the trash.
 
-        :param user: The user creating the group.
-        :param group_name: The name to give the group.
+        :param user: The user creating the workspace.
+        :param workspace_name: The name to give the workspace.
         """
 
-        group_user = CoreHandler().create_group(user, name=group_name)
-        group = group_user.group
+        workspace_user = CoreHandler().create_workspace(user, name=workspace_name)
+        workspace = workspace_user.workspace
 
         cls.register_action(
             user=user,
-            params=cls.Params(group.id, group_name),
+            params=cls.Params(workspace.id, workspace_name),
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_user
+        return workspace_user
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
@@ -130,7 +136,7 @@ class CreateGroupActionType(UndoableActionType):
         params: Params,
         action_to_undo: Action,
     ):
-        CoreHandler().delete_group_by_id(user, params.group_id)
+        CoreHandler().delete_workspace_by_id(user, params.workspace_id)
 
     @classmethod
     def redo(
@@ -140,11 +146,11 @@ class CreateGroupActionType(UndoableActionType):
         action_to_redo: Action,
     ):
         TrashHandler.restore_item(
-            user, "group", params.group_id, parent_trash_item_id=None
+            user, "workspace", params.workspace_id, parent_trash_item_id=None
         )
 
 
-class UpdateGroupActionType(UndoableActionType):
+class UpdateWorkspaceActionType(UndoableActionType):
     type = "update_group"
     description = ActionTypeDescription(
         _("Update group"),
@@ -156,41 +162,41 @@ class UpdateGroupActionType(UndoableActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
-        original_group_name: str
+        workspace_id: int
+        workspace_name: str
+        original_workspace_name: str
 
     @classmethod
     def do(
-        cls, user: AbstractUser, group: GroupForUpdate, new_group_name: str
-    ) -> GroupForUpdate:
+        cls, user: AbstractUser, workspace: WorkspaceForUpdate, new_workspace_name: str
+    ) -> WorkspaceForUpdate:
         """
-        Updates the values of a group if the user has admin permissions to the group.
-        See baserow.core.handler.CoreHandler.upgrade_group for more details. Undoing
-        this action restores the name of the group prior to this action being performed,
-        redoing this restores the new name set initially.
+        Updates the values of a workspace if the user has admin permissions to the
+        workspace. See baserow.core.handler.CoreHandler.upgrade_workspace for more
+        details. Undoing this action restores the name of the workspace prior to this
+        action being performed, redoing this restores the new name set initially.
 
-        :param user: The user creating the group.
-        :param group: A LockedGroup obtained from CoreHandler.get_group_for_update on
-            which the update will be run.
-        :param new_group_name: The new name to give the group.
-        :return: The updated group.
+        :param user: The user creating the workspace.
+        :param workspace: A LockedWorkspace obtained from
+            CoreHandler.get_workspace_for_update on which the update will be run.
+        :param new_workspace_name: The new name to give the workspace.
+        :return: The updated workspace.
         """
 
-        original_group_name = group.name
-        CoreHandler().update_group(user, group, name=new_group_name)
+        original_workspace_name = workspace.name
+        CoreHandler().update_workspace(user, workspace, name=new_workspace_name)
 
         cls.register_action(
             user=user,
             params=cls.Params(
-                group.id,
-                group_name=new_group_name,
-                original_group_name=original_group_name,
+                workspace.id,
+                workspace_name=new_workspace_name,
+                original_workspace_name=original_workspace_name,
             ),
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group
+        return workspace
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
@@ -203,11 +209,11 @@ class UpdateGroupActionType(UndoableActionType):
         params: Params,
         action_to_undo: Action,
     ):
-        group = CoreHandler().get_group_for_update(params.group_id)
-        CoreHandler().update_group(
+        workspace = CoreHandler().get_workspace_for_update(params.workspace_id)
+        CoreHandler().update_workspace(
             user,
-            group,
-            name=params.original_group_name,
+            workspace,
+            name=params.original_workspace_name,
         )
 
     @classmethod
@@ -217,15 +223,15 @@ class UpdateGroupActionType(UndoableActionType):
         params: Params,
         action_to_redo: Action,
     ):
-        group = CoreHandler().get_group_for_update(params.group_id)
-        CoreHandler().update_group(
+        workspace = CoreHandler().get_workspace_for_update(params.workspace_id)
+        CoreHandler().update_workspace(
             user,
-            group,
-            name=params.group_name,
+            workspace,
+            name=params.new_workspace_name,
         )
 
 
-class OrderGroupsActionType(UndoableActionType):
+class OrderWorkspacesActionType(UndoableActionType):
     type = "order_groups"
     description = ActionTypeDescription(
         _("Order groups"),
@@ -234,30 +240,30 @@ class OrderGroupsActionType(UndoableActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_ids: List[int]
-        original_group_ids: List[int]
+        workspace_ids: List[int]
+        original_workspace_ids: List[int]
 
     @classmethod
-    def do(cls, user: AbstractUser, group_ids_in_order: List[int]) -> None:
+    def do(cls, user: AbstractUser, workspace_ids_in_order: List[int]) -> None:
         """
-        Changes the order of groups for a user.
-        See baserow.core.handler.CoreHandler.order_groups for more details. Undoing
-        this action restores the original order of groups prior to this action being
+        Changes the order of workspaces for a user.
+        See baserow.core.handler.CoreHandler.order_workspaces for more details. Undoing
+        this action restores the original order of workspaces prior to this action being
         performed, redoing this restores the new order set initially.
 
-        :param user: The user ordering the groups.
-        :param group_ids: The ids of the groups to order.
+        :param user: The user ordering the workspaces.
+        :param workspace_ids_in_order: The ids of the workspaces to order.
         """
 
-        original_group_ids_in_order = CoreHandler().get_groups_order(user)
+        original_workspace_ids_in_order = CoreHandler().get_workspaces_order(user)
 
-        CoreHandler().order_groups(user, group_ids_in_order)
+        CoreHandler().order_workspaces(user, workspace_ids_in_order)
 
         cls.register_action(
             user=user,
             params=cls.Params(
-                group_ids_in_order,
-                original_group_ids_in_order,
+                workspace_ids_in_order,
+                original_workspace_ids_in_order,
             ),
             scope=cls.scope(),
         )
@@ -273,7 +279,7 @@ class OrderGroupsActionType(UndoableActionType):
         params: Params,
         action_to_undo: Action,
     ):
-        CoreHandler().order_groups(user, params.original_group_ids)
+        CoreHandler().order_workspaces(user, params.original_workspace_ids)
 
     @classmethod
     def redo(
@@ -282,63 +288,70 @@ class OrderGroupsActionType(UndoableActionType):
         params: Params,
         action_to_redo: Action,
     ):
-        CoreHandler().order_groups(user, params.group_ids)
+        CoreHandler().order_workspaces(user, params.workspace_ids)
 
 
 class OrderApplicationsActionType(UndoableActionType):
     type = "order_applications"
     description = ActionTypeDescription(
-        _("Order applications"), _("Applications reordered"), GROUP_ACTION_CONTEXT
+        _("Order applications"), _("Applications reordered"), WORKSPACE_ACTION_CONTEXT
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_ids: List[int]
         original_application_ids: List[int]
 
     @classmethod
     def do(
-        cls, user: AbstractUser, group: Group, application_ids_in_order: List[int]
+        cls,
+        user: AbstractUser,
+        workspace: Workspace,
+        application_ids_in_order: List[int],
     ) -> Any:
         """
-        Reorders the applications of a given group in the desired order. The index of
-        the id in the list will be the new order. See
+        Reorders the applications of a given workspace in the desired order. The index
+        of the id in the list will be the new order. See
         `baserow.core.handler.CoreHandler.order_applications` for further details. When
         undone re-orders the applications back to the old order, when redone reorders
         to the new order.
 
         :param user: The user on whose behalf the applications are reordered.
-        :param group: The group where the applications are in.
+        :param workspace: The workspace where the applications are in.
         :param application_ids_in_order: A list of ids in the new order.
         """
 
         original_application_ids_in_order = list(
-            CoreHandler().order_applications(user, group, application_ids_in_order)
+            CoreHandler().order_applications(user, workspace, application_ids_in_order)
         )
 
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             application_ids_in_order,
             original_application_ids_in_order,
         )
-        cls.register_action(user, params, scope=cls.scope(group.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(workspace.id), workspace=workspace
+        )
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-        group = CoreHandler().get_group_for_update(params.group_id)
-        CoreHandler().order_applications(user, group, params.original_application_ids)
+        workspace = CoreHandler().get_workspace_for_update(params.workspace_id)
+        CoreHandler().order_applications(
+            user, workspace, params.original_application_ids
+        )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        group = CoreHandler().get_group_for_update(params.group_id)
-        CoreHandler().order_applications(user, group, params.application_ids)
+        workspace = CoreHandler().get_workspace_for_update(params.workspace_id)
+        CoreHandler().order_applications(user, workspace, params.application_ids)
 
 
 class CreateApplicationActionType(UndoableActionType):
@@ -346,13 +359,13 @@ class CreateApplicationActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Create application"),
         _('"%(application_name)s" (%(application_id)s) %(application_type)s created'),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_type: str
         application_id: int
         application_name: str
@@ -362,7 +375,7 @@ class CreateApplicationActionType(UndoableActionType):
     def do(
         cls,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         application_type: str,
         name: str,
         init_with_data: bool = False,
@@ -373,7 +386,7 @@ class CreateApplicationActionType(UndoableActionType):
         Undoing this action trashes the application and redoing restores it.
 
         :param user: The user creating the application.
-        :param group: The group to create the application in.
+        :param workspace: The workspace to create the application in.
         :param application_type: The type of application to create.
         :param name: The name of the new application.
         :param init_with_data: Whether the application should be initialized with
@@ -382,7 +395,7 @@ class CreateApplicationActionType(UndoableActionType):
         """
 
         application = CoreHandler().create_application(
-            user, group, application_type, name=name, init_with_data=init_with_data
+            user, workspace, application_type, name=name, init_with_data=init_with_data
         )
 
         application_type = application_type_registry.get_by_model(
@@ -390,20 +403,22 @@ class CreateApplicationActionType(UndoableActionType):
         )
 
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             application_type.type,
             application.id,
             application.name,
             init_with_data,
         )
-        cls.register_action(user, params, scope=cls.scope(group.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(workspace.id), workspace=workspace
+        )
 
         return application
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
@@ -425,13 +440,13 @@ class DeleteApplicationActionType(UndoableActionType):
             'Application "%(application_name)s" (%(application_id)s) of type '
             "%(application_type)s deleted"
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_type: str
         application_id: int
         application_name: str
@@ -440,7 +455,7 @@ class DeleteApplicationActionType(UndoableActionType):
     def do(cls, user: AbstractUser, application: Application) -> None:
         """
         Deletes an existing application instance if the user has access to the
-        related group. The `application_deleted` signal is also called.
+        related workspace. The `application_deleted` signal is also called.
         See baserow.core.handler.CoreHandler.delete_application for further details.
         Undoing this action restores the application and redoing trashes it.
 
@@ -450,24 +465,24 @@ class DeleteApplicationActionType(UndoableActionType):
 
         CoreHandler().delete_application(user, application)
 
-        group = application.group
+        workspace = application.workspace
         application_type = application_type_registry.get_by_model(
             application.specific_class
         )
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             application_type.type,
             application.id,
             application.name,
         )
         cls.register_action(
-            user, params, scope=cls.scope(application.group.id), group=group
+            user, params, scope=cls.scope(workspace.id), workspace=workspace
         )
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user, params: Params, action_being_undone: Action):
@@ -489,13 +504,13 @@ class UpdateApplicationActionType(UndoableActionType):
             "Application (%(application_id)s) of type %(application_type)s renamed "
             'from "%(original_application_name)s" to "%(application_name)s"'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_type: str
         application_id: int
         application_name: str
@@ -521,25 +536,25 @@ class UpdateApplicationActionType(UndoableActionType):
         application_type = application_type_registry.get_by_model(
             application.specific_class
         )
-        group = application.group
+        workspace = application.workspace
 
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             application_type.type,
             application.id,
             name,
             original_name,
         )
         cls.register_action(
-            user, params, scope=cls.scope(application.group.id), group=group
+            user, params, scope=cls.scope(workspace.id), workspace=workspace
         )
 
         return application
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
@@ -562,13 +577,13 @@ class DuplicateApplicationActionType(UndoableActionType):
             'Application "%(application_name)s" (%(application_id)s) of type %(application_type)s '
             'duplicated from "%(original_application_name)s" (%(original_application_id)s)'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         application_type: str
         application_id: int
         application_name: str
@@ -602,24 +617,24 @@ class DuplicateApplicationActionType(UndoableActionType):
         application_type = application_type_registry.get_by_model(
             application.specific_class
         )
-        group = application.group
+        workspace = application.workspace
 
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             application_type.type,
             new_app_clone.id,
             new_app_clone.name,
             application.id,
             application.name,
         )
-        cls.register_action(user, params, cls.scope(application.group.id), group=group)
+        cls.register_action(user, params, cls.scope(workspace.id), workspace=workspace)
 
         return new_app_clone
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
@@ -641,13 +656,13 @@ class InstallTemplateActionType(UndoableActionType):
             'Template "%(template_name)s" (%(template_id)s) installed '
             "into application IDs %(installed_application_ids)s"
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         template_id: int
         template_name: str
         installed_application_ids: List[int]
@@ -656,18 +671,18 @@ class InstallTemplateActionType(UndoableActionType):
     def do(
         cls,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         template: Template,
         progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> List[Application]:
         """
-        Install a template into the provided group. See
+        Install a template into the provided workspace. See
         baserow.core.handler.CoreHandler.install_template for further details.
         Undoing this action trash the installed applications and redoing
         restore them all.
 
         :param user: The user on whose behalf the template is installed.
-        :param group: The group where the applications will be installed.
+        :param workspace: The workspace where the applications will be installed.
         :param template: The template to install.
         :param progress_builder: A progress builder instance that can be used to
             track the progress of the installation.
@@ -676,25 +691,27 @@ class InstallTemplateActionType(UndoableActionType):
 
         installed_applications, _ = CoreHandler().install_template(
             user,
-            group,
+            workspace,
             template,
             progress_builder=progress_builder,
         )
 
         params = cls.Params(
-            group.id,
-            group.name,
+            workspace.id,
+            workspace.name,
             template.id,
             template.name,
             [app.id for app in installed_applications],
         )
-        cls.register_action(user, params, scope=cls.scope(group.id), group=group)
+        cls.register_action(
+            user, params, scope=cls.scope(workspace.id), workspace=workspace
+        )
 
         return installed_applications
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
@@ -711,7 +728,7 @@ class InstallTemplateActionType(UndoableActionType):
             )
 
 
-class CreateGroupInvitationActionType(ActionType):
+class CreateWorkspaceInvitationActionType(ActionType):
     type = "create_group_invitation"
     description = ActionTypeDescription(
         _("Create group invitation"),
@@ -725,46 +742,46 @@ class CreateGroupInvitationActionType(ActionType):
     class Params:
         email: str
         permissions: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group: Group,
+        workspace: Workspace,
         email: str,
         permissions: str,
         base_url: str,
         message: str = "",
-    ) -> GroupInvitation:
+    ) -> WorkspaceInvitation:
         """
-        Creates a new group invitation for the given email address and sends out an
+        Creates a new workspace invitation for the given email address and sends out an
         email containing the invitation.
-        Look into baserow.core.handler.CoreHandler.create_group_invitation for further
-        details.
+        Look into baserow.core.handler.CoreHandler.create_workspace_invitation for
+        further details.
 
 
         """
 
-        group_invitation = CoreHandler().create_group_invitation(
-            user, group, email, permissions, base_url, message
+        workspace_invitation = CoreHandler().create_workspace_invitation(
+            user, workspace, email, permissions, base_url, message
         )
 
         cls.register_action(
             user=user,
-            params=cls.Params(email, permissions, group.id, group.name),
+            params=cls.Params(email, permissions, workspace.id, workspace.name),
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_invitation
+        return workspace_invitation
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
 
 
-class DeleteGroupInvitationActionType(ActionType):
+class DeleteWorkspaceInvitationActionType(ActionType):
     type = "delete_group_invitation"
     description = ActionTypeDescription(
         _("Delete group invitation"),
@@ -779,47 +796,47 @@ class DeleteGroupInvitationActionType(ActionType):
         invitation_id: int
         email: str
         permissions: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group_invitation: GroupInvitation,
+        workspace_invitation: WorkspaceInvitation,
     ):
         """
-        Deletes an existing group invitation.
-        Look into baserow.core.handler.CoreHandler.delete_group_invitation for further
-        details.
+        Deletes an existing workspace invitation.
+        Look into baserow.core.handler.CoreHandler.delete_workspace_invitation
+        for further details.
 
 
         """
 
-        group = group_invitation.group
+        workspace = workspace_invitation.workspace
         params = cls.Params(
-            group_invitation.id,
-            group_invitation.email,
-            group_invitation.permissions,
-            group.id,
-            group.name,
+            workspace_invitation.id,
+            workspace_invitation.email,
+            workspace_invitation.permissions,
+            workspace.id,
+            workspace.name,
         )
-        CoreHandler().delete_group_invitation(user, group_invitation)
+        CoreHandler().delete_workspace_invitation(user, workspace_invitation)
 
         cls.register_action(
             user=user,
             params=params,
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_invitation
+        return workspace_invitation
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
 
 
-class AcceptGroupInvitationActionType(ActionType):
+class AcceptWorkspaceInvitationActionType(ActionType):
     type = "accept_group_invitation"
     description = ActionTypeDescription(
         _("Accept group invitation"),
@@ -834,45 +851,47 @@ class AcceptGroupInvitationActionType(ActionType):
         invitation_id: int
         sender: str
         permissions: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group_invitation: GroupInvitation,
-    ) -> GroupUser:
+        workspace_invitation: WorkspaceInvitation,
+    ) -> WorkspaceUser:
         """
-        Accepts an existing group invitation.
-        Look into baserow.core.handler.CoreHandler.accept_group_invitation for further
-        details.
+        Accepts an existing workspace invitation.
+        Look into baserow.core.handler.CoreHandler.accept_workspace_invitation for
+        further details.
         """
 
-        group = group_invitation.group
+        workspace = workspace_invitation.workspace
         params = cls.Params(
-            group_invitation.id,
-            group_invitation.invited_by.email,
-            group_invitation.permissions,
-            group.id,
-            group.name,
+            workspace_invitation.id,
+            workspace_invitation.invited_by.email,
+            workspace_invitation.permissions,
+            workspace.id,
+            workspace.name,
         )
-        group_user = CoreHandler().accept_group_invitation(user, group_invitation)
+        workspace_user = CoreHandler().accept_workspace_invitation(
+            user, workspace_invitation
+        )
 
         cls.register_action(
             user=user,
             params=params,
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_user
+        return workspace_user
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
 
 
-class RejectGroupInvitationActionType(ActionType):
+class RejectWorkspaceInvitationActionType(ActionType):
     type = "reject_group_invitation"
     description = ActionTypeDescription(
         _("Reject group invitation"),
@@ -887,45 +906,47 @@ class RejectGroupInvitationActionType(ActionType):
         invitation_id: int
         sender: str
         permissions: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group_invitation: GroupInvitation,
-    ) -> GroupUser:
+        workspace_invitation: WorkspaceInvitation,
+    ) -> WorkspaceUser:
         """
-        Accepts an existing group invitation.
-        Look into baserow.core.handler.CoreHandler.reject_group_invitation for further
-        details.
+        Accepts an existing workspace invitation.
+        Look into baserow.core.handler.CoreHandler.reject_workspace_invitation for
+        further details.
         """
 
-        group = group_invitation.group
+        workspace = workspace_invitation.workspace
         params = cls.Params(
-            group_invitation.id,
-            group_invitation.invited_by.email,
-            group_invitation.permissions,
-            group.id,
-            group.name,
+            workspace_invitation.id,
+            workspace_invitation.invited_by.email,
+            workspace_invitation.permissions,
+            workspace.id,
+            workspace.name,
         )
-        group_user = CoreHandler().reject_group_invitation(user, group_invitation)
+        workspace_user = CoreHandler().reject_workspace_invitation(
+            user, workspace_invitation
+        )
 
         cls.register_action(
             user=user,
             params=params,
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_user
+        return workspace_user
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
 
 
-class UpdateGroupInvitationActionType(ActionType):
+class UpdateWorkspaceInvitationActionType(ActionType):
     type = "update_group_invitation_permissions"
     description = ActionTypeDescription(
         _("Update group invitation permissions"),
@@ -941,50 +962,50 @@ class UpdateGroupInvitationActionType(ActionType):
         invitation_id: int
         email: str
         permissions: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         original_permissions: str
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
-        group_invitation: GroupInvitation,
+        workspace_invitation: WorkspaceInvitation,
         permissions: str,
-    ) -> GroupInvitation:
+    ) -> WorkspaceInvitation:
         """
-        Updates an existing group invitation permissions.
-        Look into baserow.core.handler.CoreHandler.update_group_invitation for further
-        details.
+        Updates an existing workspace invitation permissions.
+        Look into baserow.core.handler.CoreHandler.update_workspace_invitation for
+        further details.
         """
 
-        group = group_invitation.group
+        workspace = workspace_invitation.workspace
         params = cls.Params(
-            group_invitation.id,
-            group_invitation.email,
+            workspace_invitation.id,
+            workspace_invitation.email,
             permissions,
-            group.id,
-            group.name,
-            original_permissions=group_invitation.permissions,
+            workspace.id,
+            workspace.name,
+            original_permissions=workspace_invitation.permissions,
         )
-        group_invitation = CoreHandler().update_group_invitation(
-            user, group_invitation, permissions
+        workspace_invitation = CoreHandler().update_workspace_invitation(
+            user, workspace_invitation, permissions
         )
 
         cls.register_action(
             user=user,
             params=params,
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
-        return group_invitation
+        return workspace_invitation
 
     @classmethod
     def scope(cls) -> ActionScopeStr:
         return RootActionScopeType.value()
 
 
-class LeaveGroupActionType(ActionType):
+class LeaveWorkspaceActionType(ActionType):
     type = "leave_group"
     description = ActionTypeDescription(
         _("Leave group"),
@@ -993,23 +1014,23 @@ class LeaveGroupActionType(ActionType):
 
     @dataclasses.dataclass
     class Params:
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, group: Group):
+    def do(cls, user: AbstractUser, workspace: Workspace):
         """
-        Leaves an existing group.
-        Look into baserow.core.handler.CoreHandler.leave_group for further details.
+        Leaves an existing workspace.
+        Look into baserow.core.handler.CoreHandler.leave_workspace for further details.
         """
 
-        CoreHandler().leave_group(user, group)
+        CoreHandler().leave_workspace(user, workspace)
 
         cls.register_action(
             user=user,
-            params=cls.Params(group.id, group.name),
+            params=cls.Params(workspace.id, workspace.name),
             scope=cls.scope(),
-            group=group,
+            workspace=workspace,
         )
 
     @classmethod

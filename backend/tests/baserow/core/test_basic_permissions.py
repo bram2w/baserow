@@ -9,21 +9,21 @@ import pytest
 from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
 from baserow.core.exceptions import (
     PermissionDenied,
-    UserInvalidGroupPermissionsError,
-    UserNotInGroup,
+    UserInvalidWorkspacePermissionsError,
+    UserNotInWorkspace,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.operations import (
-    ListApplicationsGroupOperationType,
-    ListGroupsOperationType,
-    UpdateGroupOperationType,
+    ListApplicationsWorkspaceOperationType,
+    ListWorkspacesOperationType,
     UpdateSettingsOperationType,
+    UpdateWorkspaceOperationType,
 )
 from baserow.core.permission_manager import (
     BasicPermissionManagerType,
     CorePermissionManagerType,
-    GroupMemberOnlyPermissionManagerType,
     StaffOnlyPermissionManagerType,
+    WorkspaceMemberOnlyPermissionManagerType,
 )
 from baserow.core.registries import (
     ObjectScopeType,
@@ -48,73 +48,73 @@ from baserow.core.types import PermissionCheck
 )
 def test_check_permissions(data_fixture):
     user = data_fixture.create_user()
-    user_group = data_fixture.create_user_group(permissions="ADMIN")
-    user_group_2 = data_fixture.create_user_group(permissions="MEMBER")
-    user_group_3 = data_fixture.create_user_group()
-    data_fixture.create_template(group=user_group_3.group)
+    user_workspace = data_fixture.create_user_workspace(permissions="ADMIN")
+    user_workspace_2 = data_fixture.create_user_workspace(permissions="MEMBER")
+    user_workspace_3 = data_fixture.create_user_workspace()
+    data_fixture.create_template(workspace=user_workspace_3.workspace)
 
     # An external user shouldn't be allowed
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         CoreHandler().check_permissions(
             user,
-            ListApplicationsGroupOperationType.type,
-            group=user_group.group,
-            context=user_group.group,
+            ListApplicationsWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
+            context=user_workspace.workspace,
         )
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         CoreHandler().check_permissions(
             user,
-            UpdateGroupOperationType.type,
-            group=user_group.group,
-            context=user_group.group,
+            UpdateWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
+            context=user_workspace.workspace,
         )
 
     assert (
         CoreHandler().check_permissions(
             user,
-            ListApplicationsGroupOperationType.type,
-            group=user_group.group,
-            context=user_group.group,
+            ListApplicationsWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
+            context=user_workspace.workspace,
             raise_permission_exceptions=False,
         )
         is False
     )
 
     assert CoreHandler().check_permissions(
-        user_group.user,
-        ListApplicationsGroupOperationType.type,
-        group=user_group.group,
-        context=user_group.group,
+        user_workspace.user,
+        ListApplicationsWorkspaceOperationType.type,
+        workspace=user_workspace.workspace,
+        context=user_workspace.workspace,
     )
     assert CoreHandler().check_permissions(
-        user_group.user,
-        UpdateGroupOperationType.type,
-        group=user_group.group,
-        context=user_group.group,
+        user_workspace.user,
+        UpdateWorkspaceOperationType.type,
+        workspace=user_workspace.workspace,
+        context=user_workspace.workspace,
     )
 
     assert CoreHandler().check_permissions(
-        user_group_2.user,
-        ListApplicationsGroupOperationType.type,
-        group=user_group_2.group,
-        context=user_group.group,
+        user_workspace_2.user,
+        ListApplicationsWorkspaceOperationType.type,
+        workspace=user_workspace_2.workspace,
+        context=user_workspace.workspace,
     )
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
+    with pytest.raises(UserInvalidWorkspacePermissionsError):
         assert CoreHandler().check_permissions(
-            user_group_2.user,
-            UpdateGroupOperationType.type,
-            group=user_group_2.group,
-            context=user_group_2.group,
+            user_workspace_2.user,
+            UpdateWorkspaceOperationType.type,
+            workspace=user_workspace_2.workspace,
+            context=user_workspace_2.workspace,
         )
 
     with pytest.raises(PermissionDenied):
         assert CoreHandler().check_permissions(
             AnonymousUser(),
-            ListApplicationsGroupOperationType.type,
-            group=user_group.group,
-            context=user_group.group,
+            ListApplicationsWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
+            context=user_workspace.workspace,
         )
 
     basic_permission_manager = permission_manager_type_registry.get("basic")
@@ -124,38 +124,38 @@ def test_check_permissions(data_fixture):
     # should be refused by default if the basic permission manager doesn't answer.
     with pytest.raises(PermissionDenied):
         CoreHandler().check_permissions(
-            user_group.user,
-            ListApplicationsGroupOperationType.type,
-            group=user_group.group,
-            context=user_group.group,
+            user_workspace.user,
+            ListApplicationsWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
+            context=user_workspace.workspace,
         )
 
     basic_permission_manager.check_multiple_permissions = original_check
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
+    with pytest.raises(UserInvalidWorkspacePermissionsError):
         assert CoreHandler().check_permissions(
-            user_group_2.user,
-            UpdateGroupOperationType.type,
-            group=user_group_2.group,
-            context=user_group_2.group,
+            user_workspace_2.user,
+            UpdateWorkspaceOperationType.type,
+            workspace=user_workspace_2.workspace,
+            context=user_workspace_2.workspace,
             allow_if_template=True,
         )
 
     assert CoreHandler().check_permissions(
-        user_group_3.user,
-        UpdateGroupOperationType.type,
-        group=user_group_3.group,
-        context=user_group_3.group,
+        user_workspace_3.user,
+        UpdateWorkspaceOperationType.type,
+        workspace=user_workspace_3.workspace,
+        context=user_workspace_3.workspace,
         allow_if_template=True,
     )
 
     with pytest.raises(PermissionDenied):
         assert CoreHandler().check_permissions(
             AnonymousUser(),
-            ListApplicationsGroupOperationType.type,
-            group=user_group.group,
+            ListApplicationsWorkspaceOperationType.type,
+            workspace=user_workspace.workspace,
             allow_if_template=True,
-            context=user_group.group,
+            context=user_workspace.workspace,
         )
 
 
@@ -165,14 +165,14 @@ def test_check_multiple_permissions(data_fixture):
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
-    group = data_fixture.create_group(
+    workspace = data_fixture.create_workspace(
         user=admin,
         custom_permissions=[(user_2, "MEMBER"), (user_3, "MEMBER")],
     )
-    database = data_fixture.create_database_application(user=admin, group=group)
+    database = data_fixture.create_database_application(user=admin, workspace=workspace)
 
     checks = []
-    result = CoreHandler().check_multiple_permissions(checks, group)
+    result = CoreHandler().check_multiple_permissions(checks, workspace)
 
     assert result == {}
 
@@ -180,9 +180,9 @@ def test_check_multiple_permissions(data_fixture):
     for user in [admin, user_2, user_3, user_4, AnonymousUser()]:
         for type, scope in [
             (UpdateSettingsOperationType.type, None),
-            (ListGroupsOperationType.type, group),
-            (UpdateGroupOperationType.type, group),
-            (ListApplicationsGroupOperationType.type, group),
+            (ListWorkspacesOperationType.type, workspace),
+            (UpdateWorkspaceOperationType.type, workspace),
+            (ListApplicationsWorkspaceOperationType.type, workspace),
             (ListTablesDatabaseTableOperationType.type, database),
         ]:
             checks.append(PermissionCheck(user, type, scope))
@@ -190,7 +190,7 @@ def test_check_multiple_permissions(data_fixture):
     perm_manager = CorePermissionManagerType()
 
     result = perm_manager.check_multiple_permissions(
-        [c for c in checks if perm_manager.actor_is_supported(c.actor)], group
+        [c for c in checks if perm_manager.actor_is_supported(c.actor)], workspace
     )
 
     assert [result[c] if c in result else None for c in checks] == [
@@ -223,7 +223,7 @@ def test_check_multiple_permissions(data_fixture):
 
     perm_manager = StaffOnlyPermissionManagerType()
     result = perm_manager.check_multiple_permissions(
-        [c for c in checks if perm_manager.actor_is_supported(c.actor)], group
+        [c for c in checks if perm_manager.actor_is_supported(c.actor)], workspace
     )
     assert [
         (result[c] if result[c] is True else False) if c in result else None
@@ -256,9 +256,9 @@ def test_check_multiple_permissions(data_fixture):
         None,
     ]
 
-    perm_manager = GroupMemberOnlyPermissionManagerType()
+    perm_manager = WorkspaceMemberOnlyPermissionManagerType()
     result = perm_manager.check_multiple_permissions(
-        [c for c in checks if perm_manager.actor_is_supported(c.actor)], group
+        [c for c in checks if perm_manager.actor_is_supported(c.actor)], workspace
     )
     assert [
         (result[c] if result[c] is True else False) if c in result else None
@@ -293,7 +293,7 @@ def test_check_multiple_permissions(data_fixture):
 
     perm_manager = BasicPermissionManagerType()
     result = perm_manager.check_multiple_permissions(
-        [c for c in checks if perm_manager.actor_is_supported(c.actor)], group
+        [c for c in checks if perm_manager.actor_is_supported(c.actor)], workspace
     )
     assert [
         (result[c] if result[c] is True else False) if c in result else None
@@ -327,7 +327,7 @@ def test_check_multiple_permissions(data_fixture):
     ]
 
     # All together
-    result = CoreHandler().check_multiple_permissions(checks, group)
+    result = CoreHandler().check_multiple_permissions(checks, workspace)
 
     permission_result = [result[check] for check in checks]
 
@@ -366,7 +366,7 @@ def test_get_permissions(data_fixture):
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
-    group = data_fixture.create_group(
+    workspace = data_fixture.create_workspace(
         user=admin,
         custom_permissions=[(user_2, "ADMIN"), (user_3, "MEMBER")],
     )
@@ -375,12 +375,12 @@ def test_get_permissions(data_fixture):
     print(result)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -393,16 +393,16 @@ def test_get_permissions(data_fixture):
         {"name": "member", "permissions": False},
     ]
 
-    result = CoreHandler().get_permissions(admin, group)
+    result = CoreHandler().get_permissions(admin, workspace)
     print(result)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -416,16 +416,16 @@ def test_get_permissions(data_fixture):
             "name": "basic",
             "permissions": {
                 "admin_only_operations": [
-                    "group.list_invitations",
-                    "group.create_invitation",
+                    "workspace.list_invitations",
+                    "workspace.create_invitation",
                     "invitation.read",
                     "invitation.update",
                     "invitation.delete",
-                    "group.list_group_users",
-                    "group.update",
-                    "group.delete",
-                    "group_user.update",
-                    "group_user.delete",
+                    "workspace.list_workspace_users",
+                    "workspace.update",
+                    "workspace.delete",
+                    "workspace_user.update",
+                    "workspace_user.delete",
                 ],
                 "is_admin": True,
             },
@@ -435,12 +435,12 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_2)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -453,15 +453,15 @@ def test_get_permissions(data_fixture):
         {"name": "member", "permissions": False},
     ]
 
-    result = CoreHandler().get_permissions(user_2, group)
+    result = CoreHandler().get_permissions(user_2, workspace)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -475,16 +475,16 @@ def test_get_permissions(data_fixture):
             "name": "basic",
             "permissions": {
                 "admin_only_operations": [
-                    "group.list_invitations",
-                    "group.create_invitation",
+                    "workspace.list_invitations",
+                    "workspace.create_invitation",
                     "invitation.read",
                     "invitation.update",
                     "invitation.delete",
-                    "group.list_group_users",
-                    "group.update",
-                    "group.delete",
-                    "group_user.update",
-                    "group_user.delete",
+                    "workspace.list_workspace_users",
+                    "workspace.update",
+                    "workspace.delete",
+                    "workspace_user.update",
+                    "workspace_user.delete",
                 ],
                 "is_admin": True,
             },
@@ -494,12 +494,12 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_3)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -512,15 +512,15 @@ def test_get_permissions(data_fixture):
         {"name": "member", "permissions": False},
     ]
 
-    result = CoreHandler().get_permissions(user_3, group)
+    result = CoreHandler().get_permissions(user_3, workspace)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {
@@ -534,31 +534,31 @@ def test_get_permissions(data_fixture):
             "name": "basic",
             "permissions": {
                 "admin_only_operations": [
-                    "group.list_invitations",
-                    "group.create_invitation",
+                    "workspace.list_invitations",
+                    "workspace.create_invitation",
                     "invitation.read",
                     "invitation.update",
                     "invitation.delete",
-                    "group.list_group_users",
-                    "group.update",
-                    "group.delete",
-                    "group_user.update",
-                    "group_user.delete",
+                    "workspace.list_workspace_users",
+                    "workspace.update",
+                    "workspace.delete",
+                    "workspace_user.update",
+                    "workspace_user.delete",
                 ],
                 "is_admin": False,
             },
         },
     ]
 
-    result = CoreHandler().get_permissions(user_4, group)
+    result = CoreHandler().get_permissions(user_4, workspace)
 
     assert result == [
-        {"name": "core", "permissions": ["list_groups"]},
+        {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
             "permissions": {
                 "staff_only_operations": [],
-                "always_allowed_operations": ["create_group"],
+                "always_allowed_operations": ["create_workspace"],
             },
         },
         {

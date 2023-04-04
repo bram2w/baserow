@@ -51,7 +51,7 @@
             $hasPermission(
               'database.table.create_field',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -72,7 +72,7 @@
             $hasPermission(
               'database.table.create_field',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -99,7 +99,7 @@
             $hasPermission(
               'database.table.field.duplicate',
               field,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -124,7 +124,7 @@
             $hasPermission(
               'database.table.view.create_filter',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -139,7 +139,7 @@
             $hasPermission(
               'database.table.view.create_sort',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -171,7 +171,7 @@
             $hasPermission(
               'database.table.view.create_sort',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -204,7 +204,7 @@
             $hasPermission(
               'database.table.view.update_field_options',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -226,7 +226,7 @@
           !$hasPermission(
             'database.table.view.update_field_options',
             view,
-            database.group.id
+            database.workspace.id
           )
         "
         :store-prefix="storePrefix"
@@ -303,37 +303,37 @@ export default {
         this.$hasPermission(
           'database.table.create_field',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.create_filter',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.create_sort',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.update_field_options',
           this.view,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.field.duplicate',
           this.field,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.field.update',
           this.field,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.field.delete',
           this.field,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },
@@ -431,7 +431,7 @@ export default {
             readOnly: !this.$hasPermission(
               'database.table.view.update_field_options',
               this.view,
-              this.database.group.id
+              this.database.workspace.id
             ),
           }
         )

@@ -13,7 +13,7 @@ from baserow.core.registries import (
     plugin_registry,
 )
 from baserow.core.trash.registries import trash_item_type_registry
-from baserow.core.usage.registries import group_storage_usage_item_registry
+from baserow.core.usage.registries import workspace_storage_usage_item_registry
 from baserow.ws.registries import page_registry
 
 
@@ -459,16 +459,20 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
 
         from baserow.contrib.database.table.usage_types import (
-            TableGroupStorageUsageItemType,
+            TableWorkspaceStorageUsageItemType,
         )
 
-        group_storage_usage_item_registry.register(TableGroupStorageUsageItemType())
+        workspace_storage_usage_item_registry.register(
+            TableWorkspaceStorageUsageItemType()
+        )
 
         from baserow.contrib.database.views.usage_types import (
-            FormViewGroupStorageUsageItem,
+            FormViewWorkspaceStorageUsageItem,
         )
 
-        group_storage_usage_item_registry.register(FormViewGroupStorageUsageItem())
+        workspace_storage_usage_item_registry.register(
+            FormViewWorkspaceStorageUsageItem()
+        )
 
         from baserow.core.jobs.registries import job_type_registry
 

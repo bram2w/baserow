@@ -30,7 +30,7 @@ from baserow.contrib.database.webhooks.exceptions import (
 from baserow.contrib.database.webhooks.handler import WebhookHandler
 from baserow.contrib.database.webhooks.models import TableWebhook
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 
 from .serializers import (
     TableWebhookCreateRequestSerializer,
@@ -57,7 +57,7 @@ class TableWebhooksView(APIView):
         operation_id="list_database_table_webhooks",
         description=(
             "Lists all webhooks of the table related to the provided `table_id` if the "
-            "user has access to the related database group."
+            "user has access to the related database workspace."
         ),
         responses={
             200: TableWebhookSerializer(many=True),
@@ -67,7 +67,7 @@ class TableWebhooksView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         }
     )
@@ -97,7 +97,7 @@ class TableWebhooksView(APIView):
         description=(
             "Creates a new webhook for the table related to the provided `table_id` "
             "parameter if the authorized user has access to the related database "
-            "group."
+            "workspace."
         ),
         request=TableWebhookCreateRequestSerializer(),
         responses={
@@ -111,7 +111,7 @@ class TableWebhooksView(APIView):
     @transaction.atomic
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             TableWebhookMaxAllowedCountExceeded: ERROR_TABLE_WEBHOOK_MAX_LIMIT_EXCEEDED,
         }
@@ -143,7 +143,7 @@ class TableWebhookView(APIView):
         operation_id="get_database_table_webhook",
         description=(
             "Returns the existing webhook if the authorized user has access to the "
-            "related database group."
+            "related database workspace."
         ),
         responses={
             200: TableWebhookSerializer(),
@@ -153,7 +153,7 @@ class TableWebhookView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableWebhookDoesNotExist: ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST,
         }
     )
@@ -174,7 +174,7 @@ class TableWebhookView(APIView):
         operation_id="update_database_table_webhook",
         description=(
             "Updates the existing view if the authorized user has access to the "
-            "related database group."
+            "related database workspace."
         ),
         request=TableWebhookUpdateRequestSerializer(),
         responses={
@@ -186,7 +186,7 @@ class TableWebhookView(APIView):
     @validate_body(TableWebhookUpdateRequestSerializer)
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableWebhookDoesNotExist: ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST,
         }
     )
@@ -216,7 +216,7 @@ class TableWebhookView(APIView):
         operation_id="delete_database_table_webhook",
         description=(
             "Deletes the existing webhook if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         request=TableWebhookCreateRequestSerializer(),
         responses={
@@ -226,7 +226,7 @@ class TableWebhookView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableWebhookDoesNotExist: ERROR_TABLE_WEBHOOK_DOES_NOT_EXIST,
         }
     )
@@ -257,9 +257,9 @@ class TableWebhookTestCallView(APIView):
         operation_id="test_call_database_table_webhook",
         description=(
             "This endpoint triggers a test call based on the provided data if the "
-            "user has access to the group related to the table. The test call will be "
-            "made immediately and a copy of the request, response and status will be "
-            "included in the response."
+            "user has access to the workspace related to the table. The test call will "
+            "be made immediately and a copy of the request, response and status will "
+            "be included in the response."
         ),
         request=TableWebhookTestCallRequestSerializer,
         responses={
@@ -270,7 +270,7 @@ class TableWebhookTestCallView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
         }
     )

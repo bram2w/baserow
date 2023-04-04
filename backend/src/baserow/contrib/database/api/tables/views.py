@@ -59,7 +59,7 @@ from baserow.contrib.database.table.operations import (
     ReadDatabaseTableOperationType,
 )
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
+from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
@@ -84,11 +84,15 @@ from .serializers import (
 
 FileImportJobSerializerClass = job_type_registry.get(
     FileImportJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleFileImportJobSerializerClass"
+)
 
 DuplicateTableJobTypeSerializer = job_type_registry.get(
     DuplicateTableJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleDuplicateTableJobTypeSerializer"
+)
 
 
 class TablesView(APIView):
@@ -108,7 +112,7 @@ class TablesView(APIView):
         operation_id="list_database_tables",
         description=(
             "Lists all the tables that are in the database related to the "
-            "`database_id` parameter if the user has access to the database's group. "
+            "`database_id` parameter if the user has access to the database's workspace. "
             "A table is exactly as the name suggests. It can hold multiple fields, "
             "each having their own type and multiple rows. They can be added via the "
             "**create_database_table_field** and **create_database_table_row** "
@@ -123,7 +127,7 @@ class TablesView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, database_id):
@@ -134,7 +138,7 @@ class TablesView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ListTablesDatabaseTableOperationType.type,
-            group=database.group,
+            workspace=database.workspace,
             context=database,
         )
 
@@ -144,7 +148,7 @@ class TablesView(APIView):
             request.user,
             ListTablesDatabaseTableOperationType.type,
             tables,
-            group=database.group,
+            workspace=database.workspace,
             context=database,
         )
 
@@ -168,7 +172,7 @@ class TablesView(APIView):
         description=(
             "Creates synchronously a new table for the database related to the "
             "provided `database_id` parameter if the authorized user has access to the "
-            "database's group.\n\n"
+            "database's workspace.\n\n"
             "As an alternative you can use the `create_async_database_table` for "
             "better performances and importing bigger files."
         ),
@@ -194,7 +198,7 @@ class TablesView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             InvalidInitialTableData: ERROR_INVALID_INITIAL_TABLE_DATA,
             InitialTableDataLimitExceeded: ERROR_INITIAL_TABLE_DATA_LIMIT_EXCEEDED,
             InitialSyncTableDataLimitExceeded: ERROR_INITIAL_SYNC_TABLE_DATA_LIMIT_EXCEEDED,
@@ -215,7 +219,7 @@ class TablesView(APIView):
         CoreHandler().check_permissions(
             request.user,
             CreateTableDatabaseTableOperationType.type,
-            group=database.group,
+            workspace=database.workspace,
             context=database,
         )
 
@@ -259,7 +263,7 @@ class AsyncCreateTableView(APIView):
         description=(
             "Creates a job that creates a new table for the database related to the "
             "provided `database_id` parameter if the authorized user has access to the "
-            "database's group. This endpoint is asynchronous and return "
+            "database's workspace. This endpoint is asynchronous and return "
             "the created job to track the progress of the task."
         ),
         request=TableCreateSerializer,
@@ -279,7 +283,7 @@ class AsyncCreateTableView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
         }
     )
@@ -292,7 +296,7 @@ class AsyncCreateTableView(APIView):
         CoreHandler().check_permissions(
             request.user,
             CreateTableDatabaseTableOperationType.type,
-            group=database.group,
+            workspace=database.workspace,
             context=database,
         )
 
@@ -326,7 +330,7 @@ class TableView(APIView):
         operation_id="get_database_table",
         description=(
             "Returns the requested table if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         responses={
             200: TableSerializer,
@@ -337,7 +341,7 @@ class TableView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, table_id):
@@ -348,7 +352,7 @@ class TableView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ReadDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -370,7 +374,7 @@ class TableView(APIView):
         operation_id="update_database_table",
         description=(
             "Updates the existing table if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         request=TableUpdateSerializer,
         responses={
@@ -385,7 +389,7 @@ class TableView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     @validate_body(TableUpdateSerializer)
@@ -416,7 +420,7 @@ class TableView(APIView):
         operation_id="delete_database_table",
         description=(
             "Deletes the existing table if the authorized user has access to the "
-            "related database's group."
+            "related database's workspace."
         ),
         responses={
             204: None,
@@ -430,7 +434,7 @@ class TableView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
@@ -463,7 +467,7 @@ class AsyncTableImportView(APIView):
         operation_id="import_data_database_table_async",
         description=(
             "Import data in the specified table if the authorized user has access to "
-            "the related database's group. This endpoint is asynchronous and return "
+            "the related database's workspace. This endpoint is asynchronous and return "
             "the created job to track the progress of the task."
         ),
         request=TableImportSerializer,
@@ -476,7 +480,7 @@ class AsyncTableImportView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
         }
     )
@@ -490,7 +494,7 @@ class AsyncTableImportView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ImportRowsDatabaseTableOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -527,7 +531,7 @@ class OrderTablesView(APIView):
         description=(
             "Changes the order of the provided table ids to the matching position that "
             "the id has in the list. If the authorized user does not belong to the "
-            "group it will be ignored. The order of the not provided tables will be "
+            "workspace it will be ignored. The order of the not provided tables will be "
             "set to `0`."
         ),
         request=OrderTablesSerializer,
@@ -544,7 +548,7 @@ class OrderTablesView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TableNotInDatabase: ERROR_TABLE_NOT_IN_DATABASE,
         }
     )
@@ -578,8 +582,9 @@ class AsyncDuplicateTableView(APIView):
         operation_id="duplicate_database_table_async",
         description=(
             "Start a job to duplicate the table with the provided `table_id` parameter "
-            "if the authorized user has access to the database's group."
+            "if the authorized user has access to the database's workspace."
         ),
+        request=None,
         responses={
             202: DuplicateTableJobTypeSerializer,
             400: get_error_schema(
@@ -596,7 +601,7 @@ class AsyncDuplicateTableView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
         }
     )

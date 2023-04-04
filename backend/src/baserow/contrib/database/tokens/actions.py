@@ -5,8 +5,11 @@ from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 
 from baserow.core.action.registries import ActionType, ActionTypeDescription
-from baserow.core.action.scopes import GROUP_ACTION_CONTEXT, GroupActionScopeType
-from baserow.core.models import Group
+from baserow.core.action.scopes import (
+    WORKSPACE_ACTION_CONTEXT,
+    WorkspaceActionScopeType,
+)
+from baserow.core.models import Workspace
 
 from .handler import TokenHandler
 from .models import Token
@@ -19,30 +22,30 @@ class CreateDbTokenActionType(ActionType):
         _(
             'A Database Token with name "%(token_name)s" (%(token_id)s) has been created'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
         token_id: int
         token_name: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
-    def do(cls, user: AbstractUser, group: Group, name: str):
-        token = TokenHandler().create_token(user, group, name)
+    def do(cls, user: AbstractUser, workspace: Workspace, name: str):
+        token = TokenHandler().create_token(user, workspace, name)
         cls.register_action(
             user,
-            cls.Params(token.id, token.name, group.id, group.name),
-            cls.scope(group.id),
-            group,
+            cls.Params(token.id, token.name, workspace.id, workspace.name),
+            cls.scope(workspace.id),
+            workspace,
         )
         return token
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class UpdateDbTokenNameActionType(ActionType):
@@ -52,35 +55,37 @@ class UpdateDbTokenNameActionType(ActionType):
         _(
             'The Database Token (%(token_name)s) name changed from "%(original_token_name)s" to "%(token_name)s"'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
         token_id: int
         token_name: str
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         original_token_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, token: Token, name: str):
         original_token_name = token.name
-        group = token.group
+        workspace = token.workspace
 
         token = TokenHandler().update_token(user, token, name)
 
         cls.register_action(
             user,
-            cls.Params(token.id, token.name, group.id, group.name, original_token_name),
-            cls.scope(group.id),
-            group,
+            cls.Params(
+                token.id, token.name, workspace.id, workspace.name, original_token_name
+            ),
+            cls.scope(workspace.id),
+            workspace,
         )
         return token
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class UpdateDbTokenPermissionsActionType(ActionType):
@@ -90,7 +95,7 @@ class UpdateDbTokenPermissionsActionType(ActionType):
         _(
             'The Database Token "%(token_name)s" (%(token_id)s) permissions has been updated'
         ),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
@@ -98,8 +103,8 @@ class UpdateDbTokenPermissionsActionType(ActionType):
         token_id: int
         token_name: str
         token_permissions: List[Dict[str, Union[str, int]]]
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
         original_token_permissions: List[Dict[str, Union[str, int]]]
 
     @classmethod
@@ -112,7 +117,7 @@ class UpdateDbTokenPermissionsActionType(ActionType):
         original_token_permissions = list(
             token.tokenpermission_set.values("type", "database", "table")
         )
-        group = token.group
+        workspace = token.workspace
 
         TokenHandler().update_token_permissions(user, token, **permissions)
         token_permissions = list(
@@ -125,17 +130,17 @@ class UpdateDbTokenPermissionsActionType(ActionType):
                 token.id,
                 token.name,
                 token_permissions,
-                group.id,
-                group.name,
+                workspace.id,
+                workspace.name,
                 original_token_permissions,
             ),
-            cls.scope(group.id),
-            group,
+            cls.scope(workspace.id),
+            workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class RotateDbTokenKeyActionType(ActionType):
@@ -143,33 +148,33 @@ class RotateDbTokenKeyActionType(ActionType):
     description = ActionTypeDescription(
         _("Rotate DB token key"),
         _('The Database Token "%(token_name)s" (%(token_id)s) has been rotated'),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
         token_id: int
         token_name: int
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(cls, user: AbstractUser, token: Token):
 
         token = TokenHandler().rotate_token_key(user, token)
 
-        group = token.group
+        workspace = token.workspace
         cls.register_action(
             user,
-            cls.Params(token.id, token.name, group.id, group.name),
-            cls.scope(group.id),
-            group,
+            cls.Params(token.id, token.name, workspace.id, workspace.name),
+            cls.scope(workspace.id),
+            workspace,
         )
         return token
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class DeleteDbTokenActionType(ActionType):
@@ -177,15 +182,15 @@ class DeleteDbTokenActionType(ActionType):
     description = ActionTypeDescription(
         _("Delete DB token"),
         _('The Database Token "%(token_name)s" (%(token_id)s) has been deleted'),
-        GROUP_ACTION_CONTEXT,
+        WORKSPACE_ACTION_CONTEXT,
     )
 
     @dataclasses.dataclass
     class Params:
         token_id: int
         token_name: int
-        group_id: int
-        group_name: str
+        workspace_id: int
+        workspace_name: str
 
     @classmethod
     def do(
@@ -194,16 +199,16 @@ class DeleteDbTokenActionType(ActionType):
         token: Token,
     ):
 
-        group = token.group
+        workspace = token.workspace
         TokenHandler().delete_token(user, token)
 
         cls.register_action(
             user,
-            cls.Params(token.id, token.name, group.id, group.name),
-            cls.scope(group.id),
-            group,
+            cls.Params(token.id, token.name, workspace.id, workspace.name),
+            cls.scope(workspace.id),
+            workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int):
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int):
+        return WorkspaceActionScopeType.value(workspace_id)

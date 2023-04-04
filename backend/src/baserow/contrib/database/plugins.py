@@ -19,7 +19,7 @@ LOREM = (
 if TYPE_CHECKING:
     from django.contrib.auth.models import AbstractUser
 
-    from baserow.core.models import Group, GroupInvitation, Template
+    from baserow.core.models import Template, Workspace, WorkspaceInvitation
 
 
 class DatabasePlugin(Plugin):
@@ -28,27 +28,27 @@ class DatabasePlugin(Plugin):
     def user_created(
         self,
         user: "AbstractUser",
-        group: "Group" = None,
-        group_invitation: "GroupInvitation" = None,
+        workspace: "Workspace" = None,
+        workspace_invitation: "WorkspaceInvitation" = None,
         template: "Template" = None,
     ):
         """
         This method is called when a new user is created.
 
-        If we have created a `Group`, we are going to create a database, table,
+        If we have created a `Workspace`, we are going to create a database, table,
         view, fields and some rows here as an example for the user.
         """
 
         # If the user registered without being invited, and the Setting
-        # `allow_global_group_creation` is set to `False`, then no `Group` will
+        # `allow_global_workspace_creation` is set to `False`, then no `Workspace` will
         # be created for this `user`.
-        if group is None:
+        if workspace is None:
             return
 
-        # If the user created an account in combination with a group invitation we
-        # don't want to create the initial data in the group because data should
+        # If the user created an account in combination with a workspace invitation we
+        # don't want to create the initial data in the workspace because data should
         # already exist.
-        if group_invitation or template:
+        if workspace_invitation or template:
             return
 
         core_handler = CoreHandler()
@@ -58,7 +58,7 @@ class DatabasePlugin(Plugin):
         with override(user.profile.language):
             database = core_handler.create_application(
                 user,
-                group,
+                workspace,
                 type_name=self.type,
                 name=_("%(first_name)s's company") % {"first_name": user.first_name},
             )

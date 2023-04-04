@@ -1,17 +1,9 @@
 # noinspection PyPep8Naming
-from django.db import connection
-from django.db.migrations.executor import MigrationExecutor
-
-import pytest
-
-
-# noinspection PyPep8Naming
-@pytest.mark.django_db(transaction=True)
-def test_forwards_migration(data_fixture, reset_schema_after_module):
+def test_forwards_migration(data_fixture, migrator, teardown_table_metadata):
     migrate_from = [("database", "0043_webhooks"), ("core", "0012_add_trashed_indexes")]
     migrate_to = [("database", "0044_field_dependencies")]
 
-    old_state = migrate(migrate_from)
+    old_state = migrator.migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test.
@@ -25,14 +17,18 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
     group.trashed = False
     group.save()
     database = Database.objects.create(
-        content_type=content_type, order=1, name="test", group=group, trashed=False
+        content_type=content_type,
+        order=1,
+        name="test",
+        group_id=group.id,
+        trashed=False,
     )
     table = Table.objects.create(
-        database=database, name="table", order=1, trashed=False
+        database_id=database.id, name="table", order=1, trashed=False
     )
 
     other_table = Table.objects.create(
-        database=database, name="other table", order=1, trashed=False
+        database_id=database.id, name="other table", order=1, trashed=False
     )
 
     TextField = old_state.apps.get_model("database", "TextField")
@@ -40,16 +36,16 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
     other_text_field = TextField.objects.create(
         name="text",
         primary=True,
-        table=other_table,
+        table_id=other_table.id,
         order=1,
-        content_type=text_field_content_type,
+        content_type_id=text_field_content_type.id,
     )
     text_field = TextField.objects.create(
         name="text",
         primary=True,
-        table=table,
+        table_id=table.id,
         order=1,
-        content_type=text_field_content_type,
+        content_type_id=text_field_content_type.id,
     )
 
     FormulaField = old_state.apps.get_model("database", "FormulaField")
@@ -115,7 +111,9 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
     link_row_field.link_row_related_field = related_link_row_field
     link_row_field.save()
 
-    new_state = migrate(migrate_to)
+    new_state = migrator.migrate(
+        migrate_to,
+    )
     NewFormulaField = new_state.apps.get_model("database", "FormulaField")
     NewLinkRowField = new_state.apps.get_model("database", "LinkRowField")
 
@@ -165,15 +163,14 @@ def test_forwards_migration(data_fixture, reset_schema_after_module):
 
 
 # noinspection PyPep8Naming
-@pytest.mark.django_db(transaction=True)
-def test_backwards_migration(data_fixture, reset_schema_after_module):
+def test_backwards_migration(data_fixture, migrator, teardown_table_metadata):
     migrate_from = [
         ("database", "0044_field_dependencies"),
         ("core", "0012_add_trashed_indexes"),
     ]
     migrate_to = [("database", "0043_webhooks")]
 
-    old_state = migrate(migrate_from)
+    old_state = migrator.migrate(migrate_from)
 
     # The models used by the data_fixture below are not touched by this migration so
     # it is safe to use the latest version in the test
@@ -187,11 +184,16 @@ def test_backwards_migration(data_fixture, reset_schema_after_module):
     group.trashed = False
     group.save()
     database = Database.objects.create(
-        content_type=content_type, order=1, name="test", group=group, trashed=False
+        content_type_id=content_type.id,
+        order=1,
+        name="test",
+        group_id=group.id,
+        trashed=False,
     )
     table = Table.objects.create(
-        database=database, name="table", order=1, trashed=False
+        database_id=database.id, name="table", order=1, trashed=False
     )
+
     FormulaField = old_state.apps.get_model("database", "FormulaField")
     ContentType = old_state.apps.get_model("contenttypes", "ContentType")
     content_type_id = ContentType.objects.get_for_model(FormulaField).id
@@ -218,18 +220,10 @@ def test_backwards_migration(data_fixture, reset_schema_after_module):
         name="b",
     )
 
-    new_state = migrate(migrate_to)
+    new_state = migrator.migrate(migrate_to)
     NewFormulaField = new_state.apps.get_model("database", "FormulaField")
 
     new_formula_field = NewFormulaField.objects.get(id=formula_field.id)
     assert new_formula_field.formula == f"field('text')"
     new_unknown_field_by_id = NewFormulaField.objects.get(id=unknown_field.id)
     assert new_unknown_field_by_id.formula == "field('unknown')"
-
-
-def migrate(target):
-    executor = MigrationExecutor(connection)
-    executor.loader.build_graph()  # reload.
-    executor.migrate(target)
-    new_state = executor.loader.project_state(target)
-    return new_state

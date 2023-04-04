@@ -1,0 +1,140 @@
+.element__menu {
+  display: flex;
+  flex-wrap: nowrap;
+  border: solid 1px $color-neutral-400;
+  border-radius: 3px;
+  z-index: 2;
+
+  @include absolute(5px, 5px, auto, auto);
+}
+
+.element__insert {
+  @include center-text(26px, 10px);
+
+  display: block;
+  border-radius: 100%;
+  border: solid 1px $color-neutral-300;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
+  color: $color-primary-900;
+  background-color: $white;
+
+  &:hover {
+    background-color: $color-neutral-50;
+    box-shadow: 0 3px 5px 0 rgba(0, 0, 0, 0.32);
+  }
+
+  &--top,
+  &--bottom {
+    @include absolute(-13px, auto, auto, 50%);
+
+    margin-left: -12px;
+    z-index: 2;
+  }
+
+  &--bottom {
+    top: auto;
+    bottom: -12px;
+  }
+}
+
+.element {
+  position: relative;
+
+  .element__insert {
+    display: none;
+  }
+
+  .element__menu {
+    display: none;
+  }
+
+  &:hover {
+    .element__insert {
+      display: block;
+    }
+
+    .element__menu {
+      display: flex;
+    }
+  }
+
+  &:not(.element--active) {
+    cursor: pointer;
+  }
+
+  &.element--active {
+    cursor: inherit;
+
+    &::before {
+      @include absolute(0, 0, 0, 0);
+
+      content: "";
+      border: solid 1px $color-primary-500;
+      pointer-events: none;
+    }
+
+    .element__insert {
+      display: block;
+    }
+  }
+}
+
+.element__menu-item-description {
+  @include absolute(-25px, -2px, auto, auto);
+
+  display: none;
+  background-color: $color-neutral-900;
+  font-size: 11px;
+  color: $white;
+  line-height: 20px;
+  padding: 0 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.element__menu-item {
+  @include center-text(24px, 9px);
+
+  position: relative;
+  background-color: $white;
+  color: $color-primary-900;
+
+  &:hover {
+    background-color: $color-neutral-100;
+
+    .element__menu-item-description {
+      display: block;
+    }
+  }
+
+  &:first-child {
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+
+  &.disabled {
+    cursor: inherit;
+    color: $color-neutral-300;
+
+    &:hover {
+      background-color: $white;
+    }
+  }
+}
+
+.element__component {
+  margin: 0;
+}
+
+.element__menu-duplicate-loading {
+  margin: 5px;
+}
+
+.element--no-value {
+  opacity: 0.3;
+}

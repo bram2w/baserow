@@ -37,8 +37,8 @@ def test_create_survey_form_with_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_survey_form_with_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_survey_form_with_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(
         first_name="Test User", has_active_premium_license=True
@@ -47,8 +47,8 @@ def test_create_survey_form_with_premium_license_for_group(
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [table.database.workspace.id]
     )
     handler.create_view(
         user=user, table=table, type_name="form", name="Form", mode="survey"
@@ -57,8 +57,8 @@ def test_create_survey_form_with_premium_license_for_group(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_create_survey_form_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_create_survey_form_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(
         first_name="Test User", has_active_premium_license=True
@@ -67,7 +67,7 @@ def test_create_survey_form_without_premium_license_for_group(
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.create_view(
             user=user, table=table, type_name="form", name="Form", mode="survey"
@@ -115,31 +115,31 @@ def test_update_survey_form_with_premium_license(premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_update_survey_form_without_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_update_survey_form_without_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user()
     form = premium_data_fixture.create_form_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         handler.update_view(user=user, view=form, mode="survey")
 
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_update_survey_form_with_premium_license_for_group(
-    premium_data_fixture, alternative_per_group_license_service
+def test_update_survey_form_with_premium_license_for_workspace(
+    premium_data_fixture, alternative_per_workspace_license_service
 ):
     user = premium_data_fixture.create_user(has_active_premium_license=True)
     form = premium_data_fixture.create_form_view(user=user)
 
     handler = ViewHandler()
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [form.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [form.table.database.workspace.id]
     )
     handler.update_view(user=user, view=form, mode="survey")
 

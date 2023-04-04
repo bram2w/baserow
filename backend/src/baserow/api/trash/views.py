@@ -18,10 +18,10 @@ from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
-    ApplicationNotInGroup,
-    GroupDoesNotExist,
+    ApplicationNotInWorkspace,
     TrashItemDoesNotExist,
-    UserNotInGroup,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
 )
 from baserow.core.trash.actions import EmptyTrashActionType, RestoreFromTrashActionType
 from baserow.core.trash.exceptions import (
@@ -43,6 +43,10 @@ from .serializers import (
     TrashContentsSerializer,
     TrashEntryRequestSerializer,
     TrashStructureSerializer,
+)
+
+ExampleTrashContentsSerializer = get_example_pagination_serializer_class(
+    TrashContentsSerializer
 )
 
 
@@ -71,7 +75,7 @@ class TrashItemView(APIView):
     @validate_body(TrashEntryRequestSerializer)
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             TrashItemDoesNotExist: ERROR_TRASH_ITEM_DOES_NOT_EXIST,
             CannotRestoreChildBeforeParent: ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
             ParentIdMustNotBeProvidedException: ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
@@ -82,7 +86,7 @@ class TrashItemView(APIView):
     def patch(self, request, data):
         """
         Restores the specified trashable item if it is in the trash and the user is
-        in the items group.
+        in the item's workspace.
         """
 
         action_type_registry.get(RestoreFromTrashActionType.type).do(
@@ -100,17 +104,17 @@ class TrashContentsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="Returns the trash for the group with this id.",
+                description="Returns the trash for the workspace with this id.",
             ),
             OpenApiParameter(
                 name="application_id",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Optionally filters down the trash to only items for "
-                "this application in the group.",
+                "this application in the workspace.",
             ),
             OpenApiParameter(
                 name="page",
@@ -120,11 +124,11 @@ class TrashContentsView(APIView):
             ),
         ],
         tags=["Trash"],
-        operation_id="get_contents",
-        description="Responds with trash contents for a group optionally "
+        operation_id="workspace_get_contents",
+        description="Responds with trash contents for a workspace optionally "
         "filtered to a specific application.",
         responses={
-            200: get_example_pagination_serializer_class(TrashContentsSerializer),
+            200: ExampleTrashContentsSerializer,
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -137,49 +141,51 @@ class TrashContentsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            ApplicationNotInGroup: ERROR_APPLICATION_NOT_IN_GROUP,
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            ApplicationNotInWorkspace: ERROR_APPLICATION_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         }
     )
-    def get(self, request, group_id):
+    def get(self, request, workspace_id):
         """
-        Responds with any trashed items in the group or application, including an
-        entry for the group/app if they themselves are trashed.
+        Responds with any trashed items in the workspace or application, including an
+        entry for the workspace/app if they themselves are trashed.
         """
 
         application_id = request.GET.get("application_id", None)
         trash_contents = TrashHandler.get_trash_contents(
-            request.user, group_id, application_id
+            request.user, workspace_id, application_id
         )
         paginator = PageNumberPagination(limit_page_size=settings.TRASH_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(trash_contents, request, self)
-        serializer = TrashContentsSerializer(page, many=True)
+        serializer = TrashContentsSerializer(
+            page, many=True, context={"request": request}
+        )
 
         return paginator.get_paginated_response(serializer.data)
 
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="group_id",
+                name="workspace_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The group whose trash contents to empty, including the "
-                "group itself if it is also trashed.",
+                description="The workspace whose trash contents to empty, including the "
+                "workspace itself if it is also trashed.",
             ),
             OpenApiParameter(
                 name="application_id",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.INT,
                 description="Optionally filters down the trash to delete to only items "
-                "for this application in the group.",
+                "for this application in the workspace.",
             ),
         ],
         tags=["Trash"],
-        operation_id="empty_contents",
-        description="Empties the specified group and/or application of trash, including"
-        " the group and application themselves if they are trashed also.",
+        operation_id="workspace_empty_contents",
+        description="Empties the specified workspace and/or application of trash, including"
+        " the workspace and application themselves if they are trashed also.",
         responses={
             204: None,
             400: get_error_schema(
@@ -194,21 +200,23 @@ class TrashContentsView(APIView):
     )
     @map_exceptions(
         {
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-            ApplicationNotInGroup: ERROR_APPLICATION_NOT_IN_GROUP,
-            GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            ApplicationNotInWorkspace: ERROR_APPLICATION_NOT_IN_GROUP,
+            WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
         }
     )
-    def delete(self, request, group_id):
+    def delete(self, request, workspace_id):
         """
-        Empties the group and/or application of trash permanently deleting any trashed
-        contents, including the group and application if they are also trashed.
+        Empties the workspace and/or application of trash permanently deleting any
+        trashed contents, including the workspace and application if they are also
+        trashed.
         """
 
         application_id = request.GET.get("application_id", None)
+
         action_type_registry.get(EmptyTrashActionType.type).do(
-            request.user, group_id, application_id
+            request.user, workspace_id, application_id
         )
         return Response(status=204)
 
@@ -219,7 +227,7 @@ class TrashStructureView(APIView):
     @extend_schema(
         tags=["Trash"],
         operation_id="get_trash_structure",
-        description="Responds with the groups and applications available for the "
+        description="Responds with the workspaces and applications available for the "
         "requesting user to inspect the trash contents of.",
         responses={
             200: TrashStructureSerializer,

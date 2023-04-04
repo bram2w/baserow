@@ -1,5 +1,5 @@
 import { createApplication } from '@baserow/test/fixtures/applications'
-import { createGroup } from '@baserow/test/fixtures/groups'
+import { createWorkspace } from '@baserow/test/fixtures/workspaces'
 import {
   createGridView,
   createPublicGridView,
@@ -25,20 +25,22 @@ export class MockServer {
     this.store = store
   }
 
-  loadPermissions(group, result = {}) {
-    this.mock.onGet(`/groups/${group.id}/permissions/`).reply(200, result)
+  loadPermissions(workspace, result = {}) {
+    this.mock
+      .onGet(`/workspaces/${workspace.id}/permissions/`)
+      .reply(200, result)
   }
 
-  async createAppAndGroup(table) {
-    const group = createGroup(this.mock, {})
-    this.loadPermissions(group)
+  async createAppAndWorkspace(table) {
+    const workspace = createWorkspace(this.mock, {})
+    this.loadPermissions(workspace)
     const application = createApplication(this.mock, {
-      groupId: group.id,
+      workspaceId: workspace.id,
       tables: [table],
     })
-    await this.store.dispatch('group/fetchAll')
+    await this.store.dispatch('workspace/fetchAll')
     await this.store.dispatch('application/fetchAll')
-    return { application, group }
+    return { application, workspace }
   }
 
   createTable() {

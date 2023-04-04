@@ -188,7 +188,7 @@ def test_file_field_type(data_fixture):
 @pytest.mark.django_db(transaction=True)
 def test_import_export_file_field(data_fixture, tmpdir):
     user = data_fixture.create_user()
-    imported_group = data_fixture.create_group(user=user)
+    imported_workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(user=user)
     table = data_fixture.create_database_table(database=database)
     field = data_fixture.create_file_field(table=table, name="File")
@@ -225,8 +225,8 @@ def test_import_export_file_field(data_fixture, tmpdir):
     )
 
     files_buffer = BytesIO()
-    exported_applications = core_handler.export_group_applications(
-        database.group, files_buffer=files_buffer, storage=storage
+    exported_applications = core_handler.export_workspace_applications(
+        database.workspace, files_buffer=files_buffer, storage=storage
     )
 
     # We expect that the exported zip file contains the user file used in the created
@@ -258,8 +258,8 @@ def test_import_export_file_field(data_fixture, tmpdir):
         "original_name"
     ] = "test2.txt"
 
-    imported_applications, id_mapping = core_handler.import_applications_to_group(
-        imported_group, exported_applications, files_buffer, storage
+    imported_applications, id_mapping = core_handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, files_buffer, storage
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

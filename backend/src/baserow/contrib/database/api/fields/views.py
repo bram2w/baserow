@@ -89,7 +89,7 @@ from baserow.contrib.database.tokens.exceptions import NoPermissionToTable
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.core.db import specific_iterator
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
@@ -109,7 +109,9 @@ from .serializers import (
 
 DuplicateFieldJobTypeSerializer = job_type_registry.get(
     DuplicateFieldJobType.type
-).get_serializer_class(base_class=JobSerializer)
+).get_serializer_class(
+    base_class=JobSerializer, meta_ref_name="SingleDuplicateFieldJobTypeSerializer"
+)
 
 
 class FieldsView(APIView):
@@ -136,7 +138,7 @@ class FieldsView(APIView):
         operation_id="list_database_table_fields",
         description=(
             "Lists all the fields of the table related to the provided parameter if "
-            "the user has access to the related database's group. If the group is "
+            "the user has access to the related database's workspace. If the workspace is "
             "related to a template, then this endpoint will be publicly accessible. A "
             "table consists of fields and each field can have a different type. Each "
             "type can have different properties. A field is comparable with a regular "
@@ -154,7 +156,7 @@ class FieldsView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
         }
     )
@@ -162,7 +164,7 @@ class FieldsView(APIView):
     def get(self, request, table_id):
         """
         Responds with a list of serialized fields that belong to the table if the user
-        has access to that group.
+        has access to that workspace.
         """
 
         table = TableHandler().get_table(table_id)
@@ -170,7 +172,7 @@ class FieldsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ListFieldsOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
             allow_if_template=True,
         )
@@ -208,7 +210,7 @@ class FieldsView(APIView):
         description=(
             "Creates a new field for the table related to the provided `table_id` "
             "parameter if the authorized user has access to the related database's "
-            "group. Depending on the type, different properties can optionally be "
+            "workspace. Depending on the type, different properties can optionally be "
             "set."
             "If creating the field causes other fields to change then the specific"
             "instances of those fields will be included in the related fields "
@@ -245,7 +247,7 @@ class FieldsView(APIView):
     @map_exceptions(
         {
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxFieldLimitExceeded: ERROR_MAX_FIELD_COUNT_EXCEEDED,
             NoPermissionToTable: ERROR_NO_PERMISSION_TO_TABLE,
             FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
@@ -267,7 +269,7 @@ class FieldsView(APIView):
         CoreHandler().check_permissions(
             request.user,
             CreateFieldOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -305,7 +307,7 @@ class FieldView(APIView):
         operation_id="get_database_table_field",
         description=(
             "Returns the existing field if the authorized user has access to the "
-            "related database's group. Depending on the type different properties "
+            "related database's workspace. Depending on the type different properties "
             "could be returned."
         ),
         responses={
@@ -319,7 +321,7 @@ class FieldView(APIView):
     @map_exceptions(
         {
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
     def get(self, request, field_id):
@@ -329,7 +331,7 @@ class FieldView(APIView):
         CoreHandler().check_permissions(
             request.user,
             ReadFieldOperationType.type,
-            group=field.table.database.group,
+            workspace=field.table.database.workspace,
             context=field,
         )
 
@@ -351,7 +353,7 @@ class FieldView(APIView):
         operation_id="update_database_table_field",
         description=(
             "Updates the existing field if the authorized user has access to the "
-            "related database's group. The type can also be changed and depending on "
+            "related database's workspace. The type can also be changed and depending on "
             "that type, different additional properties can optionally be set. If you "
             "change the field type it could happen that the data conversion fails, in "
             "that case the `ERROR_CANNOT_CHANGE_FIELD_TYPE` is returned, but this "
@@ -389,7 +391,7 @@ class FieldView(APIView):
     @map_exceptions(
         {
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             CannotChangeFieldType: ERROR_CANNOT_CHANGE_FIELD_TYPE,
             FieldWithSameNameAlreadyExists: ERROR_FIELD_WITH_SAME_NAME_ALREADY_EXISTS,
             ReservedBaserowFieldNameException: ERROR_RESERVED_BASEROW_FIELD_NAME,
@@ -400,7 +402,7 @@ class FieldView(APIView):
         }
     )
     def patch(self, request, field_id):
-        """Updates the field if the user belongs to the group."""
+        """Updates the field if the user belongs to the workspace."""
 
         field = FieldHandler().get_specific_field_for_update(field_id)
         type_name = type_from_data_or_registry(request.data, field_type_registry, field)
@@ -440,7 +442,7 @@ class FieldView(APIView):
         operation_id="delete_database_table_field",
         description=(
             "Deletes the existing field if the authorized user has access to the "
-            "related database's group. Note that all the related data to that field "
+            "related database's workspace. Note that all the related data to that field "
             "is also deleted. Primary fields cannot be deleted because their value "
             "represents the row. "
             "If deleting the field causes other fields to change then the specific"
@@ -463,13 +465,13 @@ class FieldView(APIView):
     @map_exceptions(
         {
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             CannotDeletePrimaryField: ERROR_CANNOT_DELETE_PRIMARY_FIELD,
             CannotDeleteAlreadyDeletedItem: ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM,
         }
     )
     def delete(self, request, field_id):
-        """Deletes an existing field if the user belongs to the group."""
+        """Deletes an existing field if the user belongs to the workspace."""
 
         field = FieldHandler().get_field(field_id)
         field_type = field_type_registry.get_by_model(field.specific_class)
@@ -521,7 +523,7 @@ class UniqueRowValueFieldView(APIView):
     @map_exceptions(
         {
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             IncompatibleFieldTypeForUniqueValues: ERROR_INCOMPATIBLE_FIELD_TYPE_FOR_UNIQUE_VALUES,
         }
     )
@@ -559,8 +561,9 @@ class AsyncDuplicateFieldView(APIView):
         operation_id="duplicate_table_field",
         description=(
             "Duplicates the table with the provided `table_id` parameter "
-            "if the authorized user has access to the database's group."
+            "if the authorized user has access to the database's workspace."
         ),
+        request=None,
         responses={
             202: DuplicateFieldJobTypeSerializer,
             400: get_error_schema(
@@ -577,7 +580,7 @@ class AsyncDuplicateFieldView(APIView):
     @map_exceptions(
         {
             FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
-            UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             MaxJobCountExceeded: ERROR_MAX_JOB_COUNT_EXCEEDED,
         }
     )

@@ -4,9 +4,9 @@
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Disponible dans la version entreprise",
-        "licenseDescription": "Avoir le rôle de spectateur est inclus dans Baserow Entreprise. Si un utilisateur a un tout autre role, dans n'importe quel groupe, il utilisera automatiquement un siège payant.",
+        "licenseDescription": "Avoir le rôle de spectateur est inclus dans Baserow Entreprise. Si un utilisateur a un tout autre role, dans n'importe quel projet, il utilisera automatiquement un siège payant.",
         "sidebarTooltip": "Votre compte a un accès global aux fonctions entreprise",
-        "overflowWarning": "Vous avez trop d'utilisateurs non-spectateurs et avez utilisé tous vos sièges payants. Changez les utilisateurs pour qu'ils deviennent des spectateurs sur la page des membres de chaque groupe."
+        "overflowWarning": "Vous avez trop d'utilisateurs non-spectateurs et avez utilisé tous vos sièges payants. Changez les utilisateurs pour qu'ils deviennent des spectateurs sur la page des membres de chaque projet."
     },
     "trashType": {
         "team": "équipe"
@@ -14,12 +14,12 @@
     "createTeamModal": {
         "title": "Créer une équipe",
         "invalidNameTitle": "Veuillez utiliser un autre nom",
-        "invalidNameMessage": "Ce nom d'équipe est déjà utilisé dans le groupe spécifié."
+        "invalidNameMessage": "Ce nom d'équipe est déjà utilisé dans le projet spécifié."
     },
     "updateTeamModal": {
         "title": "Mettre à jour {teamName}",
         "invalidNameTitle": "Veuillez utiliser un nom différent",
-        "invalidNameMessage": "Ce nom d'équipe est déjà utilisé dans le groupe spécifié."
+        "invalidNameMessage": "Ce nom d'équipe est déjà utilisé dans le projet spécifié."
     },
     "manageTeamForm": {
         "submit": "Enregistrer",
@@ -35,7 +35,7 @@
         "remove": "Supprimer l'équipe"
     },
     "teamsTable": {
-        "title": "{teamCount} équipes dans {groupName}",
+        "title": "{teamCount} équipes dans {workspaceName}",
         "createNew": "Créer une équipe",
         "nameColumn": "Nom",
         "createdColumn": "Création",
@@ -53,7 +53,7 @@
     "auditLog": {
         "title": "Journal d’audit",
         "filterUserTitle": "Utilisateur",
-        "filterGroupTitle": "Groupe",
+        "filterWorkspaceTitle": "Projet",
         "filterActionTypeTitle": "Type d'événement",
         "filterFromTimestampTitle": "Date de début",
         "filterToTimestampTitle": "À ce jour",
@@ -62,14 +62,14 @@
         "actionType": "Type d'événement",
         "description": "Description",
         "timestamp": "Horodatage",
-        "ip_address": "Addresse IP",
+        "ip_address": "Adresse IP",
         "filterFromTimestamp": "Date de début",
-        "group": "Groupe",
+        "workspace": "Projet",
         "clearFilters": "Tout enlever",
         "exportToCsv": "Exporter vers CSV",
         "exportModalTitle": "Exporter vers CSV",
         "allUsers": "Tous les utilisateurs",
-        "allGroups": "Tous les groupes",
+        "allWorkspaces": "Tous les projets",
         "allActionTypes": "Tous les types d'événements"
     },
     "clientHandler": {
@@ -141,13 +141,13 @@
         "errorAuthFlowError": "une erreur s'est produite au cours du processus d'authentification avec le fournisseur sélectionné.",
         "loginText": "Vous avez déjà un compte ?",
         "errorInvalidSamlResponse": "La réponse SAML est invalide.",
-        "errorGroupInvitationEmailMismatch": "votre adresse électronique ne correspond pas à l'invitation.",
+        "errorWorkspaceInvitationEmailMismatch": "votre adresse électronique ne correspond pas à l'invitation.",
         "errorSignupDisabled": "La création de compte a été désactivée par l’administrateur."
     },
     "roles": {
         "admin": {
             "name": "Administrateur",
-            "description": "Peut configurer et modifier les groupes et les applications."
+            "description": "Peut configurer et modifier les projets et les applications."
         },
         "builder": {
             "description": "Peut configurer et modifier les applications.",
@@ -155,7 +155,7 @@
         },
         "editor": {
             "name": "Éditeur",
-            "description": "Peut modifier toutes les données, mais pas configurer les applications ou les groupes."
+            "description": "Peut modifier toutes les données, mais pas configurer les applications ou les projets."
         },
         "commenter": {
             "name": "Commentateur",
@@ -171,7 +171,7 @@
         },
         "noRoleLowPriority": {
             "name": "Aucun rôle",
-            "description": "Obtient le rôle définit par les équipes auxquelles il appartient."
+            "description": "Obtient le rôle par défaut pour le Projet définit par les équipes auxquelles il appartient."
         }
     },
     "memberRolesModal": {
@@ -185,26 +185,26 @@
     "memberRolesTab": {
         "database": {
             "selectMembers": "Sélectionnez les membres",
-            "everyoneHasAccess": "Tous les membres de l’espace de travail {name} peuvent accéder à cette base de données.",
+            "everyoneHasAccess": "Tous les membres du projet {name} peuvent accéder à cette base de données.",
             "warningTitle": "D'autres utilisateurs peuvent avoir hérité de l'accès !",
-            "headerTooltip": "Les rôles de la base de données sont prioritaires sur les rôles du groupe.",
-            "title": "Base de données {nom}",
+            "headerTooltip": "Les rôles de la base de données sont prioritaires sur les rôles du projet.",
+            "title": "Base de données {name}",
             "onlyYouHaveAccess": "Vous seul pouvez accéder à cette base de données.",
-            "warningMessage": "D'autres utilisateurs peuvent avoir hérité de l'accès via leurs rôles respectifs dans le groupe parent."
+            "warningMessage": "D'autres utilisateurs peuvent avoir hérité de l'accès via leurs rôles respectifs dans le projet parent."
         },
         "table": {
             "selectMembers": "Sélectionnez les membres",
-            "warningMessage": "D'autres utilisateurs peuvent avoir hérité de l'accès via leurs rôles respectifs dans le groupe ou la base de données parente.",
-            "title": "Table {nom}",
-            "everyoneHasAccess": "Tous les membres de l'espace de travail {nom} peuvent accéder à cette table.",
+            "warningMessage": "D'autres utilisateurs peuvent avoir hérité de l'accès via leurs rôles respectifs dans le projet ou la base de données parente.",
+            "title": "Table {name}",
+            "everyoneHasAccess": "Tous les membres du projet {name} peuvent accéder à cette table.",
             "onlyYouHaveAccess": "Vous seul pouvez accéder à cette table.",
             "warningTitle": "D'autres utilisateurs peuvent avoir hérité de l'accès !",
-            "headerTooltip": "Les rôles de table sont prioritaires sur les rôles de groupe et de base de données."
+            "headerTooltip": "Les rôles de table sont prioritaires sur les rôles de projet et de base de données."
         }
     },
     "memberRolesShareToggle": {
-        "label": "Partager avec tout le monde dans {nom}",
-        "subLabel": "{totalUserAmount} membres de l'espace de travail"
+        "label": "Partager avec tout le monde dans {name}",
+        "subLabel": "{totalUserAmount} membres du projet"
     },
     "memberRolesDatabaseContexItem": {
         "label": "Gérer les membres"
@@ -263,7 +263,7 @@
         "sso": "Authentification unique (SSO)",
         "rbac": "Contrôle d’accès basé sur les rôles"
     },
-    "chatwootSuportSidebarGroup": {
+    "chatwootSupportSidebarWorkspace": {
         "directSupport": "Assistance"
     },
     "userTeamsField": {

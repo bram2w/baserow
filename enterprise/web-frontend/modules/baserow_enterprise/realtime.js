@@ -6,8 +6,12 @@
 export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent(
     'permissions_updated',
-    ({ store }, { group_id: groupId }) => {
-      if (store.getters['group/haveGroupPermissionsBeenLoaded'](groupId)) {
+    ({ store }, { workspace_id: workspaceId }) => {
+      if (
+        store.getters['workspace/haveWorkspacePermissionsBeenLoaded'](
+          workspaceId
+        )
+      ) {
         store.dispatch('notification/setPermissionsUpdated', true)
       }
     }

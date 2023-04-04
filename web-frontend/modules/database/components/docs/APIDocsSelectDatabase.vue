@@ -1,12 +1,12 @@
 <template>
   <div class="select-application">
     <template v-if="hasDatabases">
-      <APIDocsSelectDatabaseGroup
-        v-for="group in groups"
-        :key="group.id"
-        :group="group"
+      <APIDocsSelectDatabaseWorkspace
+        v-for="workspace in workspaces"
+        :key="workspace.id"
+        :workspace="workspace"
         :selected="selected"
-      ></APIDocsSelectDatabaseGroup>
+      ></APIDocsSelectDatabaseWorkspace>
     </template>
     <p v-else>
       {{ $t('apiDocsSelectDatabase') }}
@@ -18,11 +18,11 @@
 import { mapState } from 'vuex'
 
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import APIDocsSelectDatabaseGroup from '@baserow/modules/database/components/docs/APIDocsSelectDatabaseGroup'
+import APIDocsSelectDatabaseWorkspace from '@baserow/modules/database/components/docs/APIDocsSelectDatabaseWorkspace'
 
 export default {
   name: 'APIDocsSelectDatabase',
-  components: { APIDocsSelectDatabaseGroup },
+  components: { APIDocsSelectDatabaseWorkspace },
   props: {
     selected: {
       type: Number,
@@ -40,7 +40,7 @@ export default {
       )
     },
     ...mapState({
-      groups: (state) => state.group.items,
+      workspaces: (state) => state.workspace.items,
     }),
   },
 }

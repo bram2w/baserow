@@ -86,6 +86,7 @@ class ExportJobSerializer(ExportedFileURLSerializerMixin, serializers.ModelSeria
         help_text="DEPRECATED: Use state instead"
     )
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_status(self, instance):
         return instance.state
 

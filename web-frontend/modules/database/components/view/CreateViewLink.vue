@@ -56,7 +56,7 @@ export default {
       return this.viewType.getDeactivatedText()
     },
     deactivated() {
-      return this.viewType.isDeactivated(this.database.group.id)
+      return this.viewType.isDeactivated(this.database.workspace.id)
     },
     deactivatedClickModal() {
       return this.viewType.getDeactivatedClickModal()

@@ -11,7 +11,7 @@
         !$hasPermission(
           'database.table.view.update_field_options',
           view,
-          database.group.id
+          database.workspace.id
         )
       "
       :store-prefix="storePrefix"
@@ -25,7 +25,11 @@
       :fields="enabledFields"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.view.update', view, database.group.id)
+        !$hasPermission(
+          'database.table.view.update',
+          view,
+          database.workspace.id
+        )
       "
       :store-prefix="storePrefix"
       @ordered-fields="orderFields"

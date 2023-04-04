@@ -21,8 +21,8 @@ def test_read_team(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    sales = enterprise_data_fixture.create_team(name="Sales", workspace=workspace)
 
     response = api_client.get(
         reverse(
@@ -42,12 +42,14 @@ def test_list_teams(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
-    engineering = enterprise_data_fixture.create_team(name="Engineering", group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    sales = enterprise_data_fixture.create_team(name="Sales", workspace=workspace)
+    engineering = enterprise_data_fixture.create_team(
+        name="Engineering", workspace=workspace
+    )
 
     response = api_client.get(
-        reverse("api:enterprise:teams:list", kwargs={"group_id": group.id}),
+        reverse("api:enterprise:teams:list", kwargs={"workspace_id": workspace.id}),
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
     assert response.status_code == HTTP_200_OK
@@ -64,12 +66,12 @@ def test_list_search_teams(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
-    enterprise_data_fixture.create_team(name="Engineering", group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    sales = enterprise_data_fixture.create_team(name="Sales", workspace=workspace)
+    enterprise_data_fixture.create_team(name="Engineering", workspace=workspace)
 
     response = api_client.get(
-        f'{reverse("api:enterprise:teams:list", kwargs={"group_id": group.id})}?search=Sal',
+        f'{reverse("api:enterprise:teams:list", kwargs={"workspace_id": workspace.id})}?search=Sal',
         **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
     assert response.status_code == HTTP_200_OK
@@ -82,10 +84,10 @@ def test_list_search_teams(api_client, data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_create_team(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     response = api_client.post(
-        reverse("api:enterprise:teams:list", kwargs={"group_id": group.id}),
+        reverse("api:enterprise:teams:list", kwargs={"workspace_id": workspace.id}),
         {"name": "Executives"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -93,7 +95,7 @@ def test_create_team(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
     assert response_json["name"] == "Executives"
-    assert response_json["group"] == group.id
+    assert response_json["workspace"] == workspace.id
 
 
 @pytest.mark.django_db
@@ -101,8 +103,8 @@ def test_put_team(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    sales = enterprise_data_fixture.create_team(name="Sales", workspace=workspace)
 
     response = api_client.put(
         reverse("api:enterprise:teams:item", kwargs={"team_id": sales.id}),
@@ -117,14 +119,14 @@ def test_put_team(api_client, data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
-def test_put_team_not_as_group_member(
+def test_put_team_not_as_workspace_member(
     api_client, data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group()
-    sales = enterprise_data_fixture.create_team(name="Sales", group=group)
+    workspace = data_fixture.create_workspace()
+    sales = enterprise_data_fixture.create_team(name="Sales", workspace=workspace)
 
     response = api_client.put(
         reverse("api:enterprise:teams:item", kwargs={"team_id": sales.id}),
@@ -142,8 +144,8 @@ def test_delete_team(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
 
     response = api_client.delete(
         reverse("api:enterprise:teams:item", kwargs={"team_id": team.id}),
@@ -153,14 +155,14 @@ def test_delete_team(api_client, data_fixture, enterprise_data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_team_not_as_group_member(
+def test_delete_team_not_as_workspace_member(
     api_client, data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group()
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace()
+    team = enterprise_data_fixture.create_team(workspace=workspace)
 
     response = api_client.delete(
         reverse("api:enterprise:teams:item", kwargs={"team_id": team.id}),
@@ -176,8 +178,8 @@ def test_read_team_subject(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     subject = enterprise_data_fixture.create_subject(team=team)
 
     response = api_client.get(
@@ -198,8 +200,8 @@ def test_list_team_subjects(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     subject1 = enterprise_data_fixture.create_subject(team=team)
     subject2 = enterprise_data_fixture.create_subject(team=team)
 
@@ -220,8 +222,8 @@ def test_list_team_subjects(api_client, data_fixture, enterprise_data_fixture):
 @pytest.mark.django_db
 def test_create_team_subject_by_id(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
 
     response = api_client.post(
         reverse("api:enterprise:teams:subject-list", kwargs={"team_id": team.id}),
@@ -241,8 +243,8 @@ def test_create_team_subject_by_email(
     api_client, data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
 
     response = api_client.post(
         reverse("api:enterprise:teams:subject-list", kwargs={"team_id": team.id}),
@@ -262,8 +264,8 @@ def test_patch_team_subject(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     subject = enterprise_data_fixture.create_subject(team=team)
 
     response = api_client.patch(
@@ -283,8 +285,8 @@ def test_delete_team_subject(api_client, data_fixture, enterprise_data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     subject = enterprise_data_fixture.create_subject(team=team)
 
     response = api_client.delete(

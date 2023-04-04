@@ -2,83 +2,83 @@
   <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
     <div class="dashboard">
       <DashboardHelp></DashboardHelp>
-      <GroupInvitation
-        v-for="invitation in groupInvitations"
+      <WorkspaceInvitation
+        v-for="invitation in workspaceInvitations"
         :key="'invitation-' + invitation.id"
         :invitation="invitation"
         @remove="removeInvitation($event)"
-      ></GroupInvitation>
+      ></WorkspaceInvitation>
       <div class="dashboard__container">
         <div class="dashboard__sidebar">
           <DashboardSidebar
-            :groups="sortedGroups"
-            @group-selected="scrollToGroup"
-            @create-group-clicked="$refs.createGroupModal.show()"
+            :workspaces="sortedWorkspaces"
+            @workspace-selected="scrollToWorkspace"
+            @create-workspace-clicked="$refs.createWorkspaceModal.show()"
           ></DashboardSidebar>
         </div>
         <div class="dashboard__content">
-          <DashboardNoGroups
-            v-if="groups.length === 0"
-            @create-clicked="$refs.createGroupModal.show()"
-          ></DashboardNoGroups>
+          <DashboardNoWorkspaces
+            v-if="workspaces.length === 0"
+            @create-clicked="$refs.createWorkspaceModal.show()"
+          ></DashboardNoWorkspaces>
           <template v-else>
-            <DashboardGroup
-              v-for="group in sortedGroups"
-              :ref="'group-' + group.id"
-              :key="group.id"
-              :group="group"
-              :component-arguments="groupComponentArguments"
-            ></DashboardGroup>
+            <DashboardWorkspace
+              v-for="workspace in sortedWorkspaces"
+              :ref="'workspace-' + workspace.id"
+              :key="workspace.id"
+              :workspace="workspace"
+              :component-arguments="workspaceComponentArguments"
+            ></DashboardWorkspace>
             <div>
               <a
-                v-if="$hasPermission('create_group')"
+                v-if="$hasPermission('create_workspace')"
                 class="dashboard__create-link"
-                @click="$refs.createGroupModal.show()"
+                @click="$refs.createWorkspaceModal.show()"
               >
                 <i class="fas fa-plus"></i>
-                {{ $t('dashboard.createGroup') }}
+                {{ $t('dashboard.createWorkspace') }}
               </a>
             </div>
           </template>
         </div>
       </div>
     </div>
-    <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
+    <CreateWorkspaceModal ref="createWorkspaceModal"></CreateWorkspaceModal>
   </div>
 </template>
 
 <script>
 import { mapState, mapGetters } from 'vuex'
 
-import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
-import GroupInvitation from '@baserow/modules/core/components/group/GroupInvitation'
-import DashboardGroup from '@baserow/modules/core/components/dashboard/DashboardGroup'
+import CreateWorkspaceModal from '@baserow/modules/core/components/workspace/CreateWorkspaceModal'
+import WorkspaceInvitation from '@baserow/modules/core/components/workspace/WorkspaceInvitation'
+import DashboardWorkspace from '@baserow/modules/core/components/dashboard/DashboardWorkspace'
 import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
-import DashboardNoGroups from '@baserow/modules/core/components/dashboard/DashboardNoGroups'
+import DashboardNoWorkspaces from '@baserow/modules/core/components/dashboard/DashboardNoWorkspaces'
 import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
 import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
   components: {
     DashboardHelp,
-    DashboardNoGroups,
+    DashboardNoWorkspaces,
     DashboardSidebar,
-    CreateGroupModal,
-    DashboardGroup,
-    GroupInvitation,
+    CreateWorkspaceModal,
+    DashboardWorkspace,
+    WorkspaceInvitation,
   },
   layout: 'app',
   /**
    * Fetches the data that must be shown on the dashboard, this could for example be
-   * pending group invitations.
+   * pending workspace invitations.
    */
   async asyncData(context) {
     const { error, app } = context
     try {
       const { data } = await AuthService(app.$client).dashboard()
       let asyncData = {
-        groupInvitations: data.group_invitations,
-        groupComponentArguments: {},
+        workspaceInvitations: data.workspace_invitations,
+        workspaceComponentArguments: {},
       }
       // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
       // might be plugins that extend the dashboard and we want to fetch that async data
@@ -99,30 +99,30 @@ export default {
   },
   computed: {
     ...mapGetters({
-      sortedGroups: 'group/getAllSorted',
+      sortedWorkspaces: 'workspace/getAllSorted',
     }),
     ...mapState({
       user: (state) => state.auth.user,
-      groups: (state) => state.group.items,
+      workspaces: (state) => state.workspace.items,
       applications: (state) => state.application.items,
     }),
   },
   methods: {
     /**
-     * When a group invitation has been rejected or accepted, it can be removed from the
+     * When a workspace invitation has been rejected or accepted, it can be removed from the
      * list because in both situations the invitation itself is deleted.
      */
     removeInvitation(invitation) {
-      const index = this.groupInvitations.findIndex(
+      const index = this.workspaceInvitations.findIndex(
         (i) => i.id === invitation.id
       )
-      this.groupInvitations.splice(index, 1)
+      this.workspaceInvitations.splice(index, 1)
     },
     /**
-     * Make sure that the selected group is visible.
+     * Make sure that the selected workspace is visible.
      */
-    scrollToGroup(group) {
-      const ref = this.$refs['group-' + group.id]
+    scrollToWorkspace(workspace) {
+      const ref = this.$refs['workspace-' + workspace.id]
       if (ref) {
         const element = ref[0].$el
         element.scrollIntoView({ behavior: 'smooth' })

@@ -8,13 +8,15 @@ from .views import (
     OrderApplicationsView,
 )
 
-app_name = "baserow.api.group"
+app_name = "baserow.api.workspace"
 
 
 urlpatterns = [
-    re_path(r"group/(?P<group_id>[0-9]+)/$", ApplicationsView.as_view(), name="list"),
     re_path(
-        r"group/(?P<group_id>[0-9]+)/order/$",
+        r"workspace/(?P<workspace_id>[0-9]+)/$", ApplicationsView.as_view(), name="list"
+    ),
+    re_path(
+        r"workspace/(?P<workspace_id>[0-9]+)/order/$",
         OrderApplicationsView.as_view(),
         name="order",
     ),

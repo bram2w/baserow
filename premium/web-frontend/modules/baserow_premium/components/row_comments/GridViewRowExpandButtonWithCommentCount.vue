@@ -6,7 +6,7 @@
       !injections.$hasPermission(
         'database.table.list_comments',
         props.table,
-        props.groupId
+        props.workspaceId
       )
     "
     :row="props.row"

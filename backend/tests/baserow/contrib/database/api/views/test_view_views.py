@@ -88,13 +88,16 @@ def test_list_views(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=table_1.database.group)
+    data_fixture.create_template(workspace=table_1.database.workspace)
     url = reverse("api:database:views:list", kwargs={"table_id": table_1.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
 
     response = api_client.delete(
-        reverse("api:groups:item", kwargs={"group_id": table_1.database.group.id}),
+        reverse(
+            "api:workspaces:item",
+            kwargs={"workspace_id": table_1.database.workspace.id},
+        ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -268,7 +271,10 @@ def test_get_view(api_client, data_fixture):
     assert response_json["decorations"] == []
 
     response = api_client.delete(
-        reverse("api:groups:item", kwargs={"group_id": view.table.database.group.id}),
+        reverse(
+            "api:workspaces:item",
+            kwargs={"workspace_id": view.table.database.workspace.id},
+        ),
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT
@@ -491,7 +497,7 @@ def test_get_view_field_options_as_template(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=grid.table.database.group)
+    data_fixture.create_template(workspace=grid.table.database.workspace)
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK
@@ -588,7 +594,7 @@ def test_patch_view_field_options_as_template(api_client, data_fixture):
     response = api_client.patch(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=grid.table.database.group)
+    data_fixture.create_template(workspace=grid.table.database.workspace)
     url = reverse("api:database:views:field_options", kwargs={"view_id": grid.id})
     response = api_client.patch(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -655,7 +661,7 @@ def test_anon_user_cant_get_info_about_a_non_public_view(api_client, data_fixtur
 
 
 @pytest.mark.django_db
-def test_user_in_wrong_group_cant_get_info_about_a_non_public_view(
+def test_user_in_wrong_workspace_cant_get_info_about_a_non_public_view(
     api_client, data_fixture
 ):
     user = data_fixture.create_user()
@@ -678,7 +684,7 @@ def test_user_in_wrong_group_cant_get_info_about_a_non_public_view(
 
 
 @pytest.mark.django_db
-def test_user_in_same_group_can_get_info_about_a_non_public_view(
+def test_user_in_same_workspace_can_get_info_about_a_non_public_view(
     api_client, data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
@@ -723,7 +729,10 @@ def test_cannot_get_info_about_trashed_view(api_client, data_fixture):
     grid_view = data_fixture.create_grid_view(user=user, public=True)
 
     TrashHandler.trash(
-        user, grid_view.table.database.group, None, grid_view.table.database.group
+        user,
+        grid_view.table.database.workspace,
+        None,
+        grid_view.table.database.workspace,
     )
 
     response = api_client.get(
@@ -920,7 +929,7 @@ def test_view_creator_can_always_get_data_of_a_public_password_protected(
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    # user in a valid group can access data, event without password
+    # user in a valid workspace can access data, event without password
     response = api_client.get(
         reverse("api:database:views:public_info", kwargs={"slug": grid_view.slug}),
         format="json",
@@ -930,7 +939,7 @@ def test_view_creator_can_always_get_data_of_a_public_password_protected(
 
 
 @pytest.mark.django_db
-def test_user_in_wrong_group_need_the_password_to_access_password_protected_view(
+def test_user_in_wrong_workspace_need_the_password_to_access_password_protected_view(
     api_client, data_fixture
 ):
     user = data_fixture.create_user()

@@ -23,7 +23,7 @@
 <script>
 import UserAdminService from '@baserow_premium/services/admin/users'
 import UsernameField from '@baserow_premium/components/admin/users/fields/UsernameField'
-import UserGroupsField from '@baserow_premium/components/admin/users/fields/UserGroupsField'
+import UserWorkspacesField from '@baserow_premium/components/admin/users/fields/UserWorkspacesField'
 import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
 import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
 import LocalDateField from '@baserow/modules/core/components/crudTable/fields/LocalDateField'
@@ -54,9 +54,9 @@ export default {
         true
       ),
       new CrudTableColumn(
-        'groups',
-        () => this.$t('usersAdminTable.groups'),
-        UserGroupsField
+        'workspaces',
+        () => this.$t('usersAdminTable.workspaces'),
+        UserWorkspacesField
       ),
       new CrudTableColumn(
         'last_login',
@@ -81,7 +81,6 @@ export default {
     this.service = UserAdminService(this.$client)
     return {
       editUser: {},
-      hiddenGroups: [],
     }
   },
   methods: {

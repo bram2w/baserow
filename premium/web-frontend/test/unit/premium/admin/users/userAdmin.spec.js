@@ -25,15 +25,15 @@ describe('User Admin Component Tests', () => {
       id: 1,
       username: 'user@baserow.io',
       name: 'user name',
-      groups: [
+      workspaces: [
         {
           id: 4,
-          name: "users's group",
+          name: "users's workspace",
           permissions: 'ADMIN',
         },
         {
           id: 65,
-          name: 'other_group',
+          name: 'other_workspace',
         },
       ],
       lastLogin: '2021-04-26T07:50:45.6415059Z',
@@ -48,7 +48,7 @@ describe('User Admin Component Tests', () => {
     const {
       usernameCell,
       nameCell,
-      groupsCell,
+      workspacesCell,
       lastLoginCell,
       signedUpCell,
       isActiveCell,
@@ -62,21 +62,25 @@ describe('User Admin Component Tests', () => {
     // First name matches
     expect(nameCell.text()).toBe(userSetup.name)
 
-    // Has two groups
-    const groups = ui.getGroups(groupsCell)
-    expect(groups.length).toBe(2)
-    const firstGroup = groups.at(0)
-    const secondGroup = groups.at(1)
+    // Has two workspaces
+    const workspaces = ui.getWorkspaces(workspacesCell)
+    expect(workspaces.length).toBe(2)
+    const firstWorkspace = workspaces.at(0)
+    const secondWorkspace = workspaces.at(1)
 
-    // The first group has the correct name and as the user is an admin an icon is
+    // The first workspace has the correct name and as the user is an admin an icon is
     // displayed
-    expect(firstGroup.text()).toBe("users's group")
-    expect(ui.groupCellShowsThisUserIsGroupAdmin(firstGroup)).toBe(true)
+    expect(firstWorkspace.text()).toBe("users's workspace")
+    expect(ui.workspaceCellShowsThisUserIsWorkspaceAdmin(firstWorkspace)).toBe(
+      true
+    )
 
-    // The second group has the right name and no admin icon as the user is not an
+    // The second workspace has the right name and no admin icon as the user is not an
     // admin
-    expect(secondGroup.text()).toBe('other_group')
-    expect(ui.groupCellShowsThisUserIsGroupAdmin(secondGroup)).toBe(false)
+    expect(secondWorkspace.text()).toBe('other_workspace')
+    expect(ui.workspaceCellShowsThisUserIsWorkspaceAdmin(secondWorkspace)).toBe(
+      false
+    )
 
     // The last login and signed up dates are correctly formatted to the locale
     moment.locale('nl')
@@ -87,20 +91,20 @@ describe('User Admin Component Tests', () => {
     expect(isActiveCell.text()).toBe('premium.user.active')
   })
 
-  test('A user with no groups is displayed without any', async () => {
+  test('A user with no workspaces is displayed without any', async () => {
     const { user, ui } = await whenThereIsAUserAndYouOpenUserAdmin({
-      groups: [],
+      workspaces: [],
     })
 
     await flushPromises()
 
     const cells = ui.findCells()
     expect(cells.length).toBe(7)
-    const { usernameCell, groupsCell } = ui.getRow(cells, 0)
+    const { usernameCell, workspacesCell } = ui.getRow(cells, 0)
 
     expect(usernameCell.text()).toContain(user.username)
-    const groups = ui.getGroups(groupsCell)
-    expect(groups.length).toBe(0)
+    const workspaces = ui.getWorkspaces(workspacesCell)
+    expect(workspaces.length).toBe(0)
   })
 
   test('A user can be deleted', async () => {

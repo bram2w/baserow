@@ -19,11 +19,68 @@
     },
     "pageForm": {
         "nameLabel": "Name",
+        "pathLabel": "Path",
         "errorNameNotUnique": "A page with this name already exists",
+        "errorPathNotUnique": "A path with this name already exists",
+        "errorStartingSlash": "A path needs to start with a '/'",
+        "errorValidPathCharacters": "The path contains invalid characters",
         "defaultName": "Page"
+    },
+    "pageHeaderItemTypes": {
+        "labelElements": "Elements",
+        "labelDataSource": "Data",
+        "labelVariables": "Variables",
+        "labelSettings": "Page settings"
+    },
+    "elementsContext": {
+        "searchPlaceholder": "Search elements"
+    },
+    "elementType": {
+        "heading": "Heading",
+        "headingDescription": "Page heading title",
+        "paragraph": "Paragraph",
+        "paragraphDescription": "Single line text"
+    },
+    "addElementButton": {
+        "label": "Element"
+    },
+    "addElementModal": {
+        "title": "Add new element",
+        "searchPlaceholder": "Search elements"
+    },
+    "elementMenu": {
+        "moveUp": "Move up",
+        "moveDown": "Move down"
     },
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
         "duplicatedTitle": "Page duplicated"
+    },
+    "pageSidePanelType": {
+        "general": "General",
+        "style": "Style",
+        "visibility": "Visibility",
+        "events": "Events"
+    },
+    "emptySidePanelState": {
+        "message": "Click on one of the elements to see more details"
+    },
+    "headingElement": {
+        "noValue": "No title..."
+    },
+    "headingElementForm": {
+        "levelTitle": "Level",
+        "textTitle": "Text",
+        "textPlaceholder": "Enter text...",
+        "headingName": "Heading {level} <h{level}>",
+        "textError": "The value is invalid."
+    },
+    "paragraphElement": {
+        "noValue": "Empty paragraph..."
+    },
+    "paragraphElementForm": {
+        "textTitle": "Text",
+        "textPlaceholder": "Enter text...",
+        "textError": "The value is invalid."
     }
 }

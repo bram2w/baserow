@@ -11,8 +11,8 @@
         <template #invitedBy>
           <strong>{{ invitation.invited_by }}</strong>
         </template>
-        <template #group>
-          <strong>{{ invitation.group }}</strong>
+        <template #workspace>
+          <strong>{{ invitation.workspace }}</strong>
         </template>
       </i18n>
     </Alert>
@@ -207,12 +207,14 @@ export default {
           language: this.$i18n.locale,
         }
 
-        // If there is a valid invitation we can add the group invitation token to the
-        // action parameters so that is can be passed along when signing up. That makes
-        // the user accept the group invitation without creating a new group for the
+        // If there is a valid invitation we can add the workspace invitation token to the
+        // action parameters so that it can be passed along when signing up. That makes
+        // the user accept the workspace invitation without creating a new workspace for the
         // user.
         if (this.invitation !== null) {
-          values.groupInvitationToken = this.$route.query.groupInvitationToken
+          values.workspaceInvitationToken =
+            this.$route.query.workspaceInvitationToken ||
+            this.$route.query.groupInvitationToken // GroupDeprecation
         }
 
         // If a template is provided, we can add that id to the parameters so that the

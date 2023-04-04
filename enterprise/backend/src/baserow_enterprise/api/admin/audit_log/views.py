@@ -22,7 +22,7 @@ from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.exceptions import MaxJobCountExceeded
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.registries import job_type_registry
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 from baserow_enterprise.audit_log.models import AuditLogEntry
 from baserow_enterprise.features import AUDIT_LOG
@@ -31,10 +31,10 @@ from .serializers import (
     AuditLogActionTypeSerializer,
     AuditLogExportJobRequestSerializer,
     AuditLogExportJobResponseSerializer,
-    AuditLogGroupSerializer,
     AuditLogQueryParamsSerializer,
     AuditLogSerializer,
     AuditLogUserSerializer,
+    AuditLogWorkspaceSerializer,
 )
 
 User = get_user_model()
@@ -45,7 +45,7 @@ class AdminAuditLogView(AdminListingView):
     serializer_class = AuditLogSerializer
     filters_field_mapping = {
         "user_id": "user_id",
-        "group_id": "group_id",
+        "workspace_id": "workspace_id",
         "action_type": "action_type",
         "from_timestamp": "action_timestamp__gte",
         "to_timestamp": "action_timestamp__lte",
@@ -53,7 +53,7 @@ class AdminAuditLogView(AdminListingView):
     }
     sort_field_mapping = {
         "user": "user_email",
-        "group": "group_name",
+        "workspace": "workspace_name",
         "type": "action_type",
         "timestamp": "action_timestamp",
         "ip_address": "ip_address",
@@ -109,21 +109,21 @@ class AdminAuditLogUserFilterView(AdminListingView):
         return super().get(request)
 
 
-class AdminAuditLogGroupFilterView(AdminListingView):
+class AdminAuditLogWorkspaceFilterView(AdminListingView):
     permission_classes = (IsAdminUser,)
-    serializer_class = AuditLogGroupSerializer
+    serializer_class = AuditLogWorkspaceSerializer
     search_fields = ["name"]
     default_order_by = "name"
 
     def get_queryset(self, request):
-        return Group.objects.filter(template__isnull=True)
+        return Workspace.objects.filter(template__isnull=True)
 
     @extend_schema(
         tags=["Admin"],
-        operation_id="admin_audit_log_groups",
-        description="List all distinct group names related to an audit log entry.",
+        operation_id="admin_audit_log_workspaces",
+        description="List all distinct workspace names related to an audit log entry.",
         **AdminListingView.get_extend_schema_parameters(
-            "groups", serializer_class, search_fields, {}
+            "workspaces", serializer_class, search_fields, {}
         ),
     )
     def get(self, request):

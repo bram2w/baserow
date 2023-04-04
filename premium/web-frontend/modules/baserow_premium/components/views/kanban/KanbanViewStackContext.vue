@@ -3,7 +3,11 @@
     <ul class="context__menu">
       <li
         v-if="
-          $hasPermission('database.table.create_row', table, database.group.id)
+          $hasPermission(
+            'database.table.create_row',
+            table,
+            database.workspace.id
+          )
         "
       >
         <a @click=";[$emit('create-row'), hide()]">
@@ -17,7 +21,7 @@
           $hasPermission(
             'database.table.field.update',
             singleSelectField,
-            database.group.id
+            database.workspace.id
           )
         "
       >
@@ -42,7 +46,7 @@
           $hasPermission(
             'database.table.field.update',
             singleSelectField,
-            database.group.id
+            database.workspace.id
           )
         "
       >

@@ -37,12 +37,15 @@ def test_multiple_collaborators_field_type_create(api_client, data_fixture):
 @pytest.mark.field_multiple_collaborators
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_update(api_client, data_fixture):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
     database = data_fixture.create_database_application(
-        user=user, name="Placeholder", group=group
+        user=user, name="Placeholder", workspace=workspace
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -147,7 +150,7 @@ def test_multiple_collaborators_field_type_insert_row_validation(
         == "The provided user id [999999] is not a valid collaborator."
     )
 
-    # user not in group
+    # user not in workspace
 
     response = api_client.post(
         reverse("api:database:rows:list", kwargs={"table_id": table.id}),
@@ -168,14 +171,17 @@ def test_multiple_collaborators_field_type_insert_row_validation(
 @pytest.mark.api_rows
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_insert_row(api_client, data_fixture):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -225,13 +231,16 @@ def test_multiple_collaborators_field_type_insert_row(api_client, data_fixture):
 def test_multiple_collaborators_field_type_update_row_validation(
     api_client, data_fixture
 ):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
     user2 = data_fixture.create_user()
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -285,7 +294,7 @@ def test_multiple_collaborators_field_type_update_row_validation(
         == "The provided user id [999999] is not a valid collaborator."
     )
 
-    # user not in group
+    # user not in workspace
 
     response = api_client.patch(
         reverse(
@@ -308,14 +317,17 @@ def test_multiple_collaborators_field_type_update_row_validation(
 @pytest.mark.api_rows
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_update_row(api_client, data_fixture):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -469,7 +481,7 @@ def test_multiple_collaborators_field_type_batch_insert_rows_validation(
         == "The provided user id [999999] is not a valid collaborator."
     )
 
-    # user not in group
+    # user not in workspace
 
     response = api_client.post(
         reverse("api:database:rows:batch", kwargs={"table_id": table.id}),
@@ -494,14 +506,17 @@ def test_multiple_collaborators_field_type_batch_insert_rows_validation(
 @pytest.mark.api_rows
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_batch_insert_rows(api_client, data_fixture):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -571,13 +586,16 @@ def test_multiple_collaborators_field_type_batch_insert_rows(api_client, data_fi
 def test_multiple_collaborators_field_type_batch_update_rows_validation(
     api_client, data_fixture
 ):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
     user2 = data_fixture.create_user()
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()
@@ -654,7 +672,7 @@ def test_multiple_collaborators_field_type_batch_update_rows_validation(
         == "The provided user id [999999] is not a valid collaborator."
     )
 
-    # user not in group
+    # user not in workspace
 
     response = api_client.patch(
         reverse("api:database:rows:batch", kwargs={"table_id": table.id}),
@@ -682,14 +700,17 @@ def test_multiple_collaborators_field_type_batch_update_rows_validation(
 @pytest.mark.api_rows
 @pytest.mark.django_db
 def test_multiple_collaborators_field_type_batch_update_rows(api_client, data_fixture):
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
-        email="test@test.nl", password="password", first_name="Test1", group=group
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
     )
-    user2 = data_fixture.create_user(group=group)
-    user3 = data_fixture.create_user(group=group)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
-        user=user, group=group, name="Placeholder"
+        user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
     field_handler = FieldHandler()

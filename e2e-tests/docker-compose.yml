@@ -10,7 +10,7 @@ services:
       PUBLIC_WEB_FRONTEND_URL: http://web-frontend:3000
       BASEROW_AMOUNT_OF_WORKERS: 2
       BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION: false
-      DJANGO_SETTINGS_MODULE: 'baserow.config.settings.base'
+      DJANGO_SETTINGS_MODULE: 'baserow.config.settings.e2e'
     command:
       - gunicorn
 

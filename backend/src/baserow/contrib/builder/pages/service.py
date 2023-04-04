@@ -19,6 +19,7 @@ from baserow.contrib.builder.pages.signals import (
     page_updated,
     pages_reordered,
 )
+from baserow.contrib.builder.pages.types import PagePathParams
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import ChildProgressBuilder, extract_allowed
 
@@ -36,36 +37,45 @@ class PageService:
         :return: The model instance of the Page
         """
 
-        base_queryset = Page.objects.select_related("builder", "builder__group")
+        base_queryset = Page.objects.select_related("builder", "builder__workspace")
         page = self.handler.get_page(page_id, base_queryset=base_queryset)
 
         CoreHandler().check_permissions(
             user,
             ReadPageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
         return page
 
-    def create_page(self, user: AbstractUser, builder: Builder, name: str) -> Page:
+    def create_page(
+        self,
+        user: AbstractUser,
+        builder: Builder,
+        name: str,
+        path: str,
+        path_params: PagePathParams = None,
+    ) -> Page:
         """
         Creates a new page
 
         :param user: The user trying to create the page
         :param builder: The builder the page belongs to
         :param name: The name of the page
+        :param path: The path of the page
+        :param path_params: The params of the path provided
         :return: The newly created page instance
         """
 
         CoreHandler().check_permissions(
             user,
             CreatePageOperationType.type,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
-        page = self.handler.create_page(builder, name)
+        page = self.handler.create_page(builder, name, path, path_params)
 
         page_created.send(self, page=page, user=user)
 
@@ -82,13 +92,15 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             DeletePageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
+        page_id = page.id
+
         self.handler.delete_page(page)
 
-        page_deleted.send(self, builder=page.builder, page_id=page.id, user=user)
+        page_deleted.send(self, builder=page.builder, page_id=page_id, user=user)
 
     def update_page(self, user: AbstractUser, page: Page, **kwargs) -> Page:
         """
@@ -96,18 +108,18 @@ class PageService:
 
         :param user: The user trying to update the page
         :param page: The page that should be updated
-        :param values: The fields that should be updated with their corresponding value
+        :param kwargs: The fields that should be updated with their corresponding value
         :return: The updated page
         """
 
         CoreHandler().check_permissions(
             user,
             UpdatePageOperationType.type,
-            group=page.builder.group,
+            workspace=page.builder.workspace,
             context=page,
         )
 
-        allowed_updates = extract_allowed(kwargs, ["name"])
+        allowed_updates = extract_allowed(kwargs, ["name", "path", "path_params"])
 
         self.handler.update_page(page, **allowed_updates)
 
@@ -130,7 +142,7 @@ class PageService:
         CoreHandler().check_permissions(
             user,
             OrderPagesBuilderOperationType.type,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
@@ -139,7 +151,7 @@ class PageService:
             user,
             OrderPagesBuilderOperationType.type,
             all_pages,
-            group=builder.group,
+            workspace=builder.workspace,
             context=builder,
         )
 
@@ -166,11 +178,11 @@ class PageService:
         """
 
         CoreHandler().check_permissions(
-            user, DuplicatePageOperationType.type, page.builder.group, context=page
+            user, DuplicatePageOperationType.type, page.builder.workspace, context=page
         )
 
         page_clone = PageHandler().duplicate_page(page, progress_builder)
 
-        page_created.send(self, page=page, user=user)
+        page_created.send(self, page=page_clone, user=user)
 
         return page_clone

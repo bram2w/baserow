@@ -11,7 +11,7 @@ def test_authenticate(api_client, data_fixture):
         _, token = data_fixture.create_user_and_token()
 
     response = api_client.get(
-        reverse("api:groups:list"),
+        reverse("api:workspaces:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT SOME_WRONG_TOKEN",
     )
@@ -19,7 +19,7 @@ def test_authenticate(api_client, data_fixture):
     assert response.json()["error"] == "ERROR_INVALID_ACCESS_TOKEN"
 
     response = api_client.get(
-        reverse("api:groups:list"), format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        reverse("api:workspaces:list"), format="json", HTTP_AUTHORIZATION=f"JWT {token}"
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
     assert response.json()["error"] == "ERROR_INVALID_ACCESS_TOKEN"

@@ -43,7 +43,7 @@ def test_tables_reordered(mock_broadcast_to_channel_group, data_fixture):
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
-    assert args[0][0] == table.database.group_id
+    assert args[0][0] == table.database.workspace_id
     assert args[0][1]["type"] == "tables_reordered"
     assert args[0][1]["database_id"] == generate_hash(database.id)
     assert args[0][1]["order"] == [generate_hash(table.id)]

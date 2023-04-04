@@ -47,8 +47,8 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
     return PremiumModal
   }
 
-  isDeactivated(groupId) {
-    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
   }
 
   canAdd({ view }) {
@@ -60,8 +60,8 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
     return [true]
   }
 
-  getComponent(groupId) {
-    if (!this.isDeactivated(groupId)) {
+  getComponent(workspaceId) {
+    if (!this.isDeactivated(workspaceId)) {
       return LeftBorderColorViewDecorator
     }
 
@@ -104,8 +104,8 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
     return 'wrapper'
   }
 
-  getComponent(groupId) {
-    if (!this.isDeactivated(groupId)) {
+  getComponent(workspaceId) {
+    if (!this.isDeactivated(workspaceId)) {
       return BackgroundColorViewDecorator
     }
 
@@ -133,8 +133,8 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
     return PremiumModal
   }
 
-  isDeactivated(groupId) {
-    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, groupId)
+  isDeactivated(workspaceId) {
+    return !this.app.$hasFeature(PremiumFeatures.PREMIUM, workspaceId)
   }
 
   canAdd({ view }) {

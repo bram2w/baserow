@@ -10,6 +10,10 @@
     </li>
     <li class="premium-features__feature">
       <i class="fas fa-fw fa-check premium-features__feature-icon"></i>
+      {{ $t('premiumFeatures.calendarView') }}
+    </li>
+    <li class="premium-features__feature">
+      <i class="fas fa-fw fa-check premium-features__feature-icon"></i>
       {{ $t('premiumFeatures.exports') }}
     </li>
     <li class="premium-features__feature">

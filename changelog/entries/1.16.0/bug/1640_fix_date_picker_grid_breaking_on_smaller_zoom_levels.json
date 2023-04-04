@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix date picker grid breaking on smaller zoom levels",
+    "issue_number": 1640,
+    "bullet_points": [],
+    "created_at": "2023-03-14"
+}

@@ -58,7 +58,7 @@ class KanbanViewFieldOptions(HierarchicalModelMixin, models.Model):
     # created field must always be last.
     order = models.SmallIntegerField(
         default=32767,
-        help_text="The order that the field has in the form. Lower value is first.",
+        help_text="The order that the field has in the view. Lower value is first.",
     )
 
     def get_parent(self):
@@ -66,6 +66,61 @@ class KanbanViewFieldOptions(HierarchicalModelMixin, models.Model):
 
     class Meta:
         db_table = "database_kanbanviewfieldoptions"
+        ordering = (
+            "order",
+            "field_id",
+        )
+
+
+class CalendarView(View):
+    field_options = models.ManyToManyField(Field, through="CalendarViewFieldOptions")
+    date_field = models.ForeignKey(
+        Field,
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="calendar_view_date_field",
+        help_text="One of the supported date fields that "
+        "the calendar view will be based on.",
+    )
+
+    class Meta:
+        db_table = "database_calendarview"
+
+
+class CalendarViewFieldOptionsManager(models.Manager):
+    """
+    The View can be trashed and the field options are not deleted, therefore
+    we need to filter out the trashed views.
+    """
+
+    def get_queryset(self):
+        trashed_Q = Q(calendar_view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class CalendarViewFieldOptions(HierarchicalModelMixin, models.Model):
+    objects = CalendarViewFieldOptionsManager()
+    objects_and_trash = models.Manager()
+
+    calendar_view = models.ForeignKey(CalendarView, on_delete=models.CASCADE)
+    field = models.ForeignKey(Field, on_delete=models.CASCADE)
+    hidden = models.BooleanField(
+        default=True,
+        help_text="Whether or not the field should be hidden in the card.",
+    )
+    # The default value is the maximum value of the small integer field because a newly
+    # created field must always be last.
+    order = models.SmallIntegerField(
+        default=32767,
+        help_text="The order that the field has in the view. Lower value is first.",
+    )
+
+    def get_parent(self):
+        return self.calendar_view
+
+    class Meta:
+        db_table = "database_calendarviewfieldoptions"
         ordering = (
             "order",
             "field_id",

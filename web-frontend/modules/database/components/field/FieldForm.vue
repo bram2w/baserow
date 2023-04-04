@@ -10,6 +10,8 @@
           class="input"
           :placeholder="$t('fieldForm.name')"
           @blur="$v.values.name.$touch()"
+          @input="isPrefilledWithSuggestedFieldName = false"
+          @keydown.enter="handleKeydownEnter($event)"
         />
         <div
           v-if="$v.values.name.$dirty && !$v.values.name.required"
@@ -74,6 +76,7 @@
         :name="values.name"
         :default-values="defaultValues"
         @validate="$v.$touch"
+        @suggested-field-name="handleSuggestedFieldName($event)"
       />
     </template>
     <slot></slot>
@@ -82,7 +85,7 @@
 
 <script>
 import { required, maxLength } from 'vuelidate/lib/validators'
-
+import { getNextAvailableNameInSequence } from '@baserow/modules/core/utils/string'
 import form from '@baserow/modules/core/mixins/form'
 import { mapGetters } from 'vuex'
 import {
@@ -117,6 +120,8 @@ export default {
         name: '',
         type: this.forcedType || '',
       },
+      isPrefilledWithSuggestedFieldName: false,
+      oldValueType: null,
     }
   },
   computed: {
@@ -132,14 +137,34 @@ export default {
     ...mapGetters({
       fields: 'field/getAll',
     }),
+    isNameFieldEmptyOrPrefilled() {
+      return (
+        this.values.name === '' ||
+        this.values.name ===
+          this.getNextAvailableFieldName(
+            this.fieldTypes[this.oldValueType]?.getName()
+          ) ||
+        this.values.name ===
+          this.getNextAvailableFieldName(
+            this.fieldTypes[this.values.type]?.getName()
+          ) ||
+        this.isPrefilledWithSuggestedFieldName
+      )
+    },
   },
   watch: {
+    // if the name field is empty or prefilled by a default value
+    // we want to update the name field with the name of the field type
+    // when the field type is changed.
     'values.type'(newValueType, oldValueType) {
-      if (
-        this.values.name === '' ||
-        this.values.name === this.fieldTypes[oldValueType]?.getName()
-      )
-        this.values.name = this.fieldTypes[newValueType]?.getName()
+      this.oldValueType = oldValueType
+      if (this.isNameFieldEmptyOrPrefilled) {
+        const availableFieldName = this.getNextAvailableFieldName(
+          this.fieldTypes[newValueType]?.getName()
+        )
+        this.values.name = availableFieldName
+      }
+      this.isPrefilledWithSuggestedFieldName = false
     },
   },
   validations() {
@@ -171,6 +196,22 @@ export default {
     },
     showFieldTypesDropdown(target) {
       this.$refs.fieldTypesDropdown.show(target)
+    },
+    handleSuggestedFieldName(event) {
+      if (this.isNameFieldEmptyOrPrefilled) {
+        this.isPrefilledWithSuggestedFieldName = true
+        const availableFieldName = this.getNextAvailableFieldName(event)
+        this.values.name = availableFieldName
+      }
+    },
+    getNextAvailableFieldName(baseName) {
+      const excludeNames = this.fields.map((f) => f.name)
+      return getNextAvailableNameInSequence(baseName, excludeNames)
+    },
+    handleKeydownEnter(event) {
+      event.preventDefault()
+      this.$emit('keydown-enter')
+      this.submit()
     },
   },
 }

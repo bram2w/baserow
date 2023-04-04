@@ -1,0 +1,23 @@
+.add-element-card {
+  border: solid $color-neutral-300 1px;
+  border-radius: 5px;
+  padding: 10px 15px 10px 15px;
+  width: 133px;
+  height: 60px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+  }
+
+  &--disabled {
+    cursor: inherit;
+    pointer-events: none;
+  }
+}
+
+.add-element-card__description {
+  font-size: 11px;
+  color: $color-neutral-400;
+}

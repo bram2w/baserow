@@ -8,7 +8,7 @@ from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.core.action.registries import ActionType
 from baserow.core.action.signals import ActionCommandType, action_done
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 
 from .handler import AuditLogHandler
 
@@ -21,7 +21,7 @@ def log_action(
     action_params: Dict[str, Any],
     action_timestamp: datetime,
     action_command_type: ActionCommandType,
-    group: Optional[Group] = None,
+    workspace: Optional[Workspace] = None,
     **kwargs
 ):
     try:
@@ -31,7 +31,7 @@ def log_action(
             action_params,
             action_timestamp,
             action_command_type,
-            group=group,
+            workspace=workspace,
             **kwargs
         )
     except FeaturesNotAvailableError:

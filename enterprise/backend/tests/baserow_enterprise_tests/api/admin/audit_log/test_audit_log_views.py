@@ -22,13 +22,13 @@ from baserow.core.action.registries import (
     ActionTypeDescription,
     action_type_registry,
 )
-from baserow.core.actions import CreateGroupActionType
+from baserow.core.actions import CreateWorkspaceActionType
 from baserow.test_utils.helpers import AnyInt
 from baserow_enterprise.audit_log.models import AuditLogEntry
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("url_name", ["users", "groups", "action_types", "list"])
+@pytest.mark.parametrize("url_name", ["users", "workspaces", "action_types", "list"])
 @override_settings(DEBUG=True)
 def test_admins_can_not_access_audit_log_endpoints_without_an_enterprise_license(
     api_client, enterprise_data_fixture, url_name
@@ -45,7 +45,7 @@ def test_admins_can_not_access_audit_log_endpoints_without_an_enterprise_license
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("url_name", ["users", "groups", "action_types", "list"])
+@pytest.mark.parametrize("url_name", ["users", "workspaces", "action_types", "list"])
 @override_settings(DEBUG=True)
 def test_non_admins_can_not_access_audit_log_endpoints(
     api_client, enterprise_data_fixture, url_name
@@ -142,19 +142,23 @@ def test_audit_log_user_filter_returns_users_correctly(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_audit_log_group_filter_returns_groups_correctly(
+def test_audit_log_workspace_filter_returns_workspaces_correctly(
     api_client, enterprise_data_fixture
 ):
     (
         admin_user,
         admin_token,
     ) = enterprise_data_fixture.create_enterprise_admin_user_and_token()
-    group_1 = enterprise_data_fixture.create_group(name="group 1", user=admin_user)
-    group_2 = enterprise_data_fixture.create_group(name="group 2", user=admin_user)
+    workspace_1 = enterprise_data_fixture.create_workspace(
+        name="workspace 1", user=admin_user
+    )
+    workspace_2 = enterprise_data_fixture.create_workspace(
+        name="workspace 2", user=admin_user
+    )
 
-    # no search query should return all groups
+    # no search query should return all workspaces
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:groups"),
+        reverse("api:enterprise:admin:audit_log:workspaces"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -164,14 +168,14 @@ def test_audit_log_group_filter_returns_groups_correctly(
         "next": None,
         "previous": None,
         "results": [
-            {"id": group_1.id, "value": group_1.name},
-            {"id": group_2.id, "value": group_2.name},
+            {"id": workspace_1.id, "value": workspace_1.name},
+            {"id": workspace_2.id, "value": workspace_2.name},
         ],
     }
 
-    # searching by name should return only the correct group
+    # searching by name should return only the correct workspace
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:groups") + "?search=1",
+        reverse("api:enterprise:admin:audit_log:workspaces") + "?search=1",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -180,7 +184,7 @@ def test_audit_log_group_filter_returns_groups_correctly(
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [{"id": group_1.id, "value": group_1.name}],
+        "results": [{"id": workspace_1.id, "value": workspace_1.name}],
     }
 
 
@@ -252,7 +256,10 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
 
     # the search works in the user language
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:action_types") + f"?search=crea+gruppo",
+        (
+            reverse("api:enterprise:admin:audit_log:action_types")
+            + f"?search=crea+progetto"
+        ),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -261,7 +268,7 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [{"id": "create_group", "value": "Crea gruppo"}],
+        "results": [{"id": "create_group", "value": "Crea progetto"}],
     }
 
 
@@ -273,10 +280,10 @@ def test_audit_log_entries_are_not_created_without_a_license(
     user = enterprise_data_fixture.create_user()
 
     with freeze_time("2023-01-01 12:00:00"):
-        CreateGroupActionType.do(user, "group 1")
+        CreateWorkspaceActionType.do(user, "workspace 1")
 
     with freeze_time("2023-01-01 12:00:01"):
-        CreateGroupActionType.do(user, "group 2")
+        CreateWorkspaceActionType.do(user, "workspace 2")
 
     assert AuditLogEntry.objects.count() == 0
 
@@ -295,17 +302,18 @@ def test_audit_log_entries_are_created_from_actions_and_returned_in_order(
     )
 
     with freeze_time("2023-01-01 12:00:00"):
-        group_1 = CreateGroupActionType.do(admin_user, "group 1").group
+        workspace_1 = CreateWorkspaceActionType.do(admin_user, "workspace 1").workspace
 
     with freeze_time("2023-01-01 12:00:10"):
-        ActionHandler.undo(admin_user, [CreateGroupActionType.scope()], session_id)
+        ActionHandler.undo(admin_user, [CreateWorkspaceActionType.scope()], session_id)
 
     with freeze_time("2023-01-01 12:00:20"):
-        ActionHandler.redo(admin_user, [CreateGroupActionType.scope()], session_id)
+        ActionHandler.redo(admin_user, [CreateWorkspaceActionType.scope()], session_id)
 
     common_json = {
         "action_type": "create_group",
-        "group": f"{group_1.name} ({group_1.id})",
+        "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
+        "workspace": f"{workspace_1.name} ({workspace_1.id})",
         "id": AnyInt(),
         "ip_address": None,
         "type": "Create group",
@@ -325,17 +333,17 @@ def test_audit_log_entries_are_created_from_actions_and_returned_in_order(
         "results": [
             {
                 **common_json,
-                "description": f'REDONE: Group "{group_1.name}" ({group_1.id}) created.',
+                "description": f'REDONE: Group "{workspace_1.name}" ({workspace_1.id}) created.',
                 "timestamp": "2023-01-01T12:00:20Z",
             },
             {
                 **common_json,
-                "description": f'UNDONE: Group "{group_1.name}" ({group_1.id}) created.',
+                "description": f'UNDONE: Group "{workspace_1.name}" ({workspace_1.id}) created.',
                 "timestamp": "2023-01-01T12:00:10Z",
             },
             {
                 **common_json,
-                "description": f'Group "{group_1.name}" ({group_1.id}) created.',
+                "description": f'Group "{workspace_1.name}" ({workspace_1.id}) created.',
                 "timestamp": "2023-01-01T12:00:00Z",
             },
         ],
@@ -353,10 +361,10 @@ def test_audit_log_entries_are_translated_in_the_user_language(
     ) = enterprise_data_fixture.create_enterprise_admin_user_and_token(language="it")
 
     with freeze_time("2023-01-01 12:00:00"):
-        group_1 = CreateGroupActionType.do(admin_user, "group 1").group
+        workspace_1 = CreateWorkspaceActionType.do(admin_user, "workspace 1").workspace
 
     with freeze_time("2023-01-01 12:00:01"):
-        group_2 = CreateGroupActionType.do(admin_user, "group 2").group
+        workspace_2 = CreateWorkspaceActionType.do(admin_user, "workspace 2").workspace
 
     with patch("django.utils.translation.override") as mock_override:
         api_client.get(
@@ -379,22 +387,24 @@ def test_audit_log_entries_are_translated_in_the_user_language(
         "results": [
             {
                 "action_type": "create_group",
-                "description": f'Gruppo "{group_2.name}" ({group_2.id}) creato.',
-                "group": f"{group_2.name} ({group_2.id})",
+                "description": f'Progetto "{workspace_2.name}" ({workspace_2.id}) creato.',
+                "group": f"{workspace_2.name} ({workspace_2.id})",  # GroupDeprecation
+                "workspace": f"{workspace_2.name} ({workspace_2.id})",
                 "id": AnyInt(),
                 "ip_address": None,
                 "timestamp": "2023-01-01T12:00:01Z",
-                "type": "Crea gruppo",
+                "type": "Crea progetto",
                 "user": f"{admin_user.email} ({admin_user.id})",
             },
             {
                 "action_type": "create_group",
-                "description": f'Gruppo "{group_1.name}" ({group_1.id}) creato.',
-                "group": f"{group_1.name} ({group_1.id})",
+                "description": f'Progetto "{workspace_1.name}" ({workspace_1.id}) creato.',
+                "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
+                "workspace": f"{workspace_1.name} ({workspace_1.id})",
                 "id": AnyInt(),
                 "ip_address": None,
                 "timestamp": "2023-01-01T12:00:00Z",
-                "type": "Crea gruppo",
+                "type": "Crea progetto",
                 "user": f"{admin_user.email} ({admin_user.id})",
             },
         ],
@@ -412,25 +422,27 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
     user = enterprise_data_fixture.create_user()
 
     with freeze_time("2023-01-01 12:00:00"):
-        group_1 = CreateGroupActionType.do(admin_user, "group 1").group
+        workspace_1 = CreateWorkspaceActionType.do(admin_user, "workspace 1").workspace
 
     with freeze_time("2023-01-01 12:00:01"):
-        group_2 = CreateGroupActionType.do(user, "group 2").group
+        workspace_2 = CreateWorkspaceActionType.do(user, "workspace 2").workspace
 
-    json_group_1 = {
+    json_workspace_1 = {
         "action_type": "create_group",
-        "description": f'Group "{group_1.name}" ({group_1.id}) created.',
-        "group": f"{group_1.name} ({group_1.id})",
+        "description": f'Group "{workspace_1.name}" ({workspace_1.id}) created.',
+        "group": f"{workspace_1.name} ({workspace_1.id})",  # GroupDeprecation
+        "workspace": f"{workspace_1.name} ({workspace_1.id})",
         "id": AnyInt(),
         "ip_address": None,
         "timestamp": "2023-01-01T12:00:00Z",
         "type": "Create group",
         "user": f"{admin_user.email} ({admin_user.id})",
     }
-    json_group_2 = {
+    json_workspace_2 = {
         "action_type": "create_group",
-        "description": f'Group "{group_2.name}" ({group_2.id}) created.',
-        "group": f"{group_2.name} ({group_2.id})",
+        "description": f'Group "{workspace_2.name}" ({workspace_2.id}) created.',
+        "group": f"{workspace_2.name} ({workspace_2.id})",  # GroupDeprecation
+        "workspace": f"{workspace_2.name} ({workspace_2.id})",
         "id": AnyInt(),
         "ip_address": None,
         "timestamp": "2023-01-01T12:00:01Z",
@@ -449,12 +461,14 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [json_group_2],
+        "results": [json_workspace_2],
     }
 
-    # by group_id
+    # by workspace_id
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list") + "?group_id=" + str(group_1.id),
+        reverse("api:enterprise:admin:audit_log:list")
+        + "?workspace_id="
+        + str(workspace_1.id),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -463,7 +477,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [json_group_1],
+        "results": [json_workspace_1],
     }
 
     # by action_type
@@ -477,7 +491,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
         "count": 2,
         "next": None,
         "previous": None,
-        "results": [json_group_2, json_group_1],
+        "results": [json_workspace_2, json_workspace_1],
     }
 
     response = api_client.get(
@@ -506,7 +520,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [json_group_2],
+        "results": [json_workspace_2],
     }
 
     # to timestamp
@@ -521,7 +535,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
         "count": 1,
         "next": None,
         "previous": None,
-        "results": [json_group_1],
+        "results": [json_workspace_1],
     }
 
 
@@ -590,7 +604,7 @@ def test_audit_log_can_export_to_csv_all_entries(
         assert job[key] == value
     for key in [
         "filter_user_id",
-        "filter_group_id",
+        "filter_workspace_id",
         "filter_action_type",
         "filter_from_timestamp",
         "filter_to_timestamp",
@@ -613,7 +627,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
         admin_user,
         admin_token,
     ) = enterprise_data_fixture.create_enterprise_admin_user_and_token()
-    group = enterprise_data_fixture.create_group(user=admin_user)
+    workspace = enterprise_data_fixture.create_workspace(user=admin_user)
 
     csv_settings = {
         "csv_column_separator": "|",
@@ -622,7 +636,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
     }
     filters = {
         "filter_user_id": admin_user.id,
-        "filter_group_id": group.id,
+        "filter_workspace_id": workspace.id,
         "filter_action_type": "create_application",
         "filter_from_timestamp": "2023-01-01T00:00:00Z",
         "filter_to_timestamp": "2023-01-03T00:00:00Z",
@@ -667,7 +681,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
         assert job[key] == value
     for key in [
         "filter_user_id",
-        "filter_group_id",
+        "filter_workspace_id",
         "filter_action_type",
         "filter_from_timestamp",
         "filter_to_timestamp",
@@ -730,7 +744,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
     expected_data = {
         "action_type": "temporary",
         "description": "This is a temporary action with value: test.",
-        "group": "",
+        "workspace": "",
         "ip_address": None,
         "timestamp": "2023-01-01T12:00:00Z",
         "type": "Temporary action",
@@ -777,7 +791,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
     expected_data = {
         "action_type": "temporary",
         "description": "This is a temporary action with value: test and %(uid)s.",
-        "group": "",
+        "workspace": "",
         "ip_address": None,
         "timestamp": "2023-01-01T12:00:00Z",
         "type": "Temporary action",
@@ -804,7 +818,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
         {
             "action_type": "temporary",
             "description": "This is a temporary action with value: test and 42.",
-            "group": "",
+            "workspace": "",
             "ip_address": None,
             "timestamp": "2023-01-01T12:01:00Z",
             "type": "Temporary action",
@@ -813,7 +827,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
         {
             "action_type": "temporary",
             "description": "This is a temporary action with value: test and %(uid)s.",
-            "group": "",
+            "workspace": "",
             "ip_address": None,
             "timestamp": "2023-01-01T12:00:00Z",
             "type": "Temporary action",

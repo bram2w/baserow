@@ -12,7 +12,7 @@ from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.views import signals as view_signals
 from baserow.contrib.database.views.models import OWNERSHIP_TYPE_COLLABORATIVE
 from baserow.core.exceptions import PermissionDenied
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 
 from .handler import delete_personal_views
 from .models import KanbanView
@@ -29,7 +29,7 @@ def field_deleted(sender, field, **kwargs):
 
 
 def premium_check_ownership_type(
-    user: AbstractUser, group: Group, ownership_type: str
+    user: AbstractUser, workspace: Workspace, ownership_type: str
 ) -> None:
     """
     Checks whether the provided ownership type is supported for the user.
@@ -38,12 +38,12 @@ def premium_check_ownership_type(
     in the ViewOwnershipPermissionManagerType once it is possible.
 
     :param user: The user on whose behalf the operation is performed.
-    :param group: The group for which the check is performed.
+    :param workspace: The workspace for which the check is performed.
     :param ownership_type: View's ownership type.
     :raises PermissionDenied: When not allowed.
     """
 
-    premium = LicenseHandler.user_has_feature(PREMIUM, user, group)
+    premium = LicenseHandler.user_has_feature(PREMIUM, user, workspace)
 
     if premium:
         if ownership_type not in [
@@ -58,8 +58,8 @@ def premium_check_ownership_type(
 
 @receiver(view_signals.view_created)
 def view_created(sender, view, user, **kwargs):
-    group = view.table.database.group
-    premium_check_ownership_type(user, group, view.ownership_type)
+    workspace = view.table.database.workspace
+    premium_check_ownership_type(user, workspace, view.ownership_type)
 
 
 def before_user_permanently_deleted(sender, instance, **kwargs):

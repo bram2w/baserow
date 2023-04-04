@@ -1,12 +1,12 @@
 from abc import ABC
 
 from baserow.contrib.database.tokens.object_scopes import TokenObjectScopeType
-from baserow.core.operations import GroupCoreOperationType
+from baserow.core.operations import WorkspaceCoreOperationType
 from baserow.core.registries import OperationType
 
 
-class CreateTokenOperationType(GroupCoreOperationType):
-    type = "group.create_token"
+class CreateTokenOperationType(WorkspaceCoreOperationType):
+    type = "workspace.create_token"
 
 
 class TokenOperationType(OperationType, ABC):
@@ -14,12 +14,12 @@ class TokenOperationType(OperationType, ABC):
 
 
 class ReadTokenOperationType(TokenOperationType):
-    type = "group.token.read"
+    type = "workspace.token.read"
 
 
 class UpdateTokenOperationType(TokenOperationType):
-    type = "group.token.update"
+    type = "workspace.token.update"
 
 
 class UseTokenOperationType(TokenOperationType):
-    type = "group.token.use"
+    type = "workspace.token.use"

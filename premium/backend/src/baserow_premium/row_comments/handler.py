@@ -30,20 +30,20 @@ class RowCommentHandler:
         :return: A queryset of all row comments for that particular row.
         :raises TableDoesNotExist: If the table does not exist.
         :raises RowDoesNotExist: If the row does not exist.
-        :raises UserNotInGroup: If the user is not a member of the group that the
-            table is in.
+        :raises UserNotInWorkspace: If the user is not a member of the workspace that
+            the table is in.
         """
 
         table = TableHandler().get_table(table_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            PREMIUM, requesting_user, table.database.group
+            PREMIUM, requesting_user, table.database.workspace
         )
         # TODO: RBAC -> When row level permissions are introduced we also need to check
         #       that the user can see the row
         CoreHandler().check_permissions(
             requesting_user,
             ReadRowCommentsOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 
@@ -68,14 +68,14 @@ class RowCommentHandler:
         :return: The newly created RowComment instance.
         :raises TableDoesNotExist: If the table does not exist.
         :raises RowDoesNotExist: If the row does not exist.
-        :raises UserNotInGroup: If the user is not a member of the group that the
-            table is in.
+        :raises UserNotInWorkspace: If the user is not a member of the workspace that
+            the table is in.
         :raises InvalidRowCommentException: If the comment is blank or None.
         """
 
         table = TableHandler().get_table(table_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            PREMIUM, requesting_user, table.database.group
+            PREMIUM, requesting_user, table.database.workspace
         )
 
         if comment is None or comment == "":
@@ -86,7 +86,7 @@ class RowCommentHandler:
         CoreHandler().check_permissions(
             requesting_user,
             CreateRowCommentsOperationType.type,
-            group=table.database.group,
+            workspace=table.database.workspace,
             context=table,
         )
 

@@ -2,14 +2,14 @@
     "premium": {
         "user": {
             "isStaff": "Personel",
-            "isGroupAdmin": "Jest administratorem grupy",
+            "isWorkspaceAdmin": "Jest administratorem grupy",
             "active": "Aktywny",
             "deactivated": "Dezaktywowany"
         },
         "adminType": {
             "dashboard": "Dashboard",
             "users": "Użytkownicy",
-            "groups": "Grupy",
+            "workspaces": "Grupy",
             "licenses": "Licencje"
         },
         "viewType": {
@@ -63,8 +63,8 @@
     "registerLicenseForm": {
         "licenseKey": "Klucz licencyjny"
     },
-    "groupsAdminTable": {
-        "allGroups": "Wszystkie grupy",
+    "workspacesAdminTable": {
+        "allWorkspaces": "Wszystkie grupy",
         "id": "ID",
         "name": "Nazwa",
         "members": "Członkowie",
@@ -76,10 +76,10 @@
         "rowCount": "Liczba wierszy",
         "usageHelpText": "Obliczane co noc, gdy włączone jest ustawienie śledzenia wykorzystania grupy"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Usunąć na stałe"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Usuń {name}",
         "confirmation": "Czy na pewno chcesz usunąć grupę: {name}?",
         "comment": "Grupa zostanie trwale usunięta, wraz z powiązanymi z nią aplikacjami. Nie ma możliwości cofnięcia tej akcji.",
@@ -94,7 +94,7 @@
         "id": "ID",
         "username": "Nazwa użytkownika",
         "name": "Nazwa",
-        "groups": "Grupy",
+        "workspaces": "Grupy",
         "lastLogin": "Ostatnie logowanie",
         "dateJoined": "Zapisany",
         "active": "Aktywny"
@@ -174,7 +174,7 @@
         "title": "Pulpit",
         "totals": "Ogółem",
         "totalUsers": "Użytkownicy ogółem",
-        "totalGroups": "Grupy ogółem",
+        "totalWorkspaces": "Grupy ogółem",
         "totalApplications": "Aplikacje ogółem",
         "newUsers": "Nowi użytkownicy",
         "newUsers24h": "Nowi użytkownicy w ciągu ostatnich 24 godzin",

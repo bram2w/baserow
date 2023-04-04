@@ -1,9 +1,9 @@
 export default (client) => {
   return {
-    create(groupId, shareURL) {
+    create(workspaceId, shareURL) {
       return client.post(`/jobs/`, {
         type: 'airtable',
-        group_id: groupId,
+        workspace_id: workspaceId,
         airtable_share_url: shareURL,
       })
     },

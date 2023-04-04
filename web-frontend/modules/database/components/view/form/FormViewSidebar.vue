@@ -128,7 +128,8 @@ export default {
     },
     isDeactivated() {
       return (
-        !this.readOnly && this.modeType.isDeactivated(this.database.group.id)
+        !this.readOnly &&
+        this.modeType.isDeactivated(this.database.workspace.id)
       )
     },
   },

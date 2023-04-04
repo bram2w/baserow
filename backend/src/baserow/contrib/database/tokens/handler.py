@@ -44,7 +44,7 @@ class TokenHandler:
         """
 
         try:
-            token = Token.objects.select_related("group").get(key=key)
+            token = Token.objects.select_related("workspace").get(key=key)
         except Token.DoesNotExist:
             raise TokenDoesNotExist(f"The token with key {key} does not exist.")
 
@@ -52,7 +52,7 @@ class TokenHandler:
 
     def get_token(self, user, token_id, base_queryset=None):
         """
-        Fetches a single token and checks if the user belongs to the group.
+        Fetches a single token and checks if the user belongs to the workspace.
 
         :param user: The user on whose behalf the token is requested.
         :type user: User
@@ -71,13 +71,15 @@ class TokenHandler:
             base_queryset = Token.objects
 
         try:
-            token = base_queryset.select_related("group").get(id=token_id, user=user)
+            token = base_queryset.select_related("workspace").get(
+                id=token_id, user=user
+            )
         except Token.DoesNotExist:
             raise TokenDoesNotExist(f"The token with id {token_id} does not exist.")
 
-        group = token.group
+        workspace = token.workspace
         CoreHandler().check_permissions(
-            user, ReadTokenOperationType.type, group=group, context=token
+            user, ReadTokenOperationType.type, workspace=workspace, context=token
         )
 
         return token
@@ -112,14 +114,14 @@ class TokenHandler:
             if not Token.objects.filter(key=token).exists():
                 return token
 
-    def create_token(self, user, group, name):
+    def create_token(self, user, workspace, name):
         """
         Creates a new API token.
 
         :param user: The user of whose behalf the token is created.
         :type user: User
-        :param group: The group object of which the token is related to.
-        :type group: Group
+        :param workspace: The workspace object of which the token is related to.
+        :type workspace: Workspace
         :param name: The name of the token.
         :type name: str
         :return: The created token instance.
@@ -127,14 +129,14 @@ class TokenHandler:
         """
 
         CoreHandler().check_permissions(
-            user, CreateTokenOperationType.type, group=group, context=group
+            user, CreateTokenOperationType.type, workspace=workspace, context=workspace
         )
 
         token = Token.objects.create(
-            name=name, key=self.generate_unique_key(), user=user, group=group
+            name=name, key=self.generate_unique_key(), user=user, workspace=workspace
         )
 
-        # The newly created token should have access to all the tables in the group
+        # The newly created token should have access to all the tables in the workspace
         # when it is created.
         self.update_token_permissions(
             user, token, create=True, read=True, update=True, delete=True
@@ -209,40 +211,40 @@ class TokenHandler:
         )
 
         * Gives create row permissions to all tables in database 1 and to table 10.
-        * Gives read permissions to all tables in the token's group.
+        * Gives read permissions to all tables in the token's workspace.
         * Doesn't give permissions to update any row in all the tables related to the
-          token's group.
+          token's workspace.
         * Doesn't give permissions to delete any row in all the tables related to the
-          token's group.
+          token's workspace.
 
         :param user: The user on whose behalf the permissions are updated.
         :type user: User
         :param token: The token for which the permissions need to be updated.
         :type token: Token
         :param create: Indicates for which tables the token can create rows. True
-            indicates all tables in the group, a database indicates all tables in the
-            provided databases and a table indicates only that table. Multiple values
-            can be provided in a list.
+            indicates all tables in the workspace, a database indicates all tables in
+            the provided databases and a table indicates only that table. Multiple
+            values can be provided in a list.
         :type create: list, bool or none
         :param read: Indicates for which tables the token can list and get rows. True
-            indicates all tables in the group, a database indicates all tables in the
-            provided databases and a table indicates only that table. Multiple values
-            can be provided in a list.
+            indicates all tables in the workspace, a database indicates all tables in
+            the provided databases and a table indicates only that table. Multiple
+            values can be provided in a list.
         :type read: list, bool or none
         :param update: Indicates for which tables the token can update rows. True
-            indicates all tables in the group, a database indicates all tables in the
-            provided databases and a table indicates only that table. Multiple values
-            can be provided in a list.
+            indicates all tables in the workspace, a database indicates all tables in
+            the provided databases and a table indicates only that table. Multiple
+            values can be provided in a list.
         :type update: list, bool or none
         :param delete: Indicates for which tables the token can delete rows. True
-            indicates all tables in the group, a database indicates all tables in the
-            provided databases and a table indicates only that table. Multiple values
-            can be provided in a list.
+            indicates all tables in the workspace, a database indicates all tables in
+            the provided databases and a table indicates only that table. Multiple
+            values can be provided in a list.
         :type delete: list, bool or none
         :raises DatabaseDoesNotBelongToGroup: If a provided database instance does not
-            belong to the token's group.
+            belong to the token's workspace.
         :raises TableDoesNotBelongToGroup: If a provided table instance does not
-            belong to the token's group.
+            belong to the token's workspace.
         :raises TokenDoesNotBelongToUser: When the provided token does not belong the
             provided user.
         """
@@ -263,7 +265,7 @@ class TokenHandler:
         ]:
             # Only check permission for tables so ignoring non list type (True or False)
             # and select only database_table objects
-            # We can't check the permission at group and database level because it
+            # We can't check the permission at workspace and database level because it
             # just means that all underlying tables are affected but only those
             # already visible by the user. It's not a security check. The security
             # check is done in the corresponding API endpoint.
@@ -275,7 +277,7 @@ class TokenHandler:
                     CoreHandler().check_permissions(
                         user,
                         TOKEN_TO_OPERATION_MAP[token_action],
-                        group=token.group,
+                        workspace=token.workspace,
                         context=table,
                     )
 
@@ -292,10 +294,10 @@ class TokenHandler:
             elif isinstance(value, list):
                 for instance in value:
                     if isinstance(instance, Database):
-                        if instance.group_id != token.group_id:
+                        if instance.workspace_id != token.workspace_id:
                             raise DatabaseDoesNotBelongToGroup(
                                 f"The database {instance.id} does not belong to the "
-                                f"token's group."
+                                f"token's workspace."
                             )
 
                         desired_permissions.append(
@@ -304,10 +306,10 @@ class TokenHandler:
                             )
                         )
                     elif isinstance(instance, Table):
-                        if instance.database.group_id != token.group_id:
+                        if instance.database.workspace_id != token.workspace_id:
                             raise TableDoesNotBelongToGroup(
                                 f"The table {instance.id} does not belong to the "
-                                f"token's group."
+                                f"token's workspace."
                             )
 
                         desired_permissions.append(
@@ -368,12 +370,15 @@ class TokenHandler:
             the provided table.
         """
 
-        if token.group_id != table.database.group_id:
+        if token.workspace_id != table.database.workspace_id:
             return False
 
         # First check the user has the permission to use the token
         if not CoreHandler().check_permissions(
-            token.user, UseTokenOperationType.type, group=token.group, context=token
+            token.user,
+            UseTokenOperationType.type,
+            workspace=token.workspace,
+            context=token,
         ):
             return False
 

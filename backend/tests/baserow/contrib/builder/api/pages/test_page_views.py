@@ -16,21 +16,28 @@ def test_create_page(api_client, data_fixture):
     builder = data_fixture.create_builder_application(user=user)
 
     name = "test"
+    path = "/test/:id/"
+    path_params = {"id": {"param_type": "text"}}
 
     url = reverse(
         "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
     )
     response = api_client.post(
-        url, {"name": name}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        url,
+        {"name": name, "path": path, "path_params": path_params},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["name"] == name
+    assert response_json["path"] == path
+    assert response_json["path_params"] == path_params
 
 
 @pytest.mark.django_db
-def test_create_page_user_not_in_group(api_client, data_fixture):
+def test_create_page_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
 
@@ -38,7 +45,10 @@ def test_create_page_user_not_in_group(api_client, data_fixture):
         "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
     )
     response = api_client.post(
-        url, {"name": "test"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        url,
+        {"name": "test", "path": "/test"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_401_UNAUTHORIZED
@@ -51,11 +61,244 @@ def test_create_page_application_does_not_exist(api_client, data_fixture):
 
     url = reverse("api:builder:builder_id:pages:list", kwargs={"builder_id": 9999})
     response = api_client.post(
-        url, {"name": "test"}, format="json", HTTP_AUTHORIZATION=f"JWT {token}"
+        url,
+        {"name": "test", "path": "/test"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_APPLICATION_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_create_page_invalid_page_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {"name": "test", "path": "path with spaces"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_create_page_invalid_page_path_param(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:id",
+            "path_params": {"id": {"param_type": "unsupported"}},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_create_page_invalid_page_path_param_key(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:id",
+            "path_params": {"test": {"test": "hello"}},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert "path_params" in response_json["detail"]
+
+
+@pytest.mark.django_db
+def test_create_page_invalid_page_path_param_semantics(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:^test",
+            "path_params": {"^test": {"param_type": "text"}},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert "^test" in response_json["detail"]["path_params"][0]["error"]
+
+
+@pytest.mark.django_db
+def test_create_page_duplicate_page_name(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, name="test")
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": page.name,
+            "path": "/test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_NAME_NOT_UNIQUE"
+
+
+@pytest.mark.django_db
+def test_create_page_duplicate_page_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, path="/test")
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": page.path,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_PATH_NOT_UNIQUE"
+
+
+@pytest.mark.django_db
+def test_create_page_path_param_not_in_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/test",
+            "path_params": {"id": {"param_type": "text"}},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PATH_PARAM_NOT_IN_PATH"
+
+
+@pytest.mark.django_db
+def test_create_page_path_param_not_defined(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:id",
+            "path_params": {},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PATH_PARAM_NOT_DEFINED"
+
+
+@pytest.mark.django_db
+def test_create_page_incorrect_data_structure(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:id",
+            "path_params": [{"test": "test"}],
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_create_page_duplicate_path_params_in_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    url = reverse(
+        "api:builder:builder_id:pages:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {
+            "name": "test",
+            "path": "/test/:test/:test",
+            "path_params": {"test": {"param_type": "text"}},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DUPLICATE_PATH_PARAMS_IN_PATH"
 
 
 @pytest.mark.django_db
@@ -87,6 +330,152 @@ def test_update_page_page_does_not_exist(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_page_duplicate_page_name(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, name="test")
+    page_two = data_fixture.create_builder_page(builder=builder, name="test2")
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page_two.id})
+    response = api_client.patch(
+        url,
+        {
+            "name": page.name,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_NAME_NOT_UNIQUE"
+
+
+@pytest.mark.django_db
+def test_update_page_duplicate_page_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, path="/test")
+    page_two = data_fixture.create_builder_page(builder=builder, path="/test2")
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page_two.id})
+    response = api_client.patch(
+        url,
+        {
+            "path": page.path,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PAGE_PATH_NOT_UNIQUE"
+
+
+@pytest.mark.django_db
+def test_update_page_path_param_not_in_path_existing_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, path="/test")
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page.id})
+    response = api_client.patch(
+        url,
+        {"path_params": {"id": {"param_type": "text"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PATH_PARAM_NOT_IN_PATH"
+
+
+@pytest.mark.django_db
+def test_update_page_path_param_not_in_path_new_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder, path="/test")
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page.id})
+    response = api_client.patch(
+        url,
+        {"path": "/test/test", "path_params": {"id": {"param_type": "text"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PATH_PARAM_NOT_IN_PATH"
+
+
+@pytest.mark.django_db
+def test_update_page_path_param_not_defined(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(
+        builder=builder,
+        path="/test",
+    )
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page.id})
+    response = api_client.patch(
+        url,
+        {
+            "path": "/test/:test",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_PATH_PARAM_NOT_DEFINED"
+
+
+@pytest.mark.django_db
+def test_update_page_invalid_page_path_param_semantics(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(
+        builder=builder,
+        path="/test",
+    )
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page.id})
+    response = api_client.patch(
+        url,
+        {"path": "/test/:^test", "path_params": {"^test": {"param_type": "text"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert "^test" in response_json["detail"]["path_params"][0]["error"]
+
+
+@pytest.mark.django_db
+def test_update_page_duplicate_path_params_in_path(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(
+        builder=builder,
+        path="/test",
+    )
+
+    url = reverse("api:builder:pages:item", kwargs={"page_id": page.id})
+    response = api_client.patch(
+        url,
+        {"path": "/test/:test/:test", "path_params": {"test": {"param_type": "text"}}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_DUPLICATE_PATH_PARAMS_IN_PATH"
+
+
+@pytest.mark.django_db
 def test_order_pages(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
@@ -107,7 +496,7 @@ def test_order_pages(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_order_pages_user_not_in_group(api_client, data_fixture):
+def test_order_pages_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
     page_one = data_fixture.create_builder_page(builder=builder, order=1)
@@ -184,7 +573,7 @@ def test_delete_page(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_delete_page_user_not_in_group(api_client, data_fixture):
+def test_delete_page_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
     page = data_fixture.create_builder_page(builder=builder, order=1)

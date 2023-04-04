@@ -3,8 +3,8 @@ from django.db import transaction
 import pytest
 
 from baserow.core.action.handler import ActionHandler
-from baserow.core.action.scopes import GroupActionScopeType
-from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInGroup
+from baserow.core.action.scopes import WorkspaceActionScopeType
+from baserow.core.exceptions import ApplicationDoesNotExist, UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.job_types import DuplicateApplicationJobType
 from baserow.core.jobs.constants import JOB_FINISHED
@@ -20,7 +20,7 @@ def test_value_preparation_for_duplicate_application_job(data_fixture):
     user = data_fixture.create_user()
     ext_database = data_fixture.create_database_application()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         job = JobHandler().create_and_start_job(
             user,
             DuplicateApplicationJobType.type,
@@ -48,12 +48,12 @@ def test_value_preparation_for_duplicate_application_job(data_fixture):
 def test_can_submit_duplicate_application_job(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = CoreHandler().create_application(
-        user, group, application_type, application_name
+        user, workspace, application_type, application_name
     )
 
     assert Application.objects.count() == 1
@@ -106,12 +106,12 @@ def test_can_submit_duplicate_application_job(data_fixture):
 def test_can_undo_duplicate_application_job(data_fixture):
     session_id = "session-id"
     user = data_fixture.create_user(session_id=session_id)
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     application_type = "database"
     application_name = "My Application"
 
     application = CoreHandler().create_application(
-        user, group, application_type, application_name
+        user, workspace, application_type, application_name
     )
 
     JobHandler().create_and_start_job(
@@ -125,7 +125,9 @@ def test_can_undo_duplicate_application_job(data_fixture):
 
     with transaction.atomic():
         actions_undone = ActionHandler.undo(
-            user, [GroupActionScopeType.value(group_id=group.id)], session_id
+            user,
+            [WorkspaceActionScopeType.value(workspace_id=workspace.id)],
+            session_id,
         )
 
         assert_undo_redo_actions_are_valid(

@@ -28,7 +28,7 @@
 <script>
 import context from '@baserow/modules/core/mixins/context'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import GroupService from '@baserow/modules/core/services/group'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 
 export default {
   name: 'EditInviteContext',
@@ -57,7 +57,7 @@ export default {
       this.removeLoading = true
 
       try {
-        await GroupService(this.$client).deleteInvitation(invitation.id)
+        await WorkspaceService(this.$client).deleteInvitation(invitation.id)
         this.$emit('refresh')
         this.hide()
       } catch (error) {

@@ -4,9 +4,9 @@ from django.db import transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.registries import subject_type_registry
-from baserow.core.signals import group_user_updated, permissions_updated
+from baserow.core.signals import permissions_updated, workspace_user_updated
 from baserow.core.types import Subject
 from baserow.ws.tasks import broadcast_to_users
 from baserow_enterprise.signals import (
@@ -25,30 +25,30 @@ User = get_user_model()
 @receiver(role_assignment_created)
 @receiver(role_assignment_deleted)
 def send_permissions_updated_when_role_assignment_updated(
-    sender, subject: Subject, group: Group, **kwargs
+    sender, subject: Subject, workspace: Workspace, **kwargs
 ):
-    permissions_updated.send(sender, subject=subject, group=group)
+    permissions_updated.send(sender, subject=subject, workspace=workspace)
 
 
-@receiver(group_user_updated)
-def send_permissions_updated_when_group_user_updated(
-    sender, group_user: GroupUser, permissions_before: str, **kwargs
+@receiver(workspace_user_updated)
+def send_permissions_updated_when_workspace_user_updated(
+    sender, workspace_user: WorkspaceUser, permissions_before: str, **kwargs
 ):
-    if permissions_before != group_user.permissions:
+    if permissions_before != workspace_user.permissions:
         permissions_updated.send(
-            sender, subject=group_user.user, group=group_user.group
+            sender, subject=workspace_user.user, workspace=workspace_user.workspace
         )
 
 
 @receiver(team_deleted)
 @receiver(team_restored)
 def send_permissions_updated_when_team_was_deleted(sender, team: Team, **kwargs):
-    permissions_updated.send(sender, subject=team, group=team.group)
+    permissions_updated.send(sender, subject=team, workspace=team.workspace)
 
 
 @receiver(permissions_updated)
 def notify_users_about_updated_permissions(
-    sender, subject: Subject, group: Group, **kwargs
+    sender, subject: Subject, workspace: Workspace, **kwargs
 ):
     subject_type = subject_type_registry.get_by_model(subject)
     associated_users = subject_type.get_users_included_in_subject(subject)
@@ -56,7 +56,12 @@ def notify_users_about_updated_permissions(
 
     transaction.on_commit(
         lambda: broadcast_to_users.delay(
-            associated_user_ids, {"type": "permissions_updated", "group_id": group.id}
+            associated_user_ids,
+            {
+                "type": "permissions_updated",
+                "group_id": workspace.id,
+                "workspace_id": workspace.id,
+            },
         )
     )
 
@@ -74,18 +79,18 @@ def cascade_subject_delete(sender, instance, **kwargs):
     ).delete()
 
 
-def cascade_group_user_delete(sender, instance, **kwargs):
+def cascade_workspace_user_delete(sender, instance, **kwargs):
     """
-    Delete role assignments linked user to deleted GroupUser.
+    Delete role assignments linked user to deleted WorkspaceUser.
     """
 
     from .models import RoleAssignment
 
     user_id = instance.user_id
-    group_id = instance.group_id
+    workspace_id = instance.workspace_id
     user_ct = ContentType.objects.get_for_model(User)
     RoleAssignment.objects.filter(
-        subject_id=user_id, subject_type=user_ct, group_id=group_id
+        subject_id=user_id, subject_type=user_ct, workspace_id=workspace_id
     ).delete()
 
 
@@ -106,7 +111,7 @@ def connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments():
     all related role_assignments.
     """
 
-    from baserow.core.models import GroupUser
+    from baserow.core.models import WorkspaceUser
     from baserow.core.registries import (
         object_scope_type_registry,
         subject_type_registry,
@@ -117,8 +122,8 @@ def connect_to_post_delete_signals_to_cascade_deletion_to_role_assignments():
     for subject_type in subject_type_registry.get_all():
         post_delete.connect(cascade_subject_delete, subject_type.model_class)
 
-    # Add the GroupUser handler
-    post_delete.connect(cascade_group_user_delete, GroupUser)
+    # Add the WorkspaceUser handler
+    post_delete.connect(cascade_workspace_user_delete, WorkspaceUser)
 
     # Add the scope handler
     for role_assignable_object_type in ROLE_ASSIGNABLE_OBJECT_MAP.keys():

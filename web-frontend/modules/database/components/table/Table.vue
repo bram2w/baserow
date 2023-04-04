@@ -84,7 +84,7 @@
               $hasPermission(
                 'database.table.view.create_filter',
                 view,
-                database.group.id
+                database.workspace.id
               ))
           "
           class="header__filter-item"
@@ -105,7 +105,7 @@
               $hasPermission(
                 'database.table.view.create_sort',
                 view,
-                database.group.id
+                database.workspace.id
               ))
           "
           class="header__filter-item"
@@ -126,7 +126,7 @@
             $hasPermission(
               'database.table.view.update_slug',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
           class="header__filter-item"
@@ -140,7 +140,7 @@
             $hasPermission(
               'database.table.view.decoration.update',
               view,
-              database.group.id
+              database.workspace.id
             )
           "
           class="header__filter-item"
@@ -176,6 +176,7 @@
         :database="database"
         :table="table"
         :view="view"
+        :loading="viewLoading"
         :fields="fields"
         :read-only="readOnly"
         :store-prefix="storePrefix"
@@ -317,32 +318,32 @@ export default {
         this.$hasPermission(
           'database.table.run_export',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.import_rows',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.duplicate',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.update',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.view.delete',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
         this.$hasPermission(
           'database.table.create_webhook',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       )
     },
@@ -431,7 +432,8 @@ export default {
           this.view,
           fieldsToRefresh,
           this.storePrefix,
-          includeFieldOptions
+          includeFieldOptions,
+          event?.sourceEvent
         )
       } catch (error) {
         if (error instanceof RefreshCancelledError) {

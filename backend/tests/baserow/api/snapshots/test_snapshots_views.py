@@ -20,8 +20,10 @@ from baserow.test_utils.helpers import is_dict_subset
 @pytest.mark.parametrize("token_header", ["JWT invalid", "Token invalid"])
 def test_create_snapshot_invalid_token(api_client, data_fixture, token_header):
     user, jwt_token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
     response = api_client.post(
@@ -35,18 +37,20 @@ def test_create_snapshot_invalid_token(api_client, data_fixture, token_header):
 
 
 @pytest.mark.django_db
-def test_create_snapshot_user_not_in_group(api_client, data_fixture):
+def test_create_snapshot_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user_not_in_group, token_not_in_group = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    user_not_in_workspace, token_not_in_workspace = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
     response = api_client.post(
         url,
         {"name": "Test snapshot"},
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_not_in_group}",
+        HTTP_AUTHORIZATION=f"JWT {token_not_in_workspace}",
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -73,8 +77,10 @@ def test_create_snapshot_app_not_found(api_client, data_fixture):
 @pytest.mark.django_db
 def test_create_snapshot_body_validation(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
     with freeze_time("2021-01-02 12:00"):
@@ -89,8 +95,10 @@ def test_create_snapshot_body_validation(api_client, data_fixture):
 @pytest.mark.django_db
 def test_create_snapshot(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
     snapshot_name = "Test snapshot name"
 
@@ -118,11 +126,15 @@ def test_create_snapshot(api_client, data_fixture):
 def test_create_snapshot_limit_reached(api_client, data_fixture, settings):
     settings.BASEROW_MAX_SNAPSHOTS_PER_GROUP = 3
     user, token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group(user=user)
-    # group 1
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
-    application_2 = data_fixture.create_database_application(group=group_1, order=2)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace(user=user)
+    # workspace 1
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    application_2 = data_fixture.create_database_application(
+        workspace=workspace_1, order=2
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -141,8 +153,10 @@ def test_create_snapshot_limit_reached(api_client, data_fixture, settings):
         created_by=user,
         name="Snapshot3",
     )
-    # group 2
-    application_3 = data_fixture.create_database_application(group=group_2, order=1)
+    # workspace 2
+    application_3 = data_fixture.create_database_application(
+        workspace=workspace_2, order=1
+    )
     snapshot_4 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_3,
@@ -179,8 +193,10 @@ def test_create_snapshot_limit_reached(api_client, data_fixture, settings):
 @pytest.mark.parametrize("token_header", ["JWT invalid", "Token invalid"])
 def test_list_snapshots_invalid_token(api_client, data_fixture, token_header):
     user, jwt_token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
     response = api_client.get(
@@ -193,17 +209,19 @@ def test_list_snapshots_invalid_token(api_client, data_fixture, token_header):
 
 
 @pytest.mark.django_db
-def test_list_snapshots_user_not_in_group(api_client, data_fixture):
+def test_list_snapshots_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user_not_in_group, token_not_in_group = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    user_not_in_workspace, token_not_in_workspace = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     url = reverse("api:snapshots:list", kwargs={"application_id": application_1.id})
 
     response = api_client.get(
         url,
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_not_in_group}",
+        HTTP_AUTHORIZATION=f"JWT {token_not_in_workspace}",
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -227,10 +245,16 @@ def test_list_snapshots_app_not_found(api_client, data_fixture):
 def test_list_snapshots(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     user2, token2 = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
-    application_2 = data_fixture.create_database_application(group=group_1, order=1)
-    fake_snapshot_app = data_fixture.create_database_application(group=group_1, order=3)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    application_2 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
+    fake_snapshot_app = data_fixture.create_database_application(
+        workspace=workspace_1, order=3
+    )
     with freeze_time("2021-01-02 12:00"):
         snapshot_1 = data_fixture.create_snapshot(
             user=user,
@@ -287,8 +311,10 @@ def test_list_snapshots(api_client, data_fixture):
 @pytest.mark.parametrize("token_header", ["JWT invalid", "Token invalid"])
 def test_restore_snapshot_invalid_token(api_client, data_fixture, token_header):
     user, jwt_token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -307,11 +333,13 @@ def test_restore_snapshot_invalid_token(api_client, data_fixture, token_header):
 
 
 @pytest.mark.django_db
-def test_restore_snapshot_user_not_in_group(api_client, data_fixture):
+def test_restore_snapshot_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user_not_in_group, token_not_in_group = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    user_not_in_workspace, token_not_in_workspace = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -323,7 +351,7 @@ def test_restore_snapshot_user_not_in_group(api_client, data_fixture):
     response = api_client.post(
         url,
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_not_in_group}",
+        HTTP_AUTHORIZATION=f"JWT {token_not_in_workspace}",
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -346,8 +374,10 @@ def test_restore_snapshot_not_found(api_client, data_fixture):
 @pytest.mark.django_db
 def test_restore_snapshot(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -381,8 +411,10 @@ def test_restore_snapshot(api_client, data_fixture):
 @pytest.mark.parametrize("token_header", ["JWT invalid", "Token invalid"])
 def test_delete_snapshot_invalid_token(api_client, data_fixture, token_header):
     user, jwt_token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -401,11 +433,13 @@ def test_delete_snapshot_invalid_token(api_client, data_fixture, token_header):
 
 
 @pytest.mark.django_db
-def test_delete_snapshot_user_not_in_group(api_client, data_fixture):
+def test_delete_snapshot_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    user_not_in_group, token_not_in_group = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    user_not_in_workspace, token_not_in_workspace = data_fixture.create_user_and_token()
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,
@@ -417,7 +451,7 @@ def test_delete_snapshot_user_not_in_group(api_client, data_fixture):
     response = api_client.delete(
         url,
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token_not_in_group}",
+        HTTP_AUTHORIZATION=f"JWT {token_not_in_workspace}",
     )
 
     assert response.status_code == HTTP_400_BAD_REQUEST
@@ -440,8 +474,10 @@ def test_delete_snapshot_not_found(api_client, data_fixture):
 @pytest.mark.django_db
 def test_delete_snapshot(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group_1 = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group_1, order=1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace_1, order=1
+    )
     snapshot_1 = data_fixture.create_snapshot(
         user=user,
         snapshot_from_application=application_1,

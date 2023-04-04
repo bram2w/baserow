@@ -47,7 +47,7 @@ export default {
   },
   methods: {
     isDeactivated(decoratorType) {
-      return decoratorType.isDeactivated(this.database.group.id)
+      return decoratorType.isDeactivated(this.database.workspace.id)
     },
     isDisabled(decoratorType) {
       return !decoratorType.canAdd({ view: this.view })[0]

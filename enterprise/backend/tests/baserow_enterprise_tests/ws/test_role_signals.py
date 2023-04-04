@@ -51,13 +51,15 @@ def use_async_event_loop_here(async_event_loop):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
     # Assign an initial role to the user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, builder_role)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, builder_role
+    )
 
     # Establish websocket connection and subscribe to table
     communicator = WebsocketCommunicator(
@@ -72,7 +74,7 @@ async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
     await communicator.receive_json_from()
 
     # Remove role from user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, None)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(user, workspace, None)
 
     # Make sure the user has been un-subscribed
     assert await received_message(communicator, "page_discard") is True
@@ -83,14 +85,16 @@ async def test_unsubscribe_subject_from_table_role_deleted(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
     no_role_role = Role.objects.get(uid=NO_ROLE_LOW_PRIORITY_ROLE_UID)
 
     # Assign an initial role to the user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, builder_role)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, builder_role
+    )
 
     # Establish websocket connection and subscribe to table
     communicator = WebsocketCommunicator(
@@ -105,7 +109,9 @@ async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
     await communicator.receive_json_from()
 
     # Remove role from user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, no_role_role)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, no_role_role
+    )
 
     # Make sure the user has been un-subscribed
     assert await received_message(communicator, "page_discard") is True
@@ -117,13 +123,15 @@ async def test_unsubscribe_subject_from_table_role_no_role(data_fixture):
 async def test_unsubscribe_subject_from_table_unrelated_user(data_fixture):
     user = data_fixture.create_user()
     unrelated_user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(members=[user, unrelated_user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(members=[user, unrelated_user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
     # Assign an initial role to the user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, builder_role)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, builder_role
+    )
 
     # Establish websocket connection and subscribe to table
     communicator = WebsocketCommunicator(
@@ -138,7 +146,7 @@ async def test_unsubscribe_subject_from_table_unrelated_user(data_fixture):
     await communicator.receive_json_from()
 
     # Remove role from user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, None)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(user, workspace, None)
 
     # Make sure the user has been un-subscribed
     assert await received_message(communicator, "page_discard") is False
@@ -149,8 +157,8 @@ async def test_unsubscribe_subject_from_table_unrelated_user(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_new_role_no_access(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
@@ -168,7 +176,7 @@ async def test_unsubscribe_subject_from_table_new_role_no_access(data_fixture):
 
     # Deny user access to the table
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user, group, no_access_role, table
+        user, workspace, no_access_role, table
     )
 
     # Make sure the user has been un-subscribed
@@ -180,14 +188,16 @@ async def test_unsubscribe_subject_from_table_new_role_no_access(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_role_updated(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(members=[user])
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(members=[user])
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
     no_access_role = Role.objects.get(uid="NO_ACCESS")
 
     # Assign an initial role to the user
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, builder_role)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, builder_role
+    )
 
     # Establish websocket connection and subscribe to table
     communicator = WebsocketCommunicator(
@@ -203,7 +213,7 @@ async def test_unsubscribe_subject_from_table_role_updated(data_fixture):
 
     # Remove role from user
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user, group, no_access_role
+        user, workspace, no_access_role
     )
 
     # Make sure the user has been un-subscribed
@@ -215,14 +225,14 @@ async def test_unsubscribe_subject_from_table_role_updated(data_fixture):
 @pytest.mark.django_db(transaction=True)
 async def test_unsubscribe_subject_from_table_should_still_have_access(data_fixture):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
     # Assign an initial role to the user
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        user, group, builder_role, table
+        user, workspace, builder_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -237,9 +247,11 @@ async def test_unsubscribe_subject_from_table_should_still_have_access(data_fixt
     await communicator.send_json_to({"page": "table", "table_id": table.id})
     await communicator.receive_json_from()
 
-    # Remove role from user, in this case the user still has their group level
+    # Remove role from user, in this case the user still has their workspace level
     # role and is therefore still able to see the table
-    await sync_to_async(RoleAssignmentHandler().assign_role)(user, group, None, table)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        user, workspace, None, table
+    )
 
     # Make sure the user is still subscribed
     assert await received_message(communicator, "page_discard") is False
@@ -252,9 +264,9 @@ async def test_unsubscribe_subject_from_table_teams(
     data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(custom_permissions=[(user, "NO_ACCESS")])
-    team = enterprise_data_fixture.create_team(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(custom_permissions=[(user, "NO_ACCESS")])
+    team = enterprise_data_fixture.create_team(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -263,7 +275,7 @@ async def test_unsubscribe_subject_from_table_teams(
 
     # Set initial role for team
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        team, group, builder_role, table
+        team, workspace, builder_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -278,7 +290,9 @@ async def test_unsubscribe_subject_from_table_teams(
     await communicator.send_json_to({"page": "table", "table_id": table.id})
     await communicator.receive_json_from()
 
-    await sync_to_async(RoleAssignmentHandler().assign_role)(team, group, None, table)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        team, workspace, None, table
+    )
 
     assert await received_message(communicator, "page_discard") is True
     await communicator.disconnect()
@@ -290,9 +304,9 @@ async def test_unsubscribe_subject_from_table_teams_when_team_trashed(
     data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(custom_permissions=[(user, "NO_ACCESS")])
-    team = enterprise_data_fixture.create_team(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(custom_permissions=[(user, "NO_ACCESS")])
+    team = enterprise_data_fixture.create_team(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -301,7 +315,7 @@ async def test_unsubscribe_subject_from_table_teams_when_team_trashed(
 
     # Set initial role for team
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        team, group, builder_role, table
+        team, workspace, builder_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -328,9 +342,9 @@ async def test_unsubscribe_subject_from_table_teams_still_connected(
     data_fixture, enterprise_data_fixture
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    team = enterprise_data_fixture.create_team(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -339,7 +353,7 @@ async def test_unsubscribe_subject_from_table_teams_still_connected(
 
     # Set initial role for team
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        team, group, builder_role, table
+        team, workspace, builder_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -354,7 +368,9 @@ async def test_unsubscribe_subject_from_table_teams_still_connected(
     await communicator.send_json_to({"page": "table", "table_id": table.id})
     await communicator.receive_json_from()
 
-    await sync_to_async(RoleAssignmentHandler().assign_role)(team, group, None, table)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        team, workspace, None, table
+    )
 
     assert await received_message(communicator, "page_discard") is False
     await communicator.disconnect()
@@ -367,11 +383,11 @@ async def test_unsubscribe_subject_from_table_teams_multiple_users(
 ):
     user, token = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(
+    workspace = data_fixture.create_workspace(
         custom_permissions=[(user, "NO_ACCESS"), (user_2, "NO_ACCESS")]
     )
-    team = enterprise_data_fixture.create_team(group=group)
-    database = data_fixture.create_database_application(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     builder_role = Role.objects.get(uid="BUILDER")
 
@@ -381,7 +397,7 @@ async def test_unsubscribe_subject_from_table_teams_multiple_users(
 
     # Set initial role for team
     await sync_to_async(RoleAssignmentHandler().assign_role)(
-        team, group, builder_role, table
+        team, workspace, builder_role, table
     )
 
     # Establish websocket connection and subscribe to table
@@ -407,7 +423,9 @@ async def test_unsubscribe_subject_from_table_teams_multiple_users(
     await communicator_2.send_json_to({"page": "table", "table_id": table.id})
     await communicator_2.receive_json_from()
 
-    await sync_to_async(RoleAssignmentHandler().assign_role)(team, group, None, table)
+    await sync_to_async(RoleAssignmentHandler().assign_role)(
+        team, workspace, None, table
+    )
 
     assert await received_message(communicator, "page_discard") is True
     assert await received_message(communicator_2, "page_discard") is True

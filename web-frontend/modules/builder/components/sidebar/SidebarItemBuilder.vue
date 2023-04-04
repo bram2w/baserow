@@ -26,7 +26,9 @@
       <div class="context__menu-title">{{ page.name }} ({{ page.id }})</div>
       <ul class="context__menu">
         <li
-          v-if="$hasPermission('builder.page.update', page, builder.group.id)"
+          v-if="
+            $hasPermission('builder.page.update', page, builder.workspace.id)
+          "
         >
           <a @click="enableRename()">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -35,7 +37,7 @@
         </li>
         <li
           v-if="
-            $hasPermission('builder.page.duplicate', page, builder.group.id)
+            $hasPermission('builder.page.duplicate', page, builder.workspace.id)
           "
         >
           <a
@@ -50,7 +52,9 @@
           </a>
         </li>
         <li
-          v-if="$hasPermission('builder.page.delete', page, builder.group.id)"
+          v-if="
+            $hasPermission('builder.page.delete', page, builder.workspace.id)
+          "
         >
           <a
             :class="{ 'context__menu-item--loading': deleteLoading }"
@@ -93,17 +97,17 @@ export default {
         this.$hasPermission(
           'builder.page.run_export',
           this.page,
-          this.builder.group.id
+          this.builder.workspace.id
         ) ||
         this.$hasPermission(
           'builder.page.update',
           this.page,
-          this.builder.group.id
+          this.builder.workspace.id
         ) ||
         this.$hasPermission(
           'builder.page.duplicate',
           this.page,
-          this.builder.group.id
+          this.builder.workspace.id
         )
       )
     },

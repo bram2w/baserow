@@ -25,7 +25,11 @@
       :include-grid-view-identifier-dropdown="true"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :store-prefix="storePrefix"
       :style="{ width: leftWidth + 'px' }"
@@ -37,6 +41,7 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
+      @cell-shift-click="multiSelectShiftClick"
       @add-row="addRow()"
       @add-rows="$refs.rowsAddContext.toggleNextToMouse($event)"
       @add-row-after="addRowAfter($event)"
@@ -71,7 +76,7 @@
       :width="leftFieldsWidth"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.move_row', table, database.group.id)
+        !$hasPermission('database.table.move_row', table, database.workspace.id)
       "
       :store-prefix="storePrefix"
     ></GridViewFieldWidthHandle>
@@ -81,13 +86,18 @@
       :fields="visibleFields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
+      :can-fit-in-two-columns="canFitInTwoColumns"
       :table="table"
       :view="view"
       :include-add-field="true"
       :can-order-fields="true"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :store-prefix="storePrefix"
       :style="{ left: leftWidth + 'px' }"
@@ -104,6 +114,7 @@
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
+      @cell-shift-click="multiSelectShiftClick"
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
@@ -153,7 +164,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -168,7 +179,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -183,7 +194,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -208,7 +219,7 @@
             $hasPermission(
               'database.table.delete_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
         >
@@ -228,11 +239,19 @@
       :rows="allRows"
       :read-only="
         readOnly ||
-        !$hasPermission('database.table.update_row', table, database.group.id)
+        !$hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :enable-navigation="
         !readOnly &&
-        $hasPermission('database.table.update_row', table, database.group.id)
+        $hasPermission(
+          'database.table.update_row',
+          table,
+          database.workspace.id
+        )
       "
       :show-hidden-fields="showHiddenFieldsInRowModal"
       @toggle-hidden-fields-visibility="
@@ -922,15 +941,28 @@ export default {
         this.fieldsUpdated()
       })
     },
+    multiSelectShiftClick({ event, row, field }) {
+      this.$store.dispatch(
+        this.storePrefix + 'view/grid/multiSelectShiftClick',
+        {
+          rowId: row.id,
+          fieldIndex:
+            this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        }
+      )
+    },
     /**
      * Called when mouse is clicked and held on a GridViewCell component.
      * Starts multi-select by setting the head and tail index to the currently
      * selected cell.
      */
     multiSelectStart({ event, row, field }) {
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
+
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectStart', {
         rowId: row.id,
-        fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        fieldIndex,
       })
     },
     /**
@@ -939,9 +971,12 @@ export default {
      * with the last cell hovered over.
      */
     multiSelectHold({ event, row, field }) {
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
+
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectHold', {
         rowId: row.id,
-        fieldIndex: this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+        fieldIndex,
       })
     },
     /**
@@ -964,6 +999,7 @@ export default {
         this.$store.getters[
           this.storePrefix + 'view/grid/isMultiSelectActive'
         ] &&
+        !event.shiftKey &&
         (!isElement(this.$el, event.target) ||
           !['grid-view__row', 'grid-view__rows', 'grid-view'].includes(
             event.target.classList[0]
@@ -1027,8 +1063,8 @@ export default {
       const rowIndex = this.$store.getters[
         this.storePrefix + 'view/grid/getRowIndexById'
       ](row.id)
-      const fieldIndex =
-        this.visibleFields.findIndex((f) => f.id === field.id) + 1
+      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
+      if (this.canFitInTwoColumns) fieldIndex += 1
       await this.pasteData(textData, jsonData, rowIndex, fieldIndex)
     },
     /**
@@ -1062,7 +1098,7 @@ export default {
         !this.$hasPermission(
           'database.table.update_row',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       ) {
         return

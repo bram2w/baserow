@@ -35,7 +35,7 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
     assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
     # The kanban view should work if it's a template.
-    premium_data_fixture.create_template(group=kanban.table.database.group)
+    premium_data_fixture.create_template(workspace=kanban.table.database.workspace)
     url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_200_OK
@@ -43,24 +43,24 @@ def test_list_without_valid_premium_license(api_client, premium_data_fixture):
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_list_without_valid_premium_license_for_group(
-    api_client, premium_data_fixture, alternative_per_group_license_service
+def test_list_without_valid_premium_license_for_workspace(
+    api_client, premium_data_fixture, alternative_per_workspace_license_service
 ):
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
     kanban = premium_data_fixture.create_kanban_view(user=user)
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_402_PAYMENT_REQUIRED
     assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, [kanban.table.database.group.id]
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, [kanban.table.database.workspace.id]
     )
-    premium_data_fixture.create_template(group=kanban.table.database.group)
+    premium_data_fixture.create_template(workspace=kanban.table.database.workspace)
     url = reverse("api:database:views:kanban:list", kwargs={"view_id": kanban.id})
     response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
     assert response.status_code == HTTP_200_OK
@@ -1724,8 +1724,10 @@ def test_list_public_rows_limit_offset(api_client, premium_data_fixture):
 @pytest.mark.django_db
 def test_kanban_view_hierarchy(api_client, premium_data_fixture):
     user = premium_data_fixture.create_user()
-    group = premium_data_fixture.create_group(user=user)
-    app = premium_data_fixture.create_database_application(group=group, name="Test 1")
+    workspace = premium_data_fixture.create_workspace(user=user)
+    app = premium_data_fixture.create_database_application(
+        workspace=workspace, name="Test 1"
+    )
     table = premium_data_fixture.create_database_table(database=app)
     premium_data_fixture.create_text_field(table=table)
 
@@ -1735,8 +1737,8 @@ def test_kanban_view_hierarchy(api_client, premium_data_fixture):
         public=True,
     )
     assert kanban_view.get_parent() == table
-    assert kanban_view.get_root() == group
+    assert kanban_view.get_root() == workspace
 
     kanban_view_field_options = kanban_view.get_field_options()[0]
     assert kanban_view_field_options.get_parent() == kanban_view
-    assert kanban_view_field_options.get_root() == group
+    assert kanban_view_field_options.get_root() == workspace

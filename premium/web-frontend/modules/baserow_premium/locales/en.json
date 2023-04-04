@@ -2,18 +2,19 @@
     "premium": {
         "user": {
             "isStaff": "Is staff",
-            "isGroupAdmin": "Is group admin",
+            "isWorkspaceAdmin": "Is workspace admin",
             "active": "Active",
             "deactivated": "Deactivated"
         },
         "adminType": {
             "dashboard": "Dashboard",
             "users": "Users",
-            "groups": "Groups",
+            "workspaces": "Workspaces",
             "licenses": "Licenses"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendar"
         },
         "exporterType": {
             "json": "Export to JSON",
@@ -63,8 +64,8 @@
     "registerLicenseForm": {
         "licenseKey": "License key"
     },
-    "groupsAdminTable": {
-        "allGroups": "All groups",
+    "workspacesAdminTable": {
+        "allWorkspaces": "All workspaces",
         "id": "ID",
         "name": "Name",
         "members": "Members",
@@ -74,16 +75,16 @@
         "freeUsers": "Free users",
         "seatsTaken": "Seats taken",
         "storageUsage": "Storage Used (MB)",
-        "usageHelpText": "Calculated nightly when the track group usage setting is enabled"
+        "usageHelpText": "Calculated nightly when the track workspace usage setting is enabled"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Permanently delete"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Delete {name}",
-        "confirmation": "Are you sure you want to delete the group: {name}?",
-        "comment": "The group will be permanently deleted, including the related applications. It is not possible to undo this action.",
-        "delete": "Delete group {name}"
+        "confirmation": "Are you sure you want to delete the workspace: {name}?",
+        "comment": "The workspace will be permanently deleted, including the related applications. It is not possible to undo this action.",
+        "delete": "Delete workspace {name}"
     },
     "activeUsers": {
         "newUsers": "New users",
@@ -93,7 +94,7 @@
         "allUsers": "All users",
         "username": "Username",
         "name": "Name",
-        "groups": "Groups",
+        "workspaces": "Workspaces",
         "lastLogin": "Last login",
         "dateJoined": "Signed up",
         "active": "Active"
@@ -118,7 +119,7 @@
         "warning": {
             "changeEmail": "Changing this users email address means when they sign in they must use the new email address to do so. This must be communicated with that user.",
             "inactiveUser": "When a user is marked as inactive they are prevented from signing in.",
-            "userStaff": "Making the user staff gives them admin access to all users, all groups and the ability to revoke your own staff permissions."
+            "userStaff": "Making the user staff gives them admin access to all users, all workspaces and the ability to revoke your own staff permissions."
         },
         "error": {
             "invalidName": "Please enter a valid full name, it must be longer than 2 letters and less than 150.",
@@ -131,7 +132,7 @@
     "deleteUserModal": {
         "title": "Delete {username}",
         "confirmation": "Are you sure you want to delete the user: {name}?",
-        "comment1": "The user account will be deleted, however the groups that user is a member of will continue existing. The users group will not be deleted, even if this user is the last user in the group. Deleting the last user in a group prevents anyone being able to access that group.",
+        "comment1": "The user account will be deleted, however the workspaces that user is a member of will continue existing. The users workspace will not be deleted, even if this user is the last user in the workspace. Deleting the last user in a workspace prevents anyone being able to access that workspace.",
         "comment2": "After deleting a user it is possible for a new user to sign up again using the deleted users email address. To ensure they cannot sign up again instead deactivate the user and do not delete them.",
         "delete": "Delete user {username}"
     },
@@ -169,11 +170,25 @@
         "tryAgain": "Try again",
         "new": "New"
     },
+    "calendarViewHeader": {
+        "displayBy": "Display by",
+        "displayedBy": "Displayed by “{fieldName}” field",
+        "labels": "Labels"
+    },
+    "calendarDateSelector": {
+        "today": "Today"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 more... | {hiddenRowsCount} more..."
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "try again"
+    },
     "dashboard": {
         "title": "Dashboard",
         "totals": "Totals",
         "totalUsers": "Total users",
-        "totalGroups": "Total groups",
+        "totalWorkspaces": "Total workspaces",
         "totalApplications": "Total applications",
         "newUsers": "New users",
         "newUsers24h": "New users last 24 hours",
@@ -188,6 +203,7 @@
     "premiumFeatures": {
         "rowComments": "Row comments",
         "kanbanView": "Kanban view",
+        "calendarView": "Calendar view",
         "exports": "JSON and XML export",
         "admin": "Admin functionality",
         "rowColoring": "Row coloring",
@@ -268,10 +284,10 @@
         "content": "You are leaving your self hosted instance and you are being redirected to http://baserow.io."
     },
     "premiumTopSidebar": {
-      "impersonateDescription": "This account is impersonated. A page refresh will stop it.",
-      "impersonateStop": "Stop",
-      "premium": "Premium",
-      "premiumDescription": "Your account has access to the premium features globally"
+        "impersonateDescription": "This account is impersonated. A page refresh will stop it.",
+        "impersonateStop": "Stop",
+        "premium": "Premium",
+        "premiumDescription": "Your account has access to the premium features globally"
     },
     "formViewModeType": {
         "survey": "Survey",
@@ -291,5 +307,13 @@
     },
     "viewsContext": {
         "personal": "Personal"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Which field would you like to use for this view?",
+        "noCompatibleDateFields": "There are no date fields in this table, please create one first."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Choose date field",
+        "save": "Save"
     }
 }

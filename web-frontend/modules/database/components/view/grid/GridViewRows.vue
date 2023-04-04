@@ -9,10 +9,11 @@
       v-for="(row, index) in rows"
       :key="`row-${row._.persistentId}`"
       :view="view"
-      :group-id="groupId"
+      :workspace-id="workspaceId"
       :row="row"
       :fields="fields"
       :all-fields="allFields"
+      :can-fit-in-two-columns="canFitInTwoColumns"
       :field-widths="fieldWidths"
       :include-row-details="includeRowDetails"
       :decorations-by-place="decorationsByPlace"
@@ -67,9 +68,14 @@ export default {
       type: Boolean,
       required: true,
     },
-    groupId: {
+    workspaceId: {
       type: Number,
       required: true,
+    },
+    canFitInTwoColumns: {
+      type: Boolean,
+      required: false,
+      default: () => true,
     },
   },
   computed: {

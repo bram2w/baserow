@@ -72,9 +72,9 @@ class CreateTableActionType(UndoableActionType):
             progress=progress,
         )
 
-        group = database.group
+        workspace = database.workspace
         params = cls.Params(database.id, database.name, table.id, table.name)
-        cls.register_action(user, params, cls.scope(database.id), group=group)
+        cls.register_action(user, params, cls.scope(database.id), workspace=workspace)
 
         return table, error_report
 
@@ -127,7 +127,9 @@ class DeleteTableActionType(UndoableActionType):
 
         TableHandler().delete_table(user, table)
 
-        cls.register_action(user, params, cls.scope(database.id), group=database.group)
+        cls.register_action(
+            user, params, cls.scope(database.id), workspace=database.workspace
+        )
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:
@@ -180,7 +182,9 @@ class OrderTableActionType(UndoableActionType):
 
         table_handler.order_tables(user, database, order=order)
 
-        cls.register_action(user, params, cls.scope(database.id), group=database.group)
+        cls.register_action(
+            user, params, cls.scope(database.id), workspace=database.workspace
+        )
 
     @classmethod
     def scope(cls, database_id) -> ActionScopeStr:
@@ -252,7 +256,9 @@ class UpdateTableActionType(UndoableActionType):
             original_table_name,
         )
 
-        cls.register_action(user, params, cls.scope(database.id), group=database.group)
+        cls.register_action(
+            user, params, cls.scope(database.id), workspace=database.workspace
+        )
         return table
 
     @classmethod
@@ -320,7 +326,9 @@ class DuplicateTableActionType(UndoableActionType):
             table.id,
             table.name,
         )
-        cls.register_action(user, params, cls.scope(database.id), group=database.group)
+        cls.register_action(
+            user, params, cls.scope(database.id), workspace=database.workspace
+        )
         return new_table_clone
 
     @classmethod

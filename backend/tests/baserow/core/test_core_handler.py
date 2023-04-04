@@ -14,35 +14,35 @@ from baserow.contrib.database.application_types import DatabaseApplicationType
 from baserow.contrib.database.models import Database
 from baserow.core.exceptions import (
     ApplicationDoesNotExist,
-    ApplicationNotInGroup,
+    ApplicationNotInWorkspace,
     ApplicationTypeDoesNotExist,
     BaseURLHostnameNotAllowed,
     DuplicateApplicationMaxLocksExceededException,
-    GroupDoesNotExist,
-    GroupInvitationDoesNotExist,
-    GroupInvitationEmailMismatch,
-    GroupUserAlreadyExists,
-    GroupUserDoesNotExist,
-    GroupUserIsLastAdmin,
     IsNotAdminError,
-    LastAdminOfGroup,
+    LastAdminOfWorkspace,
     TemplateDoesNotExist,
     TemplateFileDoesNotExist,
-    UserInvalidGroupPermissionsError,
-    UserNotInGroup,
+    UserInvalidWorkspacePermissionsError,
+    UserNotInWorkspace,
+    WorkspaceDoesNotExist,
+    WorkspaceInvitationDoesNotExist,
+    WorkspaceInvitationEmailMismatch,
+    WorkspaceUserAlreadyExists,
+    WorkspaceUserDoesNotExist,
+    WorkspaceUserIsLastAdmin,
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
-    GROUP_USER_PERMISSION_ADMIN,
+    WORKSPACE_USER_PERMISSION_ADMIN,
     Application,
-    Group,
-    GroupInvitation,
-    GroupUser,
     Settings,
     Template,
     TemplateCategory,
+    Workspace,
+    WorkspaceInvitation,
+    WorkspaceUser,
 )
-from baserow.core.operations import ReadGroupOperationType
+from baserow.core.operations import ReadWorkspaceOperationType
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -75,297 +75,339 @@ def test_update_settings(data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_group(data_fixture):
+def test_get_workspace(data_fixture):
     user_1 = data_fixture.create_user()
     data_fixture.create_user()
-    group_1 = data_fixture.create_group(user=user_1)
+    workspace_1 = data_fixture.create_workspace(user=user_1)
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupDoesNotExist):
-        handler.get_group(group_id=0)
+    with pytest.raises(WorkspaceDoesNotExist):
+        handler.get_workspace(workspace_id=0)
 
-    group_1_copy = handler.get_group(group_id=group_1.id)
-    assert group_1_copy.id == group_1.id
+    workspace_1_copy = handler.get_workspace(workspace_id=workspace_1.id)
+    assert workspace_1_copy.id == workspace_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
-        handler.get_group(
-            group_id=group_1.id, base_queryset=Group.objects.prefetch_related("UNKNOWN")
+        handler.get_workspace(
+            workspace_id=workspace_1.id,
+            base_queryset=Workspace.objects.prefetch_related("UNKNOWN"),
         )
 
 
 @pytest.mark.django_db
-def test_get_group_user(data_fixture):
+def test_get_workspace_user(data_fixture):
     user_1 = data_fixture.create_user()
     data_fixture.create_user()
-    group_1 = data_fixture.create_group()
-    group_user_1 = data_fixture.create_user_group(user=user_1, group=group_1)
+    workspace_1 = data_fixture.create_workspace()
+    workspace_user_1 = data_fixture.create_user_workspace(
+        user=user_1, workspace=workspace_1
+    )
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupUserDoesNotExist):
-        handler.get_group_user(group_user_id=0)
+    with pytest.raises(WorkspaceUserDoesNotExist):
+        handler.get_workspace_user(workspace_user_id=0)
 
-    group_user = handler.get_group_user(group_user_id=group_user_1.id)
-    assert group_user.id == group_user_1.id
-    assert group_user_1.group_id == group_1.id
+    workspace_user = handler.get_workspace_user(workspace_user_id=workspace_user_1.id)
+    assert workspace_user.id == workspace_user_1.id
+    assert workspace_user_1.workspace_id == workspace_1.id
 
     # If the error is raised we know for sure that the query has resolved.
     with pytest.raises(AttributeError):
-        handler.get_group_user(
-            group_user_id=group_user_1.id,
-            base_queryset=GroupUser.objects.prefetch_related("UNKNOWN"),
+        handler.get_workspace_user(
+            workspace_user_id=workspace_user_1.id,
+            base_queryset=WorkspaceUser.objects.prefetch_related("UNKNOWN"),
         )
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_user_updated.send")
-def test_update_group_user(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_user_updated.send")
+def test_update_workspace_user(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
-    group_1 = data_fixture.create_group()
-    data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
-    group_user_2 = data_fixture.create_user_group(
-        user=user_2, group=group_1, permissions="MEMBER"
+    workspace_1 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user_1, workspace=workspace_1, permissions="ADMIN"
+    )
+    workspace_user_2 = data_fixture.create_user_workspace(
+        user=user_2, workspace=workspace_1, permissions="MEMBER"
     )
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.update_group_user(user=user_3, group_user=group_user_2)
+    with pytest.raises(UserNotInWorkspace):
+        handler.update_workspace_user(user=user_3, workspace_user=workspace_user_2)
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        handler.update_group_user(user=user_2, group_user=group_user_2)
+    with pytest.raises(UserInvalidWorkspacePermissionsError):
+        handler.update_workspace_user(user=user_2, workspace_user=workspace_user_2)
 
-    tmp = handler.update_group_user(
-        user=user_1, group_user=group_user_2, permissions="ADMIN"
+    tmp = handler.update_workspace_user(
+        user=user_1, workspace_user=workspace_user_2, permissions="ADMIN"
     )
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group_user"].id == group_user_2.id
+    assert send_mock.call_args[1]["workspace_user"].id == workspace_user_2.id
     assert send_mock.call_args[1]["user"].id == user_1.id
 
-    group_user_2.refresh_from_db()
-    assert tmp.id == group_user_2.id
+    workspace_user_2.refresh_from_db()
+    assert tmp.id == workspace_user_2.id
     assert tmp.permissions == "ADMIN"
-    assert group_user_2.permissions == "ADMIN"
+    assert workspace_user_2.permissions == "ADMIN"
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_user_deleted.send")
-def test_delete_group_user(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_user_deleted.send")
+def test_delete_workspace_user(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
-    group_1 = data_fixture.create_group()
-    data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
-    group_user_2 = data_fixture.create_user_group(
-        user=user_2, group=group_1, permissions="MEMBER"
+    workspace_1 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user_1, workspace=workspace_1, permissions="ADMIN"
+    )
+    workspace_user_2 = data_fixture.create_user_workspace(
+        user=user_2, workspace=workspace_1, permissions="MEMBER"
     )
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.delete_group_user(user=user_3, group_user=group_user_2)
+    with pytest.raises(UserNotInWorkspace):
+        handler.delete_workspace_user(user=user_3, workspace_user=workspace_user_2)
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        handler.delete_group_user(user=user_2, group_user=group_user_2)
+    with pytest.raises(UserInvalidWorkspacePermissionsError):
+        handler.delete_workspace_user(user=user_2, workspace_user=workspace_user_2)
 
-    group_user_id = group_user_2.id
-    handler.delete_group_user(user=user_1, group_user=group_user_2)
-    assert GroupUser.objects.all().count() == 1
+    workspace_user_id = workspace_user_2.id
+    handler.delete_workspace_user(user=user_1, workspace_user=workspace_user_2)
+    assert WorkspaceUser.objects.all().count() == 1
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group_user_id"] == group_user_id
-    assert send_mock.call_args[1]["group_user"].group_id == group_user_2.group_id
+    assert send_mock.call_args[1]["workspace_user_id"] == workspace_user_id
+    assert (
+        send_mock.call_args[1]["workspace_user"].workspace_id
+        == workspace_user_2.workspace_id
+    )
     assert send_mock.call_args[1]["user"].id == user_1.id
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_created.send")
-def test_create_group(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_created.send")
+def test_create_workspace(send_mock, data_fixture):
     user = data_fixture.create_user()
 
     handler = CoreHandler()
-    group_user = handler.create_group(user=user, name="Test group")
+    workspace_user = handler.create_workspace(user=user, name="Test workspace")
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group"].id == group_user.group.id
+    assert send_mock.call_args[1]["workspace"].id == workspace_user.workspace.id
     assert send_mock.call_args[1]["user"].id == user.id
 
-    group = Group.objects.all().first()
-    user_group = GroupUser.objects.all().first()
+    workspace = Workspace.objects.all().first()
+    user_workspace = WorkspaceUser.objects.all().first()
 
-    assert group.name == "Test group"
-    assert user_group.user == user
-    assert user_group.group == group
-    assert user_group.order == 1
-    assert user_group.permissions == GROUP_USER_PERMISSION_ADMIN
+    assert workspace.name == "Test workspace"
+    assert user_workspace.user == user
+    assert user_workspace.workspace == workspace
+    assert user_workspace.order == 1
+    assert user_workspace.permissions == WORKSPACE_USER_PERMISSION_ADMIN
 
-    handler.create_group(user=user, name="Test group 2")
+    handler.create_workspace(user=user, name="Test workspace 2")
 
-    assert Group.objects.all().count() == 2
-    assert GroupUser.objects.all().count() == 2
+    assert Workspace.objects.all().count() == 2
+    assert WorkspaceUser.objects.all().count() == 2
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_restored.send")
-def test_restore_group(group_restored_mock, data_fixture):
+@patch("baserow.core.signals.workspace_restored.send")
+def test_restore_workspace(workspace_restored_mock, data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(name="Test group", user=user)
+    workspace = data_fixture.create_workspace(name="Test workspace", user=user)
 
     handler = CoreHandler()
 
-    handler.delete_group_by_id(user, group.id)
+    handler.delete_workspace_by_id(user, workspace.id)
 
-    assert Group.objects.count() == 0
+    assert Workspace.objects.count() == 0
 
-    TrashHandler.restore_item(user, "group", group.id)
+    TrashHandler.restore_item(user, "workspace", workspace.id)
 
-    group_restored_mock.assert_called_once()
-    assert group_restored_mock.call_args[1]["user"] is None
+    workspace_restored_mock.assert_called_once()
+    assert workspace_restored_mock.call_args[1]["user"] is None
     assert (
-        group_restored_mock.call_args[1]["group_user"].id
-        == group.groupuser_set.get(user=user).id
+        workspace_restored_mock.call_args[1]["workspace_user"].id
+        == workspace.workspaceuser_set.get(user=user).id
     )
 
-    group = Group.objects.all().first()
-    user_group = GroupUser.objects.all().first()
+    workspace = Workspace.objects.all().first()
+    user_workspace = WorkspaceUser.objects.all().first()
 
-    assert group.name == "Test group"
-    assert user_group.user == user
-    assert user_group.group == group
-    assert user_group.permissions == GROUP_USER_PERMISSION_ADMIN
+    assert workspace.name == "Test workspace"
+    assert user_workspace.user == user
+    assert user_workspace.workspace == workspace
+    assert user_workspace.permissions == WORKSPACE_USER_PERMISSION_ADMIN
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_updated.send")
-def test_update_group(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_updated.send")
+def test_update_workspace(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user_1)
+    workspace = data_fixture.create_workspace(user=user_1)
 
     handler = CoreHandler()
 
-    group = handler.get_group_for_update(group.id)
-    handler.update_group(user=user_1, group=group, name="New name")
+    workspace = handler.get_workspace_for_update(workspace.id)
+    handler.update_workspace(user=user_1, workspace=workspace, name="New name")
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group"].id == group.id
+    assert send_mock.call_args[1]["workspace"].id == workspace.id
     assert send_mock.call_args[1]["user"].id == user_1.id
 
-    group.refresh_from_db()
+    workspace.refresh_from_db()
 
-    assert group.name == "New name"
+    assert workspace.name == "New name"
 
-    with pytest.raises(UserNotInGroup):
-        handler.update_group(user=user_2, group=group, name="New name")
+    with pytest.raises(UserNotInWorkspace):
+        handler.update_workspace(user=user_2, workspace=workspace, name="New name")
 
-    with pytest.raises(ValueError, match="The group is not an instance of Group"):
-        handler.update_group(user=user_2, group=object(), name="New name")
+    with pytest.raises(
+        ValueError, match="The workspace is not an instance of Workspace."
+    ):
+        handler.update_workspace(user=user_2, workspace=object(), name="New name")
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_user_deleted.send")
-def test_leave_group(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_user_deleted.send")
+def test_leave_workspace(send_mock, data_fixture):
     user_1 = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     user_3 = data_fixture.create_user()
     user_4 = data_fixture.create_user()
     user_5 = data_fixture.create_user(to_be_deleted=True)
-    group_1 = data_fixture.create_group()
-    group_2 = data_fixture.create_group()
-    data_fixture.create_user_group(user=user_1, group=group_1, permissions="ADMIN")
-    group_user_2 = data_fixture.create_user_group(
-        user=user_2, group=group_1, permissions="ADMIN"
+    workspace_1 = data_fixture.create_workspace()
+    workspace_2 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user_1, workspace=workspace_1, permissions="ADMIN"
     )
-    data_fixture.create_user_group(user=user_3, group=group_1, permissions="USER")
+    workspace_user_2 = data_fixture.create_user_workspace(
+        user=user_2, workspace=workspace_1, permissions="ADMIN"
+    )
+    data_fixture.create_user_workspace(
+        user=user_3, workspace=workspace_1, permissions="USER"
+    )
     # Add a pending deletion user
-    data_fixture.create_user_group(user=user_5, group=group_1, permissions="ADMIN")
-    data_fixture.create_user_group(user=user_3, group=group_2, permissions="USER")
-    data_fixture.create_user_group(user=user_4, group=group_2, permissions="USER")
+    data_fixture.create_user_workspace(
+        user=user_5, workspace=workspace_1, permissions="ADMIN"
+    )
+    data_fixture.create_user_workspace(
+        user=user_3, workspace=workspace_2, permissions="USER"
+    )
+    data_fixture.create_user_workspace(
+        user=user_4, workspace=workspace_2, permissions="USER"
+    )
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.leave_group(user=user_4, group=group_1)
+    with pytest.raises(UserNotInWorkspace):
+        handler.leave_workspace(user=user_4, workspace=workspace_1)
 
-    handler.leave_group(user=user_2, group=group_1)
+    handler.leave_workspace(user=user_2, workspace=workspace_1)
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group_user_id"] == group_user_2.id
-    assert send_mock.call_args[1]["group_user"].group_id == group_user_2.group_id
+    assert send_mock.call_args[1]["workspace_user_id"] == workspace_user_2.id
+    assert (
+        send_mock.call_args[1]["workspace_user"].workspace_id
+        == workspace_user_2.workspace_id
+    )
     assert send_mock.call_args[1]["user"].id == user_2.id
 
-    with pytest.raises(GroupUserIsLastAdmin):
-        handler.leave_group(user=user_1, group=group_1)
+    with pytest.raises(WorkspaceUserIsLastAdmin):
+        handler.leave_workspace(user=user_1, workspace=workspace_1)
 
-    handler.leave_group(user=user_3, group=group_1)
+    handler.leave_workspace(user=user_3, workspace=workspace_1)
 
-    assert GroupUser.objects.filter(user=user_1, group=group_1).exists() is True
-    assert GroupUser.objects.filter(user=user_2, group=group_1).exists() is False
-    assert GroupUser.objects.filter(user=user_3, group=group_1).exists() is False
-    assert GroupUser.objects.filter(user=user_3, group=group_2).exists() is True
-    assert GroupUser.objects.filter(user=user_4, group=group_2).exists() is True
+    assert (
+        WorkspaceUser.objects.filter(user=user_1, workspace=workspace_1).exists()
+        is True
+    )
+    assert (
+        WorkspaceUser.objects.filter(user=user_2, workspace=workspace_1).exists()
+        is False
+    )
+    assert (
+        WorkspaceUser.objects.filter(user=user_3, workspace=workspace_1).exists()
+        is False
+    )
+    assert (
+        WorkspaceUser.objects.filter(user=user_3, workspace=workspace_2).exists()
+        is True
+    )
+    assert (
+        WorkspaceUser.objects.filter(user=user_4, workspace=workspace_2).exists()
+        is True
+    )
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.group_deleted.send")
-def test_delete_group(send_mock, data_fixture):
+@patch("baserow.core.signals.workspace_deleted.send")
+def test_delete_workspace(send_mock, data_fixture):
     user = data_fixture.create_user()
-    group_1 = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group_1)
+    workspace_1 = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace_1)
     data_fixture.create_database_table(database=database)
-    data_fixture.create_group(user=user)
+    data_fixture.create_workspace(user=user)
     user_2 = data_fixture.create_user()
-    group_3 = data_fixture.create_group(user=user_2)
+    workspace_3 = data_fixture.create_workspace(user=user_2)
 
     handler = CoreHandler()
 
-    group_1 = handler.get_group_for_update(group_1.id)
-    group_3 = handler.get_group_for_update(group_3.id)
-    handler.delete_group(user, group_1)
+    workspace_1 = handler.get_workspace_for_update(workspace_1.id)
+    workspace_3 = handler.get_workspace_for_update(workspace_3.id)
+    handler.delete_workspace(user, workspace_1)
 
-    assert group_1.trashed
+    assert workspace_1.trashed
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group"].id == group_1.id
+    assert send_mock.call_args[1]["workspace"].id == workspace_1.id
     assert send_mock.call_args[1]["user"].id == user.id
-    assert len(send_mock.call_args[1]["group_users"]) == 1
-    assert send_mock.call_args[1]["group_users"][0].id == user.id
+    assert len(send_mock.call_args[1]["workspace_users"]) == 1
+    assert send_mock.call_args[1]["workspace_users"][0].id == user.id
 
-    assert Group.objects.count() == 2
-    assert GroupUser.objects.count() == 2
-    assert Group.trash.count() == 1
-    assert GroupUser.trash.count() == 1
+    assert Workspace.objects.count() == 2
+    assert WorkspaceUser.objects.count() == 2
+    assert Workspace.trash.count() == 1
+    assert WorkspaceUser.trash.count() == 1
 
-    with pytest.raises(UserNotInGroup):
-        handler.delete_group(user, group_3)
+    with pytest.raises(UserNotInWorkspace):
+        handler.delete_workspace(user, workspace_3)
 
-    handler.delete_group(user_2, group_3)
+    handler.delete_workspace(user_2, workspace_3)
 
-    assert Group.objects.count() == 1
-    assert GroupUser.objects.count() == 1
-    assert Group.trash.count() == 2
-    assert GroupUser.trash.count() == 2
+    assert Workspace.objects.count() == 1
+    assert WorkspaceUser.objects.count() == 1
+    assert Workspace.trash.count() == 2
+    assert WorkspaceUser.trash.count() == 2
 
     with pytest.raises(ValueError):
-        handler.delete_group(user=user_2, group=object())
+        handler.delete_workspace(user=user_2, workspace=object())
 
 
 @pytest.mark.django_db
-@patch("baserow.core.signals.groups_reordered.send")
-def test_order_groups(send_mock, data_fixture):
+@patch("baserow.core.signals.workspaces_reordered.send")
+def test_order_workspaces(send_mock, data_fixture):
     user = data_fixture.create_user()
-    ug_1 = data_fixture.create_user_group(user=user, order=1)
-    ug_2 = data_fixture.create_user_group(user=user, order=2)
-    ug_3 = data_fixture.create_user_group(user=user, order=3)
+    ug_1 = data_fixture.create_user_workspace(user=user, order=1)
+    ug_2 = data_fixture.create_user_workspace(user=user, order=2)
+    ug_3 = data_fixture.create_user_workspace(user=user, order=3)
 
     assert [1, 2, 3] == [ug_1.order, ug_2.order, ug_3.order]
 
     handler = CoreHandler()
-    handler.order_groups(user, [ug_3.group.id, ug_2.group.id, ug_1.group.id])
+    handler.order_workspaces(
+        user, [ug_3.workspace.id, ug_2.workspace.id, ug_1.workspace.id]
+    )
 
     send_mock.assert_called_once()
 
@@ -375,7 +417,9 @@ def test_order_groups(send_mock, data_fixture):
 
     assert [1, 2, 3] == [ug_3.order, ug_2.order, ug_1.order]
 
-    handler.order_groups(user, [ug_2.group.id, ug_1.group.id, ug_3.group.id])
+    handler.order_workspaces(
+        user, [ug_2.workspace.id, ug_1.workspace.id, ug_3.workspace.id]
+    )
 
     ug_1.refresh_from_db()
     ug_2.refresh_from_db()
@@ -385,119 +429,128 @@ def test_order_groups(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_groups_order(data_fixture):
+def test_get_workspaces_order(data_fixture):
     user = data_fixture.create_user()
-    ug_1 = data_fixture.create_user_group(user=user, order=1)
-    ug_2 = data_fixture.create_user_group(user=user, order=2)
-    ug_3 = data_fixture.create_user_group(user=user, order=3)
+    ug_1 = data_fixture.create_user_workspace(user=user, order=1)
+    ug_2 = data_fixture.create_user_workspace(user=user, order=2)
+    ug_3 = data_fixture.create_user_workspace(user=user, order=3)
 
     handler = CoreHandler()
-    assert [ug_1.group_id, ug_2.group_id, ug_3.group_id] == handler.get_groups_order(
-        user
-    )
+    assert [
+        ug_1.workspace_id,
+        ug_2.workspace_id,
+        ug_3.workspace_id,
+    ] == handler.get_workspaces_order(user)
 
-    handler.order_groups(user, [ug_3.group.id, ug_2.group.id, ug_1.group.id])
-    assert [ug_3.group_id, ug_2.group_id, ug_1.group_id] == handler.get_groups_order(
-        user
+    handler.order_workspaces(
+        user, [ug_3.workspace.id, ug_2.workspace.id, ug_1.workspace.id]
     )
+    assert [
+        ug_3.workspace_id,
+        ug_2.workspace_id,
+        ug_1.workspace_id,
+    ] == handler.get_workspaces_order(user)
 
 
 @pytest.mark.django_db
-def test_get_group_invitation_by_token(data_fixture):
+def test_get_workspace_invitation_by_token(data_fixture):
     user = data_fixture.create_user()
-    group_user = data_fixture.create_user_group(user=user)
-    invitation = data_fixture.create_group_invitation(
-        group=group_user.group, email=user.email
+    workspace_user = data_fixture.create_user_workspace(user=user)
+    invitation = data_fixture.create_workspace_invitation(
+        workspace=workspace_user.workspace, email=user.email
     )
 
     handler = CoreHandler()
-    signer = handler.get_group_invitation_signer()
+    signer = handler.get_workspace_invitation_signer()
 
     with pytest.raises(BadSignature):
-        handler.get_group_invitation_by_token(token="INVALID")
+        handler.get_workspace_invitation_by_token(token="INVALID")
 
-    with pytest.raises(GroupInvitationDoesNotExist):
-        handler.get_group_invitation_by_token(token=signer.dumps(999999))
+    with pytest.raises(WorkspaceInvitationDoesNotExist):
+        handler.get_workspace_invitation_by_token(token=signer.dumps(999999))
 
-    invitation2 = handler.get_group_invitation_by_token(
+    invitation2 = handler.get_workspace_invitation_by_token(
         token=signer.dumps(invitation.id)
     )
 
     assert invitation.id == invitation2.id
     assert invitation.invited_by_id == invitation2.invited_by_id
-    assert invitation.group_id == invitation2.group_id
+    assert invitation.workspace_id == invitation2.workspace_id
     assert invitation.email == invitation2.email
     assert invitation.permissions == invitation2.permissions
-    assert isinstance(invitation2, GroupInvitation)
+    assert isinstance(invitation2, WorkspaceInvitation)
 
     with pytest.raises(AttributeError):
-        handler.get_group_invitation_by_token(
+        handler.get_workspace_invitation_by_token(
             token=signer.dumps(invitation.id),
-            base_queryset=GroupInvitation.objects.prefetch_related("UNKNOWN"),
+            base_queryset=WorkspaceInvitation.objects.prefetch_related("UNKNOWN"),
         )
 
 
 @pytest.mark.django_db
-def test_get_group_invitation(data_fixture):
+def test_get_workspace_invitation(data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
     data_fixture.create_user()
-    group_user = data_fixture.create_user_group(user=user)
-    data_fixture.create_user_group(
-        user=user_2, group=group_user.group, permissions="MEMBER"
+    workspace_user = data_fixture.create_user_workspace(user=user)
+    data_fixture.create_user_workspace(
+        user=user_2, workspace=workspace_user.workspace, permissions="MEMBER"
     )
-    invitation = data_fixture.create_group_invitation(
-        group=group_user.group, email=user.email
+    invitation = data_fixture.create_workspace_invitation(
+        workspace=workspace_user.workspace, email=user.email
     )
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupInvitationDoesNotExist):
-        handler.get_group_invitation(group_invitation_id=999999)
+    with pytest.raises(WorkspaceInvitationDoesNotExist):
+        handler.get_workspace_invitation(workspace_invitation_id=999999)
 
-    invitation2 = handler.get_group_invitation(group_invitation_id=invitation.id)
+    invitation2 = handler.get_workspace_invitation(
+        workspace_invitation_id=invitation.id
+    )
 
     assert invitation.id == invitation2.id
     assert invitation.invited_by_id == invitation2.invited_by_id
-    assert invitation.group_id == invitation2.group_id
+    assert invitation.workspace_id == invitation2.workspace_id
     assert invitation.email == invitation2.email
     assert invitation.permissions == invitation2.permissions
-    assert isinstance(invitation2, GroupInvitation)
+    assert isinstance(invitation2, WorkspaceInvitation)
 
     with pytest.raises(AttributeError):
         handler.get_field(
             invitation_id=invitation.id,
-            base_queryset=GroupInvitation.objects.prefetch_related("UNKNOWN"),
+            base_queryset=WorkspaceInvitation.objects.prefetch_related("UNKNOWN"),
         )
 
 
 @pytest.mark.django_db(transaction=True)
-def test_send_group_invitation_email(data_fixture, mailoutbox):
-    group_invitation = data_fixture.create_group_invitation()
+def test_send_workspace_invitation_email(data_fixture, mailoutbox):
+    workspace_invitation = data_fixture.create_workspace_invitation()
     handler = CoreHandler()
 
     with pytest.raises(BaseURLHostnameNotAllowed):
-        handler.send_group_invitation_email(
-            invitation=group_invitation, base_url="http://test.nl/group-invite"
+        handler.send_workspace_invitation_email(
+            invitation=workspace_invitation, base_url="http://test.nl/workspace-invite"
         )
 
-    signer = handler.get_group_invitation_signer()
-    handler.send_group_invitation_email(
-        invitation=group_invitation, base_url="http://localhost:3000/group-invite"
+    signer = handler.get_workspace_invitation_signer()
+    handler.send_workspace_invitation_email(
+        invitation=workspace_invitation,
+        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
     email = mailoutbox[0]
 
     assert (
-        email.subject == f"{group_invitation.invited_by.first_name} invited you "
-        f"to {group_invitation.group.name} - Baserow"
+        email.subject == f"{workspace_invitation.invited_by.first_name} invited you "
+        f"to {workspace_invitation.workspace.name} - Baserow"
     )
     assert email.from_email == "no-reply@localhost"
-    assert group_invitation.email in email.to
+    assert workspace_invitation.email in email.to
 
     html_body = email.alternatives[0][0]
-    search_url = "http://localhost:3000/group-invite/"
+    search_url = "http://localhost:3000/workspace-invite/"
     start_url_index = html_body.index(search_url)
 
     assert start_url_index != -1
@@ -506,240 +559,251 @@ def test_send_group_invitation_email(data_fixture, mailoutbox):
     token = html_body[start_url_index + len(search_url) : end_url_index]
 
     invitation_id = signer.loads(token)
-    assert invitation_id == group_invitation.id
+    assert invitation_id == workspace_invitation.id
 
 
 @pytest.mark.django_db(transaction=True)
-def test_send_group_invitation_email_in_different_language(data_fixture, mailoutbox):
+def test_send_workspace_invitation_email_in_different_language(
+    data_fixture, mailoutbox
+):
     user = data_fixture.create_user(language="fr")
-    group_invitation = data_fixture.create_group_invitation(invited_by=user)
+    workspace_invitation = data_fixture.create_workspace_invitation(invited_by=user)
 
     handler = CoreHandler()
-    handler.send_group_invitation_email(
-        invitation=group_invitation, base_url="http://localhost:3000/group-invite"
+    handler.send_workspace_invitation_email(
+        invitation=workspace_invitation,
+        base_url="http://localhost:3000/workspace-invite",
     )
 
     assert len(mailoutbox) == 1
     assert (
         mailoutbox[0].subject
-        == f"{group_invitation.invited_by.first_name} vous a invité à "
-        f"{group_invitation.group.name} - Baserow"
+        == f"{workspace_invitation.invited_by.first_name} vous a invité à "
+        f"{workspace_invitation.workspace.name} - Baserow"
     )
 
 
 @pytest.mark.django_db
-@patch("baserow.core.handler.CoreHandler.send_group_invitation_email")
-def test_create_group_invitation(mock_send_email, data_fixture):
-    user_group = data_fixture.create_user_group()
-    user = user_group.user
-    group = user_group.group
+@patch("baserow.core.handler.CoreHandler.send_workspace_invitation_email")
+def test_create_workspace_invitation(mock_send_email, data_fixture):
+    user_workspace = data_fixture.create_user_workspace()
+    user = user_workspace.user
+    workspace = user_workspace.workspace
     user_2 = data_fixture.create_user()
-    user_group_3 = data_fixture.create_user_group(group=group, permissions="MEMBER")
-    user_3 = user_group_3.user
+    user_workspace_3 = data_fixture.create_user_workspace(
+        workspace=workspace, permissions="MEMBER"
+    )
+    user_3 = user_workspace_3.user
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.create_group_invitation(
+    with pytest.raises(UserNotInWorkspace):
+        handler.create_workspace_invitation(
             user=user_2,
-            group=group,
+            workspace=workspace,
             email="test@test.nl",
             permissions="ADMIN",
             message="Test",
             base_url="http://localhost:3000/invite",
         )
 
-    with pytest.raises(UserInvalidGroupPermissionsError):
-        handler.create_group_invitation(
+    with pytest.raises(UserInvalidWorkspacePermissionsError):
+        handler.create_workspace_invitation(
             user=user_3,
-            group=group,
+            workspace=workspace,
             email="test@test.nl",
             permissions="ADMIN",
             message="Test",
             base_url="http://localhost:3000/invite",
         )
 
-    with pytest.raises(GroupUserAlreadyExists):
-        handler.create_group_invitation(
+    with pytest.raises(WorkspaceUserAlreadyExists):
+        handler.create_workspace_invitation(
             user=user,
-            group=group,
+            workspace=workspace,
             email=user_3.email,
             permissions="ADMIN",
             message="Test",
             base_url="http://localhost:3000/invite",
         )
 
-    invitation = handler.create_group_invitation(
+    invitation = handler.create_workspace_invitation(
         user=user,
-        group=group,
+        workspace=workspace,
         email="test@test.nl",
         permissions="ADMIN",
         message="Test",
         base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
-    assert invitation.group_id == group.id
+    assert invitation.workspace_id == workspace.id
     assert invitation.email == "test@test.nl"
     assert invitation.permissions == "ADMIN"
     assert invitation.message == "Test"
-    assert GroupInvitation.objects.all().count() == 1
+    assert WorkspaceInvitation.objects.all().count() == 1
 
     mock_send_email.assert_called_once()
     assert mock_send_email.call_args[0][0].id == invitation.id
     assert mock_send_email.call_args[0][1] == "http://localhost:3000/invite"
 
-    # Because there already is an invitation for this email and group, it must be
+    # Because there already is an invitation for this email and workspace, it must be
     # updated instead of having duplicates.
-    invitation = handler.create_group_invitation(
+    invitation = handler.create_workspace_invitation(
         user=user,
-        group=group,
+        workspace=workspace,
         email="test@test.nl",
         permissions="MEMBER",
         message="New message",
         base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
-    assert invitation.group_id == group.id
+    assert invitation.workspace_id == workspace.id
     assert invitation.email == "test@test.nl"
     assert invitation.permissions == "MEMBER"
     assert invitation.message == "New message"
-    assert GroupInvitation.objects.all().count() == 1
+    assert WorkspaceInvitation.objects.all().count() == 1
 
-    invitation = handler.create_group_invitation(
+    invitation = handler.create_workspace_invitation(
         user=user,
-        group=group,
+        workspace=workspace,
         email="test2@test.nl",
         permissions="ADMIN",
         message="",
         base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
-    assert invitation.group_id == group.id
+    assert invitation.workspace_id == workspace.id
     assert invitation.email == "test2@test.nl"
     assert invitation.permissions == "ADMIN"
     assert invitation.message == ""
-    assert GroupInvitation.objects.all().count() == 2
+    assert WorkspaceInvitation.objects.all().count() == 2
 
-    invitation = handler.create_group_invitation(
+    invitation = handler.create_workspace_invitation(
         user=user,
-        group=group,
+        workspace=workspace,
         email="test3@test.nl",
         permissions="ADMIN",
         base_url="http://localhost:3000/invite",
     )
     assert invitation.invited_by_id == user.id
-    assert invitation.group_id == group.id
+    assert invitation.workspace_id == workspace.id
     assert invitation.email == "test3@test.nl"
     assert invitation.permissions == "ADMIN"
     assert invitation.message == ""
-    assert GroupInvitation.objects.all().count() == 3
+    assert WorkspaceInvitation.objects.all().count() == 3
 
 
 @pytest.mark.django_db
-def test_update_group_invitation(data_fixture):
-    group_invitation = data_fixture.create_group_invitation()
-    user = group_invitation.invited_by
+def test_update_workspace_invitation(data_fixture):
+    workspace_invitation = data_fixture.create_workspace_invitation()
+    user = workspace_invitation.invited_by
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.update_group_invitation(
-            user=user_2, invitation=group_invitation, permissions="ADMIN"
+    with pytest.raises(UserNotInWorkspace):
+        handler.update_workspace_invitation(
+            user=user_2, invitation=workspace_invitation, permissions="ADMIN"
         )
 
-    invitation = handler.update_group_invitation(
-        user=user, invitation=group_invitation, permissions="MEMBER"
+    invitation = handler.update_workspace_invitation(
+        user=user, invitation=workspace_invitation, permissions="MEMBER"
     )
 
     assert invitation.permissions == "MEMBER"
-    invitation = GroupInvitation.objects.all().first()
+    invitation = WorkspaceInvitation.objects.all().first()
     assert invitation.permissions == "MEMBER"
 
 
 @pytest.mark.django_db
-def test_delete_group_invitation(data_fixture):
-    group_invitation = data_fixture.create_group_invitation()
-    user = group_invitation.invited_by
+def test_delete_workspace_invitation(data_fixture):
+    workspace_invitation = data_fixture.create_workspace_invitation()
+    user = workspace_invitation.invited_by
     user_2 = data_fixture.create_user()
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.delete_group_invitation(
+    with pytest.raises(UserNotInWorkspace):
+        handler.delete_workspace_invitation(
             user=user_2,
-            invitation=group_invitation,
+            invitation=workspace_invitation,
         )
 
-    handler.delete_group_invitation(
+    handler.delete_workspace_invitation(
         user=user,
-        invitation=group_invitation,
+        invitation=workspace_invitation,
     )
-    assert GroupInvitation.objects.all().count() == 0
+    assert WorkspaceInvitation.objects.all().count() == 0
 
 
 @pytest.mark.django_db
-def test_reject_group_invitation(data_fixture):
-    group_invitation = data_fixture.create_group_invitation(email="test@test.nl")
-    user_1 = data_fixture.create_user(email="test@test.nl")
-    user_2 = data_fixture.create_user(email="test2@test.nl")
-
-    handler = CoreHandler()
-
-    with pytest.raises(GroupInvitationEmailMismatch):
-        handler.reject_group_invitation(user=user_2, invitation=group_invitation)
-
-    assert GroupInvitation.objects.all().count() == 1
-
-    handler.reject_group_invitation(user=user_1, invitation=group_invitation)
-    assert GroupInvitation.objects.all().count() == 0
-    assert GroupUser.objects.all().count() == 1
-
-
-@pytest.mark.django_db
-def test_accept_group_invitation(data_fixture):
-    group = data_fixture.create_group()
-    group_2 = data_fixture.create_group()
-    group_invitation = data_fixture.create_group_invitation(
-        email="test@test.nl", permissions="MEMBER", group=group
+def test_reject_workspace_invitation(data_fixture):
+    workspace_invitation = data_fixture.create_workspace_invitation(
+        email="test@test.nl"
     )
     user_1 = data_fixture.create_user(email="test@test.nl")
     user_2 = data_fixture.create_user(email="test2@test.nl")
 
     handler = CoreHandler()
 
-    with pytest.raises(GroupInvitationEmailMismatch):
-        handler.accept_group_invitation(user=user_2, invitation=group_invitation)
+    with pytest.raises(WorkspaceInvitationEmailMismatch):
+        handler.reject_workspace_invitation(
+            user=user_2, invitation=workspace_invitation
+        )
 
-    assert GroupInvitation.objects.all().count() == 1
+    assert WorkspaceInvitation.objects.all().count() == 1
 
-    group_user = handler.accept_group_invitation(
-        user=user_1, invitation=group_invitation
-    )
-    assert group_user.group_id == group.id
-    assert group_user.permissions == "MEMBER"
-    assert GroupInvitation.objects.all().count() == 0
-    assert GroupUser.objects.all().count() == 1
+    handler.reject_workspace_invitation(user=user_1, invitation=workspace_invitation)
+    assert WorkspaceInvitation.objects.all().count() == 0
+    assert WorkspaceUser.objects.all().count() == 1
 
-    group_invitation = data_fixture.create_group_invitation(
-        email="test@test.nl", permissions="ADMIN", group=group
-    )
-    group_user = handler.accept_group_invitation(
-        user=user_1, invitation=group_invitation
-    )
-    assert group_user.group_id == group.id
-    assert group_user.permissions == "ADMIN"
-    assert GroupInvitation.objects.all().count() == 0
-    assert GroupUser.objects.all().count() == 1
 
-    group_invitation = data_fixture.create_group_invitation(
-        email="test@test.nl", permissions="MEMBER", group=group_2
+@pytest.mark.django_db
+def test_accept_workspace_invitation(data_fixture):
+    workspace = data_fixture.create_workspace()
+    workspace_2 = data_fixture.create_workspace()
+    workspace_invitation = data_fixture.create_workspace_invitation(
+        email="test@test.nl", permissions="MEMBER", workspace=workspace
     )
-    group_user = handler.accept_group_invitation(
-        user=user_1, invitation=group_invitation
+    user_1 = data_fixture.create_user(email="test@test.nl")
+    user_2 = data_fixture.create_user(email="test2@test.nl")
+
+    handler = CoreHandler()
+
+    with pytest.raises(WorkspaceInvitationEmailMismatch):
+        handler.accept_workspace_invitation(
+            user=user_2, invitation=workspace_invitation
+        )
+
+    assert WorkspaceInvitation.objects.all().count() == 1
+
+    workspace_user = handler.accept_workspace_invitation(
+        user=user_1, invitation=workspace_invitation
     )
-    assert group_user.group_id == group_2.id
-    assert group_user.permissions == "MEMBER"
-    assert GroupInvitation.objects.all().count() == 0
-    assert GroupUser.objects.all().count() == 2
+    assert workspace_user.workspace_id == workspace.id
+    assert workspace_user.permissions == "MEMBER"
+    assert WorkspaceInvitation.objects.all().count() == 0
+    assert WorkspaceUser.objects.all().count() == 1
+
+    workspace_invitation = data_fixture.create_workspace_invitation(
+        email="test@test.nl", permissions="ADMIN", workspace=workspace
+    )
+    workspace_user = handler.accept_workspace_invitation(
+        user=user_1, invitation=workspace_invitation
+    )
+    assert workspace_user.workspace_id == workspace.id
+    assert workspace_user.permissions == "ADMIN"
+    assert WorkspaceInvitation.objects.all().count() == 0
+    assert WorkspaceUser.objects.all().count() == 1
+
+    workspace_invitation = data_fixture.create_workspace_invitation(
+        email="test@test.nl", permissions="MEMBER", workspace=workspace_2
+    )
+    workspace_user = handler.accept_workspace_invitation(
+        user=user_1, invitation=workspace_invitation
+    )
+    assert workspace_user.workspace_id == workspace_2.id
+    assert workspace_user.permissions == "MEMBER"
+    assert WorkspaceInvitation.objects.all().count() == 0
+    assert WorkspaceUser.objects.all().count() == 2
 
 
 @pytest.mark.django_db
@@ -769,11 +833,11 @@ def test_get_application(data_fixture):
 def test_create_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
     handler = CoreHandler()
     handler.create_application(
-        user=user, group=group, type_name="database", name="Test database"
+        user=user, workspace=workspace, type_name="database", name="Test database"
     )
 
     assert Application.objects.all().count() == 1
@@ -782,19 +846,21 @@ def test_create_database_application(send_mock, data_fixture):
     database = Database.objects.all().first()
     assert database.name == "Test database"
     assert database.order == 1
-    assert database.group == group
+    assert database.workspace == workspace
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["application"].id == database.id
     assert send_mock.call_args[1]["user"].id == user.id
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_application(
-            user=user_2, group=group, type_name="database", name=""
+            user=user_2, workspace=workspace, type_name="database", name=""
         )
 
     with pytest.raises(ApplicationTypeDoesNotExist):
-        handler.create_application(user=user, group=group, type_name="UNKNOWN", name="")
+        handler.create_application(
+            user=user, workspace=workspace, type_name="UNKNOWN", name=""
+        )
 
 
 @pytest.mark.django_db
@@ -802,12 +868,12 @@ def test_create_database_application(send_mock, data_fixture):
 def test_update_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_application(
             user=user_2,
             application=database,
@@ -830,22 +896,28 @@ def test_update_database_application(send_mock, data_fixture):
 def test_order_applications(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    application_1 = data_fixture.create_database_application(group=group, order=1)
-    application_2 = data_fixture.create_database_application(group=group, order=2)
-    application_3 = data_fixture.create_database_application(group=group, order=3)
+    workspace = data_fixture.create_workspace(user=user)
+    application_1 = data_fixture.create_database_application(
+        workspace=workspace, order=1
+    )
+    application_2 = data_fixture.create_database_application(
+        workspace=workspace, order=2
+    )
+    application_3 = data_fixture.create_database_application(
+        workspace=workspace, order=3
+    )
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
-        handler.order_applications(user=user_2, group=group, order=[])
+    with pytest.raises(UserNotInWorkspace):
+        handler.order_applications(user=user_2, workspace=workspace, order=[])
 
-    with pytest.raises(ApplicationNotInGroup):
-        handler.order_applications(user=user, group=group, order=[0])
+    with pytest.raises(ApplicationNotInWorkspace):
+        handler.order_applications(user=user, workspace=workspace, order=[0])
 
     handler.order_applications(
         user=user,
-        group=group,
+        workspace=workspace,
         order=[application_3.id, application_2.id, application_1.id],
     )
     application_1.refresh_from_db()
@@ -856,7 +928,7 @@ def test_order_applications(send_mock, data_fixture):
     assert application_3.order == 1
 
     send_mock.assert_called_once()
-    assert send_mock.call_args[1]["group"].id == group.id
+    assert send_mock.call_args[1]["workspace"].id == workspace.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert send_mock.call_args[1]["order"] == [
         application_3.id,
@@ -866,7 +938,7 @@ def test_order_applications(send_mock, data_fixture):
 
     handler.order_applications(
         user=user,
-        group=group,
+        workspace=workspace,
         order=[application_1.id, application_3.id, application_2.id],
     )
     application_1.refresh_from_db()
@@ -876,7 +948,7 @@ def test_order_applications(send_mock, data_fixture):
     assert application_2.order == 3
     assert application_3.order == 2
 
-    handler.order_applications(user=user, group=group, order=[application_1.id])
+    handler.order_applications(user=user, workspace=workspace, order=[application_1.id])
     application_1.refresh_from_db()
     application_2.refresh_from_db()
     application_3.refresh_from_db()
@@ -884,13 +956,19 @@ def test_order_applications(send_mock, data_fixture):
     assert application_2.order == 3
     assert application_3.order == 2
 
-    application_4 = data_fixture.create_database_application(group=group, order=4)
-    application_5 = data_fixture.create_database_application(group=group, order=5)
-    application_6 = data_fixture.create_database_application(group=group, order=6)
+    application_4 = data_fixture.create_database_application(
+        workspace=workspace, order=4
+    )
+    application_5 = data_fixture.create_database_application(
+        workspace=workspace, order=5
+    )
+    application_6 = data_fixture.create_database_application(
+        workspace=workspace, order=6
+    )
 
     handler.order_applications(
         user=user,
-        group=group,
+        workspace=workspace,
         order=[
             application_1.id,
             application_2.id,
@@ -980,7 +1058,7 @@ def test_order_applications(send_mock, data_fixture):
         # Reset order
         handler.order_applications(
             user=user,
-            group=group,
+            workspace=workspace,
             order=[
                 application_1.id,
                 application_2.id,
@@ -993,7 +1071,7 @@ def test_order_applications(send_mock, data_fixture):
 
         handler.order_applications(
             user=user,
-            group=group,
+            workspace=workspace,
             order=input,
         )
 
@@ -1008,13 +1086,13 @@ def test_order_applications(send_mock, data_fixture):
 def test_delete_database_application(send_mock, data_fixture):
     user = data_fixture.create_user()
     user_2 = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_application(user=user_2, application=database)
 
     with pytest.raises(ValueError):
@@ -1056,16 +1134,16 @@ def test_get_template(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
-def test_export_import_group_application(data_fixture):
-    group = data_fixture.create_group()
-    imported_group = data_fixture.create_group()
-    database = data_fixture.create_database_application(group=group)
+def test_export_import_workspace_application(data_fixture):
+    workspace = data_fixture.create_workspace()
+    imported_workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
-    exported_applications = handler.export_group_applications(group, BytesIO())
-    imported_applications, id_mapping = handler.import_applications_to_group(
-        imported_group, exported_applications, BytesIO(), None
+    exported_applications = handler.export_workspace_applications(workspace, BytesIO())
+    imported_applications, id_mapping = handler.import_applications_to_workspace(
+        imported_workspace, exported_applications, BytesIO(), None
     )
 
     assert len(imported_applications) == 1
@@ -1092,11 +1170,11 @@ def test_sync_and_install_all_templates(data_fixture, tmpdir):
         list(Path(settings.APPLICATION_TEMPLATES_DIR).glob("*.json"))
     )
 
-    group_user = data_fixture.create_user_group()
+    workspace_user = data_fixture.create_user_workspace()
     for template in Template.objects.all():
         with transaction.atomic():
             handler.install_template(
-                group_user.user, group_user.group, template, storage=storage
+                workspace_user.user, workspace_user.workspace, template, storage=storage
             )
 
 
@@ -1109,11 +1187,11 @@ def test_sync_and_install_single_template(data_fixture, tmpdir):
         storage=storage, template_search_glob="new-hire-onboarding.json"
     )
 
-    group_user = data_fixture.create_user_group()
+    workspace_user = data_fixture.create_user_workspace()
     template = Template.objects.get()
     with transaction.atomic():
         handler.install_template(
-            group_user.user, group_user.group, template, storage=storage
+            workspace_user.user, workspace_user.workspace, template, storage=storage
         )
 
 
@@ -1126,24 +1204,24 @@ def test_sync_templates(data_fixture, tmpdir):
 
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
 
-    group_1 = data_fixture.create_group()
-    group_2 = data_fixture.create_group()
-    group_3 = data_fixture.create_group()
+    workspace_1 = data_fixture.create_workspace()
+    workspace_2 = data_fixture.create_workspace()
+    workspace_3 = data_fixture.create_workspace()
 
     category_1 = data_fixture.create_template_category(name="No templates")
     category_2 = data_fixture.create_template_category(name="Has template")
     template = data_fixture.create_template(
-        slug="is-going-to-be-deleted", group=group_1, category=category_2
+        slug="is-going-to-be-deleted", workspace=workspace_1, category=category_2
     )
     template_2 = data_fixture.create_template(
         slug="example-template",
-        group=group_2,
+        workspace=workspace_2,
         category=category_2,
         export_hash="IS_NOT_GOING_MATCH",
     )
     template_3 = data_fixture.create_template(
         slug="example-template-2",
-        group=group_3,
+        workspace=workspace_3,
         category=category_2,
         export_hash="f086c9b4b0dfea6956d0bb32af210277bb645ff3faebc5fb37a9eae85c433f2d",
     )
@@ -1151,11 +1229,11 @@ def test_sync_templates(data_fixture, tmpdir):
     handler = CoreHandler()
     handler.sync_templates(storage=storage)
 
-    groups = Group.objects.all().order_by("id")
-    assert len(groups) == 3
-    assert groups[0].id == group_3.id
-    assert groups[1].id not in [group_1.id, group_2.id]
-    assert groups[2].id not in [group_1.id, group_2.id]
+    workspaces = Workspace.objects.all().order_by("id")
+    assert len(workspaces) == 3
+    assert workspaces[0].id == workspace_3.id
+    assert workspaces[1].id not in [workspace_1.id, workspace_2.id]
+    assert workspaces[2].id not in [workspace_1.id, workspace_2.id]
 
     assert not TemplateCategory.objects.filter(id=category_1.id).exists()
     assert not TemplateCategory.objects.filter(id=category_2.id).exists()
@@ -1176,15 +1254,15 @@ def test_sync_templates(data_fixture, tmpdir):
     )
     assert refreshed_template_2.keywords == "Example,Template,For,Search"
     assert refreshed_template_2.categories.all().first().id == categories[0].id
-    assert template_2.group_id != refreshed_template_2.group_id
-    assert refreshed_template_2.group.name == "Example template"
-    assert refreshed_template_2.group.application_set.count() == 1
+    assert template_2.workspace_id != refreshed_template_2.workspace_id
+    assert refreshed_template_2.workspace.name == "Example template"
+    assert refreshed_template_2.workspace.application_set.count() == 1
 
     refreshed_template_3 = Template.objects.get(id=template_3.id)
-    assert template_3.group_id == refreshed_template_3.group_id
-    # We expect the group count to be zero because the export hash matches and
+    assert template_3.workspace_id == refreshed_template_3.workspace_id
+    # We expect the workspace count to be zero because the export hash matches and
     # nothing was updated.
-    assert refreshed_template_3.group.application_set.count() == 0
+    assert refreshed_template_3.workspace.application_set.count() == 0
 
     # Because the `example-template.json` has a file field that contains the hello
     # world file, we expect it to exist after syncing the templates.
@@ -1209,8 +1287,8 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
 
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
 
     handler = CoreHandler()
     handler.sync_templates(storage=storage)
@@ -1218,18 +1296,18 @@ def test_install_template(send_mock, tmpdir, data_fixture):
     template_2 = data_fixture.create_template(slug="does-not-exist")
 
     with pytest.raises(TemplateFileDoesNotExist):
-        handler.install_template(user, group, template_2, storage=storage)
+        handler.install_template(user, workspace, template_2, storage=storage)
 
     template = Template.objects.get(slug="example-template")
 
-    with pytest.raises(UserNotInGroup):
-        handler.install_template(user, group_2, template, storage=storage)
+    with pytest.raises(UserNotInWorkspace):
+        handler.install_template(user, workspace_2, template, storage=storage)
 
     applications, id_mapping = handler.install_template(
-        user, group, template, storage=storage
+        user, workspace, template, storage=storage
     )
     assert len(applications) == 1
-    assert applications[0].group_id == group.id
+    assert applications[0].workspace_id == workspace.id
     assert applications[0].name == "Event marketing"
 
     send_mock.assert_called_once()
@@ -1252,8 +1330,8 @@ def test_install_template(send_mock, tmpdir, data_fixture):
 @patch("baserow.core.signals.application_created.send")
 def test_restore_application(application_created_mock, data_fixture):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(name="Test group", user=user)
-    database = data_fixture.create_database_application(user=user, group=group)
+    workspace = data_fixture.create_workspace(name="Test workspace", user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
 
     handler = CoreHandler()
 
@@ -1274,29 +1352,32 @@ def test_restore_application(application_created_mock, data_fixture):
 
 
 @pytest.mark.django_db
-def test_raise_if_user_is_last_admin_of_group(data_fixture):
-    group_user = data_fixture.create_user_group()
+def test_raise_if_user_is_last_admin_of_workspace(data_fixture):
+    workspace_user = data_fixture.create_user_workspace()
     user2 = data_fixture.create_user()
 
-    with pytest.raises(LastAdminOfGroup):
-        CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
+    with pytest.raises(LastAdminOfWorkspace):
+        CoreHandler.raise_if_user_is_last_admin_of_workspace(workspace_user)
 
-    CoreHandler().add_user_to_group(group_user.group, user2, "ADMIN")
+    CoreHandler().add_user_to_workspace(workspace_user.workspace, user2, "ADMIN")
 
     try:
-        CoreHandler.raise_if_user_is_last_admin_of_group(group_user)
-    except LastAdminOfGroup:
+        CoreHandler.raise_if_user_is_last_admin_of_workspace(workspace_user)
+    except LastAdminOfWorkspace:
         pytest.fail("Unexpected last admin error...")
 
 
 @pytest.mark.django_db
 def test_check_permission_for_multiple_actors(data_fixture):
     user = data_fixture.create_user()
-    user_of_another_group = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    user_of_another_workspace = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
 
     assert CoreHandler().check_permission_for_multiple_actors(
-        [user, user_of_another_group], ReadGroupOperationType.type, group, context=group
+        [user, user_of_another_workspace],
+        ReadWorkspaceOperationType.type,
+        workspace,
+        context=workspace,
     ) == [user]
 
 
@@ -1307,9 +1388,12 @@ def test_duplicate_application_export_serialized_raises_operationalerror(
     application_type_serialized_raising_operationalerror,
 ):
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
     database = CoreHandler().create_application(
-        user=user, group=group, type_name=DatabaseApplicationType.type, name="Database"
+        user=user,
+        workspace=workspace,
+        type_name=DatabaseApplicationType.type,
+        name="Database",
     )
 
     with application_type_serialized_raising_operationalerror(

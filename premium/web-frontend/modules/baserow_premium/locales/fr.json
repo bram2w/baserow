@@ -2,18 +2,19 @@
     "premium": {
         "user": {
             "isStaff": "Est collaborateur",
-            "isGroupAdmin": "Est l'administrateur du groupe",
+            "isWorkspaceAdmin": "Est l'administrateur du projet",
             "active": "Actif",
             "deactivated": "Inactif"
         },
         "adminType": {
             "dashboard": "Statistiques",
             "users": "Utilisateurs",
-            "groups": "Groupes",
+            "workspaces": "Projets",
             "licenses": "Licences"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendrier"
         },
         "exporterType": {
             "json": "Exporter vers JSON",
@@ -53,13 +54,13 @@
     },
     "disconnectLicenseModal": {
         "disconnectLicense": "Déconnecter la licence",
-        "disconnectDescription": "Êtes-vous sur·e de vouloir déconnecter la licence ? Si vous deconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
+        "disconnectDescription": "Êtes-vous sur·e de vouloir déconnecter la licence ? Si vous déconnectez la licence alors que celle-ci est active, les utilisateurs associés n'auront plus accès aux fonctionnalités qu'elle offre. Cela retire définitivement la licence. Veuillez contacter notre support via {contact} si vous souhaitez utiliser cette licence sur une autre instance hebergée."
     },
     "registerLicenseForm": {
         "licenseKey": "Clé de licence"
     },
-    "groupsAdminTable": {
-        "allGroups": "Liste des groupes",
+    "workspacesAdminTable": {
+        "allWorkspaces": "Liste des projets",
         "id": "ID",
         "name": "Nom",
         "members": "Membres",
@@ -69,16 +70,16 @@
         "storageUsage": "Stockage utilisé (Mo)",
         "rowCount": "Nombre de lignes",
         "freeUsers": "Utilisateurs gratuits",
-        "usageHelpText": "Calculé chaque nuit lorsque le paramètre de suivi de l'utilisation des groupes est activé"
+        "usageHelpText": "Calculé chaque nuit lorsque le paramètre de suivi de l'utilisation des projets est activé"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Supprimer définitivement"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Supprimer {name}",
-        "confirmation": "Êtes-vous sûr·e de vouloir supprimer le groupe : {name} ?",
-        "comment": "Le groupe va être supprimé définitivement ainsi que ses applications liées. Il est impossible d'annuler cette action.",
-        "delete": "Supprimer le groupe {name}"
+        "confirmation": "Êtes-vous sûr·e de vouloir supprimer le projet : {name} ?",
+        "comment": "Le projet va être supprimé définitivement ainsi que ses applications liées. Il est impossible d'annuler cette action.",
+        "delete": "Supprimer le projet {name}"
     },
     "activeUsers": {
         "newUsers": "Nouveaux utilisateurs",
@@ -89,7 +90,7 @@
         "id": "ID",
         "username": "Identifiant",
         "name": "Nom",
-        "groups": "Groupes",
+        "workspaces": "Projets",
         "lastLogin": "Dernière connexion",
         "dateJoined": "Date d'inscription",
         "active": "Actif"
@@ -114,10 +115,10 @@
         "warning": {
             "changeEmail": "Si vous changez l'adresse électronique, l'utilisateur devra désormais utiliser celle-ci pour s'identifier. Ceci doit être signifié à l'utilisateur.",
             "inactiveUser": "Un utilisateur inactif n'est plus en mesure de s'identifier.",
-            "userStaff": "Un collaborateur a accès à la liste des utilisateurs, des groupes et peut changer les permissions de tous les utilisateurs."
+            "userStaff": "Un collaborateur a accès à la liste des utilisateurs, des projets et peut changer les permissions de tous les utilisateurs."
         },
         "error": {
-            "invalidName": "Veuillez saisir un nom valide, il doit être composé de plus de 2 charactères et moins de 150.",
+            "invalidName": "Veuillez saisir un nom valide, il doit être composé de plus de 2 caractères et moins de 150.",
             "invalidEmail": "Veuillez saisir une adresse électronique valide."
         }
     },
@@ -127,7 +128,7 @@
     "deleteUserModal": {
         "title": "Supprimer {username}",
         "confirmation": "Êtes-vous sûr·e de vouloir supprimer l'utilisateur : {name} ?",
-        "comment1": "Le compte de l'utilisateur va être supprimé, cependant les groupes dont l'utilisateur est membre vont continuer d'exister. Ces groupes ne seront pas supprimés même si cet utilisateur est le dernier utilisateur du groupe. Supprimer le dernier utilisateur d'un groupe interdit à quiconque d'y accéder de nouveau.",
+        "comment1": "Le compte de l'utilisateur va être supprimé, cependant les projets dont l'utilisateur est membre vont continuer d'exister. Ces projets ne seront pas supprimés même si cet utilisateur est le dernier utilisateur du projet. Supprimer le dernier utilisateur d'un projet interdit à quiconque d'y accéder de nouveau.",
         "comment2": "Après avoir supprimé un utilisateur, il sera possible de créer un nouveau compte avec la même adresse email. Si vous souhaitez éviter que l'utilisateur puisse se connecter avec cette adresse, vous pouvez désactiver l'utilisateur plutôt que supprimer son compte.",
         "delete": "Supprimer l'utilisateur {username}"
     },
@@ -169,7 +170,7 @@
         "title": "Statistiques",
         "totals": "Résumé",
         "totalUsers": "Nombre d'utilisateur",
-        "totalGroups": "Nombre de groupe",
+        "totalWorkspaces": "Nombre de projet",
         "totalApplications": "Nombre d'application",
         "newUsers": "Nouveaux utilisateurs",
         "newUsers24h": "Sur les dernières 24h",
@@ -184,7 +185,7 @@
     "licenses": {
         "titleNoLicenses": "Aucune licences trouvée",
         "titleLicenses": "Licences",
-        "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accés à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrer ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
+        "noLicensesDescription": "Votre instance de Baserow n'a aucune licence enregistrée. Une licence premium vous donne immédiatement accès à plusieurs fonctionnalités additionnelles. Si vous avez déjà une licence, vous pouvez l'enregistrer ici. Vous pouvez également en obtenir une en cliquant sur le bouton ci-dessous.",
         "rowComments": "Commentaires par lignes",
         "kanbanView": "Vue Kanban",
         "exports": "Export JSON et XML",
@@ -198,12 +199,12 @@
         "expired": "Expirée",
         "validity": "Valide du {start} au {end}",
         "seats": "places",
-        "premiumFeatures": "Fonctionalités premium"
+        "premiumFeatures": "Fonctionnalités premium"
     },
     "license": {
         "title": "Plan {name}",
         "users": "Utilisateurs",
-        "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
+        "description": "Choisissez les utilisateurs qui peuvent utiliser les fonctionnalités du plan {product_code}. Cette licence vous permet de distribuer le plan {product_code} à un maximum de {seats} utilisateurs.",
         "seatLeft": "Vous n'avez plus de place disponible|Il reste une seule place|Il reste {count} places",
         "fillSeats": "Distribuer les places aux utilisateurs restants",
         "removeAll": "Enlever tous les utilisateurs",
@@ -216,7 +217,7 @@
         "validThrough": "Fin de validité",
         "validThroughDescription": "Quand la licence expire, les utilisateurs associés n'auront plus accès aux fonctionnalités offertes par la licence.",
         "lastCheck": "Dernière vérification",
-        "lastCheckDescription": "La licence est vérifiée réguliérement. Si vous avez, par exemple, renouvellé ou mis à jour votre licence, les changements ne deviennent actifs qu'après la vérification.",
+        "lastCheckDescription": "La licence est vérifiée régulièrement. Si vous avez, par exemple, renouvelé ou mis à jour votre licence, les changements ne deviennent actifs qu'après la vérification.",
         "checkNow": "Vérifier maintenant",
         "seats": "Places (nombre d'utilisateur max.)",
         "licensedTo": "Attribuée à",
@@ -279,7 +280,8 @@
         "rowColoring": "Coloration des lignes",
         "surveyForm": "Sondage",
         "publicLogoRemoval": "Suppression du logo public",
-        "personalViews": "Vues privées"
+        "personalViews": "Vues privées",
+        "calendarView": "Vue Calendrier"
     },
     "formViewModePreviewSurvey": {
         "deactivated": "Les sondage sont disponibles dans la version premium.",
@@ -299,5 +301,27 @@
     },
     "viewsContext": {
         "personal": "Privée"
+    },
+    "calendarViewHeader": {
+        "displayBy": "Afficher par",
+        "displayedBy": "Affiché par le champ « {fieldName} »",
+        "labels": "Étiquettes"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 de plus... | {hiddenRowsCount} de plus..."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Choix du champ de date",
+        "save": "Enregistrer"
+    },
+    "calendarDateSelector": {
+        "today": "Aujourd'hui"
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "Réessayez"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Quel champ souhaitez-vous utiliser pour cette vue ?",
+        "noCompatibleDateFields": "Il n’y a pas de champs de date dans ce tableau, veuillez d’abord en créer un."
     }
 }

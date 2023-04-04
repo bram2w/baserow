@@ -22,20 +22,20 @@ import {
   BasicPermissionManagerType,
   CorePermissionManagerType,
   StaffPermissionManagerType,
-  GroupMemberPermissionManagerType,
+  WorkspaceMemberPermissionManagerType,
   StaffOnlySettingOperationPermissionManagerType,
 } from '@baserow/modules/core/permissionManagerTypes'
 
 import {
-  MembersGroupSettingsPageType,
-  InvitesGroupSettingsPageType,
-} from '@baserow/modules/core/groupSettingsPageTypes'
+  MembersWorkspaceSettingsPageType,
+  InvitesWorkspaceSettingsPageType,
+} from '@baserow/modules/core/workspaceSettingsPageTypes'
 
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
 import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
-import groupStore from '@baserow/modules/core/store/group'
+import workspaceStore from '@baserow/modules/core/store/workspace'
 import jobStore from '@baserow/modules/core/store/job'
 import notificationStore from '@baserow/modules/core/store/notification'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
@@ -87,7 +87,7 @@ export default (context, inject) => {
   )
   registry.register(
     'permissionManager',
-    new GroupMemberPermissionManagerType(context)
+    new WorkspaceMemberPermissionManagerType(context)
   )
   registry.register(
     'permissionManager',
@@ -110,7 +110,7 @@ export default (context, inject) => {
   store.registerModule('authProvider', authProviderStore)
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)
-  store.registerModule('group', groupStore)
+  store.registerModule('workspace', workspaceStore)
   store.registerModule('notification', notificationStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
@@ -120,12 +120,12 @@ export default (context, inject) => {
   registry.register('job', new InstallTemplateJobType(context))
 
   registry.register(
-    'groupSettingsPage',
-    new MembersGroupSettingsPageType(context)
+    'workspaceSettingsPage',
+    new MembersWorkspaceSettingsPageType(context)
   )
   registry.register(
-    'groupSettingsPage',
-    new InvitesGroupSettingsPageType(context)
+    'workspaceSettingsPage',
+    new InvitesWorkspaceSettingsPageType(context)
   )
 
   registry.register('errorPage', new DefaultErrorPageType(context))

@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from baserow.core.action.registries import ActionScopeStr, ActionScopeType
 
-GROUP_ACTION_CONTEXT = _('in group "%(group_name)s" (%(group_id)s).')
+WORKSPACE_ACTION_CONTEXT = _('in group "%(group_name)s" (%(group_id)s).')
 
 
 class RootActionScopeType(ActionScopeType):
@@ -28,20 +28,21 @@ class RootActionScopeType(ActionScopeType):
         return self.value() if value else None
 
 
-class GroupActionScopeType(ActionScopeType):
-    type = "group"
+class WorkspaceActionScopeType(ActionScopeType):
+    type = "workspace"
+    compat_type = "group"
 
     @classmethod
-    def value(cls, group_id: int) -> ActionScopeStr:
-        return cast(ActionScopeStr, cls.type + str(group_id))
+    def value(cls, workspace_id: int) -> ActionScopeStr:
+        return cast(ActionScopeStr, cls.type + str(workspace_id))
 
     def get_request_serializer_field(self) -> serializers.Field:
         return serializers.IntegerField(
             min_value=0,
             allow_null=True,
             required=False,
-            help_text="If set to a groups id then any actions directly related to that "
-            "group will be be included when undoing or redoing.",
+            help_text="If set to a workspaces id then any actions directly related to that "
+            "workspace will be be included when undoing or redoing.",
         )
 
     def valid_serializer_value_to_scope_str(

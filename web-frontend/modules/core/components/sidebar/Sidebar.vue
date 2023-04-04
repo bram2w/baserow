@@ -111,15 +111,15 @@
               </SidebarAdminItem>
             </ul>
           </li>
-          <template v-if="hasSelectedGroup && !isCollapsed">
+          <template v-if="hasSelectedWorkspace && !isCollapsed">
             <li class="tree__item margin-top-2">
               <div class="tree__action tree__action--has-options">
                 <a
-                  ref="groupSelectToggle"
+                  ref="workspaceSelectToggle"
                   class="tree__link tree__link--group"
                   @click="
-                    $refs.groupSelect.toggle(
-                      $refs.groupSelectToggle,
+                    $refs.workspaceSelect.toggle(
+                      $refs.workspaceSelectToggle,
                       'bottom',
                       'left',
                       0
@@ -128,8 +128,8 @@
                 >
                   <Editable
                     ref="rename"
-                    :value="selectedGroup.name"
-                    @change="renameGroup(selectedGroup, $event)"
+                    :value="selectedWorkspace.name"
+                    @change="renameWorkspace(selectedWorkspace, $event)"
                   ></Editable
                 ></a>
                 <a
@@ -146,20 +146,20 @@
                 >
                   <i class="fas fa-ellipsis-v"></i>
                 </a>
-                <GroupsContext ref="groupSelect"></GroupsContext>
-                <GroupContext
+                <WorkspacesContext ref="workspaceSelect"></WorkspacesContext>
+                <WorkspaceContext
                   ref="context"
-                  :group="selectedGroup"
+                  :workspace="selectedWorkspace"
                   @rename="enableRename()"
-                ></GroupContext>
+                ></WorkspaceContext>
               </div>
             </li>
             <li
               v-if="
                 $hasPermission(
-                  'group.create_invitation',
-                  selectedGroup,
-                  selectedGroup.id
+                  'workspace.create_invitation',
+                  selectedWorkspace,
+                  selectedWorkspace.id
                 )
               "
               class="tree__item"
@@ -171,14 +171,14 @@
                   {{ $t('sidebar.inviteOthers') }}
                 </a>
               </div>
-              <GroupMemberInviteModal
+              <WorkspaceMemberInviteModal
                 ref="inviteModal"
-                :group="selectedGroup"
+                :workspace="selectedWorkspace"
                 @invite-submitted="
                   $router.push({
                     name: 'settings-invites',
                     params: {
-                      groupId: selectedGroup.id,
+                      workspaceId: selectedWorkspace.id,
                     },
                   })
                 "
@@ -187,16 +187,16 @@
             <nuxt-link
               v-if="
                 $hasPermission(
-                  'group.list_group_users',
-                  selectedGroup,
-                  selectedGroup.id
+                  'workspace.list_workspace_users',
+                  selectedWorkspace,
+                  selectedWorkspace.id
                 )
               "
               v-slot="{ href, navigate, isExactActive }"
               :to="{
                 name: 'settings-members',
                 params: {
-                  groupId: selectedGroup.id,
+                  workspaceId: selectedWorkspace.id,
                 },
               }"
             >
@@ -211,9 +211,9 @@
             </nuxt-link>
             <component
               :is="component"
-              v-for="(component, index) in sidebarGroupComponents"
+              v-for="(component, index) in sidebarWorkspaceComponents"
               :key="index"
-              :group="selectedGroup"
+              :workspace="selectedWorkspace"
             ></component>
             <ul class="tree">
               <component
@@ -226,13 +226,13 @@
                   handle: '[data-sortable-handle]',
                   marginTop: -1.5,
                   enabled: $hasPermission(
-                    'group.order_applications',
-                    selectedGroup,
-                    selectedGroup.id
+                    'workspace.order_applications',
+                    selectedWorkspace,
+                    selectedWorkspace.id
                   ),
                 }"
                 :application="application"
-                :group="selectedGroup"
+                :workspace="selectedWorkspace"
               ></component>
             </ul>
             <ul v-if="pendingJobs.length" class="tree">
@@ -248,9 +248,9 @@
               <a
                 v-if="
                   $hasPermission(
-                    'group.create_application',
-                    selectedGroup,
-                    selectedGroup.id
+                    'workspace.create_application',
+                    selectedWorkspace,
+                    selectedWorkspace.id
                   )
                 "
                 ref="createApplicationContextLink"
@@ -267,42 +267,44 @@
             </li>
             <CreateApplicationContext
               ref="createApplicationContext"
-              :group="selectedGroup"
+              :workspace="selectedWorkspace"
             ></CreateApplicationContext>
           </template>
-          <template v-else-if="!hasSelectedGroup && !isCollapsed">
-            <li v-if="groups.length === 0" class="tree_item margin-top-2">
-              <p>{{ $t('sidebar.errorNoGroup') }}</p>
+          <template v-else-if="!hasSelectedWorkspace && !isCollapsed">
+            <li v-if="workspaces.length === 0" class="tree_item margin-top-2">
+              <p>{{ $t('sidebar.errorNoWorkspace') }}</p>
             </li>
             <li
-              v-for="(group, index) in groups"
-              :key="group.id"
+              v-for="(workspace, index) in workspaces"
+              :key="workspace.id"
               class="tree__item"
               :class="{
                 'margin-top-2': index === 0,
-                'tree__item--loading': group._.additionalLoading,
+                'tree__item--loading': workspace._.additionalLoading,
               }"
             >
               <div class="tree__action tree__action--has-right-icon">
                 <a
                   class="tree__link tree__link--group"
-                  @click="$store.dispatch('group/select', group)"
-                  >{{ group.name }}</a
+                  @click="$store.dispatch('workspace/select', workspace)"
+                  >{{ workspace.name }}</a
                 >
                 <i class="tree__right-icon fas fa-arrow-right"></i>
               </div>
             </li>
             <li class="sidebar__new-wrapper">
               <a
-                v-if="$hasPermission('create_group')"
+                v-if="$hasPermission('create_workspace')"
                 class="sidebar__new"
-                @click="$refs.createGroupModal.show()"
+                @click="$refs.createWorkspaceModal.show()"
               >
                 <i class="fas fa-plus"></i>
-                {{ $t('sidebar.createGroup') }}
+                {{ $t('sidebar.createWorkspace') }}
               </a>
             </li>
-            <CreateGroupModal ref="createGroupModal"></CreateGroupModal>
+            <CreateWorkspaceModal
+              ref="createWorkspaceModal"
+            ></CreateWorkspaceModal>
           </template>
         </ul>
       </div>
@@ -355,14 +357,14 @@ import SettingsModal from '@baserow/modules/core/components/settings/SettingsMod
 import SidebarAdminItem from '@baserow/modules/core/components/sidebar/SidebarAdminItem'
 import SidebarApplication from '@baserow/modules/core/components/sidebar/SidebarApplication'
 import CreateApplicationContext from '@baserow/modules/core/components/application/CreateApplicationContext'
-import GroupsContext from '@baserow/modules/core/components/group/GroupsContext'
-import GroupContext from '@baserow/modules/core/components/group/GroupContext'
-import CreateGroupModal from '@baserow/modules/core/components/group/CreateGroupModal'
+import WorkspacesContext from '@baserow/modules/core/components/workspace/WorkspacesContext'
+import WorkspaceContext from '@baserow/modules/core/components/workspace/WorkspaceContext'
+import CreateWorkspaceModal from '@baserow/modules/core/components/workspace/CreateWorkspaceModal'
 import TrashModal from '@baserow/modules/core/components/trash/TrashModal'
-import editGroup from '@baserow/modules/core/mixins/editGroup'
+import editWorkspace from '@baserow/modules/core/mixins/editWorkspace'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
-import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+import WorkspaceMemberInviteModal from '@baserow/modules/core/components/workspace/WorkspaceMemberInviteModal'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
@@ -373,13 +375,13 @@ export default {
     CreateApplicationContext,
     SidebarAdminItem,
     SidebarApplication,
-    GroupsContext,
-    GroupContext,
-    CreateGroupModal,
+    WorkspacesContext,
+    WorkspaceContext,
+    CreateWorkspaceModal,
     TrashModal,
-    GroupMemberInviteModal,
+    WorkspaceMemberInviteModal,
   },
-  mixins: [editGroup, undoRedo],
+  mixins: [editWorkspace, undoRedo],
   data() {
     return {
       logoffLoading: false,
@@ -388,11 +390,11 @@ export default {
   computed: {
     /**
      * Because all the applications that belong to the user are in the store we will
-     * filter on the selected group here.
+     * filter on the selected workspace here.
      */
     applications() {
-      return this.$store.getters['application/getAllOfGroup'](
-        this.selectedGroup
+      return this.$store.getters['application/getAllOfWorkspace'](
+        this.selectedWorkspace
       ).sort((a, b) => a.order - b.order)
     },
     adminTypes() {
@@ -413,16 +415,18 @@ export default {
         .map((plugin) => plugin.getSidebarMainMenuComponent())
         .filter((component) => component !== null)
     },
-    sidebarGroupComponents() {
+    sidebarWorkspaceComponents() {
       return Object.values(this.$registry.getAll('plugin'))
-        .map((plugin) => plugin.getSidebarGroupComponent(this.selectedGroup))
+        .map((plugin) =>
+          plugin.getSidebarWorkspaceComponent(this.selectedWorkspace)
+        )
         .filter((component) => component !== null)
     },
     pendingJobs() {
       return this.$store.getters['job/getAll'].filter((job) =>
         this.$registry
           .get('job', job.type)
-          .isJobPartOfGroup(job, this.selectedGroup)
+          .isJobPartOfWorkspace(job, this.selectedWorkspace)
       )
     },
     /**
@@ -436,14 +440,14 @@ export default {
       })
     },
     ...mapState({
-      groups: (state) => state.group.items,
-      selectedGroup: (state) => state.group.selected,
+      workspaces: (state) => state.workspace.items,
+      selectedWorkspace: (state) => state.workspace.selected,
     }),
     ...mapGetters({
       isStaff: 'auth/isStaff',
       name: 'auth/getName',
       email: 'auth/getUsername',
-      hasSelectedGroup: 'group/hasSelected',
+      hasSelectedWorkspace: 'workspace/hasSelected',
       isCollapsed: 'sidebar/isCollapsed',
     }),
   },
@@ -485,7 +489,7 @@ export default {
     async orderApplications(order, oldOrder) {
       try {
         await this.$store.dispatch('application/order', {
-          group: this.selectedGroup,
+          workspace: this.selectedWorkspace,
           order,
           oldOrder,
         })

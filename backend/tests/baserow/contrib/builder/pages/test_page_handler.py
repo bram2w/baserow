@@ -1,6 +1,14 @@
 import pytest
 
-from baserow.contrib.builder.pages.exceptions import PageDoesNotExist, PageNotInBuilder
+from baserow.contrib.builder.pages.exceptions import (
+    DuplicatePathParamsInPath,
+    PageDoesNotExist,
+    PageNameNotUnique,
+    PageNotInBuilder,
+    PagePathNotUnique,
+    PathParamNotDefined,
+    PathParamNotInPath,
+)
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 
@@ -24,13 +32,13 @@ def test_get_page_base_queryset(data_fixture, django_assert_num_queries):
     # Without selecting related
     page = PageHandler().get_page(page.id)
     with django_assert_num_queries(2):
-        group = page.builder.group
+        workspace = page.builder.workspace
 
     # With selecting related
-    base_queryset = Page.objects.select_related("builder", "builder__group")
+    base_queryset = Page.objects.select_related("builder", "builder__workspace")
     page = PageHandler().get_page(page.id, base_queryset=base_queryset)
     with django_assert_num_queries(0):
-        group = page.builder.group
+        workspace = page.builder.workspace
 
 
 @pytest.mark.django_db
@@ -38,10 +46,39 @@ def test_create_page(data_fixture):
     builder = data_fixture.create_builder_application()
     expected_order = Page.get_last_order(builder)
 
-    page = PageHandler().create_page(builder, "test")
+    page = PageHandler().create_page(builder, "test", path="/test")
 
     assert page.order == expected_order
     assert page.name == "test"
+
+
+@pytest.mark.django_db
+def test_create_page_page_name_not_unique(data_fixture):
+    page = data_fixture.create_builder_page(name="test", path="/test")
+
+    with pytest.raises(PageNameNotUnique):
+        PageHandler().create_page(page.builder, name="test", path="/new")
+
+
+@pytest.mark.django_db
+def test_create_page_page_path_not_unique(data_fixture):
+    page = data_fixture.create_builder_page(path="/test/test")
+
+    with pytest.raises(PagePathNotUnique):
+        PageHandler().create_page(page.builder, name="test", path="/test/test")
+
+
+@pytest.mark.django_db
+def test_create_page_duplicate_params_in_path(data_fixture):
+    builder = data_fixture.create_builder_application()
+
+    with pytest.raises(DuplicatePathParamsInPath):
+        PageHandler().create_page(
+            builder,
+            name="test",
+            path="/test/:test/:test",
+            path_params={"test": {"param_type": "text"}},
+        )
 
 
 @pytest.mark.django_db
@@ -62,6 +99,24 @@ def test_update_page(data_fixture):
     page.refresh_from_db()
 
     assert page.name == "new"
+
+
+@pytest.mark.django_db
+def test_update_page_page_name_not_unique(data_fixture):
+    page = data_fixture.create_builder_page(name="test")
+    page_two = data_fixture.create_builder_page(builder=page.builder, name="test2")
+
+    with pytest.raises(PageNameNotUnique):
+        PageHandler().update_page(page_two, name=page.name)
+
+
+@pytest.mark.django_db
+def test_update_page_page_path_not_unique(data_fixture):
+    page = data_fixture.create_builder_page()
+    page_two = data_fixture.create_builder_page(builder=page.builder)
+
+    with pytest.raises(PagePathNotUnique):
+        PageHandler().update_page(page_two, path=page.path)
 
 
 @pytest.mark.django_db
@@ -104,3 +159,52 @@ def test_duplicate_page(data_fixture):
     assert page_clone.id != page.id
     assert page_clone.name != page.name
     assert page_clone.order != page.order
+
+
+def test_is_page_path_valid():
+    assert PageHandler().is_page_path_valid("test/", {}) is True
+    assert PageHandler().is_page_path_valid("test/:id", {}) is False
+    assert (
+        PageHandler().is_page_path_valid("test/", {"id": {"param_type": "text"}})
+        is False
+    )
+    assert (
+        PageHandler().is_page_path_valid("test/:", {"id": {"param_type": "text"}})
+        is False
+    )
+    assert PageHandler().is_page_path_valid("test/:", {}) is True
+    assert (
+        PageHandler().is_page_path_valid("test/::id", {"id": {"param_type": "text"}})
+        is True
+    )
+    assert (
+        PageHandler().is_page_path_valid(
+            "product/:id-:slug",
+            {"id": {"param_type": "text"}, "slug": {"param_type": "text"}},
+        )
+        is True
+    )
+    assert (
+        PageHandler().is_page_path_valid(
+            "product/:test/:test",
+            {"test": {"param_type": "text"}},
+        )
+        is False
+    )
+
+
+def test_is_page_path_valid_raises():
+    with pytest.raises(PathParamNotInPath):
+        PageHandler().is_page_path_valid(
+            "test", {"id": {"param_type": "text"}}, raises=True
+        )
+
+    with pytest.raises(PathParamNotDefined):
+        PageHandler().is_page_path_valid("test/:id", {}, raises=True)
+
+
+@pytest.mark.django_db
+def test_find_unused_page_path(data_fixture):
+    page = data_fixture.create_builder_page(path="/test")
+
+    assert PageHandler().find_unused_page_path(page.builder, "/test") == "/test2"

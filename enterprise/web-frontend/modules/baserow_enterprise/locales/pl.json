@@ -52,9 +52,24 @@
     "auditLog": {
         "title": "Dziennik kontrolny",
         "filterUserTitle": "Użytkownik",
-        "filterGroupTitle": "Grupa",
+        "filterWorkspaceTitle": "Grupa",
         "filterActionTypeTitle": "Typ zdarzenia",
-        "filterFromTimestampTitle": "Od daty"
+        "filterFromTimestampTitle": "Od daty",
+        "actionType": "Rodzaj zdarzenia",
+        "description": "Opis",
+        "ip_address": "Adresy IP",
+        "exportToCsv": "Eksportuj do CSV",
+        "exportModalTitle": "Eksportuj do CSV",
+        "allUsers": "Wszyscy użytkownicy",
+        "allWorkspaces": "Wszystkie grupy",
+        "allActionTypes": "Wszystkie rodzaje zdarzeń",
+        "filterFromTimestamp": "Od daty",
+        "filterToTimestampTitle": "Do dnia",
+        "filterToTimestamp": "Do dnia",
+        "user": "Użytkownik",
+        "workspace": "Grupa",
+        "timestamp": "Znacznik czasu",
+        "clearFilters": "Wyczyść"
     },
     "manageTeamModals": {
         "subheading": "Zespoły pozwalają na masowe nadawanie lub ograniczanie uprawnień wielu osobom."
@@ -66,5 +81,195 @@
         "title": "Utwórz zespół",
         "invalidNameTitle": "Proszę użyć innej nazwy",
         "invalidNameMessage": "Nazwa zespołu jest już używana w określonej grupie."
+    },
+    "auditLogExportModal": {
+        "title": "Eksportuj do CSV",
+        "cancelledTitle": "Eksport nie powiódł się",
+        "exportFilename": "Eksport dziennika kontroli – {data}",
+        "cancelledDescription": "Coś poszło nie tak podczas eksportowania dziennika audytu. Proszę spróbować ponownie."
+    },
+    "authProviders": {
+        "title": "Dostawcy uwierzytelniania",
+        "addProvider": "Dodaj dostawcę",
+        "noProviders": "Nie skonfigurowano jeszcze dostawców uwierzytelniania."
+    },
+    "authProviderTypes": {
+        "password": "Uwierzytelnianie e-mailem i hasłem"
+    },
+    "samlSettingsForm": {
+        "invalidDomain": "Nieprawidłowa nazwa domeny",
+        "domain": "Domena",
+        "domainPlaceholder": "Wpisz nazwę domeny firmowej...",
+        "domainAlreadyExists": "Dostawca SAML dla tej domeny już istnieje",
+        "metadata": "Metadane",
+        "metadataPlaceholder": "Wklej metadane dostawcy tożsamości...",
+        "invalidMetadata": "Nieprawidłowe metadane XML dla dostawcy tożsamości",
+        "relayStateUrl": "Domyślny adres URL stanu przekaźnika",
+        "acsUrl": "Adres URL pojedynczego logowania",
+        "providerIsVerified": "Dostawca został zweryfikowany"
+    },
+    "createSettingsAuthProviderModal": {
+        "title": "Dodaj nowe {type}"
+    },
+    "updateSettingsAuthProviderModal": {
+        "title": "Edytuj {name}"
+    },
+    "deleteAuthProviderModal": {
+        "title": "Usuń {name}",
+        "comment": "Czy naprawdę chcesz usunąć ten {type}?"
+    },
+    "loginWithSaml": {
+        "signInWithSaml": "Zaloguj się z SAML SSO",
+        "loginText": "Masz już hasło?",
+        "redirecting": "Przekierowanie do dostawcy tożsamości...",
+        "continueWithSaml": "Przejdź do dostawcy logowania jednokrotnego SAML",
+        "requestError": "Ta domena nie jest skonfigurowana z logowaniem jednokrotnym SAML"
+    },
+    "loginError": {
+        "title": "Coś poszło nie tak:",
+        "loginText": "Masz już konto?",
+        "errorUserDeactivated": "użytkownik został wyłączony.",
+        "help": "W celu uzyskania pomocy należy skontaktować się z administratorem.",
+        "defaultErrorMessage": "nie można było ukończyć procesu logowania SSO.",
+        "errorSsoFeatureNotActive": "Funkcja logowania jednokrotnego nie jest aktywna. Skontaktuj się z administratorem.",
+        "errorInvalidSamlRequest": "Żądanie SAML jest nieprawidłowe.",
+        "errorInvalidSamlResponse": "Odpowiedź SAML jest nieprawidłowa.",
+        "errorProviderDoesNotExist": "ten dostawca uwierzytelniania nie istnieje lub jest niedostępny.",
+        "errorAuthFlowError": "wystąpił błąd podczas procesu uwierzytelniania u wybranego dostawcy.",
+        "errorDifferentProvider": "prosimy o korzystanie z usług dostawcy, u którego się pierwotnie zarejestrowałeś.",
+        "errorWorkspaceInvitationEmailMismatch": "twój adres e-mail nie pasuje do zaproszenia.",
+        "errorSignupDisabled": "rejestracja została wyłączona przez administratora."
+    },
+    "roles": {
+        "commenter": {
+            "name": "Komentujący",
+            "description": "Można tylko odczytać i komentować dane."
+        },
+        "noAccess": {
+            "name": "Brak dostępu",
+            "description": "Brak dostępu do czegokolwiek."
+        },
+        "admin": {
+            "name": "Admin",
+            "description": "Może w pełni konfigurować i edytować grupy i aplikacje."
+        },
+        "builder": {
+            "name": "Budowniczy",
+            "description": "Może w pełni konfigurować i edytować aplikacje."
+        },
+        "editor": {
+            "name": "Edytor",
+            "description": "Może w pełni edytować dane, ale nie może konfigurować aplikacji lub grup."
+        },
+        "viewer": {
+            "name": "Widz",
+            "description": "Może tylko odczytywać dane."
+        },
+        "noRoleLowPriority": {
+            "name": "Brak roli",
+            "description": "Pobierz domyślną rolę grupową od swoich zespołów."
+        }
+    },
+    "memberRolesModal": {
+        "memberRolesTableTabTitle": "Obecna tabela",
+        "error": {
+            "title": "Nie można pobrać danych",
+            "description": "Podczas pobierania danych członka wystąpił błąd."
+        },
+        "memberRolesDatabaseTabTitle": "Baza danych"
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "Baza danych {name}",
+            "selectMembers": "Wybierz członków",
+            "onlyYouHaveAccess": "Tylko ty masz dostęp do tej bazy danych.",
+            "warningTitle": "Inni użytkownicy mogą dziedziczyć dostęp!",
+            "everyoneHasAccess": "Każdy w obszarze roboczym {name} ma dostęp do tej bazy danych.",
+            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp poprzez swoje role w grupie nadrzędnej.",
+            "headerTooltip": "Rola baz danych przejmuje role grupowe."
+        },
+        "table": {
+            "title": "Tabela {name}",
+            "selectMembers": "Wybierz członków",
+            "onlyYouHaveAccess": "Tylko ty masz dostęp do tej tabeli.",
+            "warningTitle": "Inni użytkownicy mogą dziedziczyć dostęp!",
+            "everyoneHasAccess": "Każdy w obszarze roboczym {name} ma dostęp do tej bazy danych.",
+            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp za pośrednictwem swoich ról w nadrzędnej bazie danych lub grupie.",
+            "headerTooltip": "Role tabel zastąpią role grup i baz danych."
+        }
+    },
+    "memberRolesShareToggle": {
+        "label": "Udostępnij każdemu w {name}",
+        "subLabel": "{totalUserAmount} członków obszaru roboczego"
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Zarządzaj członkami"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Zarządzaj członkami"
+    },
+    "memberRolesMembersList": {
+        "teamMembersCount": "{count} członków zespołu",
+        "remove": "Usuń",
+        "adminHelpText": "Administratorzy mogą ograniczać role innych administratorów."
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Znajdź członków...",
+        "selectedAmountLabel": "Wybrano {count} członków"
+    },
+    "selectTeamsList": {
+        "searchPlaceholder": "Znajdź zespoły...",
+        "selectedAmountLabel": "Wybrano {count} zespołów"
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Zaproś {count} {type}",
+        "types": {
+            "members": "członkowie",
+            "teams": "zespoły"
+        },
+        "helpTooltip": "Przypisania ról członków zastępują przydziały ról zespołu.",
+        "roleSelectorBuilderDataWarningTooltip": "Będą mogli tworzyć formuły i pola wyszukiwania, odsłaniając dowolne pola w dowolnych połączonych tabelach."
+    },
+    "oauthSettingsForm": {
+        "clientId": "ID klienta",
+        "secretPlaceholder": "Sekret dostawcy",
+        "providerName": "Nazwa",
+        "providerNamePlaceholder": "Indywidualna nazwa dostawcy",
+        "clientIdPlaceholder": "Identyfikator klienta dostawcy",
+        "secret": "Sekret",
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "Podstawowy adres URL dostawcy",
+        "invalidBaseUrl": "Wprowadzony adres URL nie jest prawidłowym adresem URL dostawcy",
+        "callbackUrl": "Adres URL wywołania zwrotnego"
+    },
+    "loginButton": {
+        "continueWith": "Kontynuuj z"
+    },
+    "editAuthProviderMenuContext": {
+        "edit": "Edytuj",
+        "delete": "Usuń"
+    },
+    "roleAssignmentModal": {
+        "membersTab": "Członkowie",
+        "teamsTab": "Zespoły",
+        "subjectTypeNameMembers": "członkowie",
+        "subjectTypeNameTeams": "zespoły"
+    },
+    "membersRoleField": {
+        "noAccessHelpText": "Ten użytkownik wymaga jawnego dostępu do zasobów.",
+        "adminHelpText": "Administratorzy mogą ograniczać role innych administratorów."
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Można nadpisać role na bazach danych i tabelach."
+    },
+    "enterpriseFeatures": {
+        "sso": "Logowanie jednokrotne SSO",
+        "rbac": "Kontrola dostępu oparta na rolach"
+    },
+    "chatwootSupportSidebarWorkspace": {
+        "directSupport": "Bezpośrednie wsparcie"
+    },
+    "userTeamsField": {
+        "no_records": "Brak zespołów"
     }
 }

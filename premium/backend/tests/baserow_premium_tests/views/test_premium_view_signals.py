@@ -12,15 +12,17 @@ from baserow.core.user.handler import UserHandler
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.view_ownership
 def test_remove_unused_personal_views(
-    data_fixture, alternative_per_group_license_service
+    data_fixture, alternative_per_workspace_license_service
 ):
-    group = data_fixture.create_group(name="Group 1")
-    user = data_fixture.create_user(group=group)
-    user2 = data_fixture.create_user(group=group)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace(name="Workspace 1")
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(user=user, database=database)
     handler = ViewHandler()
-    alternative_per_group_license_service.restrict_user_premium_to(user, group.id)
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, workspace.id
+    )
     view = handler.create_view(
         user=user,
         table=table,
@@ -44,7 +46,7 @@ def test_remove_unused_personal_views(
     user.last_login = timezone.now() - timedelta(weeks=100)
     user.save()
 
-    UserHandler().delete_expired_users_and_related_groups_if_last_admin(
+    UserHandler().delete_expired_users_and_related_workspaces_if_last_admin(
         grace_delay=timedelta(days=1)
     )
 

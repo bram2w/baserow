@@ -2,14 +2,15 @@ from django.db import models
 
 from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
-from baserow.core.models import Application, Group
+from baserow.core.mixins import GroupToWorkspaceCompatModelMixin
+from baserow.core.models import Application, Workspace
 
 
-class AirtableImportJob(JobWithUserIpAddress, Job):
-    group = models.ForeignKey(
-        Group,
+class AirtableImportJob(JobWithUserIpAddress, Job, GroupToWorkspaceCompatModelMixin):
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.CASCADE,
-        help_text="The group where the Airtable base must be imported into.",
+        help_text="The workspace where the Airtable base must be imported into.",
     )
     airtable_share_id = models.CharField(
         max_length=18,

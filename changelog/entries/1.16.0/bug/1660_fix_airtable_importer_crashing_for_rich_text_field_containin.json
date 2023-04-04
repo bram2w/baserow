@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix airtable importer crashing for rich text field containing user mention",
+    "issue_number": 1660,
+    "bullet_points": [],
+    "created_at": "2023-03-27"
+}

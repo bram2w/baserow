@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.utils.functional import lazy
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.core.action.registries import action_type_registry
 from baserow.core.jobs.registries import job_type_registry
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 from baserow_enterprise.audit_log.models import AuditLogEntry
 
@@ -16,8 +18,8 @@ def render_user(user_id, user_email):
     return f"{user_email} ({user_id})" if user_id else ""
 
 
-def render_group(group_id, group_name):
-    return f"{group_name} ({group_id})" if group_id else ""
+def render_workspace(workspace_id, workspace_name):
+    return f"{workspace_name} ({workspace_id})" if workspace_id else ""
 
 
 def render_action_type(action_type):
@@ -26,20 +28,29 @@ def render_action_type(action_type):
 
 class AuditLogSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
-    group = serializers.SerializerMethodField()
+    group = serializers.SerializerMethodField()  # GroupDeprecation
+    workspace = serializers.SerializerMethodField()
     type = serializers.SerializerMethodField()
     description = serializers.SerializerMethodField()
     timestamp = serializers.DateTimeField(source="action_timestamp")
 
-    def get_group(self, instance):
-        return render_group(instance.group_id, instance.group_name)
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_group(self, instance):  # GroupDeprecation
+        return self.get_workspace(instance)
 
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_workspace(self, instance):
+        return render_workspace(instance.workspace_id, instance.workspace_name)
+
+    @extend_schema_field(OpenApiTypes.STR)
     def get_user(self, instance):
         return render_user(instance.user_id, instance.user_email)
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
         return instance.type
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_description(self, instance):
         return instance.description
 
@@ -49,7 +60,8 @@ class AuditLogSerializer(serializers.ModelSerializer):
             "id",
             "action_type",
             "user",
-            "group",
+            "group",  # GroupDeprecation
+            "workspace",
             "type",
             "description",
             "timestamp",
@@ -66,11 +78,11 @@ class AuditLogUserSerializer(serializers.ModelSerializer):
         fields = ("id", "value")
 
 
-class AuditLogGroupSerializer(serializers.ModelSerializer):
+class AuditLogWorkspaceSerializer(serializers.ModelSerializer):
     value = serializers.CharField(source="name")
 
     class Meta:
-        model = Group
+        model = Workspace
         fields = ("id", "value")
 
 
@@ -81,17 +93,25 @@ class AuditLogActionTypeSerializer(serializers.Serializer):
     )
     value = serializers.SerializerMethodField()
 
+    @extend_schema_field(OpenApiTypes.STR)
     def get_value(self, instance):
         return render_action_type(instance.type)
 
 
 AuditLogExportJobRequestSerializer = job_type_registry.get(
     AuditLogExportJobType.type
-).get_serializer_class(base_class=serializers.Serializer, request_serializer=True)
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    request_serializer=True,
+    meta_ref_name="SingleAuditLogExportJobRequestSerializer",
+)
 
 AuditLogExportJobResponseSerializer = job_type_registry.get(
     AuditLogExportJobType.type
-).get_serializer_class(base_class=serializers.Serializer)
+).get_serializer_class(
+    base_class=serializers.Serializer,
+    meta_ref_name="SingleAuditLogExportJobResponseSerializer",
+)
 
 
 class AuditLogQueryParamsSerializer(serializers.Serializer):
@@ -99,7 +119,7 @@ class AuditLogQueryParamsSerializer(serializers.Serializer):
     search = serializers.CharField(required=False, default=None)
     sorts = serializers.CharField(required=False, default=None)
     user_id = serializers.IntegerField(min_value=0, required=False, default=None)
-    group_id = serializers.IntegerField(min_value=0, required=False, default=None)
+    workspace_id = serializers.IntegerField(min_value=0, required=False, default=None)
     action_type = serializers.ChoiceField(
         choices=lazy(action_type_registry.get_types, list)(),
         default=None,

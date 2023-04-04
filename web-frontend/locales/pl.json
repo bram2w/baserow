@@ -169,7 +169,7 @@
         }
     },
     "trashType": {
-        "group": "grupa",
+        "workspace": "grupa",
         "application": "aplikacja",
         "table": "tabela",
         "field": "pole",
@@ -208,10 +208,10 @@
         "tooManyRequestsDescription": "Wysyłasz zbyt wiele żądań do serwera. Proszę poczekać chwilę.",
         "notCompletedTitle": "Akcja nie została ukończona.",
         "notCompletedDescription": "Akcja nie mogła zostać zakończona, ponieważ wystąpił nieznany błąd.",
-        "userNotInGroupTitle": "Działanie niedozwolone.",
-        "userNotInGroupDescription": "Akcja nie mogła zostać zakończona, ponieważ nie jesteś członkiem powiązanej grupy.",
-        "invalidGroupPermissionsTitle": "Działanie niedozwolone.",
-        "invalidGroupPermissionsDescription": "Akcja nie mogła zostać zakończona, ponieważ nie masz odpowiednich uprawnień do powiązanej grupy.",
+        "userNotInWorkspaceTitle": "Działanie niedozwolone.",
+        "userNotInWorkspaceDescription": "Akcja nie mogła zostać zakończona, ponieważ nie jesteś członkiem powiązanej grupy.",
+        "invalidWorkspacePermissionsTitle": "Działanie niedozwolone.",
+        "invalidWorkspacePermissionsDescription": "Akcja nie mogła zostać zakończona, ponieważ nie masz odpowiednich uprawnień do powiązanej grupy.",
         "tableDoesNotExistTitle": "Tabela nie istnieje.",
         "tableDoesNotExistDescription": "Akcja nie mogła zostać zakończona, ponieważ powiązana tabela już nie istnieje.",
         "rowDoesNotExistTitle": "Wiersz nie istnieje.",
@@ -234,8 +234,8 @@
         "cannotRestoreParentBeforeChildDescription": "Nie można przywrócić tego elementu, ponieważ zależy on od usuniętego elementu. Proszę najpierw przywrócić element nadrzędny.",
         "cannotRestoreAsRelatedTableTrashedTitle": "Proszę najpierw przywrócić powiązane tabele.",
         "cannotRestoreAsRelatedTableTrashedDescription": "Nie możesz przywrócić tego pola, ponieważ zależy ono od innych tabel, które są nadal usuwane. Proszę najpierw przywrócić inne powiązane tabele.",
-        "groupUserIsLastAdminTitle": "Nie może opuścić grupy",
-        "groupUserIsLastAdminDescription": "Nie jest możliwe opuszczenie grupy, ponieważ jesteś ostatnim adminem lub ponieważ konta innych adminów oczekują na usunięcie. Proszę o usunięcie grupy lub nadanie innemu użytkownikowi uprawnień administratora.",
+        "workspaceUserIsLastAdminTitle": "Nie może opuścić grupy",
+        "workspaceUserIsLastAdminDescription": "Nie jest możliwe opuszczenie grupy, ponieważ jesteś ostatnim adminem lub ponieważ konta innych adminów oczekują na usunięcie. Proszę o usunięcie grupy lub nadanie innemu użytkownikowi uprawnień administratora.",
         "errorMaxJobCountExceededTitle": "Nie można było rozpocząć akcji.",
         "errorMaxJobCountExceededDescription": "Nie można rozpocząć kolejnych działań, ponieważ inne są nadal wykonywane w tle. Proszę spróbować ponownie po zakończeniu poprzednich działań.",
         "failedToLockFieldDueToConflictTitle": "Nie można zmienić pola",
@@ -392,7 +392,11 @@
         "modDescription": "Zwraca resztę z podziału między pierwszym argumentem a drugim argumentem.",
         "isNullDescription": "Zwraca true jeśli argument jest null, false w przeciwnym wypadku.",
         "isNanDescription": "Zwraca wartość true, jeśli argument jest 'NaN', w przeciwnym razie zwraca wartość false.",
-        "wheNanDescription": "Zwraca pierwszy argument, jeśli nie jest on 'NaN'. Zwraca drugi argument, jeśli pierwszy argument jest 'NaN'"
+        "wheNanDescription": "Zwraca pierwszy argument, jeśli nie jest on 'NaN'. Zwraca drugi argument, jeśli pierwszy argument jest 'NaN'",
+        "todayDescription": "Zwraca bieżącą datę w formacie utc.",
+        "whenNanDescription": "Zwraca pierwszy argument, jeśli nie jest to „NaN”. Zwraca drugi argument, jeśli pierwszym argumentem jest „NaN”",
+        "nowDescription": "Zwraca bieżącą datę i czas w formacie utc.",
+        "toDateTzDescription": "Zwraca pierwszy argument przekonwertowany na datę podaną jako łańcuch formatu daty jako drugi argument i strefę czasową podaną jako trzeci argument."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"

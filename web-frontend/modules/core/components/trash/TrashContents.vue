@@ -58,11 +58,11 @@
 
 <script>
 /**
- * Displays a infinite scrolling list of trash contents for either a selectedTrashGroup or
- * a specific selectedTrashApplication in the selectedTrashGroup. The user can empty the trash
+ * Displays a infinite scrolling list of trash contents for either a selectedTrashWorkspace or
+ * a specific selectedTrashApplication in the selectedTrashWorkspace. The user can empty the trash
  * contents permanently deleting them all, or restore individual trashed items.
  *
- * If the selectedItem (the selectedTrashApplication if provided, otherwise the selectedTrashGroup
+ * If the selectedItem (the selectedTrashApplication if provided, otherwise the selectedTrashWorkspace
  * ) is trashed itself then the modal will display buttons and modals which indicate
  * that they will permanently delete the selectedItem instead of just emptying it's
  * contents.
@@ -78,7 +78,7 @@ export default {
   components: { InfiniteScroll, TrashEntry, TrashEmptyModal },
   mixins: [],
   props: {
-    selectedTrashGroup: {
+    selectedTrashWorkspace: {
       type: Object,
       required: true,
     },
@@ -108,16 +108,18 @@ export default {
     parentIsTrashed() {
       return (
         this.selectedTrashApplication !== null &&
-        this.selectedTrashGroup.trashed
+        this.selectedTrashWorkspace.trashed
       )
     },
     selectedItem() {
       return this.selectedTrashApplication === null
-        ? this.selectedTrashGroup
+        ? this.selectedTrashWorkspace
         : this.selectedTrashApplication
     },
     selectedItemType() {
-      return this.selectedTrashApplication === null ? 'group' : 'application'
+      return this.selectedTrashApplication === null
+        ? 'workspace'
+        : 'application'
     },
     title() {
       const title = this.selectedItem.name

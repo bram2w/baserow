@@ -18,15 +18,15 @@
     "createTeamModal": {
         "title": "Crea team",
         "invalidNameTitle": "Per favore, usa un nome diverso",
-        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del progetto."
     },
     "updateTeamModal": {
         "title": "Modifica {teamName}",
         "invalidNameTitle": "Per favore, usa un nome diverso",
-        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del gruppo."
+        "invalidNameMessage": "Questo nome è già stato utilizzato all'interno del progetto."
     },
     "manageTeamModals": {
-        "subheading": "I Team permettono di dare gli stessi permessi a gruppi di persone."
+        "subheading": "I Team permettono di dare gli stessi permessi a progetti di persone."
     },
     "manageTeamForm": {
         "submit": "Salva",
@@ -42,7 +42,7 @@
         "edit": "Modifica team"
     },
     "teamsTable": {
-        "title": "{teamCount} team in {groupName}",
+        "title": "{teamCount} team in {workspaceName}",
         "createNew": "Crea team",
         "nameColumn": "Nome",
         "createdColumn": "Creato il",
@@ -60,7 +60,7 @@
     "auditLog": {
         "title": "Audit log",
         "filterUserTitle": "Utente",
-        "filterGroupTitle": "Gruppo",
+        "filterWorkspaceTitle": "Progetto",
         "filterActionTypeTitle": "Tipo Evento",
         "filterFromTimestampTitle": "Data inizio",
         "filterFromTimestamp": "Data fine",
@@ -75,8 +75,8 @@
         "clearFilters": "Pulisci",
         "allUsers": "Tutti gli utenti",
         "actionType": "Tipo di evento",
-        "group": "Gruppo",
-        "allGroups": "Tutti i gruppi",
+        "workspace": "Progetto",
+        "allWorkspaces": "Tutti i progetti",
         "allActionTypes": "Tutti gli eventi"
     },
     "auditLogExportModal": {
@@ -114,7 +114,10 @@
     },
     "loginWithSaml": {
         "signInWithSaml": "Accedi con SAML SSO",
-        "redirecting": "Reindirizzando il tuo browser all'Identity Provider..."
+        "redirecting": "Reindirizzando il tuo browser all'Identity Provider...",
+        "continueWithSaml": "Continua tramite SAML SSO",
+        "requestError": "Questo dominio non è configurato per utilizzare SAML SSO",
+        "loginText": "Hai già una password?"
     },
     "teamsSettings": {
         "teamsTabTitle": "Team"
@@ -125,5 +128,148 @@
     },
     "authProviderTypes": {
         "password": "Autenticazione tramite email e password"
+    },
+    "loginError": {
+        "title": "Qualcosa è andato storto:",
+        "loginText": "Hai già un account?",
+        "errorProviderDoesNotExist": "questo metodo di autenticazione non esiste o non è disponibile.",
+        "errorAuthFlowError": "un errore imprevisto ha impedito di completare la procedura di autenticazione.",
+        "errorWorkspaceInvitationEmailMismatch": "la tua email non corrisponde a quella riportata nell'invito.",
+        "errorInvalidSamlRequest": "Richiesta SAML non valida.",
+        "help": "Per favore contatta l'amministratore di sistema per aver aiuto.",
+        "defaultErrorMessage": "Non è stato possibile completare il login tramite SSO.",
+        "errorSsoFeatureNotActive": "SSO non attivo. Contatta l'amministratore di sistema per avere aiuto.",
+        "errorInvalidSamlResponse": "Risposta SAML non valida.",
+        "errorUserDeactivated": "l'utente è stato disabilitato.",
+        "errorDifferentProvider": "Per favore, usa lo stesso meccanismo di login utilizzato in fase di registrazione dell'account.",
+        "errorSignupDisabled": "La registrazione è stata disabilitata dall'amministratore."
+    },
+    "roles": {
+        "admin": {
+            "description": "Può configurare e modificare progetti ed applicazioni.",
+            "name": "Amministratore"
+        },
+        "builder": {
+            "description": "Può configurare e modificare applicazioni.",
+            "name": "Builder"
+        },
+        "editor": {
+            "name": "Editor",
+            "description": "Può modificare i dati ma non configurare applicazioni o progetti."
+        },
+        "viewer": {
+            "description": "Può solo leggere i dati.",
+            "name": "Viewer"
+        },
+        "commenter": {
+            "name": "Commenter",
+            "description": "Può solo vedere e commentare i dati."
+        },
+        "noAccess": {
+            "description": "Non può accedere a nulla.",
+            "name": "Nessun accesso"
+        },
+        "noRoleLowPriority": {
+            "description": "Prende il ruolo di default dai team.",
+            "name": "Nessun ruolo"
+        }
+    },
+    "memberRolesTab": {
+        "database": {
+            "title": "{name} database",
+            "selectMembers": "Seleziona membri",
+            "warningMessage": "Altri utenti potrebbero ereditare l'accesso ai dati tramite i ruoli nei rispettivi progetti.",
+            "onlyYouHaveAccess": "Solo tu puoi accedere al database.",
+            "everyoneHasAccess": "Tutti nel progetto {name} possono accedere al database.",
+            "warningTitle": "Altri potrebbero ereditare i permessi!",
+            "headerTooltip": "I ruoli a livello di database hanno priorità rispetto ai ruoli di progetto."
+        },
+        "table": {
+            "warningTitle": "Altri utenti potrebber ereditare l'accesso!",
+            "warningMessage": "Altri utenti potrebbero ereditare l'accesso grazie ai ruoli nel rispettivi database o progetti.",
+            "headerTooltip": "I ruoli a livello di tabella hanno la priorità rispetto ai ruoli di database e progetti.",
+            "everyoneHasAccess": "Tutti nel progetto {name} possono accedere alla tabella.",
+            "title": "Tabella {name}",
+            "selectMembers": "Seleziona membri",
+            "onlyYouHaveAccess": "Solo tu puoi accedere alla tabella."
+        }
+    },
+    "memberRolesShareToggle": {
+        "label": "Condividi con tutti in {name}",
+        "subLabel": "{totalUserAmount} membri nel workspace"
+    },
+    "memberRolesMembersList": {
+        "teamMembersCount": "{count} membri del team",
+        "remove": "Rimuovi",
+        "adminHelpText": "Gli amministratore possono modificare i permessi di altri amministratori."
+    },
+    "selectSubjectsListFooter": {
+        "invite": "Invita {count} {type}",
+        "helpTooltip": "I ruoli assegnati ai singoli membri hanno priorità rispetto ai ruoli dei team.",
+        "roleSelectorBuilderDataWarningTooltip": "Saranno in grado di creare formule e campi lookup in grado di esporre campi di tabelle collegate.",
+        "types": {
+            "members": "membri",
+            "teams": "team"
+        }
+    },
+    "selectTeamsList": {
+        "selectedAmountLabel": "{count} team selezionati",
+        "searchPlaceholder": "Trova team..."
+    },
+    "membersPagePlugin": {
+        "roleHelpText": "Possono essere sovrascritti con ruoli a livello di database e tabella."
+    },
+    "oauthSettingsForm": {
+        "providerName": "Nome",
+        "providerNamePlaceholder": "Nome provider",
+        "clientId": "Client ID",
+        "callbackUrl": "URL di callback",
+        "clientIdPlaceholder": "Client ID del provider",
+        "secret": "Chiave segreta",
+        "secretPlaceholder": "Chiave segreta del provider",
+        "baseUrl": "URL",
+        "baseUrlPlaceholder": "URL del provider",
+        "invalidBaseUrl": "L'URL inserito non è un URL valido"
+    },
+    "memberRolesModal": {
+        "memberRolesDatabaseTabTitle": "Database",
+        "error": {
+            "title": "Non è stato possibile ottenere i dati",
+            "description": "Un errore imprevisto ha impedito di ottenere i dati."
+        },
+        "memberRolesTableTabTitle": "Tabella corrente"
+    },
+    "memberRolesTableContexItem": {
+        "label": "Gestisci membri"
+    },
+    "roleAssignmentModal": {
+        "subjectTypeNameTeams": "team",
+        "membersTab": "Membri",
+        "teamsTab": "Team",
+        "subjectTypeNameMembers": "membri"
+    },
+    "selectMembersList": {
+        "searchPlaceholder": "Trova membri...",
+        "selectedAmountLabel": "{count} membri selezionati"
+    },
+    "membersRoleField": {
+        "adminHelpText": "Gli amministratore possono modificare i permessi di altri amministratori.",
+        "noAccessHelpText": "Questo utente necessita di esplicito accesso alle risorse."
+    },
+    "memberRolesDatabaseContexItem": {
+        "label": "Gestisci membri"
+    },
+    "loginButton": {
+        "continueWith": "Continua con"
+    },
+    "enterpriseFeatures": {
+        "sso": "Single Sign On",
+        "rbac": "Role-based access control"
+    },
+    "chatwootSupportSidebarWorkspace": {
+        "directSupport": "Supporto diretto"
+    },
+    "userTeamsField": {
+        "no_records": "Nessun team"
     }
 }

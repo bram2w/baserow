@@ -206,12 +206,12 @@ def test_cannot_export_json_without_premium_license(storage_mock, premium_data_f
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_json_without_premium_license_for_group(
-    storage_mock, premium_data_fixture, alternative_per_group_license_service
+    storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
     # Setting the group id to `0` will make sure that the user doesn't have
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "json"}, user=user
@@ -479,12 +479,12 @@ def test_cannot_export_xml_without_premium_license(storage_mock, premium_data_fi
 @override_settings(DEBUG=True)
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_cannot_export_xml_without_premium_license_for_group(
-    storage_mock, premium_data_fixture, alternative_per_group_license_service
+    storage_mock, premium_data_fixture, alternative_per_workspace_license_service
 ):
     # Setting the group id to `0` will make sure that the user doesn't have
     # premium access to the group.
     user = premium_data_fixture.create_user(has_active_premium_license=True)
-    alternative_per_group_license_service.restrict_user_premium_to(user, [0])
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, [0])
     with pytest.raises(FeaturesNotAvailableError):
         run_export_over_interesting_test_table(
             premium_data_fixture, storage_mock, {"exporter_type": "xml"}, user=user

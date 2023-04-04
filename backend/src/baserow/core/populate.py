@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from baserow.core.models import GroupUser
+from baserow.core.models import WorkspaceUser
 from baserow.core.user.exceptions import UserAlreadyExist
 from baserow.core.user.handler import UserHandler
 
@@ -25,18 +25,20 @@ def load_test_data():
         admin.is_staff = True
         admin.save()
 
-        group = admin.groupuser_set.all().order_by("id").first().group
-        group.name = f"Acme Corp ({i +1})" if i > 0 else "Acme Corp"
-        group.save()
+        workspace = admin.workspaceuser_set.all().order_by("id").first().workspace
+        workspace.name = f"Acme Corp ({i +1})" if i > 0 else "Acme Corp"
+        workspace.save()
 
-        # Create a second admin for the group
+        # Create a second admin for the workspace
         email = f"admin{i + 1}_bis@baserow.io" if i > 0 else "admin_bis@baserow.io"
         try:
             admin_bis = user_handler.create_user(f"Admin {i+1} bis", email, "password")
         except UserAlreadyExist:
             admin_bis = User.objects.get(email=email)
-        GroupUser.objects.update_or_create(
-            group=group, user=admin_bis, defaults=dict(permissions="ADMIN", order=2)
+        WorkspaceUser.objects.update_or_create(
+            workspace=workspace,
+            user=admin_bis,
+            defaults=dict(permissions="ADMIN", order=2),
         )
 
         for j in range(3):
@@ -52,8 +54,8 @@ def load_test_data():
             except UserAlreadyExist:
                 member = User.objects.get(email=member_email)
 
-            GroupUser.objects.update_or_create(
-                group=group,
+            WorkspaceUser.objects.update_or_create(
+                workspace=workspace,
                 user=member,
                 defaults=dict(permissions="MEMBER", order=j + 2),
             )

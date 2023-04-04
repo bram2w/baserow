@@ -14,14 +14,14 @@ def test_create_airtable_import_job(
     mock_run_import_from_airtable, data_fixture, api_client
 ):
     user, token = data_fixture.create_user_and_token()
-    group = data_fixture.create_group(user=user)
-    group_2 = data_fixture.create_group()
+    workspace = data_fixture.create_workspace(user=user)
+    workspace_2 = data_fixture.create_workspace()
 
     response = api_client.post(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": 0,
+            "workspace_id": 0,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -33,7 +33,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": group_2.id,
+            "workspace_id": workspace_2.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -53,7 +53,6 @@ def test_create_airtable_import_job(
     assert response.json() == {
         "error": "ERROR_REQUEST_BODY_VALIDATION",
         "detail": {
-            "group_id": [{"error": "This field is required.", "code": "required"}],
             "airtable_share_url": [
                 {"error": "This field is required.", "code": "required"}
             ],
@@ -64,7 +63,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": "not_int",
+            "workspace_id": "not_int",
             "airtable_share_url": "https://airtable.com/test",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -74,7 +73,9 @@ def test_create_airtable_import_job(
     assert response.json() == {
         "error": "ERROR_REQUEST_BODY_VALIDATION",
         "detail": {
-            "group_id": [{"error": "A valid integer is required.", "code": "invalid"}],
+            "workspace_id": [
+                {"error": "A valid integer is required.", "code": "invalid"}
+            ],
             "airtable_share_url": [
                 {
                     "error": "The publicly shared Airtable URL is invalid.",
@@ -88,19 +89,20 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": group.id,
+            "workspace_id": workspace.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
     airtable_import_job = AirtableImportJob.objects.all().first()
-    assert airtable_import_job.group_id == group.id
+    assert airtable_import_job.workspace_id == workspace.id
     assert airtable_import_job.airtable_share_id == "shrxxxxxxxxxxxxxx"
     assert response.json() == {
         "id": airtable_import_job.id,
         "type": "airtable",
-        "group_id": group.id,
+        "group_id": workspace.id,  # GroupDeprecation
+        "workspace_id": workspace.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
         "state": "pending",
@@ -114,19 +116,20 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": group.id,
+            "workspace_id": workspace.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
     airtable_import_job = AirtableImportJob.objects.all().first()
-    assert airtable_import_job.group_id == group.id
+    assert airtable_import_job.workspace_id == workspace.id
     assert airtable_import_job.airtable_share_id == "shrxxxxxxxxxxxxxx"
     assert response.json() == {
         "id": airtable_import_job.id,
         "type": "airtable",
-        "group_id": group.id,
+        "group_id": workspace.id,  # GroupDeprecation
+        "workspace_id": workspace.id,
         "airtable_share_id": "shrxxxxxxxxxxxxxx",
         "progress_percentage": 0,
         "state": "pending",
@@ -138,7 +141,7 @@ def test_create_airtable_import_job(
         reverse("api:jobs:list"),
         {
             "type": "airtable",
-            "group_id": group.id,
+            "workspace_id": workspace.id,
             "airtable_share_url": "https://airtable.com/shrxxxxxxxxxxxxxx",
         },
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -175,7 +178,8 @@ def test_get_airtable_import_job(data_fixture, api_client):
     assert json == {
         "id": airtable_job_1.id,
         "type": "airtable",
-        "group_id": airtable_job_1.group_id,
+        "group_id": airtable_job_1.workspace_id,  # GroupDeprecation
+        "workspace_id": airtable_job_1.workspace_id,
         "airtable_share_id": "test",
         "progress_percentage": 0,
         "state": "pending",
@@ -201,7 +205,8 @@ def test_get_airtable_import_job(data_fixture, api_client):
     assert json == {
         "id": airtable_job_1.id,
         "type": "airtable",
-        "group_id": airtable_job_1.group_id,
+        "group_id": airtable_job_1.workspace_id,  # GroupDeprecation
+        "workspace_id": airtable_job_1.workspace_id,
         "airtable_share_id": "test",
         "progress_percentage": 50,
         "state": "failed",
@@ -211,9 +216,13 @@ def test_get_airtable_import_job(data_fixture, api_client):
             "name": airtable_job_1.database.name,
             "order": 0,
             "type": "database",
-            "group": {
-                "id": airtable_job_1.database.group.id,
-                "name": airtable_job_1.database.group.name,
+            "group": {  # GroupDeprecation
+                "id": airtable_job_1.database.workspace.id,
+                "name": airtable_job_1.database.workspace.name,
+            },
+            "workspace": {
+                "id": airtable_job_1.database.workspace.id,
+                "name": airtable_job_1.database.workspace.name,
             },
         },
     }

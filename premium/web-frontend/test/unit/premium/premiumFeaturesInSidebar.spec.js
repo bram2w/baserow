@@ -74,11 +74,11 @@ describe('Sidebar Premium Features Snapshot tests', () => {
     )
   })
 
-  test('A non staff user with group premium cannot see admin settings links', async () => {
-    testApp.giveCurrentUserPremiumFeatureForSpecificGroupOnly(1)
+  test('A non staff user with workspace premium cannot see admin settings links', async () => {
+    testApp.giveCurrentUserPremiumFeatureForSpecificWorkspaceOnly(1)
     testApp
       .getStore()
-      .dispatch('group/forceCreate', { id: 1, name: 'testGroup' })
+      .dispatch('workspace/forceCreate', { id: 1, name: 'testWorkspace' })
     const sidebarComponent = await testApp.mount(Sidebar, {})
     expect(UIHelpers.getSidebarItemNames(sidebarComponent)).not.toContain(
       'sidebar.admin'
@@ -103,7 +103,7 @@ describe('Sidebar Premium Features Snapshot tests', () => {
         'sidebar.admin',
         'premium.adminType.dashboard',
         'premium.adminType.users',
-        'premium.adminType.groups',
+        'premium.adminType.workspaces',
       ])
     )
   })
@@ -126,7 +126,7 @@ describe('Sidebar Premium Features Snapshot tests', () => {
         openedPage,
         'premium.adminType.dashboard',
         'premium.adminType.users',
-        'premium.adminType.groups',
+        'premium.adminType.workspaces',
       ])
     )
   })

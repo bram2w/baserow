@@ -27,7 +27,7 @@ import TemplateService from '@baserow/modules/core/services/template'
 export default {
   name: 'TemplateHeader',
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -59,7 +59,7 @@ export default {
 
       try {
         const { data: job } = await TemplateService(this.$client).asyncInstall(
-          this.group.id,
+          this.workspace.id,
           template.id
         )
         this.job = job

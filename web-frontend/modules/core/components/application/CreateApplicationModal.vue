@@ -29,7 +29,7 @@ export default {
       type: Object,
       required: true,
     },
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -41,8 +41,8 @@ export default {
   },
   methods: {
     getDefaultName() {
-      const excludeNames = this.$store.getters['application/getAllOfGroup'](
-        this.group
+      const excludeNames = this.$store.getters['application/getAllOfWorkspace'](
+        this.workspace
       ).map((application) => application.name)
       const baseName = this.applicationType.getDefaultName()
       return getNextAvailableNameInSequence(baseName, excludeNames)
@@ -54,7 +54,7 @@ export default {
       try {
         const application = await this.$store.dispatch('application/create', {
           type: this.applicationType.type,
-          group: this.group,
+          workspace: this.workspace,
           values,
         })
         this.$emit('created', application)

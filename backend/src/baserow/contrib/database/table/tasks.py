@@ -11,8 +11,8 @@ from baserow.contrib.database.ws.pages import TablePageType
 from baserow.core.exceptions import PermissionException
 from baserow.core.handler import CoreHandler
 from baserow.core.mixins import TrashableModelMixin
-from baserow.core.models import Group
-from baserow.core.object_scopes import GroupObjectScopeType
+from baserow.core.models import Workspace
+from baserow.core.object_scopes import WorkspaceObjectScopeType
 from baserow.core.registries import (
     PermissionManagerType,
     object_scope_type_registry,
@@ -31,7 +31,7 @@ def run_row_count_job():
 
     from baserow.contrib.database.table.handler import TableHandler
 
-    if CoreHandler().get_settings().track_group_usage:
+    if CoreHandler().get_settings().track_workspace_usage:
         TableHandler.count_rows()
 
 
@@ -48,7 +48,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     subject_type_name: str,
     scope_id: int,
     scope_type_name: str,
-    group_id: int,
+    workspace_id: int,
     permission_manager: PermissionManagerType = None,
 ):
     """
@@ -60,14 +60,14 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     :param subject_type_name: The name of the subject type
     :param scope_id: The id of the scope the subject should be removed from
     :param scope_type_name: The name of the scope type
-    :param group_id: The id of the group in which context this is executed
+    :param workspace_id: The id of the workspace in which context this is executed
     :param permission_manager: Optional parameter used to check permissions
     """
 
     from asgiref.sync import async_to_sync
     from channels.layers import get_channel_layer
 
-    group = Group.objects.get(pk=group_id)
+    workspace = Workspace.objects.get(pk=workspace_id)
 
     subject_type = subject_type_registry.get(subject_type_name)
     scope_type = object_scope_type_registry.get(scope_type_name)
@@ -94,7 +94,7 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
                     permission_manager.check_permissions(
                         user,
                         ListenToAllDatabaseTableEventsOperationType.type,
-                        group=group,
+                        workspace=workspace,
                         context=table,
                     )
                 except PermissionException:
@@ -117,20 +117,20 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
 def unsubscribe_user_from_table_currently_subscribed_to(
     self,
     user_id: int,
-    group_id: int,
+    workspace_id: int,
 ):
     """
     Unsubscribe all users associated with the subject from the table they are currently
     viewing.
 
     :param user_id: The id of the user that is supposed to be unsubscribed
-    :param group_id: The id of the group the user belongs to
+    :param workspace_id: The id of the workspace the user belongs to
     """
 
     unsubscribe_subject_from_tables_currently_subscribed_to(
         user_id,
         UserSubjectType.type,
-        group_id,
-        GroupObjectScopeType.type,
-        group_id,
+        workspace_id,
+        WorkspaceObjectScopeType.type,
+        workspace_id,
     )

@@ -110,7 +110,7 @@
             $hasPermission(
               'database.table.create_row',
               table,
-              database.group.id
+              database.workspace.id
             )
           "
           class="button button--ghost kanban-view__stack-new-button"
@@ -216,12 +216,12 @@ export default {
         (this.$hasPermission(
           'database.table.create_row',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         ) ||
           this.$hasPermission(
             'database.table.field.update',
             this.singleSelectField,
-            this.database.group.id
+            this.database.workspace.id
           ))
       )
     },
@@ -327,7 +327,7 @@ export default {
         this.$hasPermission(
           'database.table.move_row',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       ) {
         const rect = event.target.getBoundingClientRect()

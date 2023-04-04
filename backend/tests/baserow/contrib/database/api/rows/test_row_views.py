@@ -36,8 +36,8 @@ def test_list_rows(api_client, data_fixture):
         view=grid_view, user=user, field=field_1, value="Product 1"
     )
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, False, True, True)
 
     model = table.get_model(attribute_names=True)
@@ -478,8 +478,8 @@ def test_create_row(api_client, data_fixture):
         table=table, order=3, name="Description"
     )
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, False, True, True, True)
 
     response = api_client.post(
@@ -780,8 +780,8 @@ def test_get_row(api_client, data_fixture):
         table=table, order=2, name="For sale"
     )
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, False, True, True)
 
     model = table.get_model()
@@ -880,8 +880,8 @@ def test_update_row(api_client, data_fixture):
         table=table, order=2, name="For sale"
     )
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, True, False, True)
 
     model = table.get_model()
@@ -1130,8 +1130,8 @@ def test_move_row(api_client, data_fixture):
     table = data_fixture.create_database_table(user=user)
     table_2 = data_fixture.create_database_table()
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, True, False, True)
 
     handler = RowHandler()
@@ -1289,8 +1289,8 @@ def test_delete_row_by_id(api_client, data_fixture):
     data_fixture.create_number_field(table=table, order=1, name="Horsepower")
     data_fixture.create_boolean_field(table=table, order=2, name="For sale")
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, True, True, False)
 
     model = table.get_model()
@@ -1674,8 +1674,8 @@ def test_list_row_names(api_client, data_fixture):
     table_3 = data_fixture.create_database_table(user=user)
     data_fixture.create_text_field(name="Name", table=table_3, primary=True)
 
-    token = TokenHandler().create_token(user, table.database.group, "Good")
-    wrong_token = TokenHandler().create_token(user, table.database.group, "Wrong")
+    token = TokenHandler().create_token(user, table.database.workspace, "Good")
+    wrong_token = TokenHandler().create_token(user, table.database.workspace, "Wrong")
     TokenHandler().update_token_permissions(user, wrong_token, True, False, True, True)
 
     model = table.get_model(attribute_names=True)

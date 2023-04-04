@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser, Group
+from django.contrib.auth.models import AbstractUser
 from django.db import DatabaseError, transaction
 from django.db.models import Q
 from django.utils.timezone import make_aware, now, utc
@@ -31,6 +31,7 @@ from rest_framework.status import HTTP_200_OK
 from baserow.api.user.registries import user_data_registry
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Workspace
 from baserow.core.registries import plugin_registry
 from baserow.ws.signals import broadcast_to_users
 
@@ -73,37 +74,38 @@ class LicenseHandler:
 
     @classmethod
     def raise_if_user_doesnt_have_feature(
-        cls, feature: str, user: AbstractUser, group: Group
+        cls, feature: str, user: AbstractUser, workspace: Workspace
     ):
         """
-        Checks if the provided user has the feature for a group or instance-wide.
+        Checks if the provided user has the feature for a workspace or instance-wide.
 
         :param user: The user to check for feature access.
-        :param group: The group that the user must have active premium features for.
+        :param workspace: The workspace that the user must have active premium for.
         :param feature: The feature the user must have.
         :raises FeaturesNotAvailableError: if the user does not have premium
-            features from a license the provided group.
+            features from a license the provided workspace.
         """
 
-        if not cls.user_has_feature(feature, user, group):
+        if not cls.user_has_feature(feature, user, workspace):
             raise FeaturesNotAvailableError()
 
     @classmethod
-    def user_has_feature(cls, feature: str, user: AbstractUser, group: Group):
+    def user_has_feature(cls, feature: str, user: AbstractUser, workspace: Workspace):
         """
         Checks if the user has a particular feature granted by an active license for a
-        group. This could be granted by a license specific to that group, or an instance
-        level license, or a license which is instance wide.
+        workspace. This could be granted by a license specific to that workspace, or an
+        instance level license, or a license which is instance wide.
 
         :param feature: The feature to check to see if active. Look for features.py
             files for these constant strings to use.
         :param user: The user to check.
-        :param group: The group that the user is attempting to use the feature in.
+        :param workspace: The workspace that the user is attempting to
+            use the feature in.
         :return: True if the user is allowed to use that feature, False otherwise.
         """
 
         license_plugin = cls._get_license_plugin()
-        return license_plugin.user_has_feature(feature, user, group)
+        return license_plugin.user_has_feature(feature, user, workspace)
 
     @classmethod
     def instance_has_feature(cls, feature: str):
@@ -120,20 +122,20 @@ class LicenseHandler:
         return license_plugin.instance_has_feature(feature)
 
     @classmethod
-    def group_has_feature(cls, feature: str, group: Group):
+    def workspace_has_feature(cls, feature: str, workspace: Workspace):
         """
-        Checks if the Baserow group has a particular feature granted to the group
-        itself.
+        Checks if the Baserow workspace has a particular feature granted to the
+        workspace itself.
 
         :param feature: The feature to check to see if active. Look for features.py
             files for these constant strings to use.
-        :param group: The group to check to see if the feature is active for everyone
-            in that group.
-        :return: True if the feature is enabled for a particular group.
+        :param workspace: The workspace to check to see if the feature is active for
+            everyone in that workspace.
+        :return: True if the feature is enabled for a particular workspace.
         """
 
         license_plugin = cls._get_license_plugin()
-        return license_plugin.group_has_feature(feature, group)
+        return license_plugin.workspace_has_feature(feature, workspace)
 
     @classmethod
     def user_has_feature_instance_wide(cls, feature: str, user: AbstractUser):
@@ -305,7 +307,7 @@ class LicenseHandler:
                     "instance_id": settings_object.instance_id,
                     "extra_license_info": extra_license_info,
                 },
-                timeout=10,
+                timeout=settings.LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS,
                 headers=headers,
             )
 

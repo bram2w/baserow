@@ -374,6 +374,3 @@ msgstr "%(name)s grupo"
 #~ "desarrollador sin\n"
 #~ "          dejando su navegador.\n"
 #~ "        "
-
-#~ msgid "Group invitation"
-#~ msgstr "Invitation à un groupe"

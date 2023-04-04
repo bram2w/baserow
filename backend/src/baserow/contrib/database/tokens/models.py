@@ -2,13 +2,22 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import Q
 
-from baserow.core.mixins import HierarchicalModelMixin, ParentGroupTrashableModelMixin
-from baserow.core.models import Group
+from baserow.core.mixins import (
+    GroupToWorkspaceCompatModelMixin,
+    HierarchicalModelMixin,
+    ParentWorkspaceTrashableModelMixin,
+)
+from baserow.core.models import Workspace
 
 User = get_user_model()
 
 
-class Token(HierarchicalModelMixin, ParentGroupTrashableModelMixin, models.Model):
+class Token(
+    HierarchicalModelMixin,
+    ParentWorkspaceTrashableModelMixin,
+    GroupToWorkspaceCompatModelMixin,
+    models.Model,
+):
     """
     A token can be used to authenticate a user with the row create, read, update and
     delete endpoints.
@@ -29,10 +38,10 @@ class Token(HierarchicalModelMixin, ParentGroupTrashableModelMixin, models.Model
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, help_text="The user that owns the token."
     )
-    group = models.ForeignKey(
-        Group,
+    workspace = models.ForeignKey(
+        Workspace,
         on_delete=models.CASCADE,
-        help_text="Only the tables of the group can be accessed.",
+        help_text="Only the tables of the workspace can be accessed.",
     )
     handled_calls = models.PositiveIntegerField(
         default=0,
@@ -48,7 +57,7 @@ class Token(HierarchicalModelMixin, ParentGroupTrashableModelMixin, models.Model
         ordering = ("id",)
 
     def get_parent(self):
-        return self.group
+        return self.workspace
 
 
 class TokenPermissionManager(models.Manager):

@@ -1,13 +1,30 @@
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional, cast
 
+from django.db import IntegrityError
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.models import Builder
-from baserow.contrib.builder.pages.exceptions import PageDoesNotExist, PageNotInBuilder
+from baserow.contrib.builder.pages.constants import (
+    PAGE_PATH_PARAM_PREFIX,
+    PATH_PARAM_REGEX,
+)
+from baserow.contrib.builder.pages.exceptions import (
+    DuplicatePathParamsInPath,
+    PageDoesNotExist,
+    PageNameNotUnique,
+    PageNotInBuilder,
+    PagePathNotUnique,
+    PathParamNotDefined,
+    PathParamNotInPath,
+)
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.pages.types import PagePathParams
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import ChildProgressBuilder, find_unused_name
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.application_types import BuilderApplicationType
 
 
 class PageHandler:
@@ -30,17 +47,42 @@ class PageHandler:
         except Page.DoesNotExist:
             raise PageDoesNotExist()
 
-    def create_page(self, builder: Builder, name: str) -> Page:
+    def create_page(
+        self,
+        builder: Builder,
+        name: str,
+        path: str,
+        path_params: PagePathParams = None,
+    ) -> Page:
         """
         Creates a new page
 
         :param builder: The builder the page belongs to
         :param name: The name of the page
+        :param path: The path of the page
+        :param path_params: The params of the path provided
         :return: The newly created page instance
         """
 
         last_order = Page.get_last_order(builder)
-        page = Page.objects.create(builder=builder, name=name, order=last_order)
+        path_params = path_params or {}
+
+        self.is_page_path_valid(path, path_params, raises=True)
+
+        try:
+            page = Page.objects.create(
+                builder=builder,
+                name=name,
+                order=last_order,
+                path=path,
+                path_params=path_params,
+            )
+        except IntegrityError as e:
+            if "unique constraint" in e.args[0] and "name" in e.args[0]:
+                raise PageNameNotUnique(name=name, builder_id=builder.id)
+            if "unique constraint" in e.args[0] and "path" in e.args[0]:
+                raise PagePathNotUnique(path=path, builder_id=builder.id)
+            raise e
 
         return page
 
@@ -58,14 +100,27 @@ class PageHandler:
         Updates fields of a page
 
         :param page: The page that should be updated
-        :param values: The fields that should be updated with their corresponding value
+        :param kwargs: The fields that should be updated with their corresponding value
         :return: The updated page
         """
+
+        if "path" in kwargs or "path_params" in kwargs:
+            path = kwargs.get("path", page.path)
+            path_params = kwargs.get("path_params", page.path_params)
+
+            self.is_page_path_valid(path, path_params, raises=True)
 
         for key, value in kwargs.items():
             setattr(page, key, value)
 
-        page.save()
+        try:
+            page.save()
+        except IntegrityError as e:
+            if "unique constraint" in e.args[0] and "name" in e.args[0]:
+                raise PageNameNotUnique(name=page.name, builder_id=page.builder_id)
+            if "unique constraint" in e.args[0] and "path" in e.args[0]:
+                raise PagePathNotUnique(path=page.path, builder_id=page.builder_id)
+            raise e
 
         return page
 
@@ -110,12 +165,15 @@ class PageHandler:
         progress.increment(by=start_progress)
 
         builder = page.builder
-        builder_application_type = application_type_registry.get_by_model(builder)
+        builder_application_type = cast(
+            "BuilderApplicationType", application_type_registry.get_by_model(builder)
+        )
 
         [exported_page] = builder_application_type.export_pages_serialized([page])
 
         # Set a unique name for the page to import back as a new one.
         exported_page["name"] = self.find_unused_page_name(builder, page.name)
+        exported_page["path"] = self.find_unused_page_path(builder, page.path)
         exported_page["order"] = Page.get_last_order(builder)
 
         progress.increment(by=export_progress)
@@ -126,6 +184,7 @@ class PageHandler:
             progress_builder=progress.create_child_builder(
                 represents_progress=import_progress
             ),
+            id_mapping={},
         )
 
         return new_page_clone
@@ -141,3 +200,66 @@ class PageHandler:
 
         existing_pages_names = list(builder.page_set.values_list("name", flat=True))
         return find_unused_name([proposed_name], existing_pages_names, max_length=255)
+
+    def find_unused_page_path(self, builder: Builder, proposed_path: str) -> str:
+        """
+        Find an unused path for a page in a builder.
+
+        :param builder: The builder that the page belongs to.
+        :param proposed_path: The path that is proposed to be used.
+        :return: A unique path to use
+        """
+
+        existing_paths = list(builder.page_set.values_list("path", flat=True))
+        return find_unused_name(
+            [proposed_path], existing_paths, max_length=255, suffix="{0}"
+        )
+
+    def is_page_path_valid(
+        self, path: str, path_params: PagePathParams, raises: bool = False
+    ) -> bool:
+        """
+        Checks if a path object is constructed correctly. If there is a missmatch
+        between the path itself and the path params for example, it becomes an invalid
+        path.
+
+        :param path: The path in question
+        :param path_params: The param definitions of the path provided
+        :param raises: If true, raises exceptions instead of returning a boolean
+        :raises PathParamNotInPath: If the path param is not in the path
+        :raises PathParamNotDefined: If a param in the path was not defined as a path
+            param in the path_params provided
+        :return: If the path is valid
+        """
+
+        path_param_names = path_params.keys()
+
+        # Make sure all path params are also in the path
+        for path_param_name in path_param_names:
+            if f"{PAGE_PATH_PARAM_PREFIX}{path_param_name}" not in path:
+                if raises:
+                    raise PathParamNotInPath(path, path_param_name)
+                return False
+
+        path_params_in_path = PATH_PARAM_REGEX.findall(path)
+        unique_path_params_in_path = set(path_params_in_path)
+
+        if len(unique_path_params_in_path) != len(path_params_in_path):
+            duplicate_path_param_names = [
+                name
+                for name in path_param_names
+                if name not in unique_path_params_in_path
+            ]
+            if raises:
+                raise DuplicatePathParamsInPath(path, duplicate_path_param_names)
+            return False
+
+        for path_param_in_path in path_params_in_path:
+            param_name = path_param_in_path[1:]
+
+            if param_name not in path_param_names:
+                if raises:
+                    raise PathParamNotDefined(path, param_name, path_param_names)
+                return False
+
+        return True

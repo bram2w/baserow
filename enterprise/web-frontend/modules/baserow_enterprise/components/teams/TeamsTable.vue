@@ -13,13 +13,19 @@
         {{
           $t('teamsTable.title', {
             teamCount: teamCount,
-            groupName: group.name,
+            workspaceName: workspace.name,
           })
         }}
       </template>
       <template #header-right-side>
         <div
-          v-if="$hasPermission('enterprise.teams.create_team', group, group.id)"
+          v-if="
+            $hasPermission(
+              'enterprise.teams.create_team',
+              workspace,
+              workspace.id
+            )
+          "
           class="button margin-left-2 button--large"
           @click="$refs.createModal.show()"
         >
@@ -29,7 +35,7 @@
       <template #menus="slotProps">
         <EditTeamContext
           ref="editTeamContext"
-          :group="group"
+          :workspace="workspace"
           :team="focusedTeam"
           @edit="handleEditTeam"
           @deleted="slotProps.deleteRow"
@@ -38,13 +44,13 @@
     </CrudTable>
     <CreateTeamModal
       ref="createModal"
-      :group="group"
+      :workspace="workspace"
       @created="teamCreated"
     ></CreateTeamModal>
     <UpdateTeamModal
       v-if="focusedTeam"
       ref="updateModal"
-      :group="group"
+      :workspace="workspace"
       :team="focusedTeam"
       @updated="teamUpdated"
     ></UpdateTeamModal>
@@ -73,7 +79,7 @@ export default {
     UpdateTeamModal,
   },
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -91,7 +97,7 @@ export default {
       const service = TeamService(this.$client)
       const options = {
         ...service.options,
-        urlParams: { groupId: this.group.id },
+        urlParams: { workspaceId: this.workspace.id },
       }
       return {
         ...service,
@@ -99,19 +105,19 @@ export default {
       }
     },
     roles() {
-      return this.group._.roles
+      return this.workspace._.roles
     },
     canViewEditTeamContext() {
       return (
         this.$hasPermission(
           'enterprise.teams.team.update',
-          this.group,
-          this.group.id
+          this.workspace,
+          this.workspace.id
         ) ||
         this.$hasPermission(
           'enterprise.teams.team.delete',
-          this.group,
-          this.group.id
+          this.workspace,
+          this.workspace.id
         )
       )
     },
@@ -133,7 +139,7 @@ export default {
           false,
           {
             roles: this.roles,
-            groupId: this.group.id,
+            workspaceId: this.workspace.id,
           },
           this.$t('teamsTable.roleHelpText')
         ),
@@ -148,13 +154,13 @@ export default {
       // If the user can update or delete teams, then they get an extra column for the context.
       const canUpdate = this.$hasPermission(
         'enterprise.teams.team.update',
-        this.group,
-        this.group.id
+        this.workspace,
+        this.workspace.id
       )
       const canDelete = this.$hasPermission(
         'enterprise.teams.team.delete',
-        this.group,
-        this.group.id
+        this.workspace,
+        this.workspace.id
       )
       if (canUpdate || canDelete) {
         columns.push(

@@ -74,7 +74,7 @@ export default {
   components: { ForeignRowEditModal, SelectRowModal },
   mixins: [gridField, linkRowField],
   inject: {
-    group: { default: null },
+    workspace: { default: null },
   },
   data() {
     return {
@@ -96,7 +96,7 @@ export default {
         this.$hasPermission(
           'database.table.read',
           linkedTable,
-          this.group.id
+          this.workspace.id
         ) && !this.readOnly
       )
     },

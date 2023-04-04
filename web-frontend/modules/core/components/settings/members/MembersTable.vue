@@ -11,14 +11,20 @@
       <template #title>
         {{
           $t('membersSettings.membersTable.title', {
-            userAmount: group.users.length || 0,
-            groupName: group.name,
+            userAmount: workspace.users.length || 0,
+            workspaceName: workspace.name,
           })
         }}
       </template>
       <template #header-right-side>
         <div
-          v-if="$hasPermission('group.create_invitation', group, group.id)"
+          v-if="
+            $hasPermission(
+              'workspace.create_invitation',
+              workspace,
+              workspace.id
+            )
+          "
           class="button margin-left-2 button--large"
           @click="$refs.inviteModal.show()"
         >
@@ -28,7 +34,7 @@
       <template #menus="slotProps">
         <EditMemberContext
           ref="editMemberContext"
-          :group="group"
+          :workspace="workspace"
           :member="editMember"
           @remove-user="slotProps.deleteRow"
         ></EditMemberContext>
@@ -40,14 +46,14 @@
         ></EditRoleContext>
       </template>
     </CrudTable>
-    <GroupMemberInviteModal
+    <WorkspaceMemberInviteModal
       ref="inviteModal"
-      :group="group"
+      :workspace="workspace"
       @invite-submitted="
         $router.push({
           name: 'settings-invites',
           params: {
-            groupId: group.id,
+            workspaceId: workspace.id,
           },
         })
       "
@@ -61,12 +67,12 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
-import GroupService from '@baserow/modules/core/services/group'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
 import MoreField from '@baserow/modules/core/components/crudTable/fields/MoreField'
 import MemberRoleField from '@baserow/modules/core/components/settings/members/MemberRoleField'
-import GroupMemberInviteModal from '@baserow/modules/core/components/group/GroupMemberInviteModal'
+import WorkspaceMemberInviteModal from '@baserow/modules/core/components/workspace/WorkspaceMemberInviteModal'
 import EditMemberContext from '@baserow/modules/core/components/settings/members/EditMemberContext'
 import EditRoleContext from '@baserow/modules/core/components/settings/members/EditRoleContext'
 
@@ -76,10 +82,10 @@ export default {
     EditMemberContext,
     EditRoleContext,
     CrudTable,
-    GroupMemberInviteModal,
+    WorkspaceMemberInviteModal,
   },
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -93,13 +99,13 @@ export default {
   computed: {
     ...mapGetters({ userId: 'auth/getUserId' }),
     roles() {
-      return this.group._.roles
+      return this.workspace._.roles
     },
     service() {
-      const service = GroupService(this.$client)
+      const service = WorkspaceService(this.$client)
       const options = {
         ...service.options,
-        urlParams: { groupId: this.group.id },
+        urlParams: { workspaceId: this.workspace.id },
       }
       return {
         ...service,
@@ -134,15 +140,15 @@ export default {
           {
             roles: this.roles,
             userId: this.userId,
-            groupId: this.group.id,
+            workspaceId: this.workspace.id,
           }
         ),
         new CrudTableColumn(null, null, MoreField, false, false, true),
       ]
       for (const plugin of this.membersPagePlugins) {
-        if (!plugin.isDeactivated(this.group.id)) {
+        if (!plugin.isDeactivated(this.workspace.id)) {
           columns = plugin.mutateMembersTableColumns(columns, {
-            group: this.group,
+            workspace: this.workspace,
             client: this.$client,
           })
         }
@@ -176,17 +182,17 @@ export default {
       this.$refs.crudTable.updateRow(newMember)
 
       try {
-        await GroupService(this.$client).updateUser(oldMember.id, {
+        await WorkspaceService(this.$client).updateUser(oldMember.id, {
           permissions: newMember.permissions,
         })
-        await this.$store.dispatch('group/forceUpdateGroupUser', {
-          groupId: this.group.id,
+        await this.$store.dispatch('workspace/forceUpdateWorkspaceUser', {
+          workspaceId: this.workspace.id,
           id: oldMember.id,
           values: { permissions: newMember.permissions },
         })
       } catch (error) {
         this.$refs.crudTable.updateRow(oldMember)
-        notifyIf(error, 'group')
+        notifyIf(error, 'workspace')
       }
     },
   },

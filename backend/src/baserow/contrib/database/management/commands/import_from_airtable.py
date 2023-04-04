@@ -11,14 +11,14 @@ from tqdm import tqdm
 from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
 from baserow.contrib.database.airtable.handler import AirtableHandler
 from baserow.contrib.database.airtable.utils import extract_share_id_from_url
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.utils import Progress
 
 
 class Command(BaseCommand):
     help = (
         "This management command copies all the data from a publicly shared Airtable "
-        "base and tries to import a copy into the provided group. A base can be "
+        "base and tries to import a copy into the provided workspace. A base can be "
         "shared publicly by clicking on the `Share` button in the top right corner and "
         "then create a `Shared base link`. The resulting URL must be provided as "
         "argument."
@@ -26,9 +26,9 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "group_id",
+            "workspace_id",
             type=int,
-            help="The group ID where a copy of the imported Airtable base must be "
+            help="The workspace ID where a copy of the imported Airtable base must be "
             "added to.",
         )
         parser.add_argument(
@@ -47,7 +47,7 @@ class Command(BaseCommand):
 
     @transaction.atomic
     def handle(self, *args, **options):
-        group_id = options["group_id"]
+        workspace_id = options["workspace_id"]
         public_base_url = options["public_base_url"]
 
         try:
@@ -55,16 +55,16 @@ class Command(BaseCommand):
         except UnknownTimeZoneError:
             self.stdout.write(
                 self.style.ERROR(
-                    f"The provided timezone {options['timezone']} is " f"unknown."
+                    f"The provided timezone {options['timezone']} is unknown."
                 )
             )
             sys.exit(1)
 
         try:
-            group = Group.objects.get(pk=group_id)
-        except Group.DoesNotExist:
+            workspace = Workspace.objects.get(pk=workspace_id)
+        except Workspace.DoesNotExist:
             self.stdout.write(
-                self.style.ERROR(f"The group with id {group_id} was not found.")
+                self.style.ERROR(f"The workspace with id {workspace_id} was not found.")
             )
             sys.exit(1)
 
@@ -85,8 +85,8 @@ class Command(BaseCommand):
 
             try:
                 with NamedTemporaryFile() as download_files_buffer:
-                    AirtableHandler.import_from_airtable_to_group(
-                        group,
+                    AirtableHandler.import_from_airtable_to_workspace(
+                        workspace,
                         share_id,
                         timezone,
                         progress_builder=progress.create_child_builder(

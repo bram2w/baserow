@@ -19,7 +19,7 @@ from responses import json_params_matcher
 from baserow.api.user.registries import user_data_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.models import Table
-from baserow.core.models import Application, Group, Settings
+from baserow.core.models import Application, Settings, Workspace
 from baserow.core.registries import subject_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow_enterprise.features import RBAC, SSO
@@ -144,7 +144,7 @@ def test_anonymous_user_data_has_no_enterprise_license_when_not_active(
     with freeze_time("2020-02-01 01:23"):
         assert al.get_user_data(AnonymousUser(), None) == {
             "instance_wide": {},
-            "per_group": {},
+            "per_workspace": {},
         }
 
 
@@ -161,7 +161,7 @@ def test_anonymous_user_data_enables_enterprise_features_instance_wide(
     al = user_data_registry.get_by_type(ActiveLicensesDataType)
     assert al.get_user_data(AnonymousUser(), None) == {
         "instance_wide": {"enterprise": True},
-        "per_group": {},
+        "per_workspace": {},
     }
 
 
@@ -181,7 +181,7 @@ def test_random_user_user_data_has_no_enterprise_license_when_not_active(
     with freeze_time("2020-02-01 01:23"):
         assert al.get_user_data(random_user, None) == {
             "instance_wide": {},
-            "per_group": {},
+            "per_workspace": {},
         }
 
 
@@ -199,7 +199,7 @@ def test_random_user_data_enables_enterprise_features_instance_wide(
     al = user_data_registry.get_by_type(ActiveLicensesDataType)
     assert al.get_user_data(random_user, None) == {
         "instance_wide": {"enterprise": True},
-        "per_group": {},
+        "per_workspace": {},
     }
 
 
@@ -220,7 +220,7 @@ def test_license_user_user_data_has_no_enterprise_license_when_not_active(
     with freeze_time("2020-02-01 01:23"):
         assert al.get_user_data(user, None) == {
             "instance_wide": {},
-            "per_group": {},
+            "per_workspace": {},
         }
 
 
@@ -239,7 +239,7 @@ def test_enabling_enterprise_user_data_gets_enterprise_features_instance_wide(
     # Before the license is active
     assert al.get_user_data(user, None) == {
         "instance_wide": {"enterprise": True},
-        "per_group": {},
+        "per_workspace": {},
     }
 
 
@@ -257,7 +257,7 @@ def test_user_data_no_enterprise_features_instance_wide_not_active(
     with freeze_time("2020-02-01 01:23"):
         assert al.get_user_data(user, None) == {
             "instance_wide": {},
-            "per_group": {},
+            "per_workspace": {},
         }
 
 
@@ -313,7 +313,7 @@ def test_enterprise_license_counts_viewers_as_free(
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
     user3 = data_fixture.create_user()
-    group = data_fixture.create_group(members=[user, user2, user3])
+    workspace = data_fixture.create_workspace(members=[user, user2, user3])
 
     table = data_fixture.create_database_table(user=user)
 
@@ -324,9 +324,9 @@ def test_enterprise_license_counts_viewers_as_free(
 
     assert len(RoleAssignment.objects.all()) == 0
 
-    role_assignment_handler.assign_role(user, group, admin_role)
-    role_assignment_handler.assign_role(user2, group, viewer_role)
-    role_assignment_handler.assign_role(user3, group, viewer_role)
+    role_assignment_handler.assign_role(user, workspace, admin_role)
+    role_assignment_handler.assign_role(user2, workspace, viewer_role)
+    role_assignment_handler.assign_role(user3, workspace, viewer_role)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -352,14 +352,14 @@ def test_enterprise_license_counts_viewers_as_free(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_user_who_is_editor_in_one_group_and_viewer_in_another_is_not_free(
+def test_user_who_is_editor_in_one_workspace_and_viewer_in_another_is_not_free(
     enterprise_data_fixture, data_fixture
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(members=[user, user2])
-    group2 = data_fixture.create_group(members=[user, user2])
+    workspace1 = data_fixture.create_workspace(members=[user, user2])
+    workspace2 = data_fixture.create_workspace(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     editor_role = Role.objects.get(uid="EDITOR")
@@ -367,10 +367,10 @@ def test_user_who_is_editor_in_one_group_and_viewer_in_another_is_not_free(
 
     role_assignment_handler = RoleAssignmentHandler()
 
-    role_assignment_handler.assign_role(user, group1, admin_role)
-    role_assignment_handler.assign_role(user2, group1, viewer_role)
-    role_assignment_handler.assign_role(user, group2, admin_role)
-    role_assignment_handler.assign_role(user2, group2, editor_role)
+    role_assignment_handler.assign_role(user, workspace1, admin_role)
+    role_assignment_handler.assign_role(user2, workspace1, viewer_role)
+    role_assignment_handler.assign_role(user, workspace2, admin_role)
+    role_assignment_handler.assign_role(user2, workspace2, editor_role)
 
     assert len(RoleAssignment.objects.all()) == 0
 
@@ -400,8 +400,8 @@ def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(members=[user, user2])
-    group2 = data_fixture.create_group(members=[user, user2])
+    workspace1 = data_fixture.create_workspace(members=[user, user2])
+    workspace2 = data_fixture.create_workspace(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     editor_role = Role.objects.get(uid="EDITOR")
@@ -409,10 +409,10 @@ def test_user_marked_for_deletion_is_not_counted_as_a_paid_user(
 
     role_assignment_handler = RoleAssignmentHandler()
 
-    role_assignment_handler.assign_role(user, group1, admin_role)
-    role_assignment_handler.assign_role(user2, group1, viewer_role)
-    role_assignment_handler.assign_role(user, group2, admin_role)
-    role_assignment_handler.assign_role(user2, group2, editor_role)
+    role_assignment_handler.assign_role(user, workspace1, admin_role)
+    role_assignment_handler.assign_role(user2, workspace1, viewer_role)
+    role_assignment_handler.assign_role(user, workspace2, admin_role)
+    role_assignment_handler.assign_role(user2, workspace2, editor_role)
 
     assert len(RoleAssignment.objects.all()) == 0
 
@@ -445,8 +445,8 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
     user2 = data_fixture.create_user()
-    group1 = data_fixture.create_group(members=[user, user2])
-    group2 = data_fixture.create_group(members=[user, user2])
+    workspace1 = data_fixture.create_workspace(members=[user, user2])
+    workspace2 = data_fixture.create_workspace(members=[user, user2])
 
     admin_role = Role.objects.get(uid="ADMIN")
     editor_role = Role.objects.get(uid="EDITOR")
@@ -454,10 +454,10 @@ def test_user_deactivated_user_is_not_counted_as_a_paid_user(
 
     role_assignment_handler = RoleAssignmentHandler()
 
-    role_assignment_handler.assign_role(user, group1, admin_role)
-    role_assignment_handler.assign_role(user2, group1, builder_role)
-    role_assignment_handler.assign_role(user, group2, admin_role)
-    role_assignment_handler.assign_role(user2, group2, editor_role)
+    role_assignment_handler.assign_role(user, workspace1, admin_role)
+    role_assignment_handler.assign_role(user2, workspace1, builder_role)
+    role_assignment_handler.assign_role(user, workspace2, admin_role)
+    role_assignment_handler.assign_role(user2, workspace2, editor_role)
 
     user2.is_active = False
     user2.save()
@@ -490,7 +490,7 @@ def test_cant_manually_add_seats_to_enterprise_version(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
     user2 = data_fixture.create_user()
-    data_fixture.create_group(user=user, members=[user2])
+    data_fixture.create_workspace(user=user, members=[user2])
     with pytest.raises(CantManuallyChangeSeatsError):
         LicenseHandler.add_user_to_license(user, license_object, user2)
 
@@ -503,7 +503,7 @@ def test_cant_manually_remove_seats_from_enterprise_version(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
     user2 = data_fixture.create_user()
-    data_fixture.create_group(user=user, members=[user2])
+    data_fixture.create_workspace(user=user, members=[user2])
     with pytest.raises(CantManuallyChangeSeatsError):
         LicenseHandler.remove_user_from_license(user, license_object, user2)
 
@@ -516,7 +516,7 @@ def test_cant_manually_add_all_users_to_seats_in_enterprise_version(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
     user2 = data_fixture.create_user()
-    data_fixture.create_group(user=user, members=[user2])
+    data_fixture.create_workspace(user=user, members=[user2])
     with pytest.raises(CantManuallyChangeSeatsError):
         LicenseHandler.fill_remaining_seats_of_license(user, license_object)
 
@@ -529,7 +529,7 @@ def test_cant_manually_remove_all_users_from_seats_in_enterprise_version(
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user(is_staff=True)
     user2 = data_fixture.create_user()
-    data_fixture.create_group(user=user, members=[user2])
+    data_fixture.create_workspace(user=user, members=[user2])
     with pytest.raises(CantManuallyChangeSeatsError):
         LicenseHandler.remove_all_users_from_license(user, license_object)
 
@@ -590,14 +590,16 @@ def test_user_with_paid_table_role_is_not_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -625,14 +627,16 @@ def test_user_with_free_table_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
+        user, workspace, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -660,14 +664,16 @@ def test_user_with_paid_database_role_is_not_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -695,14 +701,16 @@ def test_user_with_free_database_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=database
+        user, workspace, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -730,17 +738,19 @@ def test_user_with_paid_table_role_is_not_free_from_team(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -768,17 +778,19 @@ def test_user_with_free_table_role_is_free_from_team(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
+        team, workspace, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -806,17 +818,19 @@ def test_user_with_paid_database_role_is_not_free_from_team(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -844,17 +858,19 @@ def test_user_with_free_database_role_is_free_from_team(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -882,20 +898,22 @@ def test_user_in_deleted_team_with_paid_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
-    TrashHandler().trash(user, group, None, team)
+    TrashHandler().trash(user, workspace, None, team)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -922,14 +940,16 @@ def test_inactive_user_with_paid_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -977,17 +997,19 @@ def test_inactive_user_in_team_with_paid_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1035,14 +1057,16 @@ def test_user_to_be_deleted_with_paid_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1090,17 +1114,19 @@ def test_user_to_be_deleted_in_team_with_paid_role_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1150,29 +1176,37 @@ def test_complex_free_vs_paid_scenario(
     user1_paid_in_grp1 = data_fixture.create_user()
     user2_free_in_grp1_paid_grp2 = data_fixture.create_user()
     user3_free_both_grps = data_fixture.create_user()
-    group1 = data_fixture.create_group()
-    group2 = data_fixture.create_group()
-    data_fixture.create_user_group(
-        user=user1_paid_in_grp1, group=group1, permissions=PAID_EDITOR_ROLE
+    workspace1 = data_fixture.create_workspace()
+    workspace2 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user1_paid_in_grp1, workspace=workspace1, permissions=PAID_EDITOR_ROLE
     )
-    data_fixture.create_user_group(
-        user=user2_free_in_grp1_paid_grp2, group=group1, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user2_free_in_grp1_paid_grp2,
+        workspace=workspace1,
+        permissions=FREE_VIEWER_ROLE,
     )
-    data_fixture.create_user_group(
-        user=user2_free_in_grp1_paid_grp2, group=group2, permissions=PAID_EDITOR_ROLE
+    data_fixture.create_user_workspace(
+        user=user2_free_in_grp1_paid_grp2,
+        workspace=workspace2,
+        permissions=PAID_EDITOR_ROLE,
     )
-    data_fixture.create_user_group(
-        user=user3_free_both_grps, group=group1, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user3_free_both_grps, workspace=workspace1, permissions=FREE_VIEWER_ROLE
     )
-    data_fixture.create_user_group(
-        user=user3_free_both_grps, group=group2, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user3_free_both_grps, workspace=workspace2, permissions=FREE_VIEWER_ROLE
     )
-    database1 = data_fixture.create_database_application(group=group1)
+    database1 = data_fixture.create_database_application(workspace=workspace1)
     table1 = data_fixture.create_database_table(database=database1)
 
-    grp1_team_with_paid_role_on_db = enterprise_data_fixture.create_team(group=group1)
-    grp1_team_with_no_roles = enterprise_data_fixture.create_team(group=group1)
-    grp2_team_with_free_roles = enterprise_data_fixture.create_team(group=group2)
+    grp1_team_with_paid_role_on_db = enterprise_data_fixture.create_team(
+        workspace=workspace1
+    )
+    grp1_team_with_no_roles = enterprise_data_fixture.create_team(workspace=workspace1)
+    grp2_team_with_free_roles = enterprise_data_fixture.create_team(
+        workspace=workspace2
+    )
 
     enterprise_data_fixture.create_subject(
         team=grp1_team_with_paid_role_on_db, subject=user1_paid_in_grp1
@@ -1189,21 +1223,21 @@ def test_complex_free_vs_paid_scenario(
 
     RoleAssignmentHandler().assign_role(
         grp1_team_with_paid_role_on_db,
-        group1,
+        workspace1,
         role=Role.objects.get(uid=FREE_VIEWER_ROLE),
         scope=database1,
     )
     RoleAssignmentHandler().assign_role(
         grp1_team_with_paid_role_on_db,
-        group1,
+        workspace1,
         role=Role.objects.get(uid=PAID_EDITOR_ROLE),
         scope=table1,
     )
     RoleAssignmentHandler().assign_role(
         grp2_team_with_free_roles,
-        group2,
+        workspace2,
         role=Role.objects.get(uid=FREE_VIEWER_ROLE),
-        scope=group2,
+        scope=workspace2,
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1235,14 +1269,16 @@ def test_user_with_role_paid_on_trashed_database_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1264,7 +1300,7 @@ def test_user_with_role_paid_on_trashed_database_is_free(
         },
     )
 
-    TrashHandler().trash(user, group, database, database)
+    TrashHandler().trash(user, workspace, database, database)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1286,19 +1322,21 @@ def test_user_with_role_paid_on_trashed_database_is_free(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_user_with_role_paid_on_database_in_trashed_group_is_free(
+def test_user_with_role_paid_on_database_in_trashed_workspace_is_free(
     enterprise_data_fixture, data_fixture, synced_roles, django_assert_num_queries
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1320,7 +1358,7 @@ def test_user_with_role_paid_on_database_in_trashed_group_is_free(
         },
     )
 
-    TrashHandler().trash(user, group, None, group)
+    TrashHandler().trash(user, workspace, None, workspace)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1347,14 +1385,16 @@ def test_user_with_role_paid_on_trashed_table_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        user, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1376,7 +1416,7 @@ def test_user_with_role_paid_on_trashed_table_is_free(
         },
     )
 
-    TrashHandler().trash(user, group, database, table)
+    TrashHandler().trash(user, workspace, database, table)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1403,17 +1443,19 @@ def test_user_in_team_with_role_paid_on_trashed_database_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=database
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1435,7 +1477,7 @@ def test_user_in_team_with_role_paid_on_trashed_database_is_free(
         },
     )
 
-    TrashHandler().trash(user, group, database, database)
+    TrashHandler().trash(user, workspace, database, database)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1462,17 +1504,19 @@ def test_user_in_team_with_role_paid_on_trashed_table_is_free(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1494,7 +1538,7 @@ def test_user_in_team_with_role_paid_on_trashed_table_is_free(
         },
     )
 
-    TrashHandler().trash(user, group, database, table)
+    TrashHandler().trash(user, workspace, database, table)
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1521,23 +1565,27 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
+    workspace = data_fixture.create_workspace()
 
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
 
-    database = data_fixture.create_database_application(group=group)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
 
     # Make sure the content type cached properties contain these models so we don't
     # count that query in the get_seat_usage_summary below
-    ContentType.objects.get_for_models(Database, Application, Team, User, Table, Group)
+    ContentType.objects.get_for_models(
+        Database, Application, Team, User, Table, Workspace
+    )
 
     with CaptureQueriesContext(connection) as first_query:
         assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1560,24 +1608,24 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
         )
 
     user2 = data_fixture.create_user()
-    group2 = data_fixture.create_group()
-    data_fixture.create_user_group(
-        user=user2, group=group, permissions=FREE_VIEWER_ROLE
+    workspace2 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user2, workspace=workspace, permissions=FREE_VIEWER_ROLE
     )
-    data_fixture.create_user_group(
-        user=user2, group=group2, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user2, workspace=workspace2, permissions=FREE_VIEWER_ROLE
     )
-    data_fixture.create_user_group(
-        user=user, group=group2, permissions=PAID_EDITOR_ROLE
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace2, permissions=PAID_EDITOR_ROLE
     )
-    database2 = data_fixture.create_database_application(group=group2)
+    database2 = data_fixture.create_database_application(workspace=workspace2)
     table2 = data_fixture.create_database_table(database=database2)
-    team2 = enterprise_data_fixture.create_team(group=group2)
+    team2 = enterprise_data_fixture.create_team(workspace=workspace2)
     enterprise_data_fixture.create_subject(team=team2, subject=user2)
     enterprise_data_fixture.create_subject(team=team, subject=user)
     enterprise_data_fixture.create_subject(team=team2, subject=user)
     RoleAssignmentHandler().assign_role(
-        team2, group2, role=Role.objects.get(uid="ADMIN"), scope=table2
+        team2, workspace2, role=Role.objects.get(uid="ADMIN"), scope=table2
     )
 
     with django_assert_num_queries(len(first_query.captured_queries)):
@@ -1601,36 +1649,44 @@ def test_user_summary_calculation_for_enterprise_doesnt_do_n_plus_one_queries(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_can_query_for_summary_per_group(
+def test_can_query_for_summary_per_workspace(
     enterprise_data_fixture, data_fixture, synced_roles
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user1_paid_in_grp1 = data_fixture.create_user()
     user2_free_in_grp1_paid_grp2 = data_fixture.create_user()
     user3_free_both_grps = data_fixture.create_user()
-    group1 = data_fixture.create_group()
-    group2 = data_fixture.create_group()
-    data_fixture.create_user_group(
-        user=user1_paid_in_grp1, group=group1, permissions=PAID_EDITOR_ROLE
+    workspace1 = data_fixture.create_workspace()
+    workspace2 = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user1_paid_in_grp1, workspace=workspace1, permissions=PAID_EDITOR_ROLE
     )
-    data_fixture.create_user_group(
-        user=user2_free_in_grp1_paid_grp2, group=group1, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user2_free_in_grp1_paid_grp2,
+        workspace=workspace1,
+        permissions=FREE_VIEWER_ROLE,
     )
-    data_fixture.create_user_group(
-        user=user2_free_in_grp1_paid_grp2, group=group2, permissions=PAID_EDITOR_ROLE
+    data_fixture.create_user_workspace(
+        user=user2_free_in_grp1_paid_grp2,
+        workspace=workspace2,
+        permissions=PAID_EDITOR_ROLE,
     )
-    data_fixture.create_user_group(
-        user=user3_free_both_grps, group=group1, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user3_free_both_grps, workspace=workspace1, permissions=FREE_VIEWER_ROLE
     )
-    data_fixture.create_user_group(
-        user=user3_free_both_grps, group=group2, permissions=FREE_VIEWER_ROLE
+    data_fixture.create_user_workspace(
+        user=user3_free_both_grps, workspace=workspace2, permissions=FREE_VIEWER_ROLE
     )
-    database1 = data_fixture.create_database_application(group=group1)
+    database1 = data_fixture.create_database_application(workspace=workspace1)
     table1 = data_fixture.create_database_table(database=database1)
 
-    grp1_team_with_paid_role_on_db = enterprise_data_fixture.create_team(group=group1)
-    grp1_team_with_no_roles = enterprise_data_fixture.create_team(group=group1)
-    grp2_team_with_free_roles = enterprise_data_fixture.create_team(group=group2)
+    grp1_team_with_paid_role_on_db = enterprise_data_fixture.create_team(
+        workspace=workspace1
+    )
+    grp1_team_with_no_roles = enterprise_data_fixture.create_team(workspace=workspace1)
+    grp2_team_with_free_roles = enterprise_data_fixture.create_team(
+        workspace=workspace2
+    )
 
     enterprise_data_fixture.create_subject(
         team=grp1_team_with_paid_role_on_db, subject=user1_paid_in_grp1
@@ -1647,25 +1703,25 @@ def test_can_query_for_summary_per_group(
 
     RoleAssignmentHandler().assign_role(
         grp1_team_with_paid_role_on_db,
-        group1,
+        workspace1,
         role=Role.objects.get(uid=FREE_VIEWER_ROLE),
         scope=database1,
     )
     RoleAssignmentHandler().assign_role(
         grp1_team_with_paid_role_on_db,
-        group1,
+        workspace1,
         role=Role.objects.get(uid=PAID_EDITOR_ROLE),
         scope=table1,
     )
     RoleAssignmentHandler().assign_role(
         grp2_team_with_free_roles,
-        group2,
+        workspace2,
         role=Role.objects.get(uid=FREE_VIEWER_ROLE),
-        scope=group2,
+        scope=workspace2,
     )
 
-    assert RoleBasedSeatUsageSummaryCalculator.get_seat_usage_for_group(
-        group1
+    assert RoleBasedSeatUsageSummaryCalculator.get_seat_usage_for_workspace(
+        workspace1
     ) == SeatUsageSummary(
         seats_taken=2,
         free_users_count=1,
@@ -1684,8 +1740,8 @@ def test_can_query_for_summary_per_group(
             user3_free_both_grps.id: "VIEWER",
         },
     )
-    assert RoleBasedSeatUsageSummaryCalculator.get_seat_usage_for_group(
-        group2
+    assert RoleBasedSeatUsageSummaryCalculator.get_seat_usage_for_workspace(
+        workspace2
     ) == SeatUsageSummary(
         seats_taken=1,
         free_users_count=1,
@@ -1712,20 +1768,22 @@ def test_user_with_team_and_user_role_picks_highest_of_either(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     RoleAssignmentHandler().assign_role(
-        team, group, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
+        team, workspace, role=Role.objects.get(uid=PAID_EDITOR_ROLE), scope=table
     )
     RoleAssignmentHandler().assign_role(
-        user, group, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
+        user, workspace, role=Role.objects.get(uid=FREE_VIEWER_ROLE), scope=table
     )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1755,12 +1813,12 @@ def test_order_of_roles_is_as_expected(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    # They are a free member of the group
-    data_fixture.create_user_group(
-        user=user, group=group, permissions="NO_ROLE_LOW_PRIORITY"
+    workspace = data_fixture.create_workspace()
+    # They are a free member of the workspace
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions="NO_ROLE_LOW_PRIORITY"
     )
-    database = data_fixture.create_database_application(group=group)
+    database = data_fixture.create_database_application(workspace=workspace)
 
     # A role lower in the list should be reported over a role lower in the list.
     expected_role_order = [
@@ -1778,7 +1836,7 @@ def test_order_of_roles_is_as_expected(
             name=f"table{idx}", database=database
         )
         RoleAssignmentHandler().assign_role(
-            user, group, role=Role.objects.get(uid=uid), scope=table
+            user, workspace, role=Role.objects.get(uid=uid), scope=table
         )
 
         expected_report = {uid: 0 for uid in expected_role_order}
@@ -1793,13 +1851,15 @@ def test_order_of_roles_is_as_expected(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_weird_group_user_permission_doesnt_break_usage_check(
+def test_weird_workspace_user_permission_doesnt_break_usage_check(
     enterprise_data_fixture, data_fixture, synced_roles
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    data_fixture.create_user_group(user=user, group=group, permissions="WEIRD_VALUE")
+    workspace = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions="WEIRD_VALUE"
+    )
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
         license_object
@@ -1822,43 +1882,47 @@ def test_weird_group_user_permission_doesnt_break_usage_check(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_weird_ras_for_wrong_group_not_counted_when_querying_for_single_group_usage(
+def test_weird_ras_for_wrong_workspace_not_counted_when_querying_for_single_workspace_usage(
     enterprise_data_fixture, data_fixture, synced_roles
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    group2 = data_fixture.create_group()
-    database_in_other_group = data_fixture.create_database_application(group=group2)
-    table_in_other_group = data_fixture.create_database_table(
-        database=database_in_other_group
+    workspace = data_fixture.create_workspace()
+    workspace2 = data_fixture.create_workspace()
+    database_in_other_workspace = data_fixture.create_database_application(
+        workspace=workspace2
     )
-    data_fixture.create_user_group(user=user, group=group, permissions=FREE_VIEWER_ROLE)
+    table_in_other_workspace = data_fixture.create_database_table(
+        database=database_in_other_workspace
+    )
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions=FREE_VIEWER_ROLE
+    )
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
-    team_in_other_group = enterprise_data_fixture.create_team(group=group2)
+    team_in_other_workspace = enterprise_data_fixture.create_team(workspace=workspace2)
     enterprise_data_fixture.create_subject(team=team, subject=user)
 
     paid_role = Role.objects.get(uid=PAID_EDITOR_ROLE)
 
-    for scope in [group2, database_in_other_group, table_in_other_group]:
+    for scope in [workspace2, database_in_other_workspace, table_in_other_workspace]:
         RoleAssignment.objects.create(
             scope=scope,
-            group=group,
+            workspace=workspace,
             subject=team,
             role=paid_role,
         )
         RoleAssignment.objects.create(
             scope=scope,
-            group=group,
+            workspace=workspace,
             subject=user,
             role=paid_role,
         )
 
-    assert RoleBasedSeatUsageSummaryCalculator().get_seat_usage_for_group(
-        group
+    assert RoleBasedSeatUsageSummaryCalculator().get_seat_usage_for_workspace(
+        workspace
     ) == SeatUsageSummary(
         seats_taken=0,
         free_users_count=1,
@@ -1883,9 +1947,13 @@ def test_missing_roles_doesnt_cause_crash_and_members_admins_are_treated_as_non_
     license_object = enterprise_data_fixture.enable_enterprise()
     member_user = data_fixture.create_user()
     admin_user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    data_fixture.create_user_group(user=member_user, group=group, permissions="MEMBER")
-    data_fixture.create_user_group(user=admin_user, group=group, permissions="ADMIN")
+    workspace = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=member_user, workspace=workspace, permissions="MEMBER"
+    )
+    data_fixture.create_user_workspace(
+        user=admin_user, workspace=workspace, permissions="ADMIN"
+    )
     Role.objects.all().delete()
 
     assert EnterpriseLicenseType().get_seat_usage_summary(
@@ -1913,14 +1981,16 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group()
-    data_fixture.create_user_group(user=user, group=group, permissions="NO_ACCESS")
-    database = data_fixture.create_database_application(group=group)
+    workspace = data_fixture.create_workspace()
+    data_fixture.create_user_workspace(
+        user=user, workspace=workspace, permissions="NO_ACCESS"
+    )
+    database = data_fixture.create_database_application(workspace=workspace)
 
-    team = enterprise_data_fixture.create_team(group=group)
+    team = enterprise_data_fixture.create_team(workspace=workspace)
 
     scope_cts = ContentType.objects.get_for_models(
-        Database, Application, Table, Group
+        Database, Application, Table, Workspace
     ).values()
     user_ct = ContentType.objects.get_for_model(get_user_model())
     paid_role = Role.objects.get(uid=PAID_EDITOR_ROLE)
@@ -1929,7 +1999,7 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
     for ct in scope_cts:
         RoleAssignment.objects.create(
             subject_id=user.id,
-            group=group,
+            workspace=workspace,
             subject_type=user_ct,
             scope_id=99999,
             scope_type=ct,
@@ -1948,7 +2018,7 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
     for ct in subject_cts:
         RoleAssignment.objects.create(
             subject_id=99999,
-            group=group,
+            workspace=workspace,
             subject_type=ct,
             scope_id=database.id,
             scope_type=ContentType.objects.get_for_model(database),
@@ -1958,7 +2028,7 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
     # An RA on a non-existent subject and scope
     RoleAssignment.objects.create(
         subject_id=99999,
-        group=group,
+        workspace=workspace,
         subject_type=user_ct,
         scope_id=99999,
         scope_type=ContentType.objects.get_for_model(database),
@@ -1969,7 +2039,7 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
     TeamSubject.objects.create(team=team, subject_id=99999, subject_type=user_ct)
     RoleAssignment.objects.create(
         subject_id=team.id,
-        group=group,
+        workspace=workspace,
         subject_type=ContentType.objects.get_for_model(team),
         scope_id=database.id,
         scope_type=ContentType.objects.get_for_model(database),
@@ -1996,13 +2066,13 @@ def test_orphaned_paid_role_assignments_dont_get_counted(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_can_restore_a_group_with_rbac_enabled(
+def test_can_restore_a_workspace_with_rbac_enabled(
     enterprise_data_fixture, data_fixture, synced_roles
 ):
     license_object = enterprise_data_fixture.enable_enterprise()
     user = data_fixture.create_user()
-    group = data_fixture.create_group(user=user)
+    workspace = data_fixture.create_workspace(user=user)
 
-    TrashHandler.trash(user, group, None, group)
+    TrashHandler.trash(user, workspace, None, workspace)
 
-    TrashHandler.restore_item(user, "group", group.id)
+    TrashHandler.restore_item(user, "workspace", workspace.id)

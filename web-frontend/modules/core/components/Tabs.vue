@@ -1,17 +1,30 @@
 <template lang="html">
-  <div>
-    <ul class="tabs">
+  <div
+    class="tabs"
+    :class="{
+      'tabs--full-height': fullHeight,
+      'tabs--no-separation': noSeparation,
+      'tabs--large': large,
+    }"
+  >
+    <ul class="tabs__header">
       <li
         v-for="(tab, index) in tabs"
         :key="tab.title"
+        v-tooltip="tab.tooltip"
         class="tabs__item"
         :class="{
-          'tabs__item--active': index == internalSelectedIndex,
+          'tabs__item--active': isActive(index),
           'tabs__item--disabled': tab.disabled,
         }"
         @click="tab.disabled ? null : selectTab(index)"
       >
-        <a class="tabs__link" :class="{ 'tabs__link--disabled': tab.disabled }">
+        <a
+          :href="getHref(index)"
+          class="tabs__link"
+          :class="{ 'tabs__link--disabled': tab.disabled }"
+          @click.prevent=""
+        >
           {{ tab.title }}
         </a>
       </li>
@@ -29,6 +42,26 @@ export default {
       required: false,
       default: 0,
     },
+    fullHeight: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    noSeparation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    navigation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    large: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -39,7 +72,7 @@ export default {
   watch: {
     selectedIndex: {
       handler(i) {
-        if (i !== undefined) {
+        if (!this.navigation && i !== undefined) {
           this.internalSelectedIndex = i
         }
       },
@@ -50,13 +83,38 @@ export default {
     this.tabs = this.$children
   },
   mounted() {
-    this.selectTab(this.internalSelectedIndex)
+    if (this.navigation) {
+      this.tabs.forEach((tab) => {
+        tab.isActive = this.$route.name === tab.to.name
+      })
+    } else {
+      this.selectTab(this.internalSelectedIndex)
+    }
   },
   methods: {
+    isActive(i) {
+      if (this.navigation) {
+        return this.$route.name === this.tabs[i].to.name
+      } else {
+        return this.internalSelectedIndex === i
+      }
+    },
+    getHref(i) {
+      if (this.navigation) {
+        const tab = this.tabs[i]
+        return !tab.disabled ? this.$router.match(tab.to).path : null
+      } else {
+        return null
+      }
+    },
     selectTab(i) {
-      this.$emit('update:selected-index', i)
-      this.internalSelectedIndex = i
-
+      if (this.navigation) {
+        this.$emit('update:selected-index', i)
+        this.$router.push(this.tabs[i].to)
+      } else {
+        this.$emit('update:selected-index', i)
+        this.internalSelectedIndex = i
+      }
       this.tabs.forEach((tab, index) => {
         tab.isActive = index === i
       })

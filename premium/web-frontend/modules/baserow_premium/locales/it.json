@@ -2,18 +2,19 @@
     "premium": {
         "user": {
             "isStaff": "È staff",
-            "isGroupAdmin": "È amministratore del gruppo",
+            "isWorkspaceAdmin": "È amministratore del progetto",
             "active": "Attivo",
             "deactivated": "Disattivato"
         },
         "adminType": {
             "dashboard": "Dashboard",
             "users": "Utenti",
-            "groups": "Gruppi",
+            "workspaces": "Progetti",
             "licenses": "Licenze"
         },
         "viewType": {
-            "kanban": "Kanban"
+            "kanban": "Kanban",
+            "calendar": "Calendario"
         },
         "exporterType": {
             "json": "Esporta in JSON",
@@ -58,8 +59,8 @@
     "registerLicenseForm": {
         "licenseKey": "Chiave di licenza"
     },
-    "groupsAdminTable": {
-        "allGroups": "Tutti i gruppi",
+    "workspacesAdminTable": {
+        "allWorkspaces": "Tutti i progetti",
         "id": "ID",
         "name": "Nome",
         "members": "Membri",
@@ -71,14 +72,14 @@
         "rowCount": "Numero di righe",
         "storageUsage": "Spazio disco utilizzato (MB)"
     },
-    "editGroupContext": {
+    "editWorkspaceContext": {
         "delete": "Eliminato in modo permanente"
     },
-    "deleteGroupModal": {
+    "deleteWorkspaceModal": {
         "title": "Elimina {name}",
-        "confirmation": "Sei sicuro di voler eliminare il gruppo: {name}?",
-        "comment": "Il gruppo verrà eliminato in modo permanente, così come tutte le applicazioni associate. Non è possibile annullare questa azione.",
-        "delete": "Elimina gruppo {name}"
+        "confirmation": "Sei sicuro di voler eliminare il progetto: {name}?",
+        "comment": "Il progetto verrà eliminato in modo permanente, così come tutte le applicazioni associate. Non è possibile annullare questa azione.",
+        "delete": "Elimina progetto {name}"
     },
     "activeUsers": {
         "newUsers": "Nuovi utenti",
@@ -89,7 +90,7 @@
         "id": "ID",
         "username": "Nome utente",
         "name": "Nome",
-        "groups": "Gruppi",
+        "workspaces": "Progetti",
         "lastLogin": "Ultimo accesso",
         "dateJoined": "Registrato",
         "active": "Attivo"
@@ -114,7 +115,7 @@
         "warning": {
             "changeEmail": "Questo è l'indirizzo che l'utente dovrà utilizzare per la registrazione. Se lo modifichi, assicurati di comunicarlo alla persone interessata.",
             "inactiveUser": "Quando un utente è contrassegnato come non attivo non potrà più effettuare l'accesso.",
-            "userStaff": "I permessi di staff danno al personale l'accesso come amministratore a tutti gli utenti e a tutti i gruppi."
+            "userStaff": "I permessi di staff danno al personale l'accesso come amministratore a tutti gli utenti e a tutti i progetti."
         },
         "error": {
             "invalidName": "Inserisci un nome completo valido, deve essere più lungo di 2 lettere e meno di 150.",
@@ -127,7 +128,7 @@
     "deleteUserModal": {
         "title": "Elimina {username}",
         "confirmation": "Sei sicuro di voler eliminare l'utente: {name}?",
-        "comment1": "L'account sarà eliminato. Tuttavia, i gruppi di cui l'utente è membro continueranno a esistere. L'eliminazione dell'ultimo utente del gruppo impedirà a chiunque di accedere a quel gruppo.",
+        "comment1": "L'account sarà eliminato. Tuttavia, i progetti di cui l'utente è membro continueranno a esistere. L'eliminazione dell'ultimo utente del progetto impedirà a chiunque di accedere a quel progetto.",
         "comment2": "L'utente eliminato potrà nuovamente iscriversi utilizzando la stessa email. Per assicurarti di impedire una nuova iscrizione, disattiva l'utente anziché eliminarlo.",
         "delete": "Elimina utente {username}"
     },
@@ -157,8 +158,8 @@
         "selectOption": "Seleziona opzione"
     },
     "kanbanViewStakedBy": {
-        "title": "Campo gruppo",
-        "chooseField": "Per quale campo di selezione singola le schede devono essere impilate?",
+        "title": "Raggruppa per campo",
+        "chooseField": "Per quale campo di selezione singola le schede devono essere raggruppate?",
         "addSelectField": "aggiungi campo di selezione singola"
     },
     "kanbanViewStack": {
@@ -170,7 +171,7 @@
         "title": "Dashboard",
         "totals": "Totali",
         "totalUsers": "Totale utenti",
-        "totalGroups": "Totale gruppi",
+        "totalWorkspaces": "Totale progetti",
         "totalApplications": "Totale applicazioni",
         "newUsers": "Nuovi utenti",
         "newUsers24h": "Nuovi utenti nelle ultime 24 ore",
@@ -274,7 +275,9 @@
         "rowComments": "Commenti di riga",
         "exports": "Esportazione in formato JSON e XML",
         "surveyForm": "Sondaggio",
-        "publicLogoRemoval": "Rimozione logo"
+        "publicLogoRemoval": "Rimozione logo",
+        "calendarView": "Vista calendario",
+        "personalViews": "Vista personale"
     },
     "premiumModal": {
         "title": "Fai l'upgrade per usare {name}",
@@ -296,5 +299,30 @@
             "label": "Nascondi il logo di Baserow nella viste pubbliche",
             "premiumModalName": "rimozione logo"
         }
+    },
+    "calendarViewHeader": {
+        "displayedBy": "Visto da “{fieldName}”",
+        "labels": "Etichette",
+        "displayBy": "Visto da"
+    },
+    "calendarDateSelector": {
+        "today": "Oggi"
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "Riprova"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1+... | {hiddenRowsCount}+..."
+    },
+    "viewsContext": {
+        "personal": "Personale"
+    },
+    "dateFieldSelectForm": {
+        "noCompatibleDateFields": "Non ci sono campi con date in questa tabella, per favore creane uno prima.",
+        "dateField": "Quale campo vuoi usare per questa vista?"
+    },
+    "selectDateFieldModal": {
+        "save": "Salva",
+        "chooseDateField": "Scegli il campo data"
     }
 }

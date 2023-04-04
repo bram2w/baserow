@@ -17,7 +17,7 @@ from baserow.core.exceptions import (
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
-from baserow.core.models import Application, Group, Snapshot, User
+from baserow.core.models import Application, Snapshot, User, Workspace
 from baserow.core.registries import application_type_registry
 from baserow.core.signals import application_created
 from baserow.core.snapshots.exceptions import (
@@ -41,16 +41,16 @@ from .tasks import delete_application_snapshot
 
 
 class SnapshotHandler:
-    def _count(self, group: Group) -> int:
+    def _count(self, workspace: Workspace) -> int:
         """
         Helper method to count the number of snapshots in the provided
-        group.
+        workspace.
 
-        :param group: The group for which to count the snapshots.
+        :param workspace: The workspace for which to count the snapshots.
         """
 
         return Snapshot.objects.filter(
-            snapshot_from_application__group=group, mark_for_deletion=False
+            snapshot_from_application__workspace=workspace, mark_for_deletion=False
         ).count()
 
     def _check_is_in_use(self, snapshot: Snapshot) -> None:
@@ -80,7 +80,7 @@ class SnapshotHandler:
     def list(self, application_id: int, performed_by: User) -> QuerySet:
         """
         Lists all snapshots for the given application id if the provided
-        user is in the same group as the application.
+        user is in the same workspace as the application.
 
         :param application_id: The ID of the application for which to list
             snapshots.
@@ -88,7 +88,7 @@ class SnapshotHandler:
             have sufficient permissions.
         :raises ApplicationDoesNotExist: When the application with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         :return: A queryset for snapshots that were created for the given
             application.
@@ -97,7 +97,7 @@ class SnapshotHandler:
         try:
             application = (
                 Application.objects.filter(id=application_id)
-                .select_related("group")
+                .select_related("workspace")
                 .get()
             )
         except Application.DoesNotExist:
@@ -108,7 +108,7 @@ class SnapshotHandler:
         CoreHandler().check_permissions(
             performed_by,
             ListSnapshotsApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
@@ -125,7 +125,7 @@ class SnapshotHandler:
     def create(self, application_id: int, performed_by: User, name: str):
         """
         Creates a new application snapshot of the given application if the provided
-        user is in the same group as the application.
+        user is in the same workspace as the application.
 
         :param application_id: The ID of the application for which to list
             snapshots.
@@ -134,9 +134,9 @@ class SnapshotHandler:
         :param name: The name for the new snapshot.
         :raises ApplicationDoesNotExist: When the application with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
-        :raises MaximumSnapshotsReached: When the group has already reached
+        :raises MaximumSnapshotsReached: When the workspace has already reached
             the maximum of allowed snapshots.
         :raises ApplicationOperationNotSupported: When the application type
             doesn't support creating snapshots.
@@ -150,7 +150,7 @@ class SnapshotHandler:
         try:
             application = (
                 Application.objects.filter(id=application_id)
-                .select_related("group")
+                .select_related("workspace")
                 .get()
             )
         except Application.DoesNotExist:
@@ -161,7 +161,7 @@ class SnapshotHandler:
         CoreHandler().check_permissions(
             performed_by,
             CreateSnapshotApplicationOperationType.type,
-            group=application.group,
+            workspace=application.workspace,
             context=application,
         )
 
@@ -170,7 +170,7 @@ class SnapshotHandler:
             raise ApplicationOperationNotSupported()
 
         max_snapshots = settings.BASEROW_MAX_SNAPSHOTS_PER_GROUP
-        if max_snapshots >= 0 and self._count(application.group) >= max_snapshots:
+        if max_snapshots >= 0 and self._count(application.workspace) >= max_snapshots:
             raise MaximumSnapshotsReached()
 
         creating_jobs_count = (
@@ -212,14 +212,14 @@ class SnapshotHandler:
     ) -> Job:
         """
         Restores a previously created snapshot with the given ID if the
-        provided user is in the same group as the application.
+        provided user is in the same workspace as the application.
 
         :param snapshot_id: The ID of the snapshot to restore.
         :param performed_by: The user performing the operation that should
             have sufficient permissions.
         :raises SnapshotDoesNotExist: When the snapshot with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         :raises ApplicationOperationNotSupported: When the application type
             doesn't support restoring snapshots.
@@ -236,18 +236,18 @@ class SnapshotHandler:
             snapshot = (
                 Snapshot.objects.filter(id=snapshot_id)
                 .select_for_update(of=("self",))
-                .select_related("snapshot_from_application__group")
+                .select_related("snapshot_from_application__workspace")
                 .get()
             )
         except Snapshot.DoesNotExist:
             raise SnapshotDoesNotExist()
 
-        group = snapshot.snapshot_from_application.group
+        workspace = snapshot.snapshot_from_application.workspace
 
         CoreHandler().check_permissions(
             performed_by,
             RestoreApplicationSnapshotOperationType.type,
-            group=group,
+            workspace=workspace,
             context=snapshot,
         )
 
@@ -277,14 +277,14 @@ class SnapshotHandler:
     def delete(self, snapshot_id: int, performed_by: User) -> None:
         """
         Deletes a previously created snapshot with the given ID if the
-        provided user belongs to the same group as the application.
+        provided user belongs to the same workspace as the application.
 
         :param snapshot_id: The ID of the snapshot to delete.
         :param performed_by: The user performing the operation that should
             have sufficient permissions.
         :raises SnapshotDoesNotExist: When the snapshot with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         :raises ApplicationOperationNotSupported: When the application type
             doesn't support deleting snapshots.
@@ -300,18 +300,18 @@ class SnapshotHandler:
             snapshot = (
                 Snapshot.objects.filter(id=snapshot_id)
                 .select_for_update(of=("self",))
-                .select_related("snapshot_from_application__group")
+                .select_related("snapshot_from_application__workspace")
                 .get()
             )
         except Snapshot.DoesNotExist:
             raise SnapshotDoesNotExist()
 
-        group = snapshot.snapshot_from_application.group
+        workspace = snapshot.snapshot_from_application.workspace
 
         CoreHandler().check_permissions(
             performed_by,
             DeleteApplicationSnapshotOperationType.type,
-            group=group,
+            workspace=workspace,
             context=snapshot,
         )
 
@@ -356,26 +356,26 @@ class SnapshotHandler:
     def perform_create(self, snapshot: Snapshot, progress: Progress) -> None:
         """
         Creates an actual copy of the original application and stores it as
-        another application with its group set to None to effectively hide it
+        another application with its workspace set to None to effectively hide it
         from the system.
 
         :raises SnapshotDoesNotExist: When the snapshot with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         """
 
         if snapshot is None:
             raise SnapshotDoesNotExist()
 
-        group = snapshot.snapshot_from_application.group
+        workspace = snapshot.snapshot_from_application.workspace
 
         application = snapshot.snapshot_from_application.specific
 
         CoreHandler().check_permissions(
             snapshot.created_by,
             CreateSnapshotApplicationOperationType.type,
-            group=group,
+            workspace=workspace,
             context=application,
         )
 
@@ -393,7 +393,7 @@ class SnapshotHandler:
             raise e
 
         progress.increment(by=50)
-        id_mapping = {"import_group_id": group.id}
+        id_mapping = {"import_workspace_id": workspace.id}
         imported_database = application_type.import_serialized(
             None,
             exported_application,
@@ -408,12 +408,12 @@ class SnapshotHandler:
     def perform_restore(self, snapshot: Snapshot, progress: Progress) -> Application:
         """
         Creates an application copy from the snapshotted application. The copy
-        will be available as a normal application in the same group as the
+        will be available as a normal application in the same workspace as the
         original application.
 
         :raises SnapshotDoesNotExist: When the snapshot with the provided id
             does not exist.
-        :raises UserNotInGroup: When the user doesn't belong to the same group
+        :raises UserNotInWorkspace: When the user doesn't belong to the same workspace
             as the application.
         :returns: Application that is a copy of the snapshot.
         """
@@ -421,11 +421,11 @@ class SnapshotHandler:
         if snapshot is None:
             raise SnapshotDoesNotExist()
 
-        group = snapshot.snapshot_from_application.group
+        workspace = snapshot.snapshot_from_application.workspace
         CoreHandler().check_permissions(
             snapshot.created_by,
             RestoreApplicationSnapshotOperationType.type,
-            group=group,
+            workspace=workspace,
             context=snapshot,
         )
 
@@ -435,8 +435,9 @@ class SnapshotHandler:
             application, None, default_storage
         )
         progress.increment(by=50)
+
         imported_application = application_type.import_serialized(
-            snapshot.snapshot_from_application.group,
+            snapshot.snapshot_from_application.workspace,
             exported_application,
             {},
             None,
@@ -444,7 +445,7 @@ class SnapshotHandler:
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
         imported_application.name = CoreHandler().find_unused_application_name(
-            snapshot.snapshot_from_application.group, snapshot.name
+            snapshot.snapshot_from_application.workspace, snapshot.name
         )
         imported_application.save()
         application_created.send(self, application=imported_application, user=None)

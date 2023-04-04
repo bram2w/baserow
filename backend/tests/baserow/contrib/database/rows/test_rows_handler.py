@@ -16,7 +16,7 @@ from baserow.contrib.database.api.utils import (
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.core.exceptions import UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -128,7 +128,7 @@ def test_create_row(send_mock, data_fixture):
 
     handler = RowHandler()
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.create_row(user=user_2, table=table)
 
     row_1 = handler.create_row(
@@ -274,7 +274,7 @@ def test_get_row(data_fixture):
         },
     )
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.get_row(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
@@ -482,7 +482,7 @@ def test_update_row(send_mock, data_fixture):
     handler = RowHandler()
     row = handler.create_row(user=user, table=table)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.update_row_by_id(user=user_2, table=table, row_id=row.id, values={})
 
     with pytest.raises(RowDoesNotExist):
@@ -675,7 +675,7 @@ def test_move_row(before_send_mock, send_mock, data_fixture):
     row_2 = handler.create_row(user=user, table=table)
     row_3 = handler.create_row(user=user, table=table)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.move_row_by_id(user=user_2, table=table, row_id=row_1.id)
 
     with pytest.raises(RowDoesNotExist):
@@ -730,7 +730,7 @@ def test_delete_row(before_send_mock, send_mock, data_fixture):
     row = handler.create_row(user=user, table=table)
     handler.create_row(user=user, table=table)
 
-    with pytest.raises(UserNotInGroup):
+    with pytest.raises(UserNotInWorkspace):
         handler.delete_row_by_id(user=user_2, table=table, row_id=row.id)
 
     with pytest.raises(RowDoesNotExist):
@@ -977,8 +977,8 @@ def test_get_unique_orders_before_row_triggering_full_table_order_reset(data_fix
 
     handler = RowHandler()
     assert handler.get_unique_orders_before_row(row_3, model, 2) == [
-        Decimal("2.50000000000000000000"),
-        Decimal("2.66666666666666651864"),
+        Decimal("3.50000000000000000000"),
+        Decimal("3.66666666666666651864"),
     ]
 
     row_1.refresh_from_db()

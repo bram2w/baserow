@@ -18,32 +18,32 @@
       v-else-if="$fetchState.error"
       type="error"
       icon="exclamation"
-      :title="$t('deleteAccountSettings.groupLoadingError')"
+      :title="$t('deleteAccountSettings.workspaceLoadingError')"
     >
-      {{ $t('deleteAccountSettings.groupLoadingErrorDescription') }}
+      {{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}
     </Alert>
 
-    <div v-else-if="orphanGroups.length" class="delete-section">
+    <div v-else-if="orphanWorkspaces.length" class="delete-section">
       <div class="delete-section__label">
         <div class="delete-section__label-icon">
           <i class="fas fa-exclamation"></i>
         </div>
-        {{ $t('deleteAccountSettings.orphanGroups') }}
+        {{ $t('deleteAccountSettings.orphanWorkspaces') }}
       </div>
       <p class="delete-section__description">
-        {{ $t('deleteAccountSettings.groupNoticeDescription') }}
+        {{ $t('deleteAccountSettings.workspaceNoticeDescription') }}
       </p>
       <ul class="delete-section__list">
-        <li v-for="group in orphanGroups" :key="group.id">
+        <li v-for="workspace in orphanWorkspaces" :key="workspace.id">
           <i class="delete-section__list-icon fas fa-users"></i>
-          {{ group.name }}
+          {{ workspace.name }}
           <small>
             {{
               $tc(
-                'deleteAccountSettings.orphanGroupMemberCount',
-                groupMembers[group.id].length,
+                'deleteAccountSettings.orphanWorkspaceMemberCount',
+                workspaceMembers[workspace.id].length,
                 {
-                  count: groupMembers[group.id].length,
+                  count: workspaceMembers[workspace.id].length,
                 }
               )
             }}</small
@@ -80,7 +80,7 @@ import { mapGetters } from 'vuex'
 import { ResponseErrorMessage } from '@baserow/modules/core/plugins/clientHandler'
 import error from '@baserow/modules/core/mixins/error'
 import AuthService from '@baserow/modules/core/services/auth'
-import GroupService from '@baserow/modules/core/services/group'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export default {
@@ -93,20 +93,20 @@ export default {
         password: '',
         passwordConfirm: '',
       },
-      groupMembers: {},
+      workspaceMembers: {},
     }
   },
   async fetch() {
-    this.groupMembers = Object.fromEntries(
+    this.workspaceMembers = Object.fromEntries(
       await Promise.all(
-        this.sortedGroups
+        this.sortedWorkspaces
           .filter(({ permissions }) => permissions === 'ADMIN')
-          .map(async ({ id: groupId }) => {
-            const { data } = await GroupService(this.$client).fetchAllUsers(
-              groupId
+          .map(async ({ id: workspaceId }) => {
+            const { data } = await WorkspaceService(this.$client).fetchAllUsers(
+              workspaceId
             )
             return [
-              groupId,
+              workspaceId,
               data.filter(({ user_id: userId }) => userId !== this.userId),
             ]
           })
@@ -117,13 +117,13 @@ export default {
     ...mapGetters({
       userId: 'auth/getUserId',
       settings: 'settings/get',
-      sortedGroups: 'group/getAllSorted',
+      sortedWorkspaces: 'workspace/getAllSorted',
     }),
-    orphanGroups() {
-      return this.sortedGroups.filter(
-        ({ id: groupId }) =>
-          this.groupMembers[groupId] &&
-          this.groupMembers[groupId].every(
+    orphanWorkspaces() {
+      return this.sortedWorkspaces.filter(
+        ({ id: workspaceId }) =>
+          this.workspaceMembers[workspaceId] &&
+          this.workspaceMembers[workspaceId].every(
             ({ permissions }) => permissions !== 'ADMIN'
           )
       )
@@ -137,28 +137,28 @@ export default {
         message: this.$t('deleteAccountSettings.accountDeletedSuccessMessage'),
       })
     },
-    async loadGroupMembers() {
-      this.groupLoading = true
+    async loadWorkspaceMembers() {
+      this.workspaceLoading = true
       try {
-        this.groupMembers = Object.fromEntries(
+        this.workspaceMembers = Object.fromEntries(
           await Promise.all(
-            this.sortedGroups
+            this.sortedWorkspaces
               .filter(({ permissions }) => permissions === 'ADMIN')
-              .map(async ({ id: groupId }) => {
-                const { data } = await GroupService(this.$client).fetchAllUsers(
-                  groupId
-                )
+              .map(async ({ id: workspaceId }) => {
+                const { data } = await WorkspaceService(
+                  this.$client
+                ).fetchAllUsers(workspaceId)
                 return [
-                  groupId,
+                  workspaceId,
                   data.filter(({ user_id: userId }) => userId !== this.userId),
                 ]
               })
           )
         )
       } catch (error) {
-        notifyIf(error, 'group')
+        notifyIf(error, 'workspace')
       } finally {
-        this.groupLoading = false
+        this.workspaceLoading = false
       }
     },
     async deleteAccount() {

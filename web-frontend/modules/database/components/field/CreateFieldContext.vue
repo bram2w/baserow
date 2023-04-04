@@ -9,9 +9,11 @@
       :table="table"
       :forced-type="forcedType"
       @submitted="submit"
+      @keydown-enter="$refs.submitButton.focus()"
     >
       <div class="context__form-actions">
         <button
+          ref="submitButton"
           class="button"
           :class="{ 'button--loading': loading }"
           :disabled="loading"

@@ -13,7 +13,7 @@ export function populatePage(page) {
 const state = {
   // Holds the value of which page is currently selected
   selected: {},
-
+  deviceTypeSelected: null,
   // A job object that tracks the progress of a page duplication currently running
   duplicateJob: null,
 }
@@ -37,6 +37,12 @@ const mutations = {
     page._.selected = true
     state.selected = page
   },
+  UNSELECT(state) {
+    if (state.selected) {
+      state.selected._.selected = false
+    }
+    state.selected = {}
+  },
   SET_DUPLICATE_JOB(state, job) {
     state.duplicateJob = job
   },
@@ -46,6 +52,9 @@ const mutations = {
       const index = order.findIndex((value) => value === pageId)
       page.order = index === -1 ? 0 : index + 1
     })
+  },
+  SET_DEVICE_TYPE_SELECTED(state, deviceType) {
+    state.deviceTypeSelected = deviceType
   },
 }
 
@@ -82,6 +91,9 @@ const actions = {
 
     return { builder, page }
   },
+  unselect({ commit }) {
+    commit('UNSELECT')
+  },
   forceDelete({ commit }, { builder, page }) {
     if (page._.selected) {
       // Redirect back to the dashboard because the page doesn't exist anymore.
@@ -90,10 +102,11 @@ const actions = {
 
     commit('DELETE_ITEM', { builder, id: page.id })
   },
-  async create({ commit, dispatch }, { builder, name }) {
+  async create({ commit, dispatch }, { builder, name, path }) {
     const { data: page } = await PageService(this.$client).create(
       builder.id,
-      name
+      name,
+      path
     )
 
     commit('ADD_ITEM', { builder, page })
@@ -130,6 +143,9 @@ const actions = {
       throw error
     }
   },
+  setDeviceTypeSelected({ commit }, deviceType) {
+    commit('SET_DEVICE_TYPE_SELECTED', deviceType)
+  },
   async duplicate({ commit, dispatch }, { page }) {
     const { data: job } = await PageService(this.$client).duplicate(page.id)
 
@@ -140,6 +156,12 @@ const actions = {
 }
 
 const getters = {
+  getSelected(state) {
+    return state.selected
+  },
+  getDeviceTypeSelected(state) {
+    return state.deviceTypeSelected
+  },
   getDuplicateJob(state) {
     return state.duplicateJob
   },

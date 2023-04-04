@@ -3,18 +3,21 @@
     <h2 class="box__title">
       {{ $t('createPageModal.header') }}
     </h2>
-    <PageForm :creation="true" :builder="builder" @submitted="addPage">
-      <FormElement>
-        <div class="actions actions--right">
-          <button
-            :class="{ 'button--loading': loading }"
-            class="button button--large"
-            type="submit"
-          >
-            {{ $t('createPageModal.submit') }}
-          </button>
-        </div>
-      </FormElement>
+    <PageForm
+      ref="pageForm"
+      :creation="true"
+      :builder="builder"
+      @submitted="addPage"
+    >
+      <div class="actions actions--right">
+        <button
+          :class="{ 'button--loading': loading }"
+          class="button button--large"
+          type="submit"
+        >
+          {{ $t('createPageModal.submit') }}
+        </button>
+      </div>
     </PageForm>
   </Modal>
 </template>
@@ -40,18 +43,20 @@ export default {
     }
   },
   methods: {
-    async addPage({ name }) {
+    async addPage({ name, path }) {
       this.loading = true
       try {
         const page = await this.$store.dispatch('page/create', {
           builder: this.builder,
           name,
+          path,
         })
+        this.$refs.pageForm.$v.$reset()
+        this.hide()
         await this.$router.push({
           name: 'builder-page',
           params: { builderId: this.builder.id, pageId: page.id },
         })
-        this.hide()
       } catch (error) {
         notifyIf(error, 'application')
       }

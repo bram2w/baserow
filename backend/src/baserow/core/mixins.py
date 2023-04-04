@@ -1,5 +1,7 @@
 import abc
-from typing import List
+import warnings
+from decimal import Decimal
+from typing import Dict, List, Optional, Type
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -8,6 +10,11 @@ from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.mixins import FieldCacheMixin
 from django.utils.functional import cached_property
 
+from baserow.core.db import (
+    get_highest_order_of_queryset,
+    get_unique_orders_before_item,
+    recalculate_full_orders,
+)
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.managers import NoTrashManager, TrashOnlyManager, make_trash_manager
 
@@ -18,16 +25,15 @@ class OrderableMixin:
     """
 
     @classmethod
-    def get_highest_order_of_queryset(cls, queryset, field="order"):
+    def get_highest_order_of_queryset(
+        cls, queryset: QuerySet, field: str = "order"
+    ) -> int:
         """
         Returns the highest existing value of the provided field.
 
         :param queryset: The queryset containing the field to check.
-        :type queryset: QuerySet
         :param field: The field name containing the value.
-        :type field: str
         :return: The highest value in the queryset.
-        :rtype: int
         """
 
         return queryset.aggregate(models.Max(field)).get(f"{field}__max", 0) or 0
@@ -95,6 +101,78 @@ class OrderableMixin:
         )
 
         return new_full_order
+
+
+class FractionOrderableMixin(OrderableMixin):
+    """
+    This mixin introduces a set of helpers of the model is orderable by a decimal field.
+
+    Needs a `models.DecimalField()` on the model.
+    """
+
+    @classmethod
+    def get_highest_order_of_queryset(
+        cls, queryset: QuerySet, amount: int = 1, field: str = "order"
+    ) -> List[Decimal]:
+        """
+        Returns the highest existing values of the provided order field.
+
+        :param queryset: The queryset containing the field to check.
+        :param amount: The amount of order to return.
+        :param field: The field name containing the value.
+        :return: A list of highest order value in the queryset.
+        """
+
+        return get_highest_order_of_queryset(queryset, amount=amount, field=field)
+
+    @classmethod
+    def get_unique_orders_before_item(
+        cls,
+        before: Optional[models.Model],
+        queryset: QuerySet,
+        amount: int = 1,
+        field: str = "order",
+    ) -> List[Decimal]:
+        """
+        Calculates a list of unique decimal orders that can safely be used before the
+        provided `before` item.
+
+        :param before: The model instance where the before orders must be
+            calculated for.
+        :param queryset: The base queryset used to compute the value.
+        :param amount: The number of orders that must be requested. Can be higher if
+            multiple items are inserted or moved.
+        :param field: The order field name.
+        :raises CannotCalculateIntermediateOrder: If it's not possible to find an
+            intermediate order. The full order of the items must be recalculated in this
+            case before calling this method again.
+        :return: A list of decimals containing safe to use orders in order.
+        """
+
+        return get_unique_orders_before_item(before, queryset, amount, field=field)
+
+    @classmethod
+    def recalculate_full_orders(
+        cls,
+        field="order",
+        queryset: Optional[QuerySet] = None,
+    ):
+        """
+        Recalculates the order to whole numbers of all instances based on the existing
+        position.
+
+        id     old_order    new_order
+        1      1.5000       2.0000
+        2      1.7500       3.0000
+        3      0.7500       1.0000
+
+        :param model: The model we want to reorder the instance for.
+        :param field: The order field name.
+        :param queryset: An optional queryset to filter the item orders that are
+            recalculated. This queryset must select all the item to recalculate.
+        """
+
+        return recalculate_full_orders(cls, field=field, queryset=queryset)
 
 
 class PolymorphicContentTypeMixin:
@@ -311,7 +389,65 @@ def make_trashable_mixin(parent):
     return TrashableMixin
 
 
-ParentGroupTrashableModelMixin = make_trashable_mixin("group")
+ParentWorkspaceTrashableModelMixin = make_trashable_mixin("workspace")
+
+
+def support_foreignkey_compat(compats: Dict[str, str]) -> Type[models.Model]:
+    """
+    Constructs a mixin class which easily allows us to traverse `ForeignKey`
+    when we've renamed them to something else.
+    """
+
+    class ForeignKeyCompatMixin(models.Model):
+        class Meta:
+            abstract = True
+
+    mixin = ForeignKeyCompatMixin
+    for from_fk, to_fk in compats.items():
+        # Return the `to_fk` when you access `from_fk`.
+        setattr(mixin, from_fk, property(lambda self: getattr(self, to_fk)))
+        # Return the `{to_fk}_id` FK ID when you access `{from_fk}_id`.
+        setattr(
+            mixin, f"{from_fk}_id", property(lambda self: getattr(self, f"{to_fk}_id"))
+        )
+        warnings.warn(
+            f"The `{from_fk}` field will be deprecated soon, please use `{to_fk}` instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    return mixin
+
+
+GroupToWorkspaceCompatModelMixin = support_foreignkey_compat({"group": "workspace"})
+
+
+class GroupToWorkspaceCompatModelSerializerMixin:
+    """
+    A mixin that allows us to rename the `group` field to `workspace` when serializing.
+    """
+
+    def to_representation(self, instance):
+        """
+        Provide both the deprecated `group` field and the new `workspace` when
+        serializing.
+        """
+
+        ret = super().to_representation(instance)
+        if "workspace" in ret:
+            ret["group"] = ret["workspace"]
+
+        return ret
+
+    def to_internal_value(self, data):
+        """
+        Allow the deprecated `group` field to be used when deserializing.
+        """
+
+        if "group" in data and "workspace" not in data:
+            data["workspace"] = data.pop("group")
+
+        return super().to_internal_value(data)
 
 
 class TrashableModelMixin(models.Model):

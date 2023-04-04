@@ -1,36 +1,16 @@
 <template>
-  <div>
-    <div class="layout__col-2-1">
-      <ul class="page-tabs">
-        <nuxt-link
-          v-for="page in pages"
-          :key="page.type"
-          v-slot="{ href, navigate, isExactActive }"
-          :to="page.to"
-        >
-          <li
-            v-tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
-            class="page-tabs__item"
-            :class="{
-              'page-tabs__item--active': isExactActive,
-              'page-tabs__item--disabled': !page.navigable,
-            }"
-          >
-            <a
-              :href="page.navigable ? href : null"
-              class="page-tabs__link"
-              v-on="page.navigable ? { click: navigate } : {}"
-            >
-              {{ page.name }}
-            </a>
-          </li>
-        </nuxt-link>
-      </ul>
-    </div>
-    <div class="layout__col-2-2">
-      <NuxtChild :group="group" />
-    </div>
-  </div>
+  <Tabs :full-height="true" :navigation="true" :large="true">
+    <Tab
+      v-for="page in pages"
+      :key="page.type"
+      :title="page.name"
+      :disabled="!page.navigable"
+      :to="page.to"
+      :tooltip="!page.navigable ? $t('enterprise.deactivated') : null"
+    >
+      <NuxtChild :workspace="workspace" />
+    </Tab>
+  </Tabs>
 </template>
 
 <script>
@@ -39,42 +19,42 @@ export default {
   layout: 'app',
   async asyncData({ store, params, error }) {
     try {
-      const group = await store.dispatch(
-        'group/selectById',
-        parseInt(params.groupId, 10)
+      const workspace = await store.dispatch(
+        'workspace/selectById',
+        parseInt(params.workspaceId, 10)
       )
-      return { group }
+      return { workspace }
     } catch (e) {
-      return error({ statusCode: 404, message: 'Group not found.' })
+      return error({ statusCode: 404, message: 'Workspace not found.' })
     }
   },
   computed: {
-    groupSettingsPageTypes() {
-      return Object.values(this.$registry.getAll('groupSettingsPage'))
+    workspaceSettingsPageTypes() {
+      return Object.values(this.$registry.getAll('workspaceSettingsPage'))
     },
     pages() {
       // Build an array of settings page types they're permitted to view.
-      const permittedPages = this.groupSettingsPageTypes.filter((instance) =>
-        instance.hasPermission(this.group)
+      const permittedPages = this.workspaceSettingsPageTypes.filter(
+        (instance) => instance.hasPermission(this.workspace)
       )
       return permittedPages.map((instance) => {
         return {
           type: instance.type,
           name: instance.getName(),
-          to: instance.getRoute(this.group),
-          navigable: instance.isFeatureActive(this.group),
+          to: instance.getRoute(this.workspace),
+          navigable: instance.isFeatureActive(this.workspace),
         }
       })
     },
   },
   mounted() {
-    this.$bus.$on('group-deleted', this.groupDeleted)
+    this.$bus.$on('workspace-deleted', this.workspaceDeleted)
   },
   beforeDestroy() {
-    this.$bus.$off('group-deleted', this.groupDeleted)
+    this.$bus.$off('workspace-deleted', this.workspaceDeleted)
   },
   methods: {
-    groupDeleted() {
+    workspaceDeleted() {
       this.$nuxt.$router.push({ name: 'dashboard' })
     },
   },

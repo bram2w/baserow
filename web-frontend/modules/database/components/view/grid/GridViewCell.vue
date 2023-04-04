@@ -24,10 +24,11 @@
         props.multiSelectPosition.bottom,
     }"
     :style="data.style"
-    @click="$options.methods.select($event, parent, props.field.id)"
+    @click.exact="$options.methods.select($event, parent, props.field.id)"
     @mousedown.left="$options.methods.cellMouseDownLeft($event, listeners)"
     @mouseover="$options.methods.cellMouseover($event, listeners)"
     @mouseup.left="$options.methods.cellMouseUpLeft($event, listeners)"
+    @click.shift.exact="$options.methods.cellShiftClick($event, listeners)"
   >
     <component
       :is="$options.methods.getFunctionalComponent(parent, props)"
@@ -40,7 +41,7 @@
         !parent.alive.includes(props.field.id)
       "
       ref="unselectedField"
-      :group-id="props.groupId"
+      :workspace-id="props.workspaceId"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :state="props.state"
@@ -50,7 +51,7 @@
       :is="$options.methods.getComponent(parent, props)"
       v-else
       ref="selectedField"
-      :group-id="props.groupId"
+      :workspace-id="props.workspaceId"
       :field="props.field"
       :value="props.row['field_' + props.field.id]"
       :selected="parent.isCellSelected(props.field.id)"
@@ -148,7 +149,7 @@ export default {
       parent.selectCell(fieldId)
     },
     cellMouseDownLeft(event, listeners) {
-      if (listeners['cell-mousedown-left']) {
+      if (listeners['cell-mousedown-left'] && !event.shiftKey) {
         listeners['cell-mousedown-left']()
       }
     },
@@ -160,6 +161,11 @@ export default {
     cellMouseUpLeft(event, listeners) {
       if (listeners['cell-mouseup-left']) {
         listeners['cell-mouseup-left']()
+      }
+    },
+    cellShiftClick(event, listeners) {
+      if (listeners['cell-shift-click']) {
+        listeners['cell-shift-click']()
       }
     },
     /**

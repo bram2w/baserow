@@ -33,7 +33,7 @@ export class JobType extends Registerable {
 
   /**
    * The sidebar component will be rendered in the sidebar if the application is
-   * in the selected group. All the applications of a group are listed in the
+   * in the selected workspace. All the applications of a workspace are listed in the
    * sidebar and this component should give the user the possibility to select
    * that application.
    */
@@ -64,9 +64,9 @@ export class JobType extends Registerable {
   }
 
   /**
-   * Returns true if the specific job is part of the group
+   * Returns true if the specific job is part of the workspace
    */
-  isJobPartOfGroup(job, group) {
+  isJobPartOfWorkspace(job, workspace) {
     return false
   }
 
@@ -125,8 +125,8 @@ export class DuplicateApplicationJobType extends JobType {
     return SidebarApplicationPendingJob
   }
 
-  isJobPartOfGroup(job, group) {
-    return job.original_application.group.id === group.id
+  isJobPartOfWorkspace(job, workspace) {
+    return job.original_application.workspace.id === workspace.id
   }
 
   async onJobDone(job) {
@@ -182,14 +182,14 @@ export class InstallTemplateJobType extends JobType {
     return SidebarApplicationPendingJob
   }
 
-  isJobPartOfGroup(job, group) {
-    return job.group.id === group.id
+  isJobPartOfWorkspace(job, workspace) {
+    return job.workspace.id === workspace.id
   }
 
   async onJobDone(job) {
     const { i18n, store } = this.app
     // Installing a template has just created a couple of applications in the
-    // group. The response contains those applications and we can add them to the
+    // workspace. The response contains those applications and we can add them to the
     // store so that the user can view the installed template right away.
     const installedApplications = job.installed_applications
     try {

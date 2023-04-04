@@ -16,22 +16,24 @@
         </div>
       </div>
     </FormElement>
-    <FormElement :error="fieldHasErrors('group')" class="control">
-      <label class="control__label">{{ $t('apiTokenForm.groupLabel') }}</label>
+    <FormElement :error="fieldHasErrors('workspace')" class="control">
+      <label class="control__label">{{
+        $t('apiTokenForm.workspaceLabel')
+      }}</label>
       <Dropdown
-        v-model="values.group"
+        v-model="values.workspace"
         class="col-4"
-        @hide="$v.values.group.$touch()"
+        @hide="$v.values.workspace.$touch()"
       >
         <DropdownItem
-          v-for="group in groups"
-          :key="group.id"
-          :name="group.name"
-          :value="group.id"
+          v-for="workspace in workspaces"
+          :key="workspace.id"
+          :name="workspace.name"
+          :value="workspace.id"
         ></DropdownItem>
       </Dropdown>
       <div class="control__elements">
-        <div v-if="fieldHasErrors('group')" class="error">
+        <div v-if="fieldHasErrors('workspace')" class="error">
           {{ $t('error.requiredField') }}
         </div>
       </div>
@@ -53,13 +55,13 @@ export default {
     return {
       values: {
         name: '',
-        group: '',
+        workspace: '',
       },
     }
   },
   computed: {
     ...mapState({
-      groups: (state) => state.group.items,
+      workspaces: (state) => state.workspace.items,
     }),
   },
   mounted() {
@@ -68,7 +70,7 @@ export default {
   validations: {
     values: {
       name: { required },
-      group: { required },
+      workspace: { required },
     },
   },
 }

@@ -108,8 +108,8 @@ def test_row_comments_api_view_without_premium_license(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_row_comments_api_view_without_premium_license_for_group(
-    premium_data_fixture, api_client, alternative_per_group_license_service
+def test_row_comments_api_view_without_premium_license_for_workspace(
+    premium_data_fixture, api_client, alternative_per_workspace_license_service
 ):
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
@@ -118,8 +118,8 @@ def test_row_comments_api_view_without_premium_license_for_group(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
 
-    alternative_per_group_license_service.restrict_user_premium_to(
-        user, table.database.group.id
+    alternative_per_workspace_license_service.restrict_user_premium_to(
+        user, table.database.workspace.id
     )
 
     response = api_client.get(
@@ -132,7 +132,7 @@ def test_row_comments_api_view_without_premium_license_for_group(
     )
     assert response.status_code == HTTP_200_OK
 
-    alternative_per_group_license_service.restrict_user_premium_to(user, 0)
+    alternative_per_workspace_license_service.restrict_user_premium_to(user, 0)
     response = api_client.get(
         reverse(
             "api:premium:row_comments:item",
@@ -192,7 +192,7 @@ def test_row_comments_cant_view_comments_for_invalid_row_in_table(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_group_for(
+def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_workspace_for(
     premium_data_fixture, api_client
 ):
     user, token = premium_data_fixture.create_user_and_token(
@@ -276,7 +276,7 @@ def test_row_comments_cant_create_comments_in_invalid_row_in_table(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_group_for(
+def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_workspace_for(
     premium_data_fixture, api_client
 ):
     user, token = premium_data_fixture.create_user_and_token(
@@ -463,7 +463,9 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
     assert response.status_code == HTTP_200_OK
     assert response.json()["results"][0]["row_id"] == rows[0].id
 
-    TrashHandler.trash(user, table.database.group, table.database, rows[0], table.id)
+    TrashHandler.trash(
+        user, table.database.workspace, table.database, rows[0], table.id
+    )
 
     response = api_client.get(
         reverse(
@@ -550,7 +552,9 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
     model = table.get_model()
     assert model.objects.count() == 2
 
-    TrashHandler.trash(user, table.database.group, table.database, rows[0], table.id)
+    TrashHandler.trash(
+        user, table.database.workspace, table.database, rows[0], table.id
+    )
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
     TrashHandler.permanently_delete_marked_trash()
@@ -613,7 +617,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
     model = table.get_model()
     assert model.objects.count() == 2
 
-    TrashHandler.trash(user, table.database.group, table.database, table)
+    TrashHandler.trash(user, table.database.workspace, table.database, table)
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
     TrashHandler.permanently_delete_marked_trash()
@@ -639,7 +643,9 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
         columns=[("text", "text")], rows=["first row", "second row"], user=user
     )
 
-    premium_data_fixture.create_user_group(user=other_user, group=table.database.group)
+    premium_data_fixture.create_user_workspace(
+        user=other_user, workspace=table.database.workspace
+    )
 
     response = api_client.post(
         reverse(

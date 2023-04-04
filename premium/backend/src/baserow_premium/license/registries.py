@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 
 from baserow_premium.license.models import License
 
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registry import Instance, Registry
 
 
@@ -57,11 +57,11 @@ class LicenseType(abc.ABC, Instance):
 
         return None
 
-    def get_seat_usage_summary_for_group(
-        self, group: Group
+    def get_seat_usage_summary_for_workspace(
+        self, workspace: Workspace
     ) -> Optional[SeatUsageSummary]:
         """
-        If it makes sense for a group to have seat usage, then this should return
+        If it makes sense for a workspace to have seat usage, then this should return
         a summary of it. If it doesn't make sense for this license type then this
         should return None.
         """

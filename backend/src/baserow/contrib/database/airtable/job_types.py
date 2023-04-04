@@ -1,5 +1,6 @@
 from requests.exceptions import RequestException
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.api.errors import ERROR_GROUP_DOES_NOT_EXIST, ERROR_USER_NOT_IN_GROUP
@@ -14,7 +15,7 @@ from baserow.contrib.database.airtable.operations import (
 from baserow.contrib.database.airtable.utils import extract_share_id_from_url
 from baserow.contrib.database.airtable.validators import is_publicly_shared_airtable_url
 from baserow.core.action.registries import action_type_registry
-from baserow.core.exceptions import GroupDoesNotExist, UserNotInGroup
+from baserow.core.exceptions import UserNotInWorkspace, WorkspaceDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import JobType
 from baserow.core.signals import application_created
@@ -30,8 +31,8 @@ class AirtableImportJobType(JobType):
     max_count = 1
 
     api_exceptions_map = {
-        UserNotInGroup: ERROR_USER_NOT_IN_GROUP,
-        GroupDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
+        UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        WorkspaceDoesNotExist: ERROR_GROUP_DOES_NOT_EXIST,
     }
 
     job_exceptions_map = {
@@ -42,14 +43,20 @@ class AirtableImportJobType(JobType):
     }
 
     request_serializer_field_names = [
-        "group_id",
+        "group_id",  # GroupDeprecation
+        "workspace_id",
         "database_id",
         "airtable_share_url",
     ]
 
     request_serializer_field_overrides = {
         "group_id": serializers.IntegerField(
+            required=False,
             help_text="The group ID where the Airtable base must be imported into.",
+        ),  # GroupDeprecation
+        "workspace_id": serializers.IntegerField(
+            required=False,
+            help_text="The workspace ID where the Airtable base must be imported into.",
         ),
         "airtable_share_url": serializers.URLField(
             validators=[is_publicly_shared_airtable_url],
@@ -59,7 +66,8 @@ class AirtableImportJobType(JobType):
     }
 
     serializer_field_names = [
-        "group_id",
+        "group_id",  # GroupDeprecation
+        "workspace_id",
         "database",
         "airtable_share_id",
     ]
@@ -67,6 +75,9 @@ class AirtableImportJobType(JobType):
     serializer_field_overrides = {
         "group_id": serializers.IntegerField(
             help_text="The group ID where the Airtable base must be imported into.",
+        ),
+        "workspace_id": serializers.IntegerField(
+            help_text="The workspace ID where the Airtable base must be imported into.",
         ),
         "airtable_share_id": serializers.URLField(
             max_length=18,
@@ -77,16 +88,27 @@ class AirtableImportJobType(JobType):
 
     def prepare_values(self, values, user):
 
-        group = CoreHandler().get_group(values.pop("group_id"))
+        # GroupDeprecation
+        workspace_id = values.pop("workspace_id", values.pop("group_id", None))
+        if workspace_id is None:
+            raise ValidationError(
+                "A `workspace_id` or `group_id` is required to "
+                "execute an AirtableImportJob."
+            )
+
+        workspace = CoreHandler().get_workspace(workspace_id)
         CoreHandler().check_permissions(
-            user, RunAirtableImportJobOperationType.type, group=group, context=group
+            user,
+            RunAirtableImportJobOperationType.type,
+            workspace=workspace,
+            context=workspace,
         )
 
         airtable_share_id = extract_share_id_from_url(values["airtable_share_url"])
 
         return {
             "airtable_share_id": airtable_share_id,
-            "group": group,
+            "workspace": workspace,
         }
 
     def run(self, job, progress):
@@ -95,7 +117,7 @@ class AirtableImportJobType(JobType):
             ImportDatabaseFromAirtableActionType.type
         ).do(
             job.user,
-            job.group,
+            job.workspace,
             job.airtable_share_id,
             progress_builder=progress.create_child_builder(
                 represents_progress=progress.total

@@ -25,7 +25,7 @@ from baserow.api.exceptions import (
     RequestBodyValidationException,
 )
 from baserow.core.exceptions import PermissionDenied
-from baserow.core.models import Group
+from baserow.core.models import Workspace
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     Instance,
@@ -58,12 +58,12 @@ class TemporaryInstance(CustomFieldsInstanceMixin, ModelInstanceMixin, Instance)
 
 class TemporaryInstanceType1(TemporaryInstance):
     type = "temporary_1"
-    model_class = Group
+    model_class = Workspace
 
 
 class TemporaryInstanceType2(TemporaryInstance):
     type = "temporary_2"
-    model_class = Group
+    model_class = Workspace
     serializer_field_names = ["name"]
     serializer_field_overrides = {"name": serializers.IntegerField()}
 

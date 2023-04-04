@@ -22,11 +22,11 @@
         "installedTitle": "Template installed"
     },
     "sidebar": {
-        "createGroup": "Create group",
+        "createWorkspace": "Create workspace",
         "inviteOthers": "Invite others",
         "members": "Members",
         "logoff": "Logoff",
-        "errorNoGroup": "You don’t have any groups.",
+        "errorNoWorkspace": "You don’t have any workspaces.",
         "admin": "Admin",
         "dashboard": "Dashboard",
         "trash": "Trash",
@@ -61,10 +61,9 @@
     "deleteAccountSettings": {
         "title": "Delete account",
         "description": "You can schedule the deletion of your account by entering your current password and clicking the button. Your account will be permanently deleted after {days} days. In the meantime, if you log in again, your account deletion will be cancelled.",
-        "groupNotice": "Orphan groups will be deleted",
-        "groupNoticeDescription": "When your account is permanently deleted, all groups and associated data for which you are the last active user with Admin permissions will also be deleted. The groups shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
-        "orphanGroups": "Will also be permanently deleted after the grace time",
-        "orphanGroupMemberCount": "shared with nobody|shared with one user|shared with {count} users",
+        "workspaceNoticeDescription": "When your account is permanently deleted, all workspaces and associated data for which you are the last active user with Admin permissions will also be deleted. The workspaces shown below are the ones that will be deleted because you are the only admin. To prevent them being deleted you must first give another user admin before deleting your account.",
+        "orphanWorkspaces": "Will also be permanently deleted after the grace time",
+        "orphanWorkspaceMemberCount": "shared with nobody|shared with one user|shared with {count} users",
         "password": "Password",
         "passwordConfirm": "Repeat password",
         "repeatPasswordMatchError": "This field must match the first password field.",
@@ -75,8 +74,8 @@
         "errorUserIsLastAdminMessage": "Could not delete your account because your are the last administrator of this Baserow instance.",
         "accountDeletedSuccessTitle": "Account deletion scheduled",
         "accountDeletedSuccessMessage": "Your account has been scheduled to be deleted.",
-        "groupLoadingError": "Groups checking has failed",
-        "groupLoadingErrorDescription": "Checking the groups to be deleted failed, please refresh the page."
+        "workspaceLoadingError": "Workspaces checking has failed",
+        "workspaceLoadingErrorDescription": "Checking the workspaces to be deleted failed, please refresh the page."
     },
     "error": {
         "alreadyExistsTitle": "User already exists",
@@ -99,57 +98,48 @@
         "passwordRepeat": "Repeat password"
     },
     "invitationTitle": "Invitation",
-    "invitationMessage": "{invitedBy} has invited you to join {group}.",
-    "groupForm": {
+    "invitationMessage": "{invitedBy} has invited you to join {workspace}.",
+    "workspaceForm": {
         "nameLabel": "Name"
     },
-    "leaveGroupModal": {
-        "title": "Leave {group}",
-        "message": "Are you sure you want to leave the group {group}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the group, it will not be deleted. All the other members will still have access to it. It is not possible to leave a group if you're the last admin because that will leave it unmaintained.",
-        "leave": "Leave group"
+    "leaveWorkspaceModal": {
+        "title": "Leave {workspace}",
+        "message": "Are you sure you want to leave the workspace {workspace}? You won't be able to access the related applications anymore and if you want to regain access, one of the admins must invite you again. If you leave the workspace, it will not be deleted. All the other members will still have access to it. It is not possible to leave a workspace if you're the last admin because that will leave it unmaintained.",
+        "leave": "Leave workspace"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "createApplication": "Create new"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Invitation",
-        "message": "{by} has invited you to join {group}.",
+        "message": "{by} has invited you to join {workspace}.",
         "reject": "Reject",
         "accept": "Accept"
     },
-    "groupMemberModal": {
-        "membersModalTitle": "{group} members",
-        "userDescription": "{user} - joined {since} ago",
-        "invitationDescription": "invited {since} ago",
-        "sendInvite": "Send invite",
-        "userAlreadyInGroupTitle": "User is already in the group.",
-        "userDescriptionPendingDeletion": "{user} - pending deletion",
-        "userAlreadyInGroupText": "It is not possible to send an invitation when the user is already a member of the group."
-    },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Invite by email",
         "optionalMessagePlaceholder": "Optional message",
         "errorInvalidEmail": "Please enter a valid e-mail address.",
         "errorTooLongMessage": "Messages are limited to {amount} characters."
     },
-    "groupsContext": {
-        "search": "Search groups",
+    "workspacesContext": {
+        "search": "Search workspaces",
         "noResults": "No results found",
-        "createGroup": "Create group"
+        "createWorkspace": "Create workspace"
     },
-    "groupContext": {
-        "renameGroup": "Rename group",
+    "workspaceContext": {
+        "renameWorkspace": "Rename workspace",
         "members": "Members",
         "viewTrash": "View trash",
-        "leaveGroup": "Leave group",
-        "deleteGroup": "Delete group"
+        "leaveWorkspace": "Leave workspace",
+        "deleteWorkspace": "Delete workspace"
     },
-    "createGroupModal": {
-        "createNew": "Create new group",
-        "defaultName": "Untitled Group",
-        "add": "Add group",
+    "createWorkspaceModal": {
+        "createNew": "Create new workspace",
+        "defaultName": "Untitled Workspace",
+        "add": "Add workspace",
         "permissionDeniedTitle": "Permission denied",
-        "permissionDeniedBody": "You do not have the required permission to create a new group."
+        "permissionDeniedBody": "You do not have the required permission to create a new workspace."
     },
     "templateCategories": {
         "search": "Search templates",
@@ -160,7 +150,7 @@
     },
     "trashSidebar": {
         "title": "Trash",
-        "unnamedGroup": "Unnamed group {id}"
+        "unnamedWorkspace": "Unnamed workspace {id}"
     },
     "trashContents": {
         "message": "Restore deleted items from the past {duration}",
@@ -186,9 +176,9 @@
         "unnamed": "Unnamed {type} {id}"
     },
     "trashModal": {
-        "emptyTitle": "No groups found",
-        "emptyMessage": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
-        "emptyMessageWithoutCreatePermission": "You aren't a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first."
+        "emptyTitle": "No workspaces found",
+        "emptyMessage": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
+        "emptyMessageWithoutCreatePermission": "You aren't a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Upload from a URL",
@@ -277,10 +267,10 @@
         "alertText": "If you find Baserow useful then starring or sharing us is greatly appreciated. By sharing Baserow you are helping us to improve the product and to make it more useful for you.",
         "tweetContent": "Check out @baserow an open source no-code database tool and Airtable alternative!",
         "redditTitle": "'Baserow - An open source no-code database",
-        "noGroupTitle": "No groups found",
-        "noGroupText": "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you need to create a group.",
-        "noGroupTextWithoutCreatePermission":  "You aren’t a member of any group. Applications like databases belong to a group, so in order to create them you will need to be invited to a group by an administrator first.",
-        "createGroup": "Create group",
+        "noWorkspaceTitle": "No workspaces found",
+        "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
+        "noWorkspaceTextWithoutCreatePermission":  "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
+        "createWorkspace": "Create workspace",
         "becomeGithubSponsor": "Become a GitHub sponsor",
         "starOnGitlab": "Star us on GitLab",
         "shareOnTwitter": "Tweet about Baserow",
@@ -289,7 +279,7 @@
         "shareOnLinkedIn": "Share on LinkedIn"
     },
     "dashboardSidebar": {
-        "groups": "Groups",
+        "workspaces": "Workspaces",
         "links": "Links",
         "knowledgeBase": "Knowledge base",
         "tutorials": "Tutorials",
@@ -353,13 +343,13 @@
         "settingAllowResetPasswordWarning": "Please note that you could lock yourself out of the system and that access can't be restored if you forget your password.",
         "settingAllowNewAccountsName": "Allow creating new accounts",
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
-        "settingAllowSignupsViaGroupInvitationsName": "Allow signups via group invitations",
-        "settingAllowSignupsViaGroupInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
-        "settingAllowNonStaffCreateGroupOperation":  "Allow everyone to create new groups",
-        "settingAllowNonStaffCreateGroupOperationDescription":  "By default, everyone can create new groups. Disable this to only allow staff to create new groups.",
-        "settingAllowNonStaffCreateGroupOperationWarning": "New users will have a group automatically created for them where they are an Admin.",
-        "settingTrackGroupUsage": "Track group usage",
-        "settingTrackGroupUsageDescription": "Enables a nightly job that counts row and file usage per group, displayed on the premium group admin page.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Allow signups via workspace invitations",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
+        "settingAllowNonStaffCreateWorkspaceOperation":  "Allow everyone to create new workspaces",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription":  "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
+        "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
+        "settingTrackWorkspaceUsage": "Track workspace usage",
+        "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
         "userDeletionGraceDelay": "User deletion",
         "settingUserDeletionGraceDelay": "Grace delay",
         "settingUserDeletionGraceDelayDescription": "This is the number of days without a login after which an account scheduled for deletion is permanently deleted.",
@@ -456,23 +446,23 @@
         "membersTabTitle": "Members",
         "invitesTabTitle": "Invites",
         "membersTable": {
-            "title": "{userAmount} Members in {groupName}",
+            "title": "{userAmount} Members in {workspaceName}",
             "inviteMember": "Invite member",
             "columns": {
                 "name": "Name",
                 "email": "Email",
                 "role": "Default role",
                 "highestRole": "Highest Role",
-                "highestRoleHelpText": "The highest role this user assigned to them directly or from a team, on anything in this group",
+                "highestRoleHelpText": "The highest role this user assigned to them directly or from a team, on anything in this workspace",
                 "teams": "Teams"
             },
             "actions": {
                 "copyEmail": "Copy email",
-                "remove": "Remove from group"
+                "remove": "Remove from workspace"
             }
         },
         "invitesTable": {
-            "title": "{invitesAmount} Pending invites in {groupName}",
+            "title": "{invitesAmount} Pending invites in {workspaceName}",
             "columns": {
                 "email": "Email",
                 "message": "Message",
@@ -484,13 +474,13 @@
             }
         },
         "membersInviteModal": {
-            "title": "Invite group members",
+            "title": "Invite workspace members",
             "submit": "Send invite",
-            "helpIconText": "The selected role will be the users default role in this group.",
+            "helpIconText": "The selected role will be the users default role in this workspace.",
             "errors": {
-                "userAlreadyInGroup": {
-                    "title": "User is already in the group.",
-                    "text": "It is not possible to send an invitation when the user is already a member of the group."
+                "userAlreadyInWorkspace": {
+                    "title": "User is already in the workspace.",
+                    "text": "It is not possible to send an invitation when the user is already a member of the workspace."
                 }
             }
         }
@@ -504,9 +494,9 @@
         "deselectAll": "Deselect all",
         "selectAll": "Select all"
     },
-    "removeFromGroupModal": {
-        "title": "Confirm removal from group",
-        "confirmation": "Are you sure you want to remove {name} from {group_name}? This action cannot be undone.",
+    "removeFromWorkspaceModal": {
+        "title": "Confirm removal from workspace",
+        "confirmation": "Are you sure you want to remove {name} from {workspaceName}? This action cannot be undone.",
         "remove": "Remove"
     },
     "editRoleContext": {

@@ -78,8 +78,8 @@ export default {
     }
   },
   computed: {
-    group() {
-      return this.$store.getters['group/get'](1)
+    workspace() {
+      return this.$store.getters['workspace/get'](1)
     },
   },
   /**

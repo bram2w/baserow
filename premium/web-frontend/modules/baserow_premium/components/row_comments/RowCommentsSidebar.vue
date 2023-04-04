@@ -30,7 +30,7 @@
                   !$hasPermission(
                     'database.table.create_comment',
                     table,
-                    database.group.id
+                    database.workspace.id
                   )
                 "
                 >{{ $t('rowCommentSidebar.readOnlyNoComment') }}</template
@@ -66,7 +66,7 @@
               $hasPermission(
                 'database.table.create_comment',
                 table,
-                database.group.id
+                database.workspace.id
               )
             "
             class="row-comments__foot"
@@ -123,7 +123,10 @@ export default {
   },
   computed: {
     hasPremiumFeaturesEnabled() {
-      return this.$hasFeature(PremiumFeatures.PREMIUM, this.database.group.id)
+      return this.$hasFeature(
+        PremiumFeatures.PREMIUM,
+        this.database.workspace.id
+      )
     },
     ...mapGetters({
       comments: 'row_comments/getSortedRowComments',
@@ -158,7 +161,7 @@ export default {
         !this.$hasPermission(
           'database.table.create_comment',
           this.table,
-          this.database.group.id
+          this.database.workspace.id
         )
       ) {
         return

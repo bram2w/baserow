@@ -209,7 +209,7 @@ def test_get_user_info(provider_type, extra_params, enterprise_data_fixture):
     session = SessionBase()
     code = "testcode"
     query_params = {
-        "group_invitation_token": "testgrouptoken",
+        "workspace_invitation_token": "testgrouptoken",
         "language": "es",
         "original": "templates",
     }
@@ -251,7 +251,10 @@ def test_get_user_info(provider_type, extra_params, enterprise_data_fixture):
     user_info, original = provider_type_instance.get_user_info(provider, code, session)
     assert user_info.email == oauth_response_data["email"]
     assert user_info.name == oauth_response_data["name"]
-    assert user_info.group_invitation_token == query_params["group_invitation_token"]
+    assert (
+        user_info.workspace_invitation_token
+        == query_params["workspace_invitation_token"]
+    )
     assert user_info.language == query_params["language"]
     assert original == query_params["original"]
 
@@ -286,7 +289,7 @@ def test_get_user_info_from_oauth_json_response(
     provider_type_instance = auth_provider_type_registry.get_by_model(provider)
     session = SessionBase()
     query_params = {
-        "group_invitation_token": "testgrouptoken",
+        "workspace_invitation_token": "testgrouptoken",
         "language": "es",
         "original": "templates",
     }
@@ -301,7 +304,10 @@ def test_get_user_info_from_oauth_json_response(
     )
     assert user_info.email == oauth_response_data["email"]
     assert user_info.name == oauth_response_data["name"]
-    assert user_info.group_invitation_token == query_params["group_invitation_token"]
+    assert (
+        user_info.workspace_invitation_token
+        == query_params["workspace_invitation_token"]
+    )
     assert user_info.language == query_params["language"]
     assert original == query_params["original"]
 
@@ -332,7 +338,7 @@ def test_push_pop_request_data_to_session():
     query_params = {
         "original": "templates",
         "oauth_state": "state",
-        "group_invitation_token": "fjkldsfj",
+        "workspace_invitation_token": "fjkldsfj",
         "language": "es",
     }
     mixin = OAuth2AuthProviderMixin()

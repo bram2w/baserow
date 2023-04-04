@@ -29,11 +29,11 @@ msgstr "Gebruikers-ID"
 
 #: audit_log/job_types.py:145
 msgid "Group Name"
-msgstr "Groepsnaam"
+msgstr "Naam werkruimte "
 
 #: audit_log/job_types.py:146
 msgid "Group ID"
-msgstr "Groep ID"
+msgstr "Werkruimte ID"
 
 #: audit_log/job_types.py:147
 msgid "Action Type"

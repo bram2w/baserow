@@ -1,7 +1,7 @@
 <template>
   <Context @shown="fetchRolesAndPermissions">
     <div
-      v-if="group._.additionalLoading"
+      v-if="workspace._.additionalLoading"
       class="loading margin-left-2 margin-top-2 margin-right-2 margin-bottom-2"
     ></div>
     <ul v-else class="context__menu">
@@ -22,7 +22,7 @@
         <CreateApplicationModal
           :ref="'createApplicationModal' + type"
           :application-type="applicationType"
-          :group="group"
+          :workspace="workspace"
           @created="hide"
         ></CreateApplicationModal>
       </li>
@@ -36,7 +36,10 @@
           <i class="context__menu-icon fas fa-fw fa-file-alt"></i>
           {{ $t('createApplicationContext.fromTemplate') }}
         </a>
-        <TemplateModal ref="templateModal" :group="group"></TemplateModal>
+        <TemplateModal
+          ref="templateModal"
+          :workspace="workspace"
+        ></TemplateModal>
       </li>
     </ul>
   </Context>
@@ -55,7 +58,7 @@ export default {
   },
   mixins: [context],
   props: {
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -66,16 +69,16 @@ export default {
     },
     canCreateCreateApplication() {
       return this.$hasPermission(
-        'group.create_application',
-        this.group,
-        this.group.id
+        'workspace.create_application',
+        this.workspace,
+        this.workspace.id
       )
     },
   },
   methods: {
     async fetchRolesAndPermissions() {
-      await this.$store.dispatch('group/fetchPermissions', this.group)
-      await this.$store.dispatch('group/fetchRoles', this.group)
+      await this.$store.dispatch('workspace/fetchPermissions', this.workspace)
+      await this.$store.dispatch('workspace/fetchRoles', this.workspace)
     },
     openTemplateModal() {
       if (!this.canCreateCreateApplication) {

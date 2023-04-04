@@ -8,7 +8,7 @@ from baserow.core.action.registries import (
     ActionType,
     ActionTypeDescription,
 )
-from baserow.core.action.scopes import GroupActionScopeType
+from baserow.core.action.scopes import WorkspaceActionScopeType
 from baserow.core.models import Snapshot
 from baserow.core.snapshots.exceptions import SnapshotDoesNotExist
 from baserow.core.snapshots.handler import SnapshotHandler
@@ -45,21 +45,21 @@ class CreateSnapshotActionType(ActionType):
 
         snapshot_created = SnapshotHandler().perform_create(snapshot, progress)
         application = snapshot.snapshot_from_application
-        group = application.group
+        workspace = application.workspace
 
         cls.register_action(
             user=user,
             params=cls.Params(
                 application.id, application.name, snapshot.id, snapshot.name
             ),
-            scope=cls.scope(group.id),
-            group=group,
+            scope=cls.scope(workspace.id),
+            workspace=workspace,
         )
         return snapshot_created
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class RestoreSnapshotActionType(ActionType):
@@ -97,7 +97,7 @@ class RestoreSnapshotActionType(ActionType):
         original_application = snapshot.snapshot_from_application
         application = SnapshotHandler().perform_restore(snapshot, progress)
 
-        group = application.group
+        workspace = application.workspace
         cls.register_action(
             user=user,
             params=cls.Params(
@@ -108,14 +108,14 @@ class RestoreSnapshotActionType(ActionType):
                 original_application.id,
                 original_application.name,
             ),
-            scope=cls.scope(group.id),
-            group=group,
+            scope=cls.scope(workspace.id),
+            workspace=workspace,
         )
         return application
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)
 
 
 class DeleteSnapshotActionType(ActionType):
@@ -150,14 +150,14 @@ class DeleteSnapshotActionType(ActionType):
             snapshot = (
                 Snapshot.objects.filter(id=snapshot_id)
                 .select_for_update(of=("self",))
-                .select_related("snapshot_from_application__group")
+                .select_related("snapshot_from_application__workspace")
                 .get()
             )
         except Snapshot.DoesNotExist:
             raise SnapshotDoesNotExist()
 
         application = snapshot.snapshot_from_application
-        group = application.group
+        workspace = application.workspace
         snapshot_name = snapshot.name
 
         SnapshotHandler().delete(snapshot.id, performed_by=user)
@@ -167,10 +167,10 @@ class DeleteSnapshotActionType(ActionType):
             params=cls.Params(
                 application.id, application.name, snapshot_id, snapshot_name
             ),
-            scope=cls.scope(group.id),
-            group=group,
+            scope=cls.scope(workspace.id),
+            workspace=workspace,
         )
 
     @classmethod
-    def scope(cls, group_id: int) -> ActionScopeStr:
-        return GroupActionScopeType.value(group_id)
+    def scope(cls, workspace_id: int) -> ActionScopeStr:
+        return WorkspaceActionScopeType.value(workspace_id)

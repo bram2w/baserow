@@ -51,20 +51,26 @@
         <div v-if="!settings.allow_new_signups" class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingAllowSignupsViaGroupInvitationsName') }}
+              {{
+                $t('settings.settingAllowSignupsViaWorkspaceInvitationsName')
+              }}
             </div>
             <div class="admin-settings__description">
               {{
-                $t('settings.settingAllowSignupsViaGroupInvitationDescription')
+                $t(
+                  'settings.settingAllowSignupsViaWorkspaceInvitationDescription'
+                )
               }}
             </div>
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.allow_signups_via_group_invitations"
+              :value="settings.allow_signups_via_workspace_invitations"
               :large="true"
               @input="
-                updateSettings({ allow_signups_via_group_invitations: $event })
+                updateSettings({
+                  allow_signups_via_workspace_invitations: $event,
+                })
               "
               >{{ $t('settings.enabled') }}</SwitchInput
             >
@@ -94,26 +100,33 @@
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingAllowNonStaffCreateGroupOperation') }}
+              {{ $t('settings.settingAllowNonStaffCreateWorkspaceOperation') }}
             </div>
             <div class="admin-settings__description">
               {{
                 $t(
-                  'settings.settingAllowNonStaffCreateGroupOperationDescription'
+                  'settings.settingAllowNonStaffCreateWorkspaceOperationDescription'
                 )
               }}
             </div>
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.allow_global_group_creation"
+              :value="settings.allow_global_workspace_creation"
               :large="true"
-              @input="updateSettings({ allow_global_group_creation: $event })"
+              @input="
+                updateSettings({ allow_global_workspace_creation: $event })
+              "
               >{{ $t('settings.enabled') }}</SwitchInput
             >
-            <div v-show="settings.allow_global_group_creation" class="warning">
+            <div
+              v-show="settings.allow_global_workspace_creation"
+              class="warning"
+            >
               {{
-                $t('settings.settingAllowNonStaffCreateGroupOperationWarning')
+                $t(
+                  'settings.settingAllowNonStaffCreateWorkspaceOperationWarning'
+                )
               }}
             </div>
           </div>
@@ -155,17 +168,17 @@
         <div class="admin-settings__item">
           <div class="admin-settings__label">
             <div class="admin-settings__name">
-              {{ $t('settings.settingTrackGroupUsage') }}
+              {{ $t('settings.settingTrackWorkspaceUsage') }}
             </div>
             <div class="admin-settings__description">
-              {{ $t('settings.settingTrackGroupUsageDescription') }}
+              {{ $t('settings.settingTrackWorkspaceUsageDescription') }}
             </div>
           </div>
           <div class="admin-settings__control">
             <SwitchInput
-              :value="settings.track_group_usage"
+              :value="settings.track_workspace_usage"
               :large="true"
-              @input="updateSettings({ track_group_usage: $event })"
+              @input="updateSettings({ track_workspace_usage: $event })"
               >{{ $t('settings.enabled') }}</SwitchInput
             >
           </div>

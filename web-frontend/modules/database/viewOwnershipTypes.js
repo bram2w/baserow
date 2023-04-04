@@ -33,7 +33,7 @@ export class ViewOwnershipType extends Registerable {
   /**
    * Indicates if the view ownership type is disabled.
    */
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 
@@ -52,7 +52,7 @@ export class ViewOwnershipType extends Registerable {
   }
 
   /**
-   * The order in which groups of diff. view ownership
+   * The order in which workspaces of diff. view ownership
    * types appear in the list views.
    */
   getListViewTypeSort() {
@@ -84,7 +84,7 @@ export class CollaborativeViewOwnershipType extends ViewOwnershipType {
     return 'fas fa-users'
   }
 
-  isDeactivated(groupId) {
+  isDeactivated(workspaceId) {
     return false
   }
 }

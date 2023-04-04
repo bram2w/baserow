@@ -35,7 +35,7 @@ export default {
   middleware: [
     'settings',
     'authenticated',
-    'groupsAndApplications',
+    'workspacesAndApplications',
     'pendingJobs',
   ],
   computed: {

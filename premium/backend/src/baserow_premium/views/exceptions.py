@@ -9,3 +9,9 @@ class KanbanViewFieldDoesNotBelongToSameTable(Exception):
     """
     Raised when the provided field does not belong to the same table as the kanban view.
     """
+
+
+class CalendarViewHasNoDateField(Exception):
+    """
+    Raised when the calendar does not have a date field.
+    """

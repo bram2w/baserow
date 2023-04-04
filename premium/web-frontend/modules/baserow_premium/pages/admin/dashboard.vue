@@ -24,13 +24,13 @@
             </div>
             <div class="admin-dashboard__numbers">
               <div class="admin-dashboard__numbers-name">
-                {{ $t('dashboard.totalGroups') }}
+                {{ $t('dashboard.totalWorkspaces') }}
               </div>
               <div class="admin-dashboard__numbers-value">
-                {{ data.total_groups }}
+                {{ data.total_workspaces }}
               </div>
               <div class="admin-dashboard__numbers-percentage">
-                <nuxt-link :to="{ name: 'admin-groups' }">{{
+                <nuxt-link :to="{ name: 'admin-workspaces' }">{{
                   $t('dashboard.viewAll')
                 }}</nuxt-link>
               </div>
@@ -196,7 +196,7 @@ export default {
       loading: true,
       data: {
         total_users: 0,
-        total_groups: 0,
+        total_workspaces: 0,
         total_applications: 0,
         new_users_last_24_hours: 0,
         new_users_last_7_days: 0,

@@ -3,7 +3,13 @@
     <template v-if="Object.keys(team).length > 0">
       <ul class="context__menu">
         <li
-          v-if="$hasPermission('enterprise.teams.team.update', group, group.id)"
+          v-if="
+            $hasPermission(
+              'enterprise.teams.team.update',
+              workspace,
+              workspace.id
+            )
+          "
         >
           <a @click="handleEditClick(team)">
             <i class="context__menu-icon fas fa-fw fa-pen"></i>
@@ -11,7 +17,13 @@
           </a>
         </li>
         <li
-          v-if="$hasPermission('enterprise.teams.team.delete', group, group.id)"
+          v-if="
+            $hasPermission(
+              'enterprise.teams.team.delete',
+              workspace,
+              workspace.id
+            )
+          "
         >
           <a
             :class="{
@@ -38,7 +50,7 @@ export default {
   name: 'EditTeamContext',
   mixins: [context],
   props: {
-    group: {
+    workspace: {
       required: true,
       type: Object,
     },

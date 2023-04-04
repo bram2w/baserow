@@ -111,7 +111,7 @@ def test_list_rows(api_client, data_fixture):
     response = api_client.get(url)
     assert response.status_code == HTTP_401_UNAUTHORIZED
 
-    data_fixture.create_template(group=gallery.table.database.group)
+    data_fixture.create_template(workspace=gallery.table.database.workspace)
     url = reverse("api:database:views:gallery:list", kwargs={"view_id": gallery.id})
     response = api_client.get(url)
     assert response.status_code == HTTP_200_OK

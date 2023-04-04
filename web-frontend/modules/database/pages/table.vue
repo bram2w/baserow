@@ -61,14 +61,14 @@ export default {
     const data = {}
 
     // Try to find the table in the already fetched applications by the
-    // groupsAndApplications middleware and select that one. By selecting the table, the
+    // workspacesAndApplications middleware and select that one. By selecting the table, the
     // fields and views are also going to be fetched.
     try {
       const { database, table } = await store.dispatch('table/selectById', {
         databaseId,
         tableId,
       })
-      await store.dispatch('group/selectById', database.group.id)
+      await store.dispatch('workspace/selectById', database.workspace.id)
       data.database = database
       data.table = table
     } catch (e) {
@@ -94,7 +94,7 @@ export default {
       // put the user in an unrecoverable state. Therefore, it's better to not select a
       // view, so that the user can choose which he wants to select in the top left
       // corner.
-      if (!firstViewType.isDeactivated(data.database.group.id)) {
+      if (!firstViewType.isDeactivated(data.database.workspace.id)) {
         viewId = firstView.id
       }
     }
@@ -111,7 +111,7 @@ export default {
         // filled with initial data so we're going to call the fetch function here.
         const type = app.$registry.get('view', view.type)
 
-        if (type.isDeactivated(data.database.group.id)) {
+        if (type.isDeactivated(data.database.workspace.id)) {
           return error({ statusCode: 400, message: type.getDeactivatedText() })
         }
 

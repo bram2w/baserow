@@ -96,7 +96,7 @@
     },
     "apiTokenForm": {
         "nameLabel": "名前",
-        "groupLabel": "グループ"
+        "workspaceLabel": "グループ"
     },
     "apiDocsSelectDatabase": {
         "needOneDatabase": "APIドキュメントを参照するには少なくとも１つのデータベースが必要です。"
@@ -237,7 +237,12 @@
         "includeTimeLabel": "時間を含む",
         "timeFormatLabel": "時間書式",
         "24Hour": "24時間",
-        "12Hour": "12時間"
+        "12Hour": "12時間",
+        "showTimezoneLabel": "タイムゾーンを表示",
+        "addTimezoneOffsetLabel": "値変更 ( {utcOffsetDiff} 分追加)",
+        "subTimezoneOffsetLabel": "値変更 ( {utcOffsetDiff} 分減少)",
+        "forceTimezoneValue": "タイムゾーン",
+        "forceTimezoneLabel": "全てのコラボレーターにタイムゾーンを設定する"
     },
     "fieldLinkRowSubForm": {
         "noTable": "リンクするには、データベース内に、少なくとももう１つのテーブルが必要です。",

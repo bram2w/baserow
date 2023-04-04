@@ -23,16 +23,16 @@ export default {
         oldValue = []
       }
 
-      const groupUser =
-        this.groupCollaborators.find(
-          (groupUser) => groupUser.user_id === newId
+      const workspaceUser =
+        this.workspaceCollaborators.find(
+          (workspaceUser) => workspaceUser.user_id === newId
         ) || null
 
       let newOption = null
-      if (groupUser) {
+      if (workspaceUser) {
         newOption = {
-          id: groupUser.user_id,
-          name: groupUser.name,
+          id: workspaceUser.user_id,
+          name: workspaceUser.name,
         }
       }
 

@@ -22,7 +22,7 @@ from rest_framework.fields import CharField
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
-from baserow.core.models import Group, GroupUser
+from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -285,21 +285,25 @@ class ViewType(
         if "created_by" not in id_mapping:
             id_mapping["created_by"] = {}
 
-            created_by_group = table.database.group
+            created_by_workspace = table.database.workspace
 
             if (
-                id_mapping.get("import_group_id", None) is not None
-                and created_by_group is None
+                id_mapping.get("import_workspace_id", None) is not None
+                and created_by_workspace is None
             ):
-                created_by_group = Group.objects.get(id=id_mapping["import_group_id"])
+                created_by_workspace = Workspace.objects.get(
+                    id=id_mapping["import_workspace_id"]
+                )
 
-            if created_by_group is not None:
-                groupusers_from_group = GroupUser.objects.filter(
-                    group_id=created_by_group.id
+            if created_by_workspace is not None:
+                workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                    workspace_id=created_by_workspace.id
                 ).select_related("user")
 
-                for groupuser in groupusers_from_group:
-                    id_mapping["created_by"][groupuser.user.email] = groupuser.user
+                for workspaceuser in workspaceusers_from_workspace:
+                    id_mapping["created_by"][
+                        workspaceuser.user.email
+                    ] = workspaceuser.user
 
         try:
             ownership_type = view_ownership_type_registry.get(
@@ -592,7 +596,7 @@ class ViewType(
     def after_field_update(self, updated_fields: Union[Iterable["Field"], "Field"]):
         """
         Triggered after a field has been updated, created, deleted. This method is
-        called for each group of field directly or indirectly modified this way.
+        called for each workspace of field directly or indirectly modified this way.
         This hook gives a view type the opportunity to react on any change for a field.
 
         :param update_fields: a unique or a list of modified field.

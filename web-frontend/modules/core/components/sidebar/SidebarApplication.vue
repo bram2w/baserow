@@ -48,7 +48,7 @@
               $hasPermission(
                 'application.update',
                 application,
-                application.group.id
+                application.workspace.id
               )
             "
           >
@@ -66,7 +66,7 @@
               $hasPermission(
                 'application.duplicate',
                 application,
-                application.group.id
+                application.workspace.id
               )
             "
           >
@@ -81,7 +81,7 @@
               $hasPermission(
                 'application.create_snapshot',
                 application,
-                application.group.id
+                application.workspace.id
               )
             "
           >
@@ -99,7 +99,7 @@
               $hasPermission(
                 'application.read_trash',
                 application,
-                application.group.id
+                application.workspace.id
               )
             "
           >
@@ -113,7 +113,7 @@
               $hasPermission(
                 'application.delete',
                 application,
-                application.group.id
+                application.workspace.id
               )
             "
           >
@@ -133,7 +133,7 @@
       </Context>
       <TrashModal
         ref="applicationTrashModal"
-        :initial-group="group"
+        :initial-workspace="workspace"
         :initial-application="application"
       >
       </TrashModal>
@@ -160,7 +160,7 @@ export default {
       type: Object,
       required: true,
     },
-    group: {
+    workspace: {
       type: Object,
       required: true,
     },
@@ -177,7 +177,7 @@ export default {
           (components, plugin) =>
             components.concat(
               plugin.getAdditionalDatabaseContextComponents(
-                this.group,
+                this.workspace,
                 this.application
               )
             ),

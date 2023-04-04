@@ -370,6 +370,13 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
         "patch_batch": {"class_name": "ExampleBatchUpdateRowsRequestSerializer"},
     }
     class_name = config[example_type]["class_name"]
+
+    if not hasattr(get_example_batch_rows_serializer_class, "cache"):
+        get_example_batch_rows_serializer_class.cache = {}
+
+    if class_name in get_example_batch_rows_serializer_class.cache:
+        return get_example_batch_rows_serializer_class.cache[class_name]
+
     fields = {
         "items": serializers.ListField(
             child=get_example_row_serializer_class(
@@ -380,6 +387,7 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
         )
     }
     class_object = type(class_name, (serializers.Serializer,), fields)
+    get_example_batch_rows_serializer_class.cache[class_name] = class_object
     return class_object
 
 

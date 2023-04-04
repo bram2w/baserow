@@ -12,10 +12,10 @@
         "deleteApplication": "Deletar{type}"
     },
     "sidebar": {
-        "createGroup": "Criar grupo",
+        "createWorkspace": "Criar grupo",
         "inviteOthers": "Convidar outros",
         "logoff": "Sair",
-        "errorNoGroup": "Você não tem quaisquer grupos.",
+        "errorNoWorkspace": "Você não tem quaisquer grupos.",
         "admin": "Administrador",
         "dashboard": "Painel",
         "trash": "Lixeira",
@@ -67,50 +67,50 @@
     },
     "invitationTitle": "Convite",
     "invitationMessage": "{invitedBy} convidou você para participar {group}.",
-    "groupForm": {
+    "workspaceForm": {
         "nameLabel": "Nome"
     },
-    "leaveGroupModal": {
+    "leaveWorkspaceModal": {
         "title": "Saiu do {group}",
         "message": "Tem certeza de que deseja sair do grupo {group}? Você não poderá mais acessar os aplicativos relacionados e, se quiser recuperar o acesso, um dos administradores deverá convidá-lo novamente. Se você sair do grupo, ele não será excluído. Todos os outros membros ainda terão acesso a ele. Não é possível sair de um grupo se você for o último administrador, pois isso o deixará sem manutenção.",
         "leave": "Sair do grupo"
     },
-    "dashboardGroup": {
+    "dashboardWorkspace": {
         "showMembers": "Membros",
         "createApplication": "Criar novo"
     },
-    "groupInvitation": {
+    "workspaceInvitation": {
         "title": "Convite",
         "message": "{by} convidou você para participar de {group}.",
         "reject": "Rejeitar",
         "accept": "Aceitar"
     },
-    "groupMemberModal": {
+    "workspaceMemberModal": {
         "membersModalTitle": "{group} membros",
         "userDescription": "{user} - entrou {since} atrás",
         "invitationDescription": "convidou {since} ago",
         "sendInvite": "Enviar convite",
-        "userAlreadyInGroupTitle": "Usuário já existe no grupo.",
-        "userAlreadyInGroupText": "Não é possível enviar um convite quando o usuário já é membro do grupo."
+        "userAlreadyInWorkspaceTitle": "Usuário já existe no grupo.",
+        "userAlreadyInWorkspaceText": "Não é possível enviar um convite quando o usuário já é membro do grupo."
     },
-    "groupInviteForm": {
+    "workspaceInviteForm": {
         "invitationFormTitle": "Convidar por e-mail",
         "optionalMessagePlaceholder": "Mensagem opcional",
         "errorInvalidEmail": "Por favor adicione um endereço de e-mail válido."
     },
-    "groupsContext": {
+    "workspacesContext": {
         "search": "Pesquisar grupos",
         "noResults": "Sem resultados encontrados",
-        "createGroup": "Criar grupo"
+        "createWorkspace": "Criar grupo"
     },
-    "groupContext": {
-        "renameGroup": "Renomear grupo",
+    "workspaceContext": {
+        "renameWorkspace": "Renomear grupo",
         "members": "Membros",
         "viewTrash": "Visualizar lixeira",
-        "leaveGroup": "Sair do grupo",
-        "deleteGroup": "Deletar grupo"
+        "leaveWorkspace": "Sair do grupo",
+        "deleteWorkspace": "Deletar grupo"
     },
-    "createGroupModal": {
+    "createWorkspaceModal": {
         "createNew": "Criar novo grupo",
         "add": "Adicionar grupo"
     },
@@ -123,7 +123,7 @@
     },
     "trashSidebar": {
         "title": "Lixeira",
-        "unnamedGroup": "Grupo sem nome {id}"
+        "unnamedWorkspace": "Grupo sem nome {id}"
     },
     "trashContents": {
         "message": "Restaurar itens deletados do passado{duration}",
@@ -215,9 +215,9 @@
         "alertText": "Se você achar o Baserow útil, então patrocinar, estrelar ou compartilhar conosco é muito apreciado. Ao nos patrocinar no GitHub, você terá acesso antecipado aos recursos premium!",
         "tweetContent": "Confira @baserow uma ferramenta de banco de dados sem código de código aberto e uma alternativa ao Airtable!",
         "redditTitle": "'Baserow - Um banco de dados de código-aberto e no-code",
-        "noGroupTitle": "Sem grupos encontrados",
-        "noGroupText": "Você não é membro de nenhum grupo. Aplicativos como bancos de dados pertencem a um grupo, portanto, para criá-los, você precisa criar um grupo.",
-        "createGroup": "Criar grupo",
+        "noWorkspaceTitle": "Sem grupos encontrados",
+        "noWorkspaceText": "Você não é membro de nenhum grupo. Aplicativos como bancos de dados pertencem a um grupo, portanto, para criá-los, você precisa criar um grupo.",
+        "createWorkspace": "Criar grupo",
         "becomeGithubSponsor": "Seja um patrocinador do Github",
         "starOnGitlab": "Nos dê estrelas no Gitlab",
         "shareOnTwitter": "Tweet sobre Baserow",
@@ -266,8 +266,8 @@
         "settingAllowResetPasswordWarning": "",
         "settingAllowNewAccountsName": "Permitir criar novas contas",
         "settingAllowNewAccountsDescription": "Por padrão, qualquer usuário que visite seu domínio Baserow pode se inscrever para uma nova conta.",
-        "settingAllowSignupsViaGroupInvitationsName": "Permitir inscrições por meio de convites de grupo",
-        "settingAllowSignupsViaGroupInvitationDescription": "Mesmo que a criação de novas contas esteja desativada, esta opção permite que usuários convidados diretamente ainda criem uma conta.",
+        "settingAllowSignupsViaWorkspaceInvitationsName": "Permitir inscrições por meio de convites de grupo",
+        "settingAllowSignupsViaWorkspaceInvitationDescription": "Mesmo que a criação de novas contas esteja desativada, esta opção permite que usuários convidados diretamente ainda criem uma conta.",
         "enabled": "ativar"
     },
     "formSidebar": {
