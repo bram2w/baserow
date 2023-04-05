@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add new env var BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT, which when set allows logging in using multiple different SSO providers to the same account",
+    "issue_number": 1677,
+    "bullet_points": [],
+    "created_at": "2023-04-04"
+}

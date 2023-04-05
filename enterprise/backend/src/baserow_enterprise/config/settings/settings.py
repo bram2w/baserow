@@ -19,3 +19,9 @@ def setup(settings):
     settings.BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS = int(
         os.getenv("BASEROW_ENTERPRISE_AUDIT_LOG_RETENTION_DAYS", 365)
     )
+
+    # Set this to True to enable users to login with auth providers different than
+    # the one they were originally created with.
+    settings.BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT = bool(
+        os.getenv("BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT", False)
+    )

@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple, Type
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import connection
 
@@ -148,8 +149,13 @@ class AuthProviderHandler:
         try:
             user = user_handler.get_active_user(email=user_info.email)
 
-            is_original_provider = auth_provider.users.filter(id=user.id).exists()
-            if not is_original_provider:
+            is_original_provider_check_needed = (
+                not settings.BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT
+            )
+            if (
+                is_original_provider_check_needed
+                and not auth_provider.users.filter(id=user.id).exists()
+            ):
                 raise DifferentAuthProvider()
 
             action_type_registry.get(SignInUserActionType.type).do(user, auth_provider)

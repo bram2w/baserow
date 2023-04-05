@@ -50,13 +50,25 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     auth_provider_2 = enterprise_data_fixture.create_saml_auth_provider(
         domain="test2.com"
     )
-    with pytest.raises(DifferentAuthProvider):
+
+    with override_settings(BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT=False):
+        with pytest.raises(DifferentAuthProvider):
+            (
+                user,
+                _,
+            ) = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
+                user_info, auth_provider_2
+            )
+
+    assert User.objects.count() == 1
+    assert not user.auth_providers.filter(id=auth_provider_2.id).exists()
+
+    with override_settings(BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT=True):
         user, _ = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
             user_info, auth_provider_2
         )
 
-    assert User.objects.count() == 1
-    assert not user.auth_providers.filter(id=auth_provider_2.id).exists()
+    assert user.auth_providers.filter(id=auth_provider_2.id).exists()
 
     workspace_user = enterprise_data_fixture.create_user_workspace(user=user)
     invitation = enterprise_data_fixture.create_workspace_invitation(
