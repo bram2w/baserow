@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.16.1-rc1
+
+### New features
+* Add new env var BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT, which when set allows logging in using multiple different SSO providers to the same account [#1677](https://gitlab.com/bramw/baserow/-/issues/1677)
+
+
 ## Released 1.16.0
 
 ### New features
@@ -22,7 +28,7 @@
 
 ### Refactors
 * Globally renamed the concept of a 'group' to 'workspace'. [#1303](https://gitlab.com/bramw/baserow/-/issues/1303)
-    * https://baserow.io/docs/apis%2Fdeprecations
+  * https://baserow.io/docs/apis%2Fdeprecations
 * Renamed group to workspace in the frontend translations. [#1642](https://gitlab.com/bramw/baserow/-/issues/1642)
 
 
@@ -46,10 +52,10 @@
 ### New features
 * Introduced a new command, `permanently_empty_database`, which will empty a database of all its tables. [#1090](https://gitlab.com/bramw/baserow/-/issues/1090)
 * Improve create and edit field context [#1160](https://gitlab.com/bramw/baserow/-/issues/1160)
-    * Set field context menu width to 400px
-    * Open field type dropdown when field context menu is opened
-    * Set field name after field type when empty
-    * Increase field context menu dropdown height
+  * Set field context menu width to 400px
+  * Open field type dropdown when field context menu is opened
+  * Set field name after field type when empty
+  * Increase field context menu dropdown height
 * Allow closing file preview by clicking outside [#1167](https://gitlab.com/bramw/baserow/-/issues/1167)
 * Added "Contains word" and "Doesn't contain word" filter for TextFieldType, LongTextFieldType, URLFieldType, EmailFieldType, SingleSelectFieldType, MultipleSelectFieldType and FormulaFieldType (text) fields. [#1236](https://gitlab.com/bramw/baserow/-/issues/1236)
 * When right-clicking on the row add button in the grid view, you can now add multiple rows at a time. [#1249](https://gitlab.com/bramw/baserow/-/issues/1249)
@@ -69,10 +75,10 @@
 * Ensure that e2e tests have staff users to work with on post_migrate. [#1614](https://gitlab.com/bramw/baserow/-/issues/1614)
 * Add e2e tests. [#820](https://gitlab.com/bramw/baserow/-/issues/820)
 * Added new templates for 1.15
-    * Business Goal Tracker (OKRs)
-    * Health Inspection Reports
-    * Home Remodeling
-    * SMB Business Plan
+  * Business Goal Tracker (OKRs)
+  * Health Inspection Reports
+  * Home Remodeling
+  * SMB Business Plan
 
 ### Bug fixes
 * Fix 500 error when fetching an aggregation that computes to `NaN` [#1054](https://gitlab.com/bramw/baserow/-/issues/1054)
@@ -91,20 +97,20 @@
 * Fix being able to submit lookup field options without a field being selected [#941](https://gitlab.com/bramw/baserow/-/issues/941)
 * Add missing `procps` system package to all-in-one docker image fixing `/baserow/supervisor/docker-postgres-setup.sh run` (#1512)[https://gitlab.com/bramw/baserow/-/issues/1512]
 * Fix SimpleGridView graphical glitches
-    * Fix grid footer when only a few colums are displayed
-    * Add right border on grid last column
-    * Fix SimpleGridView border glitch in import modal
+  * Fix grid footer when only a few colums are displayed
+  * Add right border on grid last column
+  * Fix SimpleGridView border glitch in import modal
 
 ### Refactors
 * improve row before insert and move performance by refactoring the order to a fraction system [#1083](https://gitlab.com/bramw/baserow/-/issues/1083)
 * Refactor date view filters to consider timezone when filtering results. [#1473](https://gitlab.com/bramw/baserow/-/issues/1473)
 * Move enterprise imports out of core. [#1537](https://gitlab.com/bramw/baserow/-/issues/1537)
 * Improve existing templates for 1.15
-    * Benefit Show Manager
-    * Business Expenses
-    * Emergency Triage Log
-    * Employee Directory
-    * Team Check-ins
+  * Benefit Show Manager
+  * Business Expenses
+  * Emergency Triage Log
+  * Employee Directory
+  * Team Check-ins
 * Upgrade Django Channels to version 4 and bumped other dependencies
 
 ### Breaking API changes
@@ -129,11 +135,11 @@
 * Add Free label to free roles on role selector [#1504](https://gitlab.com/bramw/baserow/-/issues/1504)
 * ./dev.sh now uses "docker compose" command if available.
 * New templates:
-    * Car Dealership Inventory
-    * Car Dealership Services
-    * Customer Research
-    * Frequent Flyer Rewards
-    * Grocery Planner
+  * Car Dealership Inventory
+  * Car Dealership Services
+  * Customer Research
+  * Frequent Flyer Rewards
+  * Grocery Planner
 
 ### Bug fixes
 * Fixed bug where it was not possible to change `conditional_color` decorator provider color after reloading. [#1098](https://gitlab.com/bramw/baserow/-/issues/1098)
@@ -168,7 +174,7 @@
 * Add support for "Empty" and "Not Empty" filters for Collaborator field. [#1205](https://gitlab.com/bramw/baserow/-/issues/1205)
 * Possibility to disable password authentication if another authentication provider is enabled. [#1317](https://gitlab.com/bramw/baserow/-/issues/1317)
 * Users with roles higher than viewer on tables and databases now counted as paid users
-  on the enterprise plan including users who get those roles from a team. [#1322](https://gitlab.com/bramw/baserow/-/issues/1322)
+on the enterprise plan including users who get those roles from a team. [#1322](https://gitlab.com/bramw/baserow/-/issues/1322)
 * Add support for wildcard '*' in the FEATURE_FLAG env variable which enables all features.
 * (Enterprise Preview Feature) Database and Table level RBAC with Teams are now available as a preview feature for enterprise users, Add 'RBAC' to the FEATURE_FLAG env and restart var to enable.
 * The ordering APIs can now accept a partial list of ids to order only these ids.
@@ -242,7 +248,7 @@
 * Expose `read_only` in the list fields endpoint.
 * Made it possible to add additional signup step via plugins.
 * Made it possible to filter on the `created_on` and `updated_on` columns, even though
-  they're not exposed via fields.
+they're not exposed via fields.
 * Upgraded docker containers base images from `debian:buster-slim` to the latest stable `debian:bullseye-slim`.
 * Upgraded python version from `python-3.7.16` to `python-3.9.2`.
 
@@ -276,17 +282,17 @@
 * Added link, button, get_link_label and get_link_url formula functions. [#818](https://gitlab.com/bramw/baserow/-/issues/818)
 * Add env vars for controlling which URLs and IPs webhooks are allowed to use. [#931](https://gitlab.com/bramw/baserow/-/issues/931)
 * New templates:
-    * Copy Management
-    * Hiking Guide
-    * New Hire Onboarding
-    * Property Showings
-    * QA Test Scripts
-    * Risk Assessment and Management
-    * Web App UAT
+  * Copy Management
+  * Hiking Guide
+  * New Hire Onboarding
+  * Property Showings
+  * QA Test Scripts
+  * Risk Assessment and Management
+  * Web App UAT
 * Updated templates:
-    * Benefit Show Manager
-    * Car Hunt
-    * Wedding Client Planner
+  * Benefit Show Manager
+  * Car Hunt
+  * Wedding Client Planner
 
 ### Bug fixes
 * Fixed a bug that breaks the link row modal when a formula is referencing a single select field. [#1111](https://gitlab.com/bramw/baserow/-/issues/1111)
@@ -340,9 +346,9 @@
 * Fix various misspellings. Contributed by [@Josh Soref](https://github.com/jsoref/) using [check-spelling.dev](https://check-spelling.dev/)
 * Fixed broken call grouping when getting linked row names from server.
 * Fixed bug where the "Create option" button was not visible for the single and multiple
-  select fields in the row edit modal.
+select fields in the row edit modal.
 * Fixed bug where the link row field lookup didn't work in combination with password
-  protected views.
+protected views.
 * Fixed bug where the row coloring didn't work in combination with group level premium.
 * Fixed horizontal scroll on Mac OSX.
 
@@ -381,29 +387,29 @@
 * Conditionally show form fields.
 * Fixed bug with 404 middleware returning different 404 error messages based on the endpoint.
 * New templates:
-    * Benefit Show Manager
-    * Business Expenses
-    * Emergency Triage Log
-    * Employee Directory
-    * Growth Experiments
-    * Moving Company Manager
-    * Online Freelancer Management
-    * Personal Finance Manager
-    * User Feedback
-    * Workshops and Trainings
+  * Benefit Show Manager
+  * Business Expenses
+  * Emergency Triage Log
+  * Employee Directory
+  * Growth Experiments
+  * Moving Company Manager
+  * Online Freelancer Management
+  * Personal Finance Manager
+  * User Feedback
+  * Workshops and Trainings
 * Show badge when the user has account level premium.
 * Updated templates:
-    * Company Blog Management
-    * Student Planner
-    * Applicant Tracker
-    * Book Catalog
-    * Bucket List
-    * Car Maintenance Log
-    * Company Asset Tracker
-    * Email Marketing Campaigns
-    * Holiday Shopping
-    * Recipe Book
-    * Wedding Planning
+  * Company Blog Management
+  * Student Planner
+  * Applicant Tracker
+  * Book Catalog
+  * Bucket List
+  * Car Maintenance Log
+  * Company Asset Tracker
+  * Email Marketing Campaigns
+  * Holiday Shopping
+  * Recipe Book
+  * Wedding Planning
 
 ### Bug fixes
 * Disable table import field type guessing and instead always import as text fields. [#1050](https://gitlab.com/bramw/baserow/-/issues/1050)
@@ -427,10 +433,10 @@
 * Concurrent field updates will now respond with a 409 instead of blocking until the previous update finished, set the env var BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR to revert to the old behaviour. [#1097](https://gitlab.com/bramw/baserow/-/issues/1097)
 * API endpoints `undo` and `redo` now returns a list of actions undone/redone instead of a single action.
 * **breaking change** Webhooks `row.created`, `row.updated` and `row.deleted` are
-  replaced with `rows.created`, `rows.updated` and `rows.deleted`, containing multiple
-  changed rows at once. Already created webhooks will still be called, but the received
-  body will contain only the first changed row instead of all rows. It is highly
-  recommended to convert all webhooks to the new types.
+replaced with `rows.created`, `rows.updated` and `rows.deleted`, containing multiple
+changed rows at once. Already created webhooks will still be called, but the received
+body will contain only the first changed row instead of all rows. It is highly
+recommended to convert all webhooks to the new types.
 
 
 ## Released (2022-07-05_1.10.2)
@@ -455,7 +461,7 @@
 * Allow to import more than 15Mb. [949](ttps://gitlab.com/bramw/baserow/-/issues/949)
 * `./dev.sh all_in_one_dev` now starts a hot reloading dev mode using the all-in-one image.
 * Made it clearer that you're navigating to baserow.io when clicking the "Get a license"
-  button.
+button.
 * Made it possible to extend the app layout.
 * Made it possible to extend the register page.
 
@@ -486,18 +492,18 @@
 
 ### New features
 * Added a dropdown to the grid view that allows you to
-  select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
+select the type of row identifier displayed next to a row (`Count`or `Row Identifier`).
 * Added an admin setting to disable the ability to reset a users password.
 * Added BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION environment variable and now
-  do the sync_templates task in the background after migration to massively speedup
-  first time Baserow startup speed.
+do the sync_templates task in the background after migration to massively speedup
+first time Baserow startup speed.
 * Added multi-row delete.
 * Added row coloring for Kanban and Gallery views
 * Added the ability to use commas as separators in number fields
 * **breaking change** The API endpoint `/api/templates/install/<group_id>/<template_id>/`
-  is now a POST request instead of GET.
+is now a POST request instead of GET.
 * Deprecate the SYNC_TEMPLATES_ON_STARTUP environment variable and no longer call the
-  sync_templates command on startup in the docker images.
+sync_templates command on startup in the docker images.
 * Duplicate row.
 * Fix a bug in public grid views that prevented expanding long-text cells.
 * Fix deadlocks and performance problems caused by un-needed accidental row locks.
@@ -517,10 +523,10 @@
 * Add loading bar when syncing templates to make it obvious Baserow is still loading.
 * Added 0.0.0.0 and 127.0.0.1 as ALLOWED_HOSTS for connecting to the Baserow backend
 * Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
-  for configuring ALLOWED_HOSTS.
+for configuring ALLOWED_HOSTS.
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to
-  modify multiple rows at once. Currently, row created, row updated, and row deleted
-  webhooks are not triggered when using these endpoints.
+modify multiple rows at once. Currently, row created, row updated, and row deleted
+webhooks are not triggered when using these endpoints.
 * Added group context menu to sidebar.
 * Added `is days ago` filter to date field.
 * Added multi-cell pasting.
@@ -534,7 +540,7 @@
 * Allow the setting of max request page size via environment variable.
 * Boolean field converts the word `checked` to `True` value.
 * **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
-  `table_id` instead of `field_id`, and also `name` in the request body.
+`table_id` instead of `field_id`, and also `name` in the request body.
 * Cache aggregation values to improve performances
 * Dropdown can now be focused with tab key
 * Fix aggregation not updated on filter update
@@ -545,7 +551,7 @@
 * Fixed a bug that truncated characters for email in the sidebar
 * Fixed a bug that would sometimes cancel multi-cell selection.
 * Fixed a bug where making a multiple cell selection starting from an
-  empty `link_row` or `formula` field was not possible in Firefox.
+empty `link_row` or `formula` field was not possible in Firefox.
 * Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
 * Fixed a problem where a form view with link row fields sends duplicate lookup requests.
 * Fixed Airtable import bug where the import would fail if a row is empty.
@@ -553,9 +559,9 @@
 * Fixed bug where a cell value was not reverted when the request to the backend fails.
 * Fixed bug where old values are missing in the update trigger of the webhook.
 * Fixed bug where the arrow keys of a selected cell didn't work when they were not
-  rendered.
+rendered.
 * Fixed bug where the link row field `link_row_relation_id` could fail when two
-  simultaneous requests are made.
+simultaneous requests are made.
 * Fixed DONT_UPDATE_FORMULAS_AFTER_MIGRATION env var not working correctly.
 * Fixed invalid `first_name` validation in the account form modal.
 * Fixed occasional UnpicklingError error when getting a value from the model cache.
@@ -568,23 +574,23 @@
 * Improved backup_baserow splitting multiselect through tables in separate batches.
 * Increased the max decimal places of a number field to 10.
 * Introduced read only lookup of foreign row by clicking on a link row relationship in
-  the grid view row modal.
+the grid view row modal.
 * Made it possible to impersonate another user as premium admin.
 * Made views trashable.
 * New templates:
-    * Brand Assets Manager
-    * Business Conference
-    * Car Hunt
-    * Company Blog Management
-    * Event Staffing
-    * Hotel Bookings
-    * Nonprofit Grant Tracker
-    * Performance Reviews
-    * Product Roadmap
-    * Public Library Inventory
-    * Remote Team Hub
-    * Product Roadmap
-    * Hotel Bookings
+  * Brand Assets Manager
+  * Business Conference
+  * Car Hunt
+  * Company Blog Management
+  * Event Staffing
+  * Hotel Bookings
+  * Nonprofit Grant Tracker
+  * Performance Reviews
+  * Product Roadmap
+  * Public Library Inventory
+  * Remote Team Hub
+  * Product Roadmap
+  * Hotel Bookings
 * Pin backend python dependencies using pip-tools.
 * **Premium** Added row coloring.
 * Prevent the Airtable import from failing hard when an invalid date is provided.
@@ -592,35 +598,35 @@
 * Scroll to the first error message if the form submission fail
 * Select new view immediately after creation.
 * Shared public forms now don't allow creating new options
-  for single and multiple select fields.
+for single and multiple select fields.
 * Stopped the generated model cache clear operation also deleting all other redis keys.
 * The standalone `baserow/backend` image when used to run a celery service now defaults
-  to running celery with the same number of processes as the number of available cores.
+to running celery with the same number of processes as the number of available cores.
 * Updated templates:
-    * Book writing guide
-    * Bucket List
-    * Call Center Log
-    * Company Asset Tracker
-    * Email Marketing Campaigns
-    * Home Inventory
-    * House Search
-    * Job Search
-    * Nonprofit Organization Management
-    * Personal Task Manager
-    * Political Campaign Contributions
-    * Project Tracker
-    * Recipe Book
-    * Restaurant Management
-    * Single Trip Planner
-    * Software Application Bug Tracker
-    * Student Planner
-    * Teacher Lesson Plans
-    * Team Check-ins
-    * University Admissions Management
-    * Wedding Client Planner
+  * Book writing guide
+  * Bucket List
+  * Call Center Log
+  * Company Asset Tracker
+  * Email Marketing Campaigns
+  * Home Inventory
+  * House Search
+  * Job Search
+  * Nonprofit Organization Management
+  * Personal Task Manager
+  * Political Campaign Contributions
+  * Project Tracker
+  * Recipe Book
+  * Restaurant Management
+  * Single Trip Planner
+  * Software Application Bug Tracker
+  * Student Planner
+  * Teacher Lesson Plans
+  * Team Check-ins
+  * University Admissions Management
+  * Wedding Client Planner
 * Upgraded node runtime to v16.14.0
 * When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
-  processes defaults to the number of available cores.
+processes defaults to the number of available cores.
 
 
 ## Released (2022-10-05_1.10.0)
@@ -629,10 +635,10 @@
 * Add loading bar when syncing templates to make it obvious Baserow is still loading.
 * Added 0.0.0.0 and 127.0.0.1 as ALLOWED_HOSTS for connecting to the Baserow backend
 * Added a new BASEROW_EXTRA_ALLOWED_HOSTS optional comma separated environment variable
-  for configuring ALLOWED_HOSTS.
+for configuring ALLOWED_HOSTS.
 * Added batch create/update/delete rows endpoints. These endpoints make it possible to
-  modify multiple rows at once. Currently, row created, row updated, and row deleted
-  webhooks are not triggered when using these endpoints.
+modify multiple rows at once. Currently, row created, row updated, and row deleted
+webhooks are not triggered when using these endpoints.
 * Added group context menu to sidebar.
 * Added `is days ago` filter to date field.
 * Added multi-cell pasting.
@@ -646,7 +652,7 @@
 * Allow the setting of max request page size via environment variable.
 * Boolean field converts the word `checked` to `True` value.
 * **breaking change** The API endpoint `/api/database/formula/<field_id>/type/` now requires
-  `table_id` instead of `field_id`, and also `name` in the request body.
+`table_id` instead of `field_id`, and also `name` in the request body.
 * Cache aggregation values to improve performances
 * Dropdown can now be focused with tab key
 * Fix aggregation not updated on filter update
@@ -657,7 +663,7 @@
 * Fixed a bug that truncated characters for email in the sidebar
 * Fixed a bug that would sometimes cancel multi-cell selection.
 * Fixed a bug where making a multiple cell selection starting from an
-  empty `link_row` or `formula` field was not possible in Firefox.
+empty `link_row` or `formula` field was not possible in Firefox.
 * Fixed a bug where the backend would fail hard updating token permissions for deleted tables.
 * Fixed a problem where a form view with link row fields sends duplicate lookup requests.
 * Fixed Airtable import bug where the import would fail if a row is empty.
@@ -665,9 +671,9 @@
 * Fixed bug where a cell value was not reverted when the request to the backend fails.
 * Fixed bug where old values are missing in the update trigger of the webhook.
 * Fixed bug where the arrow keys of a selected cell didn't work when they were not
-  rendered.
+rendered.
 * Fixed bug where the link row field `link_row_relation_id` could fail when two
-  simultaneous requests are made.
+simultaneous requests are made.
 * Fixed DONT_UPDATE_FORMULAS_AFTER_MIGRATION env var not working correctly.
 * Fixed invalid `first_name` validation in the account form modal.
 * Fixed occasional UnpicklingError error when getting a value from the model cache.
@@ -680,23 +686,23 @@
 * Improved backup_baserow splitting multiselect through tables in separate batches.
 * Increased the max decimal places of a number field to 10.
 * Introduced read only lookup of foreign row by clicking on a link row relationship in
-  the grid view row modal.
+the grid view row modal.
 * Made it possible to impersonate another user as premium admin.
 * Made views trashable.
 * New templates:
-    * Brand Assets Manager
-    * Business Conference
-    * Car Hunt
-    * Company Blog Management
-    * Event Staffing
-    * Hotel Bookings
-    * Nonprofit Grant Tracker
-    * Performance Reviews
-    * Product Roadmap
-    * Public Library Inventory
-    * Remote Team Hub
-    * Product Roadmap
-    * Hotel Bookings
+  * Brand Assets Manager
+  * Business Conference
+  * Car Hunt
+  * Company Blog Management
+  * Event Staffing
+  * Hotel Bookings
+  * Nonprofit Grant Tracker
+  * Performance Reviews
+  * Product Roadmap
+  * Public Library Inventory
+  * Remote Team Hub
+  * Product Roadmap
+  * Hotel Bookings
 * Pin backend python dependencies using pip-tools.
 * **Premium** Added row coloring.
 * Prevent the Airtable import from failing hard when an invalid date is provided.
@@ -704,62 +710,62 @@
 * Scroll to the first error message if the form submission fail
 * Select new view immediately after creation.
 * Shared public forms now don't allow creating new options
-  for single and multiple select fields.
+for single and multiple select fields.
 * Stopped the generated model cache clear operation also deleting all other redis keys.
 * The standalone `baserow/backend` image when used to run a celery service now defaults
-  to running celery with the same number of processes as the number of available cores.
+to running celery with the same number of processes as the number of available cores.
 * Updated templates:
-    * Book writing guide
-    * Bucket List
-    * Call Center Log
-    * Company Asset Tracker
-    * Email Marketing Campaigns
-    * Home Inventory
-    * House Search
-    * Job Search
-    * Nonprofit Organization Management
-    * Personal Task Manager
-    * Political Campaign Contributions
-    * Project Tracker
-    * Recipe Book
-    * Restaurant Management
-    * Single Trip Planner
-    * Software Application Bug Tracker
-    * Student Planner
-    * Teacher Lesson Plans
-    * Team Check-ins
-    * University Admissions Management
-    * Wedding Client Planner
+  * Book writing guide
+  * Bucket List
+  * Call Center Log
+  * Company Asset Tracker
+  * Email Marketing Campaigns
+  * Home Inventory
+  * House Search
+  * Job Search
+  * Nonprofit Organization Management
+  * Personal Task Manager
+  * Political Campaign Contributions
+  * Project Tracker
+  * Recipe Book
+  * Restaurant Management
+  * Single Trip Planner
+  * Software Application Bug Tracker
+  * Student Planner
+  * Teacher Lesson Plans
+  * Team Check-ins
+  * University Admissions Management
+  * Wedding Client Planner
 * Upgraded node runtime to v16.14.0
 * When the BASEROW_AMOUNT_OF_WORKERS env variable is set to blank, the amount of worker
-  processes defaults to the number of available cores.
+processes defaults to the number of available cores.
 
 
 ## Released (2022-03-03_1.9.1)
 
 ### New features
 * Fix the Baserow Heroku install filling up the hobby postgres by disabling template
-  syncing by default.
+syncing by default.
 * Fixed API docs enum warnings. Removed `number_type` is no longer displayed in the API docs.
 * Fixed bug when importing a formula or lookup field with an incorrect empty value.
 * New templates:
-    * Non-profit Organization Management
-    * Elementary School Management
-    * Call Center Log
-    * Individual Medical Record
-    * Trip History
-    * Favorite Food Places
-    * Wedding Client Planner
+  * Non-profit Organization Management
+  * Elementary School Management
+  * Call Center Log
+  * Individual Medical Record
+  * Trip History
+  * Favorite Food Places
+  * Wedding Client Planner
 * Updated templates:
-    * Holiday Shopping
-    * Company Asset Tracker
-    * Personal Health Log
-    * Recipe Book
-    * Student Planner
-    * Political Campaign Contributions
+  * Holiday Shopping
+  * Company Asset Tracker
+  * Personal Health Log
+  * Recipe Book
+  * Student Planner
+  * Political Campaign Contributions
 * Upgraded `drf-spectacular`. Flag-style query parameters like `count` will now be displayed
-  as `boolean` instead of `any` in the OpenAPI documentation. However, the behavior of these
-  flags is still the same.
+as `boolean` instead of `any` in the OpenAPI documentation. However, the behavior of these
+flags is still the same.
 
 
 ## Released (2022-03-02_1.9)
@@ -778,11 +784,11 @@
 * Allow for group registrations while public registration is closed
 * Allow for signup via group invitation while public registration is closed.
 * **breaking change** docker-compose.yml now requires secrets to be setup by the user,
-  listens by default on 0.0.0.0:80 with a Caddy reverse proxy, use BASEROW_PUBLIC_URL
-  and BASEROW_CADDY_ADDRESSES now to configure a domain with optional auto https.
+listens by default on 0.0.0.0:80 with a Caddy reverse proxy, use BASEROW_PUBLIC_URL
+and BASEROW_CADDY_ADDRESSES now to configure a domain with optional auto https.
 * **breaking change** Number field has been changed and doesn't use `number_type` property
-  anymore. The property `number_decimal_places` can be now set to `0` to indicate integers
-  instead.
+anymore. The property `number_decimal_places` can be now set to `0` to indicate integers
+instead.
 * Bumped some backend and web-frontend dependencies.
 * Cache model fields when generating model.
 * Ensure error logging is enabled in the Backend even when DEBUG is off.
@@ -790,12 +796,12 @@
 * Fix missing translation when importing empty CSV
 * Fix restoring table linking to trashed tables creating invalid link field.
 * Fixed `'<' not supported between instances of 'NoneType' and 'int'` error. Blank
-  string for a decimal value is now converted to `None` when using the REST API.
+string for a decimal value is now converted to `None` when using the REST API.
 * Fixed adding new fields in the edit row popup that require refresh in Kanban and Form views.
 * Fixed error when the select row modal is closed immediately after opening.
 * Fixed not being able to create or convert a single select field with edge case name.
 * Fixed OpenAPI spec. The specification is now valid and can be used for imports to other
-  tools, e.g. to various REST clients.
+tools, e.g. to various REST clients.
 * Hide "Export view" button if there is no valid exporter available
 * Migrate the Baserow Cloudron and Heroku images to work from the all-in-one.
 * Moved the in component `<i18n>` translations to JSON files.
@@ -804,7 +810,7 @@
 * Rework Baserow docker images so they can be built and tested by gitlab CI.
 * Views supporting search are properly updated when a column with a matching default value is added.
 * Workaround bug in Django's schema editor sometimes causing incorrect transaction
-  rollbacks resulting in the connection to the database becoming unusable.
+rollbacks resulting in the connection to the database becoming unusable.
 
 
 ## Released (2022-01-13_1.8.2)
@@ -819,7 +825,7 @@
 ### New features
 * Fixed download/preview files from another origin
 * Fixed migration failing when upgrading a version of Baserow installed using Postgres
-  10 or lower.
+10 or lower.
 
 
 ## Released (2022-01-13)
@@ -830,48 +836,48 @@
 * Added day of month filter to date field.
 * Added French translation.
 * Added gallery view.
-    * Added cover field to the gallery view.
+  * Added cover field to the gallery view.
 * Added length is lower than filter.
 * Added rating field type.
 * Added Video, Audio, PDF and some Office file preview.
 * Allow changing the text of the submit button in the form view.
 * **breaking change** The API endpoint to rotate a form views slug has been moved to
-  `/database/views/${viewId}/rotate-slug/`.
+`/database/views/${viewId}/rotate-slug/`.
 * **dev.sh users** Fixed bug in dev.sh where UID/GID were not being set correctly,
-  please rebuild any dev images you are using.
+please rebuild any dev images you are using.
 * Fix bug where field options in rare situations could have been duplicated.
 * Fix deleted options that appear in the command line JSON file export.
 * Fix subtracting date intervals from dates in formulas in some situations not working.
 * Fix the ability to make filters and sorts on invalid formula and lookup fields.
 * Fixed bug preventing trash cleanup job from running after a lookup field was converted
-  to another field type.
+to another field type.
 * Fixed bug where not all rows were displayed on large screens.
 * Fixed copying/pasting for date field.
 * Fixed frontend errors occurring sometimes when mass deleting and restoring sorted
-  fields
+fields
 * Fixed order of fields in form preview.
 * Fixed reordering of single select options when initially creating the field.
 * Focused the search field when opening the modal to link a table row.
 * Improved performance by not rendering cells that are out of the view port.
 * Increased maximum length of application name to 160 characters.
 * New templates:
-    * Car Maintenance Log
-    * Teacher Lesson Plans
-    * Business Conference Event
-    * Restaurant Management
+  * Car Maintenance Log
+  * Teacher Lesson Plans
+  * Business Conference Event
+  * Restaurant Management
 * Replaced the table `order` index with an `order, id` index to improve performance.
 * Updated templates:
-    * Healthcare Facility Management
-    * Apartment Hunt
-    * Recipe Book
-    * Commercial Property Management
+  * Healthcare Facility Management
+  * Apartment Hunt
+  * Recipe Book
+  * Commercial Property Management
 
 
 ## Released (2021-11-25)
 
 ### New features
 * Fix trashing tables and related link fields causing the field dependency graph to
-  become invalid.
+become invalid.
 * Fixed not executing premium tests.
 * Increase Webhook URL max length to 2000.
 
@@ -886,78 +892,78 @@
 * Added table webhooks functionality.
 * Added the kanban view.
 * **Breaking Change**: Baserow's `docker-compose.yml` container names have changed to
-  no longer be hardcoded to prevent naming clashes.
+no longer be hardcoded to prevent naming clashes.
 * **Breaking Change**: Baserow's `docker-compose.yml` now allows setting the MEDIA_URL
-  env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
+env variable. If using MEDIA_PORT you now need to set MEDIA_URL also.
 * Deprecate internal formula field function field_by_id.
 * Fixed a bug where the frontend would fail hard if a table with no views was accessed.
 * Fixed a bug where the frontend would fail hard when converting a multiple select field
-  inside the row edit modal.
+inside the row edit modal.
 * Fixed bug where it was possible to create duplicate trash entries.
 * Fixed date_diff formula function.
 * Fixed propType validation error when converting from a date field to a boolean field.
 * Made it possible to change user information.
 * New templates:
-    * House Search
-    * Personal Health Log
-    * Job Search
-    * Single Trip Planner
-    * Software Application Bug Tracker
+  * House Search
+  * Personal Health Log
+  * Job Search
+  * Single Trip Planner
+  * Software Application Bug Tracker
 * Tables can now be opened in new browser tabs.
 * Updated templates:
-    * Commercial Property Management
-    * Company Asset Tracker
-    * Wedding Planner
-    * Blog Post Management
-    * Home Inventory
-    * Book Writing Guide
-    * Political Campaign Contributions
-    * Applicant Tracker
+  * Commercial Property Management
+  * Company Asset Tracker
+  * Wedding Planner
+  * Blog Post Management
+  * Home Inventory
+  * Book Writing Guide
+  * Political Campaign Contributions
+  * Applicant Tracker
 
 
 ## Released (2021-10-05)
 
 ### New features
 * Added "Formula" field type with 30+ useful functions allowing dynamic per row
-  calculations.
+calculations.
 * Added "Multiple Select" field type.
 * Fix accidentally locking of too many rows in various tables during update operations.
 * Fix minor error that could sometimes occur when a row and it's table/group/database
-  were deleted in rapid succession.
+were deleted in rapid succession.
 * Fixed a bug where the backend would fail hard when trying to order by field name without
-  using `user_field_names`.
+using `user_field_names`.
 * Fixed a bug where the currently selected view was not in the viewport of the parent.
 * Fixed a bug where views context would not scroll down after a new view has been added.
 * Fixed bug where a user could not be edited in the admin interface without providing
-  a password.
+a password.
 * Fixed bug where brand-new fields weren't included in view exports.
 * Fixed bug where copying a cell containing a null value resulted in an error.
 * Fixed bug where sometimes fields would not be ordered correctly in view exports.
 * Fixed bug where the backend would fail hard when an invalid integer was provided as
-  'before_id' when moving a row by introducing a decorator to validate query parameters.
+'before_id' when moving a row by introducing a decorator to validate query parameters.
 * Fixed error when pasting into a single select field.
 * Fixed error when rapidly switching between template tables or views in the template
-  preview.
+preview.
 * Importing table data with a column name that is too long will now truncate that name.
 * Introduced new endpoint to get and update user account information.
 * Introduced the has file type filter.
 * New templates:
-    * Recipe Book
-    * Healthcare Facility Management
-    * Bucket List
-    * Apartment Hunt
-    * Holiday Shopping
-    * Email Marketing Campaigns
-    * Book Writing Guide
-    * Home Inventory
-    * Political Campaign Contributions
+  * Recipe Book
+  * Healthcare Facility Management
+  * Bucket List
+  * Apartment Hunt
+  * Holiday Shopping
+  * Email Marketing Campaigns
+  * Book Writing Guide
+  * Home Inventory
+  * Political Campaign Contributions
 * Pasting the value of a single select option into a single select field now selects the
-  first option with that value.
+first option with that value.
 * The API now returns appropriate errors when trying to create a field with a name which is too long.
 * Updated templates:
-    * Blog Post Management
+  * Blog Post Management
 * Upgraded Django to version 3.2.6 and also upgraded all other backend libraries to
-  their latest versions.
+their latest versions.
 
 
 ## Released (2021-08-11)
@@ -972,7 +978,7 @@
 * Dropped the `old_name` column.
 * Enabled password validation in the backend.
 * Fixed bug where the currently selected dropdown item is out of view from the dropdown
-  window when scrolling with the arrow keys.
+window when scrolling with the arrow keys.
 * Fixed earliest and latest date aggregations
 * Fixed moment issue if core is installed as a dependency.
 * Fixed nuxt not restarting correctly using the provided Baserow supervisor config file.
@@ -982,36 +988,36 @@
 * Made it possible to use the "F2"-Key to edit a cell without clearing the cell content.
 * Made the form view compatible with importing and exporting.
 * New templates:
-    * Blog Post Management
+  * Blog Post Management
 * **Premium**: You can now comment and discuss rows with others in your group, click the
-  expand row button at the start of the row to view and add comments.
+expand row button at the start of the row to view and add comments.
 * Relaxed the URL field validator and made it consistent between the backend and
-  web-frontend.
+web-frontend.
 * The internal setting allowing Baserow to run with the user tables in a separate
-  database has been removed entirely to prevent data integrity issues.
+database has been removed entirely to prevent data integrity issues.
 * Updated templates:
-    * Personal Task Manager
-    * Wedding Planning
-    * Book Catalog
-    * Applicant Tracker
-    * Project Tracker
+  * Personal Task Manager
+  * Wedding Planning
+  * Book Catalog
+  * Applicant Tracker
+  * Project Tracker
 
 
 ## Released (2021-07-16)
 
 ### New features
 * Fix bug preventing fields not being able to be converted to link row fields in some
-  situations.
+situations.
 
 
 ## Released (2021-07-15)
 
 ### New features
 * **Breaking Change**: Baserow's `docker-compose.yml` no longer exposes ports for
-  the `db`, `mjml` and `redis` containers for security reasons.
+the `db`, `mjml` and `redis` containers for security reasons.
 * **Breaking Change**: `docker-compose.yml` will by default only expose Baserow on
-  `localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless
-  manually configured.
+`localhost` and not `0.0.0.0`, meaning it will not be accessible remotely unless
+manually configured.
 
 
 ## Released (2021-07-13)
@@ -1020,46 +1026,46 @@
 * Added a Heroku template and one click deploy button.
 * Fixed bug preventing the deletion of rows with a blank single select primary field.
 * Fixed error in trash cleanup job when deleting multiple rows and a field from the
-  same table at once.
+same table at once.
 
 
 ## Released (2021-07-12)
 
 ### New features
 * Add trash where deleted apps, groups, tables, fields and rows can be restored
-  deletion.
+deletion.
 * Add user_field_names GET flag to various endpoints which switches the API to work
-  using actual field names and not the internal field_1,field_2 etc identifiers.
+using actual field names and not the internal field_1,field_2 etc identifiers.
 * Added before and after date filters.
 * Added form view.
 * Added templates:
-    * Commercial Property Management
-    * Company Asset Tracker
-    * Student Planner
+  * Commercial Property Management
+  * Company Asset Tracker
+  * Student Planner
 * Disallow duplicate field names in the same table, blank field names or field names
-  called 'order' and 'id'. Existing invalid field names will be fixed automatically.
+called 'order' and 'id'. Existing invalid field names will be fixed automatically.
 * Fix the create group invite endpoint failing when no message provided.
 * Made it possible to list table field meta-data with a token.
 * Single select options can now be ordered by drag and drop.
 * Support building Baserow out of the box on Ubuntu by lowering the required docker
-  version to build Baserow down to 19.03.
+version to build Baserow down to 19.03.
 * The API endpoint to update the grid view field options has been moved to
-  `/api/database/views/{view_id}/field-options/`.
+`/api/database/views/{view_id}/field-options/`.
 * The email field's validation is now consistent and much more permissive allowing most
-  values which look like email addresses.
+values which look like email addresses.
 
 
 ## Released (2021-06-02)
 
 ### New features
 * Added a human-readable error message when a user tries to sign in with a deactivated
-  account.
+account.
 * Added a page containing external resources to the docs.
 * Added today, this month and this year filter.
 * Fixed bug where the focus of an Editable component was not always during and after
-  editing if the parent component had overflow hidden.
+editing if the parent component had overflow hidden.
 * Fixed bug where the grid view would fail hard if a cell is selected and the component
-  is destroyed.
+is destroyed.
 * Fixed bug where the selected view would still be visible after deleting it.
 * Made it possible to import a JSON file when creating a table.
 * Made it possible to order the applications by drag and drop.
@@ -1071,23 +1077,23 @@
 * **Premium** Tables and views can now be exported to JSON and XML.
 * Removed URL field max length and fixed the backend failing hard because of that.
 * Tables and views can now be exported to CSV (if you have installed using the ubuntu
-  guide please use the updated .conf files to enable this feature).
+guide please use the updated .conf files to enable this feature).
 * Templates:
-    * Lightweight CRM
-    * Wedding Planning
-    * Book Catalog
-    * App Pitch Planner
+  * Lightweight CRM
+  * Wedding Planning
+  * Book Catalog
+  * App Pitch Planner
 
 
 ## Released (2021-05-11)
 
 ### New features
 * Added `--add-columns` flag to the `fill_table` management command. It creates all the
-  field types before filling the table with random data.
+field types before filling the table with random data.
 * Added configurable field limit.
 * Added `fill_users` admin management command which fills baserow with fake users.
 * Allow providing a `template_id` when registering a new account, which will install
-  that template instead of the default database.
+that template instead of the default database.
 * Fixed bug where the rows could get out of sync during real time collaboration.
 * Fixed memory leak in the `link_row` field.
 * Made it possible to drag and drop rows in the desired order.
@@ -1105,8 +1111,8 @@
 * Add missing include query parameter and corresponding response attributes to API docs.
 * Add Phone Number field.
 * Add support for Date, Number and Single Select fields to the Contains and Not Contains
-  view
-  filters.
+view
+filters.
 * Added gunicorn worker test to the CI pipeline.
 * Added support for different** character encodings when importing CSV files.
 * Added support for importing tables from XML files.
@@ -1118,16 +1124,16 @@
 * Prevent websocket reconnect when the connection closes without error.
 * Refactored the GridView component and improved interface speed.
 * Remove incorrectly included "filters_disabled" field from
-  list_database_table_grid_view_rows api endpoint.
+list_database_table_grid_view_rows api endpoint.
 * Rename the "includes" get parameter across all API endpoints to "include" to be
-  consistent.
+consistent.
 * Searching all rows can now be done by clicking the new search icon in the top right.
 * Show an error to the user when the web socket connection could not be made and the
-  reconnect loop stops.
+reconnect loop stops.
 * Show the number of filters and sorts active in the header of a grid view.
 * The first user to sign-up after installation now gets given staff status.
 * The list_database_table_rows search query parameter now searches all possible field
-  types.
+types.
 
 
 ## Released (2021-03-01)
@@ -1140,9 +1146,9 @@
 * Changed all cookies to SameSite=lax.
 * Fail hard when the web-frontend can't reach the backend because of a network error.
 * Fixed bug where a single select field without options could not be converted to a
-  another field.
+another field.
 * Fixed bug where the Editable component was not working if a prent a user-select:
-  none; property.
+none; property.
 * Fixed error when a very long user file name is provided when uploading.
 * Fixed the "Ignored attempt to cancel a touchmove" error.
 * Made it possible for the admin to disable new signups.
@@ -1152,7 +1158,7 @@
 * Reduced the amount of queries when using the link row field.
 * Refactored handler get_* methods so that they never check for permissions.
 * Refactored the has_user everywhere such that the raise_error argument is used when
-  possible.
+possible.
 * Respect the date format when converting to a date field.
 * Upgraded DRF Spectacular dependency to the latest version.
 * Use UTC time in the date picker.
@@ -1163,13 +1169,13 @@
 ### New features
 * Added option to hide fields in a grid view.
 * Fixed bug where an incompatible row value was visible and used while changing the
-  field type.
+field type.
 * Fixed bug where is was not possible to create a relation to a table that has a single
-  select as primary field.
+select as primary field.
 * Fixed bug where the row in the RowEditModel was not entirely reactive and wouldn't be
-  updated when the grid view was refreshed.
+updated when the grid view was refreshed.
 * Fixed bug where you could not convert an existing field to a single select field
-  without select options.
+without select options.
 * Implemented real time collaboration.
 * Keep token usage details.
 * Made it possible to invite other users to a group.
@@ -1182,11 +1188,11 @@
 * Added filtering by GET parameter to the rows listing endpoint.
 * Allow larger values for the number field and improved the validation.
 * Fixed bug where if you have no filters, but the filter type is set to `OR` it always
-  results in a not matching row state in the web-frontend.
+results in a not matching row state in the web-frontend.
 * Fixed bug where inserting above or below a row created upon signup doesn't work
-  correctly.
+correctly.
 * Fixed bug where the arrow navigation didn't work for the dropdown component in
-  combination with a search query.
+combination with a search query.
 * Fixed bug where the page refreshes if you press enter in an input in the row modal.
 * Fixed drifting context menu.
 * Implemented a single select field.
@@ -1194,7 +1200,7 @@
 * Made the file name editable.
 * Made the rows orderable and added the ability to insert a row at a given position.
 * Store updated and created timestamp for the groups, applications, tables, views,
-  fields and rows.
+fields and rows.
 
 
 ## Released (2020-12-01)
@@ -1208,7 +1214,7 @@
 * Implemented a file field and user files upload.
 * Implemented a switch to disable all filters without deleting them.
 * Made it impossible for the `link_row` field to be a primary field because that can
-  cause the primary field to be deleted.
+cause the primary field to be deleted.
 * Made it possible to order by fields via the rows listing endpoint.
 * Made the cookies strict and secure.
 * Removed the redundant _DOMAIN variables.
@@ -1220,7 +1226,7 @@
 ### New features
 * Added ability to navigate dropdown menus with arrow keys.
 * Added confirmation modals when the user wants to delete a group, application, table,
-  view or field.
+view or field.
 * Added Email field.
 * Added importer abstraction including a CSV and tabular paste importer.
 * Added Ubuntu installation guide documentation.
@@ -1237,14 +1243,14 @@
 * Added sorting of rows per view.
 * Added URL field.
 * Fixed bug where the error message of the 'Select a table to link to' was not always
-  displayed.
+displayed.
 * Fixed bug where the link row field is not removed from the store when the related
-  table is deleted.
+table is deleted.
 * Fixed bug where the selected name of the dropdown was not updated when that name was
-  changed.
+changed.
 * Fixed The table X is not found in the store error.
 * Prevent adding a new line to the long text field in the grid view when selecting the
-  cell by pressing the enter key.
+cell by pressing the enter key.
 
 
 ## Released (2020-09-02)
@@ -1252,7 +1258,7 @@
 ### New features
 * Added contribution guidelines.
 * Fixed bug where it was not possible to change the table name when it contained a link
-  row field.
+row field.
 
 
 ## Released (2020-08-31)
@@ -1260,9 +1266,9 @@
 ### New features
 * Added field that can link to the row of another table.
 * Block non web frontend domains in the base url when requesting a password reset
-  email.
+email.
 * Fixed bug where the text_default value changed to None if not provided in a patch
-  request.
+request.
 * Increased the amount of password characters to 256 when signing up.
 * Show machine readable error message when the signature has expired.
 
@@ -1275,13 +1281,13 @@
 * Added OpenAPI docs.
 * Added raises attribute to the docstrings.
 * Fixed keeping the datepicker visible in the grid view when selecting a date for the
-  first time.
+first time.
 * Improved API 404 errors by providing a machine readable error.
 * Refactored all SCSS classes to BEM naming.
 * Removed not needed api v0 namespace in url and python module.
 * Use the new long text field, date field and view's field options for the example
-  tables when creating a new account. Also use the long text field when creating a new
-  table.
+tables when creating a new account. Also use the long text field when creating a new
+table.
 
 
 ## Released (2020-06-08)
@@ -1296,7 +1302,7 @@
 * Enabled the arrow keys to navigate through the fields in the grid view.
 * Fill a newly created table with some initial data.
 * Fixed error when changing field type and the data value wasn't in the correct
-  format.
+format.
 * Fixed memory leak bug.
 * Fixed not handling 500 errors.
 * Fixed not refreshing token bug and improved authentication a little bit.
@@ -1308,7 +1314,7 @@
 * Normalize the users email address when signing up and signing in.
 * Prevent row context menu when right clicking on a field that's being edited.
 * The next field is now selected when the tab character is pressed when a field is
-  selected.
+selected.
 * Update the field's data values when the type changes.
 * Use Django REST framework status code constants instead of integers.
 * Use environment variables for all settings.

@@ -715,6 +715,8 @@ publish-backend-latest-release-image:
   only:
     refs:
       - tags
+    variables:
+      - $CI_COMMIT_TAG =~ /^[0-9.]+$/
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
@@ -763,6 +765,8 @@ publish-webfrontend-latest-release-image:
   only:
     refs:
       - tags
+    variables:
+      - $CI_COMMIT_TAG =~ /^[0-9.]+$/
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
@@ -811,6 +815,8 @@ publish-allinone-latest-release-image:
   only:
     refs:
       - tags
+    variables:
+      - $CI_COMMIT_TAG =~ /^[0-9.]+$/
   dependencies: []
   variables:
     SKIP_IF_NOT_LATEST_COMMIT_ON_BRANCH: $MASTER_BRANCH_NAME
