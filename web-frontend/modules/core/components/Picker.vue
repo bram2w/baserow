@@ -10,7 +10,7 @@
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
     <Context ref="pickerContext" class="picker__context">
-      <slot :hidePicker="hide" />
+      <slot :hide-picker="hide" />
     </Context>
   </div>
 </template>

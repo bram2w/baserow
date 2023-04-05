@@ -117,30 +117,19 @@
                   <a
                     v-if="selectedElementIndex + 1 !== index"
                     href="#"
-                    class="
-                      page-builder__preview-add
-                      page-builder__preview-element-add
-                      page-builder__preview-element-add-first
-                    "
+                    class="page-builder__preview-add page-builder__preview-element-add page-builder__preview-element-add-first"
                   >
                     <i class="fas fa-plus"></i>
                   </a>
                   <a
                     v-if="selectedElementIndex - 1 !== index"
                     href="#"
-                    class="
-                      page-builder__preview-add
-                      page-builder__preview-element-add
-                      page-builder__preview-element-add-last
-                    "
+                    class="page-builder__preview-add page-builder__preview-element-add page-builder__preview-element-add-last"
                   >
                     <i class="fas fa-plus"></i>
                   </a>
                   <div
-                    class="
-                      page-builder__preview-menu
-                      page-builder__preview-element-menu
-                    "
+                    class="page-builder__preview-menu page-builder__preview-element-menu"
                   >
                     <a href="#" class="page-builder__preview-menu-item">
                       <i class="fas fa-copy"></i>
@@ -190,10 +179,7 @@
             <li class="page-builder__sidebar-tab">
               <a
                 href="#"
-                class="
-                  page-builder__sidebar-tab-link
-                  page-builder__sidebar-tab-link--active
-                "
+                class="page-builder__sidebar-tab-link page-builder__sidebar-tab-link--active"
                 >Visibility</a
               >
             </li>

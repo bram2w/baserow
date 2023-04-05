@@ -33,9 +33,7 @@
       </component>
       <a
         v-if="canAccessLinkedTable"
-        class="
-          grid-field-many-to-many__item grid-field-many-to-many__item--link
-        "
+        class="grid-field-many-to-many__item grid-field-many-to-many__item--link"
         @click.prevent="showModal()"
       >
         <i class="fas fa-plus"></i>

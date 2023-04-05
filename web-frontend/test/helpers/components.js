@@ -1,7 +1,7 @@
 import Vuelidate from '@baserow/node_modules/vuelidate/lib/index'
 import Vue from 'vue'
 import Vuex from 'vuex'
-import '@baserow/modules/core/plugins/global'
+import setupVue from '@baserow/modules/core/plugins/global'
 
 const addVuex = (context) => {
   context.vuex = Vuex
@@ -51,6 +51,7 @@ export const bootstrapVueContext = (configureContext) => {
       template: '<span><slot /></span>',
     }
     context.vue = context.vueTestUtils.createLocalVue()
+    setupVue(context.vue)
 
     jest.doMock('vue', () => context.vue)
 

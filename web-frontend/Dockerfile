@@ -1,4 +1,4 @@
-FROM node:16-bullseye as base
+FROM node:18-bullseye as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -47,6 +47,10 @@ COPY --chown=$UID:$GID ./web-frontend /baserow/web-frontend/
 COPY --chown=$UID:$GID ./premium/web-frontend /baserow/premium/web-frontend/
 COPY --chown=$UID:$GID ./enterprise/web-frontend /baserow/enterprise/web-frontend/
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
+
+# Create symlinks for jest tests
+RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules
+RUN ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh

@@ -71,6 +71,7 @@ export function createGridView(
     filter_type: 'AND',
     filters_disabled: false,
     public: publicView,
+    row_identifier_type: 'id',
     filters,
     sortings,
     decorations,
