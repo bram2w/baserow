@@ -2,6 +2,7 @@ import datetime
 import importlib
 import os
 import re
+import sys
 from decimal import Decimal
 from ipaddress import ip_network
 from pathlib import Path
@@ -25,7 +26,7 @@ class Everything(object):
         return True
 
 
-if "*" in FEATURE_FLAGS:
+if "*" in FEATURE_FLAGS or "pytest" in sys.modules:
     FEATURE_FLAGS = Everything()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
