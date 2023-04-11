@@ -5,7 +5,6 @@ from baserow.contrib.builder.pages.constants import (
     PAGE_PATH_PARAM_PREFIX,
     PATH_PARAM_EXACT_MATCH_REGEX,
 )
-from baserow.contrib.builder.pages.types import PagePathParams
 
 
 def path_validation(value: str):
@@ -28,18 +27,15 @@ def path_validation(value: str):
     validator(full_path)
 
 
-def path_params_validation(value: PagePathParams):
+def path_param_name_validation(value: str):
     """
-    Verifies that all path params are semantically valid.
+    Verifies that the path param is semantically valid.
 
-    :param value: The path params to check
-    :raises ValidationError: If a path param is not semantically valid
+    :param value: The path param to check
+    :raises ValidationError: If the path param is not semantically valid
     """
 
-    for path_param in value.keys():
-        full_path_param = f"{PAGE_PATH_PARAM_PREFIX}{path_param}"
+    full_path_param = f"{PAGE_PATH_PARAM_PREFIX}{value}"
 
-        if not PATH_PARAM_EXACT_MATCH_REGEX.match(full_path_param):
-            raise ValidationError(
-                f"Path param {path_param} contains invalid characters"
-            )
+    if not PATH_PARAM_EXACT_MATCH_REGEX.match(full_path_param):
+        raise ValidationError(f"Path param {value} contains invalid characters")

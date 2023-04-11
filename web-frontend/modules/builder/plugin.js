@@ -37,6 +37,11 @@ import {
   VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
+import { PagePageSettingsType } from '@baserow/modules/builder/pageSettingsTypes'
+import {
+  TextPathParamType,
+  NumericPathParamType,
+} from '@baserow/modules/builder/pathParamTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -62,6 +67,8 @@ export default (context) => {
   app.$registry.registerNamespace('element')
   app.$registry.registerNamespace('device')
   app.$registry.registerNamespace('pageHeaderItem')
+  app.$registry.registerNamespace('pageSettings')
+  app.$registry.registerNamespace('pathParamType')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -107,4 +114,9 @@ export default (context) => {
     new VisibilityPageSidePanelType(context)
   )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
+
+  app.$registry.register('pageSettings', new PagePageSettingsType(context))
+
+  app.$registry.register('pathParamType', new TextPathParamType(context))
+  app.$registry.register('pathParamType', new NumericPathParamType(context))
 }

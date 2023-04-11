@@ -3,7 +3,7 @@
     <template #sidebar>
       <div class="modal-sidebar__head">
         <div class="modal-sidebar__head-name">
-          {{ $t('builderSettingsModal.title') }}
+          {{ page.name }}
         </div>
       </div>
       <ul class="modal-sidebar__nav">
@@ -15,15 +15,19 @@
           >
             <i
               class="fas modal-sidebar__nav-icon"
-              :class="'fa-' + setting.getIconClass()"
+              :class="'fa-' + setting.icon"
             ></i>
-            {{ setting.getName() }}
+            {{ setting.name }}
           </a>
         </li>
       </ul>
     </template>
     <template v-if="settingSelected" #content>
-      <component :is="settingSelected.getComponent()"></component>
+      <component
+        :is="settingSelected.component"
+        :builder="builder"
+        :page="page"
+      ></component>
     </template>
   </Modal>
 </template>
@@ -32,8 +36,18 @@
 import modal from '@baserow/modules/core/mixins/modal'
 
 export default {
-  name: 'BuilderSettingsModal',
+  name: 'PageSettingsModal',
   mixins: [modal],
+  props: {
+    builder: {
+      type: Object,
+      required: true,
+    },
+    page: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       settingSelected: null,
@@ -41,7 +55,7 @@ export default {
   },
   computed: {
     registeredSettings() {
-      return this.$registry.getOrderedList('builderSettings')
+      return this.$registry.getOrderedList('pageSettings')
     },
   },
   methods: {

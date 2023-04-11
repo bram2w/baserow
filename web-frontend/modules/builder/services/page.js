@@ -1,7 +1,11 @@
 export default (client) => {
   return {
-    create(builderId, name, path) {
-      return client.post(`builder/${builderId}/pages/`, { name, path })
+    create(builderId, name, path, pathParams = {}) {
+      return client.post(`builder/${builderId}/pages/`, {
+        name,
+        path,
+        path_params: pathParams,
+      })
     },
     update(pageId, values) {
       return client.patch(`builder/pages/${pageId}/`, values)

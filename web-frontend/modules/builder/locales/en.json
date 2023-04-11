@@ -17,14 +17,12 @@
         "header": "Create page",
         "submit": "Add page"
     },
-    "pageForm": {
-        "nameLabel": "Name",
-        "pathLabel": "Path",
+    "pageErrors": {
         "errorNameNotUnique": "A page with this name already exists",
         "errorPathNotUnique": "A path with this name already exists",
         "errorStartingSlash": "A path needs to start with a '/'",
         "errorValidPathCharacters": "The path contains invalid characters",
-        "defaultName": "Page"
+        "errorUniquePathParams": "Path parameters have to be unique."
     },
     "pageHeaderItemTypes": {
         "labelElements": "Elements",
@@ -82,5 +80,27 @@
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
         "textError": "The value is invalid."
+    },
+    "pageSettingsTypes": {
+        "pageName": "Page"
+    },
+    "pageSettings": {
+        "title": "Page",
+        "pageUpdatedTitle": "Changed",
+        "pageUpdatedDescription": "The page settings have been updated."
+    },
+    "pageForm": {
+        "defaultName": "Page",
+        "nameTitle": "Name",
+        "nameSubtitle": "Unique name of the page",
+        "pathTitle": "Path",
+        "pathSubtitle": "A parameter can be added via :parameter",
+        "pathParamsTitle": "Path parameters",
+        "pathParamsSubtitle": "Are defined by :parameter in the path",
+        "pathParamsSubtitleTutorial": "Path parameters can be used to dynamically load data, depending on the provided parameter. Add :parameter to the path to add one."
+    },
+    "pathParamTypes": {
+        "textName": "Text",
+        "numericName": "Numeric"
     }
 }

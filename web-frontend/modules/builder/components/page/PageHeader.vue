@@ -1,6 +1,6 @@
 <template>
   <header class="layout__col-2-1 header header--space-between">
-    <PageHeaderMenuItems />
+    <PageHeaderMenuItems :page="page" :builder="builder" />
     <DeviceSelector
       :device-type-selected="deviceTypeSelected"
       @selected="actionSetDeviceTypeSelected"
@@ -18,6 +18,16 @@ export default {
   components: {
     PageHeaderMenuItems,
     DeviceSelector,
+  },
+  props: {
+    page: {
+      type: Object,
+      required: true,
+    },
+    builder: {
+      type: Object,
+      required: true,
+    },
   },
   computed: {
     ...mapGetters({ deviceTypeSelected: 'page/getDeviceTypeSelected' }),

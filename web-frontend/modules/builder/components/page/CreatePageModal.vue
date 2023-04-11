@@ -3,10 +3,10 @@
     <h2 class="box__title">
       {{ $t('createPageModal.header') }}
     </h2>
-    <PageForm
+    <PageSettingsForm
       ref="pageForm"
-      :creation="true"
       :builder="builder"
+      is-creation
       @submitted="addPage"
     >
       <div class="actions actions--right">
@@ -18,18 +18,18 @@
           {{ $t('createPageModal.submit') }}
         </button>
       </div>
-    </PageForm>
+    </PageSettingsForm>
   </Modal>
 </template>
 
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import PageForm from '@baserow/modules/builder/components/page/PageForm'
+import PageSettingsForm from '@baserow/modules/builder/components/page/PageSettingsForm'
 
 export default {
   name: 'CreatePageModal',
-  components: { PageForm },
+  components: { PageSettingsForm },
   mixins: [modal],
   props: {
     builder: {
@@ -43,13 +43,14 @@ export default {
     }
   },
   methods: {
-    async addPage({ name, path }) {
+    async addPage({ name, path, path_params: pathParams }) {
       this.loading = true
       try {
         const page = await this.$store.dispatch('page/create', {
           builder: this.builder,
           name,
           path,
+          pathParams,
         })
         this.$refs.pageForm.$v.$reset()
         this.hide()

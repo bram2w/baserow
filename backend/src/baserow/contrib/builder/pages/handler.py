@@ -5,6 +5,7 @@ from django.db.models import QuerySet
 
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.constants import (
+    ILLEGAL_PATH_SAMPLE_CHARACTER,
     PAGE_PATH_PARAM_PREFIX,
     PATH_PARAM_REGEX,
 )
@@ -68,6 +69,7 @@ class PageHandler:
         path_params = path_params or {}
 
         self.is_page_path_valid(path, path_params, raises=True)
+        self.is_page_path_unique(builder, path, raises=True)
 
         try:
             page = Page.objects.create(
@@ -109,6 +111,14 @@ class PageHandler:
             path_params = kwargs.get("path_params", page.path_params)
 
             self.is_page_path_valid(path, path_params, raises=True)
+            self.is_page_path_unique(
+                page.builder,
+                path,
+                base_queryset=Page.objects.exclude(
+                    id=page.id
+                ),  # We don't want to conflict with the current page
+                raises=True,
+            )
 
         for key, value in kwargs.items():
             setattr(page, key, value)
@@ -219,7 +229,7 @@ class PageHandler:
         self, path: str, path_params: PagePathParams, raises: bool = False
     ) -> bool:
         """
-        Checks if a path object is constructed correctly. If there is a missmatch
+        Checks if a path object is constructed correctly. If there is a mismatch
         between the path itself and the path params for example, it becomes an invalid
         path.
 
@@ -232,7 +242,7 @@ class PageHandler:
         :return: If the path is valid
         """
 
-        path_param_names = path_params.keys()
+        path_param_names = [p["name"] for p in path_params]
 
         # Make sure all path params are also in the path
         for path_param_name in path_param_names:
@@ -263,3 +273,59 @@ class PageHandler:
                 return False
 
         return True
+
+    def is_page_path_unique(
+        self,
+        builder: Builder,
+        path: str,
+        base_queryset: QuerySet = None,
+        raises: bool = False,
+    ) -> bool:
+        """
+        Checks if a page path is unique.
+
+        :param builder: The builder that the page belongs to
+        :param path: The path it is trying to set
+        :param raises: If true will raise an exception when the path isn't unique
+        :return: If the path is unique
+        """
+
+        queryset = base_queryset or Page.objects
+
+        existing_paths = queryset.filter(builder=builder).values_list("path", flat=True)
+
+        path_generalised = self.generalise_path(path)
+        for existing_path in existing_paths:
+            if self.generalise_path(existing_path) == path_generalised:
+                if raises:
+                    raise PagePathNotUnique(path=path, builder_id=builder.id)
+                return False
+
+        return True
+
+    def generalise_path(self, path: str) -> str:
+        """
+        Returns a generalised version of a path. This can be useful if we are trying to
+        understand if 2 paths are equivalent even if their path params have different
+        names.
+
+        For 2 paths to be equivalent they need to have the same static parts of the path
+        and the same amount and position of path parameters.
+
+        Equivalent:
+        /product/:id, /product/:new
+        /product/:id/hello/:new, /product/:new/hello/:id
+
+        Not equivalent:
+        /product/:id, /product/:id/:new
+        /product/:id/hello/:new, /product/:id/:new/hello
+
+        By replacing all the path parameters in the path with an illegal path character
+        we can make sure that we can match 2 paths and, they will be the same string if
+        they are indeed a duplicate given the above rules.
+
+        :param path: The path that is being generalised
+        :return: The generalised path
+        """
+
+        return PATH_PARAM_REGEX.sub(ILLEGAL_PATH_SAMPLE_CHARACTER, path)
