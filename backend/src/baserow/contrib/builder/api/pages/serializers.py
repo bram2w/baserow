@@ -2,17 +2,23 @@ from rest_framework import serializers
 
 from baserow.contrib.builder.pages.constants import PAGE_PATH_PARAM_TYPE_CHOICES
 from baserow.contrib.builder.pages.models import Page
-from baserow.contrib.builder.pages.validators import path_params_validation
+from baserow.contrib.builder.pages.validators import path_param_name_validation
 
 
 class PathParamSerializer(serializers.Serializer):
-    param_type = serializers.ChoiceField(choices=PAGE_PATH_PARAM_TYPE_CHOICES)
+    name = serializers.CharField(
+        required=True,
+        validators=[path_param_name_validation],
+        help_text="The name of the parameter.",
+        max_length=255,
+    )
+    type = serializers.ChoiceField(
+        choices=PAGE_PATH_PARAM_TYPE_CHOICES, help_text="The type of the parameter."
+    )
 
 
 class PageSerializer(serializers.ModelSerializer):
-    path_params = serializers.DictField(
-        child=PathParamSerializer(), required=False, validators=[path_params_validation]
-    )
+    path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:
         model = Page
@@ -25,9 +31,8 @@ class PageSerializer(serializers.ModelSerializer):
 
 
 class CreatePageSerializer(serializers.ModelSerializer):
-    path_params = serializers.DictField(
-        child=PathParamSerializer(), required=False, validators=[path_params_validation]
-    )
+
+    path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:
         model = Page
@@ -35,9 +40,8 @@ class CreatePageSerializer(serializers.ModelSerializer):
 
 
 class UpdatePageSerializer(serializers.ModelSerializer):
-    path_params = serializers.DictField(
-        child=PathParamSerializer(), required=False, validators=[path_params_validation]
-    )
+
+    path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:
         model = Page
