@@ -19,7 +19,6 @@ export class LoginPage extends BaserowPage {
     await this.passwordInput.fill(password)
     const navigationPromise = this.page.waitForNavigation({timeout:5000})
     await this.loginButton.click()
-    await this.page.screenshot()
     await navigationPromise
   }
 }
