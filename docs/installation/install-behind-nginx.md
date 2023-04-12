@@ -56,7 +56,7 @@ BASEROW_PUBLIC_URL=http://baserow.example.com
 
 ### Step 2 - Add nginx config for Baserow
 
-Create a new `baserow.conf` in `/etc/nginx/sites-enabled/` with the following contents:
+Create a new `baserow.conf` in `/etc/nginx/sites-available/` with the following contents:
 
 > Make sure to replace any http://localhost:PORT references with the correct ones for
 > your particular Baserow deployment.
