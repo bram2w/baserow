@@ -354,6 +354,13 @@ class FieldType(
 
         raise NotImplementedError("Each must have his own get_model_field method.")
 
+    def has_compatible_model_fields(self, instance, instance2) -> bool:
+        """
+        Returns True if the provided instances have compatible model fields.
+        """
+
+        return type(instance) == type(instance2)
+
     def after_model_generation(self, instance, model, field_name, manytomany_models):
         """
         After the model is generated the after_model_generation method of each field

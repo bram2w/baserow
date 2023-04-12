@@ -1507,3 +1507,36 @@ def test_user_can_change_date_force_timezone_on_formula(data_fixture, api_client
     }
     actual = {key: value for key, value in response.json().items() if key in expected}
     assert actual == expected
+
+
+@pytest.mark.django_db
+@pytest.mark.field_formula
+@pytest.mark.parametrize(
+    "instance1,instance2,is_compatible",
+    [
+        (
+            FormulaField(formula_type="date", array_formula_type=None),
+            FormulaField(formula_type="date", array_formula_type=None),
+            True,
+        ),
+        (
+            FormulaField(formula_type="array", array_formula_type="number"),
+            FormulaField(formula_type="array", array_formula_type="number"),
+            True,
+        ),
+        (
+            FormulaField(formula_type="date", array_formula_type=None),
+            FormulaField(formula_type="number", array_formula_type=None),
+            False,
+        ),
+        (
+            FormulaField(formula_type="array", array_formula_type="number"),
+            FormulaField(formula_type="array", array_formula_type="text"),
+            False,
+        ),
+    ],
+)
+def test_has_compatible_model_fields(instance1, instance2, is_compatible):
+    FormulaFieldType().has_compatible_model_fields(
+        instance1, instance2
+    ) is is_compatible

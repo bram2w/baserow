@@ -3168,6 +3168,13 @@ class FormulaFieldType(ReadOnlyFieldType):
             **kwargs,
         )
 
+    def has_compatible_model_fields(self, instance, instance2) -> bool:
+        return (
+            super().has_compatible_model_fields(instance, instance2)
+            and instance.formula_type == instance2.formula_type
+            and instance.array_formula_type == instance.array_formula_type
+        )
+
     def prepare_value_for_db(self, instance, value):
         """
         Since the Formula Field is a read only field, we raise a
