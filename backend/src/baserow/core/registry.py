@@ -182,7 +182,7 @@ class CustomFieldsInstanceMixin:
 
     def get_serializer(
         self,
-        model_instance: models.Model,
+        model_instance_or_instances: Union[models.Model, List[models.Model]],
         base_class: Optional[serializers.ModelSerializer] = None,
         context: Optional[Dict[str, Any]] = None,
         request: bool = False,
@@ -192,7 +192,8 @@ class CustomFieldsInstanceMixin:
         Returns an instantiated model serializer based on this type field names and
         overrides. The provided model instance will be used instantiate the serializer.
 
-        :param model_instance: The instance for which the serializer must be generated.
+        :param model_instance_or_instances: The instance or a list of instances for
+            which the serializer must be generated.
         :param base_class: The base serializer class that must be extended. For example
             common fields could be stored here.
         :param context: Extra context arguments to pass to the serializers context.
@@ -204,13 +205,18 @@ class CustomFieldsInstanceMixin:
         if context is None:
             context = {}
 
-        model_instance = model_instance.specific
+        if isinstance(model_instance_or_instances, list):
+            model_instance_or_instances = [
+                m.specific for m in model_instance_or_instances
+            ]
+        else:
+            model_instance_or_instances = model_instance_or_instances.specific
 
         serializer_class = self.get_serializer_class(
             base_class=base_class, request_serializer=request
         )
 
-        return serializer_class(model_instance, context=context, **kwargs)
+        return serializer_class(model_instance_or_instances, context=context, **kwargs)
 
 
 class APIUrlsInstanceMixin:
@@ -526,7 +532,7 @@ class ModelRegistryMixin(Generic[DjangoModel, InstanceSubClass]):
 class CustomFieldsRegistryMixin(Generic[DjangoModel]):
     def get_serializer(
         self,
-        model_instance: DjangoModel,
+        model_instance_or_instances: Union[DjangoModel, List[DjangoModel]],
         base_class: Optional[Type[serializers.ModelSerializer]] = None,
         context: Optional[Dict[str, any]] = None,
         **kwargs,
@@ -535,8 +541,9 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
         Based on the provided model_instance and base_class a unique serializer
         containing the correct field type is generated.
 
-        :param model_instance: The instance for which the serializer must be generated.
-        :type model_instance: Model
+        :param model_instance_or_instances: The instance or list of instances for which
+            the serializer must be generated.
+        :type model_instance_or_instances: Model
         :param base_class: The base serializer class that must be extended. For example
             common fields could be stored here.
         :type base_class: ModelSerializer
@@ -557,10 +564,19 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
                 "order to generate the serializer, maybe you forgot to "
                 "extend the ModelRegistryMixin?"
             )
-
-        instance_type = self.get_by_model(model_instance.specific_class)
+        if isinstance(model_instance_or_instances, list):
+            instance_type = self.get_by_model(
+                model_instance_or_instances[0].specific_class
+            )
+        else:
+            instance_type = self.get_by_model(
+                model_instance_or_instances.specific_class
+            )
         return instance_type.get_serializer(
-            model_instance, base_class=base_class, context=context, **kwargs
+            model_instance_or_instances,
+            base_class=base_class,
+            context=context,
+            **kwargs,
         )
 
 
