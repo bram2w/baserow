@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.db.models import QuerySet
 
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.builder.domains.models import Domain
@@ -17,7 +18,10 @@ from baserow.contrib.builder.domains.signals import (
     domains_reordered,
 )
 from baserow.contrib.builder.models import Builder
-from baserow.contrib.builder.operations import OrderDomainsBuilderOperationType
+from baserow.contrib.builder.operations import (
+    ListDomainsBuilderOperationType,
+    OrderDomainsBuilderOperationType,
+)
 from baserow.core.handler import CoreHandler
 from baserow.core.utils import extract_allowed
 
@@ -27,7 +31,10 @@ class DomainService:
         self.handler = DomainHandler()
 
     def get_domain(
-        self, user: AbstractUser, domain_id: int, base_queryset=None
+        self,
+        user: AbstractUser,
+        domain_id: int,
+        base_queryset: Optional[QuerySet] = None,
     ) -> Domain:
         """
         Gets a domain by ID
@@ -50,6 +57,42 @@ class DomainService:
         )
 
         return domain
+
+    def get_domains(
+        self,
+        user: AbstractUser,
+        builder: Builder,
+        base_queryset: Optional[QuerySet] = None,
+    ) -> QuerySet[Domain]:
+        """
+        Gets all the domains of a builder.
+
+        :param user: The user trying to get the domains
+        :param builder: The builder we are trying to get all domains for
+        :param base_queryset: Can be provided to already filter or apply performance
+            improvements to the queryset when it's being executed
+        :return: A queryset with all the domains
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            ListDomainsBuilderOperationType.type,
+            workspace=builder.workspace,
+            context=builder,
+        )
+
+        base_queryset = (
+            base_queryset if base_queryset is not None else Domain.objects.all()
+        )
+        base_queryset = CoreHandler().filter_queryset(
+            user,
+            ListDomainsBuilderOperationType.type,
+            queryset=base_queryset,
+            workspace=builder.workspace,
+            context=builder,
+        )
+
+        return DomainHandler().get_domains(builder, base_queryset)
 
     def create_domain(
         self, user: AbstractUser, builder: Builder, domain_name: str

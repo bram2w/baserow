@@ -1,21 +1,22 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import IntegrationSettings from '@baserow/modules/builder/components/settings/IntegrationSettings'
 import ThemeSettings from '@baserow/modules/builder/components/settings/ThemeSettings'
+import DomainsSettings from '@baserow/modules/builder/components/settings/DomainsSettings'
 
 class BuilderSettingType extends Registerable {
   getType() {
     return null
   }
 
-  getName() {
+  get name() {
     return null
   }
 
-  getIconClass() {
+  get icon() {
     return null
   }
 
-  getComponent() {
+  get component() {
     return null
   }
 }
@@ -25,19 +26,19 @@ export class IntegrationsBuilderSettingsType extends BuilderSettingType {
     return 'integrations'
   }
 
-  getName() {
+  get name() {
     return this.app.i18n.t('builderSettingTypes.integrationsName')
   }
 
-  getIconClass() {
+  get icon() {
     return 'plug'
   }
 
   getOrder() {
-    return 1
+    return 10
   }
 
-  getComponent() {
+  get component() {
     return IntegrationSettings
   }
 }
@@ -47,19 +48,41 @@ export class ThemeBuilderSettingsType extends BuilderSettingType {
     return 'theme'
   }
 
-  getName() {
+  get name() {
     return this.app.i18n.t('builderSettingTypes.themeName')
   }
 
-  getIconClass() {
+  get icon() {
     return 'tint'
   }
 
   getOrder() {
-    return 2
+    return 20
   }
 
-  getComponent() {
+  get component() {
     return ThemeSettings
+  }
+}
+
+export class DomainsBuilderSettingsType extends BuilderSettingType {
+  getType() {
+    return 'domains'
+  }
+
+  get name() {
+    return this.app.i18n.t('builderSettingTypes.domainsName')
+  }
+
+  get icon() {
+    return 'globe'
+  }
+
+  getOrder() {
+    return 5
+  }
+
+  get component() {
+    return DomainsSettings
   }
 }

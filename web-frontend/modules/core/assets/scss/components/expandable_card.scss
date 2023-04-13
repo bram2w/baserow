@@ -1,0 +1,17 @@
+.expandable-card__header {
+  border: 1px solid $color-neutral-200;
+  background-color: $color-neutral-100;
+  padding: 20px;
+  border-radius: 6px;
+
+  .expandable-card--expanded & {
+    border-radius: 6px 6px 0 0;
+  }
+}
+
+.expandable-card__content {
+  padding: 20px;
+  border: 1px solid $color-neutral-200;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
