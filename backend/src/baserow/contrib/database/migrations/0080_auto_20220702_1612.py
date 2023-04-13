@@ -7,7 +7,6 @@ import baserow.contrib.database.file_import.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0079_table_version"),
     ]

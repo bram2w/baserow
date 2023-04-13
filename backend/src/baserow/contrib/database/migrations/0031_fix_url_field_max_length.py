@@ -20,7 +20,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0030_auto_20210526_1939"),
     ]

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_enterprise", "0013_rename_group_role_workspace"),
     ]

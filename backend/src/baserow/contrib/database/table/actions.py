@@ -192,7 +192,6 @@ class OrderTableActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-
         TableHandler().order_tables(
             user,
             DatabaseHandler().get_database(params.database_id),

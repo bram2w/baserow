@@ -9,7 +9,6 @@ from .models import Token
 
 
 class TokenSubjectType(SubjectType):
-
     type = "core.Token"
     model_class = Token
 

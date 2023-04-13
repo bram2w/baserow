@@ -239,7 +239,6 @@ def get_highest_order_of_queryset(
     amount: int = 1,
     field: str = "order",
 ) -> List[Decimal]:
-
     """
     Returns the highest existing values of the provided order field.
 

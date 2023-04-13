@@ -432,7 +432,6 @@ class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
 class DuplicateApplicationJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_application = models.ForeignKey(
         Application,
         null=True,

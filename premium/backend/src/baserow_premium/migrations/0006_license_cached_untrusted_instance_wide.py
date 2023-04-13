@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_premium", "0005_alter_rowcomment_user"),
     ]

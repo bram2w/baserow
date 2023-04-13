@@ -628,7 +628,7 @@ def test_assign_role_batch_performance(data_fixture, profiler):
         assert workspace_user.permissions == admin_role.uid
 
     workspace_level_deletions = []
-    for (user, _, scope) in workspace_level_updates:
+    for user, _, scope in workspace_level_updates:
         workspace_level_deletions.append(
             NewRoleAssignment(
                 user,
@@ -650,7 +650,7 @@ def test_assign_role_batch_performance(data_fixture, profiler):
         assert workspace_user.permissions == no_access_role.uid
 
     database_level_assignments = []
-    for (user, _, _) in workspace_level_updates:
+    for user, _, _ in workspace_level_updates:
         database_level_assignments.append(
             NewRoleAssignment(
                 user,
@@ -672,7 +672,7 @@ def test_assign_role_batch_performance(data_fixture, profiler):
         assert role_assignment.role == admin_role
 
     database_level_deletions = []
-    for (user, _, scope) in database_level_assignments:
+    for user, _, scope in database_level_assignments:
         database_level_deletions.append(
             NewRoleAssignment(
                 user,

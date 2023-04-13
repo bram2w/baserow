@@ -215,7 +215,6 @@ class TeamHandler:
         # 3. Create any new subjects we've been given.
         # 4. Remove any existing subjects we don't want anymore.
         with atomic_if_not_already():
-
             # Build a default dict of existing subjects in the team. The key is the
             # `TeamSubject.subject_type_natural_key`, the value contains the list of
             # `subject_id` of that `subject_type`. We'll use this to determine if there
@@ -367,7 +366,6 @@ class TeamHandler:
 
         # For each unique subject type we found.
         for unique_subject_type in unique_subject_types:
-
             # Build a list of unique subject IDs, of this type.
             subject_ids_of_type = []
 
@@ -379,7 +377,6 @@ class TeamHandler:
                 lambda s: s["subject_type"] == unique_subject_type, subjects
             )
             for subject_of_type in subjects_of_type:
-
                 # Store the subject's PK.
                 subject_id = subject_of_type["subject_id"]
                 subject_ids_of_type.append(subject_id)

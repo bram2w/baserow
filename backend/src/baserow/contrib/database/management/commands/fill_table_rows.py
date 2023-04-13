@@ -81,7 +81,7 @@ def fill_table_rows(limit, table):
     # that must be populated. The value contains the objects that must be inserted in
     # bulk.
     many_to_many = defaultdict(list)
-    for (row, relations) in rows:
+    for row, relations in rows:
         for field_name, value in relations.items():
             through = getattr(model, field_name).through
             through_fields = through._meta.get_fields()

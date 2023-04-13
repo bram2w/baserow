@@ -265,7 +265,6 @@ def start_sync_templates_task_after_migrate(sender, **kwargs):
 
 
 def sync_operations_after_migrate(sender, **kwargs):
-
     apps = kwargs.get("apps", None)
 
     if apps is not None:

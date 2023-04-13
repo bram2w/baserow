@@ -24,7 +24,6 @@ def backward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0061_settings_allow_signups_via_workspace_invitations"),
     ]

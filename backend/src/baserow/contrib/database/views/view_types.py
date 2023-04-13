@@ -179,7 +179,6 @@ class GridViewType(ViewType):
             aggregation_raw_type = options.get("aggregation_raw_type")
 
             if aggregation_raw_type and field:
-
                 try:
                     # Invalidate cache if new aggregation raw type has changed
                     prev_options = GridViewFieldOptions.objects.only(
@@ -488,7 +487,6 @@ class GalleryViewType(ViewType):
             fields = [f for f in fields if f.id in field_ids_to_check]
 
         for field in fields:
-
             # The card cover image field is always visible.
             if field.id == view.card_cover_image_field_id:
                 continue

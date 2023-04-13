@@ -171,7 +171,6 @@ class FormulaMigrationHandler:
         )
 
         with tqdm(total=total_out_of_date_formulas) as progress_bar:
-
             current_batch = 0
 
             def progress_updated(percentage, state):
@@ -219,7 +218,6 @@ class FormulaMigrationHandler:
         migrations: FormulaMigrations,
         child_progress_builder: ChildProgressBuilder,
     ):
-
         (
             formulas_to_rebuild_dependencies_for,
             formulas_to_recalculate_attributes_and_cell_values_for,

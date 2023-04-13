@@ -5,7 +5,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_enterprise", "0010_rename_no_role_to_no_access"),
         ("database", "0095_update_exportjob_data"),

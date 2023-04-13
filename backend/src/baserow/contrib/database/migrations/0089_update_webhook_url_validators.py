@@ -7,7 +7,6 @@ import baserow.contrib.database.webhooks.validators
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0088_multiple_collaborators_field"),
     ]

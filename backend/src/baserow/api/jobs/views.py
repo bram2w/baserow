@@ -58,7 +58,6 @@ class JobsView(APIView):
     )
     @validate_query_parameters(ListJobQuerySerializer, return_validated=True)
     def get(self, request, query_params):
-
         states = query_params.get("states", None)
         job_ids = query_params.get("job_ids", None)
 

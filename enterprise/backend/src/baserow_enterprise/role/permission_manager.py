@@ -155,8 +155,7 @@ class RolePermissionManagerType(PermissionManagerType):
         )
         exceptions = set()
 
-        for (scope, roles) in roles_by_scope[1:]:
-
+        for scope, roles in roles_by_scope[1:]:
             allowed_operations = set()
 
             for role in roles:
@@ -170,7 +169,6 @@ class RolePermissionManagerType(PermissionManagerType):
             if object_scope_type_registry.scope_type_includes_scope_type(
                 scope_type, base_scope_type
             ):
-
                 context_exception = scope
                 # Remove or add exceptions to the exception list according to the
                 # default policy for the workspace
@@ -267,7 +265,6 @@ class RolePermissionManagerType(PermissionManagerType):
         # Dispatch actual context object ids for each exceptions scopes
         policy_per_operation_with_exception_ids = {}
         for operation_type in operation_type_registry.get_all():
-
             # Gather all ids for all scopes of the exception list of this operation
             exceptions_ids = set()
             for scope in policy_per_operation[operation_type.type]["exceptions"]:

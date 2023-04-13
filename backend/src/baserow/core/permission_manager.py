@@ -43,7 +43,6 @@ class CorePermissionManagerType(PermissionManagerType):
     ]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
-
         result = {}
         for check in checks:
             if check.operation_name in self.ALWAYS_ALLOWED_OPERATIONS:
@@ -66,7 +65,6 @@ class StaffOnlyPermissionManagerType(PermissionManagerType):
     STAFF_ONLY_OPERATIONS = [UpdateSettingsOperationType.type]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
-
         result = {}
         for check in checks:
             if check.operation_name in self.STAFF_ONLY_OPERATIONS:
@@ -94,7 +92,6 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
     supported_actor_types = [UserSubjectType.type]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
-
         if workspace is None:
             return {}
 
@@ -148,7 +145,6 @@ class BasicPermissionManagerType(PermissionManagerType):
     ]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
-
         if workspace is None:
             return {}
 

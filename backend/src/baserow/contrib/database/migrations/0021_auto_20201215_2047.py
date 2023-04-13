@@ -61,7 +61,6 @@ def remove_from_tables(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0020_fix_primary_link_row"),
     ]

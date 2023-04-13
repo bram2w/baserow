@@ -1679,7 +1679,6 @@ class PublicViewLinkRowFieldLookupView(APIView):
         }
     )
     def get(self, request: Request, slug: str, field_id: int) -> Response:
-
         handler = ViewHandler()
         view = handler.get_public_view_by_slug(
             request.user,
@@ -1840,7 +1839,6 @@ class PublicViewInfoView(APIView):
     )
     @transaction.atomic
     def get(self, request: Request, slug: str) -> Response:
-
         handler = ViewHandler()
         view = handler.get_public_view_by_slug(
             request.user,

@@ -29,7 +29,6 @@ def setup_dev_e2e_users_and_instance_id(User, args, kwargs):
     from baserow.core.models import Settings
 
     if Settings.objects.get().instance_id != "1":
-
         from baserow.core.user.handler import UserHandler
 
         user_handler = UserHandler()

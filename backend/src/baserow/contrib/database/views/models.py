@@ -58,7 +58,6 @@ class View(
     PolymorphicContentTypeMixin,
     models.Model,
 ):
-
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)

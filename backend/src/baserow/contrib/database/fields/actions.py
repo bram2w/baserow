@@ -66,7 +66,6 @@ class UpdateFieldActionType(UndoableActionCustomCleanupMixin, UndoableActionType
         new_type_name: Optional[str] = None,
         **kwargs,
     ) -> Tuple[Field, List[Field]]:
-
         """
         Updates the values and/or type of the given field. See
         baserow.contrib.database.fields.handler.FieldHandler.update_field for further

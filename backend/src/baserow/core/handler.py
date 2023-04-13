@@ -196,7 +196,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         result = {}
         undetermined_checks = set(checks)
         for permission_manager_name in settings.PERMISSION_MANAGERS:
-
             if not undetermined_checks:
                 break
 
@@ -1740,7 +1739,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).delete()
 
     def get_valid_template_path_or_raise(self, template):
-
         file_name = f"{template.slug}.json"
         template_path = Path(
             os.path.join(settings.APPLICATION_TEMPLATES_DIR, file_name)

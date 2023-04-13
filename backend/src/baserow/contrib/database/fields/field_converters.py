@@ -257,7 +257,6 @@ class TextFieldToMultipleSelectFieldConverter(FieldConverter):
         user,
         connection,
     ):
-
         from_field_type = field_type_registry.get_by_model(from_field)
         helper = MultipleSelectConversionBase(
             from_field,
@@ -274,7 +273,6 @@ class TextFieldToMultipleSelectFieldConverter(FieldConverter):
             ),
             None,
         ) as schema_editor:
-
             # Convert the existing column to a temporary text field.
             tmp_model_field, _ = helper.add_temporary_text_field_to_model(
                 to_model, from_field.db_column
@@ -377,7 +375,6 @@ class MultipleSelectFieldToTextFieldConverter(FieldConverter):
         user,
         connection,
     ):
-
         to_field_type = field_type_registry.get_by_model(to_field)
         helper = MultipleSelectConversionBase(
             from_field,
@@ -463,7 +460,6 @@ class MultipleSelectFieldToSingleSelectFieldConverter(FieldConverter):
         user,
         connection,
     ):
-
         helper = MultipleSelectConversionBase(
             from_field,
             to_field,

@@ -75,7 +75,6 @@ def test_can_backup_and_restore_baserow_reverting_changes(data_fixture, environ)
 def test_backup_baserow_dumps_database_in_batches(
     mock_check_output, mock_connect, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_pyscopg2_call_to_return(
         mock_connect,
         [("public.database_table_1",), ("public.database_relation_1",)],
@@ -145,7 +144,6 @@ def test_backup_baserow_dumps_database_in_batches(
 def test_can_change_num_jobs_and_insert_extra_args_for_baserow_backup(
     mock_check_output, mock_connect, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_pyscopg2_call_to_return(
         mock_connect,
         [("public.database_table_1",), ("public.database_relation_1",)],
@@ -223,7 +221,6 @@ def test_can_change_num_jobs_and_insert_extra_args_for_baserow_backup(
 def test_backup_baserow_table_batches_includes_all_tables_when_final_batch_small(
     mock_check_output, mock_connect, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_pyscopg2_call_to_return(
         mock_connect,
         [
@@ -283,7 +280,6 @@ def test_backup_baserow_table_batches_includes_all_tables_when_final_batch_small
 def test_backup_baserow_includes_all_tables_when_batch_size_matches_num_tables(
     mock_check_output, mock_connect, mock_tempfile, fs, data_fixture, environ
 ):
-
     tables_returned_by_sql = [
         ("public.database_table_1",),
         ("public.database_table_2",),
@@ -335,7 +331,6 @@ def test_backup_baserow_includes_all_tables_when_batch_size_matches_num_tables(
 def test_backup_baserow_does_no_table_batches_when_no_user_tables_found(
     mock_check_output, mock_connect, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_pyscopg2_call_to_return(
         mock_connect,
         [],
@@ -372,7 +367,6 @@ def test_backup_baserow_does_no_table_batches_when_no_user_tables_found(
 def test_restore_baserow_restores_contained_dumps_in_batches(
     mock_tarfile_open, mock_check_output, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir/")
     fs.create_dir("/fake_tmp_dir/backup.tar.gz/everything_but_user_tables")
     fs.create_dir("/fake_tmp_dir/backup.tar.gz/user_tables_batch_0")
@@ -436,7 +430,6 @@ def test_restore_baserow_restores_contained_dumps_in_batches(
 def test_restore_baserow_passes_extra_args_to_all_pg_restores_and_can_set_jobs(
     mock_tarfile_open, mock_check_output, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir/")
     fs.create_dir("/fake_tmp_dir/backup.tar.gz/everything_but_user_tables")
     fs.create_dir("/fake_tmp_dir/backup.tar.gz/user_tables_batch_0")
@@ -504,7 +497,6 @@ def test_restore_baserow_passes_extra_args_to_all_pg_restores_and_can_set_jobs(
 def test_restore_baserow_only_does_first_restore_if_no_user_tables(
     mock_tarfile_open, mock_check_output, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir/")
     fs.create_dir("/fake_tmp_dir/backup.tar.gz/everything_but_user_tables")
 
@@ -552,7 +544,6 @@ def test_restore_baserow_only_does_first_restore_if_no_user_tables(
 def test_restore_baserow_raises_exception_if_sub_folder_not_found_after_extract(
     mock_tarfile_open, mock_check_output, mock_tempfile, fs, data_fixture, environ
 ):
-
     mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir/")
     fs.create_dir("/fake_tmp_dir/some_other_bad_folder/")
 

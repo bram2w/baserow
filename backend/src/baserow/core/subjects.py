@@ -8,7 +8,6 @@ from baserow.core.types import Subject
 
 
 class UserSubjectType(SubjectType):
-
     type = "auth.User"
     model_class = User
 
@@ -40,7 +39,6 @@ class UserSubjectType(SubjectType):
 
 
 class AnonymousUserSubjectType(SubjectType):
-
     type = "anonymous"
     model_class = AnonymousUser
 

@@ -746,7 +746,6 @@ class Table(
 class DuplicateTableJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_table = models.ForeignKey(
         Table,
         null=True,

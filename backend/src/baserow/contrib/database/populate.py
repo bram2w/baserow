@@ -16,7 +16,6 @@ User = get_user_model()
 
 @transaction.atomic
 def load_test_data():
-
     print("Add basic data...")
 
     user = User.objects.get(email="admin@baserow.io")
@@ -61,7 +60,6 @@ def load_test_data():
                 {"color": "light-green", "value": "Grocery"},
             ]
         ):
-
             select_option = SelectOption.objects.create(
                 field=select_field,
                 order=order,
@@ -124,7 +122,6 @@ def load_test_data():
                 {"color": "dark-blue", "value": "Equitable"},
             ]
         ):
-
             select_option = SelectOption.objects.create(
                 field=select_field,
                 order=order,

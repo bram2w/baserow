@@ -7,12 +7,10 @@ class ElementFixtures:
         return element
 
     def create_builder_paragraph_element(self, user=None, page=None, **kwargs):
-
         element = self.create_builder_element(ParagraphElement, user, page, **kwargs)
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):
-
         if user is None:
             user = self.create_user()
 

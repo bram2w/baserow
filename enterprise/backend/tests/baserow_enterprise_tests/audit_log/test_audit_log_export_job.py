@@ -21,7 +21,6 @@ from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
 def test_audit_log_export_csv_correctly(
     storage_mock, enterprise_data_fixture, synced_roles
 ):
-
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     with freeze_time("2023-01-01 12:00:00"):
@@ -102,7 +101,6 @@ def test_audit_log_export_csv_correctly(
 def test_audit_log_export_csv_in_the_user_language(
     storage_mock, enterprise_data_fixture, synced_roles
 ):
-
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token(
         language="it"
     )
@@ -144,7 +142,6 @@ def test_audit_log_export_csv_in_the_user_language(
 def test_deleting_audit_log_export_job_also_delete_exported_file(
     storage_mock, enterprise_data_fixture, synced_roles
 ):
-
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
     csv_settings = {
         "csv_column_separator": ",",
@@ -180,7 +177,6 @@ def test_deleting_audit_log_export_job_also_delete_exported_file(
 def test_audit_log_export_filters_work_correctly(
     storage_mock, enterprise_data_fixture, synced_roles
 ):
-
     user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
     with freeze_time("2023-01-01 12:00:00"):

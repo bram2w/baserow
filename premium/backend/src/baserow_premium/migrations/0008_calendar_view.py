@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0100_airtableimportjob_user_ip_address"),
         ("baserow_premium", "0007_fix_missing_colors_ids"),

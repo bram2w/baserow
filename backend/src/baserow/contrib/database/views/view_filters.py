@@ -321,7 +321,6 @@ class LowerThanViewFilterType(ViewFilterType):
 
 
 class TimezoneAwareDateViewFilterType(ViewFilterType):
-
     compatible_field_types = [
         DateFieldType.type,
         LastModifiedFieldType.type,
@@ -458,7 +457,6 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
         query_field_name = field_name
 
         if isinstance(model_field, DateTimeField):
-
             if not isinstance(filter_date, datetime):
                 query_field_name = f"{field_name}_tzdate"
                 annotation[query_field_name] = TruncDate(field_name, tzinfo=timezone)

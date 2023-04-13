@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0040_formulafield_remove_field_by_id"),
         ("baserow_premium", "0002_licenses"),

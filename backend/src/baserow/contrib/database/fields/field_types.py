@@ -1813,7 +1813,6 @@ class LinkRowFieldType(FieldType):
                 and to_link_row_table_has_related_field
                 and from_field.link_row_table != to_field.link_row_table
             ):
-
                 # We are changing the related fields table so we need to invalidate
                 # its old model cache as this will not happen automatically.
                 invalidate_table_in_model_cache(from_field.link_row_table_id)
@@ -1912,7 +1911,6 @@ class LinkRowFieldType(FieldType):
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
     ) -> Optional[Field]:
-
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
@@ -2432,7 +2430,6 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     def prepare_value_for_db_in_bulk(
         self, instance, values_by_row, continue_on_error=False
     ):
-
         # Create a map {names/ids -> row_indexes} and extract unique int and text values
         unique_ids = set()
         unique_names = set()
@@ -2546,13 +2543,13 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
             # Has been checked for issues, everything is properly escaped and safe.
             # fmt: off
-            sql = (  # nosec b608
+            sql = (
                 f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = p_in);
-                """
+                """  # nosec b608
             )
             # fmt: on
             return sql, variables
@@ -2584,14 +2581,14 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 return None
 
             # Has been checked for issues, everything is properly escaped and safe.
-            return (  # nosec
+            return (
                 f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = lower(p_in)
             );
-            """,
+            """,  # nosec
                 variables,
             )
 

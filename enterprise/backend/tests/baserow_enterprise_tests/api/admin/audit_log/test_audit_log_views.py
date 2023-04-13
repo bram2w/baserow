@@ -33,7 +33,6 @@ from baserow_enterprise.audit_log.models import AuditLogEntry
 def test_admins_can_not_access_audit_log_endpoints_without_an_enterprise_license(
     api_client, enterprise_data_fixture, url_name
 ):
-
     user, token = enterprise_data_fixture.create_user_and_token(is_staff=True)
 
     response = api_client.get(
@@ -67,7 +66,6 @@ def test_non_admins_can_not_access_audit_log_endpoints(
 def test_admins_can_not_export_audit_log_to_csv_without_an_enterprise_license(
     api_client, enterprise_data_fixture
 ):
-
     user, token = enterprise_data_fixture.create_user_and_token(is_staff=True)
 
     response = api_client.post(

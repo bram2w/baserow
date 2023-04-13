@@ -6,14 +6,12 @@ from django.db import migrations, models
 
 
 def forward(apps, schema_editor):
-
     # Prior to it being renamed to WorkspaceUser.
     Groupuser = apps.get_model("core", "Groupuser")
     Groupuser.objects.all().update(permissions="ADMIN")
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("core", "0003_auto_20201215_2047"),

@@ -294,7 +294,6 @@ def test_downgrade_recalculates_attributes_and_graph_but_not_cell_values(
 def test_recalculate_formulas_according_to_version_needing_full_refresh(
     data_fixture,
 ):
-
     # Passing over a version that needs recalculation of cells does it
     assert_when_updating_formula_versions(
         data_fixture,

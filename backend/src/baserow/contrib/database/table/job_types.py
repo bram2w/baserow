@@ -45,7 +45,6 @@ class DuplicateTableJobType(JobType):
         return read_repeatable_read_single_table_transaction(job.original_table.id)
 
     def prepare_values(self, values, user):
-
         table = TableHandler().get_table(values.pop("table_id"))
 
         CoreHandler().check_permissions(

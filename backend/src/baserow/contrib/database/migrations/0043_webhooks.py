@@ -9,7 +9,6 @@ import baserow.contrib.database.webhooks.validators
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0042_add_other_trashed_indexes"),
     ]

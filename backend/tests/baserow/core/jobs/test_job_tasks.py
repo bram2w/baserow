@@ -42,7 +42,6 @@ def test_run_task(mock_get_by_model, data_fixture):
     data_fixture.register_temp_job_types()
 
     def run(job, progress):
-
         progress.increment(50, "test")
 
         # Check if the job has updated in the transaction
@@ -95,7 +94,6 @@ def test_run_task(mock_get_by_model, data_fixture):
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.core.jobs.registries.JobTypeRegistry.get_by_model")
 def test_run_task_with_exception(mock_get_by_model, data_fixture):
-
     job_type = TmpCustomJobType()
     job_type.run = Mock(side_effect=Exception("test-1"))
     mock_get_by_model.return_value = job_type

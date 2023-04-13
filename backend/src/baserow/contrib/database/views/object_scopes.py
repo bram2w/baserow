@@ -16,7 +16,6 @@ from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
 class DatabaseViewObjectScopeType(ObjectScopeType):
-
     type = "database_view"
     model_class = View
 
@@ -48,7 +47,6 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
 
 
 class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
-
     type = "database_view_decoration"
     model_class = ViewDecoration
 
@@ -86,7 +84,6 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
 
 
 class DatabaseViewSortObjectScopeType(ObjectScopeType):
-
     type = "database_view_sort"
     model_class = ViewSort
 
@@ -124,7 +121,6 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
 
 
 class DatabaseViewFilterObjectScopeType(ObjectScopeType):
-
     type = "database_view_filter"
     model_class = ViewFilter
 

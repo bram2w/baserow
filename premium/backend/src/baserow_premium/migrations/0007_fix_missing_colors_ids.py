@@ -21,7 +21,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0067_viewdecoration"),
         ("baserow_premium", "0006_license_cached_untrusted_instance_wide"),

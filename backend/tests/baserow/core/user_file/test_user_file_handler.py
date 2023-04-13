@@ -7,7 +7,6 @@ from django.core.files.storage import FileSystemStorage
 
 import httpretty
 import pytest
-import responses
 from freezegun import freeze_time
 from PIL import Image
 
@@ -235,9 +234,6 @@ def test_upload_user_file_by_url(data_fixture, tmpdir):
         content_type="text/plain",
     )
 
-    responses.add(
-        responses.GET,
-    )
     httpretty.register_uri(
         httpretty.GET,
         "https://baserow.io/not-found.pdf",
@@ -316,10 +312,6 @@ def test_upload_user_file_by_url_with_querystring(data_fixture, tmpdir) -> None:
         body=b"Hello World",
         status=200,
         content_type="text/plain",
-    )
-
-    responses.add(
-        responses.GET,
     )
 
     with freeze_time("2022-08-30 09:00"):

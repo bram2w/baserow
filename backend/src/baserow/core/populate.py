@@ -10,7 +10,6 @@ User = get_user_model()
 
 @transaction.atomic
 def load_test_data():
-
     print("Add basic users...")
     user_handler = UserHandler()
 
