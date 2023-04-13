@@ -42,7 +42,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_enterprise", "0009_roleassignment_subject_and_scope_uniqueness"),
     ]

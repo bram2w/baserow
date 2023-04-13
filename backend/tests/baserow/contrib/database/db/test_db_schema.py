@@ -154,7 +154,6 @@ def test_lenient_schema_editor_is_also_safe(data_fixture):
             None,
             False,
         ) as schema_editor:
-
             # Django only creates indexes when the model is managed.
             model = table.get_model(managed=True)
             schema_editor.create_model(model)

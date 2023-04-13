@@ -13,7 +13,6 @@ from baserow.contrib.database.rows.handler import RowHandler
 def test_creating_many_rows_in_public_filtered_views(
     data_fixture, django_assert_num_queries
 ):
-
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         columns=[("number", "number")], rows=[["0"]], user=user
@@ -61,7 +60,6 @@ def test_creating_many_rows_in_public_filtered_views(
 def test_updating_many_rows_in_public_filtered_views(
     data_fixture, django_assert_num_queries
 ):
-
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         columns=[("number", "number")], rows=[["0"]], user=user

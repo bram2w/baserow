@@ -13,7 +13,6 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_deleting_many_of_rows_is_fast(data_fixture):
-
     table, user, row, _, context = setup_interesting_test_table(data_fixture)
     count = 1000
     fill_table_rows(count, table)

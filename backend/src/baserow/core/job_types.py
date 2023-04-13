@@ -81,7 +81,6 @@ class DuplicateApplicationJobType(JobType):
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-
         application = CoreHandler().get_user_application(user, values["application_id"])
 
         return {
@@ -89,7 +88,6 @@ class DuplicateApplicationJobType(JobType):
         }
 
     def run(self, job: DuplicateApplicationJob, progress: Progress) -> Application:
-
         new_application_clone = action_type_registry.get_by_type(
             DuplicateApplicationActionType
         ).do(
@@ -158,7 +156,6 @@ class InstallTemplateJobType(JobType):
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-
         # GroupDeprecation
         workspace_id = values.pop("workspace_id", values.pop("group_id", None))
         if workspace_id is None:

@@ -146,7 +146,6 @@ class RowCommentView(APIView):
     @validate_body(RowCommentCreateSerializer)
     @transaction.atomic
     def post(self, request, table_id, row_id, data):
-
         new_row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
             request.user, table_id, row_id, data["comment"]
         )

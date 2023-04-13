@@ -43,7 +43,6 @@ def reverse(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0031_fix_url_field_max_length"),
     ]

@@ -29,7 +29,7 @@ dev backend image is the one used when running `./dev.sh restart --build` etc.
 1. Add a line to `base.in` containing your new dependency
 2. In the `backend lint` tab opened by running `./dev.sh --build`, or an active virtual
    environment with `pip-tools` installed.
-3. Ensure you are using python 3.7 if not using `./dev.sh --build`
+3. Ensure you are using python 3.9 if not using `./dev.sh --build`
 4. `cd requirements`
 5. Run `pip-compile --output-file=base.txt base.in`, review the changes to base.txt,
    commit and push them to your MR.
@@ -38,7 +38,7 @@ dev backend image is the one used when running `./dev.sh restart --build` etc.
 1. Add a line to `dev.in` containing your new dependency
 2. In the `backend lint` tab opened by running `./dev.sh --build`, or an active virtual
    environment with `pip-tools` installed.
-3. Ensure you are using python 3.7 if not using `./dev.sh --build`
+3. Ensure you are using python 3.9 if not using `./dev.sh --build`
 4. `cd requirements`
 4. Run `pip-compile --output-file=dev.txt dev.in`, review the changes to dev.txt,
    commit and push them to your MR.

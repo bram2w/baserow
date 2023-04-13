@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0013_alter_application_name_squashed_0014_alter_group_name"),
     ]

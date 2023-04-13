@@ -11,7 +11,6 @@ def delete_all_role_assignments(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_enterprise", "0007_teamsubject_baserow_ent_created_01fb9f_idx"),
     ]

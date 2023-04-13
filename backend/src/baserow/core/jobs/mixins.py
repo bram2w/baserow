@@ -64,7 +64,6 @@ class JobWithUserDataMixin(models.Model):
 
 
 class JobWithUserIpAddress(JobWithUserDataMixin):
-
     user_ip_address = models.GenericIPAddressField(
         null=True, help_text="The user IP address."
     )

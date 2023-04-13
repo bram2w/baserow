@@ -167,7 +167,6 @@ def _populate_test_data(data_fixture, enterprise_data_fixture):
     PERMISSION_MANAGERS=["core", "staff", "member", "role", "basic"],
 )
 def test_check_permissions(data_fixture, enterprise_data_fixture):
-
     (
         admin,
         builder,
@@ -190,7 +189,7 @@ def test_check_permissions(data_fixture, enterprise_data_fixture):
     perm_manager = RolePermissionManagerType()
 
     def check_perms(user, test_list):
-        for (permission, context, result) in test_list:
+        for permission, context, result in test_list:
             if isinstance(context, Table):
                 workspace = context.database.workspace
             elif isinstance(context, Database):

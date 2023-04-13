@@ -489,7 +489,6 @@ class FailingFieldType(TextFieldType):
 
 @pytest.mark.django_db
 def test_update_field_failing(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_number_field(table=table, order=1)
@@ -651,7 +650,6 @@ class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
 
 @pytest.mark.django_db
 def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_text_field = data_fixture.create_text_field(table=table, order=1)
@@ -807,7 +805,6 @@ class AlwaysLowercaseTextField2(TextFieldType):
 
 @pytest.mark.django_db
 def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_field_with_old_value_prep = data_fixture.create_long_text_field(

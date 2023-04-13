@@ -375,7 +375,6 @@ def test_get_serializer_class(data_fixture):
 
 @override_settings(DEBUG=False)
 def test_api_error_if_url_trailing_slash_is_missing(api_client):
-
     invalid_url = "/api/invalid-url"
     # with DEBUG=False always return a JSON response for an invalid url
     for content_type in ["application/json", "application/xml", "text/html", "", "*/*"]:
@@ -404,7 +403,6 @@ def test_api_error_if_url_trailing_slash_is_missing(api_client):
 
 @override_settings(DEBUG=True)
 def test_api_give_informative_404_page_in_debug_for_invalid_urls(api_client):
-
     invalid_url = "/api/invalid-url"
 
     # check that the django 404 html informative page is returned if DEBUG=True

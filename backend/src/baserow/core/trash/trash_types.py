@@ -12,7 +12,6 @@ from baserow.core.trash.registries import TrashableItemType, trash_item_type_reg
 
 
 class ApplicationTrashableItemType(TrashableItemType):
-
     type = "application"
     model_class = Application
 
@@ -50,7 +49,6 @@ class ApplicationTrashableItemType(TrashableItemType):
 
 
 class WorkspaceTrashableItemType(TrashableItemType):
-
     type = "workspace"
     model_class = Workspace
 

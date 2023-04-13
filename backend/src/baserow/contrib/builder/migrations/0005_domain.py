@@ -8,7 +8,6 @@ import baserow.core.mixins
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("builder", "0004_element_headingelement_paragraphelement"),
     ]

@@ -52,7 +52,6 @@ class DuplicateFieldJobType(JobType):
         )
 
     def prepare_values(self, values, user):
-
         field = FieldHandler().get_field(values["field_id"])
         CoreHandler().check_permissions(
             user,

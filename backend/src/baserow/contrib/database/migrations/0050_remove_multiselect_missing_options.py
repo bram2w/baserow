@@ -36,7 +36,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0049_urlfield_2_textfield"),
     ]

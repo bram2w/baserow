@@ -348,7 +348,6 @@ class Registry(Generic[InstanceSubClass]):
 
         # If the `type_name` isn't in the registry, we may raise DoesNotExist.
         if type_name not in self.registry:
-
             # But first, we'll test to see if it matches an Instance's
             # `compat_name`. If it does, we'll use that Instance's `type`.
             type_name_via_compat = self.get_by_type_name_by_compat(type_name)

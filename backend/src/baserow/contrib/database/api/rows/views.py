@@ -1363,7 +1363,6 @@ class RowAdjacentView(APIView):
     def get(
         self, request: Request, table_id: int, row_id: int, query_params: Dict[str, Any]
     ) -> Response:
-
         previous = query_params.get("previous")
         view_id = query_params.get("view_id")
         user_field_names = query_params.get("user_field_names")

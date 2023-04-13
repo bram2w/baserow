@@ -7,7 +7,6 @@ import baserow.core.mixins
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("builder", "0001_initial"),
     ]

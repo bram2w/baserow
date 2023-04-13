@@ -6,7 +6,6 @@ import baserow.contrib.database.fields.fields
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0070_trashedrows"),
     ]

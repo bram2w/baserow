@@ -8,7 +8,6 @@ import baserow.core.action.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("core", "0015_alter_userprofile_language"),

@@ -59,7 +59,6 @@ def remove_from_tables(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0021_auto_20201215_2047"),
     ]

@@ -9,7 +9,6 @@ User = get_user_model()
 
 
 def load_test_data():
-
     # Get the user created in the main module
     user = User.objects.get(email="admin@baserow.io")
     workspace = user.workspaceuser_set.get(workspace__name="Acme Corp").workspace

@@ -81,7 +81,6 @@ class ExportedFileURLSerializerMixin(serializers.Serializer):
 
 
 class ExportJobSerializer(ExportedFileURLSerializerMixin, serializers.ModelSerializer):
-
     status = serializers.SerializerMethodField(
         help_text="DEPRECATED: Use state instead"
     )

@@ -24,7 +24,6 @@ from baserow.core.handler import CoreHandler
 def test_can_update_lookup_field_value(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(user=user, database=table.database)
@@ -256,7 +255,6 @@ def test_can_batch_update_lookup_field_value(
 def test_can_set_sub_type_options_for_lookup_field(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(user=user, database=table.database)
@@ -326,7 +324,6 @@ def test_can_set_sub_type_options_for_lookup_field(
 
 @pytest.mark.django_db
 def test_can_lookup_single_select(data_fixture, api_client, django_assert_num_queries):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(user=user, database=table.database)
@@ -620,7 +617,6 @@ def test_import_export_tables_with_lookup_fields(
 def test_can_create_new_row_with_immediate_link_row_values_and_lookup_will_match(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user)
 
@@ -664,7 +660,6 @@ def test_can_create_new_row_with_immediate_link_row_values_and_lookup_will_match
 def test_moving_a_looked_up_row_updates_the_order(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(user=user, database=table.database)
@@ -784,7 +779,6 @@ def test_moving_a_looked_up_row_updates_the_order(
 def test_can_modify_row_containing_lookup(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(user=user, database=table.database)
@@ -921,7 +915,6 @@ def test_can_modify_row_containing_lookup(
 def test_deleting_restoring_lookup_target_works(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(
@@ -1109,7 +1102,6 @@ def test_deleting_restoring_lookup_target_works(
 def test_deleting_related_link_row_field_dep_breaks_deps(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(
@@ -1294,7 +1286,6 @@ def test_deleting_related_link_row_field_dep_breaks_deps(
 def test_deleting_table_with_dependants_works(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user, name="table 1")
     table2 = data_fixture.create_database_table(
@@ -1511,7 +1502,6 @@ def test_deleting_table_with_dependants_works(
 def test_deleting_related_link_row_field_still_lets_you_create_edit_rows(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(
@@ -1596,7 +1586,6 @@ def test_deleting_related_link_row_field_still_lets_you_create_edit_rows(
 def test_deleting_related_table_still_lets_you_create_edit_rows(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(
@@ -1680,7 +1669,6 @@ def test_deleting_related_table_still_lets_you_create_edit_rows(
 def test_converting_away_from_lookup_field_deletes_parent_formula_field(
     data_fixture, api_client, django_assert_num_queries
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     table2 = data_fixture.create_database_table(

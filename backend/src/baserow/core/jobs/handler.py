@@ -171,7 +171,6 @@ class JobHandler:
             run_async_job(job.id)
             job.refresh_from_db()
         else:
-
             # This wrapper ensure the job doesn't stay in pending state if something
             # goes wrong during the delay call. This is related to the redis connection
             # failure that triggers a sys.exit(1) to be called in gunicorn.

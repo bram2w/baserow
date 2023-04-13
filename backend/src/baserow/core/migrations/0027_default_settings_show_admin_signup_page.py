@@ -9,7 +9,6 @@ def get_settings(Settings):
 
 
 def set_show_admin_signup_page(apps, schema_editor):
-
     SettingsModel = apps.get_model("core", "Settings")
     settings = get_settings(SettingsModel)
     User = apps.get_model("auth", "User")

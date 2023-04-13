@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0063_remove_settings_allow_signups_via_group_invitations"),
     ]

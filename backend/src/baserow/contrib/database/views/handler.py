@@ -130,7 +130,6 @@ tracer = trace.get_tracer(__name__)
 
 
 class ViewHandler(metaclass=baserow_trace_methods(tracer)):
-
     PUBLIC_VIEW_TOKEN_ALGORITHM = "HS256"  # nosec
 
     def list_views(
@@ -1758,7 +1757,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         need_computation = {}
 
         # Try to get field value from cache or add it to the need_computation list
-        for (field_instance, aggregation_type_name) in aggregations:
+        for field_instance, aggregation_type_name in aggregations:
             cached_value = cached.get(
                 self._get_aggregation_value_cache_key(view, field_instance.db_column),
                 {"version": 0},
@@ -1951,7 +1950,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         aggregation_dict = {}
 
-        for (field_instance, aggregation_type_name) in aggregations:
+        for field_instance, aggregation_type_name in aggregations:
             field_name = field_instance.db_column
 
             # Check whether the field belongs to the table.

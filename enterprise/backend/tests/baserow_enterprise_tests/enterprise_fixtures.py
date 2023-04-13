@@ -43,7 +43,6 @@ class EnterpriseFixtures:
         return team
 
     def create_subject(self, team=None, subject=None, **kwargs):
-
         if subject is None:
             subject = self.create_user()
         if team is None:

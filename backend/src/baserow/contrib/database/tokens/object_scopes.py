@@ -6,7 +6,6 @@ from baserow.core.registries import ObjectScopeType, object_scope_type_registry
 
 
 class TokenObjectScopeType(ObjectScopeType):
-
     type = "token"
     model_class = Token
 

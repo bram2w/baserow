@@ -215,7 +215,6 @@ class RoleAssignmentsView(APIView):
         workspace_id: int,
         query_params: Dict[str, Any],
     ) -> Response:
-
         workspace = CoreHandler().get_workspace(workspace_id)
         scope = query_params.get("scope", workspace)
 

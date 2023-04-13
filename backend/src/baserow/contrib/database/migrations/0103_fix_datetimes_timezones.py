@@ -38,7 +38,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0102_add_timezone_attrs_for_datetimes"),
     ]

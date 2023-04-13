@@ -61,7 +61,6 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_pages: List[PageDict] = []
         for page in pages:
-
             # Get serialized version of all elements of the current page
             serialized_elements = []
             for element in specific_iterator(page.element_set.all()):
@@ -155,7 +154,6 @@ class BuilderApplicationType(ApplicationType):
         # First, we want to create all the page instances because it could be that
         # element depends on the existence of a page.
         for serialized_page in serialized_pages:
-
             page_instance = Page.objects.create(
                 builder=builder,
                 name=serialized_page["name"],

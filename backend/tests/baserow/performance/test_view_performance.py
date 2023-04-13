@@ -14,7 +14,6 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_getting_rows_from_large_grid_view(data_fixture, api_client):
-
     table, user, row, _, context = setup_interesting_test_table(data_fixture)
     token = data_fixture.generate_token(user)
     count = 10000

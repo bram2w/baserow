@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0054_rename_group_installtemplatejob_workspace"),
         ("baserow_enterprise", "0011_audit_log"),

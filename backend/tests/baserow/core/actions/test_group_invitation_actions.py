@@ -44,7 +44,6 @@ def test_update_workspace_invitation_action_type(data_fixture):
 
 @pytest.mark.django_db
 def test_delete_workspace_invitation_action_type(data_fixture):
-
     user = data_fixture.create_user()
     invitation = data_fixture.create_workspace_invitation(invited_by=user)
 

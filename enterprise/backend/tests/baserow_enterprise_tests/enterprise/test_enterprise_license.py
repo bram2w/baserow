@@ -54,7 +54,6 @@ def enable_roles_for_all_tests_here(synced_roles):
 def test_enterprise_features_will_be_active_instance_wide_when_enterprise_active(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
@@ -83,7 +82,6 @@ def test_enterprise_users_not_assigned_a_seat_still_get_enterprise_features(
 def test_enterprise_features_will_not_be_active_instance_wide_when_enterprise_not_active(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
@@ -134,7 +132,6 @@ def test_enterprise_users_dont_get_features_if_license_inactive(
 def test_anonymous_user_data_has_no_enterprise_license_when_not_active(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
@@ -153,7 +150,6 @@ def test_anonymous_user_data_has_no_enterprise_license_when_not_active(
 def test_anonymous_user_data_enables_enterprise_features_instance_wide(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     LicenseHandler.register_license(user, VALID_ONE_SEAT_ENTERPRISE_LICENSE)
@@ -170,7 +166,6 @@ def test_anonymous_user_data_enables_enterprise_features_instance_wide(
 def test_random_user_user_data_has_no_enterprise_license_when_not_active(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     random_user = data_fixture.create_user()
@@ -190,7 +185,6 @@ def test_random_user_user_data_has_no_enterprise_license_when_not_active(
 def test_random_user_data_enables_enterprise_features_instance_wide(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     random_user = data_fixture.create_user()
@@ -208,7 +202,6 @@ def test_random_user_data_enables_enterprise_features_instance_wide(
 def test_license_user_user_data_has_no_enterprise_license_when_not_active(
     data_fixture,
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     license_obj = LicenseHandler.register_license(
@@ -540,7 +533,6 @@ def test_cant_manually_remove_all_users_from_seats_in_enterprise_version(
 def test_enterprise_license_being_registered_sends_signal_to_all(
     mock_broadcast_to_users, data_fixture, django_capture_on_commit_callbacks
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     with django_capture_on_commit_callbacks(execute=True):
@@ -563,7 +555,6 @@ def test_enterprise_license_being_registered_sends_signal_to_all(
 def test_enterprise_license_being_unregistered_sends_signal_to_all(
     mock_broadcast_to_users, data_fixture, django_capture_on_commit_callbacks
 ):
-
     Settings.objects.update_or_create(defaults={"instance_id": "1"})
     user = data_fixture.create_user(is_staff=True)
     with django_capture_on_commit_callbacks(execute=True):

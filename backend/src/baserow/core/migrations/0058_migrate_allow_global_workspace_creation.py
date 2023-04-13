@@ -20,7 +20,6 @@ def backward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0057_settings_allow_global_workspace_creation"),
     ]

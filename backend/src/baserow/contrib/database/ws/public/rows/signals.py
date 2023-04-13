@@ -33,7 +33,7 @@ def _send_rows_created_event_to_views(
     view_page_type = page_registry.get("view")
     handler = ViewHandler()
 
-    for (public_view, visible_row_ids) in public_views:
+    for public_view, visible_row_ids in public_views:
         view_type = view_type_registry.get_by_model(public_view.specific_class)
         if not view_type.when_shared_publicly_requires_realtime_events:
             continue
@@ -58,7 +58,7 @@ def _send_rows_deleted_event_to_views(
 ):
     view_page_type = page_registry.get("view")
     handler = ViewHandler()
-    for (public_view, deleted_row_ids) in public_views:
+    for public_view, deleted_row_ids in public_views:
         view_type = view_type_registry.get_by_model(public_view.specific_class)
         if not view_type.when_shared_publicly_requires_realtime_events:
             continue
@@ -229,7 +229,7 @@ def public_rows_updated(
         view_page_type = page_registry.get("view")
         handler = ViewHandler()
 
-        for (public_view, visible_row_ids) in public_views_where_rows_were_updated:
+        for public_view, visible_row_ids in public_views_where_rows_were_updated:
             visible_fields_only_updated_rows = handler.restrict_rows_for_view(
                 public_view, serialized_updated_rows, visible_row_ids
             )

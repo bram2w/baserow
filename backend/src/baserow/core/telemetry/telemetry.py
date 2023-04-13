@@ -143,7 +143,6 @@ def _setup_standard_backend_instrumentation():
 
 def _setup_django_process_instrumentation():
     def response_hook(span, request, response):
-
         if hasattr(request, "user"):
 
             def _set(name, *attr):

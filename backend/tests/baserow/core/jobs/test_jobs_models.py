@@ -27,7 +27,6 @@ def test_is_running_queryset(data_fixture):
 
 @pytest.mark.django_db
 def test_is_finished_queryset(data_fixture):
-
     data_fixture.create_fake_job(state=JOB_PENDING)
     data_fixture.create_fake_job(state=JOB_STARTED)
     data_fixture.create_fake_job(state="whatever")

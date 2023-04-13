@@ -702,7 +702,6 @@ def safely_update_formula_versions(sender, **kwargs):
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
     if apps is not None and not settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
-
         try:
             FormulaField = apps.get_model("database", "FormulaField")
             # noinspection PyProtectedMember

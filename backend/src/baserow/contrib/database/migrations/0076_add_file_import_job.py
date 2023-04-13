@@ -7,7 +7,6 @@ import baserow.contrib.database.file_import.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0025_job"),
         ("database", "0075_change_export_cascade"),

@@ -77,7 +77,6 @@ class SamlAuthProviderType(AuthProviderType):
         return super().before_update(user, provider, **values)
 
     def get_login_options(self, **kwargs) -> Optional[Dict[str, Any]]:
-
         single_sign_on_feature_active = is_sso_feature_active()
         if not single_sign_on_feature_active:
             return None

@@ -34,7 +34,6 @@ from baserow.core.jobs.tasks import clean_up_jobs, run_async_job
 
 @pytest.mark.django_db(transaction=True)
 def test_run_file_import_task(data_fixture, patch_filefield_storage):
-
     user = data_fixture.create_user()
     database = data_fixture.create_database_application()
 
@@ -236,7 +235,6 @@ def test_run_file_import_task(data_fixture, patch_filefield_storage):
 
 @pytest.mark.django_db(transaction=True)
 def test_run_file_import_task_for_special_fields(data_fixture, patch_filefield_storage):
-
     user = data_fixture.create_user()
     table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 
@@ -449,7 +447,6 @@ def test_run_file_import_task_for_special_fields(data_fixture, patch_filefield_s
 
 @pytest.mark.django_db(transaction=True)
 def test_run_file_import_test_chunk(data_fixture, patch_filefield_storage):
-
     row_count = 1024 + 5
 
     user = data_fixture.create_user()
@@ -504,7 +501,6 @@ def test_run_file_import_test_chunk(data_fixture, patch_filefield_storage):
 
 @pytest.mark.django_db()
 def test_run_file_import_limit(data_fixture, patch_filefield_storage):
-
     row_count = 2000
     max_error = settings.BASEROW_MAX_ROW_REPORT_ERROR_COUNT
 
@@ -580,7 +576,6 @@ def test_run_file_import_limit(data_fixture, patch_filefield_storage):
 # to additional args.
 # ~5 min (320s) on a 6 x i5-8400 CPU @ 2.80GHz (5599 bogomips)
 def test_run_file_import_task_big_data(data_fixture, patch_filefield_storage):
-
     row_count = 100_000
 
     with patch_filefield_storage():

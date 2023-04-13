@@ -350,7 +350,6 @@ class BaserowFormulaType(abc.ABC):
 
 
 class BaserowFormulaInvalidType(BaserowFormulaType):
-
     is_valid = False
     can_order_by = False
     comparable_types = []

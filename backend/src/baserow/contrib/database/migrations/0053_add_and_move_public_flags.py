@@ -68,7 +68,6 @@ def _generate_slugs_for_views(View):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0052_table_order_and_id_index"),
     ]

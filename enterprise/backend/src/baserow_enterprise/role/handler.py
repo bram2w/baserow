@@ -163,7 +163,7 @@ class RoleAssignmentHandler:
         # Workspace all scopes and subjects to get their content_type
         scope_types = set([Workspace])
         subject_types = set()
-        for (subject, scope) in for_subject_scope:
+        for subject, scope in for_subject_scope:
             scope_types.add(type(scope))
             subject_types.add(type(subject))
 
@@ -178,7 +178,7 @@ class RoleAssignmentHandler:
         # from the workspace_users object
         subject_scope_q = Q()
         user_subject_with_workspace_scope_by_id = dict()
-        for (subject, scope) in for_subject_scope:
+        for subject, scope in for_subject_scope:
             if (
                 isinstance(subject, user_subject_type.model_class)
                 and scope == workspace
@@ -327,7 +327,7 @@ class RoleAssignmentHandler:
         # Populate double map for later use
         subjects_per_team = defaultdict(list)
         teams_per_subject = defaultdict(list)
-        for (team_id, subject_id) in teams_subjects:
+        for team_id, subject_id in teams_subjects:
             subjects_per_team[team_id].append(subject_id)
             teams_per_subject[subject_id].append(team_id)
 
@@ -441,7 +441,6 @@ class RoleAssignmentHandler:
         # For user actor, we need to get the workspace level role by reading the
         # WorkspaceUser permissions property
         if actor_subject_type.type == UserSubjectType.type:
-
             # Get all workspace users at once
             user_permissions_by_id = dict(
                 CoreHandler()
@@ -476,7 +475,7 @@ class RoleAssignmentHandler:
         # Finally replace scope_params by real scope
         roles_per_scope_per_user = defaultdict(list)
         for actor in actors:
-            for (key, value) in roles_by_scope[actor.id].items():
+            for key, value in roles_by_scope[actor.id].items():
                 roles_per_scope_per_user[actor].append((scope_cache[key], value))
 
         return roles_per_scope_per_user
@@ -507,7 +506,7 @@ class RoleAssignmentHandler:
                 )
             return cache[key]
 
-        for (scope, roles) in roles_per_scopes:
+        for scope, roles in roles_per_scopes:
             if scope_includes_context(scope, context):
                 # Check if this scope includes the context. As the role assignments
                 # are sorted, the new scope is more precise than the previous one.

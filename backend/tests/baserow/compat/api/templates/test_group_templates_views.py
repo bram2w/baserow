@@ -71,7 +71,6 @@ def test_list_templates(api_client, data_fixture):
 @pytest.mark.disabled_in_ci
 @override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
 def test_install_template(api_client, data_fixture):
-
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     workspace_2 = data_fixture.create_workspace()
@@ -143,7 +142,6 @@ def test_install_template(api_client, data_fixture):
 @pytest.mark.disabled_in_ci
 @override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
 def test_async_install_template_errors(api_client, data_fixture):
-
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     workspace_2 = data_fixture.create_workspace()
@@ -202,7 +200,6 @@ def test_async_install_template_errors(api_client, data_fixture):
 def test_async_install_template_schedule_job(
     mock_run_async_job, api_client, data_fixture
 ):
-
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
 
@@ -239,7 +236,6 @@ def test_async_install_template_schedule_job(
 @pytest.mark.disabled_in_ci
 @override_settings(APPLICATION_TEMPLATES_DIR=TEST_TEMPLATES_DIR)
 def test_async_install_template_serializer(api_client, data_fixture):
-
     user, token = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )

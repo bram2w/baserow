@@ -18,12 +18,11 @@ def forward(apps, schema_editor):
                 f"""
                     UPDATE {table_name} SET {field_name} = '0001-01-01'::date
                     WHERE {field_name} < '0001-01-01'::date
-                """
+                """  # nosec B608
             )
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0027_gridviewfieldoptions_order"),
     ]

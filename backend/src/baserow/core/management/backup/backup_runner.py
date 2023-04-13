@@ -109,7 +109,7 @@ class BaserowBackupRunner:
 
         with tempfile.TemporaryDirectory() as temporary_directory_name:
             with tarfile.open(backup_file_name, "r:gz") as backup_input_tar:
-                backup_input_tar.extractall(temporary_directory_name)
+                backup_input_tar.extractall(temporary_directory_name)  # nosec B202
 
             backup_internal_folder_name = Path(backup_file_name).name
             backup_sub_folder = Path(
@@ -274,7 +274,6 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
     """
 
     with conn.cursor() as cursor:
-
         table_prefix_regex_escaped = re.escape(Table.USER_TABLE_DATABASE_NAME_PREFIX)
         through_table_regex_escaped = re.escape(
             LinkRowField.THROUGH_DATABASE_TABLE_PREFIX

@@ -66,7 +66,7 @@ class AirtableHandler:
         """
 
         url = f"https://airtable.com/{share_id}"
-        response = requests.get(url, headers=BASE_HEADERS)
+        response = requests.get(url, headers=BASE_HEADERS)  # nosec B113
 
         if not response.ok:
             raise AirtableBaseNotPublic(
@@ -154,7 +154,7 @@ class AirtableHandler:
                 **BASE_HEADERS,
             },
             cookies=cookies,
-        )
+        )  # nosec B113
         return response
 
     @staticmethod
@@ -322,7 +322,7 @@ class AirtableHandler:
 
         with ZipFile(files_buffer, "a", ZIP_DEFLATED, False) as files_zip:
             for index, (file_name, url) in enumerate(files_to_download.items()):
-                response = requests.get(url, headers=BASE_HEADERS)
+                response = requests.get(url, headers=BASE_HEADERS)  # nosec B113
                 files_zip.writestr(file_name, response.content)
                 progress.increment(state=AIRTABLE_EXPORT_JOB_DOWNLOADING_FILES)
 

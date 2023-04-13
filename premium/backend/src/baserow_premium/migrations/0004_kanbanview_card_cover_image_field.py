@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0057_fix_invalid_type_filters_and_sorts"),
         ("baserow_premium", "0003_kanban_view"),

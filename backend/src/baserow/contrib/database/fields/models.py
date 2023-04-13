@@ -476,7 +476,6 @@ class FormulaField(Field):
             expression_type.raise_if_invalid()
 
     def mark_as_invalid_and_save(self, error: str):
-
         from baserow.contrib.database.formula import BaserowFormulaInvalidType
 
         try:
@@ -573,7 +572,6 @@ class MultipleCollaboratorsField(Field):
 class DuplicateFieldJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_field = models.ForeignKey(
         Field,
         null=True,
