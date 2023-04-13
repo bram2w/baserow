@@ -15,15 +15,15 @@
           >
             <i
               class="fas modal-sidebar__nav-icon"
-              :class="'fa-' + setting.getIconClass()"
+              :class="'fa-' + setting.icon"
             ></i>
-            {{ setting.getName() }}
+            {{ setting.name }}
           </a>
         </li>
       </ul>
     </template>
     <template v-if="settingSelected" #content>
-      <component :is="settingSelected.getComponent()"></component>
+      <component :is="settingSelected.component" :builder="builder"></component>
     </template>
   </Modal>
 </template>
@@ -34,6 +34,12 @@ import modal from '@baserow/modules/core/mixins/modal'
 export default {
   name: 'BuilderSettingsModal',
   mixins: [modal],
+  props: {
+    builder: {
+      type: Object,
+      required: true,
+    },
+  },
   data() {
     return {
       settingSelected: null,

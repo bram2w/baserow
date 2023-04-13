@@ -16,13 +16,12 @@ import {
  * @returns the new router instance accessible from `this.$router` in components.
  */
 export function createRouter(ssrContext, config) {
-  let isWebFrontendHostname = false
+  let isWebFrontendHostname = true
 
   // On the server
   if (process.server && ssrContext && ssrContext.nuxt && ssrContext.req) {
     const req = ssrContext.req
-    const frontendHostname = new URL(ssrContext.req.env.PUBLIC_WEB_FRONTEND_URL)
-      .hostname
+    const frontendHostname = new URL(req.env.PUBLIC_WEB_FRONTEND_URL).hostname
     const requestHostname = new URL(`http://${req.headers.host}`).hostname
     isWebFrontendHostname = frontendHostname === requestHostname
     // Send the variable to the frontend using the `__NUXT__` property

@@ -365,6 +365,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database tokens"},
         {"name": "Builder pages"},
         {"name": "Builder page elements"},
+        {"name": "Builder domains"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {

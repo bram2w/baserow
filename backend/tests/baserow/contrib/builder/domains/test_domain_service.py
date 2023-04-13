@@ -66,6 +66,41 @@ def test_get_domain_user_not_in_workspace(data_fixture):
         DomainService().get_domain(user, domain.id)
 
 
+@pytest.mark.django_db
+def test_get_domains_user_not_in_workspace(data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application()
+    domain = data_fixture.create_builder_domain(builder=builder)
+
+    with pytest.raises(UserNotInWorkspace):
+        DomainService().get_domains(user, builder)
+
+
+@pytest.mark.django_db
+def test_get_domains_partial_permissions(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    domain_with_access = data_fixture.create_builder_domain(builder=builder)
+    domain_without_access = data_fixture.create_builder_domain(builder=builder)
+
+    def exclude_domain_without_access(
+        actor,
+        operation_name,
+        queryset,
+        workspace=None,
+        context=None,
+        allow_if_template=False,
+    ):
+        return queryset.exclude(id=domain_without_access.id)
+
+    with stub_check_permissions() as stub:
+        stub.filter_queryset = exclude_domain_without_access
+
+        assert [p.id for p in DomainService().get_domains(user, builder)] == [
+            domain_with_access.id,
+        ]
+
+
 @patch("baserow.contrib.builder.domains.service.domain_updated")
 @pytest.mark.django_db
 def test_domain_updated_signal_sent(domain_updated_mock, data_fixture):

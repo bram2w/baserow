@@ -1,0 +1,18 @@
+.dns-status__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dns-status__table-cell {
+  padding-bottom: 15px;
+  padding-top: 15px;
+  border-bottom: 1px solid $color-neutral-200;
+
+  .dns-status__table-head & {
+    font-weight: bold;
+  }
+}
+
+.dns-status__table-header-item {
+  font-weight: bold;
+}

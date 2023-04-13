@@ -1,12 +1,10 @@
 from typing import List
 
-from django.conf import settings
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
-    OnlyOneDomainAllowed,
 )
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.models import Builder
@@ -33,6 +31,23 @@ class DomainHandler:
         except Domain.DoesNotExist:
             raise DomainDoesNotExist()
 
+    def get_domains(
+        self, builder: Builder, base_queryset: QuerySet = None
+    ) -> QuerySet[Domain]:
+        """
+        Gets all the domains of a builder.
+
+        :param builder: The builder we are trying to get all domains for
+        :param base_queryset: Can be provided to already filter or apply performance
+            improvements to the queryset when it's being executed
+        :return: A queryset with all the domains
+        """
+
+        if base_queryset is None:
+            base_queryset = Domain.objects
+
+        return base_queryset.filter(builder=builder)
+
     def create_domain(self, builder: Builder, domain_name: str) -> Domain:
         """
         Creates a new domain
@@ -41,15 +56,6 @@ class DomainHandler:
         :param domain_name: The name of the domain
         :return: The newly created domain instance
         """
-
-        # At this point in time we only want to allow one domain even though the code is
-        # already implemented in a way that allows for multiple domain. We can remove
-        # this check once we allow multiple domains.
-        if (
-            "BUILDER_MULTIPLE_DOMAINS" not in settings.FEATURE_FLAGS
-            and Domain.objects.filter(builder=builder).exists()
-        ):
-            raise OnlyOneDomainAllowed()
 
         last_order = Domain.get_last_order(builder)
         domain = Domain.objects.create(

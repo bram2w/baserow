@@ -14,7 +14,6 @@ from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_sc
 from baserow.contrib.builder.api.domains.errors import (
     ERROR_DOMAIN_DOES_NOT_EXIST,
     ERROR_DOMAIN_NOT_IN_BUILDER,
-    ERROR_ONLY_ONE_DOMAIN_ALLOWED,
 )
 from baserow.contrib.builder.api.domains.serializers import (
     CreateDomainSerializer,
@@ -24,7 +23,6 @@ from baserow.contrib.builder.api.domains.serializers import (
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
-    OnlyOneDomainAllowed,
 )
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.domains.service import DomainService
@@ -56,7 +54,6 @@ class DomainsView(APIView):
                 [
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_REQUEST_BODY_VALIDATION",
-                    "ERROR_ONLY_ONE_DOMAIN_ALLOWED",
                 ]
             ),
             404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
@@ -66,7 +63,6 @@ class DomainsView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            OnlyOneDomainAllowed: ERROR_ONLY_ONE_DOMAIN_ALLOWED,
         }
     )
     @validate_body(CreateDomainSerializer)
@@ -78,6 +74,44 @@ class DomainsView(APIView):
         )
 
         serializer = DomainSerializer(domain)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="builder_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Gets all the domains for the specified builder",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder domains"],
+        operation_id="get_builder_domains",
+        description="Gets all the domains of a builder",
+        responses={
+            200: DomainSerializer(many=True),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                ]
+            ),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, builder_id: int):
+        builder = BuilderHandler().get_builder(builder_id)
+
+        domains = DomainService().get_domains(request.user, builder)
+
+        serializer = DomainSerializer(domains, many=True)
+
         return Response(serializer.data)
 
 

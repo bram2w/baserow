@@ -6,12 +6,14 @@ import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
 import {
+  DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
 import elementStore from '@baserow/modules/builder/store/element'
+import domainStore from '@baserow/modules/builder/store/domain'
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
   HeadingElementType,
@@ -37,6 +39,7 @@ import {
   VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
+import { CustomDomainType } from '@baserow/modules/builder/domainTypes'
 import { PagePageSettingsType } from '@baserow/modules/builder/pageSettingsTypes'
 import {
   TextPathParamType,
@@ -62,11 +65,13 @@ export default (context) => {
 
   store.registerModule('page', pageStore)
   store.registerModule('element', elementStore)
+  store.registerModule('domain', domainStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
   app.$registry.registerNamespace('device')
   app.$registry.registerNamespace('pageHeaderItem')
+  app.$registry.registerNamespace('domain')
   app.$registry.registerNamespace('pageSettings')
   app.$registry.registerNamespace('pathParamType')
 
@@ -80,6 +85,10 @@ export default (context) => {
   app.$registry.register(
     'builderSettings',
     new ThemeBuilderSettingsType(context)
+  )
+  app.$registry.register(
+    'builderSettings',
+    new DomainsBuilderSettingsType(context)
   )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
@@ -114,6 +123,8 @@ export default (context) => {
     new VisibilityPageSidePanelType(context)
   )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
+
+  app.$registry.register('domain', new CustomDomainType(context))
 
   app.$registry.register('pageSettings', new PagePageSettingsType(context))
 

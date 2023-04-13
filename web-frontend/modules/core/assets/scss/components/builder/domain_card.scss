@@ -1,0 +1,20 @@
+.domain-card__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.domain-card__name {
+  font-weight: bold;
+}
+
+.domain-card__last-published {
+  color: $color-neutral-500;
+}
+
+.domain-card__detail-button-link {
+  user-select: none;
+}
+
+.domain-card__detail-button-icon {
+  margin-left: 3px;
+}

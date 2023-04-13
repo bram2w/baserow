@@ -1,11 +1,8 @@
-from django.test.utils import override_settings
-
 import pytest
 
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
-    OnlyOneDomainAllowed,
 )
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.builder.domains.models import Domain
@@ -40,6 +37,20 @@ def test_get_domain_base_queryset(data_fixture, django_assert_num_queries):
 
 
 @pytest.mark.django_db
+def test_get_domains(data_fixture):
+    builder = data_fixture.create_builder_application()
+    domain_one = data_fixture.create_builder_domain(builder=builder)
+    domain_two = data_fixture.create_builder_domain(builder=builder)
+
+    domains = list(DomainHandler().get_domains(builder))
+    domain_ids = [domain.id for domain in domains]
+
+    assert domain_one.id in domain_ids
+    assert domain_two.id in domain_ids
+    assert len(domains) == 2
+
+
+@pytest.mark.django_db
 def test_create_domain(data_fixture):
     builder = data_fixture.create_builder_application()
     expected_order = Domain.get_last_order(builder)
@@ -48,17 +59,6 @@ def test_create_domain(data_fixture):
 
     assert domain.order == expected_order
     assert domain.domain_name == "test.com"
-
-
-@pytest.mark.django_db
-@override_settings(FEATURE_FLAGS=["BUILDER"])
-def test_create_domain_only_one_domain_allowed(data_fixture):
-    builder = data_fixture.create_builder_application()
-
-    DomainHandler().create_domain(builder, "test.com")
-
-    with pytest.raises(OnlyOneDomainAllowed):
-        DomainHandler().create_domain(builder, "new.com")
 
 
 @pytest.mark.django_db
