@@ -290,7 +290,7 @@ class PageHandler:
         :return: If the path is unique
         """
 
-        queryset = base_queryset or Page.objects
+        queryset = Page.objects if base_queryset is None else base_queryset
 
         existing_paths = queryset.filter(builder=builder).values_list("path", flat=True)
 
