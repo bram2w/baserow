@@ -287,6 +287,31 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "baserow.api.openapi.AutoSchema",
 }
 
+# Limits the number of concurrent requests per user.
+# If BASEROW_MAX_CONCURRENT_USER_REQUESTS is not set, then the default value of -1
+# will be used which means the throttling is disabled.
+BASEROW_MAX_CONCURRENT_USER_REQUESTS = int(
+    os.getenv("BASEROW_MAX_CONCURRENT_USER_REQUESTS", -1)
+)
+
+if BASEROW_MAX_CONCURRENT_USER_REQUESTS > 0:
+    REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [
+        "baserow.throttling.ConcurrentUserRequestsThrottle",
+    ]
+
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
+        "concurrent_user_requests": BASEROW_MAX_CONCURRENT_USER_REQUESTS
+    }
+
+    MIDDLEWARE += [
+        "baserow.middleware.ConcurrentUserRequestsMiddleware",
+    ]
+
+# The maximum number of seconds that a request can be throttled for.
+BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT = int(
+    os.getenv("BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT", 30)
+)
+
 PUBLIC_VIEW_AUTHORIZATION_HEADER = "Baserow-View-Authorization"
 
 CORS_ORIGIN_ALLOW_ALL = True

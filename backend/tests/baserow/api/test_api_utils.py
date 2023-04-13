@@ -1,10 +1,17 @@
+import time
+from unittest.mock import patch
+
+from django.conf import settings
 from django.test import override_settings
 
 import pytest
+from fakeredis import FakeRedis, FakeServer
+from freezegun import freeze_time
 from rest_framework import serializers, status
 from rest_framework.exceptions import APIException
 from rest_framework.serializers import CharField
 from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.test import APIRequestFactory
 
 from baserow.api.exceptions import QueryParameterValidationException
 from baserow.api.registries import RegisteredException, api_exception_registry
@@ -20,6 +27,10 @@ from baserow.core.registry import (
     Instance,
     ModelInstanceMixin,
     Registry,
+)
+from baserow.throttling import (
+    BASEROW_CONCURRENCY_THROTTLE_REQUEST_ID,
+    ConcurrentUserRequestsThrottle,
 )
 
 
@@ -415,3 +426,109 @@ def test_api_give_informative_404_page_in_debug_for_invalid_urls(api_client):
 
             assert response.status_code == status.HTTP_404_NOT_FOUND
             assert response.headers.get("content-type") == "text/html"
+
+
+fake_redis_server = FakeServer()
+
+
+def create_dummy_request(user, path="/api/user/dashboard"):
+    class DummyRequest:
+        def __init__(self, path, user):
+            self.path = path
+            self.user = user
+
+    request = APIRequestFactory().get(path)
+    request.user = user
+    request._request = DummyRequest(path, user)
+    return request
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT=30,
+)
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db
+def test_concurrent_user_requests_throttle_non_staff_authenticated_users(data_fixture):
+    user = data_fixture.create_user()
+    ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
+    ConcurrentUserRequestsThrottle.rate = 1
+
+    with freeze_time("2023-03-30 00:00:00"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:01"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert not throttle.allow_request(create_dummy_request(user), None)
+        assert throttle.wait() == 29
+
+    # once the timeout is over, the user should be able to make a new request
+    request = create_dummy_request(user)
+    with freeze_time("2023-03-30 00:00:31"):
+        throttle = ConcurrentUserRequestsThrottle()
+        throttle.timer = lambda: time.time()
+        assert throttle.allow_request(request, None)
+
+    # once the request has beed processed and the callback called,
+    # another request can be made
+    ConcurrentUserRequestsThrottle.on_request_processed(request._request)
+    with freeze_time("2023-03-30 00:00:40"):
+        throttle = ConcurrentUserRequestsThrottle()
+        throttle.timer = lambda: time.time()
+        assert throttle.allow_request(request, None)
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
+@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@pytest.mark.django_db
+def test_concurrent_user_requests_does_not_throttle_staff_users(data_fixture):
+    user = data_fixture.create_user(is_staff=True)
+    ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
+    ConcurrentUserRequestsThrottle.rate = 1
+
+    with freeze_time("2023-03-30 00:00:00"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:01"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:02"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    MIDDLEWARE=[
+        *settings.MIDDLEWARE,
+        "baserow.middleware.ConcurrentUserRequestsMiddleware",
+    ],
+)
+@patch("baserow.throttling.ConcurrentUserRequestsThrottle.on_request_processed")
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db
+def test_throttle_set_baserow_concurrency_throttle_request_id_and_middleware_can_get_it(
+    mock_on_request_processed, data_fixture, api_client
+):
+    # Looking at
+    # https://github.com/encode/django-rest-framework/blob/3.14.0/rest_framework/views.py#L110
+    # it seems like the throttle_classes are set when the class is created so
+    # @override_settings does not work as expected. We need to set the
+    # throttle_classes on the class itself to be able to override the settings.
+    from baserow.api.user.views import DashboardView
+
+    ConcurrentUserRequestsThrottle.rate = 1
+    DashboardView.throttle_classes = [ConcurrentUserRequestsThrottle]
+
+    _, token = data_fixture.create_user_and_token()
+
+    api_client.get("/api/user/dashboard/", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert mock_on_request_processed.call_count == 1
+    request = mock_on_request_processed.call_args[0][0]
+    assert getattr(request, BASEROW_CONCURRENCY_THROTTLE_REQUEST_ID, None) is not None
