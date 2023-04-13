@@ -117,6 +117,8 @@ x-backend-variables: &backend-variables
   BASEROW_PERIODIC_FIELD_UPDATE_CRONTAB:
   BASEROW_PERIODIC_FIELD_UPDATE_TIMEOUT_MINUTES:
   BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME:
+  BASEROW_MAX_CONCURRENT_USER_REQUESTS:
+  BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
