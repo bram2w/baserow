@@ -38,7 +38,7 @@ class DomainService:
         :return: The model instance of the Domain
         """
 
-        base_queryset = base_queryset or Domain.objects
+        base_queryset = base_queryset if base_queryset is not None else Domain.objects
         base_queryset = base_queryset.select_related("builder", "builder__workspace")
         domain = self.handler.get_domain(domain_id, base_queryset=base_queryset)
 

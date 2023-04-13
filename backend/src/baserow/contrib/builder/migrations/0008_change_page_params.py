@@ -17,7 +17,6 @@ def migrate_params(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("builder", "0007_add_path_to_page"),
     ]

@@ -31,7 +31,6 @@ class PageSerializer(serializers.ModelSerializer):
 
 
 class CreatePageSerializer(serializers.ModelSerializer):
-
     path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:
@@ -40,7 +39,6 @@ class CreatePageSerializer(serializers.ModelSerializer):
 
 
 class UpdatePageSerializer(serializers.ModelSerializer):
-
     path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:
