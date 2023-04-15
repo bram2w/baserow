@@ -34,7 +34,7 @@
     "markdown-it": "^12.3.2",
     "moment": "^2.26.0",
     "moment-timezone": "^0.5.33",
-    "node-sass": "^6.0.1",
+    "node-sass": "^7.0.0",
     "normalize-scss": "^7.0.1",
     "nuxt": "^2.15.8",
     "nuxt-env": "^0.1.0",
