@@ -8,6 +8,8 @@ from ipaddress import ip_network
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 import dj_database_url
 from celery.schedules import crontab
 from corsheaders.defaults import default_headers
@@ -613,6 +615,16 @@ if os.getenv("EMAIL_SMTP", ""):
     EMAIL_PORT = os.getenv("EMAIL_SMTP_PORT", "25")
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
+
+    EMAIL_USE_SSL = bool(os.getenv("EMAIL_SMTP_USE_SSL", ""))
+    if EMAIL_USE_SSL and EMAIL_USE_TLS:
+        raise ImproperlyConfigured(
+            "EMAIL_SMTP_USE_SSL and EMAIL_SMTP_USE_TLS are "
+            "mutually exclusive and both cannot be set at once."
+        )
+
+    EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SMTP_SSL_CERTFILE_PATH", None)
+    EMAIL_SSL_KEYFILE = os.getenv("EMAIL_SMTP_SSL_KEYFILE_PATH", None)
 else:
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 

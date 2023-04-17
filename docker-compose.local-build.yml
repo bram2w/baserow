@@ -37,8 +37,11 @@ x-backend-variables: &backend-variables
   EMAIL_SMTP_HOST:
   EMAIL_SMTP_PORT:
   EMAIL_SMTP_USE_TLS:
+  EMAIL_SMTP_USE_SSL:
   EMAIL_SMTP_USER:
   EMAIL_SMTP_PASSWORD:
+  EMAIL_SMTP_SSL_CERTFILE_PATH:
+  EMAIL_SMTP_SSL_KEYFILE_PATH:
   FROM_EMAIL:
 
   # Set these to use AWS S3 bucket to store user files.
