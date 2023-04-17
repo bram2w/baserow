@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Allow configuring Baserow to send emails using an implicit TLS connection and with custom SSL key files.",
+    "issue_number": 1646,
+    "bullet_points": [],
+    "created_at": "2023-04-13"
+}
