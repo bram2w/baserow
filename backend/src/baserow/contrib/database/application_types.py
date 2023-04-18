@@ -21,7 +21,11 @@ from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.models import Application, Workspace
-from baserow.core.registries import ApplicationType
+from baserow.core.registries import (
+    ApplicationType,
+    BaserowImportExportMode,
+    serialization_processor_registry,
+)
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, grouper
 
@@ -66,6 +70,9 @@ class DatabaseApplicationType(ApplicationType):
         tables: List[Table],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> List[Dict[str, Any]]:
         """
         Exports the tables provided  to a serialized format that can later be
@@ -82,8 +89,9 @@ class DatabaseApplicationType(ApplicationType):
                 serialized_fields.append(field_type.export_serialized(field))
 
             table_cache: Dict[str, Any] = {}
-            if table.database.workspace is not None:
-                table_cache["workspace_id"] = table.database.workspace.id
+            workspace = table.get_root()
+            if workspace is not None:
+                table_cache["workspace_id"] = workspace.id
             serialized_views = []
             for v in table.view_set.all():
                 view = v.specific
@@ -109,16 +117,24 @@ class DatabaseApplicationType(ApplicationType):
                     )
                 serialized_rows.append(serialized_row)
 
-            serialized_tables.append(
-                DatabaseExportSerializedStructure.table(
-                    id=table.id,
-                    name=table.name,
-                    order=table.order,
-                    fields=serialized_fields,
-                    views=serialized_views,
-                    rows=serialized_rows,
-                )
+            structure = DatabaseExportSerializedStructure.table(
+                id=table.id,
+                name=table.name,
+                order=table.order,
+                fields=serialized_fields,
+                views=serialized_views,
+                rows=serialized_rows,
             )
+            # Annotate any `SerializationProcessorType` we have.
+            for (
+                serialized_structure
+            ) in serialization_processor_registry.get_all_for_mode(
+                baserow_import_export_mode
+            ):
+                structure.update(
+                    **serialized_structure.export_serialized(workspace, table)
+                )
+            serialized_tables.append(structure)
         return serialized_tables
 
     def export_serialized(
@@ -126,6 +142,9 @@ class DatabaseApplicationType(ApplicationType):
         database: Database,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> Dict[str, Any]:
         """
         Exports the database application type to a serialized format that can later
@@ -139,12 +158,17 @@ class DatabaseApplicationType(ApplicationType):
             "view_set__viewsort_set",
         )
 
-        serialized_tables = self.export_tables_serialized(tables, files_zip, storage)
+        serialized_tables = self.export_tables_serialized(
+            tables, files_zip, storage, baserow_import_export_mode
+        )
 
-        serialized = super().export_serialized(database, files_zip, storage)
+        serialized = super().export_serialized(
+            database, files_zip, storage, baserow_import_export_mode
+        )
         serialized.update(
             **DatabaseExportSerializedStructure.database(tables=serialized_tables)
         )
+
         return serialized
 
     def _ops_count_for_import_tables_serialized(
@@ -202,6 +226,9 @@ class DatabaseApplicationType(ApplicationType):
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
         external_table_fields_to_import: List[Tuple[Table, Dict[str, Any]]] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> List[Table]:
         """
         Imports tables exported by the `export_tables_serialized` method. Look at
@@ -223,6 +250,9 @@ class DatabaseApplicationType(ApplicationType):
             field to import.
             Useful for when importing a single table which also needs to add related
             fields to other existing tables in the database.
+        :param baserow_import_export_mode: defines which Baserow import/export mode to
+            use, defaults to `TARGETING_SAME_WORKSPACE_NEW_PK`.
+        :type baserow_import_export_mode: enum
         :return: The list of created tables
         """
 
@@ -418,6 +448,20 @@ class DatabaseApplicationType(ApplicationType):
             update_collector.apply_updates_and_get_updated_fields(field_cache)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
+        # Finally, now that everything has been created, loop over the
+        # `serialization_processor_registry` registry and ensure extra
+        # metadata is imported too.
+        source_workspace = Workspace.objects.get(pk=id_mapping["import_workspace_id"])
+        for serialized_table in serialized_tables:
+            for (
+                serialized_structure
+            ) in serialization_processor_registry.get_all_for_mode(
+                baserow_import_export_mode
+            ):
+                serialized_structure.import_serialized(
+                    source_workspace, serialized_table["_object"], serialized_table
+                )
+
         # Add the remaining none fields that we must not include in the import
         # because they were for example reversed link row fields.
         progress.increment(none_field_count, state=IMPORT_SERIALIZED_IMPORTING)
@@ -431,12 +475,14 @@ class DatabaseApplicationType(ApplicationType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> Application:
         """
         Imports a database application exported by the `export_serialized` method.
         """
 
-        serialized_tables = serialized_values.pop("tables")
         database_progress, table_progress = 1, 99
         progress = ChildProgressBuilder.build(
             progress_builder, child_total=database_progress + table_progress
@@ -449,20 +495,22 @@ class DatabaseApplicationType(ApplicationType):
             files_zip,
             storage,
             progress.create_child_builder(represents_progress=database_progress),
+            baserow_import_export_mode=baserow_import_export_mode,
         )
 
         database = application.specific
 
-        if not serialized_tables:
+        if not serialized_values["tables"]:
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING, by=table_progress)
         else:
             self.import_tables_serialized(
                 database,
-                serialized_tables,
+                serialized_values["tables"],
                 id_mapping,
                 files_zip,
                 storage,
                 progress.create_child_builder(represents_progress=table_progress),
+                baserow_import_export_mode=baserow_import_export_mode,
             )
 
         return database

@@ -21,7 +21,7 @@
       <i v-if="icon" class="fas" :class="`fa-${icon}`" />
     </div>
 
-    <div v-if="!minimal" class="alert__title">{{ title }}</div>
+    <div v-if="!minimal && title" class="alert__title">{{ title }}</div>
 
     <p class="alert__content"><slot /></p>
   </div>

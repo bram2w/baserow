@@ -54,9 +54,14 @@ class Command(BaseCommand):
         files_path = os.path.join(current_path, f"{file_name}.zip")
         export_path = os.path.join(current_path, f"{file_name}.json")
 
+        # By default, we won't export any registry data. This is because
+        # `RoleAssignment` can't be exported->imported across workspaces
+        # if the subjects are teams, or if the user subject doesn't belong
+        # to the imported workspace.
         with open(files_path, "wb") as files_buffer:
             exported_applications = CoreHandler().export_workspace_applications(
-                workspace, files_buffer=files_buffer
+                workspace,
+                files_buffer=files_buffer,
             )
 
         with open(export_path, "w") as export_buffer:

@@ -269,10 +269,6 @@ BUILDER_OPS = EDITOR_OPS + [
     CreateApplicationsWorkspaceOperationType,
     DeleteViewSortOperationType,
     UpdateViewSlugOperationType,
-    RestoreApplicationSnapshotOperationType,
-    ListSnapshotsApplicationOperationType,
-    DeleteApplicationSnapshotOperationType,
-    CreateSnapshotApplicationOperationType,
     DeleteApplicationOperationType,
     RestoreApplicationOperationType,
     ReadApplicationTrashOperationType,
@@ -325,6 +321,10 @@ ADMIN_OPS = BUILDER_OPS + [
     UpdateRoleTableOperationType,
     ReadRoleApplicationOperationType,
     UpdateRoleApplicationOperationType,
+    CreateSnapshotApplicationOperationType,
+    RestoreApplicationSnapshotOperationType,
+    ListSnapshotsApplicationOperationType,
+    DeleteApplicationSnapshotOperationType,
 ]
 
 default_roles = {

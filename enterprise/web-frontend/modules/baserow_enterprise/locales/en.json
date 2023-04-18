@@ -272,5 +272,8 @@
     },
     "userTeamsField": {
         "no_records": "No teams"
+    },
+    "snapshotModalWarning": {
+        "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
     }
 }

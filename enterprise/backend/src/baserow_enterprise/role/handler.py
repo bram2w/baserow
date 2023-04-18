@@ -528,11 +528,7 @@ class RoleAssignmentHandler:
         return most_precise_roles
 
     def assign_role(
-        self,
-        subject,
-        workspace,
-        role=None,
-        scope=None,
+        self, subject, workspace, role=None, scope=None, send_signals: bool = True
     ) -> Optional[RoleAssignment]:
         """
         Assign a role to a subject in the context of the given workspace over a
@@ -545,6 +541,9 @@ class RoleAssignmentHandler:
         :param scope: An optional scope on which the role applies. If no scope is given
             the workspace is used as scope.
         :return: The created RoleAssignment if role is not `None` else `None`.
+        :param send_signals: By default a `role_assignment_{created,update}` signal is
+            fire when a RoleAssignment is saved. Set this to `False` to prevent signals
+            from firing, and the end-user receiving a "Permissions updated" message.
         """
 
         if scope is None:
@@ -589,15 +588,16 @@ class RoleAssignmentHandler:
             defaults={"role": role},
         )
 
-        # TODO remove signaling from here
-        if created:
-            role_assignment_created.send(
-                self, subject=subject, workspace=workspace, scope=scope, role=role
-            )
-        else:
-            role_assignment_updated.send(
-                self, subject=subject, workspace=workspace, scope=scope, role=role
-            )
+        if send_signals:
+            # TODO remove signaling from here
+            if created:
+                role_assignment_created.send(
+                    self, subject=subject, workspace=workspace, scope=scope, role=role
+                )
+            else:
+                role_assignment_updated.send(
+                    self, subject=subject, workspace=workspace, scope=scope, role=role
+                )
 
         return role_assignment
 
@@ -644,6 +644,7 @@ class RoleAssignmentHandler:
         self,
         workspace: Workspace,
         new_role_assignments: List[NewRoleAssignment],
+        send_signals: bool = True,
     ):
         """
         TODO: this function is not yet a real batch. Should be implemented properly.
@@ -661,6 +662,7 @@ class RoleAssignmentHandler:
                 workspace,
                 role=role_assignment.role,
                 scope=role_assignment.scope,
+                send_signals=send_signals,
             )
             for role_assignment in new_role_assignments
         ]
@@ -753,7 +755,7 @@ class RoleAssignmentHandler:
         content_type = ContentType.objects.get_for_id(content_type_id)
         return content_type.get_all_objects_for_this_type(id__in=scope_ids)
 
-    def get_role_assignments(self, workspace: Workspace, scope=None):
+    def get_role_assignments(self, workspace: Workspace, scope: Optional[ScopeObject]):
         """
         Helper method that returns all role assignments given a scope and workspace.
 
