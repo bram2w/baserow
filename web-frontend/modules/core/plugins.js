@@ -127,4 +127,12 @@ export class BaserowPlugin extends Registerable {
   getAdditionalTableContextComponents(workspace, table) {
     return []
   }
+
+  /**
+   * If set, `getExtraSnapshotModalComponents` will allow plugins to decide what kind of
+   * copy is shown in the snapshots modal's Alert box.
+   */
+  getExtraSnapshotModalComponents(workspace) {
+    return null
+  }
 }

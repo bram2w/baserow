@@ -1,4 +1,8 @@
-from typing import Any, NamedTuple, Optional, TypedDict
+from typing import TYPE_CHECKING, Any, NamedTuple, Optional, TypedDict, Union
+
+if TYPE_CHECKING:
+    from baserow.contrib.builder.models import Builder
+    from baserow.contrib.database.models import Database, Table
 
 # A scope object needs to have a related registered ScopeObjectType
 ScopeObject = Any
@@ -12,6 +16,9 @@ Subject = Any
 
 # An actor is an object that can do an operation. For now only AbstractUser or Token
 Actor = Any
+
+# Objects which can be exported and imported in a `SerializationProcessorType`.
+SerializationProcessorScope = Union["Database", "Table", "Builder"]
 
 
 class PermissionCheck(NamedTuple):

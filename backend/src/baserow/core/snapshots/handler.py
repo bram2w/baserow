@@ -394,7 +394,12 @@ class SnapshotHandler:
 
         progress.increment(by=50)
         id_mapping = {"import_workspace_id": workspace.id}
-        imported_database = application_type.import_serialized(
+        # Set the `snapshot_from` reverse relation so that after
+        # `ApplicationType.import_serialized` creates the `Application`,
+        # we set the source snapshot so that `get_root()` can be called
+        # on this application.
+        exported_application["snapshot_from"] = snapshot
+        application_type.import_serialized(
             None,
             exported_application,
             id_mapping,
@@ -402,8 +407,6 @@ class SnapshotHandler:
             default_storage,
             progress_builder=progress.create_child_builder(represents_progress=50),
         )
-        snapshot.snapshot_to_application = imported_database
-        snapshot.save()
 
     def perform_restore(self, snapshot: Snapshot, progress: Progress) -> Application:
         """

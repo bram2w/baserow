@@ -63,8 +63,12 @@ class Command(BaseCommand):
                     f"missing files."
                 )
 
+            # By default, we won't import any registry data. This is because
+            # `RoleAssignment` can't be imported if the subjects are teams.
             applications, _ = handler.import_applications_to_workspace(
-                workspace, content, files_buffer
+                workspace,
+                content,
+                files_buffer,
             )
 
             if files_buffer:
