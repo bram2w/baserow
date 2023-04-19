@@ -45,6 +45,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ("baserow_enterprise", "0009_roleassignment_subject_and_scope_uniqueness"),
     ]
+    run_before = [("core", "0046_rename_group_workspace")]
 
     operations = [
         migrations.RunPython(forward, migrations.RunPython.noop),

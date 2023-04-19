@@ -186,6 +186,9 @@ export default function CoreModule(options) {
   this.appendPlugin({
     src: path.resolve(__dirname, 'plugins/realTimeHandler.js'),
   })
+  this.appendPlugin({
+    src: path.resolve(__dirname, 'plugins/hasFeature.js'),
+  })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/permissions.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })

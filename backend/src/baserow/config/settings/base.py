@@ -45,7 +45,11 @@ else:
     BASEROW_PLUGIN_FOLDERS = []
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
-BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
+BASEROW_OSS_ONLY = bool(os.getenv("BASEROW_OSS_ONLY", ""))
+if BASEROW_OSS_ONLY:
+    BASEROW_BUILT_IN_PLUGINS = []
+else:
+    BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -760,6 +764,10 @@ PERMISSION_MANAGERS = [
     "role",
     "basic",
 ]
+if "baserow_enterprise" not in INSTALLED_APPS:
+    PERMISSION_MANAGERS.remove("role")
+if "baserow_premium" not in INSTALLED_APPS:
+    PERMISSION_MANAGERS.remove("view_ownership")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
