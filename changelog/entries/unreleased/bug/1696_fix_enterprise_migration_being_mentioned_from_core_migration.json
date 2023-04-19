@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix enterprise migration being mentioned from core migration causing removal of enterprise app to break migrations.",
+    "issue_number": 1696,
+    "bullet_points": [],
+    "created_at": "2023-04-13"
+}

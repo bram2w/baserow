@@ -14,4 +14,8 @@ export class PremiumPlugin extends BaserowPlugin {
   getAdditionalShareLinkOptions() {
     return [BaserowLogoShareLinkOption]
   }
+
+  hasFeature(feature, forSpecificWorkspace) {
+    return this.app.$licenseHandler.hasFeature(feature, forSpecificWorkspace)
+  }
 }

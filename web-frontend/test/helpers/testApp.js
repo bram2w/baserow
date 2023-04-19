@@ -11,6 +11,7 @@ import MockAdapter from 'axios-mock-adapter'
 import _ from 'lodash'
 import { MockServer } from '@baserow/test/fixtures/mockServer'
 import flushPromises from 'flush-promises'
+import setupHasFeaturePlugin from '@baserow/modules/core/plugins/hasFeature'
 
 /**
  * Uses the real baserow plugins to setup a Vuex store and baserow registry
@@ -30,12 +31,6 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   store.$client = app.client
   store.app = app
   app.$store = store
-  app.$hasFeature = function (feature, workspace) {
-    return true
-  }
-  app.$licenseHandler = {
-    async afterUserDataUpdate(data) {},
-  }
   // Nuxt seems to allow both access patterns to get at the store?
   app.store = store
   const setupContext = {
@@ -43,6 +38,9 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
     app,
   }
   setupDatabasePlugin(setupContext)
+  setupHasFeaturePlugin(setupContext, (name, dep) => {
+    app[`$${name}`] = dep
+  })
   if (extraPluginSetupFunc) {
     extraPluginSetupFunc(setupContext)
   }

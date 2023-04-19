@@ -135,4 +135,14 @@ export class BaserowPlugin extends Registerable {
   getExtraSnapshotModalComponents(workspace) {
     return null
   }
+
+  /**
+   * Some features are optionally enabled, this function will be called when the
+   * $hasFeature directive is called on each plugin to check if any of the plugins
+   * enable the particular feature.
+   * @returns {boolean}
+   */
+  hasFeature(feature, forSpecificWorkspace) {
+    return false
+  }
 }

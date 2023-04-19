@@ -140,6 +140,7 @@ x-backend-variables: &backend-variables
   BASEROW_PERIODIC_FIELD_UPDATE_QUEUE_NAME:
   BASEROW_MAX_CONCURRENT_USER_REQUESTS:
   BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT:
+  BASEROW_OSS_ONLY:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
@@ -197,6 +198,7 @@ services:
       BASEROW_MAX_SNAPSHOTS_PER_GROUP:
       BASEROW_ENABLE_OTEL:
       BASEROW_DEPLOYMENT_ENV:
+      BASEROW_OSS_ONLY:
     depends_on:
       - backend
     networks:
