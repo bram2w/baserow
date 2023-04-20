@@ -4,9 +4,8 @@ from decimal import Decimal
 from math import ceil, floor
 from typing import Any, Dict, Optional, Tuple, Union
 
-from django.contrib.postgres.aggregates.general import ArrayAgg
 from django.db.models import DateField, DateTimeField, IntegerField, Q
-from django.db.models.functions import Cast, Extract, Length, TruncDate
+from django.db.models.functions import Extract, Length, TruncDate
 
 import pytz
 from dateutil import parser
@@ -841,7 +840,7 @@ class BooleanViewFilterType(ViewFilterType):
 
 class ManyToManyHasBaseViewFilter(ViewFilterType):
     """
-    The many to many base filter accepts an relationship ID. It filters the queryset so
+    The many to many base filter accepts a relationship ID. It filters the queryset so
     that only rows that have a relationship with the provided ID will remain. So if for
     example '10' is provided, then only rows where the many to many field has a
     relationship to a foreignkey with the ID of 10.
@@ -851,16 +850,14 @@ class ManyToManyHasBaseViewFilter(ViewFilterType):
         value = value.strip()
 
         try:
-            # We annotate the queryset with an aggregated Array containing all the ids
-            # of the related field. Then we filter on this annotated column by checking
-            # which of the items in the array overlap with a new Array containing the
-            # value of the filter. That way we can make sure that chaining more than
-            # one filter works correctly.
-            return AnnotatedQ(
-                annotation={
-                    f"{field_name}_array": ArrayAgg(Cast(field_name, IntegerField())),
-                },
-                q={f"{field_name}_array__overlap": [int(value)]},
+            remote_field = model_field.remote_field
+            remote_model = remote_field.model
+            return Q(
+                **{
+                    "id__in": remote_model.objects.filter(
+                        **{"id": int(value)}
+                    ).values_list(f"{remote_field.related_name}__id", flat=True)
+                }
             )
         except ValueError:
             return Q()
