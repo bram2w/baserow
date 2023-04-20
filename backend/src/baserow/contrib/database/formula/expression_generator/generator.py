@@ -302,8 +302,8 @@ class BaserowExpressionToDjangoExpressionGenerator(
         )
 
     # noinspection PyProtectedMember,PyMethodMayBeStatic
-    def _get_remote_model(self, m2m_field_name, mode):
-        looked_up_link_table_model = mode._meta.get_field(
+    def _get_remote_model(self, m2m_field_name, model):
+        looked_up_link_table_model = model._meta.get_field(
             m2m_field_name
         ).remote_field.model
         return looked_up_link_table_model
