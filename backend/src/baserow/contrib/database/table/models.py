@@ -1,11 +1,15 @@
+import itertools
 import re
+from types import MethodType
 from typing import Any, Dict, Type, Union
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
 from django.db.models import F, JSONField, Q, QuerySet
 
+from loguru import logger
 from opentelemetry import trace
 
 from baserow.contrib.database.fields.exceptions import (
@@ -386,6 +390,16 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
             if getattr(f, "requires_refresh_after_update", False)
         ]
 
+    @classmethod
+    def get_field_object_or_none(cls, field_name: str, include_trash: bool):
+        field_objects = cls._field_objects.values()
+        if include_trash:
+            field_objects = itertools.chain(
+                field_objects, cls._trashed_field_objects.values()
+            )
+
+        return next(filter(lambda f: f["name"] == field_name, field_objects), None)
+
     class Meta:
         abstract = True
 
@@ -412,6 +426,35 @@ class DefaultAppsProxy:
 
     def __getattr__(self, attr):
         return getattr(apps, attr)
+
+
+def patch_meta_get_field(_meta):
+    original_get_field = _meta.get_field
+
+    def get_field(self, field_name, *args, **kwargs):
+        try:
+            return original_get_field(field_name, *args, **kwargs)
+        except DjangoFieldDoesNotExist as exc:
+            field_object = self.model.get_field_object_or_none(
+                field_name, include_trash=True
+            )
+
+            if field_object is None:
+                raise exc
+
+            field_type = field_object["type"]
+            logger.debug(
+                "Lazy load missing {} of type {} for table {}",
+                field_name,
+                field_type.type,
+                self.model.pk,
+            )
+            field_type.after_model_generation(
+                field_object["field"], self.model, field_object["name"]
+            )
+            return original_get_field(field_name, *args, **kwargs)
+
+    _meta.get_field = MethodType(get_field, _meta)
 
 
 class Table(
@@ -491,14 +534,20 @@ class Table(
         :rtype: Model
         """
 
+        logger.debug(
+            "Generating model for table {} with fields {}, manytomany_models {}, add_dependencies {}, use_cache {}",
+            str(self.pk),
+            fields,
+            manytomany_models,
+            add_dependencies,
+            use_cache,
+        )
+
         filtered = field_names is not None or field_ids is not None
         model_name = f"Table{self.pk}Model"
 
         if fields is None:
             fields = []
-
-        if manytomany_models is None:
-            manytomany_models = {}
 
         app_label = "database_table"
         meta = type(
@@ -541,6 +590,7 @@ class Table(
             "_generated_table_model": True,
             "baserow_table": self,
             "baserow_table_id": self.id,
+            "baserow_m2m_models": manytomany_models or {},
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
@@ -565,12 +615,14 @@ class Table(
         )
 
         if use_cache:
+            logger.debug("Using cached model for table {}", self.pk)
             self.refresh_from_db(fields=["version"])
             field_attrs = get_cached_model_field_attrs(self)
         else:
             field_attrs = None
 
         if field_attrs is None:
+            logger.debug("Generating model field attrs for table {}", self.pk)
             field_attrs = self._fetch_and_generate_field_attrs(
                 add_dependencies,
                 attribute_names,
@@ -597,12 +649,15 @@ class Table(
             attrs,
         )
 
-        self._after_model_generation(attrs, manytomany_models, model)
+        patch_meta_get_field(model._meta)
+
+        if not model.baserow_m2m_models:
+            self._after_model_generation(attrs, model)
 
         return model
 
     @baserow_trace(tracer)
-    def _after_model_generation(self, attrs, manytomany_models, model):
+    def _after_model_generation(self, attrs, model):
         # In some situations the field can only be added once the model class has been
         # generated. So for each field we will call the after_model_generation with
         # the generated model as argument in order to do this. This is for example used
@@ -612,9 +667,9 @@ class Table(
             **attrs["_field_objects"],
             **attrs["_trashed_field_objects"],
         }
-        for field_id, field_object in all_field_objects.items():
+        for field_object in all_field_objects.values():
             field_object["type"].after_model_generation(
-                field_object["field"], model, field_object["name"], manytomany_models
+                field_object["field"], model, field_object["name"]
             )
 
     @baserow_trace(tracer)

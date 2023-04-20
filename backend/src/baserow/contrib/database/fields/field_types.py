@@ -1507,21 +1507,21 @@ class LinkRowFieldType(FieldType):
 
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         # Store the current table's model into the manytomany_models object so that the
         # related ManyToMany field can use that one. Otherwise we end up in a recursive
         # loop.
-        manytomany_models[instance.table_id] = model
+        model.baserow_m2m_models[instance.table_id] = model
 
-        # Check if the related table model is already in the manytomany_models.
+        # Check if the related table model is already in the model.baserow_m2m_model.
         if instance.is_self_referencing:
             related_model = model
         else:
-            related_model = manytomany_models.get(instance.link_row_table_id)
+            related_model = model.baserow_m2m_models.get(instance.link_row_table_id)
             # If we do not have a related table model already we can generate a new one.
             if related_model is None:
                 related_model = instance.link_row_table.get_model(
-                    manytomany_models=manytomany_models
+                    manytomany_models=model.baserow_m2m_models
                 )
 
         instance._related_model = related_model
@@ -2862,7 +2862,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def get_model_field(self, instance, **kwargs):
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         select_option_meta = type(
             "Meta",
             (AbstractSelectOption.Meta,),
@@ -3861,7 +3861,7 @@ class MultipleCollaboratorsFieldType(FieldType):
     def get_model_field(self, instance, **kwargs):
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         user_meta = type(
             "Meta",
             (AbstractUser.Meta,),

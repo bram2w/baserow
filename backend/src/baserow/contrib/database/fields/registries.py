@@ -361,7 +361,7 @@ class FieldType(
 
         return type(instance) == type(instance2)
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         """
         After the model is generated the after_model_generation method of each field
         is also called to make some additional changes when whole model is available.
@@ -374,9 +374,6 @@ class FieldType(
         :type model: Model
         :param field_name: The given name of the field in the model.
         :type field_name: str
-        :param manytomany_models: A dict containing cached related manytomany models in
-            order to prevent model generation loop.
-        :type manytomany_models: dict
         """
 
     def random_value(self, instance, fake, cache):
