@@ -68,8 +68,8 @@ RUN apt-get update && \
     npm install --global yarn@1.22.19 && \
     # ========================
     # Install Caddy
-    # ========================
-    curl -o caddy.tar.gz -sL https://github.com/caddyserver/caddy/releases/download/v2.4.6/caddy_2.4.6_linux_amd64.tar.gz && \
+    # ======================== \
+    curl -o caddy.tar.gz -sL "https://github.com/caddyserver/caddy/releases/download/v2.4.6/caddy_2.4.6_linux_$(dpkg --print-architecture).tar.gz" && \
     tar -xf caddy.tar.gz && \
     mv caddy /usr/bin/ && \
     rm caddy.tar.gz && \
