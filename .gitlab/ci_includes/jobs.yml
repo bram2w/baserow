@@ -108,10 +108,10 @@
         echo "Building from $BUILD_FROM_IMAGE."
       fi
       
-      docker context create multi-context
-      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
+      docker context create "$CI_COMMIT_SHORT_SHA-context"
+      docker buildx create --use --name "buildx-$CI_COMMIT_SHORT_SHA" --driver docker-container --platform linux/amd64 "$CI_COMMIT_SHORT_SHA-context"
       
-      if [[ -n "$BUILD_ARM" ]]; then
+      if [[ -n "${BUILD_ARM:-yes}" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
         echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
@@ -121,7 +121,7 @@
         [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
         echo "Building multi-arch images for ARM also."
-        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        docker buildx create --append --name "buildx-$CI_COMMIT_SHORT_SHA" --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
         DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
       else
         DOCKER_BUILD_PLATFORMS=linux/amd64
@@ -301,10 +301,10 @@
         fi
       }
       
-      docker context create multi-context
-      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
+      docker context create $CI_COMMIT_SHORT_SHA-context
+      docker buildx create --use --name "buildx-$CI_COMMIT_SHORT_SHA" --driver docker-container --platform linux/amd64 "$CI_COMMIT_SHORT_SHA-context"
       
-      if [[ -n "$BUILD_ARM" ]]; then
+      if [[ -n "${BUILD_ARM:-yes}" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
         echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
@@ -314,7 +314,7 @@
         [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
         echo "Building multi-arch images for ARM also."
-        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        docker buildx create --append --name "buildx-$CI_COMMIT_SHORT_SHA" --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
         DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
       else
         DOCKER_BUILD_PLATFORMS=linux/amd64
