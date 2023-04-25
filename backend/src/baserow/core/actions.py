@@ -558,14 +558,14 @@ class UpdateApplicationActionType(UndoableActionType):
 
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
-        application = CoreHandler().get_application(params.application_id)
+        application = CoreHandler().get_application(params.application_id).specific
         CoreHandler().update_application(
             user, application, params.original_application_name
         )
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
-        application = CoreHandler().get_application(params.application_id)
+        application = CoreHandler().get_application(params.application_id).specific
         CoreHandler().update_application(user, application, params.application_name)
 
 

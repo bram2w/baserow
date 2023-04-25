@@ -70,7 +70,8 @@ class JobHandler:
 
         :param job_id: The job id we want to fetch.
         :param job_model: An optional Job model.
-        :base_queryset: An optional base queryset to use instead of the default one.
+        :param base_queryset: An optional base queryset to use instead of the default
+            one.
         :return: the job.
         """
 

@@ -514,3 +514,6 @@ class DatabaseApplicationType(ApplicationType):
             )
 
         return database
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("table_set")

@@ -120,8 +120,14 @@ class AllApplicationsView(APIView):
         # Then filter with these ids
         applications = specific_iterator(
             Application.objects.select_related("content_type", "workspace")
+            .prefetch_related("workspace__template_set")
             .filter(id__in=applications_ids)
-            .order_by("workspace_id", "order")
+            .order_by("workspace_id", "order"),
+            per_content_type_queryset_hook=(
+                lambda model, queryset: application_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
         )
 
         data = [
@@ -192,9 +198,11 @@ class ApplicationsView(APIView):
             allow_if_template=True,
         )
 
-        applications = Application.objects.select_related(
-            "content_type", "workspace"
-        ).filter(workspace=workspace)
+        applications = (
+            Application.objects.select_related("content_type", "workspace")
+            .prefetch_related("workspace__template_set")
+            .filter(workspace=workspace)
+        )
 
         applications = CoreHandler().filter_queryset(
             request.user,
@@ -203,6 +211,15 @@ class ApplicationsView(APIView):
             workspace=workspace,
             context=workspace,
             allow_if_template=True,
+        )
+
+        applications = specific_iterator(
+            applications,
+            per_content_type_queryset_hook=(
+                lambda model, queryset: application_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
         )
 
         data = [
@@ -314,7 +331,9 @@ class ApplicationView(APIView):
     def get(self, request, application_id):
         """Selects a single application and responds with a serialized version."""
 
-        application = CoreHandler().get_user_application(request.user, application_id)
+        application = (
+            CoreHandler().get_user_application(request.user, application_id).specific
+        )
 
         return Response(
             get_application_serializer(application, context={"request": request}).data
@@ -361,9 +380,13 @@ class ApplicationView(APIView):
     def patch(self, request, data, application_id):
         """Updates the application if the user belongs to the workspace."""
 
-        application = CoreHandler().get_application(
-            application_id,
-            base_queryset=Application.objects.select_for_update(of=("self",)),
+        application = (
+            CoreHandler()
+            .get_application(
+                application_id,
+                base_queryset=Application.objects.select_for_update(of=("self",)),
+            )
+            .specific
         )
 
         application = action_type_registry.get_by_type(UpdateApplicationActionType).do(

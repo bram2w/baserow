@@ -234,3 +234,6 @@ class BuilderApplicationType(ApplicationType):
             )
 
         return builder
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("page_set")

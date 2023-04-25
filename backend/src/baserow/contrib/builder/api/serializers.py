@@ -5,10 +5,9 @@ from rest_framework import serializers
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.builder.api.pages.serializers import PageSerializer
+from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.operations import ListPagesBuilderOperationType
-from baserow.contrib.builder.pages.models import Page
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Application
 
 
 class BuilderSerializer(ApplicationSerializer):
@@ -22,7 +21,7 @@ class BuilderSerializer(ApplicationSerializer):
         fields = ApplicationSerializer.Meta.fields + ("pages",)
 
     @extend_schema_field(PageSerializer(many=True))
-    def get_pages(self, instance: Application) -> List:
+    def get_pages(self, instance: Builder) -> List:
         """
         Because the instance doesn't know at this point it is a Builder we have to
         select the related pages this way.
@@ -31,8 +30,7 @@ class BuilderSerializer(ApplicationSerializer):
         :return: A list of serialized pages that belong to this instance.
         """
 
-        pages = Page.objects.filter(builder_id=instance.pk)
-
+        pages = instance.page_set.all()
         user = self.context.get("user")
         request = self.context.get("request")
 

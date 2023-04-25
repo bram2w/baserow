@@ -1,4 +1,4 @@
-from typing import Optional, cast
+from typing import Optional
 
 from django.db.models import QuerySet
 
@@ -26,7 +26,8 @@ class DatabaseHandler:
         if base_queryset is None:
             base_queryset = Database.objects
 
-        return cast(
-            Database,
-            CoreHandler().get_application(database_id, base_queryset=base_queryset),
+        return (
+            CoreHandler()
+            .get_application(database_id, base_queryset=base_queryset)
+            .specific
         )

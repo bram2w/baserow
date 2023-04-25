@@ -42,9 +42,10 @@ class ApplicationSerializer(serializers.ModelSerializer):
 
 class SpecificApplicationSerializer(ApplicationSerializer):
     def to_representation(self, instance):
+        specific_instance = instance.specific
         return get_application_serializer(
-            instance, context=self.context
-        ).to_representation(instance)
+            specific_instance, context=self.context
+        ).to_representation(specific_instance)
 
 
 class ApplicationCreateSerializer(serializers.ModelSerializer):
