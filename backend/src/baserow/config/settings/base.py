@@ -14,6 +14,7 @@ import dj_database_url
 from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
+from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.version import VERSION
 
 # A comma separated list of feature flags used to enable in-progress or not ready
@@ -111,6 +112,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "baserow.middleware.BaserowCustomHttp404Middleware",
 ]
+
+if otel_is_enabled():
+    MIDDLEWARE += ["baserow.core.telemetry.middleware.BaserowOTELMiddleware"]
 
 ROOT_URLCONF = "baserow.config.urls"
 
