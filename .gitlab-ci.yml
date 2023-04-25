@@ -334,14 +334,15 @@ build-ci-dind-image:
   image: docker:20.10.18
   stage: build
   services:
-    - $CI_DIND_IMAGE
+    - name: $CI_DIND_IMAGE
+      alias: docker
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
     DOCKER_TLS_CERTDIR: "/certs"
   script:
     - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
-    - cd e2e-tests
+    - cd .gitlab/ci_dind_image
     - docker build -t $CI_DIND_IMAGE .
     - docker push $CI_DIND_IMAGE
   # Only trigger this job manually to prevent it running every single time a new branch
