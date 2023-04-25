@@ -22,7 +22,7 @@ Plugin", however you can choose your own plugin name when prompted to by Cookiec
 > name will be my-baserow-plugin.
 
 ```bash
-cookiecutter gl:bramw/baserow --directory plugin-boilerplate
+cookiecutter gl:baserow/baserow --directory plugin-boilerplate
 project_name [My Baserow Plugin]: 
 project_slug [my-baserow-plugin]: 
 project_module [my_baserow_plugin]:

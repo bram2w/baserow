@@ -366,7 +366,7 @@ SPECTACULAR_SETTINGS = {
     "CONTACT": {"url": "https://baserow.io/contact"},
     "LICENSE": {
         "name": "MIT",
-        "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
+        "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
     "VERSION": "1.16.1-rc1",
     "SERVE_INCLUDE_SCHEMA": False,

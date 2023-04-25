@@ -17,7 +17,7 @@ To instantiate the template, execute the following commands:
 ```sh
 $ cd ~/baserow
 $ pip install cookiecutter
-$ cookiecutter gl:bramw/baserow --directory plugin-boilerplate
+$ cookiecutter gl:baserow/baserow --directory plugin-boilerplate
 ```
 
 ## Get inspiration from our examples

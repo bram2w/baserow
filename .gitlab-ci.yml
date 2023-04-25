@@ -95,11 +95,11 @@
 #
 # On branches other than master:
 # 1. A build job first tries to find the latest image built on that branch
-#    (registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-BRANCH_NAME)
+#    (registry.gitlab.com/baserow/baserow/ci/IMAGE_NAME:ci-latest-BRANCH_NAME)
 #    to use as a build cache.
 # 2. If no latest image is found then the build job will try use the latest ci dev image
 #    build on the develop branch:
-#    (registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-develop)
+#    (registry.gitlab.com/baserow/baserow/ci/IMAGE_NAME:ci-latest-develop)
 # 3. Otherwise, the build job will run the build from scratch building all layers.
 # 4. Once the build job finishes it will push a new ci-latest-BRANCH_NAME image for
 #    future pipelines to cache from. This image will be built with
@@ -136,12 +136,12 @@
 # === Periodic full rebuilds on develop
 #
 # To get around the security implications of docker image layer caching we have a
-# daily ci pipeline scheduled job on develop (https://gitlab.com/bramw/baserow/-/pipeline_schedules)
+# daily ci pipeline scheduled job on develop (https://gitlab.com/baserow/baserow/-/pipeline_schedules)
 # which sets TRIGGER_FULL_IMAGE_REBUILD=yes as a pipeline variable. This forces all
 # the build stages to build their docker images from scratch pulling any updated base
 # images.
 #
-# This pipeline rebuilds all the `registry.gitlab.com/bramw/baserow/ci/IMAGE_NAME:ci-latest-develop`
+# This pipeline rebuilds all the `registry.gitlab.com/baserow/baserow/ci/IMAGE_NAME:ci-latest-develop`
 # images used for build caching on other branches, develop itself and on master to have
 # the latest security updates.
 #
@@ -184,7 +184,7 @@ stages:
   - publish
 
 variables:
-  # Visit https://gitlab.com/bramw/baserow/-/pipelines/new select your branch
+  # Visit https://gitlab.com/baserow/baserow/-/pipelines/new select your branch
   # and click run to be able to run a new pipeline where you can manually control these
   # variables.
   TRIGGER_FULL_IMAGE_REBUILD:
@@ -207,7 +207,7 @@ variables:
   CI_IMAGE_REPO: $CI_REGISTRY_IMAGE/ci
   # Any images with tags prefixed with the two variables below will be cleaned up automatically
   # by our gitlab cleanup job:
-  # (https://gitlab.com/bramw/baserow/-/settings/packages_and_registries).
+  # (https://gitlab.com/baserow/baserow/-/settings/packages_and_registries).
   #
   # ## Note:
   #   These cleanup tag prefixes are needed as gitlab only supports cleanup by defining
