@@ -8,13 +8,19 @@ processors:
   # Disable sending spans for the sync templates task as it contains a huge number
   # which pointlessly uses up resource limits. Also disable silk spam.
   filter:
-    traces:
-      span:
-        - 'IsMatch(name, ".*sync_templates_task.*") == true'
-        - 'IsMatch(attributes["db.statement"], ".*silk.*") == true'
-      spanevent:
-        - 'IsMatch(name, ".*sync_templates_task.*") == true'
-        - 'IsMatch(attributes["db.statement"], ".*silk.*") == true'
+    spans:
+      exclude:
+        match_type: regexp
+        attributes:
+          - key: db.statement
+            value: .*silk.*
+  filter/2:
+    spans:
+      exclude:
+        match_type: regexp
+        attributes:
+          - key: celery.task_name
+            value: .*sync_templates_task.*
   batch:
     send_batch_size: 1000
 
@@ -31,10 +37,13 @@ exporters:
   logging:
 
 service:
+#  telemetry:
+#    logs:
+#      level: "debug"
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [batch]
+      processors: [filter,filter/2,batch]
       exporters: [otlp,logging]
     metrics:
       receivers: [otlp]
