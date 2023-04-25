@@ -13,6 +13,7 @@ from baserow.api.workspaces.serializers import (
     WorkspaceUserWorkspaceSerializer,
 )
 from baserow.core import signals
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Application, WorkspaceUser
 from baserow.core.operations import (
@@ -215,6 +216,7 @@ def workspace_restored(sender, workspace_user, user, **kwargs):
         workspace=workspace_user.workspace,
         context=workspace_user.workspace,
     )
+    applications_qs = specific_iterator(applications_qs)
     applications = [
         get_application_serializer(
             application, context={"user": workspace_user.user}

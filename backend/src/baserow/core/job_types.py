@@ -70,8 +70,10 @@ class DuplicateApplicationJobType(JobType):
     }
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-        application = CoreHandler().get_user_application(
-            job.user, job.original_application_id
+        application = (
+            CoreHandler()
+            .get_user_application(job.user, job.original_application_id)
+            .specific
         )
         application_type = application_type_registry.get_by_model(
             application.specific_class
@@ -81,7 +83,9 @@ class DuplicateApplicationJobType(JobType):
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-        application = CoreHandler().get_user_application(user, values["application_id"])
+        application = (
+            CoreHandler().get_user_application(user, values["application_id"]).specific
+        )
 
         return {
             "original_application": application,

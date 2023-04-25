@@ -261,7 +261,7 @@ def broadcast_application_created(
     from baserow.core.models import Application, WorkspaceUser
     from baserow.core.operations import ReadApplicationOperationType
 
-    application = Application.objects.get(id=application_id)
+    application = Application.objects.get(id=application_id).specific
     workspace = application.workspace
     users_in_workspace = [
         workspace_user.user

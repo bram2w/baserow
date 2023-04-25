@@ -5,10 +5,9 @@ from rest_framework import serializers
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.database.api.tables.serializers import TableSerializer
+from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
-from baserow.contrib.database.table.models import Table
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Application
 
 
 class DatabaseSerializer(ApplicationSerializer):
@@ -22,7 +21,7 @@ class DatabaseSerializer(ApplicationSerializer):
         fields = ApplicationSerializer.Meta.fields + ("tables",)
 
     @extend_schema_field(TableSerializer(many=True))
-    def get_tables(self, instance: Application) -> List:
+    def get_tables(self, instance: Database) -> List:
         """
         Because the instance doesn't know at this point it is a Database we have to
         select the related tables this way.
@@ -31,8 +30,7 @@ class DatabaseSerializer(ApplicationSerializer):
         :return: A list of serialized tables that belong to this instance.
         """
 
-        tables = Table.objects.filter(database_id=instance.pk)
-
+        tables = instance.table_set.all()
         user = self.context.get("user")
         request = self.context.get("request")
 
