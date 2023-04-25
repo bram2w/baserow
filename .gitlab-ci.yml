@@ -334,8 +334,7 @@ build-ci-dind-image:
   image: docker:20.10.18
   stage: build
   services:
-    - name: $CI_DIND_IMAGE
-      alias: docker
+    - docker:20.10.18-dind
   variables:
     DOCKER_BUILDKIT: 1
     DOCKER_HOST: tcp://docker:2376
