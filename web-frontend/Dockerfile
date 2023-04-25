@@ -49,8 +49,8 @@ COPY --chown=$UID:$GID ./enterprise/web-frontend /baserow/enterprise/web-fronten
 COPY --chown=$UID:$GID ./deploy/plugins/*.sh /baserow/plugins/
 
 # Create symlinks for jest tests
-RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules
-RUN ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules
+RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules \
+ && ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules
 
 RUN dos2unix /baserow/web-frontend/docker/docker-entrypoint.sh && \
     chmod a+x /baserow/web-frontend/docker/docker-entrypoint.sh
