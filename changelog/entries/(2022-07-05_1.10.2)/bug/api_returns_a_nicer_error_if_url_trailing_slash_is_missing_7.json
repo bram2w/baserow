@@ -1,6 +1,6 @@
 {
     "type": "bug",
-    "message": "API returns a nicer error if URL trailing slash is missing. [798](https://gitlab.com/bramw/baserow/-/issues/798)",
+    "message": "API returns a nicer error if URL trailing slash is missing. [798](https://gitlab.com/baserow/baserow/-/issues/798)",
     "issue_number": null,
     "bullet_points": [],
     "created_at": "2023-02-10"

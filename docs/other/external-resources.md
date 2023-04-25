@@ -14,5 +14,5 @@
 
 ## Add your resource
 
-Please edit this file in the repository at https://gitlab.com/bramw/baserow and create
+Please edit this file in the repository at https://gitlab.com/baserow/baserow and create
 a merge request to add your external resource to this list.

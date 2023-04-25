@@ -5,7 +5,7 @@
       {{ $t('dashboard.alertText') }}
     </p>
     <a
-      href="https://gitlab.com/bramw/baserow"
+      href="https://gitlab.com/baserow/baserow"
       target="_blank"
       rel="noopener noreferrer"
       class="button button--primary dashboard__help-button"

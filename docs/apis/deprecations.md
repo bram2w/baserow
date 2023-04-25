@@ -9,7 +9,7 @@ support compatibility for.
 
 ### Summary
 
-In early 2023 [we decided](https://gitlab.com/bramw/baserow/-/issues/1303) to rename 
+In early 2023 [we decided](https://gitlab.com/baserow/baserow/-/issues/1303) to rename 
 the concept of a "group" to "workspace".
 
 For nearly all users, the only noticeable change will be that within the UI, references
@@ -45,7 +45,7 @@ There are, however, some codebase changes to be aware of.
 ## Major changes
 
 - All "group" endpoints now have a corresponding "workspace" endpoint.
-- All "group" endpoint views have been moved to a [`compat` directory](https://gitlab.com/bramw/baserow/-/tree/develop/backend/src/baserow/compat).
+- All "group" endpoint views have been moved to a [`compat` directory](https://gitlab.com/baserow/baserow/-/tree/develop/backend/src/baserow/compat).
 
 ## Non-REST API breaking changes
 

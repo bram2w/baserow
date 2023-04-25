@@ -11,7 +11,7 @@ dev environment locally, otherwise please start from the Installing Requirements
 below.
 
 ```bash
-$ git clone --branch develop https://gitlab.com/bramw/baserow.git
+$ git clone --branch develop https://gitlab.com/baserow/baserow.git
 # Our supplied ./dev.sh script wraps docker-compose setting the correct env vars for 
 # you to get hot code reloading working well.
 $ ./dev.sh 
@@ -69,7 +69,7 @@ Baserow's code to your computer.
 
 ```
 $ cd ~/baserow
-$ git clone --branch master https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/baserow/baserow.git
 Cloning into 'baserow'...
 ...
 $ cd baserow

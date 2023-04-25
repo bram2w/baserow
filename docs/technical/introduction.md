@@ -128,7 +128,7 @@ are accepted.
   enable connecting to the SMTP server via TLS.
 * `EMAIL_SMPT_USE_TLS` (default ``): `EMAIL_SMTP_USE_TLS` from above was initially
   wrongly spelled as `EMAIL_SMPT_USE_TLS`. This issue has since been addressed in 
-  [#247](https://gitlab.com/bramw/baserow/-/merge_requests/247). However, 
+  [#247](https://gitlab.com/baserow/baserow/-/merge_requests/247). However, 
   `EMAIL_SMPT_USE_TLS` is still supported for those who might still be using it in
   their environment. It's highly recommended you use the correct var name if working
   with the latest version as this support might be removed in the future.

@@ -2,7 +2,7 @@
 
 > Any questions, problems or suggestions with this guide? Ask a question in our
 > [community](https://community.baserow.io/) or contribute the change yourself at
-> https://gitlab.com/bramw/baserow/-/tree/develop/docs .
+> https://gitlab.com/baserow/baserow/-/tree/develop/docs .
 
 Cloudron is a complete solution for running apps on your server and keeping them
 up-to-date and secure. If you don't have Cloudron installed on a server you can follow
@@ -39,7 +39,7 @@ your machine. This contains the Cloudron manifest file that you need when instal
 app.
 
 ```
-$ git clone --branch master https://gitlab.com/bramw/baserow.git
+$ git clone --branch master https://gitlab.com/baserow/baserow.git
 $ cd baserow/deploy/cloudron
 ```
 
@@ -71,7 +71,7 @@ First you need to figure out what your app id is. You can do so by executing the
 copy of the Baserow repository then run the following command to get one:
 
 ```
-git clone --branch master https://gitlab.com/bramw/baserow.git
+git clone --branch master https://gitlab.com/baserow/baserow.git
 cd baserow/deploy/cloudron
 ```
 
@@ -94,5 +94,5 @@ cloudron update --app {YOUR_APP_ID} --image baserow/cloudron:1.16.0
 
 > Note that you must replace the image with the most recent image of Baserow. The
 > latest version can be found here:
-> [https://gitlab.com/bramw/baserow/container_registry/1692077](https://gitlab.com/bramw/baserow/container_registry/1692077)
+> [https://gitlab.com/baserow/baserow/container_registry/1692077](https://gitlab.com/baserow/baserow/container_registry/1692077)
 
