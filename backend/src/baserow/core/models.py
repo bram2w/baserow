@@ -129,6 +129,12 @@ class UserProfile(models.Model):
         help_text="True if the user is pending deletion. "
         "An automatic task will delete the user after a grace delay.",
     )
+    concurrency_limit = models.SmallIntegerField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text="An optional per user concurrency limit.",
+    )
 
 
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):

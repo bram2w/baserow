@@ -105,10 +105,15 @@ class ConcurrentUserRequestsThrottle(
         return None
 
     def allow_request(self, request, view):
-        if self.num_requests <= 0:
+        profile = getattr(request.user, "profile", None)
+        if profile is not None and profile.concurrency_limit:
+            limit = profile.concurrency_limit
+        else:
+            limit = self.num_requests
+        if limit <= 0:
             self._log(
                 request,
-                "ALLOWING: throttling disabled as 'BASEROW_MAX_CONCURRENT_USER_REQUESTS' <= 0",
+                "ALLOWING: throttling disabled as configured rate <= 0",
             )
             return True
 
@@ -116,7 +121,6 @@ class ConcurrentUserRequestsThrottle(
             return True
 
         self.key = key
-        limit = self.num_requests
         self.timestamp = timestamp = self.timer()
         request_id = str(uuid4())
 

@@ -2,6 +2,7 @@ import time
 from unittest.mock import patch
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings
 
 import pytest
@@ -484,7 +485,9 @@ def test_concurrent_user_requests_throttle_non_staff_authenticated_users(data_fi
 )
 @patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
 @pytest.mark.django_db
-def test_concurrent_user_requests_does_not_throttle_staff_users(data_fixture):
+def test_concurrent_user_requests_does_not_throttle_staff_users(
+    mock_init_redis_cli, data_fixture
+):
     user = data_fixture.create_user(is_staff=True)
     ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
     ConcurrentUserRequestsThrottle.rate = 1
@@ -532,3 +535,75 @@ def test_throttle_set_baserow_concurrency_throttle_request_id_and_middleware_can
     assert mock_on_request_processed.call_count == 1
     request = mock_on_request_processed.call_args[0][0]
     assert getattr(request, BASEROW_CONCURRENCY_THROTTLE_REQUEST_ID, None) is not None
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
+@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@pytest.mark.django_db
+def test_can_set_per_user_profile_custom_limt(mock_init_redis_cli, data_fixture):
+    user = data_fixture.create_user(concurrency_limit=-1)
+    assert user.profile.concurrency_limit == -1
+    ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
+    ConcurrentUserRequestsThrottle.rate = 1
+
+    with freeze_time("2023-03-30 00:00:00"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:01"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:02"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
+@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@pytest.mark.django_db
+def test_can_set_throttle_per_user_profile_custom_limit(
+    mock_init_redis_cli, data_fixture
+):
+    user = data_fixture.create_user(concurrency_limit=1)
+    ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
+    ConcurrentUserRequestsThrottle.rate = 20
+
+    with freeze_time("2023-03-30 00:00:00"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:01"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert not throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:02"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert not throttle.allow_request(create_dummy_request(user), None)
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
+@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@pytest.mark.django_db
+def test_anon_user_works(mock_init_redis_cli, data_fixture):
+    user = AnonymousUser()
+    ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
+    ConcurrentUserRequestsThrottle.rate = 20
+
+    with freeze_time("2023-03-30 00:00:00"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:01"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
+
+    with freeze_time("2023-03-30 00:00:02"):
+        throttle = ConcurrentUserRequestsThrottle()
+        assert throttle.allow_request(create_dummy_request(user), None)
