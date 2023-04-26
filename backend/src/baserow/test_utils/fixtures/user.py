@@ -42,6 +42,7 @@ class UserFixtures:
 
         profile_data["language"] = kwargs.pop("language", "en")
         profile_data["to_be_deleted"] = kwargs.pop("to_be_deleted", False)
+        profile_data["concurrency_limit"] = kwargs.pop("concurrency_limit", None)
 
         user = User(**kwargs)
         user.set_password(kwargs["password"])

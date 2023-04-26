@@ -3,9 +3,11 @@ from rest_framework import HTTP_HEADER_ENCODING
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.exceptions import AuthenticationFailed
 
+from baserow.api.sessions import set_user_remote_addr_ip_from_request
 from baserow.contrib.database.tokens.exceptions import TokenDoesNotExist
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.telemetry.utils import setup_user_in_baggage_and_spans
 
 
 class TokenAuthentication(BaseAuthentication):
@@ -57,6 +59,9 @@ class TokenAuthentication(BaseAuthentication):
 
         token = handler.update_token_usage(token)
         request.user_token = token
+        set_user_remote_addr_ip_from_request(token.user, request)
+        setup_user_in_baggage_and_spans(token.user, request)
+
         return token.user, token
 
 
