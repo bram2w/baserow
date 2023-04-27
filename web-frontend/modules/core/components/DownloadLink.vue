@@ -54,7 +54,12 @@ export default {
       this.loading = true
       // We are using fetch here to avoid extra header
       // as we need to add them to CORS later
-      const response = await fetch(this.url)
+      const response = await fetch(this.url, {
+        // Needed to prevent chrome not sending the Origin header in the actual GET
+        // request. Without this header S3 will not respond with will not respond with
+        // the correct CORS headers
+        cache: 'no-store',
+      })
       const blob = await response.blob()
       const data = window.URL.createObjectURL(blob)
 
