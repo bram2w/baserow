@@ -1,9 +1,13 @@
 from django.urls import re_path
 
 from baserow.contrib.builder.api.domains.views import (
+    AsyncPublishDomainView,
     DomainsView,
     DomainView,
     OrderDomainsView,
+    PublicBuilderByDomainNameView,
+    PublicBuilderByIdView,
+    PublicElementsView,
 )
 
 app_name = "baserow.contrib.builder.api.domains"
@@ -19,4 +23,24 @@ urlpatterns_with_builder_id = [
 
 urlpatterns_without_builder_id = [
     re_path(r"(?P<domain_id>[0-9]+)/$", DomainView.as_view(), name="item"),
+    re_path(
+        r"(?P<domain_id>[0-9]+)/publish/async/$",
+        AsyncPublishDomainView.as_view(),
+        name="publish",
+    ),
+    re_path(
+        r"published/by_name/(?P<domain_name>[^/]+)/$",
+        PublicBuilderByDomainNameView.as_view(),
+        name="get_builder_by_domain_name",
+    ),
+    re_path(
+        r"published/by_id/(?P<builder_id>[0-9]+)/$",
+        PublicBuilderByIdView.as_view(),
+        name="get_builder_by_id",
+    ),
+    re_path(
+        r"published/page/(?P<page_id>[0-9]+)/$",
+        PublicElementsView.as_view(),
+        name="list_elements",
+    ),
 ]

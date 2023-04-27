@@ -10,17 +10,33 @@ export default {
   initialize(el, value) {
     el.updatePositionEvent = () => {
       const rect = el.getBoundingClientRect()
+      const position = el.getAttribute('tooltip-position') || 'bottom'
+
+      if (position === 'top') {
+        const rectTooltip = el.tooltipElement.getBoundingClientRect()
+        el.tooltipElement.style.top = rect.top - 2 - rectTooltip.height + 'px'
+      } else {
+        el.tooltipElement.style.top = rect.bottom + 4 + 'px'
+      }
+
       const width = rect.right - rect.left
-      el.tooltipElement.style.top = rect.bottom + 4 + 'px'
       el.tooltipElement.style.left = rect.left + width / 2 + 'px'
     }
     el.tooltipMouseEnterEvent = () => {
+      const position = el.getAttribute('tooltip-position') || 'bottom'
+
       if (el.tooltipElement) {
         this.terminate(el)
       }
 
       el.tooltipElement = document.createElement('div')
-      el.tooltipElement.className = 'tooltip tooltip--body tooltip--center'
+
+      const classes = ['tooltip', 'tooltip--body', 'tooltip--center']
+      if (position === 'top') {
+        classes.push('tooltip--top')
+      }
+
+      el.tooltipElement.className = classes.join(' ')
       document.body.insertBefore(el.tooltipElement, document.body.firstChild)
 
       el.tooltipContentElement = document.createElement('div')

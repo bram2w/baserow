@@ -5,12 +5,14 @@
       :device-type-selected="deviceTypeSelected"
       @selected="actionSetDeviceTypeSelected"
     />
+    <PageActions :builder="builder" :page="page" />
   </header>
 </template>
 
 <script>
 import DeviceSelector from '@baserow/modules/builder/components/page/DeviceSelector'
 import PageHeaderMenuItems from '@baserow/modules/builder/components/page/PageHeaderMenuItems'
+import PageActions from '@baserow/modules/builder/components/page/PageActions'
 import { mapActions, mapGetters } from 'vuex'
 
 export default {
@@ -18,13 +20,14 @@ export default {
   components: {
     PageHeaderMenuItems,
     DeviceSelector,
+    PageActions,
   },
   props: {
-    page: {
+    builder: {
       type: Object,
       required: true,
     },
-    builder: {
+    page: {
       type: Object,
       required: true,
     },

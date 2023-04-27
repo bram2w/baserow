@@ -15,10 +15,13 @@
           </a>
         </div>
         <div>
-          <div class="margin-bottom-1">{{ domainType.name }}</div>
-          <div class="domain-card__last-published">
-            LAST PUBLISHED PLACEHOLDER
+          <div class="domain-card__domain-type margin-bottom-1">
+            {{ domainType.name }}
           </div>
+          <LastPublishedDomainDate
+            :domain="domain"
+            class="domain-card__last-update"
+          />
         </div>
       </div>
     </template>
@@ -32,9 +35,11 @@
 
 <script>
 import DnsStatus from '@baserow/modules/builder/components/domain/DnsStatus'
+import LastPublishedDomainDate from '@baserow/modules/builder/components/domain/LastPublishedDomainDate'
+
 export default {
   name: 'DomainCard',
-  components: { DnsStatus },
+  components: { DnsStatus, LastPublishedDomainDate },
   props: {
     domain: {
       type: Object,

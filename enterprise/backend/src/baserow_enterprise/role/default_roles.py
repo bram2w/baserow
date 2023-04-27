@@ -6,7 +6,9 @@ from baserow_premium.row_comments.operations import (
 from baserow.contrib.builder.domains.operations import (
     CreateDomainOperationType,
     DeleteDomainOperationType,
+    PublishDomainOperationType,
     ReadDomainOperationType,
+    RestoreDomainOperationType,
     UpdateDomainOperationType,
 )
 from baserow.contrib.builder.elements.operations import (
@@ -294,6 +296,7 @@ BUILDER_OPS = EDITOR_OPS + [
     DeleteDomainOperationType,
     ReadDomainOperationType,
     UpdateDomainOperationType,
+    PublishDomainOperationType,
 ]
 ADMIN_OPS = BUILDER_OPS + [
     UpdateWorkspaceOperationType,
@@ -325,6 +328,7 @@ ADMIN_OPS = BUILDER_OPS + [
     RestoreApplicationSnapshotOperationType,
     ListSnapshotsApplicationOperationType,
     DeleteApplicationSnapshotOperationType,
+    RestoreDomainOperationType,
 ]
 
 default_roles = {

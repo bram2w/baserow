@@ -23,7 +23,12 @@ from baserow.contrib.builder.operations import (
     OrderDomainsBuilderOperationType,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.utils import extract_allowed
+from baserow.core.jobs.handler import JobHandler
+from baserow.core.operations import ReadApplicationOperationType
+from baserow.core.utils import Progress, extract_allowed
+
+from .job_types import PublishDomainJobType
+from .operations import PublishDomainOperationType
 
 
 class DomainService:
@@ -81,18 +86,39 @@ class DomainService:
             context=builder,
         )
 
-        base_queryset = (
-            base_queryset if base_queryset is not None else Domain.objects.all()
-        )
-        base_queryset = CoreHandler().filter_queryset(
+        queryset = base_queryset if base_queryset is not None else Domain.objects.all()
+        queryset = CoreHandler().filter_queryset(
             user,
             ListDomainsBuilderOperationType.type,
-            queryset=base_queryset,
+            queryset=queryset,
             workspace=builder.workspace,
             context=builder,
         )
 
-        return DomainHandler().get_domains(builder, base_queryset)
+        return DomainHandler().get_domains(builder, queryset)
+
+    def get_public_builder_by_domain_name(self, user: AbstractUser, domain_name: str):
+        """
+        Returns the published builder related to the given domain name if the user has
+        the permission to access it.
+
+        :param user: The user doing the operation.
+        :param domain_name: The builder the user wants the builder for.
+        :return: the builder instance.
+        """
+
+        builder = self.handler.get_public_builder_by_domain_name(domain_name)
+
+        application = builder.application_ptr
+
+        CoreHandler().check_permissions(
+            user,
+            ReadApplicationOperationType.type,
+            workspace=application.workspace,
+            context=application,
+        )
+
+        return builder
 
     def create_domain(
         self, user: AbstractUser, builder: Builder, domain_name: str
@@ -198,3 +224,49 @@ class DomainService:
         domains_reordered.send(self, builder=builder, order=full_order, user=user)
 
         return full_order
+
+    def async_publish(self, user: AbstractUser, domain: Domain):
+        """
+        Starts an async job to publish the given builder for the given domain if the
+        user has the right permission.
+
+        :param user: The user publishing the builder.
+        :param domain: The domain the user wants to publish the builder for.
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            PublishDomainOperationType.type,
+            workspace=domain.builder.workspace,
+            context=domain,
+        )
+
+        job = JobHandler().create_and_start_job(
+            user,
+            PublishDomainJobType.type,
+            domain=domain,
+        )
+
+        return job
+
+    def publish(self, user: AbstractUser, domain: Domain, progress: Progress):
+        """
+        Publish the given builder for the given domain if the
+        user has the right permission.
+
+        :param user: The user publishing the builder.
+        :param domain: The domain the user wants to publish the builder for.
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            PublishDomainOperationType.type,
+            workspace=domain.builder.workspace,
+            context=domain,
+        )
+
+        domain = self.handler.publish(domain, progress)
+
+        domain_updated.send(self, domain=domain, user=user)
+
+        return domain

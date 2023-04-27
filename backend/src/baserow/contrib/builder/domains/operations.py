@@ -21,3 +21,11 @@ class UpdateDomainOperationType(BuilderDomainOperationType):
 
 class ReadDomainOperationType(BuilderDomainOperationType):
     type = "builder.domain.read"
+
+
+class PublishDomainOperationType(BuilderDomainOperationType):
+    type = "builder.domain.publish"
+
+
+class RestoreDomainOperationType(BuilderDomainOperationType):
+    type = "builder.domain.restore"

@@ -5,7 +5,8 @@ import pytest
 from baserow.contrib.builder.domains.exceptions import DomainNotInBuilder
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.domains.service import DomainService
-from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.exceptions import PermissionException, UserNotInWorkspace
+from baserow.core.utils import Progress
 
 
 @patch("baserow.contrib.builder.domains.service.domain_created")
@@ -171,3 +172,91 @@ def test_order_domains_domain_not_in_builder(data_fixture):
 
     with pytest.raises(DomainNotInBuilder):
         DomainService().order_domains(user, builder, [domain_two.id, domain_one.id])
+
+
+@pytest.mark.django_db
+def test_get_published_builder_by_domain_name(data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to
+    )
+
+    result = DomainService().get_public_builder_by_domain_name(
+        user, domain1.domain_name
+    )
+
+    assert builder_to == result
+
+
+@pytest.mark.django_db
+def test_get_published_builder_by_domain_name_unauthorized(
+    data_fixture, stub_check_permissions
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to
+    )
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        DomainService().get_public_builder_by_domain_name(user, domain1.domain_name)
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_async_publish_domain(mock_run_async_job, data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+
+    domain1 = data_fixture.create_builder_domain(builder=builder)
+
+    job = DomainService().async_publish(user, domain1)
+
+    mock_run_async_job.delay.assert_called_once()
+    args = mock_run_async_job.delay.call_args
+    assert args[0][0] == job.id
+
+
+@pytest.mark.django_db(transaction=True)
+def test_async_publish_domain_no_permission(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    domain1 = data_fixture.create_builder_domain()
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        DomainService().async_publish(user, domain1)
+
+
+@pytest.mark.django_db()
+@patch("baserow.contrib.builder.domains.service.domain_updated")
+def test_publish_domain(domain_updated_mock, data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+
+    domain1 = data_fixture.create_builder_domain(builder=builder)
+
+    progress = Progress(100)
+    domain = DomainService().publish(user, domain1, progress)
+
+    assert domain_updated_mock.called_with(domain=domain, user=user)
+
+
+@pytest.mark.django_db()
+def test_publish_domain_unauthorized(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+
+    domain1 = data_fixture.create_builder_domain(builder=builder)
+
+    progress = Progress(100)
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        DomainService().publish(user, domain1, progress)

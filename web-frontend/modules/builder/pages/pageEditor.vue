@@ -1,6 +1,6 @@
 <template>
   <div class="page-editor">
-    <PageHeader :page="page" :builder="builder" />
+    <PageHeader :builder="builder" :page="page" />
     <div class="layout__col-2-2 page-editor__content">
       <div :style="{ width: `calc(100% - ${panelWidth}px)` }">
         <PagePreview />

@@ -1,23 +1,23 @@
 <template>
   <ul class="header__filter">
     <li
-      v-for="(item, index) in pageHeaderItemTypes"
-      :key="item.getType()"
+      v-for="(itemType, index) in pageHeaderItemTypes"
+      :key="itemType.getType()"
       class="header__filter-item"
     >
       <a
         ref="button"
         class="header__filter-link"
-        @click="item.onClick($refs.component[index], $refs.button[index])"
+        @click="itemType.onClick($refs.component[index], $refs.button[index])"
       >
-        <i class="header__filter-icon fas" :class="`fa-${item.icon}`"></i>
-        <span class="header__filter-name">{{ item.label }}</span>
+        <i class="header__filter-icon fas" :class="`fa-${itemType.icon}`"></i>
+        <span class="header__filter-name">{{ itemType.label }}</span>
       </a>
       <component
-        :is="item.component"
+        :is="itemType.component"
         ref="component"
-        :page="page"
         :builder="builder"
+        :page="page"
       />
     </li>
   </ul>

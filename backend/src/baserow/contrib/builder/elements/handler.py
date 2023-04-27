@@ -77,6 +77,7 @@ class ElementHandler:
         """
 
         queryset = base_queryset if base_queryset is not None else Element.objects.all()
+
         queryset = queryset.filter(page=page)
 
         if specific:
@@ -105,7 +106,7 @@ class ElementHandler:
         else:
             order = Element.get_last_order(page)
 
-        shared_allowed_fields = ["type", "order"]
+        shared_allowed_fields = ["type"]
         allowed_values = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )

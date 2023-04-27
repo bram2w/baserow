@@ -7,8 +7,9 @@
   font-weight: bold;
 }
 
-.domain-card__last-published {
-  color: $color-neutral-500;
+.domain-card__domain-type,
+.domain-card__last-update {
+  text-align: right;
 }
 
 .domain-card__detail-button-link {

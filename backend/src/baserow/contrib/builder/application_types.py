@@ -39,11 +39,9 @@ class BuilderApplicationType(ApplicationType):
 
     def init_application(self, user: AbstractUser, application: Application) -> None:
         with translation.override(user.profile.language):
-            first_page_name = _("Page")
+            first_page_name = _("Homepage")
 
-        PageService().create_page(
-            user, application.specific, first_page_name, path=f"/{first_page_name}"
-        )
+        PageService().create_page(user, application.specific, first_page_name, path="/")
 
     def export_pages_serialized(
         self,

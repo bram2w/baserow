@@ -31,6 +31,25 @@
         "labelVariables": "Variables",
         "labelSettings": "Page settings"
     },
+    "pageActionTypes": {
+        "preview": "Preview",
+        "publish": "Publish"
+    },
+    "publishActionModal": {
+        "title": "Publish",
+        "description": "Take your app live by publishing to one of the domains. Note that your application can have multiple domains, each running a different version of the application.",
+        "publish": "Publish",
+        "publishSucceedTitle": "Site published",
+        "publishSucceedDescription": "The site has been successfully published.",
+        "publishFailedTitle": "Site publishing failed",
+        "publishFailedDescription": "The site publishing has failed. Please try again later.",
+        "openInNewTab": "Open in a new tab",
+        "noDomain": "You need to have at least one domain in order to publish your application."
+    },
+    "lastPublishedDomainDate": {
+        "neverPublished": "never",
+        "lastPublished": "Last published:"
+    },
     "elementsContext": {
         "searchPlaceholder": "Search elements"
     },
@@ -127,5 +146,9 @@
     "pathParamTypes": {
         "textName": "Text",
         "numericName": "Numeric"
+    },
+    "publicPage": {
+        "siteNotFound": "Site not found",
+        "pageNotFound": "Page not found"
     }
 }

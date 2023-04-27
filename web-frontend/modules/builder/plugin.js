@@ -14,6 +14,8 @@ import {
 import pageStore from '@baserow/modules/builder/store/page'
 import elementStore from '@baserow/modules/builder/store/element'
 import domainStore from '@baserow/modules/builder/store/domain'
+import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
+
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
   HeadingElementType,
@@ -46,6 +48,11 @@ import {
   NumericPathParamType,
 } from '@baserow/modules/builder/pathParamTypes'
 
+import {
+  PreviewPageActionType,
+  PublishPageActionType,
+} from '@baserow/modules/builder/pageActionTypes'
+
 export default (context) => {
   const { store, app, isDev } = context
 
@@ -66,6 +73,7 @@ export default (context) => {
   store.registerModule('page', pageStore)
   store.registerModule('element', elementStore)
   store.registerModule('domain', domainStore)
+  store.registerModule('publicBuilder', publicBuilderStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -130,4 +138,7 @@ export default (context) => {
 
   app.$registry.register('pathParamType', new TextPathParamType(context))
   app.$registry.register('pathParamType', new NumericPathParamType(context))
+
+  app.$registry.register('pageAction', new PublishPageActionType(context))
+  app.$registry.register('pageAction', new PreviewPageActionType(context))
 }
