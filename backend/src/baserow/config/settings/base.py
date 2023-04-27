@@ -774,6 +774,8 @@ if "baserow_enterprise" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("role")
 if "baserow_premium" not in INSTALLED_APPS:
     PERMISSION_MANAGERS.remove("view_ownership")
+if "builder" not in FEATURE_FLAGS:
+    PERMISSION_MANAGERS.remove("allow_public_builder")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5
