@@ -31,7 +31,8 @@
         "paste": "Paste",
         "activate": "Activate",
         "deactivate": "Deactivate",
-        "download": "Download"
+        "download": "Download",
+        "copyToClipboard": "Copy to clipboard"
     },
     "adminType": {
         "settings": "Settings"

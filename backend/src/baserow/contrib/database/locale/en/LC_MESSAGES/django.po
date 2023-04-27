@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-27 10:23+0000\n"
+"POT-Creation-Date: 2023-04-20 11:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -49,7 +49,7 @@ msgid ""
 "\"%(airtable_share_id)s\""
 msgstr ""
 
-#: src/baserow/contrib/database/application_types.py:190
+#: src/baserow/contrib/database/application_types.py:214
 msgid "Table"
 msgstr ""
 
@@ -76,29 +76,29 @@ msgstr ""
 msgid "Field \"%(field_name)s\" (%(field_id)s) updated"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:325
+#: src/baserow/contrib/database/fields/actions.py:332
 msgid "Create field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:326
+#: src/baserow/contrib/database/fields/actions.py:333
 #, python-format
 msgid "Field \"%(field_name)s\" (%(field_id)s) created"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:418
+#: src/baserow/contrib/database/fields/actions.py:425
 msgid "Delete field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:419
+#: src/baserow/contrib/database/fields/actions.py:426
 #, python-format
 msgid "Field \"%(field_name)s\" (%(field_id)s) deleted"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:486
+#: src/baserow/contrib/database/fields/actions.py:493
 msgid "Duplicate field"
 msgstr ""
 
-#: src/baserow/contrib/database/fields/actions.py:488
+#: src/baserow/contrib/database/fields/actions.py:495
 #, python-format
 msgid ""
 "Field \"%(field_name)s\" (%(field_id)s) duplicated (with_data=%(with_data)s) "
@@ -116,8 +116,8 @@ msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:72
 #: src/baserow/contrib/database/plugins.py:94
-#: src/baserow/contrib/database/table/handler.py:333
-#: src/baserow/contrib/database/table/handler.py:346
+#: src/baserow/contrib/database/table/handler.py:339
+#: src/baserow/contrib/database/table/handler.py:352
 msgid "Name"
 msgstr ""
 
@@ -126,13 +126,13 @@ msgid "Last name"
 msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:74
-#: src/baserow/contrib/database/table/handler.py:334
+#: src/baserow/contrib/database/table/handler.py:340
 msgid "Notes"
 msgstr ""
 
 #: src/baserow/contrib/database/plugins.py:75
 #: src/baserow/contrib/database/plugins.py:96
-#: src/baserow/contrib/database/table/handler.py:335
+#: src/baserow/contrib/database/table/handler.py:341
 msgid "Active"
 msgstr ""
 
@@ -258,33 +258,33 @@ msgstr ""
 msgid "Tables order changed"
 msgstr ""
 
-#: src/baserow/contrib/database/table/actions.py:214
+#: src/baserow/contrib/database/table/actions.py:213
 msgid "Update table"
 msgstr ""
 
-#: src/baserow/contrib/database/table/actions.py:216
+#: src/baserow/contrib/database/table/actions.py:215
 #, python-format
 msgid ""
 "Table (%(table_id)s) name changed from \"%(original_table_name)s\" to "
 "\"%(table_name)s\""
 msgstr ""
 
-#: src/baserow/contrib/database/table/actions.py:282
+#: src/baserow/contrib/database/table/actions.py:281
 msgid "Duplicate table"
 msgstr ""
 
-#: src/baserow/contrib/database/table/actions.py:284
+#: src/baserow/contrib/database/table/actions.py:283
 #, python-format
 msgid ""
 "Table \"%(table_name)s\" (%(table_id)s) duplicated from "
 "\"%(original_table_name)s\" (%(original_table_id)s) "
 msgstr ""
 
-#: src/baserow/contrib/database/table/handler.py:237
+#: src/baserow/contrib/database/table/handler.py:243
 msgid "Grid"
 msgstr ""
 
-#: src/baserow/contrib/database/table/handler.py:295
+#: src/baserow/contrib/database/table/handler.py:301
 #, python-format
 msgid "Field %d"
 msgstr ""
@@ -330,11 +330,11 @@ msgstr ""
 msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been rotated"
 msgstr ""
 
-#: src/baserow/contrib/database/tokens/actions.py:183
+#: src/baserow/contrib/database/tokens/actions.py:182
 msgid "Delete DB token"
 msgstr ""
 
-#: src/baserow/contrib/database/tokens/actions.py:184
+#: src/baserow/contrib/database/tokens/actions.py:183
 #, python-format
 msgid "The Database Token \"%(token_name)s\" (%(token_id)s) has been deleted"
 msgstr ""

@@ -1,14 +1,20 @@
 from typing import List
 
+from django.core.files.storage import default_storage
 from django.db.models import QuerySet
+from django.utils import timezone
 
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
 )
 from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.exceptions import BuilderDoesNotExist
 from baserow.contrib.builder.models import Builder
 from baserow.core.exceptions import IdDoesNotExist
+from baserow.core.registries import application_type_registry
+from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import Progress
 
 
 class DomainHandler:
@@ -47,6 +53,30 @@ class DomainHandler:
             base_queryset = Domain.objects
 
         return base_queryset.filter(builder=builder)
+
+    def get_public_builder_by_domain_name(self, domain_name: str) -> Builder:
+        """
+        Returns a builder given a domain name it's been published for.
+
+        :param domain_name: The domain name we want the builder for.
+        :raise BuilderDoesNotExist: When no builder is published with this domain name.
+        :return: A public builder instance.
+        """
+
+        try:
+            domain = (
+                Domain.objects.exclude(published_to=None)
+                .select_related("published_to", "builder")
+                .only("published_to", "builder")
+                .get(domain_name=domain_name)
+            )
+        except Domain.DoesNotExist:
+            raise BuilderDoesNotExist()
+
+        if TrashHandler.item_has_a_trashed_parent(domain, check_item_also=True):
+            raise BuilderDoesNotExist()
+
+        return domain.published_to
 
     def create_domain(self, builder: Builder, domain_name: str) -> Domain:
         """
@@ -112,3 +142,44 @@ class DomainHandler:
             raise DomainNotInBuilder(error.not_existing_id)
 
         return full_order
+
+    def publish(self, domain: Domain, progress: Progress):
+        """
+        Publishes a builder for the given domain object. If the builder was
+        already published, the previous version is deleted and a new one is created.
+        When a builder is published, a clone of the current version is created to avoid
+        further modifications to the original builder affect the published version.
+
+        :param domain: The object carrying the information for the publishing.
+        :param progress: A progress object to track the publishing operation progress.
+        """
+
+        builder = domain.builder
+        workspace = builder.workspace
+
+        # Delete previously existing builder publication
+        if domain.published_to:
+            domain.published_to.delete()
+
+        builder_application_type = application_type_registry.get("builder")
+
+        exported_builder = builder_application_type.export_serialized(
+            builder, None, default_storage
+        )
+
+        progress.increment(by=50)
+
+        id_mapping = {"import_workspace_id": workspace.id}
+        duplicate_builder = builder_application_type.import_serialized(
+            None,
+            exported_builder,
+            id_mapping,
+            None,
+            default_storage,
+            progress_builder=progress.create_child_builder(represents_progress=50),
+        )
+        domain.published_to = duplicate_builder
+        domain.last_published = timezone.now()
+        domain.save()
+
+        return domain

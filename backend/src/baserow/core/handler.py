@@ -351,8 +351,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).context_scope_name
         if expected_operation_context_type not in context_types:
             raise InvalidPermissionContext(
-                f"Incorrect context object matching {context_types} provided to "
-                f" check_permissions call. Was expected instead one of type "
+                f"Incorrect context object {context} matching {context_types} provided "
+                "to check_permissions call. Was expected instead one of type "
                 f"{expected_operation_context_type} based on the operation type of "
                 f"{operation_name}."
             )
@@ -450,6 +450,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             permission_manager_type = permission_manager_type_registry.get(
                 permission_manager_name
             )
+            if not permission_manager_type.actor_is_supported(actor):
+                continue
+
             queryset = permission_manager_type.filter_queryset(
                 actor, operation_name, queryset, workspace=workspace, context=context
             )

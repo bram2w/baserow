@@ -401,6 +401,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Builder pages"},
         {"name": "Builder page elements"},
         {"name": "Builder domains"},
+        {"name": "Builder public"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -763,6 +764,7 @@ PERMISSION_MANAGERS = [
     "core",
     "setting_operation",
     "staff",
+    "allow_public_builder",
     "member",
     "token",
     "role",

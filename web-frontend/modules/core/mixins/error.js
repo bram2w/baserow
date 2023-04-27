@@ -11,6 +11,11 @@ export default {
       },
     }
   },
+  computed: {
+    hasVisibleError() {
+      return this.error.visible
+    },
+  },
   methods: {
     /**
      * Can be called after catching an error. If an handler is available the error

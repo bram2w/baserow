@@ -4,6 +4,9 @@ const populateDomain = (domain) => {
   domain._ = {
     loading: false,
   }
+  if (domain.last_published) {
+    domain.last_published = new Date(domain.last_published)
+  }
   return domain
 }
 
@@ -14,6 +17,13 @@ const state = {
 const mutations = {
   SET_ITEMS(state, { domains }) {
     state.domains = domains.map(populateDomain)
+  },
+  UPDATE_ITEM(state, { domainId, values }) {
+    state.domains.forEach((domain) => {
+      if (domain.id === domainId) {
+        Object.assign(domain, values)
+      }
+    })
   },
   CLEAR_ITEMS(state) {
     state.domains = []
@@ -32,6 +42,9 @@ const mutations = {
 }
 
 const actions = {
+  forceUpdate({ commit }, { domainId, values }) {
+    commit('UPDATE_ITEM', { domainId, values })
+  },
   async fetch({ commit }, { builderId }) {
     commit('CLEAR_ITEMS')
 

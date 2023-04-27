@@ -2,8 +2,10 @@ import pytest
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
 from baserow.contrib.builder.elements.models import HeadingElement, ParagraphElement
+from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -156,3 +158,16 @@ def test_builder_application_import(data_fixture):
 
     assert element1.order == 1
     assert element1.level == 2
+
+
+@pytest.mark.django_db
+def test_delete_builder_application_with_published_builder(data_fixture):
+    builder = data_fixture.create_builder_application()
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to
+    )
+
+    TrashHandler.permanently_delete(builder)
+
+    assert Builder.objects.count() == 0

@@ -7,6 +7,12 @@
       ]
     }
   },
+  "resolve": {
+    "extensions": [".js", ".vue", ".json"],
+    "alias": {
+        "@baserow": "."
+    }
+  },
   "exclude": [
     "node_modules",
     ".nuxt"

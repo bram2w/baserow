@@ -31,6 +31,7 @@ class BuilderSerializer(ApplicationSerializer):
         """
 
         pages = instance.page_set.all()
+
         user = self.context.get("user")
         request = self.context.get("request")
 

@@ -6,6 +6,9 @@ from baserow.contrib.builder.domains.exceptions import (
 )
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.exceptions import BuilderDoesNotExist
+from baserow.contrib.builder.models import Builder
+from baserow.core.utils import Progress
 
 
 @pytest.mark.django_db
@@ -111,3 +114,82 @@ def test_order_domains_domain_not_in_builder(data_fixture):
         DomainHandler().order_domains(
             builder, [domain_two.id, domain_one.id], base_qs=base_qs
         )
+
+
+@pytest.mark.django_db
+def test_get_public_builder_by_name(data_fixture):
+    builder = data_fixture.create_builder_application()
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to
+    )
+
+    result = DomainHandler().get_public_builder_by_domain_name(domain1.domain_name)
+
+    assert builder_to == result
+
+
+@pytest.mark.django_db
+def test_get_published_builder_by_missing_domain_name(data_fixture):
+    builder = data_fixture.create_builder_application()
+    domain1 = data_fixture.create_builder_domain(builder=builder)
+
+    with pytest.raises(BuilderDoesNotExist):
+        DomainHandler().get_public_builder_by_domain_name(domain1.domain_name)
+
+
+@pytest.mark.django_db
+def test_get_published_builder_for_trashed_builder(data_fixture):
+    builder = data_fixture.create_builder_application(trashed=True)
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to
+    )
+
+    with pytest.raises(BuilderDoesNotExist):
+        DomainHandler().get_public_builder_by_domain_name(domain1.domain_name)
+
+    builder = data_fixture.create_builder_application()
+    builder_to = data_fixture.create_builder_application(workspace=None)
+    domain1 = data_fixture.create_builder_domain(
+        builder=builder, published_to=builder_to, trashed=True
+    )
+
+    with pytest.raises(BuilderDoesNotExist):
+        DomainHandler().get_public_builder_by_domain_name(domain1.domain_name)
+
+
+@pytest.mark.django_db
+def test_domain_publishing(data_fixture):
+    builder = data_fixture.create_builder_application()
+
+    domain1 = data_fixture.create_builder_domain(builder=builder)
+
+    page1 = data_fixture.create_builder_page(builder=builder)
+    page2 = data_fixture.create_builder_page(builder=builder)
+
+    element1 = data_fixture.create_builder_heading_element(
+        page=page1, level=2, value="foo"
+    )
+    element2 = data_fixture.create_builder_paragraph_element(page=page1)
+    element3 = data_fixture.create_builder_heading_element(page=page2)
+
+    progress = Progress(100)
+
+    DomainHandler().publish(domain1, progress)
+
+    domain1.refresh_from_db()
+
+    assert domain1.published_to is not None
+    assert domain1.published_to.workspace is None
+    assert domain1.published_to.page_set.count() == 2
+    assert domain1.published_to.page_set.first().element_set.count() == 2
+
+    assert Builder.objects.count() == 2
+
+    assert progress.progress == progress.total
+
+    # Lets publish it a second time.
+    DomainHandler().publish(domain1, progress)
+
+    assert Builder.objects.count() == 2
