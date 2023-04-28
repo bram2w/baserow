@@ -1,4 +1,3 @@
-// Please keep in sync with the premium/enterprise eslintrc.js
 module.exports = {
   root: true,
   env: {
@@ -10,7 +9,7 @@ module.exports = {
     jasmine: true,
   },
   parserOptions: {
-    parser: 'babel-eslint',
+    parser: '@babel/eslint-parser',
   },
   extends: [
     '@nuxtjs',
