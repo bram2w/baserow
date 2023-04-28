@@ -66,9 +66,7 @@
           @click="$emit('add-row')"
         >
           <a
-            class="
-              simple-grid__cell simple-grid__cell--single simple-grid__add-row
-            "
+            class="simple-grid__cell simple-grid__cell--single simple-grid__add-row"
           >
             <i class="fas fa-plus" />
           </a>

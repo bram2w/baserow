@@ -42,10 +42,7 @@
       </button>
       <button
         v-else
-        class="
-          button button--large button--success
-          modal-progress__export-button
-        "
+        class="button button--large button--success modal-progress__export-button"
         @click="openDatabase"
       >
         {{ $t('importFromAirtable.openButtonLabel') }}

@@ -50,7 +50,6 @@ export default {
       // ClipboardItem type to save async data to the clipboard.
       if (typeof ClipboardItem !== 'undefined') {
         navigator.clipboard.write([
-          // eslint-disable-next-line no-undef
           new ClipboardItem({
             'text/plain': selectionPromise.then(
               ([fields, rows]) =>

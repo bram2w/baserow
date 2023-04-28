@@ -174,6 +174,7 @@ export default {
     rowIdentifierType: {
       type: String,
       required: true,
+      default: 'count',
     },
     count: {
       type: Number,

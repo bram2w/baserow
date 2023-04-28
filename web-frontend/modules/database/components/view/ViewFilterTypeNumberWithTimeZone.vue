@@ -4,12 +4,7 @@
       ref="input"
       v-model="xAgo"
       type="text"
-      class="
-        input
-        filters__combined_value-input
-        filters__value-input
-        filters__value-input--small
-      "
+      class="input filters__combined_value-input filters__value-input filters__value-input--small"
       :class="{ 'input--error': $v.xAgo.$error }"
       :disabled="disabled"
       @input="

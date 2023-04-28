@@ -15,7 +15,9 @@ describe('Password Input Tests', () => {
 
   function mountPasswordInputWithParentState() {
     const parent = {
-      data: { password: '' },
+      data() {
+        return { password: '' }
+      },
       template:
         '<div> <password-input v-model="password" :validation-state="$v.password"></password-input> </div>',
       components: { 'password-input': PasswordInput },

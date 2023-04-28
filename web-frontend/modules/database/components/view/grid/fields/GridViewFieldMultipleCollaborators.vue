@@ -8,10 +8,7 @@
       >
         <template v-if="item.id && item.name">
           <div
-            class="
-              field-multiple-collaborators__name
-              background-color--light-gray
-            "
+            class="field-multiple-collaborators__name background-color--light-gray"
           >
             {{ getCollaboratorName(item) }}
             <a
@@ -29,9 +26,7 @@
       </div>
       <a
         v-if="!readOnly"
-        class="
-          grid-field-many-to-many__item grid-field-many-to-many__item--link
-        "
+        class="grid-field-many-to-many__item grid-field-many-to-many__item--link"
         @click.prevent="toggleDropdown()"
       >
         <i class="fas fa-plus"></i>

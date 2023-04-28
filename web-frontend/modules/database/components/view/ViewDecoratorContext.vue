@@ -29,9 +29,7 @@
               >
                 <template #default="{ hidePicker }">
                   <div
-                    class="
-                      decorator-context__decorator-value-provider-select-list
-                    "
+                    class="decorator-context__decorator-value-provider-select-list"
                   >
                     <DecoratorValueProviderList
                       :decoration="dec.decoration"

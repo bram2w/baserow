@@ -8,10 +8,7 @@
       >
         <template v-if="item.id && item.name">
           <span
-            class="
-              field-multiple-collaborators__name
-              background-color--light-gray
-            "
+            class="field-multiple-collaborators__name background-color--light-gray"
             >{{
               $options.methods.getCollaboratorName(item, parent.$store)
             }}</span
