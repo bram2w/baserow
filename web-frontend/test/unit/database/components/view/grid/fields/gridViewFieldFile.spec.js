@@ -48,6 +48,7 @@ describe('GridViewFieldFile component', () => {
       selected: true,
       storePrefix: 'page/',
       value: [],
+      workspaceId: 10,
     })
 
     await wrapper.find('.grid-field-file__item-add').trigger('click')

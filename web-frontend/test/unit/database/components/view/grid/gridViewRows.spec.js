@@ -74,11 +74,11 @@ describe('GridViewRows component', () => {
       primary,
     })
     await store.dispatch('view/fetchAll', { id: 1 })
-    return { table, fields, view }
+    return { table, fields, view, application }
   }
 
   test('Default component', async () => {
-    const { fields, view } = await populateStore()
+    const { fields, view, application } = await populateStore()
 
     const wrapper1 = await mountComponent({
       view,
@@ -88,13 +88,15 @@ describe('GridViewRows component', () => {
       readOnly: false,
       includeRowDetails: false,
       storePrefix: 'page/',
+      decorationsByPlace: {},
+      workspaceId: application.workspace.id,
     })
 
     expect(wrapper1.element).toMatchSnapshot()
   })
 
   test('With row details', async () => {
-    const { fields, view } = await populateStore()
+    const { fields, view, application } = await populateStore()
 
     const wrapper1 = await mountComponent({
       view,
@@ -104,6 +106,8 @@ describe('GridViewRows component', () => {
       readOnly: false,
       includeRowDetails: true,
       storePrefix: 'page/',
+      decorationsByPlace: {},
+      workspaceId: application.workspace.id,
     })
 
     expect(wrapper1.element).toMatchSnapshot()

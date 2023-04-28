@@ -1,5 +1,5 @@
 <template>
-  <!-- eslint-disable-next-line vue/no-v-html -->
+  <!-- eslint-disable-next-line vue/no-v-html vue/no-v-text-v-html-on-component -->
   <component :is="tag" class="markdown" v-html="htmlContent" />
 </template>
 
