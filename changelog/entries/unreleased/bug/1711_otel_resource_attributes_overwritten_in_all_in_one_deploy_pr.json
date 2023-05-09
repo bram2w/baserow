@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "otel_resource_attributes overwritten in all in one deploy preventing custom set attributes",
+    "issue_number": 1711,
+    "bullet_points": [],
+    "created_at": "2023-05-02"
+}
