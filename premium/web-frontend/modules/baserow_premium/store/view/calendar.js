@@ -13,6 +13,7 @@ import {
   getMonthlyTimestamps,
   getUserTimeZone,
 } from '@baserow/modules/core/utils/date'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 export function populateRow(row) {
   row._ = {}
@@ -429,6 +430,25 @@ export const actions = {
     }
   },
   /**
+   * Creates a new row and adds it to the state if needed.
+   */
+  async createNewRow(
+    { dispatch, commit, getters },
+    { view, table, fields, values }
+  ) {
+    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
+
+    const { data } = await RowService(this.$client).create(
+      table.id,
+      preparedRow
+    )
+    return await dispatch('createdNewRow', {
+      view,
+      values: data,
+      fields,
+    })
+  },
+  /**
    * Can be called when a new row has been created. This action will make sure that
    * the state is updated accordingly. If the newly created position is within the
    * current buffer (`dateStack.results`), then it will be added there, otherwise, just
@@ -697,6 +717,28 @@ export const actions = {
   selectDateAndStartLoading({ commit }, { selectedDate }) {
     commit('SET_LOADING_ROWS', true)
     commit('SET_SELECTED_DATE', selectedDate)
+  },
+  async selectRow({ commit, getters, dispatch }, { row, fields }) {
+    const dateFieldId = getters.getDateFieldIdIfNotTrashed(fields)
+    if (dateFieldId) {
+      const value = row[`field_${dateFieldId}`]
+      const dateTime = moment.tz(value, getters.getTimeZone(fields))
+      const currentDate = getters.getSelectedDate(fields)
+      // Selecting a new row might be triggered by a navigation to a
+      // `calendar/ABC/row/XYZ` URL or by the user clicking on a row they can see
+      // in the calendar view. When triggered by a navigation we almost certainly don't
+      // right month loaded into the store and so if we don't we fetch all the other
+      // rows for that month.
+      if (
+        dateTime.month() !== currentDate.month() ||
+        dateTime.year() !== currentDate.year()
+      ) {
+        await dispatch('fetchMonthly', {
+          dateTime,
+          fields,
+        })
+      }
+    }
   },
 }
 

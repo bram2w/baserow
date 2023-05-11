@@ -8,6 +8,19 @@
       'calendar-month-day--weekend': day.isWeekend,
     }"
   >
+    <a
+      v-if="
+        !readOnly &&
+        $hasPermission(
+          'database.table.create_row',
+          table,
+          database.workspace.id
+        )
+      "
+      class="calendar-month-day__create-row-btn"
+      @click="!readOnly && $emit('create-row', { day })"
+      ><i class="fas fa-plus"></i>
+    </a>
     <span ref="dateLabel" class="calendar-month-day__date-label">{{
       label
     }}</span>
@@ -18,6 +31,7 @@
         :row="row"
         :fields="fields"
         :store-prefix="storePrefix"
+        @edit-row="$emit('edit-row', $event)"
       >
       </CalendarCard>
     </div>
@@ -39,6 +53,7 @@
       :store-prefix="storePrefix"
       :parent-width="width"
       :parent-height="height"
+      @edit-row="$emit('edit-row', $event)"
     >
     </CalendarMonthDayExpanded>
   </li>
@@ -66,6 +81,18 @@ export default {
     },
     fields: {
       type: Array,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    table: {
+      type: Object,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
   },

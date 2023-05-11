@@ -13,4 +13,13 @@
   height: 26px;
   line-height: 24px;
   margin-bottom: 2px;
+
+  &:hover {
+    cursor: pointer;
+  }
+
+  &:not(.calendar-card--disabled):not(.calendar-card--dragging):hover {
+    cursor: pointer;
+    background-color: $color-neutral-100;
+  }
 }
