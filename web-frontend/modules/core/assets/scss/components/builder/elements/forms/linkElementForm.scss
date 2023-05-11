@@ -1,0 +1,12 @@
+.link-element-form__params {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-gap: 10px;
+  align-items: center;
+}
+
+.link-element-form__navigate-option-page-path {
+  font-size: 12px;
+  color: $color-neutral-500;
+  margin-left: 5px;
+}

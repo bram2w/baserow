@@ -23,11 +23,7 @@
       </ul>
     </template>
     <template v-if="settingSelected" #content>
-      <component
-        :is="settingSelected.component"
-        :builder="builder"
-        :page="page"
-      ></component>
+      <component :is="settingSelected.component" :page="page"></component>
     </template>
   </Modal>
 </template>
@@ -39,10 +35,6 @@ export default {
   name: 'PageSettingsModal',
   mixins: [modal],
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
     page: {
       type: Object,
       required: true,

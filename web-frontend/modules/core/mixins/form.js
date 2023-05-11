@@ -45,7 +45,7 @@ export default {
      */
     getDefaultValues() {
       if (this.allowedValues === null) {
-        return this.defaultValues
+        return clone(this.defaultValues)
       }
       return Object.keys(this.defaultValues).reduce((result, key) => {
         if (this.allowedValues.includes(key)) {

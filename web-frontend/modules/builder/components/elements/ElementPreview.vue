@@ -1,7 +1,7 @@
 <template>
   <div
     class="element"
-    :class="{ 'element--active': active }"
+    :class="{ 'element--active': active, 'element--in-error': inError }"
     @click="$emit('selected')"
   >
     <InsertElementButton
@@ -19,10 +19,11 @@
       @duplicate="$emit('duplicate')"
     />
     <component
-      :is="elementType.component"
-      v-bind="elementType.getComponentProps(element)"
+      :is="elementType.editComponent"
       class="element__component"
-    ></component>
+      :element="element"
+      :builder="builder"
+    />
     <InsertElementButton
       v-if="active"
       class="element__insert--bottom"
@@ -38,6 +39,7 @@ import { PLACEMENTS } from '@baserow/modules/builder/enums'
 export default {
   name: 'ElementPreview',
   components: { ElementMenu, InsertElementButton },
+  inject: ['builder'],
   props: {
     element: {
       type: Object,
@@ -68,6 +70,12 @@ export default {
     PLACEMENTS: () => PLACEMENTS,
     elementType() {
       return this.$registry.get('element', this.element.type)
+    },
+    inError() {
+      return this.elementType.isInError({
+        element: this.element,
+        builder: this.builder,
+      })
     },
   },
 }

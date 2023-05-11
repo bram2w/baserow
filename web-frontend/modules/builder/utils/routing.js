@@ -1,4 +1,4 @@
-import { pathToRegexp } from 'path-to-regexp'
+import pathToRegexp from 'path-to-regexp'
 
 export const resolveApplicationRoute = (pages, fullPath) => {
   let found

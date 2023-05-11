@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent="submit">
+  <form @submit.prevent>
     <FormElement class="control">
       <label class="control__label">
         {{ $t('paragraphElementForm.textTitle') }}

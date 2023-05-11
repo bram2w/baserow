@@ -20,9 +20,15 @@ import { generateHash } from '@baserow/modules/core/utils/hashing'
 export default {
   name: 'ParagraphElement',
   mixins: [textElement],
+  props: {
+    element: {
+      type: Object,
+      required: true,
+    },
+  },
   computed: {
     paragraphs() {
-      return this.value
+      return this.element.value
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line)

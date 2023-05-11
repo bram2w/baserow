@@ -10,15 +10,11 @@
 
 <script>
 import PageContent from '@baserow/modules/builder/components/page/PageContent'
-import PublicBuilderService from '@baserow/modules/builder/services/publicBuilder.js'
+import PublicBuilderService from '@baserow/modules/builder/services/publishedDomain.js'
 
 export default {
   components: { PageContent },
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
     page: {
       type: Object,
       required: true,

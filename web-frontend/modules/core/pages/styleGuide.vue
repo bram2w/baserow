@@ -145,6 +145,77 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Radio buttons</label>
+            <div
+              class="control__elements"
+              :style="{ backgroundColor: 'white', padding: '5px' }"
+            >
+              value: {{ radioButton }}
+              <br />
+              <br />
+              <RadioButton v-model="radioButton" value="">None</RadioButton>
+              <RadioButton v-model="radioButton" value="a"
+                >Option A</RadioButton
+              >
+              <RadioButton v-model="radioButton" value="b"
+                >Option B</RadioButton
+              >
+              <RadioButton v-model="radioButton" value="c"
+                >Option C</RadioButton
+              >
+
+              <RadioButton v-model="radioButton" value="g" :disabled="true">
+                Option D
+              </RadioButton>
+              <RadioButton v-model="radioButton" value="h" :loading="true">
+                Option E
+              </RadioButton>
+            </div>
+            <div
+              class="control__elements"
+              :style="{ backgroundColor: 'white', padding: '5px' }"
+            >
+              <RadioButton
+                v-model="radioButton"
+                value="d"
+                icon="align-left"
+              ></RadioButton>
+              <RadioButton
+                v-model="radioButton"
+                value="e"
+                icon="align-center"
+              ></RadioButton>
+              <RadioButton
+                v-model="radioButton"
+                value="f"
+                icon="align-right"
+              ></RadioButton>
+            </div>
+            <div
+              class="control__elements"
+              :style="{ backgroundColor: 'white', padding: '5px' }"
+            >
+              <RadioButton
+                v-model="radioButton"
+                value="d"
+                icon="align-left"
+                size="large"
+              ></RadioButton>
+              <RadioButton
+                v-model="radioButton"
+                value="e"
+                icon="align-center"
+                size="large"
+              ></RadioButton>
+              <RadioButton
+                v-model="radioButton"
+                value="f"
+                icon="align-right"
+                size="large"
+              ></RadioButton>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Switch field</label>
             <div class="control__elements">
               value: {{ switchValue }}
@@ -408,101 +479,122 @@
             urna. Praesent.
           </Alert>
         </div>
-
         <div class="margin-bottom-3 style-guide__buttons">
-          <a class="button">a.button</a>
-          <a class="button disabled">a.button[disabled]</a>
-          <a class="button button--success">a.button.button-success</a>
-          <a class="button button--warning">a.button.button-warning</a>
-          <a class="button button--error">a.button.button-error</a>
-          <a class="button">
-            a.button
-            <i class="button__icon fas fa-lock-open"></i>
-          </a>
-          <a class="button">
-            <i class="button__icon fas fa-arrow-left"></i>
-            a.button
-          </a>
-          <a class="button button--ghost">a.button.button-ghosts</a>
-          <a class="button">
-            <i class="fas fa-user-check"></i>
-          </a>
-          <a class="button button--ghost">
-            <i class="fas fa-user-check"></i>
-          </a>
+          <h3>Tiny size</h3>
+          <Button size="tiny">button</Button>
+          <Button size="tiny" disabled>button[disabled]</Button>
+          <Button size="tiny" color="primary">button.button-success</Button>
+          <Button size="tiny" color="success">button.button-success</Button>
+          <Button size="tiny" color="warning">button.button-warning</Button>
+          <Button size="tiny" color="error">button.button-error</Button>
+          <Button size="tiny" append-icon="lock-open">button</Button>
+          <Button size="tiny" prepend-icon="arrow-left">button</Button>
+          <Button size="tiny" color="ghost">button.button-ghost</Button>
+          <Button size="tiny" icon="user-check"></Button>
+          <Button size="tiny" icon="user-check" color="ghost"></Button>
         </div>
         <div class="margin-bottom-3 style-guide__buttons">
-          <button class="button">button.button</button>
-          <button class="button" disabled>button.button[disabled]</button>
-          <button class="button button--success">
-            button.button.button-success
-          </button>
-          <button class="button button--warning">
-            button.button.button-warning
-          </button>
-          <button class="button button--error">
-            button.button.button-error
-          </button>
-          <button class="button">
-            button.button
-            <i class="button__icon fas fa-lock-open"></i>
-          </button>
-          <button class="button">
-            <i class="button__icon fas fa-arrow-left"></i>
-            button.button
-          </button>
-          <button class="button button--ghost">
-            button.button.ghost-button
-          </button>
-          <button class="button">
-            <i class="fas fa-user-check"></i>
-          </button>
-          <button class="button button--ghost">
-            <i class="fas fa-user-check"></i>
-          </button>
+          <h3>Normal link</h3>
+          <Button type="link" href="#">a.button</Button>
+          <Button type="link" disabled href="#">a.button[disabled]</Button>
+          <Button type="link" color="success" href="#">
+            a.button.button-success
+          </Button>
+          <Button type="link" color="warning">a.button.button-warning</Button>
+          <Button type="link" color="error">a.button.button-error</Button>
+          <Button type="link" append-icon="lock-open">a.button</Button>
+          <Button type="link" prepend-icon="arrow-left">a.button</Button>
+          <Button type="link" color="ghost">a.button.button-ghost</Button>
+          <Button type="link" icon="user-check"></Button>
+          <Button type="link" icon="user-check" color="ghost"></Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Normal button</h3>
+          <Button>button.button</Button>
+          <Button disabled>button[disabled]</Button>
+          <Button color="success">button.button-success</Button>
+          <Button color="warning">button.button-warning</Button>
+          <Button color="error">button.button-error</Button>
+          <Button append-icon="lock-open">button</Button>
+          <Button prepend-icon="arrow-left">button</Button>
+          <Button color="ghost">button.button-ghost</Button>
+          <Button icon="user-check"></Button>
+          <Button icon="user-check" color="ghost"></Button>
+          <Button color="light">button.light</Button>
+          <Button color="light" active>button.light.active</Button>
         </div>
         <div class="margin-bottom-3 style-guide__buttons">
-          <a class="button button--large">a.button.button-large</a>
-          <a class="button button--large disabled"
-            >a.button.disabled.button-large</a
-          >
-          <a class="button button--large button--success"
-            >a.button.button-large.button-success</a
-          >
-          <a class="button button--large button--warning"
-            >a.button.button-large.button-warning</a
-          >
-          <a class="button button--large button--error"
-            >a.button.button-large.button-error</a
-          >
-          <a class="button button--large">
-            a.button.button-large
-            <i class="button__icon fas fa-lock-open"></i>
-          </a>
-          <a class="button button--large">
-            <i class="button__icon fas fa-arrow-left"></i>
-            a.button.button-large
-          </a>
-          <a class="button button--large button--ghost"
-            >a.button.button-ghosts</a
-          >
-          <a class="button button--large">
-            <i class="fas fa-user-check"></i>
-          </a>
-          <a class="button button--large button--ghost">
-            <i class="fas fa-user-check"></i>
-          </a>
+          <h3>Large size</h3>
+          <Button size="large">button</Button>
+          <Button size="large" disabled>button[disabled]</Button>
+          <Button size="large" color="success">button.button-success</Button>
+          <Button size="large" color="warning">button.button-warning</Button>
+          <Button size="large" color="error">button.button-error</Button>
+          <Button size="large" append-icon="lock-open">button</Button>
+          <Button size="large" prepend-icon="arrow-left">button</Button>
+          <Button size="large" color="ghost">button.button-ghost</Button>
+          <Button size="large" icon="user-check"></Button>
+          <Button size="large" icon="user-check" color="ghost"></Button>
         </div>
-        <div class="margin-bottom-3">
-          <a class="button button--large button--loading">Loading</a>
-          <a class="button button--loading">Loading</a>
-          <a class="button button--ghost button--loading">Loading</a>
+        <div
+          class="margin-bottom-3"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Loading</h3>
+          <Button size="tiny" loading>Loading</Button>
+          <Button loading>Loading</Button>
+          <Button size="large" loading>Loading</Button>
+          <Button size="large" color="ghost" loading>Loading</Button>
+          <Button size="large" icon="user-check" loading></Button>
+          <Button color="light" loading>button.light.loading</Button>
+          <Button color="light" active loading>
+            button.light.active.loading
+          </Button>
         </div>
         <div
           class="margin-bottom-3"
           style="background-color: #ffffff; padding: 20px"
         >
+          <h3>Classic tabs</h3>
           <Tabs>
+            <Tab :selected="true" :title="'Tab 1'">
+              <p>
+                Tab 1 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 2'">
+              <p>
+                Tab 2 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+            <Tab :title="'Tab 3'">
+              <p>
+                Tab 3 content Lorem ipsum dolor sit amet,
+                <a href="#">consectetur</a> adipiscing elit. Sed quis gravida
+                ante. Nulla nec elit dui. Nam nec dui ligula. Pellentesque
+                feugiat erat vel porttitor euismod. Duis nec viverra urna.
+                Praesent.
+              </p>
+            </Tab>
+          </Tabs>
+        </div>
+        <div
+          class="margin-bottom-3"
+          style="background-color: #ffffff; padding: 20px"
+        >
+          <h3>No separation</h3>
+          <Tabs no-separation>
             <Tab :selected="true" :title="'Tab 1'">
               <p>
                 Tab 1 content Lorem ipsum dolor sit amet,
@@ -909,10 +1001,12 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <a class="button" @click="$refs.context1.toggle($event.target)">
-            toggle context
-            <i class="fas fa-pencil"></i>
-          </a>
+          <Button
+            append-icon="pencil"
+            @click="$refs.context1.toggle($event.target)"
+          >
+            Toggle context
+          </Button>
           <Context ref="context1">
             <div class="context__menu-title">Vehicles</div>
             <ul class="context__menu">
@@ -937,13 +1031,11 @@
                     </li>
                     <Modal ref="modal1">
                       <h2 class="box__title">Modal inside a context</h2>
-                      <a
-                        class="button"
+                      <Button
+                        icon="pencil"
                         @click="$refs.context3.toggle($event.target)"
+                        >Toggle context</Button
                       >
-                        toggle context
-                        <i class="fas fa-pencil"></i>
-                      </a>
                       <Context ref="context3">
                         <div class="context__menu-title">Vehicles</div>
                         <ul class="context__menu">
@@ -985,7 +1077,7 @@
               </li>
             </ul>
           </Context>
-          <a class="button" @click="$refs.modal2.show()">show modal</a>
+          <Button @click="$refs.modal2.show()">show modal</Button>
           <Modal ref="modal2">
             <h2 class="box__title">An example modal</h2>
             <p>
@@ -1002,46 +1094,49 @@
               fringilla. Praesent ut tincidunt dui.
             </p>
           </Modal>
-          <a
-            class="button button--success"
+          <Button
+            color="success"
             @click="
               $store.dispatch('notification/success', {
                 title: 'Custom success notification',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
-            >toggle success notification</a
           >
-          <a
-            class="button button--error"
+            toggle success notification
+          </Button>
+          <Button
+            color="error"
             @click="
               $store.dispatch('notification/error', {
                 title: 'Custom error notification',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
-            >toggle error notification</a
           >
-          <a
-            class="button button--warning"
+            toggle error notification
+          </Button>
+          <Button
+            color="warning"
             @click="
               $store.dispatch('notification/warning', {
                 title: 'Custom warning notification',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
-            >toggle warning notification</a
           >
-          <a
-            class="button"
+            toggle warning notification
+          </Button>
+          <Button
             @click="
               $store.dispatch('notification/info', {
                 title: 'Custom info notification',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
-            >toggle info notification</a
           >
+            toggle info notification
+          </Button>
         </div>
         <div class="margin-bottom-3">
           <div class="modal__box">
@@ -1089,9 +1184,7 @@
               </ul>
             </div>
             <div class="actions actions--right">
-              <button class="button button--large button--overflow">
-                Validate
-              </button>
+              <Button size="large" overflow>Validate</Button>
             </div>
           </div>
           <div class="modal__box modal__box--with-sidebar">
@@ -1350,9 +1443,9 @@
                   />
                   <i class="fas fa-search"></i>
                 </div>
-                <a href="#" class="button button--large margin-left-2"
-                  >Invite member</a
-                >
+                <Button href="#" size="large" class="margin-left-2">
+                  Invite member
+                </Button>
               </div>
             </div>
             <div class="data-table__body">
@@ -1504,6 +1597,7 @@ export default {
     return {
       checkbox: false,
       radio: 'a',
+      radioButton: 'a',
       switchValue: false,
       switchUnknown: 2,
       dropdown: '',

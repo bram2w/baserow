@@ -23,7 +23,7 @@
           :href="getHref(index)"
           class="tabs__link"
           :class="{ 'tabs__link--disabled': tab.disabled }"
-          @click.prevent=""
+          @click.prevent
         >
           {{ tab.title }}
         </a>

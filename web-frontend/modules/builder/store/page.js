@@ -89,6 +89,15 @@ const actions = {
 
     commit('SET_SELECTED', { builder, page })
 
+    // Unselect previously selected element
+    dispatch(
+      'element/select',
+      {
+        element: null,
+      },
+      { root: true }
+    )
+
     return { builder, page }
   },
   unselect({ commit }) {

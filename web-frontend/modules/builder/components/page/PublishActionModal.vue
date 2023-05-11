@@ -85,7 +85,7 @@ import { mapActions, mapGetters } from 'vuex'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
-import BuilderService from '@baserow/modules/builder/services/publicBuilder.js'
+import PublishedDomainService from '@baserow/modules/builder/services/publishedDomain.js'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import LastPublishedDomainDate from '@baserow/modules/builder/components/domain/LastPublishedDomainDate'
@@ -134,7 +134,7 @@ export default {
     async publishSite() {
       this.loading = true
       this.hideError()
-      const { data: job } = await BuilderService(this.$client).publish({
+      const { data: job } = await PublishedDomainService(this.$client).publish({
         id: this.selectedDomain,
       })
 

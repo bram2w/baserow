@@ -21,6 +21,7 @@ import Tabs from '@baserow/modules/core/components/Tabs'
 import Tab from '@baserow/modules/core/components/Tab'
 import List from '@baserow/modules/core/components/List'
 import HelpIcon from '@baserow/modules/core/components/HelpIcon'
+import Button from '@baserow/modules/core/components/Button'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -37,6 +38,7 @@ import clickOutside from '@baserow/modules/core/directives/clickOutside'
 import Badge from '@baserow/modules/core/components/Badge'
 import InputWithIcon from '@baserow/modules/core/components/InputWithIcon'
 import ExpandableCard from '@baserow/modules/core/components/ExpandableCard'
+import RadioButton from '@baserow/modules/core/components/RadioButton'
 
 function setupVue(Vue) {
   Vue.component('Context', Context)
@@ -63,6 +65,8 @@ function setupVue(Vue) {
   Vue.component('Badge', Badge)
   Vue.component('InputWithIcon', InputWithIcon)
   Vue.component('ExpandableCard', ExpandableCard)
+  Vue.component('Button', Button)
+  Vue.component('RadioButton', RadioButton)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

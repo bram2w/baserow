@@ -2,3 +2,11 @@
   resize: vertical;
   color: $color-primary-900;
 }
+
+.link-element-form__params-error {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  align-items: center;
+}

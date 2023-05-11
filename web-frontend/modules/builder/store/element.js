@@ -56,7 +56,10 @@ const actions = {
   forceUpdate({ commit }, { element, values }) {
     commit('UPDATE_ITEM', { element, values })
   },
-  forceDelete({ commit }, { elementId }) {
+  forceDelete({ commit, getters }, { elementId }) {
+    if (getters.getSelected.id === elementId) {
+      commit('SELECT_ITEM', { element: null })
+    }
     commit('DELETE_ITEM', { elementId })
   },
   forceMove({ commit, getters }, { elementId, beforeElementId }) {
