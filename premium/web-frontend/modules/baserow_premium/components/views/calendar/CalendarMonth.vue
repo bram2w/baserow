@@ -27,6 +27,11 @@
           :day="day"
           :fields="fields"
           :store-prefix="storePrefix"
+          :database="database"
+          :read-only="readOnly"
+          :table="table"
+          @edit-row="$emit('edit-row', $event)"
+          @create-row="$emit('create-row', $event)"
         >
         </CalendarMonthDay>
       </ol>
@@ -67,6 +72,18 @@ export default {
     },
     loading: {
       type: Boolean,
+      required: true,
+    },
+    readOnly: {
+      type: Boolean,
+      required: true,
+    },
+    table: {
+      type: Object,
+      required: true,
+    },
+    database: {
+      type: Object,
       required: true,
     },
   },

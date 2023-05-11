@@ -6,14 +6,21 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
+  align-content: flex-start;
   padding: 8px;
+
+  &:hover a {
+    visibility: visible;
+  }
 }
 
 .calendar-month-day__cards {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin-top: 30px;
+  margin-top: 6px;
+  width: 100%;
 }
 
 .calendar-month-day--weekend {
@@ -39,6 +46,28 @@
   position: absolute;
   right: 15px;
   top: 10px;
+  line-height: 24px;
+}
+
+.calendar-month-day__create-row-btn {
+  border: 1px solid $color-neutral-200;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba($color-primary-900, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: $color-neutral-200;
+  background-color: $white;
+  text-decoration: none;
+  visibility: hidden;
+
+  &:hover {
+    text-decoration: none;
+    background-color: $color-neutral-50;
+    color: $color-neutral-600;
+  }
+
+  @include center-text(24px, 13px);
 }
 
 .calendar-month-day--not-current {

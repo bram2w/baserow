@@ -141,7 +141,7 @@ export default {
     },
   },
   watch: {
-    getDateField() {
+    fields() {
       const df = this.getDateField(this.fields)
       if (
         !df ||

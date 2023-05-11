@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-card">
+  <div class="calendar-card" @click="$emit('edit-row', row)">
     {{ cardContent }}
   </div>
 </template>
