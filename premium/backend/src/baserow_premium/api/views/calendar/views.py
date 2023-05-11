@@ -27,9 +27,16 @@ from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
-from baserow.contrib.database.api.views.errors import ERROR_VIEW_DOES_NOT_EXIST
+from baserow.contrib.database.api.views.errors import (
+    ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+    ERROR_VIEW_DOES_NOT_EXIST,
+)
+from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
-from baserow.contrib.database.views.exceptions import ViewDoesNotExist
+from baserow.contrib.database.views.exceptions import (
+    NoAuthorizationToPubliclySharedView,
+    ViewDoesNotExist,
+)
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
@@ -180,6 +187,151 @@ class CalendarViewView(APIView):
         if field_options:
             view_type = view_type_registry.get_by_model(view)
             context = {"fields": [o["field"] for o in model._field_objects.values()]}
+            serializer_class = view_type.get_field_options_serializer_class(
+                create_if_missing=True
+            )
+            response.update(**serializer_class(view, context=context).data)
+
+        return Response(response)
+
+
+class PublicCalendarViewView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="slug",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.STR,
+                description="Returns only rows that belong to the related view.",
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines how many rows should be returned by default. "
+                "This value can be overwritten per select option.",
+            ),
+            OpenApiParameter(
+                name="offset",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="Defines from which offset the rows should be returned."
+                "This value can be overwritten per select option.",
+            ),
+            OpenApiParameter(
+                name="from_timestamp",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.DATETIME,
+                description="Restricts results based on the calendar date field.",
+                required=True,
+            ),
+            OpenApiParameter(
+                name="to_timestamp",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.DATETIME,
+                description="Restricts results based on the calendar date field.",
+                required=True,
+            ),
+            OpenApiParameter(
+                name="user_timezone",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="User's timezone will be taken into account for date field"
+                "types that have a time and don't enforce a timezone. The timezone "
+                "will be used for aggregating the dates. For date fields without a "
+                "time this will be ignored and UTC will be forced. ",
+                default="UTC",
+                required=False,
+            ),
+        ],
+        tags=["Database table calendar view"],
+        operation_id="public_list_database_table_calendar_view_rows",
+        description=(
+            "Responds with serialized rows grouped by the view's date field "
+            "options related to the `slug` if the calendar view is publicly shared. "
+            "Additional query parameters can be provided to control the `limit` and "
+            "`offset` per select option. \n\nThis is a **premium** feature."
+        ),
+        responses={
+            200: CalendarViewExampleResponseSerializer,
+            401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
+            400: get_error_schema(
+                [
+                    "ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            CalendarViewHasNoDateField: ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD,
+            NoAuthorizationToPubliclySharedView: (
+                ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW
+            ),
+        }
+    )
+    @allowed_includes("field_options")
+    @validate_query_parameters(
+        ListCalendarRowsQueryParamsSerializer, return_validated=True
+    )
+    def get(self, request, slug: str, field_options: bool, query_params):
+        view_handler = ViewHandler()
+        view = view_handler.get_public_view_by_slug(
+            request.user,
+            slug,
+            CalendarView,
+            authorization_token=get_public_view_authorization_token(request),
+        )
+
+        date_field = view.date_field
+        if not date_field:
+            raise CalendarViewHasNoDateField(
+                "The requested calendar view does not have a required date field."
+            )
+
+        model = view.table.get_model()
+        view_type = view_type_registry.get_by_model(view)
+        (
+            queryset,
+            field_ids,
+            publicly_visible_field_options,
+        ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+            view,
+            table_model=model,
+            view_type=view_type,
+        )
+
+        grouped_rows = get_rows_grouped_by_date_field(
+            view=view,
+            date_field=date_field,
+            from_timestamp=query_params.get("from_timestamp"),
+            to_timestamp=query_params.get("to_timestamp"),
+            user_timezone=query_params.get("user_timezone"),
+            limit=query_params.get("limit"),
+            offset=query_params.get("offset"),
+            model=model,
+        )
+
+        serializer_class = get_row_serializer_class(
+            model,
+            RowSerializer,
+            is_response=True,
+            field_ids=field_ids,
+        )
+
+        for key, value in grouped_rows.items():
+            grouped_rows[key]["results"] = serializer_class(
+                value["results"], many=True
+            ).data
+
+        response = {"rows": grouped_rows}
+
+        if field_options:
+            context = {"field_options": publicly_visible_field_options}
             serializer_class = view_type.get_field_options_serializer_class(
                 create_if_missing=True
             )

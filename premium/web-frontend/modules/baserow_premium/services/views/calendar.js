@@ -1,3 +1,5 @@
+import addPublicAuthTokenHeader from '@baserow/modules/database/utils/publicView'
+
 export default (client) => {
   return {
     fetchRows({
@@ -8,6 +10,8 @@ export default (client) => {
       fromTimestamp = null,
       toTimestamp = null,
       userTimeZone = null,
+      publicUrl = false,
+      publicAuthToken = null,
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -34,7 +38,13 @@ export default (client) => {
 
       const config = { params }
 
-      return client.get(`/database/views/calendar/${calendarId}/`, config)
+      if (publicAuthToken) {
+        addPublicAuthTokenHeader(config, publicAuthToken)
+      }
+
+      const url = publicUrl ? 'public/rows/' : ''
+
+      return client.get(`/database/views/calendar/${calendarId}/${url}`, config)
     },
   }
 }

@@ -230,7 +230,7 @@ export const actions = {
    * Fetches a set of rows based on the provided datetime.
    */
   async fetchMonthly(
-    { commit, getters },
+    { commit, getters, rootGetters },
     { dateTime, fields, includeFieldOptions = false }
   ) {
     commit('SET_SELECTED_DATE', dateTime)
@@ -255,6 +255,8 @@ export const actions = {
         fromTimestamp,
         toTimestamp,
         userTimeZone: getUserTimeZone(),
+        publicUrl: rootGetters['page/view/public/getIsPublic'],
+        publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       })
       const lastRequest = dateTime.isSame(getters.getSelectedDate(fields))
       if (lastRequest) {
@@ -302,6 +304,8 @@ export const actions = {
       fromTimestamp,
       toTimestamp,
       userTimeZone: getUserTimeZone(),
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
     })
     const newRows = data.rows[date].results
     const newCount = data.rows[date].count
