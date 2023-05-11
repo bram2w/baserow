@@ -29,7 +29,11 @@ def load_test_data():
         )
 
     Domain.objects.filter(domain_name="test1.getbaserow.io").delete()
+    Domain.objects.filter(domain_name="test2.getbaserow.io").delete()
+    Domain.objects.filter(domain_name="test3.getbaserow.io").delete()
     Domain.objects.create(builder=builder, domain_name="test1.getbaserow.io", order=1)
+    Domain.objects.create(builder=builder, domain_name="test2.getbaserow.io", order=2)
+    Domain.objects.create(builder=builder, domain_name="test3.getbaserow.io", order=3)
 
     try:
         homepage = Page.objects.get(name="Homepage", builder=builder)
@@ -38,6 +42,7 @@ def load_test_data():
 
         heading_element_type = element_type_registry.get("heading")
         paragraph_element_type = element_type_registry.get("paragraph")
+        link_element_type = element_type_registry.get("link")
 
         ElementHandler().create_element(
             heading_element_type, homepage, value="Back to local", level=1
@@ -123,4 +128,36 @@ def load_test_data():
                 "pariatur. Excepteur sint occaecat cupidatat non proident, "
                 "sunt in culpa qui officia deserunt mollit anim id est laborum."
             ),
+        )
+
+        ElementHandler().create_element(
+            link_element_type,
+            terms,
+            value="Home",
+            variant="button",
+            alignment="right",
+            navigation_type="page",
+            navigate_to_page=homepage,
+        )
+
+        # Button for homepage
+        ElementHandler().create_element(
+            link_element_type,
+            homepage,
+            value="See terms",
+            variant="button",
+            alignment="right",
+            navigation_type="page",
+            navigate_to_page=terms,
+        )
+
+        ElementHandler().create_element(
+            link_element_type,
+            homepage,
+            value="Visit Baserow",
+            variant="link",
+            alignment="center",
+            navigation_type="custom",
+            target="blank",
+            navigate_to_url="https://baserow.io",
         )

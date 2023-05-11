@@ -37,11 +37,8 @@
 <script>
 export default {
   name: 'PageActions',
+  inject: ['builder'],
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
     page: {
       type: Object,
       required: true,

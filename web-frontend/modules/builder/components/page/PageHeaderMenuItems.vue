@@ -13,12 +13,7 @@
         <i class="header__filter-icon fas" :class="`fa-${itemType.icon}`"></i>
         <span class="header__filter-name">{{ itemType.label }}</span>
       </a>
-      <component
-        :is="itemType.component"
-        ref="component"
-        :builder="builder"
-        :page="page"
-      />
+      <component :is="itemType.component" ref="component" :page="page" />
     </li>
   </ul>
 </template>
@@ -28,10 +23,6 @@ export default {
   name: 'PageHeaderMenuItems',
   props: {
     page: {
-      type: Object,
-      required: true,
-    },
-    builder: {
       type: Object,
       required: true,
     },

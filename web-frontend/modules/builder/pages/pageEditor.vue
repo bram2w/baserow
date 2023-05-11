@@ -1,6 +1,6 @@
 <template>
   <div class="page-editor">
-    <PageHeader :builder="builder" :page="page" />
+    <PageHeader :page="page" />
     <div class="layout__col-2-2 page-editor__content">
       <div :style="{ width: `calc(100% - ${panelWidth}px)` }">
         <PagePreview />
@@ -21,6 +21,9 @@ import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePan
 export default {
   name: 'PageEditor',
   components: { PagePreview, PageHeader, PageSidePanels },
+  provide() {
+    return { builder: this.builder }
+  },
   /**
    * When the user leaves to another page we want to unselect the selected page. This
    * way it will not be highlighted the left sidebar.

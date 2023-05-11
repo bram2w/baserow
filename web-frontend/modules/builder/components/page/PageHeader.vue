@@ -1,11 +1,11 @@
 <template>
   <header class="layout__col-2-1 header header--space-between">
-    <PageHeaderMenuItems :page="page" :builder="builder" />
+    <PageHeaderMenuItems :page="page" />
     <DeviceSelector
       :device-type-selected="deviceTypeSelected"
       @selected="actionSetDeviceTypeSelected"
     />
-    <PageActions :builder="builder" :page="page" />
+    <PageActions :page="page" />
   </header>
 </template>
 
@@ -23,10 +23,6 @@ export default {
     PageActions,
   },
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
     page: {
       type: Object,
       required: true,

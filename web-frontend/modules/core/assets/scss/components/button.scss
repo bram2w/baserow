@@ -60,6 +60,27 @@
   border-color: $color-neutral-400;
 }
 
+.button--light {
+  @include button-style(transparent, $color-neutral-100, $color-primary-900);
+
+  &:hover,
+  &:focus,
+  &:active,
+  &.button-loading {
+    text-decoration: none;
+    box-shadow: none;
+    background-color: $color-neutral-100;
+  }
+
+  &.button--loading::after {
+    border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+  }
+}
+
 .button__icon {
   margin: 0 2px;
 
@@ -104,7 +125,6 @@
 .button--full-width {
   @include button-size(15px, 44px, 28px);
 
-  margin-bottom: 16px;
   width: 100%;
   font-weight: 400;
 }

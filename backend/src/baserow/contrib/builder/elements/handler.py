@@ -111,6 +111,8 @@ class ElementHandler:
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
 
+        allowed_values = element_type.prepare_value_for_db(allowed_values)
+
         model_class = cast(Element, element_type.model_class)
 
         element = model_class(page=page, order=order, **allowed_values)
@@ -143,6 +145,8 @@ class ElementHandler:
         allowed_updates = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
+
+        allowed_updates = element_type.prepare_value_for_db(allowed_updates)
 
         for key, value in allowed_updates.items():
             setattr(element, key, value)

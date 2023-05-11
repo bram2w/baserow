@@ -57,7 +57,9 @@
         "heading": "Heading",
         "headingDescription": "Page heading title",
         "paragraph": "Paragraph",
-        "paragraphDescription": "Single line text"
+        "paragraphDescription": "Single line text",
+        "link": "Link",
+        "linkDescription": "A link to page/URL"
     },
     "addElementButton": {
         "label": "Element"
@@ -124,6 +126,34 @@
     },
     "domainTypes": {
         "customName": "Custom domain"
+    },
+    "linkElement": {
+        "noValue": "Unnamed..."
+    },
+    "linkElementForm": {
+        "text": "Text",
+        "textPlaceholder": "Enter text...",
+        "navigateTo": "Navigate to",
+        "navigateToNotSet": "No destination",
+        "navigateToCustom": "Custom URL",
+        "url": "Destination URL",
+        "urlPlaceholder": "Enter an URL...",
+        "variant": "Variant",
+        "variantLink": "Link",
+        "variantButton": "Button",
+        "alignment": "Alignment",
+        "alignmentLeft": "Link",
+        "alignmentCenter": "Center",
+        "alignmentRight": "Right",
+        "width": "Width",
+        "widthAuto": "Auto",
+        "widthFull": "Full width",
+        "target": "Open in...",
+        "targetSelf": "Same tab",
+        "targetNewTab": "New tab",
+        "paramPlaceholder": "Enter a value...",
+        "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
+        "paramsInErrorButton": "Update parameters"
     },
     "pageSettingsTypes": {
         "pageName": "Page"

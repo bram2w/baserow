@@ -37,11 +37,8 @@ export default {
   name: 'PageSettings',
   components: { PageSettingsForm },
   mixins: [error],
+  inject: ['builder'],
   props: {
-    builder: {
-      type: Object,
-      required: true,
-    },
     page: {
       type: Object,
       required: true,

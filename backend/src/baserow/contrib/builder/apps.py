@@ -101,11 +101,16 @@ class BuilderConfig(AppConfig):
 
         permission_manager_type_registry.register(AllowPublicBuilderManagerType())
 
-        from .elements.element_types import HeadingElementType, ParagraphElementType
+        from .elements.element_types import (
+            HeadingElementType,
+            LinkElementType,
+            ParagraphElementType,
+        )
         from .elements.registries import element_type_registry
 
         element_type_registry.register(HeadingElementType())
         element_type_registry.register(ParagraphElementType())
+        element_type_registry.register(LinkElementType())
 
         from .domains.trash_types import DomainTrashableItemType
 

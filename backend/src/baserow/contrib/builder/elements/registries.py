@@ -29,6 +29,9 @@ class ElementType(
 
     SerializedDict: Type[ElementDictSubClass]
 
+    def prepare_value_for_db(self, values):
+        return values
+
     def export_serialized(
         self,
         element: Element,
