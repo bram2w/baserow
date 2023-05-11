@@ -289,8 +289,8 @@ class CalendarViewType(ViewType):
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
     can_decorate = False
-    can_share = False
-    has_public_info = False
+    can_share = True
+    has_public_info = True
 
     def get_api_urls(self):
         from baserow_premium.api.views.calendar import urls as api_urls

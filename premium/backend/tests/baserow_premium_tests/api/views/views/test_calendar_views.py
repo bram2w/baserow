@@ -6,18 +6,23 @@ from django.test.utils import override_settings
 from django.utils import timezone
 
 import pytest
-from baserow_premium.views.models import CalendarView
+from baserow_premium.views.models import CalendarView, CalendarViewFieldOptions
 from dateutil.tz import gettz
+from freezegun import freeze_time
 from pytz import utc
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
     HTTP_402_PAYMENT_REQUIRED,
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.fields.field_types import TextFieldType
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.test_utils.helpers import is_dict_subset
 
@@ -30,6 +35,20 @@ def get_list_url(calendar_view_id: int) -> str:
     return (
         reverse(
             "api:database:views:calendar:list", kwargs={"view_id": calendar_view_id}
+        )
+        + f"?{queryparams_ts_jan2023}"
+    )
+
+
+def get_public_list_url(calendar_view_slug: str) -> str:
+    queryparams_ts_jan2023 = (
+        f"from_timestamp={str(timezone.datetime(2023, 1, 1))}"
+        f"&to_timestamp={str(timezone.datetime(2023, 2, 1))}"
+    )
+    return (
+        reverse(
+            "api:database:views:calendar:public_rows",
+            kwargs={"slug": calendar_view_slug},
         )
         + f"?{queryparams_ts_jan2023}"
     )
@@ -882,3 +901,262 @@ def test_can_duplicate_calendar_view_with_date_field(
     assert response_json["name"] == f"{calendar_view.name} 2"
     assert response_json["date_field"] == date_field.id
     assert View.objects.count() == 2
+
+
+@pytest.mark.django_db
+def test_get_public_calendar_view_with_single_select_and_cover(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+    date_field = premium_data_fixture.create_date_field(table=table, order=0)
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table, user=user, public=True, date_field=date_field
+    )
+    date_field = calendar_view.date_field
+    public_field = premium_data_fixture.create_text_field(
+        table=table, name="public", order=1
+    )
+    hidden_field = premium_data_fixture.create_text_field(
+        table=table, name="hidden", order=2
+    )
+
+    premium_data_fixture.create_calendar_view_field_option(
+        calendar_view, date_field, hidden=False, order=0
+    )
+    premium_data_fixture.create_calendar_view_field_option(
+        calendar_view, public_field, hidden=False, order=1
+    )
+    premium_data_fixture.create_calendar_view_field_option(
+        calendar_view, hidden_field, hidden=True, order=2
+    )
+
+    # Can access as an anonymous user
+    response = api_client.get(
+        reverse("api:database:views:public_info", kwargs={"slug": calendar_view.slug})
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json == {
+        "fields": [
+            {
+                "id": date_field.id,
+                "name": date_field.name,
+                "order": 0,
+                "primary": date_field.primary,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "type": "date",
+                "read_only": False,
+                "date_force_timezone": None,
+                "date_format": "EU",
+                "date_include_time": False,
+                "date_show_tzinfo": False,
+                "date_time_format": "24",
+            },
+            {
+                "id": public_field.id,
+                "table_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "name": "public",
+                "order": 1,
+                "primary": False,
+                "text_default": "",
+                "type": "text",
+                "read_only": False,
+            },
+        ],
+        "view": {
+            "id": calendar_view.slug,
+            "name": calendar_view.name,
+            "order": 0,
+            "public": True,
+            "slug": calendar_view.slug,
+            "sortings": [],
+            "table": {
+                "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+                "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
+            },
+            "type": "calendar",
+            "date_field": date_field.id,
+            "show_logo": True,
+        },
+    }
+
+
+@pytest.mark.django_db
+def test_list_public_rows_without_date_field(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table, user=user, public=True, date_field=None
+    )
+
+    # Get access as an anonymous user
+    response = api_client.get(
+        get_public_list_url(calendar_view.slug),
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_public_rows_without_password(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    calendar_view.set_password("test")
+    calendar_view.save()
+
+    response = api_client.get(
+        get_public_list_url(calendar_view.slug),
+    )
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_list_public_rows_with_valid_password(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    calendar_view.set_password("test")
+    calendar_view.save()
+
+    token = ViewHandler().encode_public_view_token(calendar_view)
+    response = api_client.get(
+        get_public_list_url(calendar_view.slug),
+        HTTP_BASEROW_VIEW_AUTHORIZATION=f"JWT {token}",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_list_public_rows_password_protected_with_jwt_auth(
+    api_client, premium_data_fixture
+):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table,
+        user=user,
+        public=True,
+    )
+    calendar_view.set_password("test")
+    calendar_view.save()
+
+    response = api_client.get(
+        get_public_list_url(calendar_view.slug),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_list_public_rows_doesnt_show_hidden_columns(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    date_field = premium_data_fixture.create_date_field(table=table, name="date")
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table, user=user, public=True, date_field=date_field
+    )
+
+    # Only information related the public field should be returned
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+
+    date_field_options = CalendarViewFieldOptions.objects.get(
+        field_id=calendar_view.date_field_id
+    )
+    public_field_option = premium_data_fixture.create_calendar_view_field_option(
+        calendar_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_calendar_view_field_option(
+        calendar_view, hidden_field, hidden=True
+    )
+
+    with freeze_time("2023-01-10 12:00"):
+        row = RowHandler().create_row(
+            user, table, values={f"field_{date_field.id}": "2023-01-10 12:00"}
+        )
+
+        # Get access as an anonymous user
+        response = api_client.get(
+            get_public_list_url(calendar_view.slug) + "&include=field_options"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        assert response_json["field_options"] == {
+            f"{public_field.id}": {
+                "hidden": False,
+                "order": public_field_option.order,
+            },
+            f"{calendar_view.date_field_id}": {
+                "hidden": True,
+                "order": date_field_options.order,
+            },
+        }
+        day_with_row = response_json["rows"].pop("2023-01-10")
+        assert day_with_row["count"] == 1
+        assert day_with_row["results"] == [
+            {
+                f"field_{date_field.id}": "2023-01-10",
+                f"field_{public_field.id}": None,
+                "id": row.id,
+                "order": str(row.order),
+            }
+        ]
+        for other_day in response_json["rows"].values():
+            assert other_day["count"] == 0
+
+
+@pytest.mark.django_db
+def test_list_public_rows_limit_offset(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token()
+    table = premium_data_fixture.create_database_table(user=user)
+
+    date_field = premium_data_fixture.create_date_field(
+        table=table, name="date", date_include_time=True
+    )
+    calendar_view = premium_data_fixture.create_calendar_view(
+        table=table,
+        user=user,
+        public=True,
+        date_field=date_field,
+    )
+
+    with freeze_time("2023-01-10 12:00"):
+        for day in range(10):
+            for hour in range(10):
+                row = RowHandler().create_row(
+                    user,
+                    table,
+                    values={f"field_{date_field.id}": f"2023-01-{day+10} {hour+10}:00"},
+                )
+
+        response = api_client.get(
+            get_public_list_url(calendar_view.slug) + f"&limit=3&offset=5"
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        day_with_row = response_json["rows"].pop("2023-01-10")
+        assert day_with_row["count"] == 10
+        assert len(day_with_row["results"]) == 3
+        assert [d[f"field_{date_field.id}"] for d in day_with_row["results"]] == [
+            "2023-01-10T15:00:00Z",
+            "2023-01-10T16:00:00Z",
+            "2023-01-10T17:00:00Z",
+        ]

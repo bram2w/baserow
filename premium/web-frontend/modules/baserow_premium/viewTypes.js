@@ -240,7 +240,7 @@ export class CalendarViewType extends PremiumViewType {
   }
 
   canShare() {
-    return false
+    return true
   }
 
   getPublicRoute() {
