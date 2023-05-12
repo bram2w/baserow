@@ -479,15 +479,17 @@ class AirtableHandler:
                 )
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
 
-            # Create a default grid view because the importing of views doesn't work
+            # Create an empty grid view because the importing of views doesn't work
             # yet. It's a bit quick and dirty, but it will be replaced soon.
-            view_id += 1
-            grid_view = GridView(id=view_id, name="Grid", order=1)
+            grid_view = GridView(id=None, name="Grid", order=1)
             grid_view.get_field_options = lambda *args, **kwargs: []
             grid_view_type = view_type_registry.get_by_model(grid_view)
-            exported_views = [
-                grid_view_type.export_serialized(grid_view, None, None, None)
-            ]
+            empty_serialized_grid_view = grid_view_type.export_serialized(
+                grid_view, None, None, None
+            )
+            view_id += 1
+            empty_serialized_grid_view["id"] = view_id
+            exported_views = [empty_serialized_grid_view]
 
             exported_table = DatabaseExportSerializedStructure.table(
                 id=table["id"],
