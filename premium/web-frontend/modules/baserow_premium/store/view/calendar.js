@@ -723,15 +723,22 @@ export const actions = {
     if (dateFieldId) {
       const value = row[`field_${dateFieldId}`]
       const dateTime = moment.tz(value, getters.getTimeZone(fields))
-      const currentDate = getters.getSelectedDate(fields)
+      const {
+        fromTimestamp: currentFromTimestamp,
+        toTimestamp: currentToTimestamp,
+      } = getMonthlyTimestamps(getters.getSelectedDate(fields))
       // Selecting a new row might be triggered by a navigation to a
       // `calendar/ABC/row/XYZ` URL or by the user clicking on a row they can see
       // in the calendar view. When triggered by a navigation we almost certainly don't
       // right month loaded into the store and so if we don't we fetch all the other
       // rows for that month.
       if (
-        dateTime.month() !== currentDate.month() ||
-        dateTime.year() !== currentDate.year()
+        !dateTime.isBetween(
+          currentFromTimestamp,
+          currentToTimestamp,
+          null,
+          '[]'
+        )
       ) {
         await dispatch('fetchMonthly', {
           dateTime,

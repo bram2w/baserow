@@ -15,7 +15,9 @@
           :key="dec.decoration.id"
           v-bind="dec.propsFn(row)"
         />
-        {{ cardContent }}
+        <div class="calendar-card__labels">
+          {{ labelsText }}
+        </div>
       </div>
     </RecursiveWrapper>
   </div>
@@ -60,7 +62,7 @@ export default {
         .filter(filterVisibleFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
-    cardContent() {
+    labelsText() {
       return this.visibleCardFields
         .map((f) => {
           const fieldType = this.$registry.get('field', f.type)
