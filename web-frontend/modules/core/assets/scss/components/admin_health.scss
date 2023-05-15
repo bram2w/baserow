@@ -1,0 +1,63 @@
+.admin-health {
+  padding: 30px;
+}
+
+.admin-health__group {
+  max-width: 30vw;
+  min-width: 160px;
+
+  &:not(:last-child) {
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+    border-bottom: solid 1px $color-neutral-200;
+  }
+}
+
+.admin-health__description {
+  font-size: 13px;
+  color: $color-neutral-600;
+  line-height: 160%;
+  margin-bottom: 20px;
+}
+
+.admin-health__check-item {
+  display: flex;
+
+  &:not(:last-child) {
+    margin-bottom: 16px;
+  }
+}
+
+.admin-health__check-item-label {
+  flex: 0 0 50%;
+  margin-right: 40px;
+}
+
+.admin-health__check-item-name {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.admin-health__check-item-description {
+  font-size: 13px;
+  color: $color-warning-600;
+  line-height: 160%;
+}
+
+.admin-health__icon {
+  min-width: 0;
+
+  .warning {
+    max-width: 500px;
+    line-height: 18px;
+  }
+}
+
+.admin-health__icon--success {
+  color: $color-success-500;
+}
+
+.admin-health__icon--fail {
+  color: $color-error-500;
+}

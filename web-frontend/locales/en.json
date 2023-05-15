@@ -35,7 +35,8 @@
         "copyToClipboard": "Copy to clipboard"
     },
     "adminType": {
-        "settings": "Settings"
+        "settings": "Settings",
+        "health": "Health"
     },
     "applicationType": {
         "database": "Database",
@@ -404,5 +405,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "Invalid {name}",
         "invalidUrlEnvVarDescription": "The {name} environment variable has been set to an invalid value. Your site admin must change {name} to a valid URL starting with http:// or https:// and then restart Baserow to fix this error."
+    },
+    "health": {
+        "title": "Baserow health checks",
+        "description": "These checks show the current status of your Baserow installation."
+    },
+    "emailTester": {
+        "title": "Email tester",
+        "targetEmailLabel": "Target Email",
+        "invalidTargetEmail": "Invalid email address",
+        "submit": "Send test email",
+        "success": "Successfully sent test email",
+        "configLink": "Email Configuration Help"
     }
 }

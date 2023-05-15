@@ -43,7 +43,7 @@ The src directory contains the full source code of the Baserow backend module.
   is included by the root url config under the namespace `api`.
 * `config`: is a module that contains base settings and some settings that are for
    specific environments. It also contains the root url config that includes the api 
-   under the namespace `api` and adds a `_health` route for health checking. There is
+   under the namespace `api`. There is
    also a wsgi.py file which can be used to expose the applications.
 * `contrib`: contains extra apps that can be installed. For now it only contains the
   backend part of the database plugin. This app is installed by default, but it is
