@@ -28,7 +28,10 @@ def test_non_staff_user_cant_trigger_test_email(data_fixture, api_client):
 
 
 @pytest.mark.django_db
-def test_staff_user_can_trigger_test_email(data_fixture, api_client):
+@patch("django.core.mail.get_connection")
+def test_staff_user_can_trigger_test_email(
+    patched_get_connection, data_fixture, api_client
+):
     user, token = data_fixture.create_user_and_token(is_staff=True)
 
     response = api_client.post(
