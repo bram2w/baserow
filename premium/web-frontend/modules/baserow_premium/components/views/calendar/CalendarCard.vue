@@ -1,6 +1,23 @@
 <template>
   <div class="calendar-card" @click="$emit('edit-row', row)">
-    {{ cardContent }}
+    <RecursiveWrapper
+      :components="
+        wrapperDecorations.map((comp) => ({
+          ...comp,
+          props: comp.propsFn(row),
+        }))
+      "
+    >
+      <div class="calendar-card__content">
+        <component
+          :is="dec.component"
+          v-for="dec in firstCellDecorations"
+          :key="dec.decoration.id"
+          v-bind="dec.propsFn(row)"
+        />
+        {{ cardContent }}
+      </div>
+    </RecursiveWrapper>
   </div>
 </template>
 
@@ -9,9 +26,11 @@ import {
   sortFieldsByOrderAndIdFunction,
   filterVisibleFieldsFunction,
 } from '@baserow/modules/database/utils/view'
+import RecursiveWrapper from '@baserow/modules/database/components/RecursiveWrapper'
 
 export default {
   name: 'CalendarCard',
+  components: { RecursiveWrapper },
   props: {
     row: {
       type: Object,
@@ -24,6 +43,11 @@ export default {
     storePrefix: {
       type: String,
       required: true,
+    },
+    decorationsByPlace: {
+      type: Object,
+      required: false,
+      default: () => {},
     },
   },
   computed: {
@@ -44,6 +68,12 @@ export default {
           return fieldType.toHumanReadableString(f, cellValue)
         })
         .join(' - ')
+    },
+    firstCellDecorations() {
+      return this.decorationsByPlace?.first_cell || []
+    },
+    wrapperDecorations() {
+      return this.decorationsByPlace?.wrapper || []
     },
   },
 }

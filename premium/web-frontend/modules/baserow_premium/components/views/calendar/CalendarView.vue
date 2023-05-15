@@ -7,6 +7,7 @@
       :read-only="readOnly"
       :database="database"
       :table="table"
+      :view="view"
       @edit-row="openRowEditModal($event.id)"
       @create-row="openCreateRowModal"
     ></CalendarMonth>

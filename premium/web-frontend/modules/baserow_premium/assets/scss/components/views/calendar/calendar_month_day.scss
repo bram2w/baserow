@@ -70,6 +70,10 @@
   @include center-text(24px, 13px);
 }
 
+.calendar-month-day__read-only-filler {
+  height: 24px;
+}
+
 .calendar-month-day--not-current {
   color: $color-neutral-300;
 }

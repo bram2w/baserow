@@ -21,6 +21,8 @@
       @click="!readOnly && $emit('create-row', { day })"
       ><i class="fas fa-plus"></i>
     </a>
+    <span v-else class="calendar-month-day__read-only-filler"></span>
+
     <span ref="dateLabel" class="calendar-month-day__date-label">{{
       label
     }}</span>
@@ -31,6 +33,7 @@
         :row="row"
         :fields="fields"
         :store-prefix="storePrefix"
+        :decorations-by-place="decorationsByPlace"
         @edit-row="$emit('edit-row', $event)"
       >
       </CalendarCard>
@@ -53,6 +56,7 @@
       :store-prefix="storePrefix"
       :parent-width="width"
       :parent-height="height"
+      :decorations-by-place="decorationsByPlace"
       @edit-row="$emit('edit-row', $event)"
     >
     </CalendarMonthDayExpanded>
@@ -63,6 +67,7 @@
 import moment from '@baserow/modules/core/moment'
 import CalendarCard from '@baserow_premium/components/views/calendar/CalendarCard'
 import CalendarMonthDayExpanded from '@baserow_premium/components/views/calendar/CalendarMonthDayExpanded'
+import viewDecoration from '@baserow/modules/database/mixins/viewDecoration'
 
 export default {
   name: 'CalendarMonthDay',
@@ -70,6 +75,7 @@ export default {
     CalendarCard,
     CalendarMonthDayExpanded,
   },
+  mixins: [viewDecoration],
   props: {
     day: {
       type: Object,
@@ -94,6 +100,11 @@ export default {
     database: {
       type: Object,
       required: true,
+    },
+    view: {
+      type: Object,
+      required: false,
+      default: undefined,
     },
   },
   data() {

@@ -30,6 +30,7 @@
           :database="database"
           :read-only="readOnly"
           :table="table"
+          :view="view"
           @edit-row="$emit('edit-row', $event)"
           @create-row="$emit('create-row', $event)"
         >
@@ -85,6 +86,11 @@ export default {
     database: {
       type: Object,
       required: true,
+    },
+    view: {
+      type: Object,
+      required: false,
+      default: undefined,
     },
   },
   data() {
