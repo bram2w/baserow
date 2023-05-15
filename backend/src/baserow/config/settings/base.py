@@ -81,6 +81,8 @@ INSTALLED_APPS = [
     "health_check.cache",
     "health_check.contrib.migrations",
     "health_check.contrib.redis",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
     "baserow.core",
     "baserow.api",
     "baserow.ws",
@@ -121,10 +123,6 @@ AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
-
-BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
-if BASEROW_FULL_HEALTHCHECKS is not None:
-    INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:

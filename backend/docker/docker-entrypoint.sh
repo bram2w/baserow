@@ -284,7 +284,7 @@ case "$1" in
         fi
         return 0
       }
-      curlf "http://localhost:$BASEROW_BACKEND_PORT/_health/"
+      curlf "http://localhost:$BASEROW_BACKEND_PORT/api/_health/"
     ;;
     bash)
         exec /bin/bash -c "${@:2}"

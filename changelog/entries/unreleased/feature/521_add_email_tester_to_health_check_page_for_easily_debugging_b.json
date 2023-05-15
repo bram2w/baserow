@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add email tester to health check page for easily debugging Baserow email sending issues.",
+    "issue_number": 521,
+    "bullet_points": [],
+    "created_at": "2023-04-14"
+}

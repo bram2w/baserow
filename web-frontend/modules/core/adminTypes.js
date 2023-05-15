@@ -99,3 +99,26 @@ export class SettingsAdminType extends AdminType {
     return 9999
   }
 }
+
+export class HealthCheckAdminType extends AdminType {
+  static getType() {
+    return 'health'
+  }
+
+  getIconClass() {
+    return 'medkit'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('adminType.health')
+  }
+
+  getRouteName() {
+    return 'admin-health'
+  }
+
+  getOrder() {
+    return 10000
+  }
+}

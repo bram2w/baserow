@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add new /api/_health/full/ JSON API healthcheck endpoint for admins only to run a full set of health checks against Baserow.",
+    "issue_number": 521,
+    "bullet_points": [],
+    "created_at": "2023-04-14"
+}

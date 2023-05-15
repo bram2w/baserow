@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "Remove BASEROW_FULL_HEALTHCHECKS env var as private _health check endpoint which this env var affected has been simplified, depricated and replaced with the new /api/_health/full/ endpoint.",
+    "issue_number": " ",
+    "bullet_points": [],
+    "created_at": "2023-04-14"
+}

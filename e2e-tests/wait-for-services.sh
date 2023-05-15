@@ -24,7 +24,7 @@ baserow_ready() {
       return 22
     }
 
-    if curlf "${PUBLIC_WEB_FRONTEND_URL:-http://web-frontend:3000}/_health/" && curlf "${PUBLIC_BACKEND_URL:-http://backend:8000}/_health/" && templates_ready; then
+    if curlf "${PUBLIC_WEB_FRONTEND_URL:-http://web-frontend:3000}/_health/" && curlf "${PUBLIC_BACKEND_URL:-http://backend:8000}/api/_health/" && templates_ready; then
       return 0
     else
       return 1

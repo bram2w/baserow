@@ -63,12 +63,6 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/proxy-body-size: 20m
-    # Prevent access to the full internal healthcheck
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~* "^/_health" {
-          deny all;
-          return 403;
-      }
     kubernetes.io/ingress.class: nginx
     # removed ssl settings, add in your own desired ones
 spec:
