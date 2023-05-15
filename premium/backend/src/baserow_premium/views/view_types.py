@@ -288,7 +288,7 @@ class CalendarViewType(ViewType):
         IncompatibleField: ERROR_INCOMPATIBLE_FIELD,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
-    can_decorate = False
+    can_decorate = True
     can_share = True
     has_public_info = True
 

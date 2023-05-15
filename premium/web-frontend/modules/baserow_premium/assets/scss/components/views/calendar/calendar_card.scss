@@ -1,17 +1,9 @@
 .calendar-card {
-  @extend %ellipsis;
-
-  background-color: $white;
   border: 1px solid $color-neutral-200;
   border-radius: 4px;
   box-shadow: 0 1px 2px rgba($color-primary-900, 0.1);
-  text-align: left;
   color: $color-primary-900;
-  padding: 0 8px 0 8px;
-  font-size: 12px;
-  font-weight: 600;
   height: 26px;
-  line-height: 24px;
   margin-bottom: 2px;
 
   &:hover {
@@ -21,5 +13,23 @@
   &:not(.calendar-card--disabled):not(.calendar-card--dragging):hover {
     cursor: pointer;
     background-color: $color-neutral-100;
+  }
+}
+
+.calendar-card__content {
+  @extend %ellipsis;
+
+  margin: 0 8px 0 8px;
+  width: 100%;
+  gap: 6px;
+  display: flex;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+
+  > :first-child {
+    margin-left: 0;
+    margin-right: 0;
   }
 }
