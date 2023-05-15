@@ -175,6 +175,7 @@ def register_formula_functions(registry):
     registry.register(BaserowOr())
     # Date functions
     registry.register(BaserowDatetimeFormat())
+    registry.register(BaserowDatetimeFormatTz())
     registry.register(BaserowDay())
     registry.register(BaserowMonth())
     registry.register(BaserowYear())
@@ -278,6 +279,33 @@ class BaserowDatetimeFormat(TwoArgumentBaserowFunction):
                 output_field=fields.TextField(),
             ),
             Value(""),
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowDatetimeFormatTz(ThreeArgumentBaserowFunction):
+    type = "datetime_format_tz"
+    arg1_type = [BaserowFormulaDateType]
+    arg2_type = [BaserowFormulaTextType]
+    arg3_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+        arg3: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType(nullable=True))
+
+    def to_django_expression(
+        self, arg1: Expression, arg2: Expression, arg3: Expression
+    ) -> Expression:
+        return Func(
+            arg1,
+            arg2,
+            arg3,
+            function="try_datetime_format_tz",
             output_field=fields.TextField(),
         )
 

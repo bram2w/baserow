@@ -59,6 +59,7 @@ describe('Formula Functions Test', () => {
       'and',
       'or',
       'datetime_format',
+      'datetime_format_tz',
       'day',
       'month',
       'year',
