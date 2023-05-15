@@ -7,11 +7,12 @@ from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
-from django.db.models import F, JSONField, Q, QuerySet
+from django.db.models import JSONField, Q, QuerySet
 
 from loguru import logger
 from opentelemetry import trace
 
+from baserow.cachalot_patch import cachalot_enabled
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
     OrderByFieldNotFound,
@@ -22,13 +23,13 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
     FilterBuilder,
 )
-from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import CreatedOnField, LastModifiedField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
     set_cached_model_field_attrs,
 )
+from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
@@ -55,6 +56,10 @@ tracer = trace.get_tracer(__name__)
 
 
 class TableModelQuerySet(models.QuerySet):
+    def count(self):
+        with cachalot_enabled():
+            return super().count()
+
     def enhance_by_fields(self):
         """
         Enhances the queryset based on the `enhance_queryset` for each field in the
@@ -219,32 +224,19 @@ class TableModelQuerySet(models.QuerySet):
                     f"It is not possible to order by field type {field_type.type}.",
                 )
 
-            field_order = field_type.get_order(field, field_name, order_direction)
+            field_annotated_order_by = field_type.get_order(
+                field, field_name, order_direction
+            )
 
-            if isinstance(field_order, AnnotatedOrder):
-                if field_order.annotation is not None:
-                    annotations = {**annotations, **field_order.annotation}
-                field_order = field_order.order
-
-            if field_order:
-                order_by[index] = field_order
-            else:
-                order_expression = F(field_name)
-
-                if order_direction == "ASC":
-                    order_expression = order_expression.asc(nulls_first=True)
-                else:
-                    order_expression = order_expression.desc(nulls_last=True)
-
-                order_by[index] = order_expression
+            if field_annotated_order_by.annotation is not None:
+                annotations = {**annotations, **field_annotated_order_by.annotation}
+            field_order_by = field_annotated_order_by.order
+            order_by[index] = field_order_by
 
         order_by.append("order")
         order_by.append("id")
 
-        if annotations is not None:
-            return self.annotate(**annotations).order_by(*order_by)
-        else:
-            return self.order_by(*order_by)
+        return self.annotate(**annotations).order_by(*order_by)
 
     def filter_by_fields_object(
         self, filter_object, filter_type=FILTER_TYPE_AND, only_filter_by_field_ids=None
@@ -391,7 +383,7 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         ]
 
     @classmethod
-    def get_field_object_or_none(cls, field_name: str, include_trash: bool):
+    def get_field_object_or_none(cls, field_name: str, include_trash: bool = False):
         field_objects = cls._field_objects.values()
         if include_trash:
             field_objects = itertools.chain(
@@ -464,7 +456,6 @@ class Table(
     OrderableMixin,
     models.Model,
 ):
-    USER_TABLE_DATABASE_NAME_PREFIX = "database_table_"
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -484,7 +475,7 @@ class Table(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_database_table_name(self):
-        return f"{self.USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
+        return f"{USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
 
     @baserow_trace(tracer)
     def get_model(

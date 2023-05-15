@@ -9,18 +9,20 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--group_id",
+            "--workspace_id",
             nargs="?",
             type=int,
-            help="The group in which formulas will be updated. If the value is 0, then all groups will be updated",
+            help="The workspace in which formulas will be updated. If the value is 0, then all workspaces will be updated",
             default=None,
         )
         parser.add_argument(
             "--dont-update-now",
             action="store_true",
-            help="If set to true all the groups will be updated with the current time otherwise the previous `now` value will be used.",
+            help="If set to true all the workspaces will be updated with the current time otherwise the previous `now` value will be used.",
         )
 
     @transaction.atomic
     def handle(self, *args, **options):
-        run_periodic_fields_updates(options["group_id"], not options["dont_update_now"])
+        run_periodic_fields_updates(
+            options["workspace_id"], not options["dont_update_now"]
+        )

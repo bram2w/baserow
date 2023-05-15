@@ -98,7 +98,7 @@ from .field_filters import (
     contains_word_filter,
     filename_contains_filter,
 )
-from .field_sortings import AnnotatedOrder
+from .field_sortings import OptionallyAnnotatedOrderBy
 from .fields import (
     BaserowExpressionField,
     BaserowLastModifiedField,
@@ -2415,7 +2415,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> int:
-        return getattr(row, field_name).value
+        return getattr(row, field_name)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -2596,7 +2596,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             connection, from_field, to_field
         )
 
-    def get_order(self, field, field_name, order_direction) -> AnnotatedOrder:
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -2609,7 +2611,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             order = order.asc(nulls_first=True)
         else:
             order = order.desc(nulls_last=True)
-        return AnnotatedOrder(order=order)
+        return OptionallyAnnotatedOrderBy(order=order)
 
     def random_value(self, instance, fake, cache):
         """
@@ -2991,7 +2993,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         else:
             order = order.asc(nulls_first=True)
 
-        return AnnotatedOrder(annotation=annotation, order=order)
+        return OptionallyAnnotatedOrderBy(annotation=annotation, order=order)
 
     def before_field_options_update(
         self, field, to_create=None, to_update=None, to_delete=None
@@ -4021,7 +4023,7 @@ class MultipleCollaboratorsFieldType(FieldType):
         else:
             order = order.asc(nulls_first=True)
 
-        return AnnotatedOrder(annotation=annotation, order=order)
+        return OptionallyAnnotatedOrderBy(annotation=annotation, order=order)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
         related_objects = getattr(row, field_name)

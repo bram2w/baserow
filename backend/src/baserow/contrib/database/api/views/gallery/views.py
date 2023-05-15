@@ -55,6 +55,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
+from baserow.contrib.database.views.signals import view_loaded
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
@@ -149,7 +150,12 @@ class GalleryViewView(APIView):
         """Lists the rows for the gallery view."""
 
         view_handler = ViewHandler()
-        view = view_handler.get_view_as_user(request.user, view_id, GalleryView)
+        view = view_handler.get_view_as_user(
+            request.user,
+            view_id,
+            GalleryView,
+            base_queryset=GalleryView.objects.prefetch_related("viewsort_set"),
+        )
         view_type = view_type_registry.get_by_model(view)
 
         workspace = view.table.database.workspace
@@ -185,6 +191,7 @@ class GalleryViewView(APIView):
             )
             response.data.update(**serializer_class(view, context=context).data)
 
+        view_loaded.send(sender=self, view=view, table_model=model, user=request.user)
         return response
 
 

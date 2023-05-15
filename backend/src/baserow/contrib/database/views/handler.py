@@ -1,7 +1,8 @@
 import re
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from copy import deepcopy
 from dataclasses import dataclass
+from hashlib import shake_128
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
 from django.conf import settings
@@ -9,18 +10,20 @@ from django.contrib.auth.models import AbstractUser, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.core.exceptions import FieldDoesNotExist, ValidationError
+from django.db import connection
 from django.db import models as django_models
-from django.db.models import Count, F
+from django.db.models import Count, Q, expressions
 from django.db.models.query import QuerySet
 
 import jwt
+from loguru import logger
 from opentelemetry import trace
 from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
+from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
-from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -64,6 +67,7 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
     MirrorDict,
+    atomic_if_not_already,
     extract_allowed,
     find_unused_name,
     get_model_reference_field_name,
@@ -127,6 +131,279 @@ FieldOptionsDict = Dict[int, Dict[str, Any]]
 ending_number_regex = re.compile(r"(.+) (\d+)$")
 
 tracer = trace.get_tracer(__name__)
+
+
+PerViewTableIndexUpdate = namedtuple(
+    "PerViewTableIndexUpdate", "all_indexes added removed"
+)
+
+
+class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
+    @classmethod
+    def does_index_exist(cls, index_name: str) -> bool:
+        """
+        Returns whether or not the given index exists in the database.
+
+        :param index_name: The name of the index to check for.
+        :return: Whether or not the given index exists in the database.
+        """
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "SELECT indexname FROM pg_indexes WHERE indexname = %s",
+                [index_name],
+            )
+            return cursor.fetchone() is not None
+
+    @classmethod
+    def _get_index_name_prefix(cls, table_id: int) -> str:
+        """
+        Returns the prefix for the index. Different views can share the same
+        index when the same sortings are used to save disk space, so the
+        table_id will be used instead of the more obvious view_id.
+
+        :param table_id: The id of the table.
+        :return: The index prefix.
+        """
+
+        return f"i{table_id}:"
+
+    @classmethod
+    def _get_index_hash(cls, index_fields: List[expressions.OrderBy]) -> Optional[str]:
+        """
+        Returns a key for the provided view based on the fields used for sorting.
+        View sharing the same key will have the same index name, so that the
+        index can be reused.
+
+        :param view: The view to get the index key for.
+        :return: The index hash key calculated from the fields used for sorting.
+        """
+
+        index_key = "-".join(
+            map(lambda vs: f"{vs.expression.name}:{vs.descending}", index_fields)
+        )
+        # limit to 20 characters, considering the limit of 30 for the index name
+        return shake_128(index_key.encode("utf-8")).hexdigest(10)
+
+    @classmethod
+    def get_index_name(
+        cls, table_id: int, index_fields: List[expressions.OrderBy]
+    ) -> str:
+        """
+        Returns the name of the index for the provided view.
+
+        :param table_id: The id of the table.
+        :param index_fields: The view sorts to get the index name for.
+        :return: The index name.
+        """
+
+        index_name_prefix = cls._get_index_name_prefix(table_id)
+        index_hash = cls._get_index_hash(index_fields)
+        return f"{index_name_prefix}{index_hash}"
+
+    @classmethod
+    def schedule_index_creation_if_needed(cls, view: View, model: GeneratedTableModel):
+        """
+        Schedules the creation of the index in an asynchronous task if the index
+        is missing and the view uses some sort of ordering for which it makes sense
+        to create an index for.
+
+        :param view: The view to schedule the index creation for.
+        :param model: The table model for which the view index should be
+            generated.
+        """
+
+        view_type = view_type_registry.get_by_model(view)
+        if (
+            view_type.can_sort
+            and not view.db_index_name
+            and cls.get_index(view, model) is not None
+        ):
+            cls.schedule_index_update(view)
+
+    @classmethod
+    def get_index(
+        cls, view: View, model: Optional[GeneratedTableModel]
+    ) -> Optional[django_models.Index]:
+        """
+        Returns the model and the best possible index for the requested view.
+
+        :param view: The view to get the model and index for.
+        :param model: The table model for which the view index should be
+            generated.
+        :return: The index for view or None for the default order or if an
+            index cannot be created because of annotations or ordering based on
+            other tables fields.
+        """
+
+        if model is None:
+            model = view.table.get_model()
+
+        index_fields = []
+
+        for view_sort in view.viewsort_set.all():
+            field_object = model._field_objects[view_sort.field_id]
+            annotated_order_by = field_object["type"].get_order(
+                field_object["field"], field_object["name"], view_sort.order
+            )
+
+            # It's enough to have one field that cannot be indexed to make the DB
+            # very likely to not use the index, so just return None here.
+            if not annotated_order_by.can_be_indexed:
+                return None
+
+            index_fields.append(annotated_order_by.order)
+
+        if not index_fields:
+            return None
+
+        index_name = cls.get_index_name(view.table_id, index_fields)
+        return django_models.Index(
+            *index_fields,
+            "order",
+            "id",
+            condition=Q(trashed=False),
+            name=index_name,
+        )
+
+    @classmethod
+    def before_view_permanently_deleted(cls, view: View):
+        """
+        Called when a view is permanently deleted. This will remove the view
+        index if no longer required.
+
+        :param view: The view that was deleted.
+        """
+
+        return cls.remove_index_if_unused(view)
+
+    @classmethod
+    def after_field_changed_or_deleted(cls, field: Field):
+        """
+        Called when a field is deleted. This will remove any indexes that are no
+        longer required.
+
+        :param field: The field that was deleted.
+        """
+
+        views_need_to_be_updated = View.objects.filter(
+            viewsort__field_id=field.pk, db_index_name__isnull=False
+        )
+        for view in views_need_to_be_updated:
+            cls.schedule_index_update(view)
+
+    @classmethod
+    def schedule_index_update(cls, view: View):
+        """
+        This function schedules a celery task calling the update_view_index
+        method to update the index for the specific view.
+
+        :param view: The view for which the index needs to be updated.
+        """
+
+        from baserow.contrib.database.views.tasks import schedule_view_index_update
+
+        schedule_view_index_update(view.pk)
+
+    @classmethod
+    def add_index_if_not_exists(
+        cls, view: View, model: GeneratedTableModel
+    ) -> Optional[str]:
+        """
+        Creates a new index for the provided view if it does not exist yet.
+
+        :param view: The view to create the index for.
+        :param model: The model to use for the table. If not provided it will be
+            generated.
+        :return: The name of the index for the current view if any.
+        """
+
+        db_index = cls.get_index(view, model)
+        if db_index is None:
+            return None
+
+        other_view_using_index = View.objects.filter(
+            db_index_name=db_index.name, table=view.table
+        ).exclude(pk=view.pk)
+
+        if other_view_using_index.exists() or cls.does_index_exist(db_index.name):
+            return db_index.name
+
+        with safe_django_schema_editor() as schema_editor:
+            schema_editor.add_index(model, db_index)
+            logger.info(
+                "Created Index {db_index_name} for view {view_pk} of table {view_table_id}",
+                db_index_name=db_index.name,
+                view_pk=view.pk,
+                view_table_id=view.table_id,
+            )
+
+        return db_index.name
+
+    @classmethod
+    def remove_index_if_unused(
+        cls, view: View, model: Optional[GeneratedTableModel] = None
+    ) -> Optional[str]:
+        """
+        Removes the index for the provided view if it is not used by any other view.
+
+        :param view: The view to remove the index for.
+        :param model: The model to use for the table. If not provided it will be
+            generated.
+        :return: The name of the index for the view if any.
+        """
+
+        current_index_name = view.db_index_name
+        if not current_index_name:
+            return None
+
+        other_view_using_index = View.objects.filter(
+            db_index_name=current_index_name, table=view.table
+        ).exclude(pk=view.pk)
+
+        db_index = django_models.Index("id", name=current_index_name)
+
+        if other_view_using_index.exists() or not cls.does_index_exist(
+            current_index_name
+        ):
+            return current_index_name
+
+        if model is None:
+            model = view.table.get_model()
+
+        with safe_django_schema_editor() as schema_editor:
+            schema_editor.remove_index(model, db_index)
+            logger.info(
+                "Removed Index {db_index_name} for view {view_pk} of table {view_table_id}",
+                db_index_name=db_index.name,
+                view_pk=view.pk,
+                view_table_id=view.table_id,
+            )
+
+        return current_index_name
+
+    @classmethod
+    def update_index(cls, view: View, model: Optional[GeneratedTableModel] = None):
+        """
+        Updates the index for the provided view. If the view has been trashed,
+        it will just delete the current index if no other view is using it. If
+        the view is not trashed, it will first delete the old index if exists
+        and no other view is using it and then create the new one if missing.
+
+        :param view: The view to update the index for.
+        :param model: The model to use for the table. If not provided the model
+            will be generated.
+        """
+
+        with atomic_if_not_already():
+            if model is None:
+                model = view.table.get_model()
+
+            cls.remove_index_if_unused(view, model)
+
+            db_index_name = cls.add_index_if_not_exists(view, model)
+            view.db_index_name = db_index_name
+            view.save(update_fields=["db_index_name"])
 
 
 class ViewHandler(metaclass=baserow_trace_methods(tracer)):
@@ -395,6 +672,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         # The new view must not be publicly shared
         if "public" in serialized:
             serialized["public"] = False
+
+        # We don't want to export the db_index_name, but if it has been create,
+        # the new view can reference it.
+        serialized["db_index_name"] = original_view.db_index_name
 
         # We're using the MirrorDict here because the fields and select options in
         # the mapping remain the same. They haven't change because we're only
@@ -751,7 +1032,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         # If the new field type does not support sorting then all sortings will be
         # removed.
         if not field_type.check_can_order_by(field):
-            field.viewsort_set.all().delete()
+            deleted_count, _ = field.viewsort_set.all().delete()
+            if deleted_count > 0:
+                ViewIndexingHandler.after_field_changed_or_deleted(field)
 
         # Check which filters are not compatible anymore and remove those.
         for filter in field.viewfilter_set.all():
@@ -1104,11 +1387,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         :param view: The view where to fetch the sorting from.
         :param queryset: The queryset where the sorting need to be applied to.
+        :param restrict_to_field_ids: Only field ids in this iterable will have their
+            view sorts applied in the resulting queryset.
         :raises ValueError: When the queryset's model is not a table model or if the
             table model does not contain the one of the fields.
         :raises ViewSortDoesNotExist: When the view is trashed
-        :param restrict_to_field_ids: Only field ids in this iterable will have their
-            view sorts applied in the resulting queryset.
+
         :return: The queryset where the sorting has been applied to.
         """
 
@@ -1139,27 +1423,16 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             field_name = model._field_objects[view_sort.field_id]["name"]
             field_type = model._field_objects[view_sort.field_id]["type"]
 
-            order = field_type.get_order(field, field_name, view_sort.order)
-            annotation = None
+            field_annoteted_order_by = field_type.get_order(
+                field, field_name, view_sort.order
+            )
+            field_annotation = field_annoteted_order_by.annotation
+            field_order_by = field_annoteted_order_by.order
 
-            if isinstance(order, AnnotatedOrder):
-                annotation = order.annotation
-                order = order.order
+            if field_annotation is not None:
+                queryset = queryset.annotate(**field_annotation)
 
-            if annotation is not None:
-                queryset = queryset.annotate(**annotation)
-
-            # If the field type does not have a specific ordering expression we can
-            # order the default way.
-            if not order:
-                order = F(field_name)
-
-                if view_sort.order == "ASC":
-                    order = order.asc(nulls_first=True)
-                else:
-                    order = order.desc(nulls_last=True)
-
-            order_by.append(order)
+            order_by.append(field_order_by)
 
         order_by.append("order")
         order_by.append("id")
@@ -1634,12 +1907,13 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
     def get_queryset(
         self,
-        view,
-        search=None,
-        model=None,
-        only_sort_by_field_ids=None,
-        only_search_by_field_ids=None,
-    ):
+        view: View,
+        search: Optional[str] = None,
+        model: Optional[GeneratedTableModel] = None,
+        only_sort_by_field_ids: Optional[Iterable[int]] = None,
+        only_search_by_field_ids: Optional[Iterable[int]] = None,
+        apply_filters: bool = True,
+    ) -> QuerySet:
         """
         Returns a queryset for the provided view which is appropriately sorted,
         filtered and searched according to the view type and its settings.
@@ -1648,19 +1922,15 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param model: The model for this views table to generate the queryset from, if
             not specified then the model will be generated automatically.
         :param view: The view to get the export queryset and fields for.
-        :type view: View
         :param only_sort_by_field_ids: To only sort the queryset by some fields
             provide those field ids in this optional iterable. Other fields not
             present in the iterable will not have their view sorts applied even if they
             have one.
-        :type only_sort_by_field_ids: Optional[Iterable[int]]
         :param only_search_by_field_ids: To only apply the search term to some
             fields provide those field ids in this optional iterable. Other fields
              not present in the iterable will not be searched and filtered down by the
              search term.
-        :type only_search_by_field_ids: Optional[Iterable[int]]
         :return: The appropriate queryset for the provided view.
-        :rtype: QuerySet
         """
 
         if model is None:
@@ -1669,10 +1939,14 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         queryset = model.objects.all().enhance_by_fields()
 
         view_type = view_type_registry.get_by_model(view.specific_class)
-        if view_type.can_filter:
+        if view_type.can_filter and apply_filters:
             queryset = self.apply_filters(view, queryset)
         if view_type.can_sort:
-            queryset = self.apply_sorting(view, queryset, only_sort_by_field_ids)
+            queryset = self.apply_sorting(
+                view,
+                queryset,
+                only_sort_by_field_ids,
+            )
         if search is not None:
             queryset = queryset.search_all_fields(search, only_search_by_field_ids)
         return queryset

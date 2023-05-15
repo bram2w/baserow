@@ -9,6 +9,7 @@ from django.db.models import BooleanField, DurationField, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
+from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -663,7 +664,9 @@ class FieldType(
         :type connection: DatabaseWrapper
         """
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
         """
         This hook can be called to generate a different order by expression. By default
         None is returned which means the normal field sorting will be applied.
@@ -686,7 +689,14 @@ class FieldType(
         :rtype: Optional[Expression, AnnotatedOrderBy, None]
         """
 
-        return None
+        field_expr = django_models.F(field_name)
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(order=field_order_by, can_be_indexed=True)
 
     def force_same_type_alter_column(self, from_field, to_field):
         """

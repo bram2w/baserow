@@ -430,22 +430,17 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
                 order_direction_suffix = "__gt" if order_direction == "ASC" else "__lt"
 
-                order = field_type.get_order(field, field_name, order_direction)
+                field_annotated_order_by = field_type.get_order(
+                    field, field_name, order_direction
+                )
 
-                annotation = None
-                expression_name = None
-                if order is None:
-                    # In this case there isn't a custom implementation for the order
-                    # and we can assume that we can just filter by th field name.
-                    filter_key = f"{field_name}{order_direction_suffix}"
-                else:
-                    # In this case the field type is more complex and probably requires
-                    # joins in order to filter on the field. We will add the order
-                    # expression to the queryset and filter on that expression.
-                    annotation = order.annotation
-                    order = order.order
-                    expression_name = order.expression.name
-                    filter_key = f"{expression_name}{order_direction_suffix}"
+                # In this case the field type is more complex and probably requires
+                # joins in order to filter on the field. We will add the order
+                # expression to the queryset and filter on that expression.
+                annotation = field_annotated_order_by.annotation
+                field_annotated_order_by = field_annotated_order_by.order
+                expression_name = field_annotated_order_by.expression.name
+                filter_key = f"{expression_name}{order_direction_suffix}"
 
                 value = field_type.get_value_for_filter(row, field_name)
 

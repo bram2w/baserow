@@ -1,11 +1,15 @@
 from datetime import datetime
 from decimal import Decimal
+from time import time
 from unittest.mock import MagicMock
 
+from django.core.cache import cache
 from django.db import models
+from django.test import override_settings
 from django.utils.timezone import make_aware, utc
 
 import pytest
+from cachalot.settings import cachalot_settings
 
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
@@ -839,3 +843,56 @@ def test_table_hierarchy(data_fixture):
     row = table_model.objects.create()
     assert row.get_parent() == table
     assert row.get_root() == workspace
+
+
+@override_settings(CACHALOT_ENABLED=True)
+@pytest.mark.django_db(transaction=True)
+def test_cachalot_cache_only_count_query_correctly(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
+    table = data_fixture.create_database_table(name="Cars", database=app)
+
+    queries = {}
+
+    def get_mocked_query_cache_key(compiler):
+        sql, _ = compiler.as_sql()
+        sql_lower = sql.lower()
+        if "count(*)" in sql_lower:
+            key = "count"
+        elif f"database_table_{table.id}" in sql_lower:
+            key = "select_table"
+        else:
+            key = f"{time()}"
+        queries[key] = sql_lower
+        return key
+
+    cachalot_settings.CACHALOT_QUERY_KEYGEN = get_mocked_query_cache_key
+    cachalot_settings.CACHALOT_TABLE_KEYGEN = lambda _, table: table.rsplit("_", 1)[1]
+
+    table_model = table.get_model()
+    row = table_model.objects.create()
+
+    # listing items should not cache the result
+    assert [r.id for r in table_model.objects.all()] == [row.id]
+    assert cache.get("select_table") is None, queries["select_table"]
+
+    def assert_cachalot_cache_queryset_count_of(expected_count):
+        # count() should save the result of the query in the cache
+        assert table_model.objects.count() == expected_count
+
+        # the count query has been cached
+        inserted_cache_entry = cache.get("count")
+        assert inserted_cache_entry[1][0] == expected_count
+
+    assert_cachalot_cache_queryset_count_of(1)
+
+    # creating a new row should invalidate the cache result
+    table_model.objects.create()
+
+    # cachalot invalidate the cache by setting the timestamp for the table
+    # greater than the timestamp of the cache entry
+    invalidation_timestamp = cache.get(table.id)
+    assert invalidation_timestamp > cache.get("count")[0]
+
+    assert_cachalot_cache_queryset_count_of(2)
