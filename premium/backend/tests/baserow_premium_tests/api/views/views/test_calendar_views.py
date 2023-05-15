@@ -24,7 +24,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
-from baserow.test_utils.helpers import is_dict_subset
+from baserow.test_utils.helpers import is_dict_subset, setup_interesting_test_table
 
 
 def get_list_url(calendar_view_id: int) -> str:
@@ -574,19 +574,23 @@ def test_create_calendar_view_different_field_types(api_client, premium_data_fix
     user, token = premium_data_fixture.create_user_and_token(
         has_active_premium_license=True
     )
-    table = premium_data_fixture.create_database_table(user=user)
+    table, _, _, _, context = setup_interesting_test_table(
+        premium_data_fixture, user=user
+    )
     kwargs = {
         "table": table,
         "name": premium_data_fixture.fake.name(),
         "order": 1,
     }
-    all_field_types = field_type_registry.get_all()
-    date_field_types = [t for t in all_field_types if t.can_represent_date]
 
-    for date_field_type in date_field_types:
-        field = date_field_type.model_class.objects.create(**kwargs)
-        premium_data_fixture.create_model_field(kwargs["table"], field)
+    specific_fields = [f.specific for f in table.field_set.all()]
+    can_represent_date_fields = [
+        f
+        for f in specific_fields
+        if field_type_registry.get_by_model(f).can_represent_date(f)
+    ]
 
+    for field in can_represent_date_fields:
         response = api_client.post(
             reverse("api:database:views:list", kwargs={"table_id": table.id}),
             {

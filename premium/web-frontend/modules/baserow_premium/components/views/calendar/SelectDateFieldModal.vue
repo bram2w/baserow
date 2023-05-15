@@ -68,7 +68,7 @@ export default {
   computed: {
     dateFields() {
       return this.fields.filter((f) => {
-        return this.$registry.get('field', f.type).canRepresentDate()
+        return this.$registry.get('field', f.type).canRepresentDate(f)
       })
     },
   },

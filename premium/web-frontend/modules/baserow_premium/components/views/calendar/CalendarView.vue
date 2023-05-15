@@ -224,7 +224,8 @@ export default {
     openCreateRowModal(event) {
       const defaults = {}
       const dateField = this.getDateField(this.fields)
-      if (event?.day?.date != null && dateField) {
+      const fieldType = this.$registry.get('field', dateField.type)
+      if (event?.day?.date != null && dateField && !fieldType.getIsReadOnly()) {
         const name = `field_${dateField.id}`
         if (dateField.date_include_time) {
           defaults[name] = event.day.date.toISOString()

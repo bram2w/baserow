@@ -96,9 +96,6 @@ class FieldType(
     `FieldHandler::get_unique_row_values` method.
     """
 
-    can_represent_date = False
-    """Indicates whether the field can be used to represent date or datetime."""
-
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
@@ -1449,6 +1446,11 @@ class FieldType(
         """
 
         return getattr(row, field_name)
+
+    def can_represent_date(self, field):
+        """Indicates whether the field can be used to represent date or datetime."""
+
+        return False
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

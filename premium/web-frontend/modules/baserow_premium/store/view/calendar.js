@@ -239,7 +239,7 @@ export const actions = {
     const df = getters.getDateField(fields)
     if (
       !df ||
-      this.$registry.get('field', df.type).canRepresentDate() === false
+      this.$registry.get('field', df.type).canRepresentDate(df) === false
     ) {
       commit('RESET')
       return

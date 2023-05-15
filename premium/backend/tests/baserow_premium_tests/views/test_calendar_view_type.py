@@ -25,7 +25,10 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
-from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
+from baserow.test_utils.helpers import (
+    assert_undo_redo_actions_are_valid,
+    setup_interesting_test_table,
+)
 
 
 @pytest.mark.django_db
@@ -178,18 +181,27 @@ def test_calendar_view_created(premium_data_fixture):
 @pytest.mark.django_db
 @pytest.mark.view_calendar
 def test_calendar_view_convert_date_field_to_another(premium_data_fixture):
-    user = premium_data_fixture.create_user()
-    table = premium_data_fixture.create_database_table(user=user)
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table, _, _, _, context = setup_interesting_test_table(
+        premium_data_fixture, user=user
+    )
     date_field = premium_data_fixture.create_date_field(table=table)
     calendar_view = premium_data_fixture.create_calendar_view(
         table=table, date_field=date_field
     )
 
-    all_field_types = field_type_registry.get_all()
-    date_field_types = [t for t in all_field_types if t.can_represent_date]
+    specific_fields = [f.specific for f in table.field_set.all()]
+    can_represent_date_fields = [
+        f
+        for f in specific_fields
+        if field_type_registry.get_by_model(f).can_represent_date(f)
+    ]
     not_compatible_field_type = field_type_registry.get("text")
 
-    for date_field_type in date_field_types:
+    for date_field in can_represent_date_fields:
+        date_field_type = field_type_registry.get_by_model(date_field)
         FieldHandler().update_field(
             user=user, field=date_field, new_type_name=date_field_type.type
         )
@@ -491,95 +503,96 @@ def row_number(idx):
 
 
 GET_ROWS_GROUPED_BY_DATE_FIELD_CASES = [
-    # (
-    #     "basic date field test case",
-    #     case(
-    #         field=("date", "date"),
-    #         rows=["2023-01-10", "2023-01-12"],
-    #         from_timestamp=datetime(2023, 1, 9, 0, 0, 0, 0),
-    #         to_timestamp=datetime(2023, 1, 11, 0, 0, 0, 0),
-    #         user_timezone="UTC",
-    #         expected_result={
-    #             "2023-01-09": {"count": 0, "results": []},
-    #             "2023-01-10": {"count": 1, "results": [row_number(0)]},
-    #         },
-    #     ),
-    # ),
-    # (
-    #     "basic datetime field test case",
-    #     case(
-    #         field=("datetime", {"type": "date", "date_include_time": True}),
-    #         rows=["2023-01-10 00:00", "2023-01-09 23:59"],
-    #         from_timestamp=datetime(2023, 1, 10, 0, 0, 0, 0),
-    #         to_timestamp=datetime(2023, 1, 11, 0, 0, 0, 0),
-    #         user_timezone="UTC",
-    #         expected_result={
-    #             "2023-01-10": {"count": 1, "results": [row_number(0)]},
-    #         },
-    #     ),
-    # ),
-    # (
-    #     "basic datetime field test case where user timezone changes result",
-    #     case(
-    #         field=("datetime", {"type": "date", "date_include_time": True}),
-    #         rows=["2023-01-09 23:59", "2023-01-10 00:00"],
-    #         from_timestamp=datetime(2023, 1, 9, 23, 0, 0, 0),
-    #         to_timestamp=datetime(2023, 1, 10, 1, 0, 0, 0),
-    #         user_timezone="CET",
-    #         expected_result={
-    #             "2023-01-10": {"count": 2, "results": [row_number(0), row_number(1)]},
-    #         },
-    #     ),
-    # ),
-    # (
-    #     "datetime field test case where user timezone overriden by field timezone",
-    #     case(
-    #         field=(
-    #             "datetime",
-    #             {
-    #                 "type": "date",
-    #                 "date_include_time": True,
-    #                 "date_force_timezone": "Etc/GMT-2",
-    #             },
-    #         ),
-    #         rows=["2023-01-09 23:59", "2023-01-10 00:00"],
-    #         from_timestamp=datetime(2023, 1, 9, 23, 0, 0, 0),
-    #         to_timestamp=datetime(2023, 1, 10, 1, 0, 0, 0),
-    #         user_timezone="CET",
-    #         expected_result={
-    #             "2023-01-10": {"count": 2, "results": [row_number(0), row_number(1)]},
-    #         },
-    #     ),
-    # ),
-    # (
-    #     "datetime field test case when CET clocks go forwards",
-    #     case(
-    #         field=(
-    #             "datetime",
-    #             {
-    #                 "type": "date",
-    #                 "date_include_time": True,
-    #             },
-    #         ),
-    #         rows=[
-    #             "2022-03-26 22:59",  # 26th Europe/Amsterdam (UTC+1)
-    #             "2022-03-26 23:00",  # 27th Europe/Amsterdam (UTC+1)
-    #             "2022-03-27 21:59",  # 27th Europe/Amsterdam (UTC+2)
-    #             "2022-03-27 22:00",  # 28th Europe/Amsterdam (UTC+2)
-    #         ],
-    #         from_timestamp=datetime(2022, 3, 26, 0, 0, 0, 0),
-    #         to_timestamp=datetime(2022, 3, 28, 1, 0, 0, 0),
-    #         user_timezone="Europe/Amsterdam",
-    #         expected_result={
-    #             "2022-03-26": {"count": 1, "results": [row_number(0)]},
-    #             "2022-03-27": {
-    #                 "count": 2,
-    #                 "results": [row_number(1), row_number(2)],
-    #             },
-    #             "2022-03-28": {"count": 1, "results": [row_number(3)]},
-    #         },
-    #     ),
-    # ),
+    (
+        "basic date field test case",
+        case(
+            field=("date", "date"),
+            rows=["2023-01-10", "2023-01-12"],
+            from_timestamp=datetime(2023, 1, 9, 0, 0, 0, 0),
+            to_timestamp=datetime(2023, 1, 11, 0, 0, 0, 0),
+            user_timezone="UTC",
+            expected_result={
+                "2023-01-09": {"count": 0, "results": []},
+                "2023-01-10": {"count": 1, "results": [row_number(0)]},
+                "2023-01-11": {"count": 0, "results": []},
+            },
+        ),
+    ),
+    (
+        "basic datetime field test case",
+        case(
+            field=("datetime", {"type": "date", "date_include_time": True}),
+            rows=["2023-01-10 00:00", "2023-01-09 23:59"],
+            from_timestamp=datetime(2023, 1, 10, 0, 0, 0, 0),
+            to_timestamp=datetime(2023, 1, 11, 0, 0, 0, 0),
+            user_timezone="UTC",
+            expected_result={
+                "2023-01-10": {"count": 1, "results": [row_number(0)]},
+            },
+        ),
+    ),
+    (
+        "basic datetime field test case where user timezone changes result",
+        case(
+            field=("datetime", {"type": "date", "date_include_time": True}),
+            rows=["2023-01-09 23:59", "2023-01-10 00:00"],
+            from_timestamp=datetime(2023, 1, 9, 23, 0, 0, 0),
+            to_timestamp=datetime(2023, 1, 10, 1, 0, 0, 0),
+            user_timezone="CET",
+            expected_result={
+                "2023-01-10": {"count": 2, "results": [row_number(0), row_number(1)]},
+            },
+        ),
+    ),
+    (
+        "datetime field test case where user timezone overriden by field timezone",
+        case(
+            field=(
+                "datetime",
+                {
+                    "type": "date",
+                    "date_include_time": True,
+                    "date_force_timezone": "Etc/GMT-2",
+                },
+            ),
+            rows=["2023-01-09 23:59", "2023-01-10 00:00"],
+            from_timestamp=datetime(2023, 1, 9, 23, 0, 0, 0),
+            to_timestamp=datetime(2023, 1, 10, 1, 0, 0, 0),
+            user_timezone="CET",
+            expected_result={
+                "2023-01-10": {"count": 2, "results": [row_number(0), row_number(1)]},
+            },
+        ),
+    ),
+    (
+        "datetime field test case when CET clocks go forwards",
+        case(
+            field=(
+                "datetime",
+                {
+                    "type": "date",
+                    "date_include_time": True,
+                },
+            ),
+            rows=[
+                "2022-03-26 22:59",  # 26th Europe/Amsterdam (UTC+1)
+                "2022-03-26 23:00",  # 27th Europe/Amsterdam (UTC+1)
+                "2022-03-27 21:59",  # 27th Europe/Amsterdam (UTC+2)
+                "2022-03-27 22:00",  # 28th Europe/Amsterdam (UTC+2)
+            ],
+            from_timestamp=datetime(2022, 3, 26, 0, 0, 0, 0),
+            to_timestamp=datetime(2022, 3, 28, 1, 0, 0, 0),
+            user_timezone="Europe/Amsterdam",
+            expected_result={
+                "2022-03-26": {"count": 1, "results": [row_number(0)]},
+                "2022-03-27": {
+                    "count": 2,
+                    "results": [row_number(1), row_number(2)],
+                },
+                "2022-03-28": {"count": 1, "results": [row_number(3)]},
+            },
+        ),
+    ),
     (
         "date field test case ignores user supplied timezone",
         case(

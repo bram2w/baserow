@@ -178,7 +178,7 @@ def get_rows_grouped_by_date_field(
 
     date_field = date_field.specific
     date_field_type = field_type_registry.get_by_model(date_field)
-    if not date_field_type.can_represent_date:
+    if not date_field_type.can_represent_date(date_field):
         raise CalendarViewHasNoDateField()
 
     if base_queryset is None:

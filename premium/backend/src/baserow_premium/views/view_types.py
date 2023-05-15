@@ -311,8 +311,9 @@ class CalendarViewType(ViewType):
                     pk=date_field_value
                 )
 
-            field_type = field_type_registry.get_by_model(date_field_value.specific)
-            if not field_type.can_represent_date:
+            date_field_value = date_field_value.specific
+            field_type = field_type_registry.get_by_model(date_field_value)
+            if not field_type.can_represent_date(date_field_value):
                 raise IncompatibleField()
 
             if (
