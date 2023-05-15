@@ -6,6 +6,10 @@
   height: 26px;
   margin-bottom: 2px;
 
+  > div {
+    border-radius: 2px;
+  }
+
   &:hover {
     cursor: pointer;
   }
@@ -17,19 +21,23 @@
 }
 
 .calendar-card__content {
-  @extend %ellipsis;
-
-  margin: 0 8px 0 8px;
-  width: 100%;
-  gap: 6px;
   display: flex;
-  text-align: left;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 24px;
+  margin: 0 8px 0 8px;
+  gap: 6px;
+  height: 24px;
 
   > :first-child {
     margin-left: 0;
     margin-right: 0;
   }
+}
+
+.calendar-card__labels {
+  @extend %ellipsis;
+
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: left;
 }
