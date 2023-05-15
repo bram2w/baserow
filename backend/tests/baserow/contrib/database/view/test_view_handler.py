@@ -2,13 +2,16 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.test import override_settings
 
 import pytest
+from fakeredis import FakeRedis, FakeServer
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import (
     CannotShareViewTypeError,
     FormViewFieldTypeIsNotSupported,
@@ -28,7 +31,11 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
     ViewTypeDoesNotExist,
 )
-from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
+from baserow.contrib.database.views.handler import (
+    PublicViewRows,
+    ViewHandler,
+    ViewIndexingHandler,
+)
 from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
     FormView,
@@ -2756,3 +2763,294 @@ def test_order_views_ownership_type(data_fixture):
 
     with pytest.raises(ViewNotInTable):
         handler.order_views(user, table, [view2.id])
+
+
+# celery-singleton uses redis to store the lock state
+# so we need to mock redis to make sure the tests don't fail
+fake_redis_server = FakeServer()
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_creating_view_sort_creates_a_new_index(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+
+    table_model = table.get_model()
+    # without any sort the index key should be None
+    index = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert index is None
+
+    # after creating a sort the index key should be set and the index should be
+    # created in the database.
+    handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+    index = ViewIndexingHandler.get_index(grid_view, table_model)
+
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    number_field = data_fixture.create_number_field(user=user, table=table)
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+
+    table_model = table.get_model()
+    # creating a view_sort should create a new index.
+    view_sort_1 = handler.create_sort(
+        user=user, view=grid_view, field=text_field, order="ASC"
+    )
+    index_1 = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert ViewIndexingHandler.does_index_exist(index_1.name) is True
+
+    # Adding a new view_sort should create a new index and delete the previous one.
+    view_sort_2 = handler.create_sort(
+        user=user, view=grid_view, field=number_field, order="ASC"
+    )
+    assert ViewIndexingHandler.does_index_exist(index_1.name) is False
+
+    index_2 = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert ViewIndexingHandler.does_index_exist(index_2.name) is True
+
+    # updating the sort should create a new index and delete the previous one.
+    handler.update_sort(user, view_sort_1, field=text_field, order="DESC")
+    assert ViewIndexingHandler.does_index_exist(index_2.name) is False
+
+    index_3 = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert ViewIndexingHandler.does_index_exist(index_3.name) is True
+
+    # removing the first view_sort should create a new index and delete the
+    # previous one.
+    handler.delete_sort(user, view_sort_2)
+    assert ViewIndexingHandler.does_index_exist(index_3.name) is False
+
+    index_4 = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert ViewIndexingHandler.does_index_exist(index_4.name) is True
+
+    # deleting the last view_sort should delete the last index.
+    handler.delete_sort(user, view_sort_1)
+    index_none = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert index_none is None
+
+    assert ViewIndexingHandler.does_index_exist(index_4.name) is False
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_perm_deleting_view_remove_index_if_unused(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    database = table.database
+    workspace = database.workspace
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    table_model = table.get_model()
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+    grid_view.refresh_from_db()
+    assert ViewIndexingHandler.does_index_exist(grid_view.db_index_name) is True
+
+    # duplicate the view with the same sorting
+    grid_view_2 = handler.duplicate_view(user, grid_view)
+    index = ViewIndexingHandler.get_index(grid_view, table_model)
+
+    # permanently delete the second view is not going to delete the index because
+    # it is still used by the first view.
+    trash_handler = TrashHandler()
+    trash_handler.trash(user, workspace, database, grid_view_2)
+    trash_handler.permanently_delete(grid_view_2)
+
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+
+    # permanently delete the first view is going to delete the index because
+    # it is not used anymore.
+    trash_handler.trash(user, workspace, database, grid_view)
+    trash_handler.permanently_delete(grid_view)
+    assert ViewIndexingHandler.does_index_exist(index.name) is False
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+    index = ViewIndexingHandler.get_index(grid_view, table.get_model())
+
+    # duplicating the table will not duplicate the index.
+    table_2 = TableHandler().duplicate_table(user, table)
+    grid_view_2 = table_2.view_set.get()
+    index_2 = ViewIndexingHandler.get_index(grid_view_2, table_2.get_model())
+
+    assert index is not None
+    assert index_2 is not None
+    assert index.name != index_2.name
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+    assert ViewIndexingHandler.does_index_exist(index_2.name) is False
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    text_field_2 = data_fixture.create_text_field(user=user, table=table)
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+    index = ViewIndexingHandler.get_index(grid_view, table.get_model())
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+
+    # deleting the field without a view_sort should not delete the index
+    FieldHandler().delete_field(user, text_field_2)
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+
+    # deleting the field with a view_sort should delete the index
+    FieldHandler().delete_field(user, text_field)
+    assert ViewIndexingHandler.does_index_exist(index.name) is False
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_index(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    handler = ViewHandler()
+    grid_view = handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+    index = ViewIndexingHandler.get_index(grid_view, table.get_model())
+    assert ViewIndexingHandler.does_index_exist(index.name) is True
+
+    FieldHandler().update_field(
+        user,
+        text_field,
+        new_type_name="link_row",
+        link_row_table=table,
+        has_related_field=False,
+    )
+    assert ViewIndexingHandler.does_index_exist(index.name) is False
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch("baserow.contrib.database.views.tasks.update_view_index.delay")
+@pytest.mark.django_db(transaction=True)
+def test_loading_a_view_checks_for_db_index_without_additional_queries(
+    mocked_view_index_update_task, data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    view_handler = ViewHandler()
+    grid_view = view_handler.create_view(
+        user=user,
+        table=table,
+        type_name="grid",
+        name="Test grid",
+        ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+    )
+    view_handler.create_sort(user=user, view=grid_view, field=text_field, order="ASC")
+
+    model = table.get_model()
+
+    grid_view.refresh_from_db()
+    assert not grid_view.db_index_name
+
+    view = view_handler.get_view(
+        grid_view.id, base_queryset=GridView.objects.prefetch_related("viewsort_set")
+    )
+
+    with django_assert_num_queries(0):
+        ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
+
+    with override_settings(AUTO_INDEX_VIEW_ENABLED=True), django_assert_num_queries(0):
+        ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
+        assert mocked_view_index_update_task.call_count == 1
+
+    # actually create the index for the view
+    ViewIndexingHandler.update_index(grid_view, model)
+    view.refresh_from_db()
+    assert view.db_index_name
+
+    with override_settings(AUTO_INDEX_VIEW_ENABLED=True), django_assert_num_queries(0):
+        ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
+        # the task should not be called again
+        assert mocked_view_index_update_task.call_count == 1

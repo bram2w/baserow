@@ -328,10 +328,11 @@ class DatabaseApplicationType(ApplicationType):
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
         for serialized_table in serialized_tables:
+            table = serialized_table["_object"]
             for serialized_view in serialized_table["views"]:
                 view_type = view_type_registry.get(serialized_view["type"])
                 view_type.import_serialized(
-                    serialized_table["_object"],
+                    table,
                     serialized_view,
                     id_mapping,
                     files_zip,
@@ -342,7 +343,7 @@ class DatabaseApplicationType(ApplicationType):
             # We don't need to create all the fields individually because the schema
             # editor can handle the creation of the table schema in one go.
             with safe_django_schema_editor() as schema_editor:
-                table_model = serialized_table["_object"].get_model(
+                table_model = table.get_model(
                     fields=serialized_table["_field_objects"],
                     field_ids=[],
                     managed=True,

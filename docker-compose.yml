@@ -144,7 +144,10 @@ x-backend-variables: &backend-variables
   OTEL_TRACES_SAMPLER:
   OTEL_TRACES_SAMPLER_ARG:
   OTEL_PER_MODULE_SAMPLER_OVERRIDES:
-
+  BASEROW_CACHALOT_ENABLED:
+  BASEROW_CACHALOT_ONLY_CACHABLE_TABLES:
+  BASEROW_CACHALOT_TIMEOUT:
+  BASEROW_AUTO_INDEX_VIEW_ENABLED:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing

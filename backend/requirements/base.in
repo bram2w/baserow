@@ -57,3 +57,5 @@ opentelemetry-semantic-conventions==0.38b0
 opentelemetry-util-http==0.38b0
 Brotli==1.0.9
 loguru==0.6.0
+django-cachalot==2.5.3
+celery-singleton==0.3.1

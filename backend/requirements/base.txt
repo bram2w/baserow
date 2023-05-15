@@ -48,9 +48,12 @@ celery[redis]==5.2.7
     # via
     #   -r base.in
     #   celery-redbeat
+    #   celery-singleton
     #   django-celery-beat
     #   django-celery-email
 celery-redbeat==2.0.0
+    # via -r base.in
+celery-singleton==0.3.1
     # via -r base.in
 certifi==2022.9.24
     # via requests
@@ -103,6 +106,7 @@ django==3.2.18
     #   channels
     #   dj-database-url
     #   django-appconf
+    #   django-cachalot
     #   django-celery-beat
     #   django-celery-email
     #   django-cors-headers
@@ -114,6 +118,8 @@ django==3.2.18
     #   drf-spectacular
 django-appconf==1.0.5
     # via django-celery-email
+django-cachalot==2.5.3
+    # via -r base.in
 django-celery-beat==2.5.0
     # via -r base.in
 django-celery-email==3.0.0
@@ -340,6 +346,7 @@ redis==4.5.4
     #   -r base.in
     #   celery
     #   celery-redbeat
+    #   celery-singleton
     #   channels-redis
     #   django-redis
 regex==2023.3.23

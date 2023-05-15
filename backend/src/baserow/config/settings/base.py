@@ -14,6 +14,7 @@ import dj_database_url
 from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
+from baserow.cachalot_patch import patch_cachalot_for_baserow
 from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.version import VERSION
 
@@ -74,6 +75,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "djcelery_email",
+    "cachalot",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -85,6 +87,37 @@ INSTALLED_APPS = [
     "baserow.contrib.database",
     *BASEROW_BUILT_IN_PLUGINS,
 ]
+
+
+CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "true") == "true"
+BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
+    "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+)
+
+# Please avoid to add tables with more than 50 modifications per minute to this
+# list, as described here:
+# https://django-cachalot.readthedocs.io/en/latest/limits.html
+if BASEROW_CACHALOT_ONLY_CACHABLE_TABLES is None:
+    CACHALOT_ONLY_CACHABLE_TABLES = [
+        "core_settings",
+        "auth_user",
+        "core_userprofile",
+        "core_workspaceuser",
+        "database_token",
+        "database_tokenpermission",
+        "baserow_premium_license",
+        "baserow_premium_licenseuser",
+    ]
+else:
+    CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
+
+CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
+
+patch_cachalot_for_baserow()
+
+# This flag enable automatic index creation for table views based on sortings.
+AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
+AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")

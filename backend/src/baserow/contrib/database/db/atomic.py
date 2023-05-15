@@ -39,10 +39,10 @@ def read_repeatable_single_database_atomic_transaction(
         """
  SELECT * FROM database_field
  INNER JOIN database_table ON database_field.table_id = database_table.id
- WHERE database_table.database_id = %s FOR KEY SHARE OF database_field, database_table
+ WHERE database_table.database_id = {0} FOR KEY SHARE OF database_field, database_table
 """
     )
-    first_statement_args = [database_id]
+    first_statement_args = [sql.Literal(database_id)]
     return transaction_atomic(
         isolation_level=IsolationLevel.REPEATABLE_READ,
         first_sql_to_run_in_transaction_with_args=(
@@ -84,10 +84,10 @@ def read_committed_single_table_transaction(
         """
  SELECT * FROM database_field
  INNER JOIN database_table ON database_field.table_id = database_table.id
- WHERE database_table.id = %s FOR KEY SHARE OF database_field, database_table
+ WHERE database_table.id = {0} FOR KEY SHARE OF database_field, database_table
 """
     )
-    first_statement_args = [table_id]
+    first_statement_args = [sql.Literal(table_id)]
     return transaction_atomic(
         first_sql_to_run_in_transaction_with_args=(
             first_statement,
@@ -130,10 +130,10 @@ def read_repeatable_read_single_table_transaction(
         """
  SELECT * FROM database_field
  INNER JOIN database_table ON database_field.table_id = database_table.id
- WHERE database_table.id = %s FOR KEY SHARE OF database_field, database_table
+ WHERE database_table.id = {0} FOR KEY SHARE OF database_field, database_table
 """
     )
-    first_statement_args = [table_id]
+    first_statement_args = [sql.Literal(table_id)]
     return transaction_atomic(
         isolation_level=IsolationLevel.REPEATABLE_READ,
         first_sql_to_run_in_transaction_with_args=(

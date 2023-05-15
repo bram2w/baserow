@@ -72,18 +72,24 @@ def setup_interesting_test_table(
     if user_kwargs is None:
         user_kwargs = {}
 
-    user = user or data_fixture.create_user(**user_kwargs)
-    database = database or data_fixture.create_database_application(user=user)
-    user2 = User.objects.filter(
-        email="user2@example.com"
-    ).first() or data_fixture.create_user(
-        workspace=database.workspace, email="user2@example.com"
-    )
-    user3 = User.objects.filter(
-        email="user3@example.com"
-    ).first() or data_fixture.create_user(
-        workspace=database.workspace, email="user3@example.com"
-    )
+    if user is None:
+        user = data_fixture.create_user(**user_kwargs)
+
+    if database is None:
+        database = data_fixture.create_database_application(user=user)
+
+    try:
+        user2, user3 = User.objects.filter(
+            email__in=["user2@example.com", "user3@example.com"]
+        ).order_by("id")
+    except ValueError:
+        user2 = data_fixture.create_user(
+            workspace=database.workspace, email="user2@example.com"
+        )
+        user3 = data_fixture.create_user(
+            workspace=database.workspace, email="user3@example.com"
+        )
+
     table = data_fixture.create_database_table(
         database=database, user=user, name=name or "interesting_test_table"
     )
@@ -370,10 +376,13 @@ def setup_interesting_test_database(
     if user_kwargs is None:
         user_kwargs = {}
 
-    user = user or data_fixture.create_user(**user_kwargs)
-    database = database or data_fixture.create_database_application(
-        user=user, workspace=workspace, name=name
-    )
+    if user is None:
+        user = data_fixture.create_user(**user_kwargs)
+
+    if database is None:
+        database = data_fixture.create_database_application(
+            user=user, workspace=workspace, name=name
+        )
 
     for table_name in ["A", "B", "C"]:
         setup_interesting_test_table(

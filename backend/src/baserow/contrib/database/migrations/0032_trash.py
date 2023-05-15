@@ -6,11 +6,7 @@ def forward(apps, schema_editor):
     # noinspection PyPep8Naming
     Table = apps.get_model("database", "Table")
 
-    with connection.schema_editor() as tables_schema_editor:
-        # We need to stop the transaction because we might need to lock a lot of tables
-        # which could result in an out of memory exception.
-        tables_schema_editor.atomic.__exit__(None, None, None)
-
+    with connection.schema_editor(atomic=False) as tables_schema_editor:
         for table in Table.objects.all():
             table_name = f"database_table_{table.id}"
             # Make the forward migration more idempotent / resilient to partially
@@ -26,11 +22,7 @@ def reverse(apps, schema_editor):
     # noinspection PyPep8Naming
     Table = apps.get_model("database", "Table")
 
-    with connection.schema_editor() as tables_schema_editor:
-        # We need to stop the transaction because we might need to lock a lot of tables
-        # which could result in an out of memory exception.
-        tables_schema_editor.atomic.__exit__(None, None, None)
-
+    with connection.schema_editor(atomic=False) as tables_schema_editor:
         # apps.get_model doesn't return a model using our custom overridden managers
         # so we can safely use .objects which will return all trashed tables also
         for table in Table.objects.all():
@@ -43,6 +35,7 @@ def reverse(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
+    atomic = False
     dependencies = [
         ("database", "0031_fix_url_field_max_length"),
     ]

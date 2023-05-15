@@ -5,6 +5,7 @@ from baserow.contrib.database.fields.models import FileField
 
 from .models import GalleryView
 
+view_loaded = Signal()
 view_created = Signal()
 view_updated = Signal()
 view_deleted = Signal()
@@ -41,3 +42,21 @@ def field_deleted(sender, field, **kwargs):
         decorator_value_provider_type
     ) in decorator_value_provider_type_registry.get_all():
         decorator_value_provider_type.after_field_delete(field)
+
+    from baserow.contrib.database.views.handler import ViewIndexingHandler
+
+    ViewIndexingHandler.after_field_changed_or_deleted(field)
+
+
+@receiver([view_sort_created, view_sort_updated, view_sort_deleted])
+def update_view_index_if_view_sort_changes(sender, view_sort, **kwargs):
+    from baserow.contrib.database.views.handler import ViewIndexingHandler
+
+    ViewIndexingHandler.schedule_index_update(view_sort.view)
+
+
+@receiver(view_loaded)
+def schedule_view_index_creation_if_needed(sender, view, table_model, **kwargs):
+    from baserow.contrib.database.views.handler import ViewIndexingHandler
+
+    ViewIndexingHandler.schedule_index_creation_if_needed(view, table_model)
