@@ -169,6 +169,10 @@ class BaserowFormulaType(abc.ABC):
         pass
 
     @property
+    def can_represent_date(self) -> bool:
+        return False
+
+    @property
     @abc.abstractmethod
     def is_valid(self) -> bool:
         pass

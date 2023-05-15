@@ -698,7 +698,9 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
-    can_represent_date = True
+
+    def can_represent_date(self, field):
+        return True
 
     def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
         date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
@@ -3519,6 +3521,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         self, old_field: FormulaField, new_field_attrs: Dict[str, Any]
     ) -> bool:
         return False
+
+    def can_represent_date(self, field: "Field") -> bool:
+        return self.to_baserow_formula_type(field.specific).can_represent_date
 
 
 class LookupFieldType(FormulaFieldType):

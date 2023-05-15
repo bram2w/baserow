@@ -431,6 +431,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         "date_force_timezone",
     ]
     nullable_option_fields = ["date_force_timezone"]
+    can_represent_date = True
 
     def __init__(
         self,
@@ -739,7 +740,6 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         return []
 
     def get_baserow_field_instance_and_type(self):
-        # Until Baserow has a array field type implement the required methods below
         return self, self
 
     def get_model_field(self, instance, **kwargs) -> models.Field:

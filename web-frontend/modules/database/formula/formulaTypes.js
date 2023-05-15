@@ -104,6 +104,10 @@ export class BaserowFormulaTypeDefinition extends Registerable {
     )
     return underlyingFieldType.toHumanReadableString(field, value)
   }
+
+  canRepresentDate() {
+    return false
+  }
 }
 
 export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
@@ -233,6 +237,10 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
 
   getFunctionalGridViewFieldArrayComponent() {
     return FunctionalFormulaDateArrayItem
+  }
+
+  canRepresentDate() {
+    return true
   }
 }
 

@@ -388,7 +388,7 @@ export class CalendarViewType extends PremiumViewType {
 
     if (dateFieldId === field.id) {
       const type = this.app.$registry.get('field', field.type)
-      if (!type.canRepresentDate()) {
+      if (!type.canRepresentDate(field)) {
         this._setFieldToNull(context, field, 'date_field')
         await context.dispatch(
           storePrefix + 'view/calendar/reset',

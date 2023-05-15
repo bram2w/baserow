@@ -106,7 +106,7 @@ export default {
       const df = this.getDateField(this.fields)
       if (
         !df ||
-        this.$registry.get('field', df.type).canRepresentDate() === false
+        this.$registry.get('field', df.type).canRepresentDate(df) === false
       ) {
         return this.$t('calendarViewHeader.displayBy')
       } else {
@@ -145,7 +145,7 @@ export default {
       const df = this.getDateField(this.fields)
       if (
         !df ||
-        this.$registry.get('field', df.type).canRepresentDate() === false
+        this.$registry.get('field', df.type).canRepresentDate(df) === false
       ) {
         this.showChooseDateFieldModal()
       }
