@@ -1,5 +1,49 @@
 # Changelog
 
+## Released 1.17.0
+
+### New features
+* row create edit modal for calendar view [#1631](https://gitlab.com/baserow/baserow/-/issues/1631)
+* public sharing for calendar view [#1637](https://gitlab.com/baserow/baserow/-/issues/1637)
+* row coloring for calendar view [#1638](https://gitlab.com/baserow/baserow/-/issues/1638)
+* Allow configuring Baserow to send emails using an implicit TLS connection and with custom SSL key files. [#1646](https://gitlab.com/baserow/baserow/-/issues/1646)
+* Add a concurrent user requests rate limiter [#1673](https://gitlab.com/baserow/baserow/-/issues/1673)
+* Update of backend dependencies [#1674](https://gitlab.com/baserow/baserow/-/issues/1674)
+* use otel baggage to enhance every span with useful info [#1700](https://gitlab.com/baserow/baserow/-/issues/1700)
+* Add the `datetime_format_tz` function to format dates in different timezones. [#1719](https://gitlab.com/baserow/baserow/-/issues/1719)
+* support formula date fields in the calendar view [#1732](https://gitlab.com/baserow/baserow/-/issues/1732)
+* Add a new admin health check page for seeing the status of your Baserow server. [#521](https://gitlab.com/baserow/baserow/-/issues/521)
+* Add email tester to health check page for easily debugging Baserow email sending issues. [#521](https://gitlab.com/baserow/baserow/-/issues/521)
+* Add new /api/_health/full/ JSON API healthcheck endpoint for admins only to run a full set of health checks against Baserow. [#521](https://gitlab.com/baserow/baserow/-/issues/521)
+* Update all official Baserow images to now work on arm64 as well as amd64.  [#890](https://gitlab.com/baserow/baserow/-/issues/890)
+
+### Bug fixes
+* Ensure that enterprise role assignments are copied when an application and/or table are duplicated or snapshotted. [#1548](https://gitlab.com/baserow/baserow/-/issues/1548)
+* fix slow loading of table with hundreds of views caused by serializer in list_views endpoint [#1684](https://gitlab.com/baserow/baserow/-/issues/1684)
+* Fix enterprise migration being mentioned from core migration causing removal of enterprise app to break migrations. [#1696](https://gitlab.com/baserow/baserow/-/issues/1696)
+* fix cors errors with aws s3 file download buttons in chromium based browsers [#1708](https://gitlab.com/baserow/baserow/-/issues/1708)
+* otel_resource_attributes overwritten in all in one deploy preventing custom set attributes [#1711](https://gitlab.com/baserow/baserow/-/issues/1711)
+* Fixes a bug where a wrong empty view is generated in some cases during the Airtable import.
+
+### Refactors
+* Bump frontend dependencies [#1675](https://gitlab.com/baserow/baserow/-/issues/1675)
+* Lazy load nested table models when needed to improve `table.get_model` performances [#1695](https://gitlab.com/baserow/baserow/-/issues/1695)
+* improve performance for has doesn t have filters [#1698](https://gitlab.com/baserow/baserow/-/issues/1698)
+* Update frontend dependencies for plugin boilerplate [#1705](https://gitlab.com/baserow/baserow/-/issues/1705)
+* Auto generate a database index per view based on sorts and add django-cachalot to speed up count() [#720](https://gitlab.com/baserow/baserow/-/issues/720)
+* Changed repository URL to the one in the GitLab Baserow group
+* reduce amount of queries when listing applications
+
+### Breaking API changes
+* Remove BASEROW_FULL_HEALTHCHECKS env var as private _health check endpoint which this env var affected has been simplified, depricated and replaced with the new /api/_health/full/ endpoint. [# ](https://gitlab.com/baserow/baserow/-/issues/ )
+* Increased the snapshot permission requirements from Editor to Admin. [#1548](https://gitlab.com/baserow/baserow/-/issues/1548)
+  * Creating a snapshot will now require an Admin role.
+  * Restoring a snapshot will now require an Admin role.
+  * Listing snapshots will now require an Admin role.
+  * Deleting snapshots will now require an Admin role.
+* Depricate private _health/ check endpoint and simplify the check it performs for security reasons.
+
+
 ## Released 1.16.1-rc1
 
 ### New features
@@ -14,6 +58,7 @@
 * Pre-fill name field after the linked table name [#1619](https://gitlab.com/baserow/baserow/-/issues/1619)
 
 ### Bug fixes
+* Fix Updating formula field doesn't delete incompatible filters and sorts [#1608](https://gitlab.com/baserow/baserow/-/issues/1608)
 * Fix date picker grid breaking on smaller zoom levels [#1640](https://gitlab.com/baserow/baserow/-/issues/1640)
 * fix formula with now and field functions not always periodically refreshing [#1650](https://gitlab.com/baserow/baserow/-/issues/1650)
 * Fix clicking on the download link of an image randomly opened the file instead. [#1652](https://gitlab.com/baserow/baserow/-/issues/1652)
