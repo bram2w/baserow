@@ -2774,7 +2774,10 @@ fake_redis_server = FakeServer()
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_creating_view_sort_creates_a_new_index(data_fixture):
     user = data_fixture.create_user()
@@ -2806,7 +2809,10 @@ def test_creating_view_sort_creates_a_new_index(data_fixture):
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
     data_fixture,
@@ -2868,7 +2874,10 @@ def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_perm_deleting_view_remove_index_if_unused(data_fixture):
     user = data_fixture.create_user()
@@ -2912,7 +2921,10 @@ def test_perm_deleting_view_remove_index_if_unused(data_fixture):
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
     user = data_fixture.create_user()
@@ -2945,7 +2957,10 @@ def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
     user = data_fixture.create_user()
@@ -2977,7 +2992,10 @@ def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
     AUTO_INDEX_VIEW_ENABLED=True,
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_index(
     data_fixture,
@@ -3010,7 +3028,10 @@ def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_i
 @override_settings(
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @patch("baserow.contrib.database.views.tasks.update_view_index.delay")
 @pytest.mark.django_db(transaction=True)
 def test_loading_a_view_checks_for_db_index_without_additional_queries(

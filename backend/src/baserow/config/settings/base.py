@@ -119,6 +119,10 @@ CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
 
 patch_cachalot_for_baserow()
 
+CELERY_SINGLETON_BACKEND_CLASS = (
+    "baserow.celery_singleton_backend.RedisBackendForSingleton"
+)
+
 # This flag enable automatic index creation for table views based on sortings.
 AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
 AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
@@ -401,7 +405,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.17.0",
+    "VERSION": "1.17.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},

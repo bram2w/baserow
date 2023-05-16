@@ -1,8 +1,11 @@
+import traceback
+
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 
 from celery_singleton import DuplicateTaskError, Singleton
+from loguru import logger
 
 from baserow.config.celery import app
 from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
@@ -69,6 +72,9 @@ def _schedule_view_index_update(view_id: int):
             True,
             timeout=settings.AUTO_INDEX_LOCK_EXPIRY * 2,
         )
+    except Exception as exc:  # nosec
+        logger.error("Failed to schedule index update because of {e}", e=str(exc))
+        traceback.print_exc()
 
 
 def schedule_view_index_update(view_id: int):
