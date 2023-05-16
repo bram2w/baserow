@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.17.1
+
+### Bug fixes
+* Fix heroku error appearing when making a view sort. [#1736](https://gitlab.com/baserow/baserow/-/issues/1736)
+
+
 ## Released 1.17.0
 
 ### New features
