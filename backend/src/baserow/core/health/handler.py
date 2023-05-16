@@ -5,7 +5,9 @@ from django.conf import settings
 from django.core import mail
 from django.core.mail import EmailMessage
 
+from health_check.contrib.s3boto3_storage.backends import S3Boto3StorageHealthCheck
 from health_check.plugins import plugin_dir
+from health_check.storage.backends import DefaultFileStorageHealthCheck
 
 
 class HealthCheckResult(NamedTuple):
@@ -38,6 +40,8 @@ class HealthCheckHandler:
 
         passing = True
         for plugin in cls.get_plugins():
+            if cls._should_skip_check(plugin):
+                continue
             # The plugin checks can fail and raise but we always want to catch
             # to report back that they failed.
             # noinspection PyBroadException
@@ -50,6 +54,21 @@ class HealthCheckHandler:
                 passing = False
 
         return HealthCheckResult(checks, passing)
+
+    @classmethod
+    def _should_skip_check(cls, plugin):
+        """
+        Make sure we skip the s3 check when s3 is not active and vice versa with
+        the default storage check.
+        """
+
+        s3_enabled = (
+            settings.DEFAULT_FILE_STORAGE == "storages.backends.s3boto3.S3Boto3Storage"
+        )
+        if s3_enabled:
+            return isinstance(plugin, DefaultFileStorageHealthCheck)
+        else:
+            return isinstance(plugin, S3Boto3StorageHealthCheck)
 
     @classmethod
     def send_test_email(cls, target_email: str):
