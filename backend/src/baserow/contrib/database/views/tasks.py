@@ -35,25 +35,19 @@ def update_view_index(view_id: int):
         )
         ViewIndexingHandler.update_index(view)
     finally:
-        # if the view_id is in the cache then it means something happened
-        # during the task and it should be re-scheduled.
-        if cache.delete(get_auto_index_cache_key(view_id)):
-            schedule_view_index_update(view_id)
+        # check for any pending view index updates and schedule them out of this
+        # singleton task to avoid concurrency issues
+        _check_for_pending_view_index_updates.delay(view_id)
 
 
-def schedule_view_index_update(view_id: int):
+@app.task(queue="export")
+def _check_for_pending_view_index_updates(view_id):
     """
-    Schedules a view index update for the provided view id. If the view index
-    update is already scheduled then just add the view_id in the cache so that
-    `update_view_index` will re-schedule itself at the end.
-
-    :param view_id: The id of the view for which the index should be updated.
+    Checks if there are any pending view index updates and schedules them.
     """
 
-    if not settings.AUTO_INDEX_VIEW_ENABLED:
-        return
-
-    transaction.on_commit(lambda: _schedule_view_index_update(view_id))
+    if cache.delete(get_auto_index_cache_key(view_id)):
+        _schedule_view_index_update(view_id)
 
 
 def _schedule_view_index_update(view_id: int):
@@ -75,3 +69,18 @@ def _schedule_view_index_update(view_id: int):
             True,
             timeout=settings.AUTO_INDEX_LOCK_EXPIRY * 2,
         )
+
+
+def schedule_view_index_update(view_id: int):
+    """
+    Schedules a view index update for the provided view id. If the view index
+    update is already scheduled then just add the view_id in the cache so that
+    `update_view_index` will re-schedule itself at the end.
+
+    :param view_id: The id of the view for which the index should be updated.
+    """
+
+    if not settings.AUTO_INDEX_VIEW_ENABLED:
+        return
+
+    transaction.on_commit(lambda: _schedule_view_index_update(view_id))
