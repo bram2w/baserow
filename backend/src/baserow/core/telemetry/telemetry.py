@@ -17,9 +17,10 @@ from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs._internal.export import BatchLogRecordProcessor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics._internal.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import ProxyTracerProvider
+
+from baserow.core.telemetry.provider import DifferentSamplerPerLibraryTracerProvider
+from baserow.core.telemetry.utils import BatchBaggageSpanProcessor, otel_is_enabled
 
 
 class LogGuruCompatibleLoggerHandler(LoggingHandler):
@@ -47,6 +48,8 @@ def setup_logging():
     immediately with no contents.
     """
 
+    from django.conf import settings
+
     from loguru import logger
 
     # A slightly customized default loguru format which includes the process id.
@@ -63,19 +66,12 @@ def setup_logging():
     # Remove the default loguru stderr sink
     logger.remove()
     # Replace it with our format, loguru recommends sending application logs to stderr.
-    logger.add(sys.stderr, format=loguru_format)
+    logger.add(
+        sys.stderr, format=loguru_format, level=settings.BASEROW_BACKEND_LOG_LEVEL
+    )
     logger.info("Logger setup.")
     if otel_is_enabled():
         _setup_log_exporting(logger)
-
-
-def otel_is_enabled():
-    env_var_set = bool(os.getenv("BASEROW_ENABLE_OTEL", False))
-    not_in_tests = (
-        os.getenv("DJANGO_SETTINGS_MODULE", "").strip()
-        != "baserow.config.settings.test"
-    )
-    return env_var_set and not_in_tests
 
 
 def setup_telemetry(add_django_instrumentation: bool):
@@ -95,8 +91,8 @@ def setup_telemetry(add_django_instrumentation: bool):
         if not isinstance(existing_provider, ProxyTracerProvider):
             print("Provider already configured not reconfiguring...")
         else:
-            provider = TracerProvider()
-            processor = BatchSpanProcessor(OTLPSpanExporter())
+            provider = DifferentSamplerPerLibraryTracerProvider()
+            processor = BatchBaggageSpanProcessor(OTLPSpanExporter())
             provider.add_span_processor(processor)
             trace.set_tracer_provider(provider)
 
@@ -129,7 +125,7 @@ def _setup_log_exporting(logger):
         logger_provider=logger_provider,
     )
     logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
-    logger.add(handler, format="{message}")
+    logger.add(handler, format="{message}", level=settings.BASEROW_BACKEND_LOG_LEVEL)
     logger.info("Logger open telemetry exporting setup.")
 
 
@@ -142,21 +138,4 @@ def _setup_standard_backend_instrumentation():
 
 
 def _setup_django_process_instrumentation():
-    def response_hook(span, request, response):
-
-        if hasattr(request, "user"):
-
-            def _set(name, *attr):
-                value = request.user
-                for a in attr:
-                    value = getattr(value, a, None)
-                if value:
-                    span.set_attribute(name, value)
-
-            _set("user.id", "id")
-            _set("user.untrusted_client_session_id", "untrusted_client_session_id")
-            _set("user.database_token_id", "user_token", "id")
-
-    DjangoInstrumentor().instrument(
-        response_hook=response_hook,
-    )
+    DjangoInstrumentor().instrument()

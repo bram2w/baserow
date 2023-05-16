@@ -19,7 +19,6 @@ class TeamObjectScopeType(ObjectScopeType):
         return self.get_base_queryset().prefetch_related("workspace")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-
         if scope_type.type == WorkspaceObjectScopeType.type:
             return Q(workspace__in=[s.id for s in scopes])
 
@@ -40,7 +39,6 @@ class TeamSubjectObjectScopeType(ObjectScopeType):
         return self.get_base_queryset().prefetch_related("team", "team__workspace")
 
     def get_filter_for_scope_type(self, scope_type, scopes):
-
         if scope_type.type == WorkspaceObjectScopeType.type:
             return Q(team__workspace__in=[s.id for s in scopes])
 

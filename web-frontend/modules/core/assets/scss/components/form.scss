@@ -7,16 +7,27 @@
   }
 }
 
+.control__description {
+  font-size: 13px;
+  line-height: 160%;
+  color: $color-neutral-600;
+  margin-bottom: 16px;
+}
+
 .control__label {
   display: block;
   font-size: 14px;
   font-weight: 700;
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 
   &.control__label--small {
     font-size: 13px;
     font-weight: 700;
     margin-bottom: 4px;
+  }
+
+  & + :not(.control__description) {
+    margin-top: 16px;
   }
 }
 
@@ -29,13 +40,6 @@
   height: 16px;
   top: 3px;
   position: relative;
-}
-
-.control__description {
-  font-size: 13px;
-  line-height: 160%;
-  color: $color-neutral-600;
-  margin-bottom: 16px;
 }
 
 .control__context {

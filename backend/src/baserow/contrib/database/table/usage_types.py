@@ -3,7 +3,7 @@ from django.db.models import Sum
 from django.db.models.expressions import RawSQL
 
 from baserow.contrib.database.fields.models import FileField
-from baserow.contrib.database.models import Table
+from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
 from baserow.core.usage.registries import UsageInBytes, WorkspaceStorageUsageItemType
 from baserow.core.user_files.models import UserFile
 
@@ -42,7 +42,7 @@ class TableWorkspaceStorageUsageItemType(WorkspaceStorageUsageItemType):
         with connection.cursor() as cursor:
             cursor.execute(
                 FILENAMES_PER_GROUP_PLPGSQL_FUNCTION.format(
-                    database_table_prefix=Table.USER_TABLE_DATABASE_NAME_PREFIX,
+                    database_table_prefix=USER_TABLE_DATABASE_NAME_PREFIX,
                     filefields_query=str(
                         FileField.objects.filter(
                             table__trashed=False,

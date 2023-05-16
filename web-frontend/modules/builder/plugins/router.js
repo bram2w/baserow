@@ -8,7 +8,7 @@ import {
 /**
  * Replace the official Nuxt `createRouter` function. If the request hostname is equal
  * to the `PUBLIC_WEB_FRONTEND_URL` hostname, the router will contain only routes that
- * are not marked as `{ meta: { publishedWebsiteRoute: true } }` and it will contains
+ * are not marked as `{ meta: { publishedBuilderRoute: true } }` and it will contains
  * only this routes otherwise.
  *
  * @param {*} ssrContext
@@ -16,13 +16,12 @@ import {
  * @returns the new router instance accessible from `this.$router` in components.
  */
 export function createRouter(ssrContext, config) {
-  let isWebFrontendHostname = false
+  let isWebFrontendHostname = true
 
   // On the server
   if (process.server && ssrContext && ssrContext.nuxt && ssrContext.req) {
     const req = ssrContext.req
-    const frontendHostname = new URL(ssrContext.req.env.PUBLIC_WEB_FRONTEND_URL)
-      .hostname
+    const frontendHostname = new URL(req.env.PUBLIC_WEB_FRONTEND_URL).hostname
     const requestHostname = new URL(`http://${req.headers.host}`).hostname
     isWebFrontendHostname = frontendHostname === requestHostname
     // Send the variable to the frontend using the `__NUXT__` property
@@ -33,7 +32,7 @@ export function createRouter(ssrContext, config) {
   if (
     process.client &&
     window.__NUXT__ &&
-    window.__NUXT__.isWebFrontendHostname
+    window.__NUXT__.isWebFrontendHostname !== isWebFrontendHostname
   ) {
     isWebFrontendHostname = window.__NUXT__.isWebFrontendHostname
   }
@@ -43,9 +42,9 @@ export function createRouter(ssrContext, config) {
 
   // Filter the routes to keep only the core Baserow routes if the hostname is the
   // main one and for any other hostname, we keep the routes marked as
-  // `publishedWebsiteRoute`.
+  // `publishedBuilderRoute`.
   const newRoutes = routerOptions.routes.filter((route) => {
-    const isPublishedWebsiteRoute = !!route?.meta?.publishedWebsiteRoute
+    const isPublishedWebsiteRoute = !!route?.meta?.publishedBuilderRoute
     return (
       (isWebFrontendHostname && !isPublishedWebsiteRoute) ||
       (!isWebFrontendHostname && isPublishedWebsiteRoute)

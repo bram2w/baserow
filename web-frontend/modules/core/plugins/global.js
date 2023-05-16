@@ -21,6 +21,7 @@ import Tabs from '@baserow/modules/core/components/Tabs'
 import Tab from '@baserow/modules/core/components/Tab'
 import List from '@baserow/modules/core/components/List'
 import HelpIcon from '@baserow/modules/core/components/HelpIcon'
+import Button from '@baserow/modules/core/components/Button'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -36,50 +37,61 @@ import autoScroll from '@baserow/modules/core/directives/autoScroll'
 import clickOutside from '@baserow/modules/core/directives/clickOutside'
 import Badge from '@baserow/modules/core/components/Badge'
 import InputWithIcon from '@baserow/modules/core/components/InputWithIcon'
+import ExpandableCard from '@baserow/modules/core/components/ExpandableCard'
+import RadioButton from '@baserow/modules/core/components/RadioButton'
 
-Vue.component('Context', Context)
-Vue.component('Modal', Modal)
-Vue.component('Editable', Editable)
-Vue.component('Dropdown', Dropdown)
-Vue.component('DropdownItem', DropdownItem)
-Vue.component('Checkbox', Checkbox)
-Vue.component('Radio', Radio)
-Vue.component('Scrollbars', Scrollbars)
-Vue.component('Alert', Alert)
-Vue.component('Error', Error)
-Vue.component('SwitchInput', SwitchInput)
-Vue.component('Copied', Copied)
-Vue.component('MarkdownIt', MarkdownIt)
-Vue.component('DownloadLink', DownloadLink)
-Vue.component('FormElement', FormElement)
-Vue.component('Picker', Picker)
-Vue.component('ProgressBar', ProgressBar)
-Vue.component('Tab', Tab)
-Vue.component('Tabs', Tabs)
-Vue.component('List', List)
-Vue.component('HelpIcon', HelpIcon)
-Vue.component('Badge', Badge)
-Vue.component('InputWithIcon', InputWithIcon)
+function setupVue(Vue) {
+  Vue.component('Context', Context)
+  Vue.component('Modal', Modal)
+  Vue.component('Editable', Editable)
+  Vue.component('Dropdown', Dropdown)
+  Vue.component('DropdownItem', DropdownItem)
+  Vue.component('Checkbox', Checkbox)
+  Vue.component('Radio', Radio)
+  Vue.component('Scrollbars', Scrollbars)
+  Vue.component('Alert', Alert)
+  Vue.component('Error', Error)
+  Vue.component('SwitchInput', SwitchInput)
+  Vue.component('Copied', Copied)
+  Vue.component('MarkdownIt', MarkdownIt)
+  Vue.component('DownloadLink', DownloadLink)
+  Vue.component('FormElement', FormElement)
+  Vue.component('Picker', Picker)
+  Vue.component('ProgressBar', ProgressBar)
+  Vue.component('Tab', Tab)
+  Vue.component('Tabs', Tabs)
+  Vue.component('List', List)
+  Vue.component('HelpIcon', HelpIcon)
+  Vue.component('Badge', Badge)
+  Vue.component('InputWithIcon', InputWithIcon)
+  Vue.component('ExpandableCard', ExpandableCard)
+  Vue.component('Button', Button)
+  Vue.component('RadioButton', RadioButton)
 
-Vue.filter('lowercase', lowercase)
-Vue.filter('uppercase', uppercase)
-Vue.filter('nameAbbreviation', nameAbbreviation)
+  Vue.filter('lowercase', lowercase)
+  Vue.filter('uppercase', uppercase)
+  Vue.filter('nameAbbreviation', nameAbbreviation)
 
-Vue.directive('scroll', scroll)
-Vue.directive('preventParentScroll', preventParentScroll)
-Vue.directive('tooltip', tooltip)
-Vue.directive('sortable', sortable)
-Vue.directive('autoOverflowScroll', autoOverflowScroll)
-Vue.directive('userFileUpload', userFileUpload)
-Vue.directive('autoScroll', autoScroll)
-Vue.directive('clickOutside', clickOutside)
+  Vue.directive('scroll', scroll)
+  Vue.directive('preventParentScroll', preventParentScroll)
+  Vue.directive('tooltip', tooltip)
+  Vue.directive('sortable', sortable)
+  Vue.directive('autoOverflowScroll', autoOverflowScroll)
+  Vue.directive('userFileUpload', userFileUpload)
+  Vue.directive('autoScroll', autoScroll)
+  Vue.directive('clickOutside', clickOutside)
 
-Vue.prototype.$super = function (options) {
-  return new Proxy(options, {
-    get: (options, name) => {
-      if (options.methods && name in options.methods) {
-        return options.methods[name].bind(this)
-      }
-    },
-  })
+  Vue.prototype.$super = function (options) {
+    return new Proxy(options, {
+      get: (options, name) => {
+        if (options.methods && name in options.methods) {
+          return options.methods[name].bind(this)
+        }
+      },
+    })
+  }
 }
+
+setupVue(Vue)
+
+export { setupVue }

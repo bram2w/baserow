@@ -18,7 +18,6 @@ LICENSE = (
 
 
 def load_test_data():
-
     Settings.objects.update(instance_id="1")
 
     License.objects.get_or_create(

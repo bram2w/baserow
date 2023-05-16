@@ -1,6 +1,6 @@
 # How to Validate and Format Phone Number Fields 
 
-See this issue for background: https://gitlab.com/bramw/baserow/-/issues/339
+See this issue for background: https://gitlab.com/baserow/baserow/-/issues/339
 
 For the new number phone number field there are a number of options around how to
 validate and format the field. This document captures

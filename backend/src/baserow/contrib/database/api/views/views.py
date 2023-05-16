@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Dict
 
 from django.conf import settings
@@ -262,17 +263,21 @@ class ViewsView(APIView):
             query_params["limit"],
         )
 
-        data = [
-            view_type_registry.get_serializer(
-                view,
+        views_by_type = defaultdict(list)
+        for view in views:
+            views_by_type[type(view)].append(view)
+
+        serialized_views = []
+        for view_type, views in views_by_type.items():
+            serialized_views += view_type_registry.get_serializer(
+                views,
                 ViewSerializer,
                 filters=filters,
                 sortings=sortings,
                 decorations=decorations,
+                many=True,
             ).data
-            for view in views
-        ]
-        return Response(data)
+        return Response(serialized_views)
 
     @extend_schema(
         parameters=[
@@ -1679,7 +1684,6 @@ class PublicViewLinkRowFieldLookupView(APIView):
         }
     )
     def get(self, request: Request, slug: str, field_id: int) -> Response:
-
         handler = ViewHandler()
         view = handler.get_public_view_by_slug(
             request.user,
@@ -1840,7 +1844,6 @@ class PublicViewInfoView(APIView):
     )
     @transaction.atomic
     def get(self, request: Request, slug: str) -> Response:
-
         handler = ViewHandler()
         view = handler.get_public_view_by_slug(
             request.user,

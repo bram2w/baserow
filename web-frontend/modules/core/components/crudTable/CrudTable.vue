@@ -97,7 +97,7 @@
         @change-page="fetch"
       ></Paginator>
     </div>
-    <slot name="menus" :updateRow="updateRow" :deleteRow="deleteRow"></slot>
+    <slot name="menus" :update-row="updateRow" :delete-row="deleteRow"></slot>
   </div>
 </template>
 

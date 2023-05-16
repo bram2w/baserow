@@ -12,7 +12,6 @@ from baserow_enterprise.role.seat_usage_calculator import (
 
 
 class EnterpriseWithoutSupportLicenseType(LicenseType):
-
     type = "enterprise_without_support"
     order = 100
     features = [PREMIUM, RBAC, SSO, TEAMS, AUDIT_LOG]

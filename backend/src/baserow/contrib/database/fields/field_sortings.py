@@ -3,7 +3,7 @@ from typing import Any, Dict, Optional
 
 
 @dataclass
-class AnnotatedOrder:
+class OptionallyAnnotatedOrderBy:
     """
     A simple helper class which holds an annotation dictionary, as well as a Django
     expression to be used in queryset.order().
@@ -14,3 +14,4 @@ class AnnotatedOrder:
 
     order: Any
     annotation: Optional[Dict[str, Any]] = None
+    can_be_indexed: bool = False

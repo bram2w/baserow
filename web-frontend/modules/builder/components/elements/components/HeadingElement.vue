@@ -1,10 +1,10 @@
 <template>
   <component
-    :is="`h${level}`"
+    :is="`h${element.level}`"
     class="heading-element"
-    :class="{ 'element--no-value': !value }"
+    :class="{ 'element--no-value': !element.value }"
   >
-    {{ value || $t('headingElement.noValue') }}
+    {{ element.value || $t('headingElement.noValue') }}
   </component>
 </template>
 
@@ -15,8 +15,8 @@ export default {
   name: 'HeaderElement',
   mixins: [textElement],
   props: {
-    level: {
-      type: Number,
+    element: {
+      type: Object,
       required: true,
     },
   },

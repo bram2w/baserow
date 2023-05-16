@@ -60,7 +60,7 @@ describe('test string utils', () => {
       '127.0.0.1',
       'https://test.nl#test',
       'http://baserow.io/hrscywv4p/image/upload/c_fill,g_faces:center,h_128,w_128/yflwk7vffgwyyenftkr7.png',
-      'https://gitlab.com/bramw/baserow/-/issues?row=nice/route',
+      'https://gitlab.com/baserow/baserow/-/issues?row=nice/route',
       'https://web.archive.org/web/20210313191012/https://baserow.io/',
       'mailto:bram@baserow.io?test=test',
     ]

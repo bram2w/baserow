@@ -685,6 +685,7 @@ class DatabaseConfig(AppConfig):
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
+        import baserow.contrib.database.views.tasks  # noqa: F401
 
 
 # noinspection PyPep8Naming
@@ -702,7 +703,6 @@ def safely_update_formula_versions(sender, **kwargs):
     # execute the following hook when we are starting the django server as
     # otherwise backwards migrations etc will crash because of this.
     if apps is not None and not settings.DONT_UPDATE_FORMULAS_AFTER_MIGRATION:
-
         try:
             FormulaField = apps.get_model("database", "FormulaField")
             # noinspection PyProtectedMember

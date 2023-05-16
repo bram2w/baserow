@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Update all official Baserow images to now work on arm64 as well as amd64. ",
+    "issue_number": 890,
+    "bullet_points": [],
+    "created_at": "2023-04-20"
+}

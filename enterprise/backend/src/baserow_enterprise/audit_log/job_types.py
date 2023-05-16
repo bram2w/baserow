@@ -131,7 +131,6 @@ class AuditLogExportJobType(JobType):
             )
 
     def write_audit_log_rows(self, job, file, queryset, progress):
-
         # add BOM to support utf-8 CSVs in MS Excel (for Windows only)
         if job.export_charset == "utf-8":
             file.write(b"\xef\xbb\xbf")

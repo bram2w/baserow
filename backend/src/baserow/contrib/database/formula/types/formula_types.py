@@ -431,6 +431,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         "date_force_timezone",
     ]
     nullable_option_fields = ["date_force_timezone"]
+    can_represent_date = True
 
     def __init__(
         self,
@@ -514,12 +515,15 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         to_text_func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaValidType]:
-        when_empty_func = formula_function_registry.get("when_empty")
-        datetime_fmt_func = formula_function_registry.get("datetime_format")
-        datetime_text_literal = datetime_fmt_func(
-            arg, literal(get_date_time_format(self, "sql"))
+        when_empty = formula_function_registry.get("when_empty")
+        datetime_format_tz = formula_function_registry.get("datetime_format_tz")
+        date_format_string = literal(get_date_time_format(self, "sql"))
+        convert_to_timezone = literal(self.date_force_timezone or "UTC")
+
+        return when_empty(
+            datetime_format_tz(arg, date_format_string, convert_to_timezone),
+            literal(""),
         )
-        return when_empty_func(datetime_text_literal, literal(""))
 
     def placeholder_empty_value(self):
         if self.date_include_time:
@@ -739,7 +743,6 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         return []
 
     def get_baserow_field_instance_and_type(self):
-        # Until Baserow has a array field type implement the required methods below
         return self, self
 
     def get_model_field(self, instance, **kwargs) -> models.Field:

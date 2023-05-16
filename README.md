@@ -17,7 +17,7 @@ tool gives you the powers of a developer without leaving your browser.
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
 
 ```bash
-docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.16.0
+docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.17.0
 ```
 
 ![Baserow screenshot](docs/assets/screenshot.png "Baserow screenshot")
@@ -26,9 +26,8 @@ docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.1
 
 **We're hiring remotely**! More information at https://baserow.io/jobs.
 
-Join our forum on https://community.baserow.io/ or on Gitter via
-https://gitter.im/bramw-baserow/community. See [CONTRIBUTING.md](./CONTRIBUTING.md) on
-how to become a contributor.
+Join our forum on https://community.baserow.io/. See
+[CONTRIBUTING.md](./CONTRIBUTING.md) on how to become a contributor.
 
 ## Installation
 
@@ -62,7 +61,7 @@ development.
 If you want to contribute to Baserow you can setup a development environment like so:
 
 ```
-$ git clone https://gitlab.com/bramw/baserow.git
+$ git clone https://gitlab.com/baserow/baserow.git
 $ cd baserow
 $ ./dev.sh --build
 ```
@@ -90,12 +89,10 @@ Created by Baserow B.V. - bram@baserow.io.
 
 Distributes under the MIT license. See `LICENSE` for more information.
 
-Version: 1.16.0
+Version: 1.17.0
 
-The official repository can be found at https://gitlab.com/bramw/baserow.
+The official repository can be found at https://gitlab.com/baserow/baserow.
 
 The changelog can be found [here](./changelog.md).
 
 Become a GitHub Sponsor [here](https://github.com/sponsors/bram2w).
-
-Community chat via https://gitter.im/bramw-baserow/community.

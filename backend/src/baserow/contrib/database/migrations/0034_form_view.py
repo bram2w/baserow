@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0007_userlogentry"),
         ("database", "0033_unique_field_names"),

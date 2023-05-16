@@ -192,7 +192,7 @@ def transaction_atomic(
 
             if first_sql_to_run_in_transaction_with_args:
                 first_sql, first_args = first_sql_to_run_in_transaction_with_args
-                cursor.execute(first_sql, first_args)
+                cursor.execute(first_sql.format(*first_args))
         yield a
 
 
@@ -239,7 +239,6 @@ def get_highest_order_of_queryset(
     amount: int = 1,
     field: str = "order",
 ) -> List[Decimal]:
-
     """
     Returns the highest existing values of the provided order field.
 

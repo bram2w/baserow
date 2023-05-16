@@ -413,8 +413,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         to_field_type_name = new_type_name or from_field_type.type
 
         # If the provided field type does not match with the current one we need to
-        # migrate the field to the new type. Because the type has changed we also need
-        # to remove all view filters.
+        # migrate the field to the new type.
         baserow_field_type_changed = from_field_type.type != to_field_type_name
         field_cache = FieldCache()
         if baserow_field_type_changed:
@@ -431,9 +430,6 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             new_model_class = to_field_type.model_class
             field.change_polymorphic_type_to(new_model_class)
 
-            # If the field type changes it could be that some dependencies,
-            # like filters or sortings need to be changed.
-            ViewHandler().field_type_changed(field)
         else:
             dependants_broken_due_to_type_change = []
             to_field_type = from_field_type
@@ -458,6 +454,16 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         to_model = field.table.get_model(field_ids=[], fields=[field])
         from_model_field = from_model._meta.get_field(field.db_column)
         to_model_field = to_model._meta.get_field(field.db_column)
+
+        # If the field type or the database representation changes it could be
+        # that some view dependencies like filters or sortings need to be changed.
+        if (
+            baserow_field_type_changed
+            or not from_field_type.has_compatible_model_fields(
+                from_model_field, to_model_field
+            )
+        ):
+            ViewHandler().field_type_changed(field)
 
         # Before a field is updated we are going to call the before_schema_change
         # method of the old field because some cleanup of related instances might

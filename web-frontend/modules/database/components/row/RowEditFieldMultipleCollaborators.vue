@@ -4,17 +4,11 @@
       <li
         v-for="item in value"
         :key="item.id"
-        class="
-          field-multiple-collaborators__item
-          field-multiple-collaborators__item--row-edit
-        "
+        class="field-multiple-collaborators__item field-multiple-collaborators__item--row-edit"
       >
         <template v-if="item.id && item.name">
           <div
-            class="
-              field-multiple-collaborators__name
-              background-color--light-gray
-            "
+            class="field-multiple-collaborators__name background-color--light-gray"
           >
             {{ getCollaboratorName(item) }}
             <a

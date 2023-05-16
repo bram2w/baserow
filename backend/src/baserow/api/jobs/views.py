@@ -58,7 +58,6 @@ class JobsView(APIView):
     )
     @validate_query_parameters(ListJobQuerySerializer, return_validated=True)
     def get(self, request, query_params):
-
         states = query_params.get("states", None)
         job_ids = query_params.get("job_ids", None)
 
@@ -67,7 +66,12 @@ class JobsView(APIView):
         )
 
         serialized_jobs = [
-            job_type_registry.get_serializer(job, JobSerializer).data for job in jobs
+            job_type_registry.get_serializer(
+                job,
+                JobSerializer,
+                context={"request": request},
+            ).data
+            for job in jobs
         ]
         return Response({"jobs": serialized_jobs})
 
@@ -120,7 +124,11 @@ class JobsView(APIView):
         with job_type.map_api_exceptions():
             job = JobHandler().create_and_start_job(request.user, type_name, **data)
 
-        serializer = job_type.get_serializer(job, JobSerializer)
+        serializer = job_type.get_serializer(
+            job,
+            JobSerializer,
+            context={"request": request},
+        )
         return Response(serializer.data)
 
 
@@ -159,5 +167,9 @@ class JobView(APIView):
         """Returns the job related to the provided id."""
 
         job = JobHandler().get_job(request.user, job_id)
-        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        serializer = job_type_registry.get_serializer(
+            job,
+            JobSerializer,
+            context={"request": request},
+        )
         return Response(serializer.data)

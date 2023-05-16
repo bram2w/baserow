@@ -10,7 +10,7 @@ Software versions are divided into the following groups:
 
 ## Web browsers
 
-### Baserow 1.16.0
+### Baserow 1.17.0
 
 Browser         | Supported versions | Recommended versions
 ----------------|--------------------|--------------------
@@ -28,7 +28,7 @@ Baserow version | Supported versions | Tested versions | Recommended versions
 
 Baserow version | Supported versions | Tested versions | Recommended versions
 ----------------|--------------------|-----------------|---------------------
-1.11            | >= 16.14.0 < 17    | 16.15.1         | 16.15.1
+1.11            | >= 18.15.0         | 18.15.0         | 18.15.0
 
 ## Docker
 

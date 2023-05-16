@@ -5,7 +5,7 @@
 Baserow consists of two main components:
 
 1. The **backend** is a Python Django application that exposes a REST API. This is the
-   core of Baserow and it does not have a user interface. The [API spec](../apis/api.md) can
+   core of Baserow and it does not have a user interface. The [API spec](../apis/rest-api.md) can
    be found here. The persistent state is stored in a PostgreSQL database.
 2. The **web frontend** is an application that serves as a user interface for the
    backend and is made in [NuxtJS](https://nuxtjs.org/) and
@@ -128,7 +128,7 @@ are accepted.
   enable connecting to the SMTP server via TLS.
 * `EMAIL_SMPT_USE_TLS` (default ``): `EMAIL_SMTP_USE_TLS` from above was initially
   wrongly spelled as `EMAIL_SMPT_USE_TLS`. This issue has since been addressed in 
-  [#247](https://gitlab.com/bramw/baserow/-/merge_requests/247). However, 
+  [#247](https://gitlab.com/baserow/baserow/-/merge_requests/247). However, 
   `EMAIL_SMPT_USE_TLS` is still supported for those who might still be using it in
   their environment. It's highly recommended you use the correct var name if working
   with the latest version as this support might be removed in the future.

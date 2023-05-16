@@ -1,4 +1,4 @@
-FROM node:16-bullseye as base
+FROM node:18-bullseye as base
 
 ARG UID
 ENV UID=${UID:-9999}
@@ -58,6 +58,10 @@ HEALTHCHECK --interval=60s CMD ["curl", "-f", "http://localhost:3000/_health/"]
 EXPOSE 3000
 
 FROM base as dev
+
+# Create symlinks for jest tests
+RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules \
+ && ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules
 
 # We don't bother running build-local in dev mode as it pre-compiles nuxt which won't
 # be used when running the nuxt dev server.

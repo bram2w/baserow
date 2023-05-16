@@ -10,7 +10,10 @@ module.exports = {
     jasmine: true,
   },
   parserOptions: {
-    parser: 'babel-eslint',
+    parser: '@babel/eslint-parser',
+    parserOptions: {
+      requireConfigFile: false,
+    },
   },
   extends: [
     '@nuxtjs',
@@ -18,7 +21,7 @@ module.exports = {
     'plugin:prettier/recommended',
     'prettier',
   ],
-  plugins: ['prettier'],
+  plugins: ['prettier', 'jest'],
   rules: {
     'no-console': 0,
     'vue/no-mutating-props': 0,
@@ -26,5 +29,9 @@ module.exports = {
     'import/order': 'off',
     'vue/html-self-closing': 'off',
     'vue/no-unused-components': 'warn',
+    'vue/no-use-computed-property-like-method': 'off',
+    'vue/multi-word-component-names': 'off',
+    'vue/no-reserved-component-names': 'off',
+    'import/no-named-as-default-member': 'off',
   },
 }

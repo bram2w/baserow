@@ -1,4 +1,4 @@
-import {PluginNamePlugin} from '@{{ cookiecutter.project_slug }}/plugins'
+import { PluginNamePlugin } from '@{{ cookiecutter.project_slug }}/plugins'
 
 export default (context) => {
   const { app } = context

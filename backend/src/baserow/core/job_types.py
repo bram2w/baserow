@@ -70,8 +70,10 @@ class DuplicateApplicationJobType(JobType):
     }
 
     def transaction_atomic_context(self, job: "DuplicateApplicationJob"):
-        application = CoreHandler().get_user_application(
-            job.user, job.original_application_id
+        application = (
+            CoreHandler()
+            .get_user_application(job.user, job.original_application_id)
+            .specific
         )
         application_type = application_type_registry.get_by_model(
             application.specific_class
@@ -81,15 +83,15 @@ class DuplicateApplicationJobType(JobType):
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-
-        application = CoreHandler().get_user_application(user, values["application_id"])
+        application = (
+            CoreHandler().get_user_application(user, values["application_id"]).specific
+        )
 
         return {
             "original_application": application,
         }
 
     def run(self, job: DuplicateApplicationJob, progress: Progress) -> Application:
-
         new_application_clone = action_type_registry.get_by_type(
             DuplicateApplicationActionType
         ).do(
@@ -158,7 +160,6 @@ class InstallTemplateJobType(JobType):
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-
         # GroupDeprecation
         workspace_id = values.pop("workspace_id", values.pop("group_id", None))
         if workspace_id is None:

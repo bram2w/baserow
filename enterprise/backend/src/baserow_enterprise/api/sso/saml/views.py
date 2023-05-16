@@ -79,7 +79,6 @@ class AssertionConsumerServiceView(APIView):
     )
     @validate_body(SAMLResponseSerializer, return_validated=True)
     def post(self, request: Request, data: Dict[str, str]) -> HttpResponseRedirect:
-
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
@@ -166,7 +165,6 @@ class BaserowInitiatedSingleSignOn(APIView):
     def get(
         self, request: Request, query_params: Dict[str, str]
     ) -> HttpResponseRedirect:
-
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 

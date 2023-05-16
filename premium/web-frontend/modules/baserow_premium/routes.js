@@ -36,4 +36,9 @@ export const routes = [
     path: '/public/kanban/:slug',
     component: '@baserow/modules/database/pages/publicView.vue',
   },
+  {
+    name: 'database-public-calendar-view',
+    path: '/public/calendar/:slug',
+    component: '@baserow/modules/database/pages/publicView.vue',
+  },
 ]

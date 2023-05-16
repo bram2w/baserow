@@ -2,7 +2,7 @@
 
 > Any questions, problems or suggestions with this guide? Ask a question in our
 > [community](https://community.baserow.io/) or contribute the change yourself at
-> https://gitlab.com/bramw/baserow/-/tree/develop/docs .
+> https://gitlab.com/baserow/baserow/-/tree/develop/docs .
 
 ## Quickstart
 
@@ -16,7 +16,7 @@ version: "3.4"
 services:
   baserow:
     container_name: baserow
-    image: baserow/baserow:1.16.0
+    image: baserow/baserow:1.17.0
     environment:
       BASEROW_PUBLIC_URL: 'http://localhost'
     ports:
@@ -45,13 +45,13 @@ https://docs.docker.com/compose/install/.
 
 You can download the example Baserow `docker-compose.yml` by either directly downloading
 the file from
-[https://gitlab.com/bramw/baserow/-/blob/master/docker-compose.yml](https://gitlab.com/bramw/baserow/-/blob/master/docker-compose.yml)
+[https://gitlab.com/baserow/baserow/-/blob/master/docker-compose.yml](https://gitlab.com/baserow/baserow/-/blob/master/docker-compose.yml)
 and running:
 
 ```bash
-curl -o docker-compose.yml https://gitlab.com/bramw/baserow/-/raw/master/docker-compose.yml
-curl -o .env https://gitlab.com/bramw/baserow/-/raw/master/.env.example 
-curl -o Caddyfile https://gitlab.com/bramw/baserow/-/raw/master/Caddyfile
+curl -o docker-compose.yml https://gitlab.com/baserow/baserow/-/raw/master/docker-compose.yml
+curl -o .env https://gitlab.com/baserow/baserow/-/raw/master/.env.example 
+curl -o Caddyfile https://gitlab.com/baserow/baserow/-/raw/master/Caddyfile
 # Edit .env and set your own secure passwords for the 3 required variables at the top. 
 gedit .env
 docker-compose up -d
@@ -61,7 +61,7 @@ or by directly cloning our git repo so you can get updates easier:
 
 ```bash
 cd ~/baserow
-git clone --depth=1 --branch master https://gitlab.com/bramw/baserow.git
+git clone --depth=1 --branch master https://gitlab.com/baserow/baserow.git
 cd baserow
 cp .env.example .env
 # Edit .env and set your own secure passwords for the 3 required variables at the top. 
@@ -104,10 +104,10 @@ You can set these variables by using docker-compose env file
 (https://docs.docker.com/compose/environment-variables/#the-env-file):
 
 1. Copy the `.env.example` file found in the root of Baserows repository
-   (https://gitlab.com/bramw/baserow/-/blob/master/.env.example)  to `.env`:
+   (https://gitlab.com/baserow/baserow/-/blob/master/.env.example)  to `.env`:
 
 ```
-curl -o .env https://gitlab.com/bramw/baserow/-/raw/master/.env.example
+curl -o .env https://gitlab.com/baserow/baserow/-/raw/master/.env.example
 ```
 
 2. Edit `.env` and provide values for the missing environment variables.

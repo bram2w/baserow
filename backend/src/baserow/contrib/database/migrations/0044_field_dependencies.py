@@ -113,7 +113,6 @@ def _build_graph_from_scratch(FieldDependency, FormulaField, LinkRowField, Field
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0043_webhooks"),
     ]

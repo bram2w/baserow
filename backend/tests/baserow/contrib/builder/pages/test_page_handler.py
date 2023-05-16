@@ -1,5 +1,6 @@
 import pytest
 
+from baserow.contrib.builder.pages.constants import ILLEGAL_PATH_SAMPLE_CHARACTER
 from baserow.contrib.builder.pages.exceptions import (
     DuplicatePathParamsInPath,
     PageDoesNotExist,
@@ -77,7 +78,7 @@ def test_create_page_duplicate_params_in_path(data_fixture):
             builder,
             name="test",
             path="/test/:test/:test",
-            path_params={"test": {"param_type": "text"}},
+            path_params=[{"name": "test", "param_type": "text"}],
         )
 
 
@@ -162,32 +163,40 @@ def test_duplicate_page(data_fixture):
 
 
 def test_is_page_path_valid():
-    assert PageHandler().is_page_path_valid("test/", {}) is True
-    assert PageHandler().is_page_path_valid("test/:id", {}) is False
+    assert PageHandler().is_page_path_valid("test/", []) is True
+    assert PageHandler().is_page_path_valid("test/:id", []) is False
     assert (
-        PageHandler().is_page_path_valid("test/", {"id": {"param_type": "text"}})
+        PageHandler().is_page_path_valid(
+            "test/", [{"name": "id", "param_type": "text"}]
+        )
         is False
     )
     assert (
-        PageHandler().is_page_path_valid("test/:", {"id": {"param_type": "text"}})
+        PageHandler().is_page_path_valid(
+            "test/:", [{"name": "id", "param_type": "text"}]
+        )
         is False
     )
     assert PageHandler().is_page_path_valid("test/:", {}) is True
     assert (
-        PageHandler().is_page_path_valid("test/::id", {"id": {"param_type": "text"}})
-        is True
-    )
-    assert (
         PageHandler().is_page_path_valid(
-            "product/:id-:slug",
-            {"id": {"param_type": "text"}, "slug": {"param_type": "text"}},
+            "test/::id", [{"name": "id", "param_type": "text"}]
         )
         is True
     )
     assert (
         PageHandler().is_page_path_valid(
-            "product/:test/:test",
-            {"test": {"param_type": "text"}},
+            "product/:id-:slug",
+            [
+                {"name": "id", "param_type": "text"},
+                {"name": "slug", "param_type": "text"},
+            ],
+        )
+        is True
+    )
+    assert (
+        PageHandler().is_page_path_valid(
+            "product/:test/:test", [{"name": "test", "param_type": "text"}]
         )
         is False
     )
@@ -196,11 +205,11 @@ def test_is_page_path_valid():
 def test_is_page_path_valid_raises():
     with pytest.raises(PathParamNotInPath):
         PageHandler().is_page_path_valid(
-            "test", {"id": {"param_type": "text"}}, raises=True
+            "test", [{"name": "id", "param_type": "text"}], raises=True
         )
 
     with pytest.raises(PathParamNotDefined):
-        PageHandler().is_page_path_valid("test/:id", {}, raises=True)
+        PageHandler().is_page_path_valid("test/:id", [], raises=True)
 
 
 @pytest.mark.django_db
@@ -208,3 +217,51 @@ def test_find_unused_page_path(data_fixture):
     page = data_fixture.create_builder_page(path="/test")
 
     assert PageHandler().find_unused_page_path(page.builder, "/test") == "/test2"
+
+
+@pytest.mark.django_db
+def test_is_page_path_unique(data_fixture):
+    builder = data_fixture.create_builder_application()
+
+    data_fixture.create_builder_page(builder=builder, path="/test/:id")
+
+    assert PageHandler().is_page_path_unique(builder, "/new") is True
+    assert PageHandler().is_page_path_unique(builder, "/test/:id") is False
+    assert PageHandler().is_page_path_unique(builder, "/test/:id/:hello") is True
+    assert PageHandler().is_page_path_unique(builder, "/test/:id-:hello") is True
+
+
+@pytest.mark.django_db
+def test_is_page_path_unique_different_param_position(data_fixture):
+    builder = data_fixture.create_builder_application()
+
+    data_fixture.create_builder_page(builder=builder, path="/test/:id/hello/:new")
+
+    assert PageHandler().is_page_path_unique(builder, "/test/:new/hello/:id") is False
+    assert PageHandler().is_page_path_unique(builder, "/test/:new/:id/hello") is True
+
+
+@pytest.mark.django_db
+def test_is_page_path_unique_raises(data_fixture):
+    builder = data_fixture.create_builder_application()
+
+    data_fixture.create_builder_page(builder=builder, path="/test/:id")
+
+    with pytest.raises(PagePathNotUnique):
+        PageHandler().is_page_path_unique(builder, "/test/:id", raises=True)
+
+
+def test_generalise_path():
+    assert PageHandler().generalise_path("/test") == "/test"
+    assert (
+        PageHandler().generalise_path("/test/:id")
+        == f"/test/{ILLEGAL_PATH_SAMPLE_CHARACTER}"
+    )
+    assert (
+        PageHandler().generalise_path("/test/:id/hello/:test")
+        == f"/test/{ILLEGAL_PATH_SAMPLE_CHARACTER}/hello/{ILLEGAL_PATH_SAMPLE_CHARACTER}"
+    )
+    assert (
+        PageHandler().generalise_path("/test/:id-:hello")
+        == f"/test/{ILLEGAL_PATH_SAMPLE_CHARACTER}-{ILLEGAL_PATH_SAMPLE_CHARACTER}"
+    )

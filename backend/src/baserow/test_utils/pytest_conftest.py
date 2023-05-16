@@ -355,7 +355,6 @@ class StubbedCorePermissionManagerType(CorePermissionManagerType):
         self.raise_permission_denied = raise_permission_denied
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
-
         result = {}
         for check in checks:
             if self.raise_permission_denied:

@@ -1,0 +1,21 @@
+.domain-card__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.domain-card__name {
+  font-weight: bold;
+}
+
+.domain-card__domain-type,
+.domain-card__last-update {
+  text-align: right;
+}
+
+.domain-card__detail-button-link {
+  user-select: none;
+}
+
+.domain-card__detail-button-icon {
+  margin-left: 3px;
+}

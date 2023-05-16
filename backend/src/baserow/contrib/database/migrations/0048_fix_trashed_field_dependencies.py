@@ -24,7 +24,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0047_fix_date_diff"),
     ]

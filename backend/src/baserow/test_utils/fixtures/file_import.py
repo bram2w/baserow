@@ -9,7 +9,6 @@ data = [["test-1"]]
 
 class FileImportFixtures:
     def create_file_import_job(self, **kwargs):
-
         if "user" not in kwargs:
             kwargs["user"] = self.create_user()
 

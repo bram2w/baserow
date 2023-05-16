@@ -89,7 +89,6 @@ class SelectColorValueProviderType(PremiumDecoratorValueProviderType):
         view_handler = ViewHandler()
 
         if field_type.type != SingleSelectFieldType.type:
-
             queryset = ViewDecoration.objects.filter(
                 view__table=field.table,
                 value_provider_type=SelectColorValueProviderType.type,

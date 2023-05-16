@@ -107,7 +107,32 @@
         EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
         echo "Building from $BUILD_FROM_IMAGE."
       fi
+      
+      docker context create multi-context
+      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
+      
+      if [[ -n "$BUILD_ARM" ]]; then
+        which ssh-agent
+        eval `ssh-agent -s`
+        echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "$ARM_BUILDER_SSH_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
+        [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
+        echo "Building multi-arch images for ARM also."
+        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
+      else
+        DOCKER_BUILD_PLATFORMS=linux/amd64
+      fi
+
+      if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
+        # We don't use latest branch images from master for any caching so no need to
+        # bother pushing.
+        EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --tag $LATEST_BRANCH_CI_IMAGE";
+      fi
+      
       # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's intermediate
       #    layers will be cached so builds caching from this image can use those layers.
       # * $CACHE_ARG is a --cache-from if we have an existing image that we can use
@@ -115,24 +140,17 @@
       # * Target the dev image as we want to run tests and linting in this image.
       # * Tag as both the ci image for use in later stages and the latest ci image to
       #   cache any future ci pipeline runs.
-      docker build \
+      docker buildx build \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
+        --platform=$DOCKER_BUILD_PLATFORMS \
         $CACHE_FROM_BUILD_ARGS \
         $EXTRA_BUILD_ARGS \
         $IMAGE_LABELS \
+        --push \
         --target dev \
         --tag $CI_IMAGE_PATH \
-        --tag $LATEST_BRANCH_CI_IMAGE \
         -f $DOCKERFILE_PATH .;
 
-      # ===== 3. Push the CI image for the next stages and latest ci image cache =====
-
-      docker push $CI_IMAGE_PATH
-      if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
-        # We don't use latest branch images from master for any caching so no need to
-        # bother pushing.
-        docker push $LATEST_BRANCH_CI_IMAGE
-      fi
 
 # Builds a non-dev (no docker build target provided) and fully labelled final image
 # and tags and pushes the non-dev and dev images using $TESTED_IMAGE_PREFIX to mark
@@ -282,33 +300,54 @@
           fi
         fi
       }
+      
+      docker context create multi-context
+      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
+      
+      if [[ -n "$BUILD_ARM" ]]; then
+        which ssh-agent
+        eval `ssh-agent -s`
+        echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+        echo "$ARM_BUILDER_SSH_PUBLIC_KEY" >> ~/.ssh/id_rsa.pub
+        [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
+        echo "Building multi-arch images for ARM also."
+        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
+      else
+        DOCKER_BUILD_PLATFORMS=linux/amd64
+      fi
+      
       setup_build_from_image ""
       setup_build_from_image BACKEND
       setup_build_from_image WEBFRONTEND
 
       # Build the normal non-dev image with all the tags and labels.
-      docker build \
+      docker buildx build \
+        --platform=$DOCKER_BUILD_PLATFORMS \
         $CACHE_FROM_BUILD_ARGS \
         $EXTRA_BUILD_ARGS \
         $FORMATTEDTAGLIST \
         $IMAGE_LABELS \
+        --push \
         -t $TARGET_NON_DEV_IMAGE_PATH \
         -f $DOCKERFILE_PATH .;
-      docker push $TARGET_NON_DEV_IMAGE_PATH
 
       # Build the cache image with layer caching enabled. We don't enable it for the
       # image above to reduce its size.
       # We don't do this for master as master always caches from develop.
       if [[ "$CI_COMMIT_BRANCH" != "$MASTER_BRANCH_NAME" ]]; then
-        docker build \
+        docker buildx build \
+          --platform=$DOCKER_BUILD_PLATFORMS \
           $CACHE_FROM_BUILD_ARGS \
           $EXTRA_BUILD_ARGS \
           $IMAGE_LABELS \
+          --push \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           -t $NON_DEV_CACHE_IMAGE \
           -f $DOCKERFILE_PATH .;
-        docker push $NON_DEV_CACHE_IMAGE
       fi
 
       if [[ -n "$DEV_IMAGE_NAME" ]]; then
@@ -422,14 +461,8 @@
         echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
       fi
 
-      if ! docker pull $SOURCE_IMAGE; then
-        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
-        exit 1
-      fi
-      docker tag $SOURCE_IMAGE $TARGET_IMAGE
-      
       echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
-      docker push $TARGET_IMAGE
+      docker buildx imagetools create -t $TARGET_IMAGE $SOURCE_IMAGE
 
 .skippable-job:
   before_script:

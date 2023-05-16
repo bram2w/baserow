@@ -40,6 +40,7 @@ from baserow.contrib.database.fields.models import (
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.models import ViewFilter
 from baserow.core.exceptions import UserNotInWorkspace
 
 # You must add --run-disabled-in-ci to pytest to run this test, you can do this in
@@ -480,6 +481,43 @@ def test_update_field(send_mock, data_fixture):
     assert getattr(field_with_max_length_name, "name") == field_name_with_ok_length
 
 
+@pytest.mark.django_db
+@pytest.mark.field_formula
+@patch("baserow.contrib.database.fields.signals.field_updated.send")
+def test_update_field_reset_filter_formula_field(send_mock, data_fixture):
+    """
+    When there is a field change changing the underlying database
+    type of the field, the update_field() method should initiate
+    a cleanup for affected views. Formula fields can be in this
+    situation when the formula expression changes.
+    """
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_formula_field(table=table, order=1, formula="today()")
+    view = data_fixture.create_grid_view(table=table)
+    # create a view filter that won't be compatible with the new type
+    data_fixture.create_view_filter(
+        view=view, field=field, type="date_equals_today", value="UTC?"
+    )
+    model = table.get_model()
+    model.objects.create()
+    handler = FieldHandler()
+
+    field = handler.update_field(
+        user=user,
+        field=field,
+        new_type_name="formula",
+        formula="1",
+    )
+
+    field.refresh_from_db()
+    rows = model.objects.all()
+    assert getattr(rows[0], f"field_{field.id}") == Decimal("1")
+    # incompatible filter has been removed
+    assert ViewFilter.objects.filter(view=view).count() == 0
+
+
 # This failing field type triggers the CannotChangeFieldType error if a field is
 # changed into this type.
 class FailingFieldType(TextFieldType):
@@ -489,7 +527,6 @@ class FailingFieldType(TextFieldType):
 
 @pytest.mark.django_db
 def test_update_field_failing(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_number_field(table=table, order=1)
@@ -651,7 +688,6 @@ class SameTypeAlwaysReverseOnUpdateField(TextFieldType):
 
 @pytest.mark.django_db
 def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_text_field = data_fixture.create_text_field(table=table, order=1)
@@ -807,7 +843,6 @@ class AlwaysLowercaseTextField2(TextFieldType):
 
 @pytest.mark.django_db
 def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixture):
-
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     existing_field_with_old_value_prep = data_fixture.create_long_text_field(

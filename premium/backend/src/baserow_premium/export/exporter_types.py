@@ -28,7 +28,6 @@ class PremiumTableExporter(TableExporter):
 
 
 class JSONQuerysetSerializer(QuerysetSerializer):
-
     can_handle_rich_value = True
 
     def write_to_file(self, file_writer: FileWriter, export_charset="utf-8"):
@@ -89,7 +88,6 @@ class JSONTableExporter(PremiumTableExporter):
 
 
 class XMLQuerysetSerializer(QuerysetSerializer):
-
     can_handle_rich_value = True
 
     def write_to_file(self, file_writer: FileWriter, export_charset="utf-8"):

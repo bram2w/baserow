@@ -123,7 +123,6 @@ class SubmitFormViewView(APIView):
     )
     @transaction.atomic
     def post(self, request: Request, slug: str) -> Response:
-
         handler = ViewHandler()
         form = handler.get_public_view_by_slug(
             request.user,

@@ -80,3 +80,8 @@ class MoveElementSerializer(serializers.Serializer):
             "Otherwise the element is placed at the end of the page."
         ),
     )
+
+
+class PageParameterValueSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    value = ExpressionField(allow_blank=True)

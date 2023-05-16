@@ -16,14 +16,13 @@ User = get_user_model()
 
 @transaction.atomic
 def load_test_data():
-
     print("Add basic data...")
 
     user = User.objects.get(email="admin@baserow.io")
     workspace = user.workspaceuser_set.get(workspace__name="Acme Corp").workspace
 
     try:
-        database = Database.objects.get(name="Back to local")
+        database = Database.objects.get(name="Back to local", trashed=False)
     except Database.DoesNotExist:
         database = CoreHandler().create_application(
             user, workspace, "database", name="Back to local"
@@ -61,7 +60,6 @@ def load_test_data():
                 {"color": "light-green", "value": "Grocery"},
             ]
         ):
-
             select_option = SelectOption.objects.create(
                 field=select_field,
                 order=order,
@@ -124,7 +122,6 @@ def load_test_data():
                 {"color": "dark-blue", "value": "Equitable"},
             ]
         ):
-
             select_option = SelectOption.objects.create(
                 field=select_field,
                 order=order,

@@ -87,7 +87,6 @@ class AirtableImportJobType(JobType):
     }
 
     def prepare_values(self, values, user):
-
         # GroupDeprecation
         workspace_id = values.pop("workspace_id", values.pop("group_id", None))
         if workspace_id is None:
@@ -112,7 +111,6 @@ class AirtableImportJobType(JobType):
         }
 
     def run(self, job, progress):
-
         database = action_type_registry.get(
             ImportDatabaseFromAirtableActionType.type
         ).do(

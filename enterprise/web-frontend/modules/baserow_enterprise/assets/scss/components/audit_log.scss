@@ -1,9 +1,16 @@
 .audit-log__filters {
   display: grid;
-  grid-template-columns: 250px 250px 220px 140px 140px 90px;
-  grid-gap: 20px;
-  padding: 16px 42px 48px;
+  grid-template-columns: 3fr 3fr 3fr minmax(10%, 120px) minmax(10%, 120px) max-content;
+  grid-gap: 12px;
+  padding: 16px 42px 25px;
   z-index: 4;
+  max-width: 1200px;
+
+  .crud-table-filters__filter-wrapper-title {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
 }
 
 .audit-log__exported-list {

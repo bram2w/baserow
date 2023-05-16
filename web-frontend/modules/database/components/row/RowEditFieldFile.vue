@@ -67,7 +67,7 @@ import UploadFileDropzone from '@baserow/modules/core/components/files/UploadFil
 import UserFileService from '@baserow/modules/core/services/userFile'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
-import Axios from 'axios'
+import axios from 'axios'
 import FileInProgress from '@baserow/modules/core/components/files/FileInProgress'
 import FileFailed from '@baserow/modules/core/components/files/FileFailed'
 import FileUploaded from '@baserow/modules/core/components/files/FileUploaded'
@@ -138,7 +138,7 @@ export default {
 
         try {
           this.currentFileUploading = fileData
-          this.cancelToken = Axios.CancelToken.source()
+          this.cancelToken = axios.CancelToken.source()
           const { data } = await this.uploadFileFunction(
             file,
             progress,

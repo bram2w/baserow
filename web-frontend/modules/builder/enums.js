@@ -9,8 +9,3 @@ export const PLACEMENTS = {
   BEFORE: 'before',
   AFTER: 'after',
 }
-
-export const VALID_PATH_CHARACTERS =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=".split(
-    ''
-  )

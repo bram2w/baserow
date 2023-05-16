@@ -23,7 +23,6 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0056_galleryview_card_cover_image_field"),
     ]

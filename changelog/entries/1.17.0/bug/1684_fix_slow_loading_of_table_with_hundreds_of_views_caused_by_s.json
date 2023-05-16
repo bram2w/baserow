@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix slow loading of table with hundreds of views caused by serializer in list_views endpoint",
+    "issue_number": 1684,
+    "bullet_points": [],
+    "created_at": "2023-04-05"
+}

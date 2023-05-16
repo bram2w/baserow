@@ -1,13 +1,18 @@
+import itertools
 import re
+from types import MethodType
 from typing import Any, Dict, Type, Union
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
-from django.db.models import F, JSONField, Q, QuerySet
+from django.db.models import JSONField, Q, QuerySet
 
+from loguru import logger
 from opentelemetry import trace
 
+from baserow.cachalot_patch import cachalot_enabled
 from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
     OrderByFieldNotFound,
@@ -18,13 +23,13 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
     FilterBuilder,
 )
-from baserow.contrib.database.fields.field_sortings import AnnotatedOrder
 from baserow.contrib.database.fields.models import CreatedOnField, LastModifiedField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
     set_cached_model_field_attrs,
 )
+from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.db import specific_iterator
@@ -51,6 +56,10 @@ tracer = trace.get_tracer(__name__)
 
 
 class TableModelQuerySet(models.QuerySet):
+    def count(self):
+        with cachalot_enabled():
+            return super().count()
+
     def enhance_by_fields(self):
         """
         Enhances the queryset based on the `enhance_queryset` for each field in the
@@ -215,32 +224,19 @@ class TableModelQuerySet(models.QuerySet):
                     f"It is not possible to order by field type {field_type.type}.",
                 )
 
-            field_order = field_type.get_order(field, field_name, order_direction)
+            field_annotated_order_by = field_type.get_order(
+                field, field_name, order_direction
+            )
 
-            if isinstance(field_order, AnnotatedOrder):
-                if field_order.annotation is not None:
-                    annotations = {**annotations, **field_order.annotation}
-                field_order = field_order.order
-
-            if field_order:
-                order_by[index] = field_order
-            else:
-                order_expression = F(field_name)
-
-                if order_direction == "ASC":
-                    order_expression = order_expression.asc(nulls_first=True)
-                else:
-                    order_expression = order_expression.desc(nulls_last=True)
-
-                order_by[index] = order_expression
+            if field_annotated_order_by.annotation is not None:
+                annotations = {**annotations, **field_annotated_order_by.annotation}
+            field_order_by = field_annotated_order_by.order
+            order_by[index] = field_order_by
 
         order_by.append("order")
         order_by.append("id")
 
-        if annotations is not None:
-            return self.annotate(**annotations).order_by(*order_by)
-        else:
-            return self.order_by(*order_by)
+        return self.annotate(**annotations).order_by(*order_by)
 
     def filter_by_fields_object(
         self, filter_object, filter_type=FILTER_TYPE_AND, only_filter_by_field_ids=None
@@ -386,6 +382,16 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
             if getattr(f, "requires_refresh_after_update", False)
         ]
 
+    @classmethod
+    def get_field_object_or_none(cls, field_name: str, include_trash: bool = False):
+        field_objects = cls._field_objects.values()
+        if include_trash:
+            field_objects = itertools.chain(
+                field_objects, cls._trashed_field_objects.values()
+            )
+
+        return next(filter(lambda f: f["name"] == field_name, field_objects), None)
+
     class Meta:
         abstract = True
 
@@ -414,6 +420,35 @@ class DefaultAppsProxy:
         return getattr(apps, attr)
 
 
+def patch_meta_get_field(_meta):
+    original_get_field = _meta.get_field
+
+    def get_field(self, field_name, *args, **kwargs):
+        try:
+            return original_get_field(field_name, *args, **kwargs)
+        except DjangoFieldDoesNotExist as exc:
+            field_object = self.model.get_field_object_or_none(
+                field_name, include_trash=True
+            )
+
+            if field_object is None:
+                raise exc
+
+            field_type = field_object["type"]
+            logger.debug(
+                "Lazy load missing {} of type {} for table {}",
+                field_name,
+                field_type.type,
+                self.model.pk,
+            )
+            field_type.after_model_generation(
+                field_object["field"], self.model, field_object["name"]
+            )
+            return original_get_field(field_name, *args, **kwargs)
+
+    _meta.get_field = MethodType(get_field, _meta)
+
+
 class Table(
     HierarchicalModelMixin,
     TrashableModelMixin,
@@ -421,7 +456,6 @@ class Table(
     OrderableMixin,
     models.Model,
 ):
-    USER_TABLE_DATABASE_NAME_PREFIX = "database_table_"
     database = models.ForeignKey("database.Database", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -441,7 +475,7 @@ class Table(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_database_table_name(self):
-        return f"{self.USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
+        return f"{USER_TABLE_DATABASE_NAME_PREFIX}{self.id}"
 
     @baserow_trace(tracer)
     def get_model(
@@ -491,14 +525,20 @@ class Table(
         :rtype: Model
         """
 
+        logger.debug(
+            "Generating model for table {} with fields {}, manytomany_models {}, add_dependencies {}, use_cache {}",
+            str(self.pk),
+            fields,
+            manytomany_models,
+            add_dependencies,
+            use_cache,
+        )
+
         filtered = field_names is not None or field_ids is not None
         model_name = f"Table{self.pk}Model"
 
         if fields is None:
             fields = []
-
-        if manytomany_models is None:
-            manytomany_models = {}
 
         app_label = "database_table"
         meta = type(
@@ -541,6 +581,7 @@ class Table(
             "_generated_table_model": True,
             "baserow_table": self,
             "baserow_table_id": self.id,
+            "baserow_m2m_models": manytomany_models or {},
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
@@ -565,12 +606,14 @@ class Table(
         )
 
         if use_cache:
+            logger.debug("Using cached model for table {}", self.pk)
             self.refresh_from_db(fields=["version"])
             field_attrs = get_cached_model_field_attrs(self)
         else:
             field_attrs = None
 
         if field_attrs is None:
+            logger.debug("Generating model field attrs for table {}", self.pk)
             field_attrs = self._fetch_and_generate_field_attrs(
                 add_dependencies,
                 attribute_names,
@@ -597,12 +640,15 @@ class Table(
             attrs,
         )
 
-        self._after_model_generation(attrs, manytomany_models, model)
+        patch_meta_get_field(model._meta)
+
+        if not model.baserow_m2m_models:
+            self._after_model_generation(attrs, model)
 
         return model
 
     @baserow_trace(tracer)
-    def _after_model_generation(self, attrs, manytomany_models, model):
+    def _after_model_generation(self, attrs, model):
         # In some situations the field can only be added once the model class has been
         # generated. So for each field we will call the after_model_generation with
         # the generated model as argument in order to do this. This is for example used
@@ -612,9 +658,9 @@ class Table(
             **attrs["_field_objects"],
             **attrs["_trashed_field_objects"],
         }
-        for field_id, field_object in all_field_objects.items():
+        for field_object in all_field_objects.values():
             field_object["type"].after_model_generation(
-                field_object["field"], model, field_object["name"], manytomany_models
+                field_object["field"], model, field_object["name"]
             )
 
     @baserow_trace(tracer)
@@ -746,7 +792,6 @@ class Table(
 class DuplicateTableJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_table = models.ForeignKey(
         Table,
         null=True,

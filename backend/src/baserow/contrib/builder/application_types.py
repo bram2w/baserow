@@ -18,7 +18,7 @@ from baserow.contrib.builder.types import BuilderDict, PageDict
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.db import specific_iterator
 from baserow.core.models import Application, Workspace
-from baserow.core.registries import ApplicationType
+from baserow.core.registries import ApplicationType, BaserowImportExportMode
 from baserow.core.utils import ChildProgressBuilder
 
 
@@ -39,11 +39,9 @@ class BuilderApplicationType(ApplicationType):
 
     def init_application(self, user: AbstractUser, application: Application) -> None:
         with translation.override(user.profile.language):
-            first_page_name = _("Page")
+            first_page_name = _("Homepage")
 
-        PageService().create_page(
-            user, application.specific, first_page_name, path=f"/{first_page_name}"
-        )
+        PageService().create_page(user, application.specific, first_page_name, path="/")
 
     def export_pages_serialized(
         self,
@@ -56,12 +54,16 @@ class BuilderApplicationType(ApplicationType):
         via `import_pages_serialized`.
 
         :param pages: The pages that are supposed to be exported
+        :param files_zip: A zip file buffer where the files related to the pages
+            must be copied into.
+        :type files_zip: ZipFile
+        :param storage: The storage where the files can be loaded from.
+        :type storage: Storage or None
         :return: The list of serialized pages.
         """
 
         serialized_pages: List[PageDict] = []
         for page in pages:
-
             # Get serialized version of all elements of the current page
             serialized_elements = []
             for element in specific_iterator(page.element_set.all()):
@@ -85,6 +87,9 @@ class BuilderApplicationType(ApplicationType):
         builder: Builder,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> BuilderDict:
         """
         Exports the builder application type to a serialized format that can later
@@ -97,7 +102,9 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_pages = self.export_pages_serialized(pages, files_zip, storage)
 
-        serialized = super().export_serialized(builder, files_zip, storage)
+        serialized = super().export_serialized(
+            builder, files_zip, storage, baserow_import_export_mode
+        )
 
         return BuilderDict(pages=serialized_pages, **serialized)
 
@@ -155,7 +162,6 @@ class BuilderApplicationType(ApplicationType):
         # First, we want to create all the page instances because it could be that
         # element depends on the existence of a page.
         for serialized_page in serialized_pages:
-
             page_instance = Page.objects.create(
                 builder=builder,
                 name=serialized_page["name"],
@@ -226,3 +232,6 @@ class BuilderApplicationType(ApplicationType):
             )
 
         return builder
+
+    def enhance_queryset(self, queryset):
+        return queryset.prefetch_related("page_set")

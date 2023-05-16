@@ -6,7 +6,7 @@ import {
   GalleryViewType,
 } from '@baserow/modules/database/viewTypes'
 
-import { KanbanViewType } from './viewTypes'
+import { CalendarViewType, KanbanViewType } from './viewTypes'
 
 import leftBorderDecoratorImage from '@baserow_premium/assets/images/leftBorderDecorator.svg'
 import backgroundDecoratorImage from '@baserow_premium/assets/images/backgroundDecorator.svg'
@@ -76,6 +76,7 @@ export class LeftBorderColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
+        CalendarViewType.getType(),
       ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }
@@ -120,6 +121,7 @@ export class BackgroundColorViewDecoratorType extends ViewDecoratorType {
         GridViewType.getType(),
         GalleryViewType.getType(),
         KanbanViewType.getType(),
+        CalendarViewType.getType(),
       ].includes(view.type) && !store.getters['page/view/public/getIsPublic']
     )
   }

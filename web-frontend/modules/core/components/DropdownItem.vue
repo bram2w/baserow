@@ -21,7 +21,7 @@
             class="select__item-icon fas fa-fw"
             :class="'fa-' + icon"
           />
-          {{ name }}
+          <span class="select__item-name-text" :title="name">{{ name }}</span>
         </slot>
       </div>
       <div v-if="description !== null" class="select__item-description">

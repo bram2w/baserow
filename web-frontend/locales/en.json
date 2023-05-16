@@ -31,10 +31,12 @@
         "paste": "Paste",
         "activate": "Activate",
         "deactivate": "Deactivate",
-        "download": "Download"
+        "download": "Download",
+        "copyToClipboard": "Copy to clipboard"
     },
     "adminType": {
-        "settings": "Settings"
+        "settings": "Settings",
+        "health": "Health"
     },
     "applicationType": {
         "database": "Database",
@@ -325,7 +327,8 @@
         "equalDescription": "Returns if its two arguments have the same value.",
         "ifDescription": "If the first argument is true then returns the second argument, otherwise returns the third.",
         "toTextDescription": "Converts the input to text.",
-        "datetimeFormatDescription": "Converts the date to text given a way of formatting the date.",
+        "datetimeFormatDescription": "Converts the date to text given a way of formatting the date. It's always in UTC. Use `datetime_format_tz` to specify a timezone.",
+        "datetimeFormatTzDescription": "Converts the date to text given a way of formatting the date in the specified timezone.",
         "toNumberDescription": "Converts the input to a number if possible.",
         "fieldDescription": "Returns the field named by the single text argument.",
         "lookupDescription": "Looks up the values from a field in another table for rows in a link row field. The first argument should be the name of a link row field in the current table and the second should be the name of a field in the linked table.",
@@ -339,7 +342,7 @@
         "lessThanOrEqualDescription": "Returns true if the first argument less than or equal to the second, otherwise false.",
         "nowDescription": "Returns the current date and time in utc.",
         "todayDescription": "Returns the current date in utc.",
-        "toDateDescription": "Returns the first argument converted into a date given a date format string as the second argument.",
+        "toDateDescription": "Returns the first argument converted into a date given a date format string as the second argument. It's always in UTC. Use `to_date_tz` to specify a timezone.",
         "toDateTzDescription": "Returns the first argument converted into a date given a date format string as the second argument and the timezone provided as third argument.",
         "dayDescription": "Returns the day of the month as a number between 1 to 31 from the argument.",
         "dateDiffDescription": "Given a date unit to measure in as the first argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calculates and returns the number of units from the second argument to the third.",
@@ -403,5 +406,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "Invalid {name}",
         "invalidUrlEnvVarDescription": "The {name} environment variable has been set to an invalid value. Your site admin must change {name} to a valid URL starting with http:// or https:// and then restart Baserow to fix this error."
+    },
+    "health": {
+        "title": "Baserow health checks",
+        "description": "These checks show the current status of your Baserow installation."
+    },
+    "emailTester": {
+        "title": "Email tester",
+        "targetEmailLabel": "Target Email",
+        "invalidTargetEmail": "Invalid email address",
+        "submit": "Send test email",
+        "success": "Successfully sent test email",
+        "configLink": "Email Configuration Help"
     }
 }

@@ -397,7 +397,6 @@ class TeamSubjectsView(APIView):
     @transaction.atomic
     @validate_body(TeamSubjectSerializer)
     def post(self, request, team_id: int, data):
-
         team = TeamHandler().get_team(request.user, team_id)
         CoreHandler().check_permissions(
             request.user,

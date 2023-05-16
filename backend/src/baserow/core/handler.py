@@ -72,6 +72,7 @@ from .operations import (
     UpdateWorkspaceUserOperationType,
 )
 from .registries import (
+    BaserowImportExportMode,
     application_type_registry,
     object_scope_type_registry,
     operation_type_registry,
@@ -196,7 +197,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         result = {}
         undetermined_checks = set(checks)
         for permission_manager_name in settings.PERMISSION_MANAGERS:
-
             if not undetermined_checks:
                 break
 
@@ -351,8 +351,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).context_scope_name
         if expected_operation_context_type not in context_types:
             raise InvalidPermissionContext(
-                f"Incorrect context object matching {context_types} provided to "
-                f" check_permissions call. Was expected instead one of type "
+                f"Incorrect context object {context} matching {context_types} provided "
+                "to check_permissions call. Was expected instead one of type "
                 f"{expected_operation_context_type} based on the operation type of "
                 f"{operation_name}."
             )
@@ -450,6 +450,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             permission_manager_type = permission_manager_type_registry.get(
                 permission_manager_name
             )
+            if not permission_manager_type.actor_is_supported(actor):
+                continue
+
             queryset = permission_manager_type.filter_queryset(
                 actor, operation_name, queryset, workspace=workspace, context=context
             )
@@ -1471,7 +1474,15 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             self, application_id=application_id, application=application, user=user
         )
 
-    def export_workspace_applications(self, workspace, files_buffer, storage=None):
+    def export_workspace_applications(
+        self,
+        workspace,
+        files_buffer,
+        storage=None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_DIFF_WORKSPACE_NEW_PK,
+    ):
         """
         Exports the applications of a workspace to a list. They can later be imported
         via the `import_applications_to_workspace` method. The result can be
@@ -1487,6 +1498,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :type files_buffer: IOBase
         :param storage: The storage where the files can be loaded from.
         :type storage: Storage or None
+        :param baserow_import_export_mode: defines which Baserow import/export mode to
+            use, defaults to `TARGETING_DIFF_WORKSPACE_NEW_PK`.
+        :type baserow_import_export_mode: enum
         :return: A list containing the exported applications.
         :rtype: list
         """
@@ -1502,7 +1516,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 application_type = application_type_registry.get_by_model(application)
                 with application_type.export_safe_transaction_context(application):
                     exported_application = application_type.export_serialized(
-                        application, files_zip, storage
+                        application, files_zip, storage, baserow_import_export_mode
                     )
                 exported_applications.append(exported_application)
 
@@ -1515,6 +1529,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         files_buffer: IO[bytes],
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
+        baserow_import_export_mode: Optional[
+            BaserowImportExportMode
+        ] = BaserowImportExportMode.TARGETING_DIFF_WORKSPACE_NEW_PK,
     ) -> Tuple[List[Application], Dict[str, Any]]:
         """
         Imports multiple exported applications into the given workspace. It is
@@ -1530,6 +1547,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param storage: The storage where the files can be copied to.
         :param progress_builder: If provided will be used to build a child progress bar
             and report on this methods progress to the parent of the progress_builder.
+        :param baserow_import_export_mode: defines which Baserow import/export mode to
+            use, defaults to `TARGETING_DIFF_WORKSPACE_NEW_PK`.
+        :type baserow_import_export_mode: enum
         :return: The newly created applications based on the import and a dict
             containing a mapping of old ids to new ids.
         """
@@ -1556,6 +1576,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                     progress_builder=progress.create_child_builder(
                         represents_progress=1000
                     ),
+                    baserow_import_export_mode=baserow_import_export_mode,
                 )
                 imported_application.order = next_application_order_value
                 next_application_order_value += 1
@@ -1740,7 +1761,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         ).delete()
 
     def get_valid_template_path_or_raise(self, template):
-
         file_name = f"{template.slug}.json"
         template_path = Path(
             os.path.join(settings.APPLICATION_TEMPLATES_DIR, file_name)

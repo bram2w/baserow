@@ -342,6 +342,31 @@ export class BaserowDatetimeFormat extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowDatetimeFormatTz extends BaserowFunctionDefinition {
+  static getType() {
+    return 'datetime_format_tz'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.datetimeFormatTzDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['datetime_format_tz(date, text, text)']
+  }
+
+  getExamples() {
+    return [
+      "datetime_format_tz(field('date field'), 'YYYY-MM-DD HH24:MI', 'Europe/Amsterdam')",
+    ]
+  }
+
+  getFormulaType() {
+    return 'date'
+  }
+}
+
 export class BaserowToNumber extends BaserowFunctionDefinition {
   static getType() {
     return 'tonumber'

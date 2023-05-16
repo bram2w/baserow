@@ -160,7 +160,6 @@ class RotateDbTokenKeyActionType(ActionType):
 
     @classmethod
     def do(cls, user: AbstractUser, token: Token):
-
         token = TokenHandler().rotate_token_key(user, token)
 
         workspace = token.workspace
@@ -198,7 +197,6 @@ class DeleteDbTokenActionType(ActionType):
         user: AbstractUser,
         token: Token,
     ):
-
         workspace = token.workspace
         TokenHandler().delete_token(user, token)
 

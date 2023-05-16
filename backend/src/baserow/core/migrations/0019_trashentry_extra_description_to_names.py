@@ -22,7 +22,6 @@ def backward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0018_trashentry_names"),
     ]

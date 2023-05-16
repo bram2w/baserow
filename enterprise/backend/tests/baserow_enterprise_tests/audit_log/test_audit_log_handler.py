@@ -16,7 +16,6 @@ from baserow_enterprise.audit_log.models import AuditLogEntry
 def test_actions_are_not_inserted_as_audit_log_entries_without_license(
     api_client, enterprise_data_fixture
 ):
-
     user = enterprise_data_fixture.create_user()
 
     with freeze_time("2023-01-01 12:00:00"):

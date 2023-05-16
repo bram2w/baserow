@@ -12,6 +12,6 @@ lint: eslint stylelint
 lint-javascript: lint
 
 jest:
-	npx jest || exit;
+	npx jest --passWithNoTests || exit;
 
 test: jest

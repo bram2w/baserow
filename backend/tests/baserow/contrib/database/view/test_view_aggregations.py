@@ -125,7 +125,6 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
 
     aggregation_query = []
     for field in model._field_objects.values():
-
         aggregation_query.append(
             (
                 field["field"],
@@ -139,7 +138,6 @@ def test_view_empty_count_aggregation_for_interesting_table(data_fixture):
 
     aggregation_query = []
     for field in model._field_objects.values():
-
         aggregation_query.append(
             (
                 field["field"],
@@ -174,7 +172,6 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
     aggregation_query = []
     for field in model._field_objects.values():
         if aggregation_type.field_is_compatible(field["field"]):
-
             aggregation_query.append(
                 (
                     field["field"],
@@ -191,7 +188,6 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
     for field_obj in model._field_objects.values():
         field = field_obj["field"]
         if aggregation_type.field_is_compatible(field):
-
             field_id = field.id
             field_type = field_obj["type"].type
 

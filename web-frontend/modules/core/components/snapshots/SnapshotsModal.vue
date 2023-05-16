@@ -9,6 +9,11 @@
         $tc('snapshotsModal.descriptionLimits', maxSnapshots)
       }}</span>
     </p>
+    <component
+      :is="component"
+      v-for="(component, index) in snapshotModalAlertComponents"
+      :key="index"
+    ></component>
     <Error :error="error"></Error>
     <div class="snapshots-modal">
       <CreateSnapshotForm
@@ -88,6 +93,13 @@ export default {
   computed: {
     maxSnapshots() {
       return parseInt(this.$env.BASEROW_MAX_SNAPSHOTS_PER_GROUP)
+    },
+    snapshotModalAlertComponents() {
+      return Object.values(this.$registry.getAll('plugin'))
+        .map((plugin) =>
+          plugin.getExtraSnapshotModalComponents(this.application.workspace)
+        )
+        .filter((component) => component !== null)
     },
   },
   beforeDestroy() {

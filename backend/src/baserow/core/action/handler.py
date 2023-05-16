@@ -190,7 +190,6 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
         if latest_undone_action.action_group is None:
             actions_being_redone = [latest_undone_action]
         else:
-
             actions_being_redone = list(
                 Action.objects.filter(
                     undone_at__isnull=False,

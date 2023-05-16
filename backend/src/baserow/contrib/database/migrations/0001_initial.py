@@ -12,7 +12,6 @@ get_default_view_content_type = (
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

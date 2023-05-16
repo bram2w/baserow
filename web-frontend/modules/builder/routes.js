@@ -20,15 +20,15 @@ export const routes = [
   {
     name: 'application-builder-page',
     path: '*',
-    component: path.resolve(__dirname, 'pages/publishedWebsitePage.vue'),
-    // If publishedWebsiteRoute is true, then that route will only be used on a
+    component: path.resolve(__dirname, 'pages/publicPage.vue'),
+    // If publishedBuilderRoute is true, then that route will only be used on a
     // different subdomain.
-    meta: { publishedWebsiteRoute: true },
+    meta: { publishedBuilderRoute: true },
   },
   {
     name: 'application-builder-page',
-    // This route to the preview of the website
-    path: '/preview/application/:id/page*',
-    component: path.resolve(__dirname, 'pages/previewWebsitePage.vue'),
+    // This route to the preview of the builder page
+    path: '/builder/:builderId/preview*',
+    component: path.resolve(__dirname, 'pages/publicPage.vue'),
   },
 ]

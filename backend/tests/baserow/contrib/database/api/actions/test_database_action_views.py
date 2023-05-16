@@ -15,7 +15,6 @@ User = get_user_model()
 def test_can_undo_a_database_action_and_get_correct_response_code(
     api_client, data_fixture
 ):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(user, table=table)
@@ -46,7 +45,6 @@ def test_can_undo_a_database_action_and_get_correct_response_code(
 @pytest.mark.django_db
 @pytest.mark.undo_redo
 def test_asking_for_an_unknown_scope_returns_an_error(api_client, data_fixture):
-
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
     field = data_fixture.create_text_field(user, table=table)

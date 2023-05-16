@@ -97,7 +97,7 @@ class BatchAssignRoleActionType(UndoableActionType):
         # Build the list of assignment tuples we want to save in the action to be able
         # to [un|re]do it later
         param_assignments = []
-        for (subject, role, scope) in new_role_assignments:
+        for subject, role, scope in new_role_assignments:
             subject_type = subject_type_registry.get_by_model(subject)
             scope_type = object_scope_type_registry.get_by_model(scope)
             previous_role_assignment = previous_roles[(subject, scope)]
@@ -177,7 +177,6 @@ class BatchAssignRoleActionType(UndoableActionType):
             scope_type_name,
             scope_id,
         ) in params.assignments:
-
             subject = subject_by_type_and_id[(subject_type_name, subject_id)]
 
             role_uid = original_role_uid if undo else role_uid

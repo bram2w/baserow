@@ -175,6 +175,7 @@ def register_formula_functions(registry):
     registry.register(BaserowOr())
     # Date functions
     registry.register(BaserowDatetimeFormat())
+    registry.register(BaserowDatetimeFormatTz())
     registry.register(BaserowDay())
     registry.register(BaserowMonth())
     registry.register(BaserowYear())
@@ -219,7 +220,6 @@ def register_formula_functions(registry):
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
-
     type = "upper"
     arg_type = [BaserowFormulaTextType]
 
@@ -279,6 +279,33 @@ class BaserowDatetimeFormat(TwoArgumentBaserowFunction):
                 output_field=fields.TextField(),
             ),
             Value(""),
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowDatetimeFormatTz(ThreeArgumentBaserowFunction):
+    type = "datetime_format_tz"
+    arg1_type = [BaserowFormulaDateType]
+    arg2_type = [BaserowFormulaTextType]
+    arg3_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+        arg3: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType(nullable=True))
+
+    def to_django_expression(
+        self, arg1: Expression, arg2: Expression, arg3: Expression
+    ) -> Expression:
+        return Func(
+            arg1,
+            arg2,
+            arg3,
+            function="try_datetime_format_tz",
             output_field=fields.TextField(),
         )
 
@@ -1073,7 +1100,6 @@ class BaserowErrorToNull(OneArgumentBaserowFunction):
         func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-
         # FIXME: This function should set `nullable=True` on the resulting type,
         # but since this is used as the most external wrapper function, don't
         # want to loose the real nullable state of the expression. This should
@@ -1246,7 +1272,6 @@ class BaserowNow(ZeroArgumentBaserowFunction):
         args: List["WrappedExpressionWithMetadata"],
         context: BaserowExpressionContext,
     ) -> "WrappedExpressionWithMetadata":
-
         return WrappedExpressionWithMetadata(
             Value(context.get_utc_now(), output_field=fields.DateTimeField()),
         )
@@ -1276,7 +1301,6 @@ class BaserowToday(ZeroArgumentBaserowFunction):
         args: List["WrappedExpressionWithMetadata"],
         context: BaserowExpressionContext,
     ) -> "WrappedExpressionWithMetadata":
-
         return WrappedExpressionWithMetadata(
             Value(context.get_utc_now(), output_field=fields.DateField()),
         )
@@ -1338,7 +1362,6 @@ class BaserowToDateTz(ThreeArgumentBaserowFunction):
     def to_django_expression(
         self, arg1: Expression, arg2: Expression, arg3: Expression
     ) -> Expression:
-
         return Func(
             arg1,
             arg2,
@@ -1462,7 +1485,6 @@ class BaserowDateInterval(OneArgumentBaserowFunction):
         func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
-
         return func_call.with_valid_type(BaserowFormulaDateIntervalType(nullable=True))
 
     def to_django_expression(self, arg: Expression) -> Expression:
@@ -2109,7 +2131,6 @@ class BaserowRight(TwoArgumentBaserowFunction):
 
 
 class BaserowRegexReplace(ThreeArgumentBaserowFunction):
-
     type = "regex_replace"
     arg1_type = [BaserowFormulaTextType]
     arg2_type = [BaserowFormulaTextType]
@@ -2174,7 +2195,6 @@ class BaserowButton(TwoArgumentBaserowFunction):
 
 
 class BaserowTrim(OneArgumentBaserowFunction):
-
     type = "trim"
     arg_type = [BaserowFormulaTextType]
 

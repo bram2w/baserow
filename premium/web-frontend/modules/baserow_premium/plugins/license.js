@@ -15,7 +15,6 @@ export default function ({ app }, inject) {
   const licenseHandler = new LicenseHandler(app)
   licenseHandler.listenToBusEvents()
   inject('licenseHandler', licenseHandler)
-  inject('hasFeature', licenseHandler.hasFeature.bind(licenseHandler))
   inject(
     'highestLicenseType',
     licenseHandler.highestInstanceWideLicenseType.bind(licenseHandler)

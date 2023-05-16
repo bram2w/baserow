@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "use otel baggage to enhance every span with useful info",
+    "issue_number": 1700,
+    "bullet_points": [],
+    "created_at": "2023-04-17"
+}

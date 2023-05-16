@@ -9,6 +9,7 @@ from django.db.models import BooleanField, DurationField, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
+from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -95,9 +96,6 @@ class FieldType(
     Indicates whether this field can generate a list of unique values using the
     `FieldHandler::get_unique_row_values` method.
     """
-
-    can_represent_date = False
-    """Indicates whether the field can be used to represent date or datetime."""
 
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
@@ -354,7 +352,14 @@ class FieldType(
 
         raise NotImplementedError("Each must have his own get_model_field method.")
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def has_compatible_model_fields(self, instance, instance2) -> bool:
+        """
+        Returns True if the provided instances have compatible model fields.
+        """
+
+        return type(instance) == type(instance2)
+
+    def after_model_generation(self, instance, model, field_name):
         """
         After the model is generated the after_model_generation method of each field
         is also called to make some additional changes when whole model is available.
@@ -367,9 +372,6 @@ class FieldType(
         :type model: Model
         :param field_name: The given name of the field in the model.
         :type field_name: str
-        :param manytomany_models: A dict containing cached related manytomany models in
-            order to prevent model generation loop.
-        :type manytomany_models: dict
         """
 
     def random_value(self, instance, fake, cache):
@@ -659,7 +661,9 @@ class FieldType(
         :type connection: DatabaseWrapper
         """
 
-    def get_order(self, field, field_name, order_direction):
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
         """
         This hook can be called to generate a different order by expression. By default
         None is returned which means the normal field sorting will be applied.
@@ -682,7 +686,14 @@ class FieldType(
         :rtype: Optional[Expression, AnnotatedOrderBy, None]
         """
 
-        return None
+        field_expr = django_models.F(field_name)
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(order=field_order_by, can_be_indexed=True)
 
     def force_same_type_alter_column(self, from_field, to_field):
         """
@@ -1445,6 +1456,11 @@ class FieldType(
         """
 
         return getattr(row, field_name)
+
+    def can_represent_date(self, field):
+        """Indicates whether the field can be used to represent date or datetime."""
+
+        return False
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

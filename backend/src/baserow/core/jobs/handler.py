@@ -70,7 +70,8 @@ class JobHandler:
 
         :param job_id: The job id we want to fetch.
         :param job_model: An optional Job model.
-        :base_queryset: An optional base queryset to use instead of the default one.
+        :param base_queryset: An optional base queryset to use instead of the default
+            one.
         :return: the job.
         """
 
@@ -171,7 +172,6 @@ class JobHandler:
             run_async_job(job.id)
             job.refresh_from_db()
         else:
-
             # This wrapper ensure the job doesn't stay in pending state if something
             # goes wrong during the delay call. This is related to the redis connection
             # failure that triggers a sys.exit(1) to be called in gunicorn.

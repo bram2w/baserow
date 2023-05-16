@@ -52,7 +52,11 @@ describe('index redirect', () => {
   test('if authenticated', async () => {
     const req = httpMocks.createRequest({
       headers: {
+        host: `localhost`,
         cookie: `jwt_token=${token}`,
+      },
+      env: {
+        PUBLIC_WEB_FRONTEND_URL: `https://localhost`,
       },
     })
     const res = httpMocks.createResponse()

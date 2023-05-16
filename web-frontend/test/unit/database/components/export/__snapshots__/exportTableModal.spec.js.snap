@@ -86,9 +86,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           class="select__item-name"
                         >
                           <!---->
-                          
-        exportTableDropdown.exportEntireTable
-      
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="exportTableDropdown.exportEntireTable"
+                          >
+                            exportTableDropdown.exportEntireTable
+                          </span>
                         </div>
                          
                         <!---->
@@ -107,9 +111,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           <i
                             class="select__item-icon fas fa-fw fa-bars"
                           />
-                          
-        mock_view_1
-      
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="mock_view_1"
+                          >
+                            mock_view_1
+                          </span>
                         </div>
                          
                         <!---->
@@ -228,9 +236,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        ,
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=","
+                            >
+                              ,
+                            </span>
                           </div>
                            
                           <!---->
@@ -247,9 +259,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        ;
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=";"
+                            >
+                              ;
+                            </span>
                           </div>
                            
                           <!---->
@@ -266,9 +282,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        |
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="|"
+                            >
+                              |
+                            </span>
                           </div>
                            
                           <!---->
@@ -285,9 +305,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        &lt;tab&gt;
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=<tab>
+                            >
+                              &lt;tab&gt;
+                            </span>
                           </div>
                            
                           <!---->
@@ -304,9 +328,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        tableCSVExporter.recordSeparator (30)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="tableCSVExporter.recordSeparator (30)"
+                            >
+                              tableCSVExporter.recordSeparator (30)
+                            </span>
                           </div>
                            
                           <!---->
@@ -323,9 +351,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        tableCSVExporter.unitSeparator (31)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="tableCSVExporter.unitSeparator (31)"
+                            >
+                              tableCSVExporter.unitSeparator (31)
+                            </span>
                           </div>
                            
                           <!---->
@@ -401,9 +433,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Unicode (UTF-8)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Unicode (UTF-8)"
+                            >
+                              Unicode (UTF-8)
+                            </span>
                           </div>
                            
                           <!---->
@@ -420,9 +456,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Arabic (ISO-8859-6)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Arabic (ISO-8859-6)"
+                            >
+                              Arabic (ISO-8859-6)
+                            </span>
                           </div>
                            
                           <!---->
@@ -439,9 +479,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Arabic (Windows-1256)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Arabic (Windows-1256)"
+                            >
+                              Arabic (Windows-1256)
+                            </span>
                           </div>
                            
                           <!---->
@@ -458,9 +502,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Baltic (ISO-8859-4)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Baltic (ISO-8859-4)"
+                            >
+                              Baltic (ISO-8859-4)
+                            </span>
                           </div>
                            
                           <!---->
@@ -477,9 +525,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Baltic (windows-1257)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Baltic (windows-1257)"
+                            >
+                              Baltic (windows-1257)
+                            </span>
                           </div>
                            
                           <!---->
@@ -496,9 +548,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Celtic (ISO-8859-14)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Celtic (ISO-8859-14)"
+                            >
+                              Celtic (ISO-8859-14)
+                            </span>
                           </div>
                            
                           <!---->
@@ -515,9 +571,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Central European (ISO-8859-2)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Central European (ISO-8859-2)"
+                            >
+                              Central European (ISO-8859-2)
+                            </span>
                           </div>
                            
                           <!---->
@@ -534,9 +594,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Central European (Windows-1250)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Central European (Windows-1250)"
+                            >
+                              Central European (Windows-1250)
+                            </span>
                           </div>
                            
                           <!---->
@@ -553,9 +617,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese, Simplified (GBK)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese, Simplified (GBK)"
+                            >
+                              Chinese, Simplified (GBK)
+                            </span>
                           </div>
                            
                           <!---->
@@ -572,9 +640,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese (GB18030)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese (GB18030)"
+                            >
+                              Chinese (GB18030)
+                            </span>
                           </div>
                            
                           <!---->
@@ -591,9 +663,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese Traditional (Big5)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese Traditional (Big5)"
+                            >
+                              Chinese Traditional (Big5)
+                            </span>
                           </div>
                            
                           <!---->
@@ -610,9 +686,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (KOI8-R)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (KOI8-R)"
+                            >
+                              Cyrillic (KOI8-R)
+                            </span>
                           </div>
                            
                           <!---->
@@ -629,9 +709,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (KOI8-U)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (KOI8-U)"
+                            >
+                              Cyrillic (KOI8-U)
+                            </span>
                           </div>
                            
                           <!---->
@@ -648,9 +732,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (ISO-8859-5)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (ISO-8859-5)"
+                            >
+                              Cyrillic (ISO-8859-5)
+                            </span>
                           </div>
                            
                           <!---->
@@ -667,9 +755,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (Windows-1251)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (Windows-1251)"
+                            >
+                              Cyrillic (Windows-1251)
+                            </span>
                           </div>
                            
                           <!---->
@@ -686,9 +778,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic Mac OS (x-mac-cyrillic)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic Mac OS (x-mac-cyrillic)"
+                            >
+                              Cyrillic Mac OS (x-mac-cyrillic)
+                            </span>
                           </div>
                            
                           <!---->
@@ -705,9 +801,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Greek (ISO-8859-7)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Greek (ISO-8859-7)"
+                            >
+                              Greek (ISO-8859-7)
+                            </span>
                           </div>
                            
                           <!---->
@@ -724,9 +824,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Greek (Windows-1253)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Greek (Windows-1253)"
+                            >
+                              Greek (Windows-1253)
+                            </span>
                           </div>
                            
                           <!---->
@@ -743,9 +847,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Hebrew (ISO-8859-8)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Hebrew (ISO-8859-8)"
+                            >
+                              Hebrew (ISO-8859-8)
+                            </span>
                           </div>
                            
                           <!---->
@@ -762,9 +870,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Hebrew (Windows-1255)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Hebrew (Windows-1255)"
+                            >
+                              Hebrew (Windows-1255)
+                            </span>
                           </div>
                            
                           <!---->
@@ -781,9 +893,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (EUC-JP)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (EUC-JP)"
+                            >
+                              Japanese (EUC-JP)
+                            </span>
                           </div>
                            
                           <!---->
@@ -800,9 +916,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (ISO-2022-JP)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (ISO-2022-JP)"
+                            >
+                              Japanese (ISO-2022-JP)
+                            </span>
                           </div>
                            
                           <!---->
@@ -819,9 +939,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (Shift-JIS)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (Shift-JIS)"
+                            >
+                              Japanese (Shift-JIS)
+                            </span>
                           </div>
                            
                           <!---->
@@ -838,9 +962,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Korean (EUC-KR)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Korean (EUC-KR)"
+                            >
+                              Korean (EUC-KR)
+                            </span>
                           </div>
                            
                           <!---->
@@ -857,9 +985,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Macintosh
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Macintosh"
+                            >
+                              Macintosh
+                            </span>
                           </div>
                            
                           <!---->
@@ -876,9 +1008,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Nordic (ISO-8859-10)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Nordic (ISO-8859-10)"
+                            >
+                              Nordic (ISO-8859-10)
+                            </span>
                           </div>
                            
                           <!---->
@@ -895,9 +1031,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        South-Eastern European (ISO-8859-16)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="South-Eastern European (ISO-8859-16)"
+                            >
+                              South-Eastern European (ISO-8859-16)
+                            </span>
                           </div>
                            
                           <!---->
@@ -914,9 +1054,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Thai (Windows-874)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Thai (Windows-874)"
+                            >
+                              Thai (Windows-874)
+                            </span>
                           </div>
                            
                           <!---->
@@ -933,9 +1077,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Turkish (Windows-1254)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Turkish (Windows-1254)"
+                            >
+                              Turkish (Windows-1254)
+                            </span>
                           </div>
                            
                           <!---->
@@ -952,9 +1100,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Vietnamese (Windows-1258)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Vietnamese (Windows-1258)"
+                            >
+                              Vietnamese (Windows-1258)
+                            </span>
                           </div>
                            
                           <!---->
@@ -971,9 +1123,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Western European (ISO-8859-1)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Western European (ISO-8859-1)"
+                            >
+                              Western European (ISO-8859-1)
+                            </span>
                           </div>
                            
                           <!---->
@@ -990,9 +1146,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Western European (Windows-1252)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Western European (Windows-1252)"
+                            >
+                              Western European (Windows-1252)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1009,9 +1169,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Latin 3 (ISO-8859-3)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Latin 3 (ISO-8859-3)"
+                            >
+                              Latin 3 (ISO-8859-3)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1168,9 +1332,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           class="select__item-name"
                         >
                           <!---->
-                          
-        exportTableDropdown.exportEntireTable
-      
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="exportTableDropdown.exportEntireTable"
+                          >
+                            exportTableDropdown.exportEntireTable
+                          </span>
                         </div>
                          
                         <!---->
@@ -1189,9 +1357,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           <i
                             class="select__item-icon fas fa-fw fa-bars"
                           />
-                          
-        mock_view_1
-      
+                           
+                          <span
+                            class="select__item-name-text"
+                            title="mock_view_1"
+                          >
+                            mock_view_1
+                          </span>
                         </div>
                          
                         <!---->
@@ -1310,9 +1482,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        ,
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=","
+                            >
+                              ,
+                            </span>
                           </div>
                            
                           <!---->
@@ -1329,9 +1505,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        ;
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=";"
+                            >
+                              ;
+                            </span>
                           </div>
                            
                           <!---->
@@ -1348,9 +1528,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        |
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="|"
+                            >
+                              |
+                            </span>
                           </div>
                            
                           <!---->
@@ -1367,9 +1551,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        &lt;tab&gt;
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title=<tab>
+                            >
+                              &lt;tab&gt;
+                            </span>
                           </div>
                            
                           <!---->
@@ -1386,9 +1574,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        tableCSVExporter.recordSeparator (30)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="tableCSVExporter.recordSeparator (30)"
+                            >
+                              tableCSVExporter.recordSeparator (30)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1405,9 +1597,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        tableCSVExporter.unitSeparator (31)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="tableCSVExporter.unitSeparator (31)"
+                            >
+                              tableCSVExporter.unitSeparator (31)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1483,9 +1679,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Unicode (UTF-8)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Unicode (UTF-8)"
+                            >
+                              Unicode (UTF-8)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1502,9 +1702,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Arabic (ISO-8859-6)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Arabic (ISO-8859-6)"
+                            >
+                              Arabic (ISO-8859-6)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1521,9 +1725,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Arabic (Windows-1256)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Arabic (Windows-1256)"
+                            >
+                              Arabic (Windows-1256)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1540,9 +1748,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Baltic (ISO-8859-4)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Baltic (ISO-8859-4)"
+                            >
+                              Baltic (ISO-8859-4)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1559,9 +1771,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Baltic (windows-1257)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Baltic (windows-1257)"
+                            >
+                              Baltic (windows-1257)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1578,9 +1794,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Celtic (ISO-8859-14)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Celtic (ISO-8859-14)"
+                            >
+                              Celtic (ISO-8859-14)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1597,9 +1817,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Central European (ISO-8859-2)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Central European (ISO-8859-2)"
+                            >
+                              Central European (ISO-8859-2)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1616,9 +1840,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Central European (Windows-1250)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Central European (Windows-1250)"
+                            >
+                              Central European (Windows-1250)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1635,9 +1863,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese, Simplified (GBK)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese, Simplified (GBK)"
+                            >
+                              Chinese, Simplified (GBK)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1654,9 +1886,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese (GB18030)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese (GB18030)"
+                            >
+                              Chinese (GB18030)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1673,9 +1909,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Chinese Traditional (Big5)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Chinese Traditional (Big5)"
+                            >
+                              Chinese Traditional (Big5)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1692,9 +1932,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (KOI8-R)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (KOI8-R)"
+                            >
+                              Cyrillic (KOI8-R)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1711,9 +1955,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (KOI8-U)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (KOI8-U)"
+                            >
+                              Cyrillic (KOI8-U)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1730,9 +1978,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (ISO-8859-5)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (ISO-8859-5)"
+                            >
+                              Cyrillic (ISO-8859-5)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1749,9 +2001,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic (Windows-1251)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic (Windows-1251)"
+                            >
+                              Cyrillic (Windows-1251)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1768,9 +2024,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Cyrillic Mac OS (x-mac-cyrillic)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Cyrillic Mac OS (x-mac-cyrillic)"
+                            >
+                              Cyrillic Mac OS (x-mac-cyrillic)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1787,9 +2047,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Greek (ISO-8859-7)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Greek (ISO-8859-7)"
+                            >
+                              Greek (ISO-8859-7)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1806,9 +2070,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Greek (Windows-1253)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Greek (Windows-1253)"
+                            >
+                              Greek (Windows-1253)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1825,9 +2093,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Hebrew (ISO-8859-8)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Hebrew (ISO-8859-8)"
+                            >
+                              Hebrew (ISO-8859-8)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1844,9 +2116,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Hebrew (Windows-1255)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Hebrew (Windows-1255)"
+                            >
+                              Hebrew (Windows-1255)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1863,9 +2139,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (EUC-JP)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (EUC-JP)"
+                            >
+                              Japanese (EUC-JP)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1882,9 +2162,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (ISO-2022-JP)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (ISO-2022-JP)"
+                            >
+                              Japanese (ISO-2022-JP)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1901,9 +2185,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Japanese (Shift-JIS)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Japanese (Shift-JIS)"
+                            >
+                              Japanese (Shift-JIS)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1920,9 +2208,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Korean (EUC-KR)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Korean (EUC-KR)"
+                            >
+                              Korean (EUC-KR)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1939,9 +2231,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Macintosh
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Macintosh"
+                            >
+                              Macintosh
+                            </span>
                           </div>
                            
                           <!---->
@@ -1958,9 +2254,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Nordic (ISO-8859-10)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Nordic (ISO-8859-10)"
+                            >
+                              Nordic (ISO-8859-10)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1977,9 +2277,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        South-Eastern European (ISO-8859-16)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="South-Eastern European (ISO-8859-16)"
+                            >
+                              South-Eastern European (ISO-8859-16)
+                            </span>
                           </div>
                            
                           <!---->
@@ -1996,9 +2300,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Thai (Windows-874)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Thai (Windows-874)"
+                            >
+                              Thai (Windows-874)
+                            </span>
                           </div>
                            
                           <!---->
@@ -2015,9 +2323,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Turkish (Windows-1254)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Turkish (Windows-1254)"
+                            >
+                              Turkish (Windows-1254)
+                            </span>
                           </div>
                            
                           <!---->
@@ -2034,9 +2346,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Vietnamese (Windows-1258)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Vietnamese (Windows-1258)"
+                            >
+                              Vietnamese (Windows-1258)
+                            </span>
                           </div>
                            
                           <!---->
@@ -2053,9 +2369,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Western European (ISO-8859-1)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Western European (ISO-8859-1)"
+                            >
+                              Western European (ISO-8859-1)
+                            </span>
                           </div>
                            
                           <!---->
@@ -2072,9 +2392,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Western European (Windows-1252)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Western European (Windows-1252)"
+                            >
+                              Western European (Windows-1252)
+                            </span>
                           </div>
                            
                           <!---->
@@ -2091,9 +2415,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                             class="select__item-name"
                           >
                             <!---->
-                            
-        Latin 3 (ISO-8859-3)
-      
+                             
+                            <span
+                              class="select__item-name-text"
+                              title="Latin 3 (ISO-8859-3)"
+                            >
+                              Latin 3 (ISO-8859-3)
+                            </span>
                           </div>
                            
                           <!---->

@@ -14,7 +14,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_created, table_updated
-from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.signals import view_created
@@ -489,6 +489,7 @@ class ViewTrashableItemType(TrashableItemType):
     def permanently_delete_item(
         self, trashed_item: View, trash_item_lookup_cache: Dict[str, View] = None
     ):
+        ViewIndexingHandler.before_view_permanently_deleted(trashed_item)
         trashed_item.delete()
 
     def get_parent(self, trashed_item: View, parent_id: int) -> Optional[View]:

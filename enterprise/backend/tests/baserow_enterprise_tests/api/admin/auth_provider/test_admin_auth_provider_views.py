@@ -22,7 +22,6 @@ from baserow_enterprise.sso.saml.models import SamlAuthProviderModel
 def test_admin_cannot_list_saml_provider_without_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
-
     enterprise_data_fixture.create_saml_auth_provider(domain="test1.com")
     enterprise_data_fixture.create_saml_auth_provider(domain="acme.com")
 
@@ -95,7 +94,6 @@ def test_admin_can_list_saml_provider_with_an_enterprise_license(
 def test_admin_cannot_create_saml_provider_without_an_enterprise_license(
     api_client, data_fixture, enterprise_data_fixture
 ):
-
     # create a valid SAML provider
     domain = "test.it"
     metadata = enterprise_data_fixture.get_test_saml_idp_metadata()
@@ -631,7 +629,6 @@ def test_create_and_get_oauth2_provider(
 def test_create_oauth2_provider_required_fields(
     api_client, data_fixture, enterprise_data_fixture, provider_type, required_params
 ):
-
     admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
     response = api_client.post(
         reverse("api:enterprise:admin:auth_provider:list"),

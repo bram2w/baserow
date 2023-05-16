@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add a new admin health check page for seeing the status of your Baserow server.",
+    "issue_number": 521,
+    "bullet_points": [],
+    "created_at": "2023-04-14"
+}

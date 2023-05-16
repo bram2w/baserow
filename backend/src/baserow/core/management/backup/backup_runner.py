@@ -13,7 +13,7 @@ from django.utils import timezone
 import psycopg2
 
 from baserow.contrib.database.fields.models import LinkRowField, MultipleSelectField
-from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
 from baserow.core.management.backup.exceptions import InvalidBaserowBackupArchive
 
 NO_USER_TABLES_BACKUP_SUB_FOLDER = "everything_but_user_tables"
@@ -109,7 +109,7 @@ class BaserowBackupRunner:
 
         with tempfile.TemporaryDirectory() as temporary_directory_name:
             with tarfile.open(backup_file_name, "r:gz") as backup_input_tar:
-                backup_input_tar.extractall(temporary_directory_name)
+                backup_input_tar.extractall(temporary_directory_name)  # nosec B202
 
             backup_internal_folder_name = Path(backup_file_name).name
             backup_sub_folder = Path(
@@ -167,7 +167,7 @@ class BaserowBackupRunner:
     ):
         args = [
             f"--exclude-table={MultipleSelectField.THROUGH_DATABASE_TABLE_PREFIX}*",
-            f"--exclude-table={Table.USER_TABLE_DATABASE_NAME_PREFIX}*",
+            f"--exclude-table={USER_TABLE_DATABASE_NAME_PREFIX}*",
             f"--exclude-table={LinkRowField.THROUGH_DATABASE_TABLE_PREFIX}*",
             f"--file={temporary_directory_name}/everything_but_user_tables/",
         ]
@@ -274,8 +274,7 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
     """
 
     with conn.cursor() as cursor:
-
-        table_prefix_regex_escaped = re.escape(Table.USER_TABLE_DATABASE_NAME_PREFIX)
+        table_prefix_regex_escaped = re.escape(USER_TABLE_DATABASE_NAME_PREFIX)
         through_table_regex_escaped = re.escape(
             LinkRowField.THROUGH_DATABASE_TABLE_PREFIX
         )

@@ -127,4 +127,22 @@ export class BaserowPlugin extends Registerable {
   getAdditionalTableContextComponents(workspace, table) {
     return []
   }
+
+  /**
+   * If set, `getExtraSnapshotModalComponents` will allow plugins to decide what kind of
+   * copy is shown in the snapshots modal's Alert box.
+   */
+  getExtraSnapshotModalComponents(workspace) {
+    return null
+  }
+
+  /**
+   * Some features are optionally enabled, this function will be called when the
+   * $hasFeature directive is called on each plugin to check if any of the plugins
+   * enable the particular feature.
+   * @returns {boolean}
+   */
+  hasFeature(feature, forSpecificWorkspace) {
+    return false
+  }
 }

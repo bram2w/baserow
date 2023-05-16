@@ -17,7 +17,6 @@ from baserow.core.user.handler import UserHandler
 
 @pytest.mark.django_db
 def test_create_user_action_type():
-
     user = action_type_registry.get(CreateUserActionType.type).do(
         name="Test", email="user@test.com", password="test1234", language="en"
     )
@@ -28,7 +27,6 @@ def test_create_user_action_type():
 
 @pytest.mark.django_db
 def test_update_user_action_type(data_fixture):
-
     user = data_fixture.create_user(first_name="User")
     updated_user = action_type_registry.get(UpdateUserActionType.type).do(
         user, first_name="Test"

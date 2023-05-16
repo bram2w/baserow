@@ -1,8 +1,9 @@
 import pathToRegexp from 'path-to-regexp'
 
-export const resolveApplicationRoute = (application, fullPath) => {
+export const resolveApplicationRoute = (pages, fullPath) => {
   let found
-  for (const page of application.pages) {
+
+  for (const page of pages) {
     const keys = [] // Keys are populated by the next call
     const re = pathToRegexp(page.path, keys)
     const match = re.exec(fullPath)

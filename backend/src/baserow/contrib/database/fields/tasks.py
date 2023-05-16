@@ -64,7 +64,6 @@ def run_periodic_fields_updates(
 def _run_periodic_field_type_update_per_workspace(
     field_type_instance, workspace: Workspace, update_now=True
 ):
-
     qs = field_type_instance.get_fields_needing_periodic_update()
     if qs is None:
         return

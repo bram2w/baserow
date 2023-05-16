@@ -24,15 +24,15 @@ guide for more details.
 
 * **Maintained By**: [baserow.io](https://baserow.io/contact)
 * **Get Support At**: [The Baserow Community Forums](https://community.baserow.io)
-* **Source Code Available At**: [gitlab.com/bramw/baserow](https://gitlab.com/bramw/baserow)
+* **Source Code Available At**: [gitlab.com/baserow/baserow](https://gitlab.com/baserow/baserow)
 * **Docs At**: [baserow.io/docs](https://baserow.io/docs)
 * **License**: Open-Core with all non-premium and non-enterprise code under the MIT 
   license.
 
 ## Supported tags and Dockerfile Links
 
-* [`X.Y.Z`](https://gitlab.com/bramw/baserow/-/blob/master/deploy/web-frontend/Dockerfile)
+* [`X.Y.Z`](https://gitlab.com/baserow/baserow/-/blob/master/deploy/web-frontend/Dockerfile)
   Tagged by Baserow version.
-* [`latest`](https://gitlab.com/bramw/baserow/-/blob/master/web-frontend/Dockerfile)
-* [`develop-latest`](https://gitlab.com/bramw/baserow/-/blob/develop/web-frontend/Dockerfile)
+* [`latest`](https://gitlab.com/baserow/baserow/-/blob/master/web-frontend/Dockerfile)
+* [`develop-latest`](https://gitlab.com/baserow/baserow/-/blob/develop/web-frontend/Dockerfile)
   This is a bleeding edge image from our development branch, use at your own risk.

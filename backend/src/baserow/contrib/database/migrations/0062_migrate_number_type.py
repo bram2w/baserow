@@ -19,7 +19,6 @@ def reverse(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0061_change_decimal_places"),
     ]

@@ -632,7 +632,6 @@ def test_cleanup_does_extra_cleanup_for_actions_implementing_it(data_fixture, se
 def test_custom_cleanup_failing_doesnt_rollback_other_successful_cleanups(
     data_fixture, settings, mutable_action_registry, django_assert_num_queries
 ):
-
     now = timezone.now()
     num_minutes_where_actions_will_be_old_enough_for_cleaning = timedelta(
         minutes=int(settings.MINUTES_UNTIL_ACTION_CLEANED_UP) * 2

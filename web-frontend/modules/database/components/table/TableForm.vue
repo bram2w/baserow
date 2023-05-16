@@ -64,7 +64,7 @@ export default {
     values: {
       name: {
         // No object-shorthand here to access vm properties
-        // eslint-disable-next-line object-shorthand
+
         required: function (value) {
           if (this.creation) {
             return required(value)

@@ -89,6 +89,15 @@ const actions = {
 
     commit('SET_SELECTED', { builder, page })
 
+    // Unselect previously selected element
+    dispatch(
+      'element/select',
+      {
+        element: null,
+      },
+      { root: true }
+    )
+
     return { builder, page }
   },
   unselect({ commit }) {
@@ -102,11 +111,12 @@ const actions = {
 
     commit('DELETE_ITEM', { builder, id: page.id })
   },
-  async create({ commit, dispatch }, { builder, name, path }) {
+  async create({ commit, dispatch }, { builder, name, path, pathParams }) {
     const { data: page } = await PageService(this.$client).create(
       builder.id,
       name,
-      path
+      path,
+      pathParams
     )
 
     commit('ADD_ITEM', { builder, page })

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0062_migrate_allow_signups_via_workspace_invitations"),
     ]

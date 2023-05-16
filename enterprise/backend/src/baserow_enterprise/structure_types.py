@@ -1,0 +1,102 @@
+from typing import TYPE_CHECKING, Any
+
+from django.contrib.contenttypes.models import ContentType
+
+from baserow_premium.license.handler import LicenseHandler
+
+from baserow.core.models import Application
+from baserow.core.registries import BaserowImportExportMode, SerializationProcessorType
+from baserow.core.types import SerializationProcessorScope
+from baserow.core.utils import atomic_if_not_already
+from baserow_enterprise.features import RBAC
+from baserow_enterprise.role.handler import RoleAssignmentHandler
+from baserow_enterprise.role.models import Role
+from baserow_enterprise.role.types import NewRoleAssignment
+
+if TYPE_CHECKING:
+    from baserow.core.models import Workspace
+
+
+class EnterpriseExportSerializedStructure:
+    @staticmethod
+    def role_assignment(subject_id, subject_type_id, role_id):
+        return {
+            "subject_id": subject_id,
+            "subject_type_id": subject_type_id,
+            "role_id": role_id,
+        }
+
+
+class RoleAssignmentSerializationProcessorType(SerializationProcessorType):
+    type = "role_assignment_serialization_processors"
+    structure = EnterpriseExportSerializedStructure
+    import_export_mode = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK
+
+    @classmethod
+    def import_serialized(
+        cls,
+        workspace: "Workspace",
+        scope: SerializationProcessorScope,
+        serialized_scope: dict,
+    ) -> None:
+        """
+        Responsible for importing any `role_assignments` in `serialized_scope`
+        into a newly restored/duplicated scope in `scope`.
+        """
+
+        # Application subclass scopes can't be passed to
+        # the role assignment handler. See #1624.
+        if isinstance(scope, Application):
+            scope = getattr(scope, "application_ptr", scope)
+
+        serialized_role_assignments = serialized_scope.get("role_assignments", [])
+
+        with atomic_if_not_already():
+            new_role_assignments = []
+            for serialized_role_assignment in serialized_role_assignments:
+                subject_type = ContentType.objects.get(
+                    pk=serialized_role_assignment["subject_type_id"]
+                )
+                subject = subject_type.model_class().objects.get(
+                    pk=serialized_role_assignment["subject_id"]
+                )
+                role = Role.objects.get(pk=serialized_role_assignment["role_id"])
+                new_role_assignments.append(NewRoleAssignment(subject, role, scope))
+            RoleAssignmentHandler().assign_role_batch(
+                workspace, new_role_assignments, send_signals=False
+            )
+
+    @classmethod
+    def export_serialized(
+        cls,
+        workspace: "Workspace",
+        scope: SerializationProcessorScope,
+    ) -> dict[str, Any]:
+        """
+        Exports the `role_assignments` in `scope` when it is being exported
+        by an application type `export_serialized`.
+        """
+
+        # Do not export anything if the workspace doesn't have RBAC enabled.
+        if not LicenseHandler.workspace_has_feature(RBAC, workspace):
+            return {}
+
+        # Application subclass scopes can't be passed to
+        # the role assignment handler. See #1624.
+        if isinstance(scope, Application):
+            scope = getattr(scope, "application_ptr", scope)
+
+        serialized_role_assignments = []
+        role_assignments = RoleAssignmentHandler().get_role_assignments(
+            workspace, scope
+        )
+        for role_assignment in role_assignments:
+            serialized_role_assignments.append(
+                EnterpriseExportSerializedStructure.role_assignment(
+                    subject_id=role_assignment.subject_id,
+                    subject_type_id=role_assignment.subject_type_id,
+                    role_id=role_assignment.role.id,
+                )
+            )
+
+        return {"role_assignments": serialized_role_assignments}

@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0046_rename_group_workspace"),
         ("database", "0107_alter_tokenpermission_type"),

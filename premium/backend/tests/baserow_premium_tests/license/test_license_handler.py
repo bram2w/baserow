@@ -374,7 +374,6 @@ def test_fetch_license_status_with_authority(data_fixture):
 # Activate the responses because we want to check with the authority to fail.
 @responses.activate
 def test_check_licenses_with_authority_check(premium_data_fixture):
-
     invalid_license = premium_data_fixture.create_premium_license(license="invalid")
     does_not_exist_license = premium_data_fixture.create_premium_license(
         license="does_not_exist"

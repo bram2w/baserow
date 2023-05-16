@@ -16,7 +16,10 @@ import {
   UploadFileUserFileUploadType,
   UploadViaURLUserFileUploadType,
 } from '@baserow/modules/core/userFileUploadTypes'
-import { SettingsAdminType } from '@baserow/modules/core/adminTypes'
+import {
+  HealthCheckAdminType,
+  SettingsAdminType,
+} from '@baserow/modules/core/adminTypes'
 
 import {
   BasicPermissionManagerType,
@@ -103,6 +106,7 @@ export default (context, inject) => {
     new UploadViaURLUserFileUploadType(context)
   )
   registry.register('admin', new SettingsAdminType(context))
+  registry.register('admin', new HealthCheckAdminType(context))
   inject('registry', registry)
 
   store.registerModule('settings', settingsStore)

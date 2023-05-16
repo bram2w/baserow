@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("baserow_enterprise", "0008_delete_all_role_assignments"),
     ]

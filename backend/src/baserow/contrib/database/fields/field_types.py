@@ -98,7 +98,7 @@ from .field_filters import (
     contains_word_filter,
     filename_contains_filter,
 )
-from .field_sortings import AnnotatedOrder
+from .field_sortings import OptionallyAnnotatedOrderBy
 from .fields import (
     BaserowExpressionField,
     BaserowLastModifiedField,
@@ -698,7 +698,9 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
-    can_represent_date = True
+
+    def can_represent_date(self, field):
+        return True
 
     def get_request_kwargs_to_backup(self, field, kwargs) -> Dict[str, Any]:
         date_force_timezone_offset = kwargs.get("date_force_timezone_offset", None)
@@ -1507,21 +1509,21 @@ class LinkRowFieldType(FieldType):
 
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         # Store the current table's model into the manytomany_models object so that the
         # related ManyToMany field can use that one. Otherwise we end up in a recursive
         # loop.
-        manytomany_models[instance.table_id] = model
+        model.baserow_m2m_models[instance.table_id] = model
 
-        # Check if the related table model is already in the manytomany_models.
+        # Check if the related table model is already in the model.baserow_m2m_model.
         if instance.is_self_referencing:
             related_model = model
         else:
-            related_model = manytomany_models.get(instance.link_row_table_id)
+            related_model = model.baserow_m2m_models.get(instance.link_row_table_id)
             # If we do not have a related table model already we can generate a new one.
             if related_model is None:
                 related_model = instance.link_row_table.get_model(
-                    manytomany_models=manytomany_models
+                    manytomany_models=model.baserow_m2m_models
                 )
 
         instance._related_model = related_model
@@ -1813,7 +1815,6 @@ class LinkRowFieldType(FieldType):
                 and to_link_row_table_has_related_field
                 and from_field.link_row_table != to_field.link_row_table
             ):
-
                 # We are changing the related fields table so we need to invalidate
                 # its old model cache as this will not happen automatically.
                 invalidate_table_in_model_cache(from_field.link_row_table_id)
@@ -1912,7 +1913,6 @@ class LinkRowFieldType(FieldType):
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
     ) -> Optional[Field]:
-
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
             serialized_copy["link_row_table_id"]
@@ -2417,7 +2417,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> int:
-        return getattr(row, field_name).value
+        return getattr(row, field_name)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -2432,7 +2432,6 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     def prepare_value_for_db_in_bulk(
         self, instance, values_by_row, continue_on_error=False
     ):
-
         # Create a map {names/ids -> row_indexes} and extract unique int and text values
         unique_ids = set()
         unique_names = set()
@@ -2546,13 +2545,13 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
 
             # Has been checked for issues, everything is properly escaped and safe.
             # fmt: off
-            sql = (  # nosec b608
+            sql = (
                 f"""
                 p_in = (SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = p_in);
-                """
+                """  # nosec b608
             )
             # fmt: on
             return sql, variables
@@ -2584,14 +2583,14 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 return None
 
             # Has been checked for issues, everything is properly escaped and safe.
-            return (  # nosec
+            return (
                 f"""p_in = (
                 SELECT value FROM (
                     VALUES {','.join(values_mapping)}
                 ) AS values (key, value)
                 WHERE key = lower(p_in)
             );
-            """,
+            """,  # nosec
                 variables,
             )
 
@@ -2599,7 +2598,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             connection, from_field, to_field
         )
 
-    def get_order(self, field, field_name, order_direction) -> AnnotatedOrder:
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
         """
         If the user wants to sort the results he expects them to be ordered
         alphabetically based on the select option value and not in the id which is
@@ -2612,7 +2613,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             order = order.asc(nulls_first=True)
         else:
             order = order.desc(nulls_last=True)
-        return AnnotatedOrder(order=order)
+        return OptionallyAnnotatedOrderBy(order=order)
 
     def random_value(self, instance, fake, cache):
         """
@@ -2865,7 +2866,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def get_model_field(self, instance, **kwargs):
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         select_option_meta = type(
             "Meta",
             (AbstractSelectOption.Meta,),
@@ -2994,7 +2995,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         else:
             order = order.asc(nulls_first=True)
 
-        return AnnotatedOrder(annotation=annotation, order=order)
+        return OptionallyAnnotatedOrderBy(annotation=annotation, order=order)
 
     def before_field_options_update(
         self, field, to_create=None, to_update=None, to_delete=None
@@ -3166,6 +3167,13 @@ class FormulaFieldType(ReadOnlyFieldType):
             expression_field=expression_field_type,
             requires_refresh_after_insert=instance.requires_refresh_after_insert,
             **kwargs,
+        )
+
+    def has_compatible_model_fields(self, instance, instance2) -> bool:
+        return (
+            super().has_compatible_model_fields(instance, instance2)
+            and instance.formula_type == instance2.formula_type
+            and instance.array_formula_type == instance.array_formula_type
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -3514,6 +3522,9 @@ class FormulaFieldType(ReadOnlyFieldType):
     ) -> bool:
         return False
 
+    def can_represent_date(self, field: "Field") -> bool:
+        return self.to_baserow_formula_type(field.specific).can_represent_date
+
 
 class LookupFieldType(FormulaFieldType):
     type = "lookup"
@@ -3857,7 +3868,7 @@ class MultipleCollaboratorsFieldType(FieldType):
     def get_model_field(self, instance, **kwargs):
         return None
 
-    def after_model_generation(self, instance, model, field_name, manytomany_models):
+    def after_model_generation(self, instance, model, field_name):
         user_meta = type(
             "Meta",
             (AbstractUser.Meta,),
@@ -4017,7 +4028,7 @@ class MultipleCollaboratorsFieldType(FieldType):
         else:
             order = order.asc(nulls_first=True)
 
-        return AnnotatedOrder(annotation=annotation, order=order)
+        return OptionallyAnnotatedOrderBy(annotation=annotation, order=order)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
         related_objects = getattr(row, field_name)

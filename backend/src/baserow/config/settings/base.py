@@ -2,15 +2,20 @@ import datetime
 import importlib
 import os
 import re
+import sys
 from decimal import Decimal
 from ipaddress import ip_network
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 import dj_database_url
 from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
+from baserow.cachalot_patch import patch_cachalot_for_baserow
+from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.version import VERSION
 
 # A comma separated list of feature flags used to enable in-progress or not ready
@@ -25,7 +30,7 @@ class Everything(object):
         return True
 
 
-if "*" in FEATURE_FLAGS:
+if "*" in FEATURE_FLAGS or "pytest" in sys.modules:
     FEATURE_FLAGS = Everything()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -42,7 +47,11 @@ else:
     BASEROW_PLUGIN_FOLDERS = []
 
 BASEROW_BACKEND_PLUGIN_NAMES = [d.name for d in BASEROW_PLUGIN_FOLDERS]
-BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
+BASEROW_OSS_ONLY = bool(os.getenv("BASEROW_OSS_ONLY", ""))
+if BASEROW_OSS_ONLY:
+    BASEROW_BUILT_IN_PLUGINS = []
+else:
+    BASEROW_BUILT_IN_PLUGINS = ["baserow_premium", "baserow_enterprise"]
 
 # SECURITY WARNING: keep the secret key used in production secret!
 if "SECRET_KEY" in os.environ:
@@ -66,11 +75,15 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "djcelery_email",
+    "cachalot",
     "health_check",
     "health_check.db",
     "health_check.cache",
     "health_check.contrib.migrations",
     "health_check.contrib.redis",
+    "health_check.contrib.celery_ping",
+    "health_check.contrib.psutil",
+    "health_check.contrib.s3boto3_storage",
     "baserow.core",
     "baserow.api",
     "baserow.ws",
@@ -78,12 +91,40 @@ INSTALLED_APPS = [
     *BASEROW_BUILT_IN_PLUGINS,
 ]
 
+
+CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "true") == "true"
+BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
+    "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+)
+
+# Please avoid to add tables with more than 50 modifications per minute to this
+# list, as described here:
+# https://django-cachalot.readthedocs.io/en/latest/limits.html
+if BASEROW_CACHALOT_ONLY_CACHABLE_TABLES is None:
+    CACHALOT_ONLY_CACHABLE_TABLES = [
+        "core_settings",
+        "auth_user",
+        "core_userprofile",
+        "core_workspace",
+        "core_workspaceuser",
+        "database_token",
+        "database_tokenpermission",
+        "baserow_premium_license",
+        "baserow_premium_licenseuser",
+    ]
+else:
+    CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
+
+CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
+
+patch_cachalot_for_baserow()
+
+# This flag enable automatic index creation for table views based on sortings.
+AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
+AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
+
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
-
-BASEROW_FULL_HEALTHCHECKS = os.getenv("BASEROW_FULL_HEALTHCHECKS", None)
-if BASEROW_FULL_HEALTHCHECKS is not None:
-    INSTALLED_APPS += ["health_check.storage", "health_check.contrib.psutil"]
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
@@ -104,6 +145,9 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "baserow.middleware.BaserowCustomHttp404Middleware",
 ]
+
+if otel_is_enabled():
+    MIDDLEWARE += ["baserow.core.telemetry.middleware.BaserowOTELMiddleware"]
 
 ROOT_URLCONF = "baserow.config.urls"
 
@@ -286,6 +330,31 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "baserow.api.openapi.AutoSchema",
 }
 
+# Limits the number of concurrent requests per user.
+# If BASEROW_MAX_CONCURRENT_USER_REQUESTS is not set, then the default value of -1
+# will be used which means the throttling is disabled.
+BASEROW_MAX_CONCURRENT_USER_REQUESTS = int(
+    os.getenv("BASEROW_MAX_CONCURRENT_USER_REQUESTS", -1)
+)
+
+if BASEROW_MAX_CONCURRENT_USER_REQUESTS > 0:
+    REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [
+        "baserow.throttling.ConcurrentUserRequestsThrottle",
+    ]
+
+    REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
+        "concurrent_user_requests": BASEROW_MAX_CONCURRENT_USER_REQUESTS
+    }
+
+    MIDDLEWARE += [
+        "baserow.middleware.ConcurrentUserRequestsMiddleware",
+    ]
+
+# The maximum number of seconds that a request can be throttled for.
+BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT = int(
+    os.getenv("BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT", 30)
+)
+
 PUBLIC_VIEW_AUTHORIZATION_HEADER = "Baserow-View-Authorization"
 
 CORS_ORIGIN_ALLOW_ALL = True
@@ -330,9 +399,9 @@ SPECTACULAR_SETTINGS = {
     "CONTACT": {"url": "https://baserow.io/contact"},
     "LICENSE": {
         "name": "MIT",
-        "url": "https://gitlab.com/bramw/baserow/-/blob/master/LICENSE",
+        "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.16.1-rc1",
+    "VERSION": "1.17.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -364,6 +433,8 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database tokens"},
         {"name": "Builder pages"},
         {"name": "Builder page elements"},
+        {"name": "Builder domains"},
+        {"name": "Builder public"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -586,6 +657,16 @@ if os.getenv("EMAIL_SMTP", ""):
     EMAIL_PORT = os.getenv("EMAIL_SMTP_PORT", "25")
     EMAIL_HOST_USER = os.getenv("EMAIL_SMTP_USER", "")
     EMAIL_HOST_PASSWORD = os.getenv("EMAIL_SMTP_PASSWORD", "")
+
+    EMAIL_USE_SSL = bool(os.getenv("EMAIL_SMTP_USE_SSL", ""))
+    if EMAIL_USE_SSL and EMAIL_USE_TLS:
+        raise ImproperlyConfigured(
+            "EMAIL_SMTP_USE_SSL and EMAIL_SMTP_USE_TLS are "
+            "mutually exclusive and both cannot be set at once."
+        )
+
+    EMAIL_SSL_CERTFILE = os.getenv("EMAIL_SMTP_SSL_CERTFILE_PATH", None)
+    EMAIL_SSL_KEYFILE = os.getenv("EMAIL_SMTP_SSL_KEYFILE_PATH", None)
 else:
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
@@ -716,11 +797,18 @@ PERMISSION_MANAGERS = [
     "core",
     "setting_operation",
     "staff",
+    "allow_public_builder",
     "member",
     "token",
     "role",
     "basic",
 ]
+if "baserow_enterprise" not in INSTALLED_APPS:
+    PERMISSION_MANAGERS.remove("role")
+if "baserow_premium" not in INSTALLED_APPS:
+    PERMISSION_MANAGERS.remove("view_ownership")
+if "builder" not in FEATURE_FLAGS:
+    PERMISSION_MANAGERS.remove("allow_public_builder")
 
 OLD_ACTION_CLEANUP_INTERVAL_MINUTES = os.getenv(
     "OLD_ACTION_CLEANUP_INTERVAL_MINUTES", 5

@@ -116,3 +116,75 @@ class ParagraphElement(BaseTextElement):
     """
     A simple paragraph.
     """
+
+
+class LinkElement(BaseTextElement):
+    """
+    A simple link.
+    """
+
+    class NAVIGATION_TYPES(models.TextChoices):
+        PAGE = "page"
+        CUSTOM = "custom"
+
+    class VARIANTS(models.TextChoices):
+        LINK = "link"
+        BUTTON = "button"
+
+    class TARGETS(models.TextChoices):
+        SELF = "self"
+        BLANK = "blank"
+
+    class ALIGNMENTS(models.TextChoices):
+        LEFT = "left"
+        CENTER = "center"
+        RIGHT = "right"
+
+    class WIDTHS(models.TextChoices):
+        AUTO = "auto"
+        FULL = "full"
+
+    navigation_type = models.CharField(
+        choices=NAVIGATION_TYPES.choices,
+        help_text="The navigation type.",
+        max_length=10,
+        default=NAVIGATION_TYPES.PAGE,
+    )
+    navigate_to_page = models.ForeignKey(
+        Page,
+        null=True,
+        on_delete=models.SET_NULL,
+        help_text=(
+            "Destination page id for this link. If null then we use the "
+            "navigate_to_url property instead.",
+        ),
+    )
+    navigate_to_url = ExpressionField(
+        default="",
+        help_text="If no page is selected, this indicate the destination of the link.",
+    )
+    page_parameters = models.JSONField(
+        default=list,
+        help_text="The parameters for each parameters of the selected page if any.",
+    )
+
+    variant = models.CharField(
+        choices=VARIANTS.choices,
+        help_text="The variant of the link.",
+        max_length=10,
+        default=VARIANTS.LINK,
+    )
+    target = models.CharField(
+        choices=TARGETS.choices,
+        help_text="The target of the link when we click on it.",
+        max_length=10,
+        default=TARGETS.SELF,
+    )
+    width = models.CharField(
+        choices=WIDTHS.choices,
+        max_length=10,
+        default=WIDTHS.AUTO,
+    )
+    alignment = models.CharField(
+        choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
+    )

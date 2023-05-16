@@ -7,7 +7,6 @@ import baserow.core.mixins
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0066_airtableimportjob"),
     ]

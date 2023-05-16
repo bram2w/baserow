@@ -114,7 +114,6 @@ def test_list_applications(api_client, data_fixture, django_assert_num_queries):
         "baserow.core.handler.CoreHandler.filter_queryset",
         side_effect=stub_filter_queryset,
     ) as mock_filter_queryset:
-
         response = api_client.get(
             reverse("api:applications:list"), **{"HTTP_AUTHORIZATION": f"JWT {token}"}
         )
@@ -521,7 +520,6 @@ def test_duplicate_application_schedule_job(
 
 @pytest.mark.django_db(transaction=True)
 def test_duplicate_job_response_serializer(api_client, data_fixture):
-
     user, token = data_fixture.create_user_and_token(
         email="test_1@test.nl", password="password", first_name="Test1"
     )

@@ -138,3 +138,20 @@
 .element--no-value {
   opacity: 0.3;
 }
+
+.element--in-error::after {
+  @extend .fas;
+
+  @include fa-icon;
+  @include absolute(0, 0, auto, auto);
+
+  content: fa-content($fa-var-exclamation-circle);
+  pointer-events: none;
+  width: 20px;
+  height: 20px;
+  line-height: 20px;
+  font-size: 20px;
+  margin-right: 5px;
+  margin-top: 5px;
+  color: $color-error-300;
+}

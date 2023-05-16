@@ -30,10 +30,9 @@ def add_to_tables(apps, schema_editor):
     Table = apps.get_model("database", "Table")
 
     cursor = connection.cursor()
-    with connection.schema_editor() as tables_schema_editor:
+    with connection.schema_editor(atomic=False) as tables_schema_editor:
         # We need to stop the transaction because we might need to lock a lot of tables
         # which could result in an out of memory exception.
-        tables_schema_editor.atomic.__exit__(None, None, None)
 
         for table in Table.objects.all():
             if not exists(cursor, table.id):
@@ -48,9 +47,7 @@ def remove_from_tables(apps, schema_editor):
     Table = apps.get_model("database", "Table")
 
     cursor = connection.cursor()
-    with connection.schema_editor() as tables_schema_editor:
-        tables_schema_editor.atomic.__exit__(None, None, None)
-
+    with connection.schema_editor(atomic=False) as tables_schema_editor:
         for table in Table.objects.all():
             if exists(cursor, table.id):
                 to_model = TableModel.get_model(table, field_ids=[])
@@ -61,7 +58,7 @@ def remove_from_tables(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
+    atomic = False
     dependencies = [
         ("database", "0020_fix_primary_link_row"),
     ]

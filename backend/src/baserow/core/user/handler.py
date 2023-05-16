@@ -517,7 +517,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
                 TrashHandler.permanently_delete(workspace)
             users_to_delete.delete()
 
-        for (id, username, email, language, workspace_ids) in deleted_user_info:
+        for id, username, email, language, workspace_ids in deleted_user_info:
             with translation.override(language):
                 email = AccountDeleted(username, to=[email])
                 email.send()

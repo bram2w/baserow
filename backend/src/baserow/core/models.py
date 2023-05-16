@@ -129,6 +129,12 @@ class UserProfile(models.Model):
         help_text="True if the user is pending deletion. "
         "An automatic task will delete the user after a grace delay.",
     )
+    concurrency_limit = models.SmallIntegerField(
+        null=True,
+        default=None,
+        blank=True,
+        help_text="An optional per user concurrency limit.",
+    )
 
 
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
@@ -296,7 +302,13 @@ class Application(
         return cls.get_highest_order_of_queryset(queryset) + 1
 
     def get_parent(self):
-        return self.workspace
+        # If this application is an application snapshot, then it'll
+        # have a None workspace, so instead we define its parent as
+        # the source snapshot's `snapshot_from`.
+        if self.workspace_id:
+            return self.workspace
+        else:
+            return self.snapshot_from.get()
 
 
 class TemplateCategory(models.Model):
@@ -432,7 +444,6 @@ class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
 class DuplicateApplicationJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_application = models.ForeignKey(
         Application,
         null=True,

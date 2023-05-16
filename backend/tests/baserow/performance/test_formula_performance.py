@@ -21,7 +21,6 @@ from baserow.test_utils.helpers import setup_interesting_test_table
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture):
-
     table, user, row, _, context = setup_interesting_test_table(data_fixture)
     count = 1000
     fill_table_rows(count, table)
@@ -53,7 +52,6 @@ def test_adding_a_formula_field_compared_to_normal_field_isnt_slow(data_fixture)
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_very_nested_formula_field_change(data_fixture, django_assert_num_queries):
-
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         columns=[("number", "number")], rows=[["0"]], user=user
@@ -95,7 +93,6 @@ def test_very_nested_formula_field_change(data_fixture, django_assert_num_querie
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_creating_very_nested_formula_field(data_fixture):
-
     user = data_fixture.create_user()
     table, fields, rows = data_fixture.build_table(
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
@@ -159,7 +156,6 @@ def test_altering_very_nested_formula_field(data_fixture, django_assert_num_quer
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_getting_data_from_a_very_nested_formula_field(data_fixture, api_client):
-
     user, token = data_fixture.create_user_and_token()
     table, fields, rows = data_fixture.build_table(
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user
@@ -193,7 +189,6 @@ def test_getting_data_from_a_very_nested_formula_field(data_fixture, api_client)
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 def test_getting_data_from_normal_table(data_fixture, api_client):
-
     user, token = data_fixture.create_user_and_token()
     table, fields, rows = data_fixture.build_table(
         columns=[("perf_formula0", "number")], rows=[["0"]], user=user

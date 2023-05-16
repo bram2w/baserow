@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0055_auto_20230130_1118"),
         ("database", "0109_rename_group_token_workspace"),

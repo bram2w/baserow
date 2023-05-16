@@ -6,16 +6,21 @@ import es from '@baserow/modules/builder/locales/es.json'
 import it from '@baserow/modules/builder/locales/it.json'
 import pl from '@baserow/modules/builder/locales/pl.json'
 import {
+  DomainsBuilderSettingsType,
   IntegrationsBuilderSettingsType,
   ThemeBuilderSettingsType,
 } from '@baserow/modules/builder/builderSettingTypes'
 
 import pageStore from '@baserow/modules/builder/store/page'
 import elementStore from '@baserow/modules/builder/store/element'
+import domainStore from '@baserow/modules/builder/store/domain'
+import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
+
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
   HeadingElementType,
   ParagraphElementType,
+  LinkElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -37,6 +42,17 @@ import {
   VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
+import { CustomDomainType } from '@baserow/modules/builder/domainTypes'
+import { PagePageSettingsType } from '@baserow/modules/builder/pageSettingsTypes'
+import {
+  TextPathParamType,
+  NumericPathParamType,
+} from '@baserow/modules/builder/pathParamTypes'
+
+import {
+  PreviewPageActionType,
+  PublishPageActionType,
+} from '@baserow/modules/builder/pageActionTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -57,11 +73,16 @@ export default (context) => {
 
   store.registerModule('page', pageStore)
   store.registerModule('element', elementStore)
+  store.registerModule('domain', domainStore)
+  store.registerModule('publicBuilder', publicBuilderStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
   app.$registry.registerNamespace('device')
   app.$registry.registerNamespace('pageHeaderItem')
+  app.$registry.registerNamespace('domain')
+  app.$registry.registerNamespace('pageSettings')
+  app.$registry.registerNamespace('pathParamType')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -74,11 +95,16 @@ export default (context) => {
     'builderSettings',
     new ThemeBuilderSettingsType(context)
   )
+  app.$registry.register(
+    'builderSettings',
+    new DomainsBuilderSettingsType(context)
+  )
 
   app.$registry.register('errorPage', new PublicSiteErrorPageType(context))
 
   app.$registry.register('element', new HeadingElementType(context))
   app.$registry.register('element', new ParagraphElementType(context))
+  app.$registry.register('element', new LinkElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -107,4 +133,14 @@ export default (context) => {
     new VisibilityPageSidePanelType(context)
   )
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
+
+  app.$registry.register('domain', new CustomDomainType(context))
+
+  app.$registry.register('pageSettings', new PagePageSettingsType(context))
+
+  app.$registry.register('pathParamType', new TextPathParamType(context))
+  app.$registry.register('pathParamType', new NumericPathParamType(context))
+
+  app.$registry.register('pageAction', new PublishPageActionType(context))
+  app.$registry.register('pageAction', new PreviewPageActionType(context))
 }

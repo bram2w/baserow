@@ -61,7 +61,7 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
     def type(self):
         try:
             action_type = action_type_registry.get(self.action_type)
-        except (action_type_registry.does_not_exist_exception_class):
+        except action_type_registry.does_not_exist_exception_class:
             return _(self.original_action_short_descr)
         return action_type.get_short_description()
 
@@ -70,7 +70,7 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
         try:
             action_type = action_type_registry.get(self.action_type)
             description = action_type.get_long_description(self.params)
-        except (action_type_registry.does_not_exist_exception_class):
+        except action_type_registry.does_not_exist_exception_class:
             type_description = ActionTypeDescription(
                 self.original_action_short_descr,
                 self.original_action_long_descr,

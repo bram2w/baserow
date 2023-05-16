@@ -14,7 +14,7 @@ baserow_ready() {
       return 0
     }
 
-    if curlf "http://localhost:3000/_health/" && curlf "http://localhost:8000/_health/"; then
+    if curlf "http://localhost:3000/_health/" && curlf "http://localhost:8000/api/_health/"; then
       return 0
     else
       return 1

@@ -11,26 +11,44 @@
     },
     "builderSettingTypes": {
         "integrationsName": "Integrations",
-        "themeName": "Theme"
+        "themeName": "Theme",
+        "domainsName": "Domains"
     },
     "createPageModal": {
         "header": "Create page",
         "submit": "Add page"
     },
-    "pageForm": {
-        "nameLabel": "Name",
-        "pathLabel": "Path",
+    "pageErrors": {
         "errorNameNotUnique": "A page with this name already exists",
         "errorPathNotUnique": "A path with this name already exists",
         "errorStartingSlash": "A path needs to start with a '/'",
         "errorValidPathCharacters": "The path contains invalid characters",
-        "defaultName": "Page"
+        "errorUniquePathParams": "Path parameters have to be unique."
     },
     "pageHeaderItemTypes": {
         "labelElements": "Elements",
         "labelDataSource": "Data",
         "labelVariables": "Variables",
         "labelSettings": "Page settings"
+    },
+    "pageActionTypes": {
+        "preview": "Preview",
+        "publish": "Publish"
+    },
+    "publishActionModal": {
+        "title": "Publish",
+        "description": "Take your app live by publishing to one of the domains. Note that your application can have multiple domains, each running a different version of the application.",
+        "publish": "Publish",
+        "publishSucceedTitle": "Site published",
+        "publishSucceedDescription": "The site has been successfully published.",
+        "publishFailedTitle": "Site publishing failed",
+        "publishFailedDescription": "The site publishing has failed. Please try again later.",
+        "openInNewTab": "Open in a new tab",
+        "noDomain": "You need to have at least one domain in order to publish your application."
+    },
+    "lastPublishedDomainDate": {
+        "neverPublished": "never",
+        "lastPublished": "Last published:"
     },
     "elementsContext": {
         "searchPlaceholder": "Search elements"
@@ -39,7 +57,9 @@
         "heading": "Heading",
         "headingDescription": "Page heading title",
         "paragraph": "Paragraph",
-        "paragraphDescription": "Single line text"
+        "paragraphDescription": "Single line text",
+        "link": "Link",
+        "linkDescription": "A link to page/URL"
     },
     "addElementButton": {
         "label": "Element"
@@ -82,5 +102,83 @@
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
         "textError": "The value is invalid."
+    },
+    "domainSettings": {
+        "titleOverview": "Domains",
+        "titleAddDomain": "Add domain",
+        "addDomain": "Add domain",
+        "noDomainMessage": "You have not yet associated a domain with this application. You must add a domain to be able to publish your application. You can publish different versions of your application for each domain listed here."
+    },
+    "dnsStatus": {
+        "description": "Visit your domains' DNS settings and make the following changes",
+        "typeHeader": "Type",
+        "hostHeader": "Host",
+        "valueHeader": "Value"
+    },
+    "customDomainForm": {
+        "domainNameLabel": "Domain name",
+        "invalidDomain": "The provided domain name is invalid",
+        "notUniqueDomain": "The provided domain is already used"
+    },
+    "domainCard": {
+        "refresh": "Refresh settings",
+        "detailLabel": "Show details"
+    },
+    "domainTypes": {
+        "customName": "Custom domain"
+    },
+    "linkElement": {
+        "noValue": "Unnamed..."
+    },
+    "linkElementForm": {
+        "text": "Text",
+        "textPlaceholder": "Enter text...",
+        "navigateTo": "Navigate to",
+        "navigateToNotSet": "No destination",
+        "navigateToCustom": "Custom URL",
+        "url": "Destination URL",
+        "urlPlaceholder": "Enter an URL...",
+        "variant": "Variant",
+        "variantLink": "Link",
+        "variantButton": "Button",
+        "alignment": "Alignment",
+        "alignmentLeft": "Link",
+        "alignmentCenter": "Center",
+        "alignmentRight": "Right",
+        "width": "Width",
+        "widthAuto": "Auto",
+        "widthFull": "Full width",
+        "target": "Open in...",
+        "targetSelf": "Same tab",
+        "targetNewTab": "New tab",
+        "paramPlaceholder": "Enter a value...",
+        "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
+        "paramsInErrorButton": "Update parameters"
+    },
+    "pageSettingsTypes": {
+        "pageName": "Page"
+    },
+    "pageSettings": {
+        "title": "Page",
+        "pageUpdatedTitle": "Changed",
+        "pageUpdatedDescription": "The page settings have been updated."
+    },
+    "pageForm": {
+        "defaultName": "Page",
+        "nameTitle": "Name",
+        "nameSubtitle": "Unique name of the page",
+        "pathTitle": "Path",
+        "pathSubtitle": "A parameter can be added via :parameter",
+        "pathParamsTitle": "Path parameters",
+        "pathParamsSubtitle": "Are defined by :parameter in the path",
+        "pathParamsSubtitleTutorial": "Path parameters can be used to dynamically load data, depending on the provided parameter. Add :parameter to the path to add one."
+    },
+    "pathParamTypes": {
+        "textName": "Text",
+        "numericName": "Numeric"
+    },
+    "publicPage": {
+        "siteNotFound": "Site not found",
+        "pageNotFound": "Page not found"
     }
 }

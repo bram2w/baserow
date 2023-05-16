@@ -93,6 +93,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeNotAllowedForField,
 )
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
@@ -335,7 +336,11 @@ class RowsView(APIView):
 
         if view_id:
             view_handler = ViewHandler()
-            view = view_handler.get_view_as_user(request.user, view_id)
+            view = view_handler.get_view_as_user(
+                request.user,
+                view_id,
+                base_queryset=View.objects.prefetch_related("viewsort_set"),
+            )
 
             if view.table_id != table.id:
                 raise ViewDoesNotExist()
@@ -1363,7 +1368,6 @@ class RowAdjacentView(APIView):
     def get(
         self, request: Request, table_id: int, row_id: int, query_params: Dict[str, Any]
     ) -> Response:
-
         previous = query_params.get("previous")
         view_id = query_params.get("view_id")
         user_field_names = query_params.get("user_field_names")

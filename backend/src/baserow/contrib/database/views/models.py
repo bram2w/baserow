@@ -58,7 +58,6 @@ class View(
     PolymorphicContentTypeMixin,
     models.Model,
 ):
-
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -109,6 +108,13 @@ class View(
             " By default, views are collaborative and shared for all users"
             " that have access to the table."
         ),
+    )
+    db_index_name = models.CharField(
+        max_length=30,
+        null=True,
+        blank=True,
+        help_text="The name of the database index that is used to speed up the "
+        "filtering of the view.",
     )
 
     @property

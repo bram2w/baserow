@@ -3,6 +3,8 @@ from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import post_migrate
 
+from health_check.storage.backends import DefaultFileStorageHealthCheck
+
 
 class CoreConfig(AppConfig):
     name = "baserow.core"
@@ -246,10 +248,25 @@ class CoreConfig(AppConfig):
 
         auth_provider_type_registry.register(PasswordAuthProviderType())
 
+        self._setup_health_checks()
+
         # Clear the key after migration so we will trigger a new template sync.
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)
         # Create all operations from registry
         post_migrate.connect(sync_operations_after_migrate, sender=self)
+
+    def _setup_health_checks(self):
+        from health_check.plugins import plugin_dir
+
+        from .health.custom_health_checks import (
+            DebugModeHealthCheck,
+            HerokuExternalFileStorageConfiguredHealthCheck,
+        )
+
+        plugin_dir.register(DebugModeHealthCheck)
+        if getattr(settings, "HEROKU_ENABLED", False):
+            plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)
+        plugin_dir.register(DefaultFileStorageHealthCheck)
 
 
 # noinspection PyPep8Naming
@@ -265,7 +282,6 @@ def start_sync_templates_task_after_migrate(sender, **kwargs):
 
 
 def sync_operations_after_migrate(sender, **kwargs):
-
     apps = kwargs.get("apps", None)
 
     if apps is not None:

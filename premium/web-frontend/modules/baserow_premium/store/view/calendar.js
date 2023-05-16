@@ -13,6 +13,7 @@ import {
   getMonthlyTimestamps,
   getUserTimeZone,
 } from '@baserow/modules/core/utils/date'
+import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
 export function populateRow(row) {
   row._ = {}
@@ -230,7 +231,7 @@ export const actions = {
    * Fetches a set of rows based on the provided datetime.
    */
   async fetchMonthly(
-    { commit, getters },
+    { commit, getters, rootGetters },
     { dateTime, fields, includeFieldOptions = false }
   ) {
     commit('SET_SELECTED_DATE', dateTime)
@@ -238,7 +239,7 @@ export const actions = {
     const df = getters.getDateField(fields)
     if (
       !df ||
-      this.$registry.get('field', df.type).canRepresentDate() === false
+      this.$registry.get('field', df.type).canRepresentDate(df) === false
     ) {
       commit('RESET')
       return
@@ -255,6 +256,8 @@ export const actions = {
         fromTimestamp,
         toTimestamp,
         userTimeZone: getUserTimeZone(),
+        publicUrl: rootGetters['page/view/public/getIsPublic'],
+        publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       })
       const lastRequest = dateTime.isSame(getters.getSelectedDate(fields))
       if (lastRequest) {
@@ -302,6 +305,8 @@ export const actions = {
       fromTimestamp,
       toTimestamp,
       userTimeZone: getUserTimeZone(),
+      publicUrl: rootGetters['page/view/public/getIsPublic'],
+      publicAuthToken: rootGetters['page/view/public/getAuthToken'],
     })
     const newRows = data.rows[date].results
     const newCount = data.rows[date].count
@@ -423,6 +428,25 @@ export const actions = {
         throw error
       }
     }
+  },
+  /**
+   * Creates a new row and adds it to the state if needed.
+   */
+  async createNewRow(
+    { dispatch, commit, getters },
+    { view, table, fields, values }
+  ) {
+    const preparedRow = prepareRowForRequest(values, fields, this.$registry)
+
+    const { data } = await RowService(this.$client).create(
+      table.id,
+      preparedRow
+    )
+    return await dispatch('createdNewRow', {
+      view,
+      values: data,
+      fields,
+    })
   },
   /**
    * Can be called when a new row has been created. This action will make sure that
@@ -693,6 +717,35 @@ export const actions = {
   selectDateAndStartLoading({ commit }, { selectedDate }) {
     commit('SET_LOADING_ROWS', true)
     commit('SET_SELECTED_DATE', selectedDate)
+  },
+  async selectRow({ commit, getters, dispatch }, { row, fields }) {
+    const dateFieldId = getters.getDateFieldIdIfNotTrashed(fields)
+    if (dateFieldId) {
+      const value = row[`field_${dateFieldId}`]
+      const dateTime = moment.tz(value, getters.getTimeZone(fields))
+      const {
+        fromTimestamp: currentFromTimestamp,
+        toTimestamp: currentToTimestamp,
+      } = getMonthlyTimestamps(getters.getSelectedDate(fields))
+      // Selecting a new row might be triggered by a navigation to a
+      // `calendar/ABC/row/XYZ` URL or by the user clicking on a row they can see
+      // in the calendar view. When triggered by a navigation we almost certainly don't
+      // right month loaded into the store and so if we don't we fetch all the other
+      // rows for that month.
+      if (
+        !dateTime.isBetween(
+          currentFromTimestamp,
+          currentToTimestamp,
+          null,
+          '[]'
+        )
+      ) {
+        await dispatch('fetchMonthly', {
+          dateTime,
+          fields,
+        })
+      }
+    }
   },
 }
 

@@ -33,6 +33,7 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.signals import view_loaded
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
@@ -186,6 +187,8 @@ class KanbanViewView(APIView):
                 create_if_missing=True
             )
             response.update(**serializer_class(view, context=context).data)
+
+        view_loaded.send(sender=self, view=view, table_model=model, user=request.user)
 
         return Response(response)
 

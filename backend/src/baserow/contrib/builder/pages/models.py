@@ -27,7 +27,6 @@ class Page(
     OrderableMixin,
     models.Model,
 ):
-
     builder = models.ForeignKey("builder.Builder", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
     name = models.CharField(max_length=255)
@@ -50,7 +49,6 @@ class Page(
 class DuplicatePageJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
-
     original_page = models.ForeignKey(
         Page,
         null=True,

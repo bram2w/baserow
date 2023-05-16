@@ -139,6 +139,15 @@ class BaserowEnterpriseConfig(AppConfig):
         auth_provider_type_registry.register(GitLabAuthProviderType())
         auth_provider_type_registry.register(OpenIdConnectAuthProviderType())
 
+        from baserow.core.registries import serialization_processor_registry
+        from baserow_enterprise.structure_types import (
+            RoleAssignmentSerializationProcessorType,
+        )
+
+        serialization_processor_registry.register(
+            RoleAssignmentSerializationProcessorType()
+        )
+
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 

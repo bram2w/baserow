@@ -6,7 +6,7 @@ set -euo pipefail
 # ENVIRONMENT VARIABLES USED DIRECTLY BY THIS ENTRYPOINT
 # ======================================================
 
-export BASEROW_VERSION="1.16.1-rc1"
+export BASEROW_VERSION="1.17.0"
 
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
@@ -284,7 +284,7 @@ case "$1" in
         fi
         return 0
       }
-      curlf "http://localhost:$BASEROW_BACKEND_PORT/_health/"
+      curlf "http://localhost:$BASEROW_BACKEND_PORT/api/_health/"
     ;;
     bash)
         exec /bin/bash -c "${@:2}"

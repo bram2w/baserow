@@ -7,6 +7,7 @@ from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 
 import pytest
+from fakeredis import FakeRedis, FakeServer
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -16,6 +17,7 @@ from rest_framework.status import (
 )
 
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
+from baserow.contrib.database.views.handler import ViewIndexingHandler
 from baserow.contrib.database.views.models import GridView, View
 from baserow.contrib.database.views.registries import view_type_registry
 from baserow.contrib.database.views.view_types import GridViewType
@@ -1010,3 +1012,36 @@ def test_view_cant_update_show_logo(data_fixture, api_client):
 
     response_data = response.json()
     assert response_data["show_logo"] is True
+
+
+fake_redis_server = FakeServer()
+
+
+@override_settings(
+    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+)
+@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@pytest.mark.django_db(transaction=True)
+def test_loading_a_sortable_view_will_create_an_index(
+    api_client,
+    data_fixture,
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+    data_fixture.create_view_sort(view=grid_view, field=text_field, order="ASC")
+
+    table_model = table.get_model()
+    index = ViewIndexingHandler.get_index(grid_view, table_model)
+    assert ViewIndexingHandler.does_index_exist(index.name) is False
+
+    with override_settings(AUTO_INDEX_VIEW_ENABLED=True):
+        response = api_client.get(
+            reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id}),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        assert response.status_code == HTTP_200_OK
+
+    assert ViewIndexingHandler.does_index_exist(index.name) is True

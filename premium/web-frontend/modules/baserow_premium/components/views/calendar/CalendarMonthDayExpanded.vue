@@ -34,6 +34,11 @@
             :store-prefix="storePrefix"
             :class="{ last: index == rows.length - 1 }"
             :parent-width="contextWidth"
+            :decorations-by-place="decorationsByPlace"
+            @edit-row="
+              $emit('edit-row', $event)
+              $refs.context.hide()
+            "
           >
           </CalendarCard>
           <div v-if="error" class="calendar-month-day-expanded__try-again">
@@ -81,6 +86,11 @@ export default {
     parentHeight: {
       type: Number,
       required: true,
+    },
+    decorationsByPlace: {
+      type: Object,
+      required: false,
+      default: () => {},
     },
   },
   data() {

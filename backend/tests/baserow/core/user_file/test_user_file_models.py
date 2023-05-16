@@ -84,7 +84,6 @@ def test_user_file_deconstruct_name():
 
 @pytest.mark.django_db
 def test_user_file_deconstruct_name_with_extension_suffix():
-
     assert UserFile.deconstruct_name("foo_bar.jpg?a=A&b=B&c=C") == {
         "unique": "foo",
         "sha256_hash": "bar",

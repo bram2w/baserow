@@ -1496,7 +1496,6 @@ def test_updating_link_rows_always_ends_up_with_the_correct_number_of_related_fi
 
     for from_field in options:
         for to_field in options:
-
             if from_field is to_field:
                 continue
 

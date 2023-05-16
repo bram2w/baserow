@@ -12,7 +12,3 @@ class DomainNotInBuilder(Exception):
             *args,
             **kwargs,
         )
-
-
-class OnlyOneDomainAllowed(Exception):
-    """Raised when a second domain is about to be added to a builder"""

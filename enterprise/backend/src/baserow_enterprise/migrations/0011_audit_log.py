@@ -7,7 +7,6 @@ import baserow.core.action.models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0042_add_ip_address_to_jobs"),
         ("baserow_enterprise", "0010_rename_no_role_to_no_access"),

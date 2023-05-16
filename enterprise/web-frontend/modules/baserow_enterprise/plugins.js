@@ -3,6 +3,7 @@ import ChatwootSupportSidebarWorkspace from '@baserow_enterprise/components/Chat
 import MemberRolesDatabaseContextItem from '@baserow_enterprise/components/member-roles/MemberRolesDatabaseContextItem'
 import MemberRolesTableContextItem from '@baserow_enterprise/components/member-roles/MemberRolesTableContextItem'
 import EnterpriseFeatures from '@baserow_enterprise/features'
+import SnapshotModalWarning from '@baserow_enterprise/components/SnapshotModalWarning'
 
 export class EnterprisePlugin extends BaserowPlugin {
   static getType() {
@@ -37,5 +38,13 @@ export class EnterprisePlugin extends BaserowPlugin {
     } else {
       return []
     }
+  }
+
+  getExtraSnapshotModalComponents(workspace) {
+    const rbacSupport = this.app.$hasFeature(
+      EnterpriseFeatures.RBAC,
+      workspace.id
+    )
+    return rbacSupport ? SnapshotModalWarning : null
   }
 }

@@ -249,7 +249,7 @@ export class FieldType extends Registerable {
    * When true, indicates a field type that can be used to
    * represent a date.
    */
-  canRepresentDate() {
+  canRepresentDate(field) {
     return false
   }
 
@@ -1524,7 +1524,7 @@ class BaseDateFieldType extends FieldType {
     return true
   }
 
-  canRepresentDate() {
+  canRepresentDate(field) {
     return true
   }
 }
@@ -2680,6 +2680,11 @@ export class FormulaFieldType extends FieldType {
   getCanSortInView(field) {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.getCanSortInView()
+  }
+
+  canRepresentDate(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.canRepresentDate(field)
   }
 }
 

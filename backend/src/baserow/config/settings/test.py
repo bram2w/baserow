@@ -38,3 +38,11 @@ CACHES = {
         "VERSION": None,
     },
 }
+
+# Disable the default throttle classes because ConcurrentUserRequestsThrottle is
+# using redis and it will cause errors when running the tests.
+# Look into tests.baserow.api.test_api_utils.py if you need to test the throttle
+REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []  # noqa: F405
+
+CACHALOT_ENABLED = False
+AUTO_INDEX_VIEW_ENABLED = False

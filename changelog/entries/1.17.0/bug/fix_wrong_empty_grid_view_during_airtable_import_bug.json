@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fixes a bug where a wrong empty view is generated in some cases during the Airtable import.",
+    "issue_number": null,
+    "bullet_points": [],
+    "created_at": "2023-05-12"
+}

@@ -25,7 +25,6 @@ def default_report():
 
 
 class FileImportJob(JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job):
-
     database = models.ForeignKey(
         Database,
         on_delete=models.SET_NULL,

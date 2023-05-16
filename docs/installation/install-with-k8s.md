@@ -63,12 +63,6 @@ metadata:
     nginx.ingress.kubernetes.io/session-cookie-expires: "172800"
     nginx.ingress.kubernetes.io/session-cookie-max-age: "172800"
     nginx.ingress.kubernetes.io/proxy-body-size: 20m
-    # Prevent access to the full internal healthcheck
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~* "^/_health" {
-          deny all;
-          return 403;
-      }
     kubernetes.io/ingress.class: nginx
     # removed ssl settings, add in your own desired ones
 spec:
@@ -171,7 +165,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-asgi
-          image: baserow/backend:1.16.0
+          image: baserow/backend:1.17.0
           workingDir: /baserow
           args:
             - "gunicorn"
@@ -228,7 +222,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-wsgi
-          image: baserow/backend:1.16.0
+          image: baserow/backend:1.17.0
           workingDir: /baserow
           args:
             - "gunicorn-wsgi"
@@ -287,7 +281,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: backend-worker
-          image: baserow/backend:1.16.0
+          image: baserow/backend:1.17.0
           args:
             - "celery-worker"
           imagePullPolicy: Always
@@ -304,7 +298,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-export-worker
-          image: baserow/backend:1.16.0
+          image: baserow/backend:1.17.0
           args:
             - "celery-exportworker"
           imagePullPolicy: Always
@@ -321,7 +315,7 @@ spec:
             - secretRef:
                 name: YOUR_ENV_SECRET_REF
         - name: backend-beat-worker
-          image: baserow/backend:1.16.0
+          image: baserow/backend:1.17.0
           args:
             - "celery-beat"
           imagePullPolicy: Always
@@ -362,7 +356,7 @@ spec:
                 topologyKey: "kubernetes.io/hostname"
       containers:
         - name: web-frontend
-          image: baserow/web-frontend:1.16.0
+          image: baserow/web-frontend:1.17.0
           args:
             - nuxt
           ports:

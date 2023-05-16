@@ -24,9 +24,13 @@ export default function (
   const baseModules = [
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
-    premiumBase + '/modules/baserow_premium/module.js',
-    enterpriseBase + '/modules/baserow_enterprise/module.js',
   ]
+  if (!process.env.BASEROW_OSS_ONLY) {
+    baseModules.push(
+      premiumBase + '/modules/baserow_premium/module.js',
+      enterpriseBase + '/modules/baserow_enterprise/module.js'
+    )
+  }
 
   const featureFlags = getFeatureFlags()
 
@@ -42,6 +46,7 @@ export default function (
         config.node = { fs: 'empty' }
       },
       babel: { compact: true },
+      transpile: ['axios'],
     },
   }
 }

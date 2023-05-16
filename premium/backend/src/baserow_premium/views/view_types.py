@@ -288,9 +288,9 @@ class CalendarViewType(ViewType):
         IncompatibleField: ERROR_INCOMPATIBLE_FIELD,
         FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
     }
-    can_decorate = False
-    can_share = False
-    has_public_info = False
+    can_decorate = True
+    can_share = True
+    has_public_info = True
 
     def get_api_urls(self):
         from baserow_premium.api.views.calendar import urls as api_urls
@@ -311,8 +311,9 @@ class CalendarViewType(ViewType):
                     pk=date_field_value
                 )
 
-            field_type = field_type_registry.get_by_model(date_field_value.specific)
-            if not field_type.can_represent_date:
+            date_field_value = date_field_value.specific
+            field_type = field_type_registry.get_by_model(date_field_value)
+            if not field_type.can_represent_date(date_field_value):
                 raise IncompatibleField()
 
             if (

@@ -2,7 +2,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ElementsContext from '@baserow/modules/builder/components/page/ElementsContext'
 import DataSourceContext from '@baserow/modules/builder/components/page/DataSourceContext'
 import VariablesContext from '@baserow/modules/builder/components/page/VariablesContext'
-import SettingsModal from '@baserow/modules/builder/components/page/SettingsModal'
+import PageSettingsModal from '@baserow/modules/builder/components/page/PageSettingsModal'
 
 export class PageHeaderItemType extends Registerable {
   get label() {
@@ -94,11 +94,11 @@ export class SettingsPageHeaderItemType extends PageHeaderItemType {
   }
 
   get icon() {
-    return 'square-root-alt'
+    return 'cogs'
   }
 
   get component() {
-    return SettingsModal
+    return PageSettingsModal
   }
 
   onClick(component, button) {

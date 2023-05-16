@@ -16,7 +16,6 @@ from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
 
 @pytest.mark.django_db
 def test_value_preparation_for_duplicate_application_job(data_fixture):
-
     user = data_fixture.create_user()
     ext_database = data_fixture.create_database_application()
 

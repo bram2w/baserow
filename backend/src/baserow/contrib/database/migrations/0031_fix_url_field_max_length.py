@@ -6,11 +6,7 @@ from django.db import connection, migrations
 def forward(apps, schema_editor):
     URLField = apps.get_model("database", "URLField")
 
-    with connection.schema_editor() as tables_schema_editor:
-        # We need to stop the transaction because we might need to lock a lot of tables
-        # which could result in an out of memory exception.
-        tables_schema_editor.atomic.__exit__(None, None, None)
-
+    with connection.schema_editor(atomic=False) as tables_schema_editor:
         for field in URLField.objects.all():
             table_name = f"database_table_{field.table.id}"
             field_name = f"field_{field.id}"
@@ -20,7 +16,7 @@ def forward(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
+    atomic = False
     dependencies = [
         ("database", "0030_auto_20210526_1939"),
     ]

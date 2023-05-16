@@ -100,7 +100,6 @@ class UndoRedoResultCodeField(serializers.Field):
 
 
 class UndoRedoActionSerializer(serializers.ModelSerializer):
-
     action_type = serializers.CharField(
         required=False,
         allow_null=True,

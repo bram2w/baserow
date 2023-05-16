@@ -449,7 +449,6 @@ def test_attempting_to_export_a_table_for_a_type_which_doesnt_support_it_fails(
     handler = ExportHandler()
 
     class CantExportTableExporter(TableExporter):
-
         type = "no_tables"
 
         @property
@@ -875,7 +874,6 @@ def test_action_done_is_emitted_when_the_export_finish(storage_mock, data_fixtur
     table = data_fixture.create_database_table(user=user)
 
     with patch("baserow.core.action.signals.action_done.send") as send_mock:
-
         run_export_job_with_mock_storage(table, None, storage_mock, user)
 
         assert send_mock.call_count == 1

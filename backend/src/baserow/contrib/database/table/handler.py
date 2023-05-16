@@ -167,7 +167,10 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             progress.increment(0, state=TABLE_CREATION)
 
         if data is not None:
-            (fields, data,) = self.normalize_initial_table_data(
+            (
+                fields,
+                data,
+            ) = self.normalize_initial_table_data(
                 data, first_row_header=first_row_header
             )
         else:

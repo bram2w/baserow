@@ -7,7 +7,6 @@ import baserow.contrib.database.webhooks.validators
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("database", "0048_fix_trashed_field_dependencies"),
     ]

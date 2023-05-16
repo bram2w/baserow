@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Ensure that enterprise role assignments are copied when an application and/or table are duplicated or snapshotted.",
+    "issue_number": 1548,
+    "bullet_points": [],
+    "created_at": "2023-04-12"
+}

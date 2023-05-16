@@ -2,7 +2,7 @@
 # Bash strict mode: http://redsymbol.net/articles/unofficial-bash-strict-mode/
 set -euo pipefail
 
-export BASEROW_VERSION="1.16.1-rc1"
+export BASEROW_VERSION="1.17.0"
 BASEROW_WEBFRONTEND_PORT="${BASEROW_WEBFRONTEND_PORT:-3000}"
 
 show_help() {
@@ -38,6 +38,11 @@ attachable_exec(){
     exec bash --init-file <(echo "history -s $*; $*")
 }
 
+attachable_exec_retry(){
+    echo "$@"
+    exec bash --init-file <(echo "history -s $*; while true; do $* && break; done")
+}
+
 if [[ -z "${1:-}" ]]; then
   echo "Must provide arguments to docker-entrypoint.sh"
   show_help
@@ -71,7 +76,8 @@ case "$1" in
     nuxt-dev)
       startup_plugin_setup
       setup_additional_modules
-      attachable_exec yarn run dev
+      # Retry the command over and over to work around heap crash.
+      attachable_exec_retry yarn run dev
     ;;
     nuxt-dev-no-attach)
       startup_plugin_setup

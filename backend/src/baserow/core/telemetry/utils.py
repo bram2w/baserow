@@ -1,9 +1,15 @@
 import functools
 import inspect
+import os
+import typing
 from abc import ABCMeta
+from operator import attrgetter
 from typing import List, Optional, Union
 
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry import baggage, context
+from opentelemetry.context import Context, attach, detach, set_value
+from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.trace import Status, StatusCode, Tracer, get_current_span
 
 
@@ -21,6 +27,35 @@ def disable_instrumentation(wrapped_function):
 # attrs don't include the module name to keep them short and easier to see so we add
 # baserow manually.
 BASEROW_OTEL_TRACE_ATTR_PREFIX = "baserow."
+
+
+class BatchBaggageSpanProcessor(BatchSpanProcessor):
+    def on_start(
+        self, span: Span, parent_context: typing.Optional[Context] = None
+    ) -> None:
+        super().on_start(span, parent_context)
+        get_all = baggage.get_all(context=parent_context)
+        for name, value in get_all.items():
+            span.set_attribute(name, value)
+
+
+def setup_user_in_baggage_and_spans(user, request):
+    if otel_is_enabled():
+        span = get_current_span()
+
+        def _set(name, attr, source, set_baggage=False):
+            try:
+                value = attrgetter(attr)(source)
+            except AttributeError:
+                value = None
+            if value:
+                span.set_attribute(name, value)
+                if set_baggage:
+                    context.attach(baggage.set_baggage(name, value))
+
+        _set("user.id", "id", user, set_baggage=True)
+        _set("user.untrusted_client_session_id", "untrusted_client_session_id", user)
+        _set("user.token_id", "user_token.id", request)
 
 
 def _baserow_trace_func(wrapped_func, tracer: Tracer):
@@ -132,3 +167,12 @@ def add_baserow_trace_attrs(**kwargs):
     span = get_current_span()
     for key, value in kwargs.items():
         span.set_attribute(f"{BASEROW_OTEL_TRACE_ATTR_PREFIX}{key}", value)
+
+
+def otel_is_enabled():
+    env_var_set = bool(os.getenv("BASEROW_ENABLE_OTEL", False))
+    not_in_tests = (
+        os.getenv("DJANGO_SETTINGS_MODULE", "").strip()
+        != "baserow.config.settings.test"
+    )
+    return env_var_set and not_in_tests

@@ -95,7 +95,6 @@ class MemberDataType(Instance):
     def get_request_serializer_field(
         self,
     ) -> Union[serializers.Field, Dict[str, serializers.Field]]:
-
         """
         Should be given a `serializers.Field` object, which the `MemberDataType`
         will annotate on `WorkspaceUserSerializer`.

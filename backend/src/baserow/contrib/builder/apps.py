@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 from baserow.core.registries import object_scope_type_registry, operation_type_registry
+from baserow.core.trash.registries import trash_item_type_registry
 
 
 class BuilderConfig(AppConfig):
@@ -58,7 +59,9 @@ class BuilderConfig(AppConfig):
         from baserow.contrib.builder.domains.operations import (
             CreateDomainOperationType,
             DeleteDomainOperationType,
+            PublishDomainOperationType,
             ReadDomainOperationType,
+            RestoreDomainOperationType,
             UpdateDomainOperationType,
         )
 
@@ -66,11 +69,15 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(DeleteDomainOperationType())
         operation_type_registry.register(ReadDomainOperationType())
         operation_type_registry.register(UpdateDomainOperationType())
+        operation_type_registry.register(PublishDomainOperationType())
+        operation_type_registry.register(RestoreDomainOperationType())
 
+        from baserow.contrib.builder.domains.job_types import PublishDomainJobType
         from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
         from baserow.core.jobs.registries import job_type_registry
 
         job_type_registry.register(DuplicatePageJobType())
+        job_type_registry.register(PublishDomainJobType())
 
         from baserow.contrib.builder.elements.operations import (
             CreateElementOperationType,
@@ -88,11 +95,30 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateElementOperationType())
         operation_type_registry.register(DeleteElementOperationType())
 
-        from .elements.element_types import HeadingElementType, ParagraphElementType
+        from baserow.core.registries import permission_manager_type_registry
+
+        from .domains.permission_manager import AllowPublicBuilderManagerType
+
+        permission_manager_type_registry.register(AllowPublicBuilderManagerType())
+
+        from .elements.element_types import (
+            HeadingElementType,
+            LinkElementType,
+            ParagraphElementType,
+        )
         from .elements.registries import element_type_registry
 
         element_type_registry.register(HeadingElementType())
         element_type_registry.register(ParagraphElementType())
+        element_type_registry.register(LinkElementType())
+
+        from .domains.trash_types import DomainTrashableItemType
+
+        trash_item_type_registry.register(DomainTrashableItemType())
+
+        from .domains.receivers import connect_to_domain_pre_delete_signal
+
+        connect_to_domain_pre_delete_signal()
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

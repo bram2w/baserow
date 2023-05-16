@@ -145,6 +145,10 @@
   @extend %select__item-size;
 }
 
+.select__item-name-text {
+  @extend %ellipsis;
+}
+
 .select__item-icon {
   margin-right: 6px;
 }

@@ -183,7 +183,6 @@ class RoleAssignmentsCompatView(RoleAssignmentsView):
         group_id: int,
         query_params: Dict[str, Any],
     ) -> Response:
-
         return super().get(request, workspace_id=group_id)
 
 

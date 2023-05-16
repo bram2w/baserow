@@ -107,9 +107,13 @@ exports[`Dropdown component With items 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -169,9 +173,13 @@ exports[`Dropdown component With items 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -188,9 +196,13 @@ exports[`Dropdown component With items 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        B
-      
+             
+            <span
+              class="select__item-name-text"
+              title="B"
+            >
+              B
+            </span>
           </div>
            
           <!---->
@@ -207,9 +219,13 @@ exports[`Dropdown component With items 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        C
-      
+             
+            <span
+              class="select__item-name-text"
+              title="C"
+            >
+              C
+            </span>
           </div>
            
           <!---->
@@ -228,9 +244,13 @@ exports[`Dropdown component With items 2`] = `
             <i
               class="select__item-icon fas fa-fw fa-times"
             />
-            
-        D
-      
+             
+            <span
+              class="select__item-name-text"
+              title="D"
+            >
+              D
+            </span>
           </div>
            
           <!---->
@@ -247,9 +267,13 @@ exports[`Dropdown component With items 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        E
-      
+             
+            <span
+              class="select__item-name-text"
+              title="E"
+            >
+              E
+            </span>
           </div>
            
           <div
@@ -305,9 +329,13 @@ exports[`Dropdown component With items 3`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -324,9 +352,13 @@ exports[`Dropdown component With items 3`] = `
             class="select__item-name"
           >
             <!---->
-            
-        B
-      
+             
+            <span
+              class="select__item-name-text"
+              title="B"
+            >
+              B
+            </span>
           </div>
            
           <!---->
@@ -499,9 +531,13 @@ exports[`Dropdown component change value prop 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -518,9 +554,13 @@ exports[`Dropdown component change value prop 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        B
-      
+             
+            <span
+              class="select__item-name-text"
+              title="B"
+            >
+              B
+            </span>
           </div>
            
           <!---->
@@ -580,9 +620,13 @@ exports[`Dropdown component test focus 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -642,9 +686,13 @@ exports[`Dropdown component test focus 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -704,9 +752,13 @@ exports[`Dropdown component test interactions 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -723,9 +775,13 @@ exports[`Dropdown component test interactions 1`] = `
             class="select__item-name"
           >
             <!---->
-            
-        B
-      
+             
+            <span
+              class="select__item-name-text"
+              title="B"
+            >
+              B
+            </span>
           </div>
            
           <!---->
@@ -785,9 +841,13 @@ exports[`Dropdown component test interactions 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        A
-      
+             
+            <span
+              class="select__item-name-text"
+              title="A"
+            >
+              A
+            </span>
           </div>
            
           <!---->
@@ -804,9 +864,13 @@ exports[`Dropdown component test interactions 2`] = `
             class="select__item-name"
           >
             <!---->
-            
-        B
-      
+             
+            <span
+              class="select__item-name-text"
+              title="B"
+            >
+              B
+            </span>
           </div>
            
           <!---->

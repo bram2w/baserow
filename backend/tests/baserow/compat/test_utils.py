@@ -2,7 +2,6 @@ from baserow.compat.api.utils import prefix_schema_description_deprecated
 
 
 def test_prefix_schema_description_deprecated(group_compat_timebomb):
-
     # With no link or year
     without_link_or_year = prefix_schema_description_deprecated()
     assert without_link_or_year == "**This endpoint has been deprecated.**\n\n"

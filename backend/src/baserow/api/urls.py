@@ -1,4 +1,3 @@
-from django.http import HttpResponse
 from django.urls import include, path
 
 from drf_spectacular.views import SpectacularRedocView
@@ -11,6 +10,7 @@ from baserow.core.registries import application_type_registry, plugin_registry
 
 from .applications import urls as application_urls
 from .auth_provider import urls as auth_provider_urls
+from .health import urls as health_urls
 from .jobs import urls as jobs_urls
 from .settings import urls as settings_urls
 from .snapshots import urls as snapshots_urls
@@ -22,10 +22,6 @@ from .user_files import urls as user_files_urls
 from .workspaces import urls as workspace_urls
 
 app_name = "baserow.api"
-
-
-def public_health_check(request):
-    return HttpResponse("OK")
 
 
 urlpatterns = (
@@ -46,7 +42,7 @@ urlpatterns = (
         path("trash/", include(trash_urls, namespace="trash")),
         path("jobs/", include(jobs_urls, namespace="jobs")),
         path("snapshots/", include(snapshots_urls, namespace="snapshots")),
-        path("_health/", public_health_check, name="public_health_check"),
+        path("_health/", include(health_urls, namespace="health")),
         # GroupDeprecation
         path("groups/", include(group_compat_urls, namespace="groups")),
         path(

@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("core", "0031_duplicateapplicationjob_user_action_group_id"),
         ("database", "0086_formview_mode"),
