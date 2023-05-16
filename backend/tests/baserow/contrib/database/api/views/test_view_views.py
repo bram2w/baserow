@@ -1020,7 +1020,10 @@ fake_redis_server = FakeServer()
 @override_settings(
     CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
 )
-@patch("redis.Redis.from_url", lambda *a, **kw: FakeRedis(server=fake_redis_server))
+@patch(
+    "django_redis.get_redis_connection",
+    lambda *a, **kw: FakeRedis(server=fake_redis_server),
+)
 @pytest.mark.django_db(transaction=True)
 def test_loading_a_sortable_view_will_create_an_index(
     api_client,
