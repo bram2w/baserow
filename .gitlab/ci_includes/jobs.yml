@@ -461,14 +461,8 @@
         echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
       fi
 
-      if ! docker pull $SOURCE_IMAGE; then
-        echo "Could not pull $SOURCE_IMAGE, has the build pipeline finished yet?" 2>&1;
-        exit 1
-      fi
-      docker tag $SOURCE_IMAGE $TARGET_IMAGE
-      
       echo "$TARGET_REGISTRY_PASSWORD" | docker login -u "$TARGET_REGISTRY_USER" "$TARGET_REGISTRY" --password-stdin
-      docker push $TARGET_IMAGE
+      docker buildx imagetools create -t $TARGET_IMAGE $SOURCE_IMAGE
 
 .skippable-job:
   before_script:
