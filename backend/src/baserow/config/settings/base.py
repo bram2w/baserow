@@ -83,6 +83,7 @@ INSTALLED_APPS = [
     "health_check.contrib.redis",
     "health_check.contrib.celery_ping",
     "health_check.contrib.psutil",
+    "health_check.contrib.s3boto3_storage",
     "baserow.core",
     "baserow.api",
     "baserow.ws",

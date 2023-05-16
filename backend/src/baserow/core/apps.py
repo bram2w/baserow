@@ -3,6 +3,8 @@ from django.conf import settings
 from django.db.models import Q
 from django.db.models.signals import post_migrate
 
+from health_check.storage.backends import DefaultFileStorageHealthCheck
+
 
 class CoreConfig(AppConfig):
     name = "baserow.core"
@@ -254,11 +256,7 @@ class CoreConfig(AppConfig):
         post_migrate.connect(sync_operations_after_migrate, sender=self)
 
     def _setup_health_checks(self):
-        from health_check.contrib.s3boto_storage.backends import (
-            S3BotoStorageHealthCheck,
-        )
         from health_check.plugins import plugin_dir
-        from health_check.storage.backends import DefaultFileStorageHealthCheck
 
         from .health.custom_health_checks import (
             DebugModeHealthCheck,
@@ -268,11 +266,7 @@ class CoreConfig(AppConfig):
         plugin_dir.register(DebugModeHealthCheck)
         if getattr(settings, "HEROKU_ENABLED", False):
             plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)
-
-        if settings.DEFAULT_FILE_STORAGE == "storages.backends.s3boto3.S3Boto3Storage":
-            plugin_dir.register(S3BotoStorageHealthCheck)
-        else:
-            plugin_dir.register(DefaultFileStorageHealthCheck)
+        plugin_dir.register(DefaultFileStorageHealthCheck)
 
 
 # noinspection PyPep8Naming
