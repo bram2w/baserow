@@ -1,4 +1,5 @@
 import re
+import traceback
 from collections import defaultdict, namedtuple
 from copy import deepcopy
 from dataclasses import dataclass
@@ -214,12 +215,18 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         view_type = view_type_registry.get_by_model(view)
-        if (
-            view_type.can_sort
-            and not view.db_index_name
-            and cls.get_index(view, model) is not None
-        ):
-            cls.schedule_index_update(view)
+        if not view_type.can_sort:
+            return
+
+        try:
+            db_index = cls.get_index(view, model)
+            if db_index is not None and db_index.name != view.db_index_name:
+                cls.schedule_index_update(view)
+        except Exception as exc:  # nosec
+            logger.error(
+                "Failed to check if view needs index because of {e}", e=str(exc)
+            )
+            traceback.print_exc()
 
     @classmethod
     def get_index(

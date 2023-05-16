@@ -105,6 +105,7 @@ if BASEROW_CACHALOT_ONLY_CACHABLE_TABLES is None:
         "core_settings",
         "auth_user",
         "core_userprofile",
+        "core_workspace",
         "core_workspaceuser",
         "database_token",
         "database_tokenpermission",

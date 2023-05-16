@@ -1,5 +1,6 @@
 from django.db.transaction import Atomic
 
+from cachalot.api import cachalot_disabled
 from psycopg2 import sql
 
 from baserow.core.db import IsolationLevel, transaction_atomic
@@ -43,13 +44,14 @@ def read_repeatable_single_database_atomic_transaction(
 """
     )
     first_statement_args = [sql.Literal(database_id)]
-    return transaction_atomic(
-        isolation_level=IsolationLevel.REPEATABLE_READ,
-        first_sql_to_run_in_transaction_with_args=(
-            first_statement,
-            first_statement_args,
-        ),
-    )
+    with cachalot_disabled():
+        return transaction_atomic(
+            isolation_level=IsolationLevel.REPEATABLE_READ,
+            first_sql_to_run_in_transaction_with_args=(
+                first_statement,
+                first_statement_args,
+            ),
+        )
 
 
 def read_committed_single_table_transaction(
@@ -134,10 +136,11 @@ def read_repeatable_read_single_table_transaction(
 """
     )
     first_statement_args = [sql.Literal(table_id)]
-    return transaction_atomic(
-        isolation_level=IsolationLevel.REPEATABLE_READ,
-        first_sql_to_run_in_transaction_with_args=(
-            first_statement,
-            first_statement_args,
-        ),
-    )
+    with cachalot_disabled():
+        return transaction_atomic(
+            isolation_level=IsolationLevel.REPEATABLE_READ,
+            first_sql_to_run_in_transaction_with_args=(
+                first_statement,
+                first_statement_args,
+            ),
+        )

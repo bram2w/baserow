@@ -3047,7 +3047,9 @@ def test_loading_a_view_checks_for_db_index_without_additional_queries(
 
     # actually create the index for the view
     ViewIndexingHandler.update_index(grid_view, model)
-    view.refresh_from_db()
+    view = view_handler.get_view(
+        grid_view.id, base_queryset=GridView.objects.prefetch_related("viewsort_set")
+    )
     assert view.db_index_name
 
     with override_settings(AUTO_INDEX_VIEW_ENABLED=True), django_assert_num_queries(0):
