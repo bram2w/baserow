@@ -80,7 +80,7 @@ class AirtableImportJobType(JobType):
             help_text="The workspace ID where the Airtable base must be imported into.",
         ),
         "airtable_share_id": serializers.URLField(
-            max_length=18,
+            max_length=200,
             help_text="Public ID of the shared Airtable base that must be imported.",
         ),
         "database": ApplicationSerializer(),

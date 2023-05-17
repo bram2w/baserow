@@ -150,6 +150,46 @@ def test_create_airtable_import_job(
     assert response.json()["error"] == "ERROR_MAX_JOB_COUNT_EXCEEDED"
 
 
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.jobs.handler.run_async_job")
+def test_create_airtable_import_job_long_share_id(
+    mock_run_import_from_airtable, data_fixture, api_client
+):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    long_share_id = (
+        "shr22aXe5Hj32sPJB/tblU0bav59SSEyOkU/"
+        "viwyUDJYyQPYuFj1F?blocks=bipEYER8Qq7fLoPbr"
+    )
+
+    response = api_client.post(
+        reverse("api:jobs:list"),
+        {
+            "type": "airtable",
+            "workspace_id": workspace.id,
+            "airtable_share_url": f"https://airtable.com/{long_share_id}",
+        },
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    airtable_import_job = AirtableImportJob.objects.all().first()
+    assert airtable_import_job.workspace_id == workspace.id
+    assert airtable_import_job.airtable_share_id == long_share_id
+    assert response.json() == {
+        "id": airtable_import_job.id,
+        "type": "airtable",
+        "group_id": workspace.id,  # GroupDeprecation
+        "workspace_id": workspace.id,
+        "airtable_share_id": long_share_id,
+        "progress_percentage": 0,
+        "state": "pending",
+        "human_readable_error": "",
+        "database": None,
+    }
+    mock_run_import_from_airtable.delay.assert_called()
+
+
 @pytest.mark.django_db
 def test_get_airtable_import_job(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
