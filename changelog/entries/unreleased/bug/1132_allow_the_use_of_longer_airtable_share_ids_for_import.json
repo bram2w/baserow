@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Allow the use of longer Airtable share ids for import",
+    "issue_number": 1132,
+    "bullet_points": [],
+    "created_at": "2023-05-17"
+}

@@ -13,7 +13,7 @@ class AirtableImportJob(JobWithUserIpAddress, Job, GroupToWorkspaceCompatModelMi
         help_text="The workspace where the Airtable base must be imported into.",
     )
     airtable_share_id = models.CharField(
-        max_length=18,
+        max_length=200,
         help_text="Public ID of the shared Airtable base that must be imported.",
     )
     database = models.ForeignKey(
