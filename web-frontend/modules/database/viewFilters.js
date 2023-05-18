@@ -821,7 +821,7 @@ export class DateEqualsCurrentYearViewFilterType extends DateEqualsTodayViewFilt
 /**
  * Base class for days, months, years ago filters.
  */
-export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
+export class LocalizedDateCompareViewFilterType extends LocalizedDateViewFilterType {
   getInputComponent() {
     return ViewFilterTypeNumberWithTimeZone
   }
@@ -841,7 +841,7 @@ export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
     return `${tzone}${this.getSeparator()}${xAgo}`
   }
 
-  splitTimezoneAndXago(field, rawValue) {
+  splitTimezoneAndXToCompare(field, rawValue) {
     const [timezone, value] = this.splitTimezoneAndValue(rawValue)
 
     let filterValue = value
@@ -854,7 +854,10 @@ export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
   }
 
   getValidNumberWithTimezone(rawValue, field) {
-    const [timezone, filterValue] = this.splitTimezoneAndXago(field, rawValue)
+    const [timezone, filterValue] = this.splitTimezoneAndXToCompare(
+      field,
+      rawValue
+    )
     return `${timezone}${this.getSeparator()}${filterValue}`
   }
 
@@ -866,11 +869,11 @@ export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
     return this.getValidNumberWithTimezone(value, field)
   }
 
-  getDateToCompare(xAgo) {
+  getDateToCompare(xToCompare) {
     throw new Error('Not implemented')
   }
 
-  isDateMatching(rowValue, dateToCompare) {
+  isDateMatching(rowValue, dateToCompare, today) {
     throw new Error('Not implemented')
   }
 
@@ -879,24 +882,107 @@ export class DateEqualsXAgoViewFilterType extends LocalizedDateViewFilterType {
       rowValue = ''
     }
 
-    const [timezone, xAgo] = this.splitTimezoneAndXago(field, filterValue)
+    const [timezone, xToCompare] = this.splitTimezoneAndXToCompare(
+      field,
+      filterValue
+    )
 
     // an invalid daysAgo will result in an empty filter
-    if (xAgo === '') {
+    if (xToCompare === '') {
       return true
     }
 
-    const dateToCompare = this.getDateToCompare(xAgo)
+    let dateToCompare
+    try {
+      dateToCompare = this.getDateToCompare(xToCompare)
+    } catch (e) {
+      return false
+    }
+
     const rowDate = moment.utc(rowValue)
+    const today = moment.utc()
     if (timezone) {
       dateToCompare.tz(timezone)
       rowDate.tz(timezone)
+      today.tz(timezone)
     }
-    return this.isDateMatching(rowDate, dateToCompare)
+    return this.isDateMatching(rowDate, dateToCompare, today)
   }
 }
 
-export class DateEqualsDaysAgoViewFilterType extends DateEqualsXAgoViewFilterType {
+function isRowValueBetweenDays(rowValue, dateToCompare, today) {
+  const [firstDay, lastDay] = dateToCompare.isSameOrBefore(today)
+    ? [dateToCompare, today]
+    : [today, dateToCompare]
+  return rowValue.isBetween(firstDay, lastDay, 'days', '[]')
+}
+
+export class DateWithinDaysViewFilterType extends LocalizedDateCompareViewFilterType {
+  static getType() {
+    return 'date_within_days'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isWithinDays')
+  }
+
+  getDateToCompare(xToCompare) {
+    return moment.utc().add(parseInt(xToCompare), 'days')
+  }
+
+  isDateMatching(rowValue, dateToCompare, today) {
+    return isRowValueBetweenDays(rowValue, dateToCompare, today)
+  }
+}
+
+export class DateWithinWeeksViewFilterType extends LocalizedDateCompareViewFilterType {
+  static getType() {
+    return 'date_within_weeks'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isWithinWeeks')
+  }
+
+  getDateToCompare(xToCompare) {
+    const numberOfWeeks = parseInt(xToCompare)
+    if (numberOfWeeks === 0) {
+      throw new Error('Number of weeks cannot be 0')
+    }
+    return moment.utc().add(numberOfWeeks, 'weeks')
+  }
+
+  isDateMatching(rowValue, dateToCompare, today) {
+    return isRowValueBetweenDays(rowValue, dateToCompare, today)
+  }
+}
+
+export class DateWithinMonthsViewFilterType extends LocalizedDateCompareViewFilterType {
+  static getType() {
+    return 'date_within_months'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isWithinMonths')
+  }
+
+  getDateToCompare(xToCompare) {
+    const numberOfMonths = parseInt(xToCompare)
+    if (numberOfMonths === 0) {
+      throw new Error('Number of months cannot be 0')
+    }
+    return moment.utc().add(numberOfMonths, 'month')
+  }
+
+  isDateMatching(rowValue, dateToCompare, today) {
+    return isRowValueBetweenDays(rowValue, dateToCompare, today)
+  }
+}
+
+export class DateEqualsDaysAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_days_ago'
   }
@@ -906,16 +992,16 @@ export class DateEqualsDaysAgoViewFilterType extends DateEqualsXAgoViewFilterTyp
     return i18n.t('viewFilter.isDaysAgo')
   }
 
-  getDateToCompare(xAgo) {
-    return moment.utc().subtract(parseInt(xAgo), 'days')
+  getDateToCompare(xToCompare) {
+    return moment.utc().subtract(parseInt(xToCompare), 'days')
   }
 
-  isDateMatching(rowValue, dateToCompare) {
+  isDateMatching(rowValue, dateToCompare, today) {
     return rowValue.isSame(dateToCompare, 'day')
   }
 }
 
-export class DateEqualsMonthsAgoViewFilterType extends DateEqualsXAgoViewFilterType {
+export class DateEqualsMonthsAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_months_ago'
   }
@@ -925,16 +1011,16 @@ export class DateEqualsMonthsAgoViewFilterType extends DateEqualsXAgoViewFilterT
     return i18n.t('viewFilter.isMonthsAgo')
   }
 
-  getDateToCompare(xAgo) {
-    return moment.utc().subtract(parseInt(xAgo), 'months')
+  getDateToCompare(xToCompare) {
+    return moment.utc().subtract(parseInt(xToCompare), 'months')
   }
 
-  isDateMatching(rowValue, dateToCompare) {
+  isDateMatching(rowValue, dateToCompare, today) {
     return rowValue.isSame(dateToCompare, 'month')
   }
 }
 
-export class DateEqualsYearsAgoViewFilterType extends DateEqualsXAgoViewFilterType {
+export class DateEqualsYearsAgoViewFilterType extends LocalizedDateCompareViewFilterType {
   static getType() {
     return 'date_equals_years_ago'
   }
@@ -944,11 +1030,11 @@ export class DateEqualsYearsAgoViewFilterType extends DateEqualsXAgoViewFilterTy
     return i18n.t('viewFilter.isYearsAgo')
   }
 
-  getDateToCompare(xAgo) {
-    return moment.utc().subtract(parseInt(xAgo), 'years')
+  getDateToCompare(xToCompare) {
+    return moment.utc().subtract(parseInt(xToCompare), 'years')
   }
 
-  isDateMatching(rowValue, dateToCompare) {
+  isDateMatching(rowValue, dateToCompare, today) {
     return rowValue.isSame(dateToCompare, 'year')
   }
 }

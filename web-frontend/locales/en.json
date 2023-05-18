@@ -157,6 +157,9 @@
         "inThisWeek": "in this week",
         "inThisMonth": "in this month",
         "inThisYear": "in this year",
+        "isWithinDays": "is within days",
+        "isWithinWeeks": "is within weeks",
+        "isWithinMonths": "is within months",
         "lowerThan": "lower than",
         "lengthIsLowerThan": "length is lower than",
         "hasFileType": "has file type"

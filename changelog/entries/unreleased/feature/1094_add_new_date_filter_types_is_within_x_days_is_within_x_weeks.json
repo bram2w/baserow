@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add new view filter type for dates 'is within x days', 'is within x weeks' and 'is within x months'",
+    "issue_number": 1094,
+    "bullet_points": [],
+    "created_at": "2023-05-16"
+}

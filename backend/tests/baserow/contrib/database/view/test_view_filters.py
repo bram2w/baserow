@@ -1,4 +1,5 @@
 import random
+from contextlib import contextmanager
 from datetime import date
 
 from django.db.models import Q
@@ -6,6 +7,7 @@ from django.utils import timezone as django_timezone
 from django.utils.timezone import datetime, make_aware
 
 import pytest
+import pytz
 from freezegun import freeze_time
 from pyinstrument import Profiler
 from pytest_unordered import unordered
@@ -5662,3 +5664,174 @@ def test_multiple_collaborators_has_filter_type_export_import(data_fixture):
     assert view_filter_type.set_import_serialized_value(user.email, {}) == ""
     assert view_filter_type.set_import_serialized_value("", id_mapping) == ""
     assert view_filter_type.set_import_serialized_value("wrong", id_mapping) == ""
+
+
+@contextmanager
+def rows_with_dates(data_fixture, dates, filter_type):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    rows = model.objects.bulk_create(
+        [model(**{f"field_{date_field.id}": d}) for d in dates]
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=date_field,
+        type=filter_type,
+        value="",
+    )
+
+    def get_filtered_row_ids():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    yield rows, view_filter, get_filtered_row_ids
+
+
+@pytest.mark.django_db
+def test_date_within_days_view_filter(data_fixture):
+    dates = [
+        date(2020, 12, 1),  # 0
+        date(2021, 1, 1),  # 1
+        date(2021, 1, 2),  # 2
+        date(2021, 1, 3),  # 3
+        date(2021, 1, 4),  # 4
+        date(2021, 1, 5),  # 5
+        date(2021, 1, 6),  # 6
+        date(2021, 2, 1),  # 7
+        date(2022, 1, 1),  # 8
+    ]
+
+    with rows_with_dates(data_fixture, dates, "date_within_days") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        with freeze_time("2021-01-02"):
+            assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "1"
+        view_filter.save()
+
+        with freeze_time("2021-01-02"):
+            assert get_filtered_row_ids() == [rows[2].id, rows[3].id]
+
+        view_filter.value = "Europe/Rome?1"
+        view_filter.save()
+
+        with freeze_time("2021-01-04"):
+            assert get_filtered_row_ids() == [rows[4].id, rows[5].id]
+
+        with freeze_time(
+            datetime(2021, 1, 4, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+        ):
+            assert get_filtered_row_ids() == [rows[3].id, rows[4].id]
+
+
+@pytest.mark.django_db
+def test_date_within_weeks_view_filter(data_fixture):
+    dates = [
+        date(2020, 12, 1),  # 0
+        date(2021, 1, 1),  # 1
+        date(2021, 1, 7),  # 2
+        date(2021, 1, 8),  # 3
+        date(2021, 1, 14),  # 4
+        date(2021, 1, 15),  # 5
+        date(2021, 1, 18),  # 6
+        date(2021, 2, 1),  # 7
+        date(2022, 1, 1),  # 8
+    ]
+
+    with rows_with_dates(data_fixture, dates, "date_within_weeks") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        with freeze_time("2021-01-02"):
+            assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "1"
+        view_filter.save()
+
+        with freeze_time("2021-01-01"):
+            assert get_filtered_row_ids() == [rows[1].id, rows[2].id, rows[3].id]
+
+        view_filter.value = "Europe/Rome?2"
+        view_filter.save()
+
+        with freeze_time("2021-01-08"):
+            assert get_filtered_row_ids() == [
+                rows[3].id,
+                rows[4].id,
+                rows[5].id,
+                rows[6].id,
+            ]
+
+        with freeze_time(
+            datetime(2021, 1, 8, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+        ):
+            assert get_filtered_row_ids() == [
+                rows[2].id,
+                rows[3].id,
+                rows[4].id,
+                rows[5].id,
+                rows[6].id,
+            ]
+
+
+@pytest.mark.django_db
+def test_date_within_months_view_filter(data_fixture):
+    dates = [
+        date(2020, 12, 1),  # 0
+        date(2021, 1, 1),  # 1
+        date(2021, 1, 7),  # 2
+        date(2021, 1, 31),  # 3
+        date(2021, 2, 1),  # 4
+        date(2021, 2, 15),  # 5
+        date(2021, 3, 1),  # 6
+        date(2021, 3, 21),  # 7
+        date(2022, 1, 1),  # 8
+    ]
+
+    with rows_with_dates(data_fixture, dates, "date_within_months") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        with freeze_time("2021-01-02"):
+            assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "1"
+        view_filter.save()
+
+        with freeze_time("2021-01-02"):
+            assert get_filtered_row_ids() == [rows[2].id, rows[3].id, rows[4].id]
+
+        view_filter.value = "Europe/Rome?2"
+        view_filter.save()
+
+        with freeze_time("2021-01-08"):
+            assert get_filtered_row_ids() == [
+                rows[3].id,
+                rows[4].id,
+                rows[5].id,
+                rows[6].id,
+            ]
+
+        with freeze_time(
+            datetime(2021, 1, 8, 0, 0, 0, tzinfo=pytz.timezone("Pacific/Apia"))
+        ):
+            assert get_filtered_row_ids() == [
+                rows[2].id,
+                rows[3].id,
+                rows[4].id,
+                rows[5].id,
+                rows[6].id,
+            ]

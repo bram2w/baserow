@@ -8,6 +8,9 @@ import {
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
   DateEqualsTodayViewFilterType,
+  DateWithinDaysViewFilterType,
+  DateWithinWeeksViewFilterType,
+  DateWithinMonthsViewFilterType,
   DateEqualsDaysAgoViewFilterType,
   DateEqualsMonthsAgoViewFilterType,
   DateEqualsYearsAgoViewFilterType,
@@ -383,6 +386,135 @@ const dateInThisYear = [
   {
     rowValue: '2022-06-01T12:00:00.000000Z',
     filterValue: 'Europe/Berlin?',
+    expected: true,
+  },
+]
+
+const dateWithinDays = [
+  {
+    rowValue: moment().tz('Europe/Berlin').add(1, 'days').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().add(2, 'days').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '',
+    expected: true,
+  },
+]
+
+const dateWithinWeeks = [
+  {
+    rowValue: moment().tz('Europe/Berlin').add(5, 'days').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().add(20, 'days').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '',
+    expected: true,
+  },
+]
+
+const dateWithinMonths = [
+  {
+    rowValue: moment().tz('Europe/Berlin').add(20, 'days').format(),
+    filterValue: 'Europe/Berlin?1',
+    expected: true,
+  },
+  {
+    rowValue: '1970-08-11T23:30:37.940086Z',
+    filterValue: 'Europe/Berlin?2',
+    expected: false,
+  },
+  {
+    rowValue: moment().utc().add(80, 'days').format(),
+    filterValue: 'UTC?3',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: 'Mars/Noland?1',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '?',
+    expected: true,
+  },
+  {
+    rowValue: moment().utc().subtract(1, 'days').format(),
+    filterValue: '',
     expected: true,
   },
 ]
@@ -783,6 +915,30 @@ describe('All Tests', () => {
       values.filterValue,
       {}
     )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinDays)('DateWithinDays', (values) => {
+    const result = new DateWithinDaysViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    if (result !== values.expected) console.log('days', values)
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinWeeks)('DateWithinWeeks', (values) => {
+    const result = new DateWithinWeeksViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    if (result !== values.expected) console.log('weeks', values)
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateWithinMonths)('DateWithinMonths', (values) => {
+    const result = new DateWithinMonthsViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, {})
+    if (result !== values.expected) console.log('months', values)
     expect(result).toBe(values.expected)
   })
 
