@@ -356,14 +356,17 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
             return datetime_value.astimezone(timezone)
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[datetime, date]
+        self, field_name: str, aware_filter_date: Union[datetime, date], now: datetime
     ) -> Dict:
         """
         Returns a dictionary that can be used to create a Q object.
 
-        :param field_name: The name of the field that should be used in the query.
-        :param aware_filter_date: The date that should be used to compare with the
-            field value.
+        :param field_name: The name of the field that should be used in the
+            query.
+        :param aware_filter_date: The date that should be used to compare with
+            the field value.
+        :param now: The current aware datetime that can be used to compare with
+            the field value.
         """
 
         raise NotImplementedError()
@@ -465,7 +468,9 @@ class TimezoneAwareDateViewFilterType(ViewFilterType):
 
         query_dict = {
             f"{field_name}__isnull": False,  # makes `NotViewFilterTypeMixin` work with timezones
-            **self.get_filter_query_dict(query_field_name, filter_date),
+            **self.get_filter_query_dict(
+                query_field_name, filter_date, datetime.now(timezone)
+            ),
         }
         return AnnotatedQ(annotation=annotation, q=query_dict)
 
@@ -480,7 +485,7 @@ class DateEqualViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_equal"
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {field_name: aware_filter_date}
 
@@ -495,7 +500,7 @@ class DateBeforeViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_before"
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict[str, Any]:
         return {f"{field_name}__lt": aware_filter_date}
 
@@ -510,7 +515,7 @@ class DateAfterViewFilterType(TimezoneAwareDateViewFilterType):
     type = "date_after"
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict[str, Any]:
         return {f"{field_name}__gt": aware_filter_date}
 
@@ -570,7 +575,7 @@ class DateEqualsTodayViewFilterType(
         return datetime.now(tz=timezone).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {field_name: aware_filter_date}
 
@@ -590,7 +595,7 @@ class DateBeforeTodayViewFilterType(
         return (datetime.now(tz=timezone) - timedelta(days=1)).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {f"{field_name}__lte": aware_filter_date}
 
@@ -610,7 +615,7 @@ class DateAfterTodayViewFilterType(
         return (datetime.now(tz=timezone) + timedelta(days=1)).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {f"{field_name}__gte": aware_filter_date}
 
@@ -631,7 +636,7 @@ class DateEqualsCurrentWeekViewFilterType(
         return datetime.now(tz=timezone).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         week_of_year = aware_filter_date.isocalendar().week
         return {
@@ -656,7 +661,7 @@ class DateEqualsCurrentMonthViewFilterType(
         return datetime.now(tz=timezone).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {
             f"{field_name}__month": aware_filter_date.month,
@@ -680,9 +685,122 @@ class DateEqualsCurrentYearViewFilterType(
         return datetime.now(tz=timezone).date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {f"{field_name}__year": aware_filter_date.year}
+
+
+def get_is_within_filter_query_dict(
+    field_name: str, aware_filter_date: Union[date, datetime], now: datetime
+) -> Dict:
+    """
+    The utility function checks if the field value is between today's date and
+    the date specified in the filter value and returns the query dict.
+    It ensure that the filter works correctly even if the filter date is before
+    today's date.
+    """
+
+    op1, op2 = ("lte", "gte") if aware_filter_date >= now.date() else ("gte", "lte")
+
+    return {
+        f"{field_name}__{op1}": aware_filter_date,
+        f"{field_name}__{op2}": now.date(),
+    }
+
+
+class DateIsWithinXDaysViewFilterType(TimezoneAwareDateViewFilterType):
+    """
+    Is within X days filter checks if the field value is between today's date
+    and the number of days specified in the filter.
+
+    The value of the filter is expected to be a string like "Europe/Rome?1". It
+    uses character ? as separator between the timezone and the number of days.
+    """
+
+    type = "date_within_days"
+
+    def get_filter_date(
+        self, filter_value: str, timezone: pytz.BaseTzInfo
+    ) -> Union[datetime, date]:
+        """
+        Zero days means today, one day means today and tomorrow, and so on.
+        """
+
+        number_of_days = int(filter_value)
+
+        filter_date = datetime.now(tz=timezone) + relativedelta(days=number_of_days)
+        return filter_date.date()
+
+    def get_filter_query_dict(
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
+    ) -> Dict:
+        return get_is_within_filter_query_dict(field_name, aware_filter_date, now)
+
+
+class DateIsWithinXWeeksViewFilterType(TimezoneAwareDateViewFilterType):
+    """
+    Is within X weeks filter checks if the field value is between today's date
+    and the number of weeks specified in the filter.
+
+    The value of the filter is expected to be a string like "Europe/Rome?1". It
+    uses character ? as separator between the timezone and the number of days.
+    """
+
+    type = "date_within_weeks"
+
+    def get_filter_date(
+        self, filter_value: str, timezone: pytz.BaseTzInfo
+    ) -> Union[datetime, date]:
+        """
+        Since zero weeks can be confusing, we raise an error if the number of
+        weeks is 0. One week means today + 1 week inclusive, and so on.
+        """
+
+        number_of_weeks = int(filter_value)
+        if number_of_weeks == 0:
+            raise ValueError("Number of weeks cannot be 0")
+
+        filter_date = datetime.now(tz=timezone) + relativedelta(weeks=number_of_weeks)
+        return filter_date.date()
+
+    def get_filter_query_dict(
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
+    ) -> Dict:
+        return get_is_within_filter_query_dict(field_name, aware_filter_date, now)
+
+
+class DateIsWithinXMonthsViewFilterType(TimezoneAwareDateViewFilterType):
+    """
+    Is within X months filter checks if the field value is between today's date
+    and the number of months specified in the filter.
+
+    The value of the filter is expected to be a string like "Europe/Rome?1". It
+    uses character ? as separator between the timezone and the number of days.
+    """
+
+    type = "date_within_months"
+
+    def get_filter_date(
+        self, filter_value: str, timezone: pytz.BaseTzInfo
+    ) -> Union[datetime, date]:
+        """
+        Since zero months can be confusing, we raise an error if the number of
+        months is 0. One month means today + 1 month inclusive, and so on. E.g.
+        if today is 2023-01-31, within 1 month means within 2020-02-28
+        inclusive.
+        """
+
+        number_of_months = int(filter_value)
+        if number_of_months == 0:
+            raise ValueError("Number of months cannot be 0")
+
+        filter_date = datetime.now(tz=timezone) + relativedelta(months=number_of_months)
+        return filter_date.date()
+
+    def get_filter_query_dict(
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
+    ) -> Dict:
+        return get_is_within_filter_query_dict(field_name, aware_filter_date, now)
 
 
 class DateEqualsDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
@@ -703,7 +821,7 @@ class DateEqualsDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
         return filter_date.date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {field_name: aware_filter_date}
 
@@ -728,7 +846,7 @@ class DateEqualsMonthsAgoViewFilterType(TimezoneAwareDateViewFilterType):
         return filter_date.date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {
             f"{field_name}__year": aware_filter_date.year,
@@ -756,7 +874,7 @@ class DateEqualsYearsAgoViewFilterType(TimezoneAwareDateViewFilterType):
         return filter_date.date()
 
     def get_filter_query_dict(
-        self, field_name: str, aware_filter_date: Union[date, datetime]
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
     ) -> Dict:
         return {f"{field_name}__year": aware_filter_date.year}
 
