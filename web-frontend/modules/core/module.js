@@ -11,6 +11,7 @@ import de from './locales/de.json'
 import es from './locales/es.json'
 import it from './locales/it.json'
 import pl from './locales/pl.json'
+import { setDefaultResultOrder } from 'dns'
 
 export default function CoreModule(options) {
   /**
@@ -24,6 +25,10 @@ export default function CoreModule(options) {
 
   // Baserow must be run in universal mode.
   this.options.mode = 'universal'
+
+  // Ensure in Node 18 `localhost` resolves to `127.0.0.1` and not IPV6 `::1` by default
+  // as our internal services are listening on `127.0.0.0` and not `::1`
+  setDefaultResultOrder('ipv4first')
 
   // Prevent automatically loading pages.
   this.nuxt.hook('build:before', () => {
