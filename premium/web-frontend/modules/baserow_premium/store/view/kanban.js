@@ -135,6 +135,10 @@ export const mutations = {
       0,
       state.stacks[currentStackId].results.splice(currentIndex, 1)[0]
     )
+    if (currentStackId !== targetStackId) {
+      state.stacks[currentStackId].count--
+      state.stacks[targetStackId].count++
+    }
   },
   ADD_FIELD_TO_ALL_ROWS(state, { field, value }) {
     const name = `field_${field.id}`
@@ -527,8 +531,6 @@ export const actions = {
         targetStackId: newStackId,
         targetIndex: newIndex,
       })
-      commit('DECREASE_COUNT', { stackId: oldStackId })
-      commit('INCREASE_COUNT', { stackId: newStackId })
     } else if (oldExists && !newExists) {
       commit('DELETE_ROW', { stackId: oldStackId, index: oldExistingIndex })
       commit('DECREASE_COUNT', { stackId: oldStackId })
@@ -627,8 +629,6 @@ export const actions = {
 
     // If the stack has changed, the value needs to be updated with the backend.
     if (originalStackId !== currentStackId) {
-      commit('INCREASE_COUNT', { stackId: currentStackId })
-      commit('DECREASE_COUNT', { stackId: originalStackId })
       try {
         const { data } = await RowService(this.$client).update(
           table.id,
@@ -640,8 +640,6 @@ export const actions = {
         // If for whatever reason updating the value fails, we need to undo the
         // things that have changed in the store.
         commit('UPDATE_ROW', { row, values: oldValues })
-        commit('INCREASE_COUNT', { stackId: originalStackId })
-        commit('DECREASE_COUNT', { stackId: currentStackId })
         dispatch('cancelRowDrag', { row, originalStackId })
         throw error
       }
