@@ -50,18 +50,31 @@ docker run \
 
 ## Image Feature Overview
 
-The `baserow/baserow:1.17.1` image by default runs all of Baserow's various services in a
-single container for ease of use. A quick summary of its features are:
+The `baserow/baserow:1.17.1` image by default runs all of Baserow's various services in
+a single container for maximum ease of use.
+
+> This image is designed for simple single server deployments or simple container
+> deployment services such as Google Cloud Run.
+>
+> If you are instead looking for images which are better suited for horizontal
+> scaling (e.g. when using [K8S](./install-with-k8s.md)) then please instead use our
+> [baserow/backend and baserow/web-frontend](./install-with-docker-compose.md) images
+> instead which deploy each Baserow service in its own container impotently.
+
+A quick summary of its features are:
 
 * Runs a Postgres database and Redis server by default internally and stores all data in
   the `/baserow/data` folder inside the container.
 * Set `DATABASE_URL` or the `DATABASE_...` variables to disable the internal postgres
-  and instead connect to an external Postgres.
+  and instead connect to an external Postgres. This is highly recommended for any
+  production deployments of this image, so you can easily connect to the Postgres
+  database from any other services or processes you might have.
 * Set `REDIS_URL` or the `REDIS_...` variables to disable the internal redis and instead
   connect to an external Postgres.
 * Runs all services behind a pre-configured Caddy reverse proxy. Set
   `BASEROW_CADDY_ADDRESSES` to `https://YOUR_DOMAIN.com` and it will
-  [automatically enable https](https://caddyserver.com/docs/automatic-https#overview) for
+  [automatically enable https](https://caddyserver.com/docs/automatic-https#overview)
+  for
   you and store the keys and certs in `/baserow/data/caddy`.
 * Provides a CLI for execing admin commands against a running Baserow container or
   running one off commands against just a Baserow data volume.
@@ -116,7 +129,7 @@ docker logs -f baserow_version_REPLACE_WITH_NEW_VERSION
 docker rm baserow
 ```
 
-# Example Commands
+## Example Commands
 
 See [Configuring Baserow](configuration.md) for more detailed information on all the
 other environment variables you can configure.
@@ -326,6 +339,70 @@ docker run -it \
   baserow/baserow:1.17.1 \
   backend-cmd-with-db manage dbshell
 ```
+
+# Stateless Deployment for Horizontal Scaling
+
+This image can also be configured to deploy Baserow in a horizontally scalable way.
+We recommend you first consider using our `baserow/backend` and `baserow/web-frontend`
+single service per container images
+on [K8S](./install-with-k8s.md)/[Helm](install-with-helm.md).
+However, if you just want to easily horizontally scale Baserow on something like
+AWS ECS or Google Cloud Run then the `baserow/baserow` can be used.
+
+### Prerequisites
+
+To deploy this image in a horizontally scalable way you need to ensure all state is
+stored externally and not inside containers or volumes. To do this you will need a:
+
+1. [A PostgreSQL Database](./supported.md)
+2. [A Redis](./supported.md)
+3. One of the following services to upload and download user files from:
+    1. AWS S3 or compatable service
+    2. Google Cloud Storage
+    3. Azure Cloud Storage bucket
+    4. Some sort of a shared volume that can be mounted into every single container
+
+### Recommended Environment Variables
+
+With this image we recommend you set the following environment variables to scale it
+horizontally.
+
+> See our [Configuration Docs](https://baserow.io/docs/installation%2Fconfiguration) for
+> more details on the following environment variables.
+
+1. All relevant `DATABASE_*` env vars need to be set to point Baserow at an external
+   postgres
+2. All relevant `REDIS_*` env vars need to be set to point Baserow at an external redis
+3. `DISABLE_VOLUME_CHECK=yes` needs to be set as this image has a
+   check for less technical users that `/baserow/data` is mounted to an external
+   volume on startup. Instead, you want your containers to be stateless and so this
+   check needs to be disabled.
+4. `AWS_*/GC_*/AZURE_*` env vars need to be set connecting Baserow to an external
+   file storage service.
+    1. **Important** The URLs of files uploaded to these buckets needs to be accessible
+       directly from browser of your Baserow users.
+5. Ensure the containers always have CPU time allocated as they have periodic
+   background tasks triggered by an internal CRON service.
+
+### Scaling Options
+
+This image has the following "horizontal scaling" environment variables:
+
+1. `BASEROW_AMOUNT_OF_GUNICORN_WORKERS` this controls the number of REST API
+   workers (the things that do most of the API work) per container.
+2. `BASEROW_AMOUNT_OF_WORKERS` controls the number of background task celery
+   runners, these run realtime collaboration tasks, cleanup jobs and other slow tasks
+   like big file exports/imports.
+    1. If you are scaling many of these containers you probably only need one or two
+       of these background workers per container as they will all pool together and
+       collect background tasks submitted from any other container via Redis.
+3. You can make the image launch fewer internal processes and hence reduce memory usage
+   by setting `BASEROW_RUN_MINIMAL=yes` AND `BASEROW_AMOUNT_OF_WORKERS=1`.
+    1. This will cause this image to only launch a single celery task
+       process which handles both the fast and slow queues. The consequence of this is
+       that there is only one process handling tasks per container and so a slow task
+       such as a snapshot of a large Baserow database might delay a fast queue task
+       like sending a realtime row updated signal to all users looking at a table.
 
 ## Backing up and Restoring Baserow
 

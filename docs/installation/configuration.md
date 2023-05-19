@@ -135,17 +135,83 @@ The installation methods referred to in the variable descriptions are:
 | BASEROW\_MAX\_ROW\_REPORT\_ERROR\_COUNT            | The maximum row error count tolerated before a file import fails. Before this max error count the import will continue and the non failing rows will be imported and after it, no rows are imported at all.                                                                                                                                                                                                                                                                                                                                                                                                                                                        | 30                     |
 
 ### User file upload Configuration
-| Name                       | Description                                                                                                                                                 | Defaults                     |
-|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------|
-| MEDIA\_URL                 | **INTERNAL** The URL at which user uploaded media files will be made available                                                                              | $PUBLIC\_BACKEND\_URL/media/ |
-| MEDIA\_ROOT                | **INTERNAL** The folder in which the backend will store user uploaded files                                                                                 | /baserow/media               |
-| **<br>**                   |                                                                                                                                                             |                              |
-| AWS\_ACCESS\_KEY\_ID       | The access key for your AWS account. When set to anything other than empty will switch Baserow to use a S3 compatible bucket for storing user file uploads. |                              |
-| AWS\_SECRET\_ACCESS\_KEY   | The access secret key for your AWS account.                                                                                                                 |                              |
-| AWS\_STORAGE\_BUCKET\_NAME | Your Amazon Web Services storage bucket name.                                                                                                               |                              |
-| AWS\_S3\_REGION\_NAME      | **Optional** Name of the AWS S3 region to use (eg. eu-west-1)                                                                                               |                              |
-| AWS\_S3\_ENDPOINT\_URL     | **Optional** Custom S3 URL to use when connecting to S3, including scheme.                                                                                  |                              |
-| AWS\_S3\_CUSTOM\_DOMAIN    | **Optional** Your custom domain where the files can be downloaded from.                                                                                     |                              |
+
+Baserow needs somewhere to store the following types of files:
+* Files uploaded by users in Baserow Table's using the File Field type
+* User triggered exports of tables and views
+
+#### Filesystem Default
+
+By default, Baserow will store these files on the file system at the location set by
+the MEDIA_ROOT environment variable, which is `/baserow/media` in our `baserow/backend`
+image or `$DATA_DIR/media` for the `baserow/baserow` all-in-one image.
+
+> Warning: If Baserow is storing user files on the file system and MEDIA_ROOT is not part 
+> of a persistent volume, then all uploaded user files will be lost if 
+> you remove the container. Our default docker commands and docker compose 
+> files ensure this location will be mounted to a persistent docker volume for you if
+> you are using them.
+> 
+#### Serving User Files when stored on the file system
+
+Any uploaded files need to be served back to the user when they visit Baserow in the
+browser. Our `baserow/baserow` image and some of our `docker-compose.yml` templates
+come with a [Caddy](https://caddy.io) reverse proxy which is configured to serve
+back any user uploaded files which are stored in the data/media volume.
+
+If you do not wish to use our default Caddy see the following guides on configuring
+an Apache, NGinx or Traefik to serve user files for you:
+* [Apache](./install-behind-apache.md)
+* [Nginx](./install-behind-nginx.md)
+* [Traefik](./install-with-traefik.md)
+
+
+#### File Service alternatives
+
+You can alternatively configure Baserow to store files by uploading them to an external service. 
+This is highly recommended if you wish to horizontally scale Baserow or deploy it in
+a distributed manner.
+
+We support the following types of file storage service. Follow each link to documentation showing 
+all available UPPER_CASE settings that you can set as environment variables to set up the 
+desired provider. 
+
+* [AWS S3, or any S3 compatible service such as Backblaze or Digital Ocean spaces](https://django-storages.readthedocs.io/en/1.13.2/backends/amazon-S3.html#settings)
+  * When using AWS S3 we recommend you set the `DOWNLOAD_FILE_VIA_XHR=1` environment variable.
+* [Google Cloud Storage](https://django-storages.readthedocs.io/en/1.13.2/backends/gcloud.html#settings)
+* [Azure Cloud Storage](https://django-storages.readthedocs.io/en/1.13.2/backends/azure.html#settings)
+
+Our default docker compose files do not by default include all available user file environment
+variables to reduce their size. When using these docker compose files make sure that any
+`AWS_`, `GS_` or `AZURE_` env vars you wish to use have been added to the 
+`x-backend-variables` section.
+
+#### CORS Issues
+
+When using a 3rd party file storage service which is serving files from another 
+domain than your Baserow, you need to make sure CORS is configured correctly. 
+
+#### User File Variables Table
+
+| Name                                 | Description                                                                                                                                                            | Defaults                                                                     |
+|--------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| MEDIA\_URL                           | **INTERNAL** The URL at which user uploaded media files will be made available                                                                                         | $PUBLIC\_BACKEND\_URL/media/                                                 |
+| MEDIA\_ROOT                          | **INTERNAL** The folder in which the backend will store user uploaded files                                                                                            | /baserow/media or $DATA_DIR/media for the `baserow/baserow` all-in-one image |
+| **<br>**                             |                                                                                                                                                                        |                                                                              |
+| AWS\_ACCESS\_KEY\_ID                 | The access key for your AWS account. When set to anything other than empty will switch Baserow to use a S3 compatible bucket for storing user file uploads.            |                                                                              |
+| AWS\_SECRET\_ACCESS\_KEY             | The access secret key for your AWS account.                                                                                                                            |                                                                              |
+| AWS\_SECRET\_ACCESS\_KEY\_FILE\_PATH | **Optional** The path to a file containing access secret key for your AWS account.                                                                                     |                                                                              |
+| AWS\_STORAGE\_BUCKET\_NAME           | Your Amazon Web Services storage bucket name.                                                                                                                          |                                                                              |
+| AWS\_S3\_REGION\_NAME                | **Optional** Name of the AWS S3 region to use (eg. eu-west-1)                                                                                                          |                                                                              |
+| AWS\_S3\_ENDPOINT\_URL               | **Optional** Custom S3 URL to use when connecting to S3, including scheme.                                                                                             |                                                                              |
+| AWS\_S3\_CUSTOM\_DOMAIN              | **Optional** Your custom domain where the files can be downloaded from.                                                                                                |                                                                              |
+| AWS\_*                               | **Optional** All other AWS\_ prefixed settings mentioned [here](https://django-storages.readthedocs.io/en/1.13.2/backends/amazon-S3.html#settings) are also supported. |                                                                              |
+| **<br>**                             |                                                                                                                                                                        |                                                                              |
+| GC\_*                                | All GC\_ prefixed settings mentioned [here](https://django-storages.readthedocs.io/en/1.13.2/backends/gcloud.html#settings) are also supported.                        |                                                                              |
+| GS\_CREDENTIALS\_FILE\_PATH          | **Optional** The path to a Google service account file for credentials.                                                                                                |                                                                              | 
+| **<br>**                             |                                                                                                                                                                        |                                                                              |
+| AZURE\_*                             | All AZURE\_ prefixed settings mentioned [here](https://django-storages.readthedocs.io/en/1.13.2/backends/azure.html#settings) are also supported.                      |                                                                              |
+| AZURE\_ACCOUNT\_KEY\_FILE\_PATH      | **Optional** The path to a file containing your Azure account key.                                                                                                     |                                                                              | 
 
 ### Email Configuration
 | Name                             | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Defaults |
@@ -185,7 +251,9 @@ The installation methods referred to in the variable descriptions are:
 
 ### Plugin Configuration
 
-| BASEROW\_PLUGIN\_GIT\_REPOS                       | A comma separated list of plugin git repos to install on startup. |                                                                                                                                                                                       |
-| BASEROW\_PLUGIN\_URLS                             | A comma separated list of plugin urls to install on startup. |                                                                                                                                                                                       |
-| BASEROW\_DISABLE\_PLUGIN\_INSTALL\_ON\_STARTUP    | When set to any non-empty values no automatic startup check and/or install of plugins will be run. Disables the above two env variables. |
-| BASEROW\_PLUGIN\_DIR |**INTERNAL** Sets the folder where the Baserow plugin scripts look for plugins.|In the all-in-one image `/baserow/data/plugins`, otherwise `/baserow/plugins`|
+| Name                                           | Description                                                                                                                              | Defaults                                                                      |
+|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| BASEROW\_PLUGIN\_GIT\_REPOS                    | A comma separated list of plugin git repos to install on startup.                                                                        |                                                                               |
+| BASEROW\_PLUGIN\_URLS                          | A comma separated list of plugin urls to install on startup.                                                                             |                                                                               |
+| BASEROW\_DISABLE\_PLUGIN\_INSTALL\_ON\_STARTUP | When set to any non-empty values no automatic startup check and/or install of plugins will be run. Disables the above two env variables. |
+| BASEROW\_PLUGIN\_DIR                           | **INTERNAL** Sets the folder where the Baserow plugin scripts look for plugins.                                                          | In the all-in-one image `/baserow/data/plugins`, otherwise `/baserow/plugins` |

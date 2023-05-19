@@ -11,6 +11,13 @@ services:
       BASEROW_AMOUNT_OF_WORKERS: 2
       BASEROW_TRIGGER_SYNC_TEMPLATES_AFTER_MIGRATION: false
       DJANGO_SETTINGS_MODULE: 'baserow.config.settings.e2e'
+      AWS_ACCESS_KEY_ID: anyvalue
+      AWS_SECRET_ACCESS_KEY: anyvalue
+      AWS_STORAGE_BUCKET_NAME: testbucket
+      AWS_S3_ENDPOINT_URL: http://s3mock:9090
+      AWS_S3_CUSTOM_DOMAIN: localhost:9090/testbucket
+      AWS_S3_USE_SSL: no
+      AWS_S3_URL_PROTOCOL: "http:"
     command:
       - gunicorn
 
@@ -28,6 +35,13 @@ services:
       BASEROW_RUN_MINIMAL: 'yes'
       BASEROW_AMOUNT_OF_WORKERS: 1
       SECRET_KEY: test
+      AWS_ACCESS_KEY_ID: anyvalue
+      AWS_SECRET_ACCESS_KEY: anyvalue
+      AWS_STORAGE_BUCKET_NAME: testbucket
+      AWS_S3_ENDPOINT_URL: http://s3mock:9090
+      AWS_S3_CUSTOM_DOMAIN: localhost:9090/testbucket
+      AWS_S3_USE_SSL: no
+      AWS_S3_URL_PROTOCOL: "http:"
     command: celery-worker
 
   e2e-tests:
@@ -56,6 +70,12 @@ services:
       - POSTGRES_USER=baserow
       - POSTGRES_PASSWORD=baserow
       - POSTGRES_DB=baserow
+
+  s3mock:
+    container_name: s3mock
+    image: adobe/s3mock:latest
+    environment:
+      initialBuckets: testbucket
 
   redis:
     image: redis:6
