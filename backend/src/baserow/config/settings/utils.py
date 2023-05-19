@@ -1,4 +1,6 @@
+import os
 import traceback
+from typing import Any, Callable, List, NamedTuple, Optional, Union
 
 
 def setup_dev_e2e(*args, **kwargs):
@@ -44,3 +46,62 @@ def setup_dev_e2e_users_and_instance_id(User, args, kwargs):
             user.save()
 
         Settings.objects.update(instance_id="1")
+
+
+class Setting(NamedTuple):
+    """
+    Describes how an environment variable should be read, parsed and setup.
+    """
+
+    name: str
+    parser: Optional[Callable[[str], Any]] = None
+    default: Optional[Any] = None
+    setting_name: Optional[str] = None
+
+
+def read_file(file_path):
+    with open(file_path, "r") as file:
+        file_contents = file.read()
+    return file_contents
+
+
+def set_settings_from_env_if_present(
+    settings_module, settings: List[Union[str, Setting]]
+):
+    """
+    Takes a list of strings or Setting named tuples, reads in the environment variable
+    with the same name for each and then sets the Django setting with the same name.
+
+    Use the Setting NamedTuple if you want to specify a parser for the env var or
+    a default value. Otherwise, just provide strings which match the env var/setting
+    name.
+    """
+
+    for s in settings:
+        if type(s) is str:
+            set_setting_from_env_if_present(settings_module, s, s)
+        else:
+            set_setting_from_env_if_present(
+                settings_module, s.name, s.setting_name or s.name, s.parser, s.default
+            )
+
+
+def set_setting_from_env_if_present(
+    settings_module,
+    env_var: str,
+    setting_name: str,
+    parser: Optional[Callable[[str], Any]] = None,
+    default: Any = None,
+):
+    value = os.getenv(env_var, None)
+    if value is not None and parser is not None:
+        value = parser(value)
+    elif value is None:
+        value = default
+
+    if value is not None:
+        settings_module[setting_name] = value
+
+
+def str_to_bool(s: str) -> bool:
+    return s.lower().strip() in ("y", "yes", "t", "true", "on", "1")
