@@ -340,7 +340,7 @@ docker run -it \
   backend-cmd-with-db manage dbshell
 ```
 
-# Stateless Deployment for Horizontal Scaling
+## Stateless Deployment for Horizontal Scaling
 
 This image can also be configured to deploy Baserow in a horizontally scalable way.
 We recommend you first consider using our `baserow/backend` and `baserow/web-frontend`
