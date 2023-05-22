@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix baserow internal connection errors resulting in server error shown when using ipv6 and",
+    "issue_number": 1740,
+    "bullet_points": [],
+    "created_at": "2023-05-17"
+}
