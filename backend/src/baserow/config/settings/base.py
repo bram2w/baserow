@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import json
 import os
 import re
 import sys
@@ -15,6 +16,12 @@ from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
+from baserow.config.settings.utils import (
+    Setting,
+    read_file,
+    set_settings_from_env_if_present,
+    str_to_bool,
+)
 from baserow.core.telemetry.utils import otel_is_enabled
 from baserow.version import VERSION
 
@@ -75,7 +82,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "djcelery_email",
-    "cachalot",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -91,41 +97,6 @@ INSTALLED_APPS = [
     *BASEROW_BUILT_IN_PLUGINS,
 ]
 
-
-CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "true") == "true"
-BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
-    "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
-)
-
-# Please avoid to add tables with more than 50 modifications per minute to this
-# list, as described here:
-# https://django-cachalot.readthedocs.io/en/latest/limits.html
-if BASEROW_CACHALOT_ONLY_CACHABLE_TABLES is None:
-    CACHALOT_ONLY_CACHABLE_TABLES = [
-        "core_settings",
-        "auth_user",
-        "core_userprofile",
-        "core_workspace",
-        "core_workspaceuser",
-        "database_token",
-        "database_tokenpermission",
-        "baserow_premium_license",
-        "baserow_premium_licenseuser",
-    ]
-else:
-    CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
-
-CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
-
-patch_cachalot_for_baserow()
-
-CELERY_SINGLETON_BACKEND_CLASS = (
-    "baserow.celery_singleton_backend.RedisBackendForSingleton"
-)
-
-# This flag enable automatic index creation for table views based on sortings.
-AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
-AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
@@ -272,6 +243,102 @@ CACHES = {
     },
 }
 
+
+def install_cachalot():
+    global CACHALOT_ONLY_CACHABLE_TABLES
+    global CACHALOT_UNCACHABLE_TABLES
+    global CACHALOT_TIMEOUT
+    global INSTALLED_APPS
+
+    INSTALLED_APPS.append("cachalot")
+
+    BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
+        "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+    )
+
+    # This list will have priority over CACHALOT_ONLY_CACHABLE_TABLES.
+    BASEROW_CACHALOT_UNCACHABLE_TABLES = os.getenv(
+        "BASEROW_CACHALOT_UNCACHABLE_TABLES", None
+    )
+
+    BASEROW_CACHALOT_MODE = os.getenv("BASEROW_CACHALOT_MODE", "default")
+
+    if BASEROW_CACHALOT_MODE == "full":
+        CACHALOT_ONLY_CACHABLE_TABLES = []
+
+    elif BASEROW_CACHALOT_ONLY_CACHABLE_TABLES:
+        # Please avoid to add tables with more than 50 modifications per minute
+        # to this list, as described here:
+        # https://django-cachalot.readthedocs.io/en/latest/limits.html
+        CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
+    else:
+        CACHALOT_ONLY_CACHABLE_TABLES = [
+            "auth_user",
+            "django_content_type",
+            "core_settings",
+            "core_userprofile",
+            "core_application",
+            "core_operation",
+            "core_template",
+            "core_trashentry",
+            "core_workspace",
+            "core_workspaceuser",
+            "core_workspaceuserinvitation",
+            "core_authprovidermodel",
+            "core_passwordauthprovidermodel",
+            "database_database",
+            "database_table",
+            "database_field",
+            "database_fieldependency",
+            "database_linkrowfield",
+            "database_selectoption",
+            "baserow_premium_license",
+            "baserow_premium_licenseuser",
+            "baserow_enterprise_role",
+            "baserow_enterprise_roleassignment",
+            "baserow_enterprise_team",
+            "baserow_enterprise_teamsubject",
+        ]
+
+    if BASEROW_CACHALOT_UNCACHABLE_TABLES:
+        CACHALOT_UNCACHABLE_TABLES += list(
+            filter(bool, BASEROW_CACHALOT_UNCACHABLE_TABLES.split(","))
+        )
+
+    CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
+
+    patch_cachalot_for_baserow()
+
+
+CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "false") == "true"
+CACHALOT_CACHE = "cachalot"
+CACHALOT_UNCACHABLE_TABLES = [
+    "django_migrations",
+    "core_action",
+    "database_token",
+    "baserow_enterprise_auditlogentry",
+]
+
+if CACHALOT_ENABLED:
+    install_cachalot()
+
+    CACHES[CACHALOT_CACHE] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": f"baserow-{CACHALOT_CACHE}-cache",
+        "VERSION": VERSION,
+    }
+
+
+CELERY_SINGLETON_BACKEND_CLASS = (
+    "baserow.celery_singleton_backend.RedisBackendForSingleton"
+)
+
+# This flag enable automatic index creation for table views based on sortings.
+AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
+AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
+
 # Should contain the database connection name of the database where the user tables
 # are stored. This can be different than the default database because there are not
 # going to be any relations between the application schema and the user schema.
@@ -405,7 +472,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.17.1",
+    "VERSION": "1.17.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -510,29 +577,144 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+# Allows accessing and setting values on a dictionary like an object. Using this
+# we can pass plugin authors and other functions a `settings` object which can modify
+# the settings like they expect (settings.SETTING = 'test') etc.
+
+
+class AttrDict(dict):
+    def __getattr__(self, item):
+        return super().__getitem__(item)
+
+    def __setattr__(self, item, value):
+        globals()[item] = value
+
+    def __setitem__(self, key, value):
+        globals()[key] = value
+
+
 # The storage must always overwrite existing files.
 DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
 
-# Optional S3 storage configuration
-if os.getenv("AWS_ACCESS_KEY_ID", "") != "":
+AWS_STORAGE_ENABLED = os.getenv("AWS_ACCESS_KEY_ID", "") != ""
+GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
+AZURE_STORAGE_ENABLED = os.getenv("AZURE_ACCOUNT_NAME", "") != ""
+
+ALL_STORAGE_ENABLED_VARS = [
+    AZURE_STORAGE_ENABLED,
+    GOOGLE_STORAGE_ENABLED,
+    AWS_STORAGE_ENABLED,
+]
+if sum(ALL_STORAGE_ENABLED_VARS) > 1:
+    raise ImproperlyConfigured(
+        "You have enabled more than one user file storage backend, please make sure "
+        "you set only one of AWS_ACCESS_KEY_ID, GS_BUCKET_NAME and AZURE_ACCOUNT_NAME."
+    )
+
+if AWS_STORAGE_ENABLED:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-    AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
-    AWS_S3_OBJECT_PARAMETERS = {
-        "CacheControl": "max-age=86400",
-    }
-    AWS_S3_FILE_OVERWRITE = True
-    AWS_DEFAULT_ACL = "public-read"
+    set_settings_from_env_if_present(
+        AttrDict(vars()),
+        [
+            "AWS_S3_SESSION_PROFILE",
+            "AWS_ACCESS_KEY_ID",
+            "AWS_SECRET_ACCESS_KEY",
+            "AWS_STORAGE_BUCKET_NAME",
+            Setting(
+                "AWS_S3_OBJECT_PARAMETERS",
+                parser=json.loads,
+                default={
+                    "CacheControl": "max-age=86400",
+                },
+            ),
+            Setting("AWS_DEFAULT_ACL", default="public-read"),
+            Setting("AWS_QUERYSTRING_AUTH", parser=str_to_bool),
+            Setting("AWS_S3_MAX_MEMORY_SIZE", parser=int),
+            Setting("AWS_QUERYSTRING_EXPIRE", parser=int),
+            Setting("AWS_S3_FILE_OVERWRITE", parser=str_to_bool, default=True),
+            "AWS_S3_URL_PROTOCOL",
+            "AWS_S3_REGION_NAME",
+            "AWS_S3_ENDPOINT_URL",
+            "AWS_S3_CUSTOM_DOMAIN",
+            "AWS_LOCATION",
+            Setting("AWS_IS_GZIPPED", parser=str_to_bool),
+            "GZIP_CONTENT_TYPES",
+            Setting("AWS_S3_USE_SSL", parser=str_to_bool),
+            Setting("AWS_S3_VERIFY", parser=str_to_bool),
+            Setting(
+                "AWS_SECRET_ACCESS_KEY_FILE_PATH",
+                setting_name="AWS_SECRET_ACCESS_KEY",
+                parser=read_file,
+            ),
+            "AWS_S3_ADDRESSING_STYLE",
+            Setting("AWS_S3_PROXIES", parser=json.loads),
+            "AWS_S3_SIGNATURE_VERSION",
+            Setting("AWS_CLOUDFRONT_KEY", parser=lambda s: s.encode("ascii")),
+            "AWS_CLOUDFRONT_KEY_ID",
+        ],
+    )
 
-if os.getenv("AWS_S3_REGION_NAME", "") != "":
-    AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME")
 
-if os.getenv("AWS_S3_ENDPOINT_URL", "") != "":
-    AWS_S3_ENDPOINT_URL = os.getenv("AWS_S3_ENDPOINT_URL")
+if GOOGLE_STORAGE_ENABLED:
+    from google.oauth2 import service_account
 
-if os.getenv("AWS_S3_CUSTOM_DOMAIN", "") != "":
-    AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
+    # See https://django-storages.readthedocs.io/en/latest/backends/gcloud.html for
+    # details on what these env variables do
+
+    DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    set_settings_from_env_if_present(
+        AttrDict(vars()),
+        [
+            "GS_BUCKET_NAME",
+            "GS_PROJECT_ID",
+            Setting("GS_IS_GZIPPED", parser=str_to_bool),
+            "GZIP_CONTENT_TYPES",
+            Setting("GS_DEFAULT_ACL", default="publicRead"),
+            Setting("GS_QUERYSTRING_AUTH", parser=str_to_bool),
+            Setting("GS_FILE_OVERWRITE", parser=str_to_bool),
+            Setting("GS_MAX_MEMORY_SIZE", parser=int),
+            Setting("GS_BLOB_CHUNK_SIZE", parser=int),
+            Setting("GS_OBJECT_PARAMETERS", parser=json.loads),
+            "GS_CUSTOM_ENDPOINT",
+            "GS_LOCATION",
+            Setting("GS_EXPIRATION", parser=int),
+            Setting(
+                "GS_CREDENTIALS_FILE_PATH",
+                setting_name="GS_CREDENTIALS",
+                parser=service_account.Credentials.from_service_account_file,
+            ),
+        ],
+    )
+
+if AZURE_STORAGE_ENABLED:
+    DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+    set_settings_from_env_if_present(
+        AttrDict(vars()),
+        [
+            "AZURE_ACCOUNT_NAME",
+            "AZURE_ACCOUNT_KEY",
+            Setting(
+                "AZURE_ACCOUNT_KEY_FILE_PATH",
+                setting_name="AZURE_ACCOUNT_KEY",
+                parser=read_file,
+            ),
+            "AZURE_CONTAINER",
+            Setting("AZURE_SSL", parser=str_to_bool),
+            Setting("AZURE_UPLOAD_MAX_CONN", parser=int),
+            Setting("AZURE_CONNECTION_TIMEOUT_SECS", parser=int),
+            Setting("AZURE_URL_EXPIRATION_SECS", parser=int),
+            Setting("AZURE_OVERWRITE_FILES", parser=str_to_bool),
+            "AZURE_LOCATION",
+            "AZURE_ENDPOINT_SUFFIX",
+            "AZURE_CUSTOM_DOMAIN",
+            "AZURE_CONNECTION_STRING",
+            "AZURE_TOKEN_CREDENTIAL",
+            "AZURE_CACHE_CONTROL",
+            Setting("AZURE_OBJECT_PARAMETERS", parser=json.loads),
+            "AZURE_API_VERSION",
+        ],
+    )
+
 
 BASEROW_PUBLIC_URL = os.getenv("BASEROW_PUBLIC_URL")
 if BASEROW_PUBLIC_URL:
@@ -901,17 +1083,6 @@ MAX_NUMBER_CALENDAR_DAYS = 45
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini
 TESTS = False
-
-
-# Allows accessing and setting values on a dictionary like an object. Using this
-# we can pass plugin authors a `settings` object which can modify the settings like
-# they expect (settings.SETTING = 'test') etc.
-class AttrDict(dict):
-    def __getattr__(self, item):
-        return super().__getitem__(item)
-
-    def __setattr__(self, item, value):
-        globals()[item] = value
 
 
 for plugin in [*BASEROW_BUILT_IN_PLUGINS, *BASEROW_BACKEND_PLUGIN_NAMES]:

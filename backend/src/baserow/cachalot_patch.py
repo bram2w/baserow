@@ -1,10 +1,14 @@
 from contextlib import contextmanager
 from functools import wraps
 
+from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.db.transaction import get_connection
 
 from cachalot import utils as cachalot_utils
 from cachalot.settings import cachalot_settings
+from django_redis import get_redis_connection
+from loguru import logger
 from psycopg2.sql import Composed
 
 
@@ -44,15 +48,37 @@ def patch_cachalot_for_baserow():
     cached.
     """
 
-    from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
+    from baserow.contrib.database.table.constants import (
+        LINK_ROW_THROUGH_TABLE_PREFIX,
+        MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX,
+        MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
+        USER_TABLE_DATABASE_NAME_PREFIX,
+    )
 
     original_filter_cachable = cachalot_utils.filter_cachable
-    baserow_table_name_prefix = USER_TABLE_DATABASE_NAME_PREFIX
+
+    # remove the last character from the prefix to make sure we match the
+    # baserow table names as we split the table name by the last underscore
+    baserow_table_names_prefixes = set(
+        [
+            USER_TABLE_DATABASE_NAME_PREFIX[:-1],
+            LINK_ROW_THROUGH_TABLE_PREFIX[:-1],
+            MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX[:-1],
+            MULTIPLE_SELECT_THROUGH_TABLE_PREFIX[:-1],
+        ]
+    )
+
+    def is_baserow_table(table_name):
+        uncachable_tables = getattr(settings, "CACHALOT_UNCACHABLE_TABLES", [])
+        return (
+            table_name not in uncachable_tables
+            and table_name.rsplit("_", 1)[0] in baserow_table_names_prefixes
+        )
 
     @wraps(original_filter_cachable)
     def patched_filter_cachable(tables):
         return original_filter_cachable(tables).union(
-            set(filter(lambda t: t.startswith(baserow_table_name_prefix), tables))
+            set(filter(is_baserow_table, tables))
         )
 
     cachalot_utils.filter_cachable = patched_filter_cachable
@@ -61,8 +87,7 @@ def patch_cachalot_for_baserow():
 
     @wraps(original_is_cachable)
     def patched_is_cachable(table):
-        is_baserow_table = table.startswith(baserow_table_name_prefix)
-        return is_baserow_table or original_is_cachable(table)
+        return is_baserow_table(table) or original_is_cachable(table)
 
     cachalot_utils.is_cachable = patched_is_cachable
 
@@ -84,9 +109,7 @@ def patch_cachalot_for_baserow():
 
         cachalot_enabled = getattr(LOCAL_STORAGE, "cachalot_enabled", False)
         if cachalot_enabled:
-            tables = set(
-                t for t in tables if not t.startswith(baserow_table_name_prefix)
-            )
+            tables = set(filter(lambda t: not is_baserow_table(t), tables))
         return original_are_all_cachable(tables)
 
     cachalot_utils.are_all_cachable = patched_are_all_cachable
@@ -102,3 +125,48 @@ def patch_cachalot_for_baserow():
         return self.as_string(cursor.cursor).lower()
 
     Composed.lower = lower
+
+
+def clear_cachalot_cache():
+    """
+    This function clears the cachalot cache. It can be used in the tests to make
+    sure that the cache is cleared between tests or as post_migrate receiver to
+    ensure to start with a clean cache after migrations.
+    """
+
+    from django.conf import settings
+    from django.core.cache import caches
+
+    logger.info("Clearing cachalot cache")
+    try:
+        cachalot_cache = caches[settings.CACHALOT_CACHE]
+    except KeyError:
+        raise ImproperlyConfigured(
+            f"Could not find the {settings.CACHALOT_CACHE} cache."
+        )
+
+    if settings.TESTS:
+        cachalot_cache.clear()
+    else:
+        key_prefix = settings.CACHES[settings.CACHALOT_CACHE]["KEY_PREFIX"]
+
+        count = _delete_pattern(key_prefix)
+
+        logger.info(f"Done clearing cachalot cache, cleared {count} entries.")
+
+
+def _delete_pattern(key_prefix: str) -> int:
+    """
+    Allows deleting every redis key that matches a pattern. Copied from the
+    django-redis implementation but modified to allow deleting all versions in the
+    cache at once.
+    """
+
+    client = get_redis_connection("default")
+    count = 0
+    pipeline = client.pipeline()
+    for key in client.scan_iter(match=f"{key_prefix}*", count=1000):
+        pipeline.delete(key)
+        count += 1
+    pipeline.execute()
+    return count

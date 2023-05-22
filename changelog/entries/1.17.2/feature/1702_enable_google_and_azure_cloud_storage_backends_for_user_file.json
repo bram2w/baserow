@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Enable google and azure cloud storage backends for user file uploads and expose more S3 configuration env vars.",
+    "issue_number": 1702,
+    "bullet_points": [],
+    "created_at": "2023-05-02"
+}

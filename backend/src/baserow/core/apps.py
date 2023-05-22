@@ -1,9 +1,11 @@
 from django.apps import AppConfig
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import post_migrate
+from django.db.models.signals import post_migrate, pre_migrate
 
 from health_check.storage.backends import DefaultFileStorageHealthCheck
+
+from baserow.cachalot_patch import clear_cachalot_cache
 
 
 class CoreConfig(AppConfig):
@@ -254,6 +256,9 @@ class CoreConfig(AppConfig):
         post_migrate.connect(start_sync_templates_task_after_migrate, sender=self)
         # Create all operations from registry
         post_migrate.connect(sync_operations_after_migrate, sender=self)
+
+        if settings.CACHALOT_ENABLED:
+            pre_migrate.connect(lambda *a, **kw: clear_cachalot_cache(), sender=self)
 
     def _setup_health_checks(self):
         from health_check.plugins import plugin_dir

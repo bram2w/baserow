@@ -1,5 +1,20 @@
 # Changelog
 
+## Released 1.17.2
+
+### New features
+* Add new view filter type for dates 'is within x days', 'is within x weeks' and 'is within x months' [#1094](https://gitlab.com/baserow/baserow/-/issues/1094)
+* Enable google and azure cloud storage backends for user file uploads and expose more S3 configuration env vars. [#1702](https://gitlab.com/baserow/baserow/-/issues/1702)
+
+### Bug fixes
+* Allow the use of longer Airtable share ids for import [#1132](https://gitlab.com/baserow/baserow/-/issues/1132)
+* fix baserow internal connection errors resulting in server error shown when using ipv6 and [#1740](https://gitlab.com/baserow/baserow/-/issues/1740)
+
+### Refactors
+* Update vue-chartjs [#1683](https://gitlab.com/baserow/baserow/-/issues/1683)
+* Turn cachalot off by default controlled by BASEROW_CACHALOT_ENABLED=true/false and ensure cachalot is in its own separate django cache which is cleared before migrations. [#1739](https://gitlab.com/baserow/baserow/-/issues/1739)
+
+
 ## Released 1.17.1
 
 ### Bug fixes

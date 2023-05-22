@@ -1,2 +1,5 @@
 TABLE_CREATION = "import-create-table"
 USER_TABLE_DATABASE_NAME_PREFIX = "database_table_"
+MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX = "database_multiplecollaborators_"
+LINK_ROW_THROUGH_TABLE_PREFIX = "database_relation_"
+MULTIPLE_SELECT_THROUGH_TABLE_PREFIX = "database_multipleselect_"

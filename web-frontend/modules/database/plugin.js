@@ -45,6 +45,9 @@ import {
   DateEqualsTodayViewFilterType,
   DateBeforeTodayViewFilterType,
   DateAfterTodayViewFilterType,
+  DateWithinDaysViewFilterType,
+  DateWithinWeeksViewFilterType,
+  DateWithinMonthsViewFilterType,
   DateEqualsDaysAgoViewFilterType,
   DateEqualsMonthsAgoViewFilterType,
   DateEqualsYearsAgoViewFilterType,
@@ -278,6 +281,18 @@ export default (context) => {
   app.$registry.register(
     'viewFilter',
     new DateAfterTodayViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateWithinDaysViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateWithinWeeksViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
+    new DateWithinMonthsViewFilterType(context)
   )
   app.$registry.register(
     'viewFilter',

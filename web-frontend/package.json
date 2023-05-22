@@ -1,6 +1,6 @@
 {
   "name": "baserow",
-  "version": "1.17.1",
+  "version": "1.17.2",
   "private": true,
   "description": "Baserow: open source no-code database web frontend.",
   "author": "Bram Wiepjes (Baserow)",
@@ -33,7 +33,8 @@
     "async-mutex": "0.4.0",
     "axios": "1.3.5",
     "bignumber.js": "9.1.1",
-    "chart.js": "2.9.4",
+    "chart.js": "3.9.1",
+    "chartjs-adapter-moment": "1.0.1",
     "cookie-universal-nuxt": "2.2.2",
     "cross-env": "^7.0.2",
     "jwt-decode": "^3.1.2",
@@ -51,7 +52,7 @@
     "sass-loader": "10.4.1",
     "thenby": "^1.3.4",
     "uuid": "9.0.0",
-    "vue-chartjs": "^3.5.1",
+    "vue-chartjs": "4.1.2",
     "vuejs-datepicker": "1.6.2",
     "vuelidate": "0.7.7"
   },
