@@ -37,12 +37,20 @@ CACHES = {
         "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",  # noqa: F405
         "VERSION": None,
     },
+    CACHALOT_CACHE: {  # noqa: F405
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "KEY_PREFIX": f"baserow-{CACHALOT_CACHE}-cache",  # noqa: F405
+        "VERSION": None,
+    },
 }
 
 # Disable the default throttle classes because ConcurrentUserRequestsThrottle is
 # using redis and it will cause errors when running the tests.
 # Look into tests.baserow.api.test_api_utils.py if you need to test the throttle
 REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []  # noqa: F405
+
+if "cachalot" not in INSTALLED_APPS:  # noqa: F405
+    install_cachalot()  # noqa: F405
 
 CACHALOT_ENABLED = False
 AUTO_INDEX_VIEW_ENABLED = False

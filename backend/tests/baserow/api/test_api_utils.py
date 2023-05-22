@@ -445,7 +445,10 @@ def create_dummy_request(user, path="/api/user/dashboard"):
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     BASEROW_CONCURRENT_USER_REQUESTS_THROTTLE_TIMEOUT=30,
 )
 @patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
@@ -481,13 +484,14 @@ def test_concurrent_user_requests_throttle_non_staff_authenticated_users(data_fi
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
-@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
 @pytest.mark.django_db
-def test_concurrent_user_requests_does_not_throttle_staff_users(
-    mock_init_redis_cli, data_fixture
-):
+def test_concurrent_user_requests_does_not_throttle_staff_users(data_fixture):
     user = data_fixture.create_user(is_staff=True)
     ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
     ConcurrentUserRequestsThrottle.rate = 1
@@ -506,7 +510,10 @@ def test_concurrent_user_requests_does_not_throttle_staff_users(
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     MIDDLEWARE=[
         *settings.MIDDLEWARE,
         "baserow.middleware.ConcurrentUserRequestsMiddleware",
@@ -538,11 +545,14 @@ def test_throttle_set_baserow_concurrency_throttle_request_id_and_middleware_can
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
-@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
 @pytest.mark.django_db
-def test_can_set_per_user_profile_custom_limt(mock_init_redis_cli, data_fixture):
+def test_can_set_per_user_profile_custom_limt(data_fixture):
     user = data_fixture.create_user(concurrency_limit=-1)
     assert user.profile.concurrency_limit == -1
     ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
@@ -562,13 +572,14 @@ def test_can_set_per_user_profile_custom_limt(mock_init_redis_cli, data_fixture)
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
-@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
 @pytest.mark.django_db
-def test_can_set_throttle_per_user_profile_custom_limit(
-    mock_init_redis_cli, data_fixture
-):
+def test_can_set_throttle_per_user_profile_custom_limit(data_fixture):
     user = data_fixture.create_user(concurrency_limit=1)
     ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
     ConcurrentUserRequestsThrottle.rate = 20
@@ -587,11 +598,14 @@ def test_can_set_throttle_per_user_profile_custom_limit(
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
-@patch("baserow.throttling.ConcurrentUserRequestsThrottle._init_redis_cli")
+@patch("baserow.throttling._get_redis_cli", lambda: FakeRedis(server=fake_redis_server))
 @pytest.mark.django_db
-def test_anon_user_works(mock_init_redis_cli, data_fixture):
+def test_anon_user_works(data_fixture):
     user = AnonymousUser()
     ConcurrentUserRequestsThrottle.timer = lambda s: time.time()
     ConcurrentUserRequestsThrottle.rate = 20

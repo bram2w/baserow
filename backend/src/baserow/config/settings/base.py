@@ -82,7 +82,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "djcelery_email",
-    "cachalot",
     "health_check",
     "health_check.db",
     "health_check.cache",
@@ -98,41 +97,6 @@ INSTALLED_APPS = [
     *BASEROW_BUILT_IN_PLUGINS,
 ]
 
-
-CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "true") == "true"
-BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
-    "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
-)
-
-# Please avoid to add tables with more than 50 modifications per minute to this
-# list, as described here:
-# https://django-cachalot.readthedocs.io/en/latest/limits.html
-if BASEROW_CACHALOT_ONLY_CACHABLE_TABLES is None:
-    CACHALOT_ONLY_CACHABLE_TABLES = [
-        "core_settings",
-        "auth_user",
-        "core_userprofile",
-        "core_workspace",
-        "core_workspaceuser",
-        "database_token",
-        "database_tokenpermission",
-        "baserow_premium_license",
-        "baserow_premium_licenseuser",
-    ]
-else:
-    CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
-
-CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
-
-patch_cachalot_for_baserow()
-
-CELERY_SINGLETON_BACKEND_CLASS = (
-    "baserow.celery_singleton_backend.RedisBackendForSingleton"
-)
-
-# This flag enable automatic index creation for table views based on sortings.
-AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
-AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
@@ -278,6 +242,102 @@ CACHES = {
         "VERSION": None,
     },
 }
+
+
+def install_cachalot():
+    global CACHALOT_ONLY_CACHABLE_TABLES
+    global CACHALOT_UNCACHABLE_TABLES
+    global CACHALOT_TIMEOUT
+    global INSTALLED_APPS
+
+    INSTALLED_APPS.append("cachalot")
+
+    BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
+        "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+    )
+
+    # This list will have priority over CACHALOT_ONLY_CACHABLE_TABLES.
+    BASEROW_CACHALOT_UNCACHABLE_TABLES = os.getenv(
+        "BASEROW_CACHALOT_UNCACHABLE_TABLES", None
+    )
+
+    BASEROW_CACHALOT_MODE = os.getenv("BASEROW_CACHALOT_MODE", "default")
+
+    if BASEROW_CACHALOT_MODE == "full":
+        CACHALOT_ONLY_CACHABLE_TABLES = []
+
+    elif BASEROW_CACHALOT_ONLY_CACHABLE_TABLES:
+        # Please avoid to add tables with more than 50 modifications per minute
+        # to this list, as described here:
+        # https://django-cachalot.readthedocs.io/en/latest/limits.html
+        CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
+    else:
+        CACHALOT_ONLY_CACHABLE_TABLES = [
+            "auth_user",
+            "django_content_type",
+            "core_settings",
+            "core_userprofile",
+            "core_application",
+            "core_operation",
+            "core_template",
+            "core_trashentry",
+            "core_workspace",
+            "core_workspaceuser",
+            "core_workspaceuserinvitation",
+            "core_authprovidermodel",
+            "core_passwordauthprovidermodel",
+            "database_database",
+            "database_table",
+            "database_field",
+            "database_fieldependency",
+            "database_linkrowfield",
+            "database_selectoption",
+            "baserow_premium_license",
+            "baserow_premium_licenseuser",
+            "baserow_enterprise_role",
+            "baserow_enterprise_roleassignment",
+            "baserow_enterprise_team",
+            "baserow_enterprise_teamsubject",
+        ]
+
+    if BASEROW_CACHALOT_UNCACHABLE_TABLES:
+        CACHALOT_UNCACHABLE_TABLES += list(
+            filter(bool, BASEROW_CACHALOT_UNCACHABLE_TABLES.split(","))
+        )
+
+    CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
+
+    patch_cachalot_for_baserow()
+
+
+CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "false") == "true"
+CACHALOT_CACHE = "cachalot"
+CACHALOT_UNCACHABLE_TABLES = [
+    "django_migrations",
+    "core_action",
+    "database_token",
+    "baserow_enterprise_auditlogentry",
+]
+
+if CACHALOT_ENABLED:
+    install_cachalot()
+
+    CACHES[CACHALOT_CACHE] = {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": REDIS_URL,
+        "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
+        "KEY_PREFIX": f"baserow-{CACHALOT_CACHE}-cache",
+        "VERSION": VERSION,
+    }
+
+
+CELERY_SINGLETON_BACKEND_CLASS = (
+    "baserow.celery_singleton_backend.RedisBackendForSingleton"
+)
+
+# This flag enable automatic index creation for table views based on sortings.
+AUTO_INDEX_VIEW_ENABLED = os.getenv("BASEROW_AUTO_INDEX_VIEW_ENABLED", "true") == "true"
+AUTO_INDEX_LOCK_EXPIRY = os.getenv("BASEROW_AUTO_INDEX_LOCK_EXPIRY", 60 * 2)
 
 # Should contain the database connection name of the database where the user tables
 # are stored. This can be different than the default database because there are not

@@ -18,6 +18,11 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.mixins import ParentFieldTrashableModelMixin
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
+from baserow.contrib.database.table.constants import (
+    LINK_ROW_THROUGH_TABLE_PREFIX,
+    MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX,
+    MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
+)
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
     JobWithUserIpAddress,
@@ -302,7 +307,7 @@ class CreatedOnField(Field, BaseDateMixin):
 
 
 class LinkRowField(Field):
-    THROUGH_DATABASE_TABLE_PREFIX = "database_relation_"
+    THROUGH_DATABASE_TABLE_PREFIX = LINK_ROW_THROUGH_TABLE_PREFIX
     link_row_table = models.ForeignKey(
         "database.Table",
         on_delete=models.CASCADE,
@@ -360,7 +365,7 @@ class SingleSelectField(Field):
 
 
 class MultipleSelectField(Field):
-    THROUGH_DATABASE_TABLE_PREFIX = "database_multipleselect_"
+    THROUGH_DATABASE_TABLE_PREFIX = MULTIPLE_SELECT_THROUGH_TABLE_PREFIX
 
     @property
     def through_table_name(self):
@@ -555,7 +560,7 @@ class LookupField(FormulaField):
 
 
 class MultipleCollaboratorsField(Field):
-    THROUGH_DATABASE_TABLE_PREFIX = "database_multiplecollaborators_"
+    THROUGH_DATABASE_TABLE_PREFIX = MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX
 
     @property
     def through_table_name(self):

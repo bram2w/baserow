@@ -20,6 +20,13 @@ MIDDLEWARE += [  # noqa: F405
     "silk.middleware.SilkyMiddleware",
 ]
 
+CACHALOT_UNCACHABLE_TABLES += [  # noqa: F405
+    "silk_request",
+    "silk_response",
+    "silk_sqlquery",
+    "silk_profile",
+]
+
 # Set this env var to any non-blank value in your dev env so django-silk will EXPLAIN
 # all queries run.
 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! MASSIVE WARNING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
