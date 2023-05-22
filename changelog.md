@@ -4,6 +4,7 @@
 
 ### New features
 * Add new view filter type for dates 'is within x days', 'is within x weeks' and 'is within x months' [#1094](https://gitlab.com/baserow/baserow/-/issues/1094)
+* Enable google and azure cloud storage backends for user file uploads and expose more S3 configuration env vars. [#1702](https://gitlab.com/baserow/baserow/-/issues/1702)
 
 ### Bug fixes
 * Allow the use of longer Airtable share ids for import [#1132](https://gitlab.com/baserow/baserow/-/issues/1132)
@@ -30,7 +31,6 @@
 * Add a concurrent user requests rate limiter [#1673](https://gitlab.com/baserow/baserow/-/issues/1673)
 * Update of backend dependencies [#1674](https://gitlab.com/baserow/baserow/-/issues/1674)
 * use otel baggage to enhance every span with useful info [#1700](https://gitlab.com/baserow/baserow/-/issues/1700)
-* Enable google and azure cloud storage backends for user file uploads and expose more S3 configuration env vars. [#1702](https://gitlab.com/baserow/baserow/-/issues/1702)
 * Add the `datetime_format_tz` function to format dates in different timezones. [#1719](https://gitlab.com/baserow/baserow/-/issues/1719)
 * support formula date fields in the calendar view [#1732](https://gitlab.com/baserow/baserow/-/issues/1732)
 * Add a new admin health check page for seeing the status of your Baserow server. [#521](https://gitlab.com/baserow/baserow/-/issues/521)
