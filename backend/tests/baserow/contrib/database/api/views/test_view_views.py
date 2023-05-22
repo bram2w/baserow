@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.shortcuts import reverse
@@ -1018,7 +1019,10 @@ fake_redis_server = FakeServer()
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}}
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
 @patch(
     "django_redis.get_redis_connection",

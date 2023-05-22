@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import override_settings
 
@@ -2771,7 +2772,10 @@ fake_redis_server = FakeServer()
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -2806,7 +2810,10 @@ def test_creating_view_sort_creates_a_new_index(data_fixture):
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -2871,7 +2878,10 @@ def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -2918,7 +2928,10 @@ def test_perm_deleting_view_remove_index_if_unused(data_fixture):
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -2954,7 +2967,10 @@ def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -2989,7 +3005,10 @@ def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
     AUTO_INDEX_VIEW_ENABLED=True,
 )
 @patch(
@@ -3026,7 +3045,10 @@ def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_i
 
 
 @override_settings(
-    CACHES={"default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"}},
+    CACHES={
+        **settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    },
 )
 @patch(
     "django_redis.get_redis_connection",
@@ -3061,6 +3083,8 @@ def test_loading_a_view_checks_for_db_index_without_additional_queries(
 
     with django_assert_num_queries(0):
         ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
+
+    assert mocked_view_index_update_task.call_count == 0
 
     with override_settings(AUTO_INDEX_VIEW_ENABLED=True), django_assert_num_queries(0):
         ViewIndexingHandler.schedule_index_creation_if_needed(view, model)

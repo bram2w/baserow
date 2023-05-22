@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Turn cachalot off by default controlled by BASEROW_CACHALOT_ENABLED=true/false and ensure cachalot is in its own separate django cache which is cleared before migrations.",
+    "issue_number": 1739,
+    "bullet_points": [],
+    "created_at": "2023-05-17"
+}
