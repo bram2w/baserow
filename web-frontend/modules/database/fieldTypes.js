@@ -1,6 +1,7 @@
 import BigNumber from 'bignumber.js'
 
 import moment from '@baserow/modules/core/moment'
+import guessFormat from 'moment-guess'
 import {
   isNumeric,
   isSimplePhoneNumber,
@@ -1454,31 +1455,62 @@ class BaseDateFieldType extends FieldType {
     return DateFieldType.formatDate(field, dateValue)
   }
 
-  static parseDate(field, dateString) {
-    const value = dateString.toUpperCase()
+  /**
+   * Tries to return the minimum amount of date formats that are needed to parse
+   * a given date string.
+   * @param {*} field the date field
+   * @param {*} value the date string to parse
+   * @returns List of date formats
+   */
+  static getDateFormatsOptionsForValue(field, value) {
+    let formats = [moment.ISO_8601]
 
-    // Formats for ISO dates
-    let formats = [
-      moment.ISO_8601,
-      'YYYY-MM-DD hh:mm A',
-      'YYYY-MM-DD HH:mm',
-      'YYYY-MM-DD',
-    ]
-    // Formats for EU dates
-    const EUFormat = ['DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY']
-    // Formats for US dates
-    const USFormat = ['MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm', 'MM/DD/YYYY']
+    const timeFormats = value.includes(':')
+      ? ['', ' H:m', ' H:m A', ' H:m:s', ' H:m:s A']
+      : ['']
 
-    // Interpret the pasted date based on the field's current date format
-    if (field.date_format === 'EU') {
-      formats = formats.concat(EUFormat).concat(USFormat)
-    } else if (field.date_format === 'US') {
-      formats = formats.concat(USFormat).concat(EUFormat)
+    const getDateTimeFormatsFor = (...dateFormats) => {
+      return dateFormats.flatMap((df) => timeFormats.map((tf) => `${df}${tf}`))
     }
 
-    const date = moment.utc(value, formats, true)
+    const containsDash = value.includes('-')
+    const s = containsDash ? '-' : '/'
+
+    const usFieldFormats = getDateTimeFormatsFor(
+      `M${s}D${s}YYYY`,
+      `YYYY${s}D${s}M`
+    )
+    const euFieldFormats = getDateTimeFormatsFor(
+      `D${s}M${s}YYYY`,
+      `YYYY${s}M${s}D`
+    )
+    if (field.date_format === 'US') {
+      formats = formats.concat(usFieldFormats).concat(euFieldFormats)
+    } else {
+      formats = formats.concat(euFieldFormats).concat(usFieldFormats)
+    }
+    return formats
+  }
+
+  static parseDate(field, dateString) {
+    const formats = DateFieldType.getDateFormatsOptionsForValue(
+      field,
+      dateString
+    )
+
+    let date = moment.utc(dateString, formats, true)
     if (!date.isValid()) {
-      return null
+      // guessFormat can understand different separators and many more formats,
+      // so let's give it a chance to guess the date from dateString.
+      try {
+        const guessedFormats = guessFormat(dateString)
+        date = moment.utc(dateString, guessedFormats, true)
+      } catch (e) {
+        // date will still be invalid
+      }
+      if (!date.isValid()) {
+        return null
+      }
     }
     const timezone = getFieldTimezone(field)
     if (timezone) {
