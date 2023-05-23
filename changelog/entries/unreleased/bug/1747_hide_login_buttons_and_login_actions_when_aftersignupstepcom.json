@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Hide login buttons and login actions when afterSignupStepComponents are being displayed",
+    "issue_number": 1747,
+    "bullet_points": [],
+    "created_at": "2023-05-23"
+}
