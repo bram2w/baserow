@@ -270,7 +270,6 @@ const datePrepareValueForPaste = [
     },
     expectedValue: '2021-04-16',
   },
-
   // Date field with US format
   {
     fieldValue: '04/12/2021',

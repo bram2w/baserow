@@ -41,6 +41,7 @@
     "lodash": "^4.17.21",
     "markdown-it": "13.0.1",
     "moment": "2.29.4",
+    "moment-guess": "^1.2.4",
     "moment-timezone": "0.5.43",
     "node-sass": "8.0.0",
     "normalize-scss": "^7.0.1",
