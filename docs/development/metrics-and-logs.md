@@ -200,6 +200,18 @@ Read [this](https://opentelemetry.io/docs/instrumentation/python/manual/#creatin
 for all of the available types of metrics you can use, but a simple example is shown
 below:
 
+> Important: Any attributes you add to metric will result in a brand-new event being
+> send per periodic metric send for that specific combination of metric and attributes.
+> You must make sure that any attributes added will have only a constant possible number
+> of values and a small number of them. This is to prevent an ever-increasing number of
+> metric events being sent to the server.
+> 
+> For example, below if we called `counter.add(1, {"table_id":table.id})` OTEL will
+> send a metric data point for every single table it has seen **every single sync**
+> resulting in an ever-increasing number of metric events being sent. However, if instead
+> the attribute we added was something like "bulk_created": True or False this is fine
+> as there are only two possible values.
+
 ```python
 from opentelemetry import metrics
 
@@ -214,11 +226,7 @@ def create_row(table):
     # create some row
     # keep track of how many have been made!
     rows_created_counter.add(
-        1,
-        {
-            "baserow.table_id": table.id,
-            "baserow.database_id": table.database_id,
-        },
+        1
     )
 
 ```

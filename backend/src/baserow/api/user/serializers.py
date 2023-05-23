@@ -267,7 +267,7 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         user = get_user_from_token(attrs["refresh"], RefreshToken)
         data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
-        token_refreshes_counter.add(1, {"baserow.user_id": user.id})
+        token_refreshes_counter.add(1)
         return data
 
 
