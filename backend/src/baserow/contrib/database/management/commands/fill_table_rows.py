@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from collections import defaultdict
 from decimal import Decimal
 from math import ceil
@@ -48,6 +49,7 @@ class Command(BaseCommand):
         concurrency = options["concurrency"]
         batch_size = options["batch_size"]
 
+        tick = time.time()
         if concurrency == 1:
             try:
                 table = Table.objects.get(pk=table_id)
@@ -73,7 +75,12 @@ class Command(BaseCommand):
                 ],
                 concurrency,
             )
-        self.stdout.write(self.style.SUCCESS(f"{limit} rows have been inserted."))
+        tock = time.time()
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"{limit} rows have been inserted in {(tock - tick):.1f} seconds."
+            )
+        )
 
 
 def create_row_instance_and_relations(model, fake, cache, order):
@@ -118,7 +125,7 @@ def create_many_to_many_relations(model, rows):
                 if type(field) is not ForeignKey:
                     continue
 
-                if field.remote_field.model == model:
+                if field.remote_field.model == model and not row_column:
                     row_column = field.get_attname_column()[1]
                 else:
                     value_column = field.get_attname_column()[1]
@@ -135,7 +142,12 @@ def create_many_to_many_relations(model, rows):
 
     for field_name, values in many_to_many.items():
         through = getattr(model, field_name).through
-        through.objects.bulk_create(values)
+        through.objects.bulk_create(values, batch_size=1000)
+
+
+def bulk_create_rows(model, rows):
+    model.objects.bulk_create([row for (row, _) in rows], batch_size=1000)
+    create_many_to_many_relations(model, rows)
 
 
 def fill_table_rows(limit, table, batch_size=-1):
@@ -161,7 +173,5 @@ def fill_table_rows(limit, table, batch_size=-1):
                 rows.append((instance, relations))
                 pbar.update(1)
 
-            # First create the rows in bulk because that's more efficient than
-            # creating them one by one.
-            model.objects.bulk_create([row for (row, _) in rows])
-            create_many_to_many_relations(model, rows)
+            pbar.refresh()
+            bulk_create_rows(model, rows)
