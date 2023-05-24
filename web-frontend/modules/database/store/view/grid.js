@@ -1758,10 +1758,25 @@ export const actions = {
 
     // Based on the data, we can figure out in which cells we must paste. Here we find
     // the maximum tail indexes.
-    const rowTailIndex =
+    let rowTailIndex =
       Math.min(getters.getCount, rowHeadIndex + textData.length) - 1
     const fieldTailIndex =
       Math.min(fields.length, fieldHeadIndex + textData[0].length) - 1
+    const newRowsCount = textData.length - (rowTailIndex - rowHeadIndex + 1)
+
+    // Create extra missing rows
+    if (newRowsCount > 0) {
+      await dispatch('createNewRows', {
+        view,
+        table,
+        fields,
+        rows: Array.from(Array(newRowsCount), (element, index) => {
+          return {}
+        }),
+        selectPrimaryCell: false,
+      })
+      rowTailIndex = rowTailIndex + newRowsCount
+    }
 
     // Expand the selection of the multiple select to the cells that we're going to
     // paste in, so the user can see which values have been updated. This is because
