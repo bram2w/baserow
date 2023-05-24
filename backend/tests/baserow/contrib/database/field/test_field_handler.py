@@ -1342,3 +1342,88 @@ def test_when_public_field_updated_number_of_queries_does_not_increase_with_amou
 
     with django_assert_num_queries(len(captured.captured_queries)):
         FieldHandler().update_field(user, visible_field, name="abc")
+
+
+@pytest.mark.django_db
+def test_new_select_options_are_used_when_duplicating_single_select_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_single_select_field(table=table)
+
+    handler = FieldHandler()
+
+    handler.update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+        ],
+    )
+
+    original_select_options = list(field.select_options.all())
+
+    RowHandler().create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{field.id}": original_select_options[0].id,
+            },
+            {
+                f"field_{field.id}": original_select_options[1].id,
+            },
+        ],
+    )
+
+    dup_field, _ = handler.duplicate_field(field=field, user=user, duplicate_data=True)
+
+    for row in table.get_model().objects.all():
+        assert getattr(row, f"field_{field.pk}") != getattr(
+            row, f"field_{dup_field.pk}"
+        )
+
+
+@pytest.mark.django_db
+def test_new_select_options_are_used_when_duplicating_multiple_select_field(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_multiple_select_field(table=table)
+
+    handler = FieldHandler()
+
+    handler.update_field_select_options(
+        field=field,
+        user=user,
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+        ],
+    )
+
+    original_select_options = list(field.select_options.all())
+
+    RowHandler().create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{field.id}": [
+                    original_select_options[0].id,
+                    original_select_options[1].id,
+                ],
+            },
+            {
+                f"field_{field.id}": [original_select_options[1].id],
+            },
+        ],
+    )
+
+    dup_field, _ = handler.duplicate_field(field=field, user=user, duplicate_data=True)
+
+    for row in table.get_model().objects.all():
+        assert getattr(row, f"field_{field.pk}") != getattr(
+            row, f"field_{dup_field.pk}"
+        )

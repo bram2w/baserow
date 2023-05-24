@@ -53,6 +53,9 @@ class FieldDataBackupHandler:
 
         original_model_field = model._meta.get_field(original_field.db_column)
         duplicated_model_field = model._meta.get_field(duplicated_field.db_column)
+        mapping_values = cls._get_values_map_from_original_to_duplicated(
+            original_field, duplicated_field
+        )
 
         if isinstance(original_model_field, ManyToManyField):
             through = original_model_field.remote_field.through
@@ -66,6 +69,7 @@ class FieldDataBackupHandler:
                 m2m_model_field=original_model_field,
                 m2m_target_model_field=duplicated_model_field,
                 through_model=through,
+                mapping_values=mapping_values,
             )
         else:
             table_name = original_model_field.model._meta.db_table
@@ -73,7 +77,21 @@ class FieldDataBackupHandler:
                 table_name,
                 source_column=original_model_field.column,
                 target_column=duplicated_model_field.db_column,
+                mapping_values=mapping_values,
             )
+
+    @classmethod
+    def _get_values_map_from_original_to_duplicated(
+        cls, original_field, duplicated_field
+    ):
+        if hasattr(original_field, "select_options"):
+            return {
+                orig_opt.id: dupl_opt.id
+                for orig_opt, dupl_opt in zip(
+                    original_field.select_options.all(),
+                    duplicated_field.select_options.all(),
+                )
+            }
 
     @classmethod
     def backup_field_data(
@@ -230,16 +248,39 @@ class FieldDataBackupHandler:
                 )
             )
 
-    @staticmethod
+    @classmethod
+    def _get_source_column_sql_with_mapping(
+        cls, source_column: str, mapping: Optional[Dict[int, int]] = None
+    ):
+        if not mapping:
+            return sql.Identifier(source_column)
+        case_when_sql = sql.SQL(" ").join(
+            sql.SQL("WHEN {source_value} THEN {target_value}").format(
+                source_value=sql.Literal(source_value),
+                target_value=sql.Literal(target_value),
+            )
+            for source_value, target_value in mapping.items()
+        )
+        return sql.SQL("CASE {source_column} {case_when_sql} END").format(
+            source_column=sql.Identifier(source_column),
+            case_when_sql=case_when_sql,
+        )
+
+    @classmethod
     def _copy_m2m_data_between_tables(
+        cls,
         source_table: str,
         target_table: str,
         m2m_model_field: ManyToManyField,
         through_model: GeneratedTableModel,
         m2m_target_model_field: Optional[ManyToManyField] = None,
+        mapping_values: Optional[Dict[int, int]] = None,
     ):
         with connection.cursor() as cursor:
             m2m_target_model_field = m2m_target_model_field or m2m_model_field
+            m2m_reverse_column = cls._get_source_column_sql_with_mapping(
+                m2m_model_field.m2m_reverse_name(), mapping_values
+            )
             cursor.execute(
                 sql.SQL(
                     """
@@ -250,9 +291,7 @@ class FieldDataBackupHandler:
                     source_table=sql.Identifier(source_table),
                     target_table=sql.Identifier(target_table),
                     m2m_column=sql.Identifier(m2m_model_field.m2m_column_name()),
-                    m2m_reverse_column=sql.Identifier(
-                        m2m_model_field.m2m_reverse_name()
-                    ),
+                    m2m_reverse_column=m2m_reverse_column,
                     m2m_reverse_target_column=sql.Identifier(
                         m2m_target_model_field.m2m_reverse_name()
                     ),
@@ -280,8 +319,14 @@ class FieldDataBackupHandler:
             new_backup_model_field.null = True
             schema_editor.add_field(model, new_backup_model_field)
 
-    @staticmethod
-    def _copy_not_null_column_data(table_name, source_column, target_column):
+    @classmethod
+    def _copy_not_null_column_data(
+        cls, table_name, source_column, target_column, mapping_values=None
+    ):
+        source_column_sql = cls._get_source_column_sql_with_mapping(
+            source_column, mapping_values
+        )
+
         with connection.cursor() as cursor:
             cursor.execute(
                 sql.SQL(
@@ -290,7 +335,7 @@ class FieldDataBackupHandler:
                 ).format(
                     table_name=sql.Identifier(table_name),
                     target_column=sql.Identifier(target_column),
-                    source_column=sql.Identifier(source_column),
+                    source_column=source_column_sql,
                 )
             )
 

@@ -64,6 +64,13 @@ export default {
       lastSeenId: -1,
     }
   },
+  computed: {
+    usedColors() {
+      const colors = new Set()
+      this.value.forEach((option) => colors.add(option.color))
+      return Array.from(colors)
+    },
+  },
   methods: {
     remove(index) {
       this.$refs.colorContext.hide()
@@ -73,7 +80,7 @@ export default {
     add(optionValue = '') {
       this.value.push({
         value: optionValue,
-        color: randomColor(),
+        color: randomColor(this.usedColors),
         id: this.lastSeenId,
       })
       this.$emit('input', this.value)
