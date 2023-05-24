@@ -4,6 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from zipfile import ZipFile
@@ -1881,6 +1882,7 @@ class LinkRowFieldType(FieldType):
 
         model_name = f"table_{instance.link_row_table_id}"
         count_name = f"table_{instance.link_row_table_id}_count"
+        queryset_name = f"table_{instance.link_row_table_id}_queryset"
 
         if model_name not in cache:
             cache[model_name] = instance.link_row_table.get_model(field_ids=[])
@@ -1892,13 +1894,23 @@ class LinkRowFieldType(FieldType):
         if count == 0:
             return []
 
-        # Ignoring with nosec as this randint usage is purely for constructing
-        # random data in dev environments and is not being used for security or
-        # cryptographical reasons.
-        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(  # nosec
-            "id", flat=True
-        )
-        return values
+        def get_random_objects_iterator(limit=10000):
+            qs = model.objects.order_by("?").only("id")
+            if count > limit:
+                return qs.iterator(chunk_size=limit)
+            else:
+                return cycle(qs.all())
+
+        if queryset_name not in cache:
+            cache[queryset_name] = get_random_objects_iterator()
+
+        qs = cache[queryset_name]
+
+        try:
+            return [next(qs).id for _ in range(randrange(0, min(3, count)))]  # nosec
+        except StopIteration:
+            cache[queryset_name] = get_random_objects_iterator()
+        return []
 
     def export_serialized(self, field):
         serialized = super().export_serialized(field, False)
@@ -2249,6 +2261,7 @@ class FileFieldType(FieldType):
         """
 
         count_name = f"field_{instance.id}_count"
+        queryset_name = f"field_{instance.id}_queryset"
 
         if count_name not in cache:
             cache[count_name] = UserFile.objects.all().count()
@@ -2259,14 +2272,30 @@ class FileFieldType(FieldType):
         if count == 0:
             return values
 
-        # Ignoring with nosec as this randint usage is purely for constructing
-        # random data in dev environments and is not being used for security or
-        # cryptographical reasons.
-        for i in range(0, randrange(0, 3)):  # nosec
-            instance = UserFile.objects.all()[randint(0, count - 1)]  # nosec
-            serialized = instance.serialize()
-            serialized["visible_name"] = serialized["name"]
-            values.append(serialized)
+        def get_random_objects_iterator(limit=10000):
+            user_ids = WorkspaceUser.objects.filter(
+                workspace=instance.table.database.workspace_id
+            ).values_list("user_id", flat=True)
+            qs = UserFile.objects.filter(uploaded_by_id__in=user_ids).order_by("?")
+            if count > limit:
+                return qs.iterator(chunk_size=limit)
+            else:
+                return cycle(qs.all())
+
+        if queryset_name not in cache:
+            cache[queryset_name] = get_random_objects_iterator()
+
+        qs = cache[queryset_name]
+
+        values = []
+        for _ in range(randrange(0, min(3, count))):  # nosec
+            try:
+                instance = next(qs)
+                serialized = instance.serialize()
+                serialized["visible_name"] = instance.original_name
+                values.append(serialized)
+            except StopIteration:
+                cache[queryset_name] = get_random_objects_iterator()
 
         return values
 
@@ -2631,12 +2660,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        # Ignoring with nosec as this randint usage is purely for constructing random
-        # data in dev environments and is not being used for security or cryptographical
-        # reasons.
-        random_choice = randint(0, len(select_options) - 1)  # nosec
-
-        return select_options[random_choice]
+        return select_options[randrange(0, len(select_options))]  # nosec
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -2832,7 +2856,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         cache_entry_name = f"field_{instance.id}_options"
 
         if cache_entry_name not in cache:
-            cache[cache_entry_name] = instance.select_options.all()
+            cache[cache_entry_name] = list(
+                instance.select_options.values_list("id", flat=True)
+            )
 
         select_options = cache[cache_entry_name]
 
@@ -2840,12 +2866,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        # Ignoring with nosec as this randint usage is purely for constructing random
-        # data in dev environments and is not being used for security or cryptographical
-        # reasons.
-        random_choice = randint(1, len(select_options))  # nosec
-
-        return sample([x.id for x in select_options], random_choice)
+        return sample(select_options, randint(0, len(select_options)))  # nosec
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
@@ -3994,21 +4015,17 @@ class MultipleCollaboratorsFieldType(FieldType):
 
         if cache_entry_name not in cache:
             table = Table.objects.get(id=instance.table_id)
-            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
-                workspace=table.database.workspace
-            ).select_related("user")
-            cache[cache_entry_name] = [
-                workspaceuser.user for workspaceuser in workspaceusers_from_workspace
-            ]
+            workspaceusers_ids = WorkspaceUser.objects.filter(
+                workspace=table.database.workspace_id
+            ).values_list("user_id", flat=True)
+            cache[cache_entry_name] = list(workspaceusers_ids)
 
         collaborators = cache[cache_entry_name]
 
         if not collaborators:
             return None
 
-        random_choice = randint(1, len(collaborators))  # nosec
-
-        return sample(set([x.id for x in collaborators]), random_choice)
+        return sample(collaborators, randint(0, len(collaborators)))  # nosec
 
     def get_order(self, field, field_name, order_direction):
         """
