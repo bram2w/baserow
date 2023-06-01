@@ -89,6 +89,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "count": 0,
     "lookup": []
 },
 {
@@ -181,6 +182,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "count": 3,
     "lookup": [
         "linked_row_1",
         "linked_row_2",
@@ -318,6 +320,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <count>0</count>
       <lookup/>
    </row>
    <row>
@@ -410,6 +413,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <count>3</count>
       <lookup>
          <item>linked_row_1</item>
          <item>linked_row_2</item>

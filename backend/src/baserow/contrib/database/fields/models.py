@@ -521,6 +521,35 @@ class FormulaField(Field):
         )
 
 
+class CountField(FormulaField):
+    through_field = models.ForeignKey(
+        Field,
+        on_delete=models.SET_NULL,
+        related_name="count_fields_used_by",
+        null=True,
+        blank=True,
+    )
+
+    def save(self, *args, **kwargs):
+        from baserow.contrib.database.formula.ast.function_defs import BaserowCount
+        from baserow.contrib.database.formula.ast.tree import BaserowFieldReference
+
+        field_reference = BaserowFieldReference(
+            getattr(self.through_field, "name", ""), None, None
+        )
+        self.formula = f"{BaserowCount.type}({field_reference})"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (
+            "CountField(\n"
+            + f"formula={self.formula},\n"
+            + f"through_field_id={self.through_field_id},\n"
+            + f"error={self.error},\n"
+            + ")"
+        )
+
+
 class LookupField(FormulaField):
     through_field = models.ForeignKey(
         Field,

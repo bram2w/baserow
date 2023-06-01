@@ -207,7 +207,7 @@ def test_to_baserow_database_export():
     assert baserow_database_export["tables"][1]["id"] == "tbl7glLIGtH8C8zGCzb"
     assert baserow_database_export["tables"][1]["name"] == "Data"
     assert baserow_database_export["tables"][1]["order"] == 1
-    assert len(baserow_database_export["tables"][1]["fields"]) == 24
+    assert len(baserow_database_export["tables"][1]["fields"]) == 25
 
     # We don't have to check all the fields and rows, just a single one, because we have
     # separate tests for mapping the Airtable fields and values to Baserow.

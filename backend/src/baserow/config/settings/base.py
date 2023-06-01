@@ -541,6 +541,7 @@ SPECTACULAR_SETTINGS = {
             "multiple_select",
             "phone_number",
             "formula",
+            "count",
             "lookup",
         ],
         "ViewFilterTypesEnum": [

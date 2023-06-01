@@ -30,6 +30,7 @@ from rest_framework import serializers
 from baserow.contrib.database.api.fields.errors import (
     ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_INVALID_COUNT_THROUGH_FIELD,
     ERROR_INVALID_LOOKUP_TARGET_FIELD,
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
@@ -87,6 +88,7 @@ from .exceptions import (
     DateForceTimezoneOffsetValueError,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
+    InvalidCountThroughField,
     InvalidLookupTargetField,
     InvalidLookupThroughField,
     LinkRowTableNotInSameDatabase,
@@ -110,6 +112,7 @@ from .handler import FieldHandler
 from .models import (
     AbstractSelectOption,
     BooleanField,
+    CountField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -3545,6 +3548,109 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
+
+
+class CountFieldType(FormulaFieldType):
+    type = "count"
+    model_class = CountField
+    api_exceptions_map = {
+        **FormulaFieldType.api_exceptions_map,
+        InvalidCountThroughField: ERROR_INVALID_COUNT_THROUGH_FIELD,
+    }
+    can_get_unique_values = False
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+    ]
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "formula_type",
+    ]
+    serializer_field_overrides = {
+        "through_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="through_field.id",
+            help_text="The id of the link row field to lookup values for. Will override"
+            " the `through_field_name` parameter if both are provided, however only "
+            "one is required.",
+        ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
+    }
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._validate_through_field_values(
+            table,
+            allowed_field_values,
+            field_kwargs,
+        )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
+
+    def before_update(self, from_field, to_field_values, user, kwargs):
+        if isinstance(from_field, CountField):
+            through_field_id = (
+                from_field.through_field.id
+                if from_field.through_field is not None
+                else None
+            )
+            self._validate_through_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+                through_field_id,
+            )
+        else:
+            self._validate_through_field_values(
+                from_field.table, to_field_values, kwargs
+            )
+
+    def _validate_through_field_values(
+        self,
+        table,
+        values,
+        all_kwargs,
+        default_through_field_id=None,
+    ):
+        through_field_id = values.get("through_field_id", default_through_field_id)
+        through_field_name = all_kwargs.get("through_field_name", None)
+
+        # If the `through_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the `link_row` field by its name.
+        if through_field_name is not None:
+            try:
+                through_field_id = table.field_set.get(name=through_field_name).id
+            except Field.DoesNotExist:
+                raise InvalidCountThroughField()
+
+        try:
+            through_field = FieldHandler().get_field(through_field_id, LinkRowField)
+        except FieldDoesNotExist:
+            # Occurs when the through_field_id points at a non LinkRowField
+            raise InvalidCountThroughField()
+
+        if through_field.table != table:
+            raise InvalidCountThroughField()
+
+        values["through_field_id"] = through_field.id
+        # There is never a need to allow decimal places on the count field.
+        # Therefore, we reset it to 0 to make sure when a formula converts to count,
+        # it will have the right value.
+        values["number_decimal_places"] = 0
+
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+    ) -> "Field":
+        serialized_copy = serialized_values.copy()
+        serialized_copy["through_field_id"] = id_mapping["database_fields"][
+            serialized_values["through_field_id"]
+        ]
+        return super().import_serialized(table, serialized_copy, id_mapping)
 
 
 class LookupFieldType(FormulaFieldType):

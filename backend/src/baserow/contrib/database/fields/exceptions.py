@@ -196,6 +196,13 @@ class AllProvidedCollaboratorIdsMustBeValidUsers(ValidationError):
         )
 
 
+class InvalidCountThroughField(Exception):
+    """
+    Raised when a count field is attempted to be created or updated with a through
+    field that does not exist, is in a different table or is not a link row field.
+    """
+
+
 class InvalidLookupThroughField(Exception):
     """
     Raised when a a lookup field is attempted to be created or updated with a through

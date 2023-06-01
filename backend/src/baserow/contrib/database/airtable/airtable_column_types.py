@@ -12,6 +12,7 @@ from baserow.contrib.database.export_serialized import DatabaseExportSerializedS
 from baserow.contrib.database.fields.models import (
     NUMBER_MAX_DECIMAL_PLACES,
     BooleanField,
+    CountField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -377,3 +378,21 @@ class PhoneAirtableColumnType(AirtableColumnType):
             return value
         except ValidationError:
             return ""
+
+
+class CountAirtableColumnType(AirtableColumnType):
+    type = "count"
+
+    def to_baserow_field(self, raw_airtable_table, raw_airtable_column):
+        type_options = raw_airtable_column.get("typeOptions", {})
+        return CountField(through_field_id=type_options.get("relationColumnId"))
+
+    def to_baserow_export_serialized_value(
+        self,
+        row_id_mapping,
+        raw_airtable_column,
+        baserow_field,
+        value,
+        files_to_download,
+    ):
+        return None

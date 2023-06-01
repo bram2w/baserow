@@ -187,6 +187,7 @@ class DatabaseConfig(AppConfig):
 
         from .fields.field_types import (
             BooleanFieldType,
+            CountFieldType,
             CreatedOnFieldType,
             DateFieldType,
             EmailFieldType,
@@ -222,6 +223,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(MultipleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
         field_type_registry.register(FormulaFieldType())
+        field_type_registry.register(CountFieldType())
         field_type_registry.register(LookupFieldType())
         field_type_registry.register(MultipleCollaboratorsFieldType())
 
@@ -436,6 +438,7 @@ class DatabaseConfig(AppConfig):
 
         from .airtable.airtable_column_types import (
             CheckboxAirtableColumnType,
+            CountAirtableColumnType,
             DateAirtableColumnType,
             ForeignKeyAirtableColumnType,
             FormulaAirtableColumnType,
@@ -463,6 +466,7 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(MultilineTextAirtableColumnType())
         airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
+        airtable_column_type_registry.register(CountAirtableColumnType())
 
         from baserow.contrib.database.table.usage_types import (
             TableWorkspaceStorageUsageItemType,

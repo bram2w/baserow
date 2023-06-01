@@ -98,6 +98,12 @@ ERROR_FIELD_CIRCULAR_REFERENCE = (
     HTTP_400_BAD_REQUEST,
     "Fields cannot reference each other resulting in a circular chain of references.",
 )
+ERROR_INVALID_COUNT_THROUGH_FIELD = (
+    "ERROR_INVALID_COUNT_THROUGH_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided through field does not exist, is in a different table or is not a "
+    "link row field.",
+)
 ERROR_INVALID_LOOKUP_THROUGH_FIELD = (
     "ERROR_INVALID_LOOKUP_THROUGH_FIELD",
     HTTP_400_BAD_REQUEST,

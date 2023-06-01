@@ -183,6 +183,12 @@ def construct_all_possible_field_kwargs(
             },
             {"name": "formula_link_url_only", "formula": "link('https://google.com')"},
         ],
+        "count": [
+            {
+                "name": "count",
+                "through_field_name": "link_row",
+            }
+        ],
         "lookup": [
             {
                 "name": "lookup",
