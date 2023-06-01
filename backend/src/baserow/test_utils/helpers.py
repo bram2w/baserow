@@ -225,7 +225,9 @@ def setup_interesting_test_table(
             sha256_hash="name",
         )
 
-    missing_fields = set(name_to_field_id.keys()) - set(values.keys()) - {"lookup"}
+    missing_fields = (
+        set(name_to_field_id.keys()) - set(values.keys()) - {"lookup", "count"}
+    )
     assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "
         f"field type. In the values dict you are missing the fields {missing_fields}."

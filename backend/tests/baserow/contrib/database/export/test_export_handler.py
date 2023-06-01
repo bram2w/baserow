@@ -230,11 +230,11 @@ def test_can_export_every_interesting_different_field_to_csv(
         "file_link_row,file,single_select,multiple_select,multiple_collaborators,"
         "phone_number,formula_text,formula_int,formula_bool,formula_decimal,formula_dateinterval,"
         "formula_date,formula_singleselect,formula_email,formula_link_with_label,"
-        "formula_link_url_only,lookup\r\n"
+        "formula_link_url_only,count,lookup\r\n"
         "1,,,,,,,,,0,False,,,,,,,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,,,,,,,,,,,test FORMULA,1,True,33.3333333333,1 day,"
-        "2020-01-01,,,label (https://google.com),https://google.com,\r\n"
+        "2020-01-01,,,label (https://google.com),https://google.com,0,\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,01/02/2020 02:23,"
         "01/02/2020 02:23,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
@@ -246,7 +246,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         'b.txt (http://localhost:8000/media/user_files/other_name.txt)",A,"D,C,E",'
         '"user2@example.com,user3@example.com",+4412345678,test FORMULA,1,True,33.3333333333,'
         "1 day,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
-        '"linked_row_1,linked_row_2,"\r\n'
+        '3,"linked_row_1,linked_row_2,"\r\n'
     )
 
     assert contents == expected

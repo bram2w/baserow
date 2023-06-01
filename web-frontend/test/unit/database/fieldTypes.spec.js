@@ -174,6 +174,14 @@ const mockedFields = {
     table_id: 42,
     type: 'multiple_collaborators',
   },
+  count: {
+    id: 18,
+    name: 'count',
+    order: 18,
+    primary: false,
+    table_id: 42,
+    type: 'count',
+  },
 }
 
 const valuesToCall = [null, undefined]

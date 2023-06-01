@@ -95,6 +95,7 @@ import {
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
+import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
@@ -2717,6 +2718,33 @@ export class FormulaFieldType extends FieldType {
   canRepresentDate(field) {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canRepresentDate(field)
+  }
+}
+
+export class CountFieldType extends FormulaFieldType {
+  static getType() {
+    return 'count'
+  }
+
+  getIconClass() {
+    return 'calculator'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.count')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.count')
+  }
+
+  getFormComponent() {
+    return FieldCountSubForm
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
   }
 }
 

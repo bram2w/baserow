@@ -3,6 +3,7 @@ import responses
 
 from baserow.contrib.database.airtable.airtable_column_types import (
     CheckboxAirtableColumnType,
+    CountAirtableColumnType,
     DateAirtableColumnType,
     ForeignKeyAirtableColumnType,
     FormulaAirtableColumnType,
@@ -19,6 +20,7 @@ from baserow.contrib.database.airtable.airtable_column_types import (
 from baserow.contrib.database.airtable.registry import airtable_column_type_registry
 from baserow.contrib.database.fields.models import (
     BooleanField,
+    CountField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -1089,4 +1091,36 @@ def test_airtable_import_url_column(data_fixture, api_client):
             {}, airtable_field, baserow_field, "https://test.nl", {}
         )
         == "https://test.nl"
+    )
+
+
+@pytest.mark.django_db
+@responses.activate
+def test_airtable_import_count_column(data_fixture, api_client):
+    airtable_field = {
+        "id": "fldG9y88Zw7q7u4Z7i4",
+        "name": "Count",
+        "type": "count",
+        "typeOptions": {
+            "relationColumnId": "fldABC88Zw7q7u4Z7i4",
+            "dependencies": [],
+            "resultType": "number",
+            "resultIsArray": False,
+        },
+    }
+    (
+        baserow_field,
+        airtable_column_type,
+    ) = airtable_column_type_registry.from_airtable_column_to_serialized(
+        {}, airtable_field
+    )
+    assert isinstance(baserow_field, CountField)
+    assert isinstance(airtable_column_type, CountAirtableColumnType)
+
+    assert baserow_field.through_field_id == "fldABC88Zw7q7u4Z7i4"
+    assert (
+        airtable_column_type.to_baserow_export_serialized_value(
+            {}, airtable_field, baserow_field, "1", {}
+        )
+        is None
     )
