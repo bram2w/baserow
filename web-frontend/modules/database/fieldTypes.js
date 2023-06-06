@@ -3,11 +3,11 @@ import BigNumber from 'bignumber.js'
 import moment from '@baserow/modules/core/moment'
 import guessFormat from 'moment-guess'
 import {
+  getFilenameFromUrl,
   isNumeric,
   isSimplePhoneNumber,
   isValidEmail,
   isValidURL,
-  getFilenameFromUrl,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -100,6 +100,7 @@ import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEdi
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
+import _ from 'lodash'
 
 export class FieldType extends Registerable {
   /**
@@ -2350,27 +2351,53 @@ export class MultipleSelectFieldType extends FieldType {
     )
   }
 
+  /**
+   Converts pasted options to select field options based on the fields existing select
+   options. Matches by id first if that fails then by value. Ensures the produced
+   select options are unique by id.
+   */
+  convertPastedOptionsToThisFields(existingSelectOptions, pastedDataArray) {
+    const selectOptionNameMap = _.groupBy(existingSelectOptions, 'value')
+    const selectOptionIdMap = _.keyBy(existingSelectOptions, 'id')
+    const resultingSelectOptions = []
+
+    pastedDataArray.forEach((pastedSelectOption) => {
+      const existingSelectOptionWithSameId =
+        selectOptionIdMap[pastedSelectOption?.id]
+      if (existingSelectOptionWithSameId) {
+        resultingSelectOptions.push(existingSelectOptionWithSameId)
+      } else if (pastedSelectOption?.value) {
+        const existingSelectOptionWithSameName =
+          selectOptionNameMap[pastedSelectOption.value]?.shift()
+        if (existingSelectOptionWithSameName) {
+          resultingSelectOptions.push(existingSelectOptionWithSameName)
+        }
+      }
+    })
+
+    return _.uniqBy(resultingSelectOptions, 'id')
+  }
+
   prepareValueForPaste(field, clipboardData, richClipboardData) {
     if (this.checkRichValueIsCompatible(richClipboardData)) {
       if (richClipboardData === null) {
         return []
       }
-
-      return richClipboardData
+      return this.convertPastedOptionsToThisFields(
+        field.select_options,
+        richClipboardData
+      )
     } else {
       // Fallback to text version
       try {
-        const data = this.app.$papa.stringToArray(clipboardData)
-
-        const selectOptionMap = Object.fromEntries(
-          field.select_options.map((option) => [option.value, option])
-        )
-
-        const uniqueValuesOnly = Array.from(new Set(data))
-
-        return uniqueValuesOnly
-          .filter((name) => Object.keys(selectOptionMap).includes(name))
-          .map((name) => selectOptionMap[name])
+        const data = this.app.$papa
+          .stringToArray(clipboardData)
+          .map((value) => {
+            return {
+              value,
+            }
+          })
+        return this.convertPastedOptionsToThisFields(field.select_options, data)
       } catch (e) {
         return []
       }
