@@ -1,9 +1,11 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import moment from '@baserow/modules/core/moment'
 import {
+  DateBeforeOrEqualViewFilterType,
   DateBeforeViewFilterType,
   DateBeforeTodayViewFilterType,
   DateAfterViewFilterType,
+  DateAfterOrEqualViewFilterType,
   DateAfterTodayViewFilterType,
   DateEqualViewFilterType,
   DateNotEqualViewFilterType,
@@ -127,6 +129,112 @@ const dateAfterCases = [
   {
     rowValue: '2021-08-11',
     filterValue: 'UTC?2021-08-11',
+    expected: false,
+  },
+]
+
+const dateBeforeOrEqualCases = [
+  {
+    rowValue: '2021-08-10T21:59:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-10',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-11',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-10T22:59:37.940086Z',
+    filterValue: 'Europe/London?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-10T22:01:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-10',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-10T23:01:37.940086Z',
+    filterValue: 'Europe/London?2021-08-10',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-10T23:59:37.940086Z',
+    filterValue: 'UTC?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-10',
+    filterValue: 'UTC?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-11T00:01:37.940086Z',
+    filterValue: 'UTC?2021-08-10',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-10',
+    expected: false,
+  },
+]
+
+const dateAfterOrEqualCases = [
+  {
+    rowValue: '2021-08-11T22:01:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-12',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-10',
+    filterValue: 'Europe/Berlin?2021-08-09',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-11T23:01:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-11T21:59:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-12',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-10T22:59:37.940086Z',
+    filterValue: 'Europe/Berlin?2021-08-12',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-12T00:01:37.940086Z',
+    filterValue: 'UTC?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-12',
+    filterValue: 'Europe/Berlin?2021-08-11',
+    expected: true,
+  },
+  {
+    rowValue: '2021-08-11T23:59:37.940086Z',
+    filterValue: 'UTC?2021-08-12',
+    expected: false,
+  },
+  {
+    rowValue: '2021-08-11',
+    filterValue: 'UTC?2021-08-12',
     expected: false,
   },
 ]
@@ -865,12 +973,34 @@ describe('All Tests', () => {
     expect(result).toBe(values.expected)
   })
 
-  test.each(dateAfterCases)('AfterViewFilter with Timezone', (values) => {
+  test.each(dateBeforeOrEqualCases)('BeforeOrEqualViewFilter', (values) => {
+    const result = new DateBeforeOrEqualViewFilterType({
+      app: testApp,
+    }).matches(values.rowValue, values.filterValue, { date_include_time: true })
+    if (values.expected !== result) {
+      console.log('beforeequal', values)
+    }
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterCases)('AfterViewFilter', (values) => {
     const result = new DateAfterViewFilterType({ app: testApp }).matches(
       values.rowValue,
       values.filterValue,
       { date_include_time: true }
     )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(dateAfterOrEqualCases)('AfterOrEqualViewFilter', (values) => {
+    const result = new DateAfterOrEqualViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      { date_include_time: true }
+    )
+    if (values.expected !== result) {
+      console.log('afterequal', values)
+    }
     expect(result).toBe(values.expected)
   })
 

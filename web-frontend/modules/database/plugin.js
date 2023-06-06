@@ -55,7 +55,9 @@ import {
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
+  DateBeforeOrEqualViewFilterType,
   DateAfterViewFilterType,
+  DateAfterOrEqualViewFilterType,
   DateEqualsDayOfMonthViewFilterType,
   LinkRowHasFilterType,
   LinkRowHasNotFilterType,
@@ -323,7 +325,15 @@ export default (context) => {
     new DateEqualsDayOfMonthViewFilterType(context)
   )
   app.$registry.register('viewFilter', new DateBeforeViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateBeforeOrEqualViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new DateAfterViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateAfterOrEqualViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
