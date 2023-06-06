@@ -611,6 +611,57 @@ export class DateBeforeViewFilterType extends LocalizedDateViewFilterType {
   }
 }
 
+export class DateBeforeOrEqualViewFilterType extends LocalizedDateViewFilterType {
+  static getType() {
+    return 'date_before_or_equal'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isBeforeOrEqualDate')
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+
+    // without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // an invalid date will be filtered out
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
+    }
+
+    return rowDate.isSameOrBefore(filterDate, 'day')
+  }
+}
+
 export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
     return 'date_after'
@@ -657,6 +708,55 @@ export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
       return false
     }
     return rowDate.isAfter(filterDate, 'day')
+  }
+}
+
+export class DateAfterOrEqualViewFilterType extends LocalizedDateViewFilterType {
+  static getType() {
+    return 'date_after_or_equal'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAfterOrEqualDate')
+  }
+
+  getExample() {
+    return '2020-01-01'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeDate
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    const [timezone, dateValue] = this.splitTimezoneAndValue(filterValue)
+    const filterDate = moment.utc(dateValue, this.getDateFormat(), true)
+    const rowDate = moment.utc(rowValue)
+    if (timezone !== null) {
+      filterDate.tz(timezone, true)
+      rowDate.tz(timezone)
+    }
+
+    // without a valid date the filter won't be applied
+    if (!filterDate.isValid()) {
+      return true
+    }
+
+    // an invalid date will be filtered out
+    if (rowValue === null || !rowDate.isValid()) {
+      return false
+    }
+    return rowDate.isSameOrAfter(filterDate, 'day')
   }
 }
 
