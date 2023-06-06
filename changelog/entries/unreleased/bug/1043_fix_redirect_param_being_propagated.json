@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix redirect param being propagated",
+    "issue_number": 1043,
+    "bullet_points": [],
+    "created_at": "2023-06-06"
+}
