@@ -146,7 +146,7 @@ def test_to_baserow_database_export():
     with open(os.path.join(base_path, "file-sample.txt"), "rb") as file:
         responses.add(
             responses.GET,
-            "https://dl.airtable.com/.attachments/70e50b90fb83997d25e64937979b6b5b/f3f62d23/file-sample.txt",
+            "https://dl.airtable.com/.signed/file-sample.txt",
             status=200,
             body=file.read(),
         )
@@ -342,7 +342,7 @@ def test_import_from_airtable_to_workspace(data_fixture, tmpdir):
     with open(os.path.join(base_path, "file-sample.txt"), "rb") as file:
         responses.add(
             responses.GET,
-            "https://dl.airtable.com/.attachments/70e50b90fb83997d25e64937979b6b5b/f3f62d23/file-sample.txt",
+            "https://dl.airtable.com/.signed/file-sample.txt",
             status=200,
             body=file.read(),
         )

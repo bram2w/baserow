@@ -4,8 +4,6 @@ from tempfile import NamedTemporaryFile
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from pytz import timezone as pytz_timezone
-from pytz.exceptions import UnknownTimeZoneError
 from tqdm import tqdm
 
 from baserow.contrib.database.airtable.exceptions import AirtableBaseNotPublic
@@ -37,28 +35,11 @@ class Command(BaseCommand):
             help="The URL of the publicly shared Airtable base "
             "(e.g. https://airtable.com/shrxxxxxxxxxxxxxx).",
         )
-        parser.add_argument(
-            "--timezone",
-            type=str,
-            nargs="?",
-            default="UTC",
-            help="The default timezone used when formatting dates.",
-        )
 
     @transaction.atomic
     def handle(self, *args, **options):
         workspace_id = options["workspace_id"]
         public_base_url = options["public_base_url"]
-
-        try:
-            timezone = pytz_timezone(options["timezone"])
-        except UnknownTimeZoneError:
-            self.stdout.write(
-                self.style.ERROR(
-                    f"The provided timezone {options['timezone']} is unknown."
-                )
-            )
-            sys.exit(1)
 
         try:
             workspace = Workspace.objects.get(pk=workspace_id)
@@ -88,7 +69,6 @@ class Command(BaseCommand):
                     AirtableHandler.import_from_airtable_to_workspace(
                         workspace,
                         share_id,
-                        timezone,
                         progress_builder=progress.create_child_builder(
                             represents_progress=progress.total
                         ),
