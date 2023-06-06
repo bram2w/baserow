@@ -10,7 +10,10 @@ export default function ({ req, store, route, redirect }) {
     const query = {}
     if (req) {
       query.original = encodeURI(req.originalUrl)
+    } else {
+      query.original = route.path
     }
+
     return redirect({ name: 'login', query })
   }
 }
