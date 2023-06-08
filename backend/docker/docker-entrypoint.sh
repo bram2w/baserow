@@ -156,8 +156,13 @@ install-plugin  : Installs a baserow plugin.
 run_setup_commands_if_configured(){
   startup_plugin_setup
   if [ "$MIGRATE_ON_STARTUP" = "true" ] ; then
-    echo "python /baserow/backend/src/baserow/manage.py migrate"
-    OTEL_SERVICE_NAME=backend-migrate python /baserow/backend/src/baserow/manage.py migrate
+    if [ "${BASEROW_DISABLE_LOCKED_MIGRATIONS:-}" = "true" ] ; then
+      migration_command="migrate"
+    else
+      migration_command="locked_migrate"
+    fi
+    echo "python /baserow/backend/src/baserow/manage.py $migration_command"
+    OTEL_SERVICE_NAME=backend-migrate python /baserow/backend/src/baserow/manage.py "$migration_command"
   fi
 }
 
