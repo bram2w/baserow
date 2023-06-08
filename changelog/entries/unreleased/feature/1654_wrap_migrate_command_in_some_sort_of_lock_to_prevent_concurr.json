@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Wrap migrate command in some sort of lock to prevent buggy concurrent migration runs in deployments with many Baserow backend services.",
+    "issue_number": 1654,
+    "bullet_points": [],
+    "created_at": "2023-05-22"
+}

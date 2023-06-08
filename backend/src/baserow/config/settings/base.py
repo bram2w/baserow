@@ -1081,6 +1081,8 @@ LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 
 MAX_NUMBER_CALENDAR_DAYS = 45
 
+MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
+
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini
 TESTS = False
