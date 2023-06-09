@@ -81,11 +81,15 @@ const actions = {
     updateContext.lastUpdatedValues = null
     commit('SELECT_ITEM', { element })
   },
-  async create({ dispatch }, { pageId, elementType, beforeId = null }) {
+  async create(
+    { dispatch },
+    { pageId, elementType, beforeId = null, configuration = null }
+  ) {
     const { data: element } = await ElementService(this.$client).create(
       pageId,
       elementType,
-      beforeId
+      beforeId,
+      configuration
     )
 
     await dispatch('forceCreate', { element, beforeId })
@@ -210,8 +214,9 @@ const actions = {
     const element = getters.getElements.find((e) => e.id === elementId)
     await dispatch('create', {
       pageId,
-      elementType: element.type,
       beforeId: element.id,
+      elementType: element.type,
+      configuration: element,
     })
   },
 }
