@@ -1,3 +1,4 @@
+import re
 from contextlib import contextmanager
 from functools import wraps
 
@@ -57,22 +58,22 @@ def patch_cachalot_for_baserow():
 
     original_filter_cachable = cachalot_utils.filter_cachable
 
-    # remove the last character from the prefix to make sure we match the
-    # baserow table names as we split the table name by the last underscore
-    baserow_table_names_prefixes = set(
-        [
-            USER_TABLE_DATABASE_NAME_PREFIX[:-1],
-            LINK_ROW_THROUGH_TABLE_PREFIX[:-1],
-            MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX[:-1],
-            MULTIPLE_SELECT_THROUGH_TABLE_PREFIX[:-1],
-        ]
+    # create a single regex to match if a string provided starts with any of the
+    # prefixes we want to match followed by a number
+    baserow_table_names_regex = re.compile(
+        r"^(?:{}|{}|{}|{})\d+".format(
+            USER_TABLE_DATABASE_NAME_PREFIX,
+            LINK_ROW_THROUGH_TABLE_PREFIX,
+            MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX,
+            MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
+        )
     )
 
     def is_baserow_table(table_name):
         uncachable_tables = getattr(settings, "CACHALOT_UNCACHABLE_TABLES", [])
         return (
             table_name not in uncachable_tables
-            and table_name.rsplit("_", 1)[0] in baserow_table_names_prefixes
+            and baserow_table_names_regex.match(table_name) is not None
         )
 
     @wraps(original_filter_cachable)
@@ -113,6 +114,27 @@ def patch_cachalot_for_baserow():
         return original_are_all_cachable(tables)
 
     cachalot_utils.are_all_cachable = patched_are_all_cachable
+
+    baserow_tables_regex = re.compile(
+        r"({}\d+|{}\d+|{}\d+|{}\d+)".format(
+            USER_TABLE_DATABASE_NAME_PREFIX,
+            LINK_ROW_THROUGH_TABLE_PREFIX,
+            MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX,
+            MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
+        )
+    )
+    original_get_tables_from_sql = cachalot_utils._get_tables_from_sql
+
+    @wraps(original_get_tables_from_sql)
+    def patched_get_tables_from_sql(
+        connection, lowercased_sql, enable_quote: bool = False
+    ):
+        baserow_tables = baserow_tables_regex.findall(lowercased_sql)
+        return set(baserow_tables) | original_get_tables_from_sql(
+            connection, lowercased_sql, enable_quote
+        )
+
+    cachalot_utils._get_tables_from_sql = patched_get_tables_from_sql
 
     def lower(self):
         """
