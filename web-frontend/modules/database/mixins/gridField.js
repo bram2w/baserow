@@ -184,7 +184,7 @@ export default {
         // prevent Safari from beeping since the window.getSelection() is empty
         event.preventDefault()
       }
-      this.addEventListenerWithAutoRemove(document, 'copy', copyEventListener)
+      this.addEventListenerWithAutoRemove(window, 'copy', copyEventListener)
 
       // Updates the value of the field when a user pastes something in the field.
       const pasteEventListener = async (event) => {
