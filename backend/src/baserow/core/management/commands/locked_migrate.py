@@ -1,11 +1,10 @@
-import subprocess  # nosec
-import sys
-
 from django.conf import settings
 from django.core.management.commands.migrate import Command as MigrateCommand
-from django.db import connection, transaction
+from django.db import connections, transaction
 
 from loguru import logger
+
+LOCKED_MIGRATE_CMD_CONNECTION_ALIAS = "locked_migrate_cmd_connection"
 
 
 class Command(MigrateCommand):
@@ -20,8 +19,6 @@ class Command(MigrateCommand):
     )
 
     def add_arguments(self, parser):
-        # We inherit from MigrateCommand to ensure we show the exact same set of
-        # command line options.
         super().add_arguments(parser)
         parser.add_argument(
             "--lock-id",
@@ -32,17 +29,32 @@ class Command(MigrateCommand):
         )
 
     def handle(self, *args, **options):
-        lock_id = options["lock_id"]
-        with transaction.atomic():
-            self.acquire_lock(lock_id)
-            self.run_migration_command()
+        lock_id = options.pop("lock_id")
 
-    def acquire_lock(self, lock_id):
-        with connection.cursor() as cursor:
+        # We need to use a brand new, separate database connection as we need an
+        # open transaction to hold the pg_advisory_xact_lock. However, we can't then
+        # use this same connection to run the migrations as many of them run
+        # non-atomically outside a transaction.
+        separate_lock_connection = connections.create_connection("default")
+        connections[LOCKED_MIGRATE_CMD_CONNECTION_ALIAS] = separate_lock_connection
+        try:
+            with transaction.atomic(using=LOCKED_MIGRATE_CMD_CONNECTION_ALIAS):
+                self.acquire_lock(separate_lock_connection, lock_id)
+                super().handle(*args, **options)
+            logger.info(
+                f"Migration complete, the migration lock has now been released."
+            )
+        finally:
+            # Be sure the connection gets closed as we made it ourselves and there's
+            # no harm calling close multiple times
+            separate_lock_connection.close()
+
+    def acquire_lock(self, lock_connection, lock_id):
+        with lock_connection.cursor() as cursor:
             logger.info(
                 f"Attempting to lock the postgres advisory lock with id: {lock_id} "
                 "You can disable using locked_migrate by default and switch back to the "
-                "non-locking version by setting BASEROW_DISABLE_LOCKED_MIGRATIONS=true."
+                "non-locking version by setting BASEROW_DISABLE_LOCKED_MIGRATIONS=true"
             )
             # We are forced to use a xact lock to ensure this works properly with
             # pgbouncer, see
@@ -51,31 +63,3 @@ class Command(MigrateCommand):
             # with-pgbouncer/
             cursor.execute("SELECT pg_advisory_xact_lock(%s)", [lock_id])
             logger.info(f"Acquired the lock, proceeding with migration.")
-
-    def run_migration_command(self):
-        # Make sure we run the exact same migrate command just the non lock version.
-        migrate_args = sys.argv.copy()
-        migrate_args[migrate_args.index("locked_migrate")] = "migrate"
-
-        # We run in a sub-process to ensure a separate database connection is made
-        # as we can't run all migrations inside a single database transaction
-        # which we are currently using the hold the lock.
-        #
-        # Nosec is added as we are a CLI tool passing through user input to a
-        # sub-process, there is no danger we are intentionally doing this for it to
-        # work fundamentally.
-        migrate_process = subprocess.Popen(  # nosec
-            migrate_args, stderr=subprocess.PIPE, stdout=subprocess.PIPE
-        )
-        self.stream_output(migrate_process.stdout, self.stdout)
-        self.stream_output(migrate_process.stderr, self.stderr)
-        migrate_process.wait()
-
-        if migrate_process.returncode != 0:
-            raise subprocess.CalledProcessError(
-                migrate_process.returncode, migrate_args
-            )
-
-    def stream_output(self, pipe, output_stream):
-        for line in iter(pipe.readline, b""):
-            output_stream.write(line.decode())
