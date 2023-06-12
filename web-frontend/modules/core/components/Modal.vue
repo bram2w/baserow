@@ -11,6 +11,7 @@
         'modal__box--full-height': fullHeight,
         'modal__box--with-sidebar': sidebar,
         'modal__box--full-screen': fullScreen,
+        'modal__box--wide': wide,
         'modal__box--small': small,
         'modal__box--tiny': tiny,
       }"
@@ -73,6 +74,11 @@ export default {
       required: false,
     },
     fullScreen: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    wide: {
       type: Boolean,
       default: false,
       required: false,

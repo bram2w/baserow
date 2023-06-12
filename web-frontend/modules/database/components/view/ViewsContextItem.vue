@@ -25,6 +25,7 @@
       v-if="deactivatedClickModal !== null"
       ref="deactivatedClickModal"
       :name="viewType.getName()"
+      :workspace="database.workspace"
     ></component>
     <template v-if="!readOnly && showViewContext">
       <a

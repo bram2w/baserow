@@ -27,6 +27,7 @@
           v-if="hasDeactivatedClickModal(mode)"
           :ref="'deactivatedClickModal' + index.toString()"
           :name="mode.getName()"
+          :workspace="database.workspace"
         ></component>
       </li>
     </ul>

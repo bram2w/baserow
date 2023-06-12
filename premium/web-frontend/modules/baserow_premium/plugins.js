@@ -18,4 +18,12 @@ export class PremiumPlugin extends BaserowPlugin {
   hasFeature(feature, forSpecificWorkspace) {
     return this.app.$licenseHandler.hasFeature(feature, forSpecificWorkspace)
   }
+
+  /**
+   * A hook to provide different content for the
+   * PremiumModal.
+   */
+  getPremiumModalContentComponent() {
+    return null
+  }
 }

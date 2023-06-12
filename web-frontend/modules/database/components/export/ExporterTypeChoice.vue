@@ -19,6 +19,7 @@
       :is="deactivatedClickModal"
       v-if="deactivatedClickModal !== null"
       ref="deactivatedClickModal"
+      :workspace="database.workspace"
       :name="exporterType.getName()"
     ></component>
   </li>

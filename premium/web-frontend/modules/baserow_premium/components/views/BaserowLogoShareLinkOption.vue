@@ -23,6 +23,7 @@
     <PremiumModal
       v-if="!hasPremiumFeatures"
       ref="premiumModal"
+      :workspace="workspace"
       :name="$t('shareLinkOptions.baserowLogo.premiumModalName')"
     ></PremiumModal>
   </div>

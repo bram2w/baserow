@@ -17,6 +17,7 @@
         v-if="decoratorType.getDeactivatedClickModal() !== null"
         :ref="'deactivatedClickModal' + index.toString()"
         :name="decoratorType.getName()"
+        :workspace="database.workspace"
       ></component>
     </div>
   </div>
