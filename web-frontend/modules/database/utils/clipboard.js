@@ -54,13 +54,16 @@ export const getRichClipboard = async (event) => {
  */
 export const setRichClipboard = (values) => {
   const listener = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
     Object.entries(values).forEach(([type, content]) => {
       e.clipboardData.setData(type, content)
     })
-    e.preventDefault()
-    e.stopPropagation()
   }
   document.addEventListener('copy', listener)
-  document.execCommand('copy')
-  document.removeEventListener('copy', listener)
+  try {
+    document.execCommand('copy')
+  } finally {
+    document.removeEventListener('copy', listener)
+  }
 }
