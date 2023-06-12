@@ -103,7 +103,7 @@ export default {
       return this.$children.filter((child) => child.isDropdownItem === true)
     },
     focusout(event) {
-      // Hide only if we loose focus in profit of another element
+      // Hide only if we loose focus in favor of another element.
       if (event.relatedTarget) {
         this.hide()
       }
@@ -144,10 +144,35 @@ export default {
         // Scroll to the selected child.
         this.getDropdownItemComponents().forEach((child) => {
           if (child.value === this.value) {
-            this.$refs.items.scrollTop =
-              child.$el.offsetTop -
-              child.$el.clientHeight -
-              Math.round(this.$refs.items.clientHeight / 2)
+            // This is a bit of weird scenario. This $refs.items uses the
+            // `v-auto-overflow-scroll` directive. That one uses the resize observer
+            // to detect if the element needs a scrollbar. This one has not fired before
+            // this part of the code runs, resulting in no scrollbar. After it will
+            // run, it can create a scrollbar, which changes the `offsetTop` values, and
+            // will therefore not scroll to the correct item. Running this function
+            // in advance will make sure that the scrollbar is added immediately if
+            // needed, `offsetTop` are going to be correct.
+            this.$refs.items.autoOverflowScrollHeightObserverFunction?.()
+
+            const childTop = child.$el.offsetTop
+            const childBottom = child.$el.offsetTop + child.$el.clientHeight
+            const itemsScrollTop = this.$refs.items.scrollTop
+            const itemsScrollBottom =
+              this.$refs.items.scrollTop + this.$refs.items.clientHeight
+
+            if (childTop < itemsScrollTop) {
+              // If the selected item is above the visible scroll area, we want to
+              // change the scroll offset, so that the item is visible at the top.
+              this.$refs.items.scrollTop = child.$el.offsetTop - 10
+            } else if (childBottom > itemsScrollBottom) {
+              // If the selected item is below the visible scroll area, we want to
+              // change the scroll offset, so that the item is visible at the bottom.
+              this.$refs.items.scrollTop =
+                child.$el.offsetTop -
+                this.$refs.items.clientHeight +
+                child.$el.clientHeight +
+                10
+            }
           }
         })
       })

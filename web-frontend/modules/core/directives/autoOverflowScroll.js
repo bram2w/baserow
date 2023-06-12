@@ -15,13 +15,16 @@ import ResizeObserver from 'resize-observer-polyfill'
  */
 export default {
   bind(el) {
-    el.autoOverflowScrollHeightObserver = new ResizeObserver(() => {
+    el.autoOverflowScrollHeightObserverFunction = () => {
       if (el.scrollHeight <= el.clientHeight) {
         el.classList.add('prevent-scroll')
       } else {
         el.classList.remove('prevent-scroll')
       }
-    })
+    }
+    el.autoOverflowScrollHeightObserver = new ResizeObserver(
+      el.autoOverflowScrollHeightObserverFunction
+    )
     el.autoOverflowScrollHeightObserver.observe(el)
   },
   unbind(el) {

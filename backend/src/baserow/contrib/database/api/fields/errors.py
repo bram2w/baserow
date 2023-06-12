@@ -104,6 +104,23 @@ ERROR_INVALID_COUNT_THROUGH_FIELD = (
     "The provided through field does not exist, is in a different table or is not a "
     "link row field.",
 )
+ERROR_INVALID_ROLLUP_THROUGH_FIELD = (
+    "ERROR_INVALID_ROLLUP_THROUGH_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided through field does not exist, is in a different table or is not a "
+    "link row field.",
+)
+ERROR_INVALID_ROLLUP_TARGET_FIELD = (
+    "ERROR_INVALID_ROLLUP_TARGET_FIELD",
+    HTTP_400_BAD_REQUEST,
+    "The provided target field does not exist or is in a different table to the table"
+    " linked to by the through field.",
+)
+ERROR_INVALID_ROLLUP_FORMULA_FUNCTION = (
+    "ERROR_INVALID_ROLLUP_FORMULA_FUNCTION",
+    HTTP_400_BAD_REQUEST,
+    "The provided rollup formula function does not exist.",
+)
 ERROR_INVALID_LOOKUP_THROUGH_FIELD = (
     "ERROR_INVALID_LOOKUP_THROUGH_FIELD",
     HTTP_400_BAD_REQUEST,

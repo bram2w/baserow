@@ -33,6 +33,9 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_INVALID_COUNT_THROUGH_FIELD,
     ERROR_INVALID_LOOKUP_TARGET_FIELD,
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
+    ERROR_INVALID_ROLLUP_FORMULA_FUNCTION,
+    ERROR_INVALID_ROLLUP_TARGET_FIELD,
+    ERROR_INVALID_ROLLUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
@@ -64,6 +67,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
+from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
@@ -74,6 +78,7 @@ from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 
 from .constants import UPSERT_OPTION_DICT_KEY
+from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
     SelfReferenceFieldDependencyError,
@@ -91,6 +96,8 @@ from .exceptions import (
     InvalidCountThroughField,
     InvalidLookupTargetField,
     InvalidLookupThroughField,
+    InvalidRollupTargetField,
+    InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
@@ -128,6 +135,7 @@ from .models import (
     NumberField,
     PhoneNumberField,
     RatingField,
+    RollupField,
     SelectOption,
     SingleSelectField,
     TextField,
@@ -1927,6 +1935,7 @@ class LinkRowFieldType(FieldType):
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Optional[Field]:
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
@@ -1956,7 +1965,9 @@ class LinkRowFieldType(FieldType):
             )
             serialized_copy["link_row_relation_id"] = related_field.link_row_relation_id
 
-        field = super().import_serialized(table, serialized_copy, id_mapping)
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
 
         if related_field_found:
             # If the related field is found, it means that when creating that field
@@ -1973,12 +1984,17 @@ class LinkRowFieldType(FieldType):
 
         return field
 
-    def after_import_serialized(self, field: LinkRowField, field_cache: "FieldCache"):
+    def after_import_serialized(
+        self,
+        field: LinkRowField,
+        field_cache: "FieldCache",
+        id_mapping: Dict[str, Any],
+    ):
         if field.link_row_related_field:
             FieldDependencyHandler().rebuild_dependencies(
                 field.link_row_related_field, field_cache
             )
-        super().after_import_serialized(field, field_cache)
+        super().after_import_serialized(field, field_cache, id_mapping)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
@@ -3519,9 +3535,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         )
         to_model.objects_and_trash.all().update(**{f"{to_field.db_column}": expr})
 
-    def after_import_serialized(self, field, field_cache):
+    def after_import_serialized(self, field, field_cache, id_mapping):
         field.save(recalculate=True, field_cache=field_cache)
-        super().after_import_serialized(field, field_cache)
+        super().after_import_serialized(field, field_cache, id_mapping)
 
     def after_rows_imported(
         self,
@@ -3570,9 +3586,7 @@ class CountFieldType(FormulaFieldType):
             required=False,
             allow_null=True,
             source="through_field.id",
-            help_text="The id of the link row field to lookup values for. Will override"
-            " the `through_field_name` parameter if both are provided, however only "
-            "one is required.",
+            help_text="The id of the link row field to count values for.",
         ),
         "nullable": serializers.BooleanField(required=False, read_only=True),
     }
@@ -3645,12 +3659,170 @@ class CountFieldType(FormulaFieldType):
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
-        serialized_copy["through_field_id"] = id_mapping["database_fields"][
-            serialized_values["through_field_id"]
-        ]
-        return super().import_serialized(table, serialized_copy, id_mapping)
+        # We have to temporarily remove the `through_field_id`, because it can be
+        # that they haven't been created yet, which prevents us from finding it in
+        # the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        return field
+
+
+class RollupFieldType(FormulaFieldType):
+    type = "rollup"
+    model_class = RollupField
+    api_exceptions_map = {
+        **FormulaFieldType.api_exceptions_map,
+        InvalidRollupThroughField: ERROR_INVALID_ROLLUP_THROUGH_FIELD,
+        InvalidRollupTargetField: ERROR_INVALID_ROLLUP_TARGET_FIELD,
+        FormulaFunctionTypeDoesNotExist: ERROR_INVALID_ROLLUP_FORMULA_FUNCTION,
+    }
+    can_get_unique_values = False
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "target_field_id",
+        "rollup_function",
+    ]
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "target_field_id",
+        "rollup_function",
+        "formula_type",
+    ]
+    serializer_field_overrides = {
+        "through_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="through_field.id",
+            help_text="The id of the link row field to rollup values for.",
+        ),
+        "target_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="target_field.id",
+            help_text="The id of the field in the table linked to by the "
+            "through_field to rollup.",
+        ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
+    }
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._validate_through_and_target_field_values(
+            table,
+            allowed_field_values,
+            field_kwargs,
+        )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
+
+    def before_update(self, from_field, to_field_values, user, kwargs):
+        if isinstance(from_field, RollupField):
+            through_field_id = (
+                from_field.through_field.id
+                if from_field.through_field is not None
+                else None
+            )
+            target_field_id = (
+                from_field.target_field.id
+                if from_field.target_field is not None
+                else None
+            )
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+                through_field_id,
+                target_field_id,
+            )
+        else:
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+            )
+
+    def _validate_through_and_target_field_values(
+        self,
+        table,
+        values,
+        all_kwargs,
+        default_through_field_id=None,
+        default_target_field_id=None,
+    ):
+        through_field_id = values.get("through_field_id", default_through_field_id)
+        target_field_id = values.get("target_field_id", default_target_field_id)
+        through_field_name = all_kwargs.get("through_field_name", None)
+        target_field_name = all_kwargs.get("target_field_name", None)
+
+        # If the `through_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the `link_row` field by its name.
+        if through_field_name is not None:
+            try:
+                through_field_id = table.field_set.get(name=through_field_name).id
+            except Field.DoesNotExist:
+                raise InvalidRollupThroughField()
+        try:
+            through_field = FieldHandler().get_field(through_field_id, LinkRowField)
+        except FieldDoesNotExist:
+            # Occurs when the through_field_id points at a non LinkRowField
+            raise InvalidRollupThroughField()
+
+        if through_field.table != table:
+            raise InvalidRollupThroughField()
+
+        # If the `target_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the field by its name.
+        if target_field_name is not None:
+            try:
+                target_field_id = through_field.link_row_table.field_set.get(
+                    name=target_field_name
+                ).id
+            except Field.DoesNotExist:
+                raise InvalidRollupTargetField()
+        try:
+            target_field = FieldHandler().get_field(target_field_id)
+        except FieldDoesNotExist:
+            raise InvalidRollupTargetField()
+
+        if target_field.table != through_field.link_row_table:
+            raise InvalidRollupTargetField()
+
+        values["through_field_id"] = through_field.id
+        values["target_field_id"] = target_field.id
+
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
+    ) -> "Field":
+        serialized_copy = serialized_values.copy()
+        # We have to temporarily remove the `through_field_id` and `target_field_id`,
+        # because it can be that they haven't been created yet, which prevents us
+        # from finding it in the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        original_target_field_id = serialized_copy.pop("target_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "target_field_id", original_target_field_id
+        )
+        return field
 
 
 class LookupFieldType(FormulaFieldType):
@@ -3869,17 +4041,24 @@ class LookupFieldType(FormulaFieldType):
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
-        # The through field and target field id's must be set to None because we
-        # don't need them. The field is created based on the field name.
-        serialized_copy["through_field_id"] = None
-        serialized_copy["target_field_id"] = None
-        return super().import_serialized(table, serialized_copy, id_mapping)
-
-    def after_import_serialized(self, field, field_cache):
-        self._rebuild_field_from_names(field)
-        super().after_import_serialized(field, field_cache)
+        # We have to temporarily set the `through_field_id` and `target_field_id`,
+        # because it can be that they haven't been created yet, which prevents us
+        # from finding it in the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        original_target_field_id = serialized_copy.pop("target_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "target_field_id", original_target_field_id
+        )
+        return field
 
 
 class MultipleCollaboratorsFieldType(FieldType):

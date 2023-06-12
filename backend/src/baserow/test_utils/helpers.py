@@ -113,7 +113,7 @@ def setup_interesting_test_table(
     i = 0
     other_table_primary_decimal_field = data_fixture.create_number_field(
         table=decimal_link_table,
-        name="text_field",
+        name="decimal_field",
         primary=True,
         number_decimal_places=3,
         number_negative=True,
@@ -226,7 +226,9 @@ def setup_interesting_test_table(
         )
 
     missing_fields = (
-        set(name_to_field_id.keys()) - set(values.keys()) - {"lookup", "count"}
+        set(name_to_field_id.keys())
+        - set(values.keys())
+        - {"lookup", "count", "rollup"}
     )
     assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "

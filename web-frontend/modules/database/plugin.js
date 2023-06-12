@@ -23,6 +23,7 @@ import {
   CreatedOnFieldType,
   FormulaFieldType,
   CountFieldType,
+  RollupFieldType,
   LookupFieldType,
   MultipleCollaboratorsFieldType,
 } from '@baserow/modules/database/fieldTypes'
@@ -407,6 +408,7 @@ export default (context) => {
   app.$registry.register('field', new PhoneNumberFieldType(context))
   app.$registry.register('field', new FormulaFieldType(context))
   app.$registry.register('field', new CountFieldType(context))
+  app.$registry.register('field', new RollupFieldType(context))
   app.$registry.register('field', new LookupFieldType(context))
   app.$registry.register('field', new MultipleCollaboratorsFieldType(context))
 

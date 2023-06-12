@@ -32,6 +32,7 @@ from baserow.core.utils import ChildProgressBuilder, grouper
 from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_TABLE
 from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure
+from .fields.deferred_field_fk_updater import DeferredFieldFkUpdater
 from .table.models import Table
 
 
@@ -267,6 +268,9 @@ class DatabaseApplicationType(ApplicationType):
         if "database_tables" not in id_mapping:
             id_mapping["database_tables"] = {}
 
+        if "database_fields" not in id_mapping:
+            id_mapping["database_fields"] = {}
+
         if "workspace_id" not in id_mapping and database.workspace is not None:
             id_mapping["workspace_id"] = database.workspace.id
 
@@ -290,11 +294,15 @@ class DatabaseApplicationType(ApplicationType):
         # the fields.
         fields_excluding_reversed_linked_fields = []
         none_field_count = 0
+        deferred_fk_update_collector = DeferredFieldFkUpdater()
         for serialized_table in serialized_tables:
             for serialized_field in serialized_table["fields"]:
                 field_type = field_type_registry.get(serialized_field["type"])
                 field_instance = field_type.import_serialized(
-                    serialized_table["_object"], serialized_field, id_mapping
+                    serialized_table["_object"],
+                    serialized_field,
+                    id_mapping,
+                    deferred_fk_update_collector,
                 )
 
                 if field_instance:
@@ -304,26 +312,34 @@ class DatabaseApplicationType(ApplicationType):
                     )
                 else:
                     none_field_count += 1
-
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         for external_table, serialized_field in external_table_fields_to_import or []:
             field_type = field_type_registry.get(serialized_field["type"])
-            field_type.import_serialized(external_table, serialized_field, id_mapping)
+            field_type.import_serialized(
+                external_table,
+                serialized_field,
+                id_mapping,
+                deferred_fk_update_collector,
+            )
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        deferred_fk_update_collector.run_deferred_fk_updates(
+            id_mapping["database_fields"]
+        )
 
         # From each field we call after_import_serialized which will recursively
         # be called on all of its dependants. This ensures that formulas recalculate
         # themselves now that all fields exist.
         field_cache = FieldCache()
-        for field_type, serialized_field in fields_excluding_reversed_linked_fields:
-            field_type.after_import_serialized(serialized_field, field_cache)
+        for field_type, field_instance in fields_excluding_reversed_linked_fields:
+            field_type.after_import_serialized(field_instance, field_cache, id_mapping)
 
         # The loop above might have recalculated the formula fields in the list,
         # we need to refresh the instances we have as a result as they might be stale.
-        for field_type, serialized_field in fields_excluding_reversed_linked_fields:
+        for field_type, field_instance in fields_excluding_reversed_linked_fields:
             if field_type.needs_refresh_after_import_serialized:
-                serialized_field.refresh_from_db()
+                field_instance.refresh_from_db()
 
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
@@ -332,11 +348,7 @@ class DatabaseApplicationType(ApplicationType):
             for serialized_view in serialized_table["views"]:
                 view_type = view_type_registry.get(serialized_view["type"])
                 view_type.import_serialized(
-                    table,
-                    serialized_view,
-                    id_mapping,
-                    files_zip,
-                    storage,
+                    table, serialized_view, id_mapping, files_zip
                 )
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 

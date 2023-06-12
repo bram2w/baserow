@@ -189,6 +189,15 @@ def construct_all_possible_field_kwargs(
                 "through_field_name": "link_row",
             }
         ],
+        "rollup": [
+            {
+                "name": "rollup",
+                "through_field_name": "decimal_link_row",
+                "target_field_name": "decimal_field",
+                "rollup_function": "sum",
+                "number_decimal_places": 3,
+            }
+        ],
         "lookup": [
             {
                 "name": "lookup",

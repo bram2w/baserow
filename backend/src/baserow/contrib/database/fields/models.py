@@ -550,6 +550,53 @@ class CountField(FormulaField):
         )
 
 
+class RollupField(FormulaField):
+    through_field = models.ForeignKey(
+        Field,
+        on_delete=models.SET_NULL,
+        related_name="rollup_fields_used_by",
+        null=True,
+        blank=True,
+    )
+    target_field = models.ForeignKey(
+        Field,
+        on_delete=models.SET_NULL,
+        related_name="targeting_rollup_fields",
+        null=True,
+        blank=True,
+    )
+    rollup_function = models.CharField(
+        max_length=64,
+        blank=True,
+        help_text="The rollup formula function that must be applied.",
+    )
+
+    def save(self, *args, **kwargs):
+        from baserow.contrib.database.formula.ast.tree import BaserowFieldReference
+        from baserow.contrib.database.formula.registries import (
+            formula_function_registry,
+        )
+
+        formula_function = formula_function_registry.get(self.rollup_function)
+        field_reference = BaserowFieldReference(
+            getattr(self.through_field, "name", ""),
+            getattr(self.target_field, "name", ""),
+            None,
+        )
+        self.formula = f"{formula_function.type}({field_reference})"
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return (
+            "RollupField(\n"
+            + f"through_field={getattr(self.through_field, 'name', '')},\n"
+            + f"target_field={getattr(self.target_field, 'name', '')},\n"
+            + f"rollup_function={self.rollup_function},\n"
+            + f"error={self.error},\n"
+            + ")"
+        )
+
+
 class LookupField(FormulaField):
     through_field = models.ForeignKey(
         Field,
