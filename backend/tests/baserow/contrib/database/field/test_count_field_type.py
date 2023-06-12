@@ -416,7 +416,6 @@ def test_convert_count_to_text_field_via_api(data_fixture, api_client):
         name="count_field",
         through_field_id=link_row_field.id,
     )
-    # text_field = FieldHandler().update_field(user, count_field, 'text')
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": count_field.id}),

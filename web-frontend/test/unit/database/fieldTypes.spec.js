@@ -182,6 +182,14 @@ const mockedFields = {
     table_id: 42,
     type: 'count',
   },
+  rollup: {
+    id: 19,
+    name: 'rollup',
+    order: 19,
+    primary: false,
+    table_id: 42,
+    type: 'rollup',
+  },
 }
 
 const valuesToCall = [null, undefined]

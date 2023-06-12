@@ -198,8 +198,22 @@ class AllProvidedCollaboratorIdsMustBeValidUsers(ValidationError):
 
 class InvalidCountThroughField(Exception):
     """
-    Raised when a count field is attempted to be created or updated with a through
+    Raised when a count field is attempted to be created or updated with a through a
     field that does not exist, is in a different table or is not a link row field.
+    """
+
+
+class InvalidRollupThroughField(Exception):
+    """
+    Raised when a rollup field is attempted to be created or updated with a through a
+    field that does not exist, is in a different table or is not a link row field.
+    """
+
+
+class InvalidRollupTargetField(Exception):
+    """
+    Raised when a rollup field is attempted to be created or updated with a target
+    field that does not exist or is not in the through fields linked table.
     """
 
 
@@ -212,7 +226,7 @@ class InvalidLookupThroughField(Exception):
 
 class InvalidLookupTargetField(Exception):
     """
-    Raised when a a lookup field is attempted to be created or updated with a target
+    Raised when a lookup field is attempted to be created or updated with a target
     field that does not exist or is not in the through fields linked table.
     """
 

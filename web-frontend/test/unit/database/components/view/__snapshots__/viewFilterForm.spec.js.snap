@@ -1014,7 +1014,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items prevent-scroll"
               tabindex=""
             >
               <li
@@ -1344,7 +1344,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items prevent-scroll"
               tabindex=""
             >
               <li

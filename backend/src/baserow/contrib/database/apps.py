@@ -202,6 +202,7 @@ class DatabaseConfig(AppConfig):
             NumberFieldType,
             PhoneNumberFieldType,
             RatingFieldType,
+            RollupFieldType,
             SingleSelectFieldType,
             TextFieldType,
             URLFieldType,
@@ -224,6 +225,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(PhoneNumberFieldType())
         field_type_registry.register(FormulaFieldType())
         field_type_registry.register(CountFieldType())
+        field_type_registry.register(RollupFieldType())
         field_type_registry.register(LookupFieldType())
         field_type_registry.register(MultipleCollaboratorsFieldType())
 

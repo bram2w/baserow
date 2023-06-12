@@ -11,10 +11,30 @@
       :table="table"
       :through-field="selectedThroughField"
       :default-values="defaultValues"
-      :label="$t('fieldLookupSubForm.selectTargetFieldLabel')"
+      :label="$t('fieldRollupSubForm.selectTargetFieldLabel')"
       @input="selectedTargetField = $event"
     ></FieldSelectTargetFieldSubForm>
     <template v-if="selectedTargetField">
+      <div class="control">
+        <label class="control__label control__label--small">{{
+          $t('fieldRollupSubForm.label')
+        }}</label>
+        <div class="control__elements">
+          <Dropdown
+            v-model="values.rollup_function"
+            :class="{ 'dropdown--error': $v.values.rollup_function.$error }"
+            @hide="$v.values.rollup_function.$touch()"
+          >
+            <DropdownItem
+              v-for="f in rollupFunctions"
+              :key="f.getType()"
+              :name="f.getType()"
+              :value="f.getType()"
+              :description="f.getDescription()"
+            ></DropdownItem>
+          </Dropdown>
+        </div>
+      </div>
       <FormulaTypeSubForms
         :default-values="defaultValues"
         :formula-type="targetFieldFormulaType"
@@ -22,11 +42,15 @@
       >
       </FormulaTypeSubForms>
     </template>
+    <div v-if="errorFromServer" class="error formula-field__error">
+      {{ errorFromServer }}
+    </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
@@ -35,7 +59,7 @@ import FieldSelectThroughFieldSubForm from '@baserow/modules/database/components
 import FieldSelectTargetFieldSubForm from '@baserow/modules/database/components/field/FieldSelectTargetFieldSubForm'
 
 export default {
-  name: 'FieldLookupSubForm',
+  name: 'FieldRollupSubForm',
   components: {
     FieldSelectThroughFieldSubForm,
     FieldSelectTargetFieldSubForm,
@@ -46,8 +70,10 @@ export default {
     return {
       selectedThroughField: null,
       selectedTargetField: null,
-      allowedValues: [],
-      values: {},
+      allowedValues: ['rollup_function'],
+      values: {
+        rollup_function: null,
+      },
       errorFromServer: null,
     }
   },
@@ -64,6 +90,11 @@ export default {
       }
       return 'unknown'
     },
+    rollupFunctions() {
+      return Object.values(this.$registry.getAll('formula_function')).filter(
+        (f) => f.isRollupCompatible()
+      )
+    },
     ...mapGetters({
       // This part might fail in the future because we can't 100% depend on that the
       // fields in the store are related to the component that renders this. An example
@@ -71,7 +102,11 @@ export default {
       fields: 'field/getAll',
     }),
   },
-  validations: {},
+  validations: {
+    values: {
+      rollup_function: { required },
+    },
+  },
   methods: {
     handleErrorByForm(error) {
       if (

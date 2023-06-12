@@ -35,6 +35,10 @@ export class BaserowFunctionDefinition extends Registerable {
   getOperator() {
     return ''
   }
+
+  isRollupCompatible() {
+    return false
+  }
 }
 
 export class BaserowUpper extends BaserowFunctionDefinition {
@@ -1054,6 +1058,10 @@ export class BaserowCount extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowContains extends BaserowFunctionDefinition {
@@ -1892,6 +1900,10 @@ export class BaserowAny extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowEvery extends BaserowFunctionDefinition {
@@ -1914,6 +1926,10 @@ export class BaserowEvery extends BaserowFunctionDefinition {
 
   getFormulaType() {
     return 'array'
+  }
+
+  isRollupCompatible() {
+    return true
   }
 }
 
@@ -1942,6 +1958,10 @@ export class BaserowMax extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowMin extends BaserowFunctionDefinition {
@@ -1968,6 +1988,10 @@ export class BaserowMin extends BaserowFunctionDefinition {
 
   getFormulaType() {
     return 'array'
+  }
+
+  isRollupCompatible() {
+    return true
   }
 }
 
@@ -2023,6 +2047,10 @@ export class BaserowStddevPop extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowStddevSample extends BaserowFunctionDefinition {
@@ -2049,6 +2077,10 @@ export class BaserowStddevSample extends BaserowFunctionDefinition {
 
   getFormulaType() {
     return 'array'
+  }
+
+  isRollupCompatible() {
+    return true
   }
 }
 
@@ -2077,6 +2109,10 @@ export class BaserowVarianceSample extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowVariancePop extends BaserowFunctionDefinition {
@@ -2103,6 +2139,10 @@ export class BaserowVariancePop extends BaserowFunctionDefinition {
 
   getFormulaType() {
     return 'array'
+  }
+
+  isRollupCompatible() {
+    return true
   }
 }
 
@@ -2131,6 +2171,10 @@ export class BaserowAvg extends BaserowFunctionDefinition {
   getFormulaType() {
     return 'array'
   }
+
+  isRollupCompatible() {
+    return true
+  }
 }
 
 export class BaserowSum extends BaserowFunctionDefinition {
@@ -2157,6 +2201,10 @@ export class BaserowSum extends BaserowFunctionDefinition {
 
   getFormulaType() {
     return 'array'
+  }
+
+  isRollupCompatible() {
+    return true
   }
 }
 

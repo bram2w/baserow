@@ -96,6 +96,7 @@ import GridViewFieldFormula from '@baserow/modules/database/components/view/grid
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
 import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
+import FieldRollupSubForm from '@baserow/modules/database/components/field/FieldRollupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
@@ -2604,10 +2605,19 @@ export class FormulaFieldType extends FieldType {
     return 'formula'
   }
 
+  static getTypeAndSubTypes() {
+    return [
+      this.getType(),
+      CountFieldType.getType(),
+      RollupFieldType.getType(),
+      LookupFieldType.getType(),
+    ]
+  }
+
   static compatibleWithFormulaTypes(...formulaTypeStrings) {
     return (field) => {
       return (
-        field.type === this.getType() &&
+        this.getTypeAndSubTypes().includes(field.type) &&
         formulaTypeStrings.includes(field.formula_type)
       )
     }
@@ -2768,6 +2778,33 @@ export class CountFieldType extends FormulaFieldType {
 
   getFormComponent() {
     return FieldCountSubForm
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
+  }
+}
+
+export class RollupFieldType extends FormulaFieldType {
+  static getType() {
+    return 'rollup'
+  }
+
+  getIconClass() {
+    return 'box-open'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.rollup')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.rollup')
+  }
+
+  getFormComponent() {
+    return FieldRollupSubForm
   }
 
   shouldFetchFieldSelectOptions() {

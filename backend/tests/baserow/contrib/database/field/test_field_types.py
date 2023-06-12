@@ -4,7 +4,9 @@ from django.test.utils import override_settings
 import pytest
 from faker import Faker
 
-from baserow.contrib.database.fields.field_cache import FieldCache
+from baserow.contrib.database.fields.deferred_field_fk_updater import (
+    DeferredFieldFkUpdater,
+)
 from baserow.contrib.database.fields.field_types import PhoneNumberFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
@@ -28,7 +30,7 @@ def test_import_export_text_field(data_fixture):
     text_field_type = field_type_registry.get_by_model(text_field)
     text_serialized = text_field_type.export_serialized(text_field)
     text_field_imported = text_field_type.import_serialized(
-        text_field.table, text_serialized, id_mapping
+        text_field.table, text_serialized, id_mapping, DeferredFieldFkUpdater()
     )
     assert text_field.id != text_field_imported.id
     assert text_field.name == text_field_imported.name
@@ -62,7 +64,10 @@ def test_import_export_formula_field(data_fixture, api_client):
         table=second_table, name="Text name", text_default="Text default"
     )
     formula_field_imported = formula_field_type.import_serialized(
-        text_field_in_diff_table.table, formula_serialized, id_mapping
+        text_field_in_diff_table.table,
+        formula_serialized,
+        id_mapping,
+        DeferredFieldFkUpdater(),
     )
     assert formula_field.id != formula_field_imported.id
     assert formula_field.name == formula_field_imported.name
@@ -626,7 +631,6 @@ def test_human_readable_values(data_fixture):
 def test_import_export_lookup_field(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
-    id_mapping = {}
 
     target_field = data_fixture.create_text_field(name="target", table=table_b)
     table_a_model = table_a.get_model(attribute_names=True)
@@ -654,11 +658,19 @@ def test_import_export_lookup_field(data_fixture, api_client):
     assert lookup_serialized["through_field_id"] == link_field.id
     assert lookup_serialized["through_field_name"] == link_field.name
 
+    id_mapping = {
+        "database_fields": {
+            link_field.id: link_field.id,
+            target_field.id: target_field.id,
+        }
+    }
+
     lookup.name = "rename to prevent import clash"
     lookup.save()
 
+    deferred_field_fk_updater = DeferredFieldFkUpdater()
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a, lookup_serialized, id_mapping
+        table_a, lookup_serialized, id_mapping, deferred_field_fk_updater
     )
     assert lookup.id != lookup_field_imported.id
     assert lookup_field_imported.name == "lookup"
@@ -670,7 +682,8 @@ def test_import_export_lookup_field(data_fixture, api_client):
     assert lookup_field_imported.through_field_name == lookup.through_field_name
     assert lookup_field_imported.target_field_name == lookup.target_field_name
 
-    lookup_field_type.after_import_serialized(lookup_field_imported, FieldCache())
+    deferred_field_fk_updater.run_deferred_fk_updates(id_mapping["database_fields"])
+    lookup_field_imported.refresh_from_db()
     assert lookup_field_imported.through_field == lookup.through_field
     assert lookup_field_imported.target_field == lookup.target_field
     assert lookup_field_imported.through_field_name == lookup.through_field_name
