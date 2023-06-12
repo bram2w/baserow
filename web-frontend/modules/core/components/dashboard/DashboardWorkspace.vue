@@ -30,6 +30,7 @@
           :key="index"
           :workspace="workspace"
           :component-arguments="componentArguments"
+          @workspace-updated="$emit('workspace-updated', workspace)"
         ></component>
       </div>
     </div>

@@ -24,6 +24,7 @@
       :is="deactivatedClickModal"
       v-if="deactivatedClickModal !== null"
       ref="deactivatedClickModal"
+      :workspace="database.workspace"
       :name="viewType.getName()"
     ></component>
   </a>

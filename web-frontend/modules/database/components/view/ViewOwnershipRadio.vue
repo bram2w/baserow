@@ -15,6 +15,7 @@
       v-if="viewOwnershipType.getDeactivatedModal() !== null"
       ref="deactivatedClickModal"
       :name="viewOwnershipType.getFeatureName()"
+      :workspace="database.workspace"
     ></component>
   </Radio>
 </template>

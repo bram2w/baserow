@@ -212,7 +212,7 @@
             <component
               :is="component"
               v-for="(component, index) in sidebarWorkspaceComponents"
-              :key="index"
+              :key="'sidebarWorkspaceComponents' + index"
               :workspace="selectedWorkspace"
             ></component>
             <ul class="tree">

@@ -75,6 +75,8 @@ export default {
           this.$client
         ).acceptInvitation(invitation.id)
 
+        this.$emit('invitation-accepted', { invitation, workspace })
+
         // The accept endpoint returns a workspace user object that we can add to the
         // store. Also the applications that we just fetched can be added to the
         // store.

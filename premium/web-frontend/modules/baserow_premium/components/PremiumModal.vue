@@ -1,20 +1,31 @@
 <template>
   <Modal>
-    <h2 class="box__title">
-      {{ $t('premiumModal.title', { name }) }}
-    </h2>
-    <div>
-      <p>
-        {{ $t('premiumModal.description', { name }) }}
-      </p>
-      <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
-      <a
-        href="https://baserow.io/pricing"
-        target="_blank"
-        class="button button--primary button--large"
-        >{{ $t('premiumModal.viewPricing') }}</a
-      >
-    </div>
+    <component
+      :is="contentComponent"
+      v-if="contentComponent"
+      :name="name"
+      :workspace="workspace"
+      @hide="hide"
+    ></component>
+    <template v-else>
+      <h2 class="box__title">
+        {{ $t('premiumModal.title', { name }) }}
+      </h2>
+      <div>
+        <p>
+          {{ $t('premiumModal.description', { name }) }}
+        </p>
+        <PremiumFeatures class="margin-bottom-3"></PremiumFeatures>
+        <div>
+          <a
+            href="https://baserow.io/pricing"
+            target="_blank"
+            class="button button--primary button--large"
+            >{{ $t('premiumModal.viewPricing') }}</a
+          >
+        </div>
+      </div>
+    </template>
   </Modal>
 </template>
 
@@ -30,6 +41,17 @@ export default {
     name: {
       type: String,
       required: true,
+    },
+    workspace: {
+      type: Object,
+      required: true,
+    },
+  },
+  computed: {
+    contentComponent() {
+      return this.$registry
+        .get('plugin', 'premium')
+        .getPremiumModalContentComponent()
     },
   },
 }
