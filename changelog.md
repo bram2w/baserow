@@ -1,5 +1,28 @@
 # Changelog
 
+## Released 1.18.0
+
+### New features
+* When copy-pasting, automatically create missing number of rows [#1252](https://gitlab.com/baserow/baserow/-/issues/1252)
+* Add 2 date filters: `before or same date` and `after or same date`. [#1344](https://gitlab.com/baserow/baserow/-/issues/1344)
+* Wrap migrate command in some sort of lock to prevent buggy concurrent migration runs in deployments with many Baserow backend services. [#1654](https://gitlab.com/baserow/baserow/-/issues/1654)
+* add ability to copy and paste between different multi select option fields based on matching [#1750](https://gitlab.com/baserow/baserow/-/issues/1750)
+* Introduced rollup field [#222](https://gitlab.com/baserow/baserow/-/issues/222)
+* Introduced count field [#224](https://gitlab.com/baserow/baserow/-/issues/224)
+
+### Bug fixes
+* Fix redirect param being propagated [#1043](https://gitlab.com/baserow/baserow/-/issues/1043)
+* Duplicating field with select options results in two fields sharing same underlying options. [#1735](https://gitlab.com/baserow/baserow/-/issues/1735)
+* Fix drag and drop problem in Kanban view regarding inconsistent stack counts [#1738](https://gitlab.com/baserow/baserow/-/issues/1738)
+* Fix browser freeze in older browsers when copying single cell [#1741](https://gitlab.com/baserow/baserow/-/issues/1741)
+* Hide login buttons and login actions when afterSignupStepComponents are being displayed [#1747](https://gitlab.com/baserow/baserow/-/issues/1747)
+* Fix issue where cachalot doesn't invalidate correctly `database_multipleselect_*` m2m tables. [#1772](https://gitlab.com/baserow/baserow/-/issues/1772)
+* Made Airtable import compatible with signed files.
+
+### Refactors
+* Added datetime formats to be able to parse different datetimes (with momentjs strict mode enabled). [#1648](https://gitlab.com/baserow/baserow/-/issues/1648)
+
+
 ## Released 1.17.2
 
 ### New features
