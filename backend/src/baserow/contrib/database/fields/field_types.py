@@ -4,6 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from datetime import date, datetime, timedelta
 from decimal import Decimal
+from itertools import cycle
 from random import randint, randrange, sample
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
 from zipfile import ZipFile
@@ -29,8 +30,12 @@ from rest_framework import serializers
 from baserow.contrib.database.api.fields.errors import (
     ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR,
     ERROR_INCOMPATIBLE_PRIMARY_FIELD_TYPE,
+    ERROR_INVALID_COUNT_THROUGH_FIELD,
     ERROR_INVALID_LOOKUP_TARGET_FIELD,
     ERROR_INVALID_LOOKUP_THROUGH_FIELD,
+    ERROR_INVALID_ROLLUP_FORMULA_FUNCTION,
+    ERROR_INVALID_ROLLUP_TARGET_FIELD,
+    ERROR_INVALID_ROLLUP_THROUGH_FIELD,
     ERROR_LINK_ROW_TABLE_NOT_IN_SAME_DATABASE,
     ERROR_LINK_ROW_TABLE_NOT_PROVIDED,
     ERROR_SELF_REFERENCING_LINK_ROW_CANNOT_HAVE_RELATED_FIELD,
@@ -62,6 +67,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
+from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
@@ -72,6 +78,7 @@ from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 
 from .constants import UPSERT_OPTION_DICT_KEY
+from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
     SelfReferenceFieldDependencyError,
@@ -86,8 +93,11 @@ from .exceptions import (
     DateForceTimezoneOffsetValueError,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
+    InvalidCountThroughField,
     InvalidLookupTargetField,
     InvalidLookupThroughField,
+    InvalidRollupTargetField,
+    InvalidRollupThroughField,
     LinkRowTableNotInSameDatabase,
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
@@ -109,6 +119,7 @@ from .handler import FieldHandler
 from .models import (
     AbstractSelectOption,
     BooleanField,
+    CountField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -124,6 +135,7 @@ from .models import (
     NumberField,
     PhoneNumberField,
     RatingField,
+    RollupField,
     SelectOption,
     SingleSelectField,
     TextField,
@@ -1881,6 +1893,7 @@ class LinkRowFieldType(FieldType):
 
         model_name = f"table_{instance.link_row_table_id}"
         count_name = f"table_{instance.link_row_table_id}_count"
+        queryset_name = f"table_{instance.link_row_table_id}_queryset"
 
         if model_name not in cache:
             cache[model_name] = instance.link_row_table.get_model(field_ids=[])
@@ -1892,13 +1905,23 @@ class LinkRowFieldType(FieldType):
         if count == 0:
             return []
 
-        # Ignoring with nosec as this randint usage is purely for constructing
-        # random data in dev environments and is not being used for security or
-        # cryptographical reasons.
-        values = model.objects.order_by("?")[0 : randrange(0, 3)].values_list(  # nosec
-            "id", flat=True
-        )
-        return values
+        def get_random_objects_iterator(limit=10000):
+            qs = model.objects.order_by("?").only("id")
+            if count > limit:
+                return qs.iterator(chunk_size=limit)
+            else:
+                return cycle(qs.all())
+
+        if queryset_name not in cache:
+            cache[queryset_name] = get_random_objects_iterator()
+
+        qs = cache[queryset_name]
+
+        try:
+            return [next(qs).id for _ in range(randrange(0, min(3, count)))]  # nosec
+        except StopIteration:
+            cache[queryset_name] = get_random_objects_iterator()
+        return []
 
     def export_serialized(self, field):
         serialized = super().export_serialized(field, False)
@@ -1912,6 +1935,7 @@ class LinkRowFieldType(FieldType):
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Optional[Field]:
         serialized_copy = serialized_values.copy()
         serialized_copy["link_row_table_id"] = id_mapping["database_tables"][
@@ -1941,7 +1965,9 @@ class LinkRowFieldType(FieldType):
             )
             serialized_copy["link_row_relation_id"] = related_field.link_row_relation_id
 
-        field = super().import_serialized(table, serialized_copy, id_mapping)
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
 
         if related_field_found:
             # If the related field is found, it means that when creating that field
@@ -1958,12 +1984,17 @@ class LinkRowFieldType(FieldType):
 
         return field
 
-    def after_import_serialized(self, field: LinkRowField, field_cache: "FieldCache"):
+    def after_import_serialized(
+        self,
+        field: LinkRowField,
+        field_cache: "FieldCache",
+        id_mapping: Dict[str, Any],
+    ):
         if field.link_row_related_field:
             FieldDependencyHandler().rebuild_dependencies(
                 field.link_row_related_field, field_cache
             )
-        super().after_import_serialized(field, field_cache)
+        super().after_import_serialized(field, field_cache, id_mapping)
 
     def get_export_serialized_value(self, row, field_name, cache, files_zip, storage):
         cache_entry = f"{field_name}_relations"
@@ -2249,6 +2280,7 @@ class FileFieldType(FieldType):
         """
 
         count_name = f"field_{instance.id}_count"
+        queryset_name = f"field_{instance.id}_queryset"
 
         if count_name not in cache:
             cache[count_name] = UserFile.objects.all().count()
@@ -2259,14 +2291,30 @@ class FileFieldType(FieldType):
         if count == 0:
             return values
 
-        # Ignoring with nosec as this randint usage is purely for constructing
-        # random data in dev environments and is not being used for security or
-        # cryptographical reasons.
-        for i in range(0, randrange(0, 3)):  # nosec
-            instance = UserFile.objects.all()[randint(0, count - 1)]  # nosec
-            serialized = instance.serialize()
-            serialized["visible_name"] = serialized["name"]
-            values.append(serialized)
+        def get_random_objects_iterator(limit=10000):
+            user_ids = WorkspaceUser.objects.filter(
+                workspace=instance.table.database.workspace_id
+            ).values_list("user_id", flat=True)
+            qs = UserFile.objects.filter(uploaded_by_id__in=user_ids).order_by("?")
+            if count > limit:
+                return qs.iterator(chunk_size=limit)
+            else:
+                return cycle(qs.all())
+
+        if queryset_name not in cache:
+            cache[queryset_name] = get_random_objects_iterator()
+
+        qs = cache[queryset_name]
+
+        values = []
+        for _ in range(randrange(0, min(3, count))):  # nosec
+            try:
+                instance = next(qs)
+                serialized = instance.serialize()
+                serialized["visible_name"] = instance.original_name
+                values.append(serialized)
+            except StopIteration:
+                cache[queryset_name] = get_random_objects_iterator()
 
         return values
 
@@ -2631,12 +2679,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        # Ignoring with nosec as this randint usage is purely for constructing random
-        # data in dev environments and is not being used for security or cryptographical
-        # reasons.
-        random_choice = randint(0, len(select_options) - 1)  # nosec
-
-        return select_options[random_choice]
+        return select_options[randrange(0, len(select_options))]  # nosec
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -2832,7 +2875,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         cache_entry_name = f"field_{instance.id}_options"
 
         if cache_entry_name not in cache:
-            cache[cache_entry_name] = instance.select_options.all()
+            cache[cache_entry_name] = list(
+                instance.select_options.values_list("id", flat=True)
+            )
 
         select_options = cache[cache_entry_name]
 
@@ -2840,12 +2885,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         if not select_options:
             return None
 
-        # Ignoring with nosec as this randint usage is purely for constructing random
-        # data in dev environments and is not being used for security or cryptographical
-        # reasons.
-        random_choice = randint(1, len(select_options))  # nosec
-
-        return sample([x.id for x in select_options], random_choice)
+        return sample(select_options, randint(0, len(select_options)))  # nosec
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
@@ -3495,9 +3535,9 @@ class FormulaFieldType(ReadOnlyFieldType):
         )
         to_model.objects_and_trash.all().update(**{f"{to_field.db_column}": expr})
 
-    def after_import_serialized(self, field, field_cache):
+    def after_import_serialized(self, field, field_cache, id_mapping):
         field.save(recalculate=True, field_cache=field_cache)
-        super().after_import_serialized(field, field_cache)
+        super().after_import_serialized(field, field_cache, id_mapping)
 
     def after_rows_imported(
         self,
@@ -3524,6 +3564,265 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
+
+
+class CountFieldType(FormulaFieldType):
+    type = "count"
+    model_class = CountField
+    api_exceptions_map = {
+        **FormulaFieldType.api_exceptions_map,
+        InvalidCountThroughField: ERROR_INVALID_COUNT_THROUGH_FIELD,
+    }
+    can_get_unique_values = False
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+    ]
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "formula_type",
+    ]
+    serializer_field_overrides = {
+        "through_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="through_field.id",
+            help_text="The id of the link row field to count values for.",
+        ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
+    }
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._validate_through_field_values(
+            table,
+            allowed_field_values,
+            field_kwargs,
+        )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
+
+    def before_update(self, from_field, to_field_values, user, kwargs):
+        if isinstance(from_field, CountField):
+            through_field_id = (
+                from_field.through_field.id
+                if from_field.through_field is not None
+                else None
+            )
+            self._validate_through_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+                through_field_id,
+            )
+        else:
+            self._validate_through_field_values(
+                from_field.table, to_field_values, kwargs
+            )
+
+    def _validate_through_field_values(
+        self,
+        table,
+        values,
+        all_kwargs,
+        default_through_field_id=None,
+    ):
+        through_field_id = values.get("through_field_id", default_through_field_id)
+        through_field_name = all_kwargs.get("through_field_name", None)
+
+        # If the `through_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the `link_row` field by its name.
+        if through_field_name is not None:
+            try:
+                through_field_id = table.field_set.get(name=through_field_name).id
+            except Field.DoesNotExist:
+                raise InvalidCountThroughField()
+
+        try:
+            through_field = FieldHandler().get_field(through_field_id, LinkRowField)
+        except FieldDoesNotExist:
+            # Occurs when the through_field_id points at a non LinkRowField
+            raise InvalidCountThroughField()
+
+        if through_field.table != table:
+            raise InvalidCountThroughField()
+
+        values["through_field_id"] = through_field.id
+        # There is never a need to allow decimal places on the count field.
+        # Therefore, we reset it to 0 to make sure when a formula converts to count,
+        # it will have the right value.
+        values["number_decimal_places"] = 0
+
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
+    ) -> "Field":
+        serialized_copy = serialized_values.copy()
+        # We have to temporarily remove the `through_field_id`, because it can be
+        # that they haven't been created yet, which prevents us from finding it in
+        # the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        return field
+
+
+class RollupFieldType(FormulaFieldType):
+    type = "rollup"
+    model_class = RollupField
+    api_exceptions_map = {
+        **FormulaFieldType.api_exceptions_map,
+        InvalidRollupThroughField: ERROR_INVALID_ROLLUP_THROUGH_FIELD,
+        InvalidRollupTargetField: ERROR_INVALID_ROLLUP_TARGET_FIELD,
+        FormulaFunctionTypeDoesNotExist: ERROR_INVALID_ROLLUP_FORMULA_FUNCTION,
+    }
+    can_get_unique_values = False
+    allowed_fields = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "target_field_id",
+        "rollup_function",
+    ]
+    serializer_field_names = BASEROW_FORMULA_TYPE_ALLOWED_FIELDS + [
+        "through_field_id",
+        "target_field_id",
+        "rollup_function",
+        "formula_type",
+    ]
+    serializer_field_overrides = {
+        "through_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="through_field.id",
+            help_text="The id of the link row field to rollup values for.",
+        ),
+        "target_field_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            source="target_field.id",
+            help_text="The id of the field in the table linked to by the "
+            "through_field to rollup.",
+        ),
+        "nullable": serializers.BooleanField(required=False, read_only=True),
+    }
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._validate_through_and_target_field_values(
+            table,
+            allowed_field_values,
+            field_kwargs,
+        )
+
+    def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
+        return None
+
+    def before_update(self, from_field, to_field_values, user, kwargs):
+        if isinstance(from_field, RollupField):
+            through_field_id = (
+                from_field.through_field.id
+                if from_field.through_field is not None
+                else None
+            )
+            target_field_id = (
+                from_field.target_field.id
+                if from_field.target_field is not None
+                else None
+            )
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+                through_field_id,
+                target_field_id,
+            )
+        else:
+            self._validate_through_and_target_field_values(
+                from_field.table,
+                to_field_values,
+                kwargs,
+            )
+
+    def _validate_through_and_target_field_values(
+        self,
+        table,
+        values,
+        all_kwargs,
+        default_through_field_id=None,
+        default_target_field_id=None,
+    ):
+        through_field_id = values.get("through_field_id", default_through_field_id)
+        target_field_id = values.get("target_field_id", default_target_field_id)
+        through_field_name = all_kwargs.get("through_field_name", None)
+        target_field_name = all_kwargs.get("target_field_name", None)
+
+        # If the `through_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the `link_row` field by its name.
+        if through_field_name is not None:
+            try:
+                through_field_id = table.field_set.get(name=through_field_name).id
+            except Field.DoesNotExist:
+                raise InvalidRollupThroughField()
+        try:
+            through_field = FieldHandler().get_field(through_field_id, LinkRowField)
+        except FieldDoesNotExist:
+            # Occurs when the through_field_id points at a non LinkRowField
+            raise InvalidRollupThroughField()
+
+        if through_field.table != table:
+            raise InvalidRollupThroughField()
+
+        # If the `target_field_name` is provided in the kwargs when creating or
+        # updating a field, then we want to find the field by its name.
+        if target_field_name is not None:
+            try:
+                target_field_id = through_field.link_row_table.field_set.get(
+                    name=target_field_name
+                ).id
+            except Field.DoesNotExist:
+                raise InvalidRollupTargetField()
+        try:
+            target_field = FieldHandler().get_field(target_field_id)
+        except FieldDoesNotExist:
+            raise InvalidRollupTargetField()
+
+        if target_field.table != through_field.link_row_table:
+            raise InvalidRollupTargetField()
+
+        values["through_field_id"] = through_field.id
+        values["target_field_id"] = target_field.id
+
+    def import_serialized(
+        self,
+        table: "Table",
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
+    ) -> "Field":
+        serialized_copy = serialized_values.copy()
+        # We have to temporarily remove the `through_field_id` and `target_field_id`,
+        # because it can be that they haven't been created yet, which prevents us
+        # from finding it in the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        original_target_field_id = serialized_copy.pop("target_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "target_field_id", original_target_field_id
+        )
+        return field
 
 
 class LookupFieldType(FormulaFieldType):
@@ -3742,17 +4041,24 @@ class LookupFieldType(FormulaFieldType):
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
         serialized_copy = serialized_values.copy()
-        # The through field and target field id's must be set to None because we
-        # don't need them. The field is created based on the field name.
-        serialized_copy["through_field_id"] = None
-        serialized_copy["target_field_id"] = None
-        return super().import_serialized(table, serialized_copy, id_mapping)
-
-    def after_import_serialized(self, field, field_cache):
-        self._rebuild_field_from_names(field)
-        super().after_import_serialized(field, field_cache)
+        # We have to temporarily set the `through_field_id` and `target_field_id`,
+        # because it can be that they haven't been created yet, which prevents us
+        # from finding it in the mapping.
+        original_through_field_id = serialized_copy.pop("through_field_id")
+        original_target_field_id = serialized_copy.pop("target_field_id")
+        field = super().import_serialized(
+            table, serialized_copy, id_mapping, deferred_fk_update_collector
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "through_field_id", original_through_field_id
+        )
+        deferred_fk_update_collector.add_deferred_fk_to_update(
+            field, "target_field_id", original_target_field_id
+        )
+        return field
 
 
 class MultipleCollaboratorsFieldType(FieldType):
@@ -3994,21 +4300,17 @@ class MultipleCollaboratorsFieldType(FieldType):
 
         if cache_entry_name not in cache:
             table = Table.objects.get(id=instance.table_id)
-            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
-                workspace=table.database.workspace
-            ).select_related("user")
-            cache[cache_entry_name] = [
-                workspaceuser.user for workspaceuser in workspaceusers_from_workspace
-            ]
+            workspaceusers_ids = WorkspaceUser.objects.filter(
+                workspace=table.database.workspace_id
+            ).values_list("user_id", flat=True)
+            cache[cache_entry_name] = list(workspaceusers_ids)
 
         collaborators = cache[cache_entry_name]
 
         if not collaborators:
             return None
 
-        random_choice = randint(1, len(collaborators))  # nosec
-
-        return sample(set([x.id for x in collaborators]), random_choice)
+        return sample(collaborators, randint(0, len(collaborators)))  # nosec
 
     def get_order(self, field, field_name, order_direction):
         """

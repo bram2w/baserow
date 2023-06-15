@@ -22,7 +22,6 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
 )
-from baserow.contrib.database.views.handler import ViewHandler
 
 
 @pytest.mark.django_db
@@ -900,53 +899,3 @@ def test_cachalot_cache_only_count_query_correctly(data_fixture):
     assert invalidation_timestamp > cache.get("count")[0]
 
     assert_cachalot_cache_queryset_count_of(2)
-
-
-@override_settings(CACHALOT_ENABLED=True)
-@pytest.mark.django_db(transaction=True)
-def test_cachalot_cache_count_for_filtered_views(data_fixture):
-    user = data_fixture.create_user()
-    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
-    cache = caches[settings.CACHALOT_CACHE]
-
-    grid_view = data_fixture.create_grid_view(table=table_a)
-
-    ViewHandler().create_filter(
-        user=user,
-        view=grid_view,
-        field=link_field,
-        type_name="link_row_has",
-        value="1",
-    )
-
-    queries = {}
-
-    def get_mocked_query_cache_key(compiler):
-        sql, _ = compiler.as_sql()
-        sql_lower = sql.lower()
-        if "count(*)" in sql_lower:
-            key = "count"
-        elif f"database_table_{table_a.id}" in sql_lower:
-            key = "select_table"
-        else:
-            key = f"{time()}"
-        queries[key] = sql_lower
-        return key
-
-    cachalot_settings.CACHALOT_QUERY_KEYGEN = get_mocked_query_cache_key
-    cachalot_settings.CACHALOT_TABLE_KEYGEN = lambda _, table: table.rsplit("_", 1)[1]
-
-    table_model = table_a.get_model()
-    table_model.objects.create()
-    queryset = ViewHandler().get_queryset(view=grid_view)
-
-    def assert_cachalot_cache_queryset_count_of(expected_count):
-        # count() should save the result of the query in the cache
-        assert queryset.count() == expected_count
-
-        # the count query has been cached
-        inserted_cache_entry = cache.get("count")
-        assert inserted_cache_entry is not None
-        assert inserted_cache_entry[1][0] == expected_count
-
-    assert_cachalot_cache_queryset_count_of(0)

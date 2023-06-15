@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Duplicating field with select options results in two fields sharing same underlying options.",
+    "issue_number": 1735,
+    "bullet_points": [],
+    "created_at": "2023-05-18"
+}

@@ -1,12 +1,13 @@
 import BigNumber from 'bignumber.js'
 
 import moment from '@baserow/modules/core/moment'
+import guessFormat from 'moment-guess'
 import {
+  getFilenameFromUrl,
   isNumeric,
   isSimplePhoneNumber,
   isValidEmail,
   isValidURL,
-  getFilenameFromUrl,
 } from '@baserow/modules/core/utils/string'
 import { Registerable } from '@baserow/modules/core/registry'
 
@@ -94,10 +95,13 @@ import {
 import GridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/GridViewFieldFormula'
 import FieldFormulaSubForm from '@baserow/modules/database/components/field/FieldFormulaSubForm'
 import FieldLookupSubForm from '@baserow/modules/database/components/field/FieldLookupSubForm'
+import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
+import FieldRollupSubForm from '@baserow/modules/database/components/field/FieldRollupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
+import _ from 'lodash'
 
 export class FieldType extends Registerable {
   /**
@@ -1454,31 +1458,62 @@ class BaseDateFieldType extends FieldType {
     return DateFieldType.formatDate(field, dateValue)
   }
 
-  static parseDate(field, dateString) {
-    const value = dateString.toUpperCase()
+  /**
+   * Tries to return the minimum amount of date formats that are needed to parse
+   * a given date string.
+   * @param {*} field the date field
+   * @param {*} value the date string to parse
+   * @returns List of date formats
+   */
+  static getDateFormatsOptionsForValue(field, value) {
+    let formats = [moment.ISO_8601]
 
-    // Formats for ISO dates
-    let formats = [
-      moment.ISO_8601,
-      'YYYY-MM-DD hh:mm A',
-      'YYYY-MM-DD HH:mm',
-      'YYYY-MM-DD',
-    ]
-    // Formats for EU dates
-    const EUFormat = ['DD/MM/YYYY hh:mm A', 'DD/MM/YYYY HH:mm', 'DD/MM/YYYY']
-    // Formats for US dates
-    const USFormat = ['MM/DD/YYYY hh:mm A', 'MM/DD/YYYY HH:mm', 'MM/DD/YYYY']
+    const timeFormats = value.includes(':')
+      ? ['', ' H:m', ' H:m A', ' H:m:s', ' H:m:s A']
+      : ['']
 
-    // Interpret the pasted date based on the field's current date format
-    if (field.date_format === 'EU') {
-      formats = formats.concat(EUFormat).concat(USFormat)
-    } else if (field.date_format === 'US') {
-      formats = formats.concat(USFormat).concat(EUFormat)
+    const getDateTimeFormatsFor = (...dateFormats) => {
+      return dateFormats.flatMap((df) => timeFormats.map((tf) => `${df}${tf}`))
     }
 
-    const date = moment.utc(value, formats, true)
+    const containsDash = value.includes('-')
+    const s = containsDash ? '-' : '/'
+
+    const usFieldFormats = getDateTimeFormatsFor(
+      `M${s}D${s}YYYY`,
+      `YYYY${s}D${s}M`
+    )
+    const euFieldFormats = getDateTimeFormatsFor(
+      `D${s}M${s}YYYY`,
+      `YYYY${s}M${s}D`
+    )
+    if (field.date_format === 'US') {
+      formats = formats.concat(usFieldFormats).concat(euFieldFormats)
+    } else {
+      formats = formats.concat(euFieldFormats).concat(usFieldFormats)
+    }
+    return formats
+  }
+
+  static parseDate(field, dateString) {
+    const formats = DateFieldType.getDateFormatsOptionsForValue(
+      field,
+      dateString
+    )
+
+    let date = moment.utc(dateString, formats, true)
     if (!date.isValid()) {
-      return null
+      // guessFormat can understand different separators and many more formats,
+      // so let's give it a chance to guess the date from dateString.
+      try {
+        const guessedFormats = guessFormat(dateString)
+        date = moment.utc(dateString, guessedFormats, true)
+      } catch (e) {
+        // date will still be invalid
+      }
+      if (!date.isValid()) {
+        return null
+      }
     }
     const timezone = getFieldTimezone(field)
     if (timezone) {
@@ -2317,27 +2352,53 @@ export class MultipleSelectFieldType extends FieldType {
     )
   }
 
+  /**
+   Converts pasted options to select field options based on the fields existing select
+   options. Matches by id first if that fails then by value. Ensures the produced
+   select options are unique by id.
+   */
+  convertPastedOptionsToThisFields(existingSelectOptions, pastedDataArray) {
+    const selectOptionNameMap = _.groupBy(existingSelectOptions, 'value')
+    const selectOptionIdMap = _.keyBy(existingSelectOptions, 'id')
+    const resultingSelectOptions = []
+
+    pastedDataArray.forEach((pastedSelectOption) => {
+      const existingSelectOptionWithSameId =
+        selectOptionIdMap[pastedSelectOption?.id]
+      if (existingSelectOptionWithSameId) {
+        resultingSelectOptions.push(existingSelectOptionWithSameId)
+      } else if (pastedSelectOption?.value) {
+        const existingSelectOptionWithSameName =
+          selectOptionNameMap[pastedSelectOption.value]?.shift()
+        if (existingSelectOptionWithSameName) {
+          resultingSelectOptions.push(existingSelectOptionWithSameName)
+        }
+      }
+    })
+
+    return _.uniqBy(resultingSelectOptions, 'id')
+  }
+
   prepareValueForPaste(field, clipboardData, richClipboardData) {
     if (this.checkRichValueIsCompatible(richClipboardData)) {
       if (richClipboardData === null) {
         return []
       }
-
-      return richClipboardData
+      return this.convertPastedOptionsToThisFields(
+        field.select_options,
+        richClipboardData
+      )
     } else {
       // Fallback to text version
       try {
-        const data = this.app.$papa.stringToArray(clipboardData)
-
-        const selectOptionMap = Object.fromEntries(
-          field.select_options.map((option) => [option.value, option])
-        )
-
-        const uniqueValuesOnly = Array.from(new Set(data))
-
-        return uniqueValuesOnly
-          .filter((name) => Object.keys(selectOptionMap).includes(name))
-          .map((name) => selectOptionMap[name])
+        const data = this.app.$papa
+          .stringToArray(clipboardData)
+          .map((value) => {
+            return {
+              value,
+            }
+          })
+        return this.convertPastedOptionsToThisFields(field.select_options, data)
       } catch (e) {
         return []
       }
@@ -2544,10 +2605,19 @@ export class FormulaFieldType extends FieldType {
     return 'formula'
   }
 
+  static getTypeAndSubTypes() {
+    return [
+      this.getType(),
+      CountFieldType.getType(),
+      RollupFieldType.getType(),
+      LookupFieldType.getType(),
+    ]
+  }
+
   static compatibleWithFormulaTypes(...formulaTypeStrings) {
     return (field) => {
       return (
-        field.type === this.getType() &&
+        this.getTypeAndSubTypes().includes(field.type) &&
         formulaTypeStrings.includes(field.formula_type)
       )
     }
@@ -2685,6 +2755,60 @@ export class FormulaFieldType extends FieldType {
   canRepresentDate(field) {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canRepresentDate(field)
+  }
+}
+
+export class CountFieldType extends FormulaFieldType {
+  static getType() {
+    return 'count'
+  }
+
+  getIconClass() {
+    return 'calculator'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.count')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.count')
+  }
+
+  getFormComponent() {
+    return FieldCountSubForm
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
+  }
+}
+
+export class RollupFieldType extends FormulaFieldType {
+  static getType() {
+    return 'rollup'
+  }
+
+  getIconClass() {
+    return 'box-open'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.rollup')
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.rollup')
+  }
+
+  getFormComponent() {
+    return FieldRollupSubForm
+  }
+
+  shouldFetchFieldSelectOptions() {
+    return false
   }
 }
 

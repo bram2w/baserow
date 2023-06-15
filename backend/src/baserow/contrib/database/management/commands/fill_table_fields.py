@@ -56,9 +56,11 @@ def fill_table_fields(limit, table):
     field_handler = FieldHandler()
     all_kwargs_per_type = construct_all_possible_field_kwargs(None, None, None, None)
     first_user = table.database.workspace.users.first()
-    # Keep all fields but link_row and lookup
+    # Keep all fields but link_row, count, rollup and lookup
     allowed_field_list = [
-        f for f in all_kwargs_per_type.items() if f[0] not in ["link_row", "lookup"]
+        f
+        for f in all_kwargs_per_type.items()
+        if f[0] not in ["link_row", "count", "rollup", "lookup"]
     ]
     for _ in range(limit):
         # This is a helper cli command, randomness is not being used for any security
@@ -85,7 +87,7 @@ def create_field_for_every_type(table):
     first_user = table.database.workspace.users.first()
     i = 0
     for field_type_name, all_possible_kwargs in all_kwargs_per_type.items():
-        if field_type_name in ["link_row", "lookup"]:
+        if field_type_name in ["link_row", "count", "rollup", "lookup"]:
             continue
         for kwargs in all_possible_kwargs:
             kwargs.pop("primary", None)

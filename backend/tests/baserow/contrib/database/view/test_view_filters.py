@@ -5695,6 +5695,35 @@ def rows_with_dates(data_fixture, dates, filter_type):
     yield rows, view_filter, get_filtered_row_ids
 
 
+@contextmanager
+def rows_with_datetimes(data_fixture, dates, filter_type):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=True)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    rows = model.objects.bulk_create(
+        [model(**{f"field_{date_field.id}": d}) for d in dates]
+    )
+
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=date_field,
+        type=filter_type,
+        value="",
+    )
+
+    def get_filtered_row_ids():
+        return [
+            r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()
+        ]
+
+    yield rows, view_filter, get_filtered_row_ids
+
+
 @pytest.mark.django_db
 def test_date_within_days_view_filter(data_fixture):
     dates = [
@@ -5835,3 +5864,139 @@ def test_date_within_months_view_filter(data_fixture):
                 rows[5].id,
                 rows[6].id,
             ]
+
+
+@pytest.mark.django_db
+def test_before_or_equal_datetime_view_filter(data_fixture):
+    dates = [
+        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=pytz.UTC),  # 0
+        datetime(2021, 1, 1, 18, 30, 0, 0, tzinfo=pytz.UTC),  # 1
+        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=pytz.UTC),  # 2
+    ]
+
+    with rows_with_datetimes(data_fixture, dates, "date_before_or_equal") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "2022-01-02"
+        view_filter.save()
+
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "Europe/Rome?2021-01-02"
+        view_filter.save()
+
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id, rows[2].id]
+
+        view_filter.value = "Australia/Melbourne?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[0].id]
+
+        view_filter.value = "Pacific/Honolulu?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id, rows[2].id]
+
+
+@pytest.mark.django_db
+def test_before_or_equal_date_view_filter(data_fixture):
+    dates = [
+        date(2020, 12, 1),  # 0
+        date(2021, 1, 1),  # 1
+        date(2021, 1, 2),  # 2
+    ]
+
+    with rows_with_dates(data_fixture, dates, "date_before_or_equal") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "2022-01-02"
+        view_filter.save()
+
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "Europe/Rome?2021-01-02"
+        view_filter.save()
+
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id, rows[2].id]
+
+        view_filter.value = "Australia/Melbourne?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id]
+
+        view_filter.value = "Pacific/Honolulu?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id]
+
+
+@pytest.mark.django_db
+def test_after_or_equal_datetime_view_filter(data_fixture):
+    dates = [
+        datetime(2020, 12, 1, 12, 30, 0, 0, tzinfo=pytz.UTC),  # 0
+        datetime(2021, 1, 1, 14, 30, 0, 0, tzinfo=pytz.UTC),  # 1
+        datetime(2021, 1, 2, 3, 30, 0, 0, tzinfo=pytz.UTC),  # 2
+    ]
+
+    with rows_with_datetimes(data_fixture, dates, "date_after_or_equal") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "2020-12-01"
+        view_filter.save()
+
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "Europe/Rome?2020-12-01"
+        view_filter.save()
+
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id, rows[2].id]
+
+        view_filter.value = "Australia/Melbourne?2021-01-02"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[1].id, rows[2].id]
+
+        view_filter.value = "Pacific/Honolulu?2021-01-02"
+        view_filter.save()
+        assert get_filtered_row_ids() == []
+
+
+@pytest.mark.django_db
+def test_after_or_equal_date_view_filter(data_fixture):
+    dates = [
+        date(2020, 12, 1),  # 0
+        date(2021, 1, 1),  # 1
+        date(2021, 1, 2),  # 2
+    ]
+
+    with rows_with_dates(data_fixture, dates, "date_after_or_equal") as (
+        rows,
+        view_filter,
+        get_filtered_row_ids,
+    ):
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "2020-12-01"
+        view_filter.save()
+
+        assert len(get_filtered_row_ids()) == len(dates)
+
+        view_filter.value = "Europe/Rome?2020-12-01"
+        view_filter.save()
+
+        assert get_filtered_row_ids() == [rows[0].id, rows[1].id, rows[2].id]
+
+        view_filter.value = "Australia/Melbourne?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[1].id, rows[2].id]
+
+        view_filter.value = "Pacific/Honolulu?2021-01-01"
+        view_filter.save()
+        assert get_filtered_row_ids() == [rows[1].id, rows[2].id]

@@ -6,6 +6,9 @@ from django.utils.timezone import datetime, make_aware, utc
 import pytest
 from pytz import timezone
 
+from baserow.contrib.database.fields.deferred_field_fk_updater import (
+    DeferredFieldFkUpdater,
+)
 from baserow.contrib.database.fields.field_types import DateFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DateField
@@ -539,7 +542,7 @@ def test_import_export_date_field(data_fixture):
     date_field_type = field_type_registry.get_by_model(date_field)
     number_serialized = date_field_type.export_serialized(date_field)
     number_field_imported = date_field_type.import_serialized(
-        date_field.table, number_serialized, {}
+        date_field.table, number_serialized, {}, DeferredFieldFkUpdater()
     )
     assert date_field.date_format == number_field_imported.date_format
     assert date_field.date_include_time == number_field_imported.date_include_time

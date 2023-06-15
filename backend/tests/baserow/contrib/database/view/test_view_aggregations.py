@@ -183,7 +183,7 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
         user, grid_view, aggregation_query, model=model, with_total=True
     )
 
-    assert len(result.keys()) == 33
+    assert len(result.keys()) == 35
 
     for field_obj in model._field_objects.values():
         field = field_obj["field"]
@@ -198,6 +198,8 @@ def test_view_unique_count_aggregation_for_interesting_table(data_fixture):
                     "email",
                     "rating",
                     "phone_number",
+                    "count",
+                    "rollup",
                 ]
                 or field_type == "formula"
                 and field.formula_type == "char"

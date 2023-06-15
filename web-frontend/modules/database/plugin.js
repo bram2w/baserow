@@ -22,6 +22,8 @@ import {
   PhoneNumberFieldType,
   CreatedOnFieldType,
   FormulaFieldType,
+  CountFieldType,
+  RollupFieldType,
   LookupFieldType,
   MultipleCollaboratorsFieldType,
 } from '@baserow/modules/database/fieldTypes'
@@ -55,7 +57,9 @@ import {
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
   DateBeforeViewFilterType,
+  DateBeforeOrEqualViewFilterType,
   DateAfterViewFilterType,
+  DateAfterOrEqualViewFilterType,
   DateEqualsDayOfMonthViewFilterType,
   LinkRowHasFilterType,
   LinkRowHasNotFilterType,
@@ -323,7 +327,15 @@ export default (context) => {
     new DateEqualsDayOfMonthViewFilterType(context)
   )
   app.$registry.register('viewFilter', new DateBeforeViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateBeforeOrEqualViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new DateAfterViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new DateAfterOrEqualViewFilterType(context)
+  )
   app.$registry.register('viewFilter', new ContainsViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsNotViewFilterType(context))
   app.$registry.register('viewFilter', new ContainsWordViewFilterType(context))
@@ -395,6 +407,8 @@ export default (context) => {
   app.$registry.register('field', new MultipleSelectFieldType(context))
   app.$registry.register('field', new PhoneNumberFieldType(context))
   app.$registry.register('field', new FormulaFieldType(context))
+  app.$registry.register('field', new CountFieldType(context))
+  app.$registry.register('field', new RollupFieldType(context))
   app.$registry.register('field', new LookupFieldType(context))
   app.$registry.register('field', new MultipleCollaboratorsFieldType(context))
 

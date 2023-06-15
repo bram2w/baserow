@@ -4,7 +4,7 @@ from typing import Any, Dict, List, NewType, Optional, Tuple, cast
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import DatabaseError, ProgrammingError
-from django.db.models import QuerySet, Sum
+from django.db.models import Q, QuerySet, Sum
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
@@ -13,6 +13,7 @@ from opentelemetry import trace
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.constants import RESERVED_BASEROW_FIELD_NAMES
+from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.exceptions import (
     InvalidBaserowFieldName,
     MaxFieldLimitExceeded,
@@ -478,8 +479,14 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             related_field_name = FieldHandler().find_next_unused_field_name(
                 link_row_table, [serialized_table["name"]]
             )
+            # We deliberately want to use a negative ID for the newly created related
+            # field because it can't clash with another existing field ID. It doesn't
+            # matter that it's negative because it get a new unique when it's
+            # imported later on.
+            related_field_id = -len(external_fields)
+            serialized_field["link_row_related_field_id"] = related_field_id
             serialized_related_link_row_field = {
-                "id": serialized_field["link_row_related_field_id"],
+                "id": related_field_id,
                 "name": related_field_name,
                 "type": LinkRowFieldType.type,
                 "link_row_table_id": serialized_table["id"],
@@ -531,7 +538,24 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
         exported_table["name"] = self.find_unused_table_name(database, table.name)
         exported_table["order"] = Table.get_last_order(database)
 
-        id_mapping: Dict[str, Any] = {"database_tables": {}}
+        # It can happen that a field, filter, etc has a reference to a field in
+        # another table. This can result in an error because that field id is not in
+        # the field mapping. Therefore, we're fetching all the related field ids in
+        # the table and add those to the mapping. The key and value is the same
+        # because those field ids haven't changed.
+        all_table_dependency_field_ids = FieldDependency.objects.filter(
+            Q(dependant__table_id=table.id) & ~Q(dependency__table_id=table.id)
+        ).values_list("dependency_id", flat=True)
+        all_table_dependency_field_ids = {
+            field_id: field_id for field_id in all_table_dependency_field_ids
+        }
+        id_mapping: Dict[str, Any] = {
+            "database_tables": {},
+            "database_fields": all_table_dependency_field_ids,
+            # We have to create the `database_field_select_options` because that's
+            # otherwise not created later on.
+            "database_field_select_options": {},
+        }
 
         link_fields_to_import_to_existing_tables = (
             self._create_related_link_fields_in_existing_tables_to_import(

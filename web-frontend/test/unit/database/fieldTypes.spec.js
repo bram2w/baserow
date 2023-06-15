@@ -174,6 +174,22 @@ const mockedFields = {
     table_id: 42,
     type: 'multiple_collaborators',
   },
+  count: {
+    id: 18,
+    name: 'count',
+    order: 18,
+    primary: false,
+    table_id: 42,
+    type: 'count',
+  },
+  rollup: {
+    id: 19,
+    name: 'rollup',
+    order: 19,
+    primary: false,
+    table_id: 42,
+    type: 'rollup',
+  },
 }
 
 const valuesToCall = [null, undefined]
@@ -270,7 +286,6 @@ const datePrepareValueForPaste = [
     },
     expectedValue: '2021-04-16',
   },
-
   // Date field with US format
   {
     fieldValue: '04/12/2021',

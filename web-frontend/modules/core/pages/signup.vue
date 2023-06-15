@@ -36,11 +36,15 @@
       >
       </PasswordRegister>
       <LoginButtons
+        v-if="afterSignupStep < 0"
         show-border="top"
         :hide-if-no-buttons="true"
         :invitation="invitation"
       />
-      <LoginActions v-if="!shouldShowAdminSignupPage" :invitation="invitation">
+      <LoginActions
+        v-if="!shouldShowAdminSignupPage && afterSignupStep < 0"
+        :invitation="invitation"
+      >
         <li>
           {{ $t('signup.loginText') }}
           <nuxt-link :to="{ name: 'login' }">

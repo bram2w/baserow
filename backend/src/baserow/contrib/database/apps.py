@@ -187,6 +187,7 @@ class DatabaseConfig(AppConfig):
 
         from .fields.field_types import (
             BooleanFieldType,
+            CountFieldType,
             CreatedOnFieldType,
             DateFieldType,
             EmailFieldType,
@@ -201,6 +202,7 @@ class DatabaseConfig(AppConfig):
             NumberFieldType,
             PhoneNumberFieldType,
             RatingFieldType,
+            RollupFieldType,
             SingleSelectFieldType,
             TextFieldType,
             URLFieldType,
@@ -222,6 +224,8 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(MultipleSelectFieldType())
         field_type_registry.register(PhoneNumberFieldType())
         field_type_registry.register(FormulaFieldType())
+        field_type_registry.register(CountFieldType())
+        field_type_registry.register(RollupFieldType())
         field_type_registry.register(LookupFieldType())
         field_type_registry.register(MultipleCollaboratorsFieldType())
 
@@ -272,8 +276,10 @@ class DatabaseConfig(AppConfig):
             ContainsNotViewFilterType,
             ContainsViewFilterType,
             ContainsWordViewFilterType,
+            DateAfterOrEqualViewFilterType,
             DateAfterTodayViewFilterType,
             DateAfterViewFilterType,
+            DateBeforeOrEqualViewFilterType,
             DateBeforeTodayViewFilterType,
             DateBeforeViewFilterType,
             DateEqualsCurrentMonthViewFilterType,
@@ -324,7 +330,9 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LowerThanViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())
+        view_filter_type_registry.register(DateBeforeOrEqualViewFilterType())
         view_filter_type_registry.register(DateAfterViewFilterType())
+        view_filter_type_registry.register(DateAfterOrEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
         view_filter_type_registry.register(DateEqualsTodayViewFilterType())
         view_filter_type_registry.register(DateBeforeTodayViewFilterType())
@@ -436,6 +444,7 @@ class DatabaseConfig(AppConfig):
 
         from .airtable.airtable_column_types import (
             CheckboxAirtableColumnType,
+            CountAirtableColumnType,
             DateAirtableColumnType,
             ForeignKeyAirtableColumnType,
             FormulaAirtableColumnType,
@@ -463,6 +472,7 @@ class DatabaseConfig(AppConfig):
         airtable_column_type_registry.register(MultilineTextAirtableColumnType())
         airtable_column_type_registry.register(MultipleAttachmentAirtableColumnType())
         airtable_column_type_registry.register(RichTextTextAirtableColumnType())
+        airtable_column_type_registry.register(CountAirtableColumnType())
 
         from baserow.contrib.database.table.usage_types import (
             TableWorkspaceStorageUsageItemType,

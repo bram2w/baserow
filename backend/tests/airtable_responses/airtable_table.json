@@ -438,6 +438,9 @@
         ]
       }
     ],
+    "signedUserContentUrls": {
+        "https://dl.airtable.com/.attachments/70e50b90fb83997d25e64937979b6b5b/f3f62d23/file-sample.txt": "https://dl.airtable.com/.signed/file-sample.txt"
+    },
     "schemaChecksum":"46f523a43433afe37d63e00d1a0f36c64310f06e4e0af2c32b6e99f26ab0e51a",
     "hasOnlyIncludedRowAndCellDataForIncludedViews":false
   }

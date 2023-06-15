@@ -607,7 +607,7 @@ exports[`Dropdown component test focus 1`] = `
     </div>
      
     <ul
-      class="select__items"
+      class="select__items prevent-scroll"
       tabindex=""
     >
       <li
@@ -673,7 +673,7 @@ exports[`Dropdown component test focus 2`] = `
     </div>
      
     <ul
-      class="select__items"
+      class="select__items prevent-scroll"
       tabindex=""
     >
       <li
@@ -739,7 +739,7 @@ exports[`Dropdown component test interactions 1`] = `
     </div>
      
     <ul
-      class="select__items"
+      class="select__items prevent-scroll"
       tabindex=""
     >
       <li
@@ -828,7 +828,7 @@ exports[`Dropdown component test interactions 2`] = `
     </div>
      
     <ul
-      class="select__items"
+      class="select__items prevent-scroll"
       tabindex=""
     >
       <li

@@ -3,9 +3,10 @@ export default (client) => {
     fetchAll(pageId) {
       return client.get(`builder/page/${pageId}/elements/`)
     },
-    create(pageId, elementType, beforeId = null) {
+    create(pageId, elementType, beforeId = null, configuration = null) {
       const payload = {
         type: elementType,
+        ...configuration,
       }
 
       if (beforeId !== null) {

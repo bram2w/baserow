@@ -398,6 +398,7 @@ class AirtableHandler:
         view_id = 0
         for table_index, table in enumerate(schema["tableSchemas"]):
             field_mapping = {}
+            files_to_download_for_table = {}
 
             # Loop over all the columns in the table and try to convert them to Baserow
             # format.
@@ -467,14 +468,18 @@ class AirtableHandler:
 
             # Loop over all the rows in the table and convert them to Baserow format. We
             # need to provide the `row_id_mapping` and `field_mapping` because there
-            # could be references to other rows and fields. the `files_to_download` is
-            # needed because every value could be depending on additional files that
-            # must later be downloaded.
+            # could be references to other rows and fields. the
+            # `files_to_download_for_table` is needed because every value could be
+            # depending on additional files that must later be downloaded.
             exported_rows = []
             for row_index, row in enumerate(tables[table["id"]]["rows"]):
                 exported_rows.append(
                     cls.to_baserow_row_export(
-                        row_id_mapping, field_mapping, row, row_index, files_to_download
+                        row_id_mapping,
+                        field_mapping,
+                        row,
+                        row_index,
+                        files_to_download_for_table,
                     )
                 )
                 converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
@@ -502,6 +507,15 @@ class AirtableHandler:
             exported_tables.append(exported_table)
             converting_progress.increment(state=AIRTABLE_EXPORT_JOB_CONVERTING)
 
+            # Airtable has a mapping of signed URLs for the uploaded files. The
+            # mapping is provided in the table payload, and if it exists, we need
+            # that URL for download instead of the one originally provided.
+            signed_user_content_urls = tables[table["id"]]["signedUserContentUrls"]
+            for file_name, url in files_to_download_for_table.items():
+                if url in signed_user_content_urls:
+                    url = signed_user_content_urls[url]
+                files_to_download[file_name] = url
+
         exported_database = CoreExportSerializedStructure.application(
             id=1,
             name=init_data["rawApplications"][init_data["sharedApplicationId"]]["name"],
@@ -512,7 +526,7 @@ class AirtableHandler:
             **DatabaseExportSerializedStructure.database(tables=exported_tables)
         )
 
-        # After all the tables have been converted to Baserow format, we can must
+        # After all the tables have been converted to Baserow format, we must
         # download all the user files. Because we first want to the whole conversion to
         # be completed and because we want this to be added to the progress bar, this is
         # done last.
@@ -581,7 +595,7 @@ class AirtableHandler:
             tables.append(json.loads(decoded_content))
 
         # Split database schema from the tables because we need this to be separated
-        # later on..
+        # later on.
         schema, tables = cls.extract_schema(tables)
 
         # Convert the raw Airtable data to Baserow export format so we can import that

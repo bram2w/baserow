@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add 2 date filters: `before or same date` and `after or same date`.",
+    "issue_number": 1344,
+    "bullet_points": [],
+    "created_at": "2023-05-25"
+}

@@ -69,8 +69,20 @@ export class BaserowPlugin extends Registerable {
    * `getDashboardWorkspaceExtraComponent` components, it could be that additional data
    * must be fetched from the backend when the page first loads. This method can be
    * overwritten to do that.
+   *
+   * Optinally, a workspace id can be provided to fetch only data for a particular
+   * workspace.
    */
-  fetchAsyncDashboardData(context, data) {
+  fetchAsyncDashboardData(context, data, workspaceId) {
+    return data
+  }
+
+  /**
+   * Tells core Baserow how new fetched data for a particular workspace
+   * should be merged with previously fetched dashboard data from
+   * fetchAsyncDashboardData()
+   */
+  mergeDashboardData(data, newData) {
     return data
   }
 

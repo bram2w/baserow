@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix issue where cachalot doesn't invalidate correctly `database_multipleselect_*` m2m tables.",
+    "issue_number": 1772,
+    "bullet_points": [],
+    "created_at": "2023-06-07"
+}

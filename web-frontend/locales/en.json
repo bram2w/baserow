@@ -92,6 +92,8 @@
         "multipleSelect": "Multiple select",
         "phoneNumber": "Phone number",
         "formula": "Formula",
+        "count": "Count",
+        "rollup": "Rollup",
         "lookup": "Lookup",
         "multipleCollaborators": "Collaborators"
     },
@@ -127,7 +129,9 @@
         "multipleSelect": "Accepts an array of mixed integers or text values each representing the chosen select option id or value. In case of a text value, the first matching option is selected.",
         "phoneNumber": "Accepts a phone number which has a maximum length of 100 characters consisting solely of digits, spaces and the following characters: Nx,._+*()#=;/- .",
         "formula": "A read-only field defined by a formula written in the Baserow formula language.",
-        "lookup": "A read-only field connected to a link row field which returns an array of values and row ids from the chosen lookup field in the linked table.",
+        "count": "A read-only field connected to a link to table field which returns the number of relations.",
+        "rollup": "A read-only field connected to a link to table field which returns rolls up the values from the chosen lookup field in the linked table.",
+        "lookup": "A read-only field connected to a link to table field which returns an array of values and row ids from the chosen lookup field in the linked table.",
         "multipleCollaborators": "Accepts an array of objects where each object contains a user's id."
     },
     "viewFilter": {
@@ -146,7 +150,9 @@
         "isDate": "is date",
         "isDayOfMonth": "day of month is",
         "isBeforeDate": "is before date",
+        "isBeforeOrEqualDate": "is before or same date",
         "isAfterDate": "is after date",
+        "isAfterOrEqualDate": "is after or same date",
         "isNotDate": "is not date",
         "isToday": "is today",
         "beforeToday": "is before today",
@@ -334,7 +340,7 @@
         "datetimeFormatTzDescription": "Converts the date to text given a way of formatting the date in the specified timezone.",
         "toNumberDescription": "Converts the input to a number if possible.",
         "fieldDescription": "Returns the field named by the single text argument.",
-        "lookupDescription": "Looks up the values from a field in another table for rows in a link row field. The first argument should be the name of a link row field in the current table and the second should be the name of a field in the linked table.",
+        "lookupDescription": "Looks up the values from a field in another table for rows in a link to table field. The first argument should be the name of a link to table field in the current table and the second should be the name of a field in the linked table.",
         "isBlankDescription": "Returns true if the argument is null, empty or blank, false otherwise.",
         "isNullDescription": "Returns true if the argument is null, false otherwise.",
         "tDescription": "Returns the arguments value if it is text, but otherwise ''.",

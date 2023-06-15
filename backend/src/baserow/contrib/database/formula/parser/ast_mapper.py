@@ -9,6 +9,7 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowIntegerLiteral,
     BaserowStringLiteral,
 )
+from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.formula.parser.exceptions import (
     BaserowFormulaSyntaxError,
     FieldByIdReferencesAreDeprecated,
@@ -28,7 +29,6 @@ from baserow.contrib.database.formula.parser.parser import (
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.formula_type import UnTyped
-from baserow.core.exceptions import InstanceTypeDoesNotExist
 
 
 def raw_formula_to_untyped_expression(
@@ -136,7 +136,7 @@ class BaserowFormulaToBaserowASTMapper(BaserowFormulaVisitor):
     def _get_function_def(function_name):
         try:
             function_def = formula_function_registry.get(function_name)
-        except InstanceTypeDoesNotExist:
+        except FormulaFunctionTypeDoesNotExist:
             raise BaserowFormulaSyntaxError(f"{function_name} is not a valid function")
         return function_def
 

@@ -131,6 +131,7 @@ x-backend-variables: &backend-variables
   BASEROW_CACHALOT_UNCACHABLE_TABLES:
   BASEROW_CACHALOT_TIMEOUT:
   BASEROW_AUTO_INDEX_VIEW_ENABLED:
+  BASEROW_DISABLE_LOCKED_MIGRATIONS:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing

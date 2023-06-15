@@ -20,7 +20,7 @@
           @click="updateForm({ cover_image: null })"
         >
           <i class="fas fa-times"></i>
-          {{ $t('common.remove') }}
+          {{ $t('action.remove') }}
         </a>
       </template>
     </div>
@@ -38,7 +38,7 @@
             @click="updateForm({ logo_image: null })"
           >
             <i class="fas fa-times"></i>
-            {{ $t('common.remove') }}
+            {{ $t('action.remove') }}
           </a>
         </div>
         <FormViewImageUpload

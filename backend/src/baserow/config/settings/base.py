@@ -472,7 +472,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.17.2",
+    "VERSION": "1.18.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -541,6 +541,7 @@ SPECTACULAR_SETTINGS = {
             "multiple_select",
             "phone_number",
             "formula",
+            "count",
             "lookup",
         ],
         "ViewFilterTypesEnum": [
@@ -1079,6 +1080,8 @@ BASEROW_NOWAIT_FOR_LOCKS = not bool(
 LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 
 MAX_NUMBER_CALENDAR_DAYS = 45
+
+MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

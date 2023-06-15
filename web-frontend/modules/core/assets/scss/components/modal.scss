@@ -37,6 +37,10 @@
     height: calc(100% - 80px);
   }
 
+  &.modal__box--wide {
+    max-width: 720px;
+  }
+
   &.modal__box--small {
     max-width: 520px;
   }

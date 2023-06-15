@@ -15,6 +15,7 @@
         <PremiumModal
           ref="premiumModal"
           :name="$t('rowCommentSidebar.name')"
+          :workspace="database.workspace"
         ></PremiumModal>
       </div>
     </template>
@@ -121,6 +122,11 @@ export default {
       comment: '',
     }
   },
+  watch: {
+    async hasPremiumFeaturesEnabled() {
+      await this.initialLoad()
+    },
+  },
   computed: {
     hasPremiumFeaturesEnabled() {
       return this.$hasFeature(
@@ -138,22 +144,25 @@ export default {
     }),
   },
   async created() {
-    if (!this.hasPremiumFeaturesEnabled) {
-      return
-    }
-
-    try {
-      const tableId = this.table.id
-      const rowId = this.row.id
-      await this.$store.dispatch('row_comments/fetchRowComments', {
-        tableId,
-        rowId,
-      })
-    } catch (e) {
-      notifyIf(e, 'application')
-    }
+    await this.initialLoad()
   },
   methods: {
+    async initialLoad() {
+      if (!this.hasPremiumFeaturesEnabled) {
+        return
+      }
+
+      try {
+        const tableId = this.table.id
+        const rowId = this.row.id
+        await this.$store.dispatch('row_comments/fetchRowComments', {
+          tableId,
+          rowId,
+        })
+      } catch (e) {
+        notifyIf(e, 'application')
+      }
+    },
     async postComment() {
       const comment = this.comment.trim()
       if (

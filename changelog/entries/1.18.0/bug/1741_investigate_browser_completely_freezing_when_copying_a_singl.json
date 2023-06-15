@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix browser freeze in older browsers when copying single cell",
+    "issue_number": 1741,
+    "bullet_points": [],
+    "created_at": "2023-06-12"
+}

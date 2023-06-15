@@ -79,16 +79,21 @@ export default {
         firstError.scrollIntoView({ behavior: 'smooth' })
       }
     },
-    submit() {
-      this.$v.$touch()
+    touch() {
+      if ('$v' in this) {
+        this.$v.$touch()
+      }
 
       // Also touch all the child forms so that all the error messages are going to
       // be displayed.
       for (const child of this.$children) {
         if ('isFormValid' in child && '$v' in child) {
-          child.$v.$touch()
+          child.touch()
         }
       }
+    },
+    submit() {
+      this.touch()
 
       if (this.isFormValid()) {
         this.$emit('submitted', this.getFormValues())

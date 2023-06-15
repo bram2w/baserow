@@ -15,7 +15,6 @@ from baserow.core.registry import (
     APIUrlsRegistryMixin,
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
-    ImportExportMixin,
     Instance,
     MapAPIExceptionsInstanceMixin,
     ModelInstanceMixin,
@@ -23,6 +22,7 @@ from baserow.core.registry import (
     Registry,
 )
 
+from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
 from .fields import DurationFieldUsingPostgresFormatting
 from .models import Field, LinkRowField, SelectOption
@@ -48,7 +48,6 @@ class FieldType(
     APIUrlsInstanceMixin,
     CustomFieldsInstanceMixin,
     ModelInstanceMixin,
-    ImportExportMixin,
     Instance,
 ):
 
@@ -762,6 +761,7 @@ class FieldType(
         table: "Table",
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Field:
         """
         Imported an exported serialized field dict that was exported via the
@@ -772,11 +772,16 @@ class FieldType(
             be imported.
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
+        :param deferred_fk_update_collector: An object than can be used to defer
+            setting FK's to other fields until after all fields have been created
+            and we know their IDs.
         :return: The newly created field instance.
         """
 
         if "database_fields" not in id_mapping:
             id_mapping["database_fields"] = {}
+
+        if "database_field_select_options" not in id_mapping:
             id_mapping["database_field_select_options"] = {}
 
         serialized_copy = serialized_values.copy()
@@ -805,13 +810,19 @@ class FieldType(
 
         return field
 
-    def after_import_serialized(self, field: Field, field_cache: "FieldCache"):
+    def after_import_serialized(
+        self,
+        field: Field,
+        field_cache: "FieldCache",
+        id_mapping: Dict[str, Any],
+    ):
         """
         Called on fields in dependency order after all fields for an application have
         been created for any final tasks that require the field graph to be present.
 
         :param field: A field instance of this field type.
         :param field_cache: A field cache to be used when fetching fields.
+        :param id_mapping:
         """
 
         from baserow.contrib.database.fields.dependencies.handler import (
@@ -824,7 +835,9 @@ class FieldType(
             dependant_field_type,
             _,
         ) in field.dependant_fields_with_types(field_cache):
-            dependant_field_type.after_import_serialized(dependant_field, field_cache)
+            dependant_field_type.after_import_serialized(
+                dependant_field, field_cache, id_mapping
+            )
 
     def after_rows_imported(
         self,

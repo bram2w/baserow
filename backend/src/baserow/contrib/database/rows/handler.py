@@ -679,13 +679,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         values, manytomany_values = self.extract_manytomany_values(values, model)
         values["order"] = self.get_unique_orders_before_row(before, model)[0]
         instance = model.objects.create(**values)
-        rows_created_counter.add(
-            1,
-            {
-                "baserow.table_id": table.id,
-                "baserow.database_id": table.database_id,
-            },
-        )
+        rows_created_counter.add(1)
 
         for name, value in manytomany_values.items():
             getattr(instance, name).set(value)
@@ -869,10 +863,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         row.save()
         rows_updated_counter.add(
             1,
-            {
-                "baserow.table_id": table.id,
-                "baserow.database_id": table.database_id,
-            },
         )
 
         update_collector = FieldUpdateCollector(
@@ -985,10 +975,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         rows_created_counter.add(
             len(rows_relationships),
-            {
-                "baserow.table_id": table.id,
-                "baserow.database_id": table.database_id,
-            },
         )
 
         many_to_many = defaultdict(list)
@@ -1525,10 +1511,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
             rows_updated_counter.add(
                 len(rows_to_update),
-                {
-                    "baserow.table_id": table.id,
-                    "baserow.database_id": table.database_id,
-                },
             )
 
         update_collector = FieldUpdateCollector(
@@ -1759,10 +1741,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         TrashHandler.trash(user, workspace, table.database, row, parent_id=table.id)
         rows_deleted_counter.add(
             1,
-            {
-                "baserow.table_id": table.id,
-                "baserow.database_id": table.database_id,
-            },
         )
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
@@ -1862,10 +1840,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         rows_deleted_counter.add(
             len(row_ids),
-            {
-                "baserow.table_id": table.id,
-                "baserow.database_id": table.database_id,
-            },
         )
 
         updated_field_ids = []

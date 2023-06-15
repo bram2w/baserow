@@ -20,14 +20,17 @@
   font-weight: 700;
   margin-bottom: 8px;
 
+  & + :not(.control__description) {
+    margin-top: 16px;
+  }
+
   &.control__label--small {
     font-size: 13px;
     font-weight: 700;
-    margin-bottom: 4px;
-  }
 
-  & + :not(.control__description) {
-    margin-top: 16px;
+    & + :not(.control__description) {
+      margin-top: 4px;
+    }
   }
 }
 

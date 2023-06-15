@@ -7,6 +7,7 @@
         :key="'invitation-' + invitation.id"
         :invitation="invitation"
         @remove="removeInvitation($event)"
+        @invitation-accepted="invitationAccepted($event)"
       ></WorkspaceInvitation>
       <div class="dashboard__container">
         <div class="dashboard__sidebar">
@@ -28,6 +29,7 @@
               :key="workspace.id"
               :workspace="workspace"
               :component-arguments="workspaceComponentArguments"
+              @workspace-updated="workspaceUpdated($event)"
             ></DashboardWorkspace>
             <div>
               <a
@@ -43,7 +45,10 @@
         </div>
       </div>
     </div>
-    <CreateWorkspaceModal ref="createWorkspaceModal"></CreateWorkspaceModal>
+    <CreateWorkspaceModal
+      ref="createWorkspaceModal"
+      @created="workspaceUpdated($event)"
+    ></CreateWorkspaceModal>
   </div>
 </template>
 
@@ -126,6 +131,30 @@ export default {
       if (ref) {
         const element = ref[0].$el
         element.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
+    async invitationAccepted({ workspace }) {
+      await this.fetchWorkspaceExtraData(workspace)
+    },
+    async workspaceUpdated(workspace) {
+      await this.fetchWorkspaceExtraData(workspace)
+    },
+    async fetchWorkspaceExtraData(workspace) {
+      const plugins = Object.values(this.$registry.getAll('plugin'))
+      const asyncData = {}
+      for (let i = 0; i < plugins.length; i++) {
+        const workspaceData = await plugins[i].fetchAsyncDashboardData(
+          this.$root.$nuxt.context,
+          asyncData,
+          workspace.id
+        )
+        const data = {
+          workspaceComponentArguments: this.workspaceComponentArguments,
+        }
+        this.workspaceComponentArguments = plugins[i].mergeDashboardData(
+          JSON.parse(JSON.stringify(data)),
+          workspaceData
+        ).workspaceComponentArguments
       }
     },
   },
