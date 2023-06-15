@@ -1,5 +1,5 @@
-import parseBaserowFormula from '@baserow/modules/database/formula/parser/parser'
-import BaserowFormulaParserError from '@baserow/modules/database/formula/parser/errors'
+import parseBaserowFormula from '@baserow/formula/parser/parser'
+import { BaserowFormulaParserError } from '@baserow/formula/parser/errors'
 
 describe('Baserow Formula Tests', () => {
   const validFormulas = ["lower('test')", "upper('test')"]

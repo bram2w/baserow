@@ -9,26 +9,22 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowIntegerLiteral,
     BaserowStringLiteral,
 )
-from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
-from baserow.contrib.database.formula.parser.exceptions import (
+from baserow.contrib.database.formula.registries import formula_function_registry
+from baserow.contrib.database.formula.types.formula_type import UnTyped
+from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
+from baserow.formula.parser.exceptions import (
     BaserowFormulaSyntaxError,
     FieldByIdReferencesAreDeprecated,
     InvalidNumberOfArguments,
     MaximumFormulaSizeError,
     UnknownOperator,
 )
-from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
-    BaserowFormula,
-)
-from baserow.contrib.database.formula.parser.generated.BaserowFormulaVisitor import (
-    BaserowFormulaVisitor,
-)
-from baserow.contrib.database.formula.parser.parser import (
+from baserow.formula.parser.generated.BaserowFormula import BaserowFormula
+from baserow.formula.parser.generated.BaserowFormulaVisitor import BaserowFormulaVisitor
+from baserow.formula.parser.parser import (
     convert_string_literal_token_to_string,
     get_parse_tree_for_formula,
 )
-from baserow.contrib.database.formula.registries import formula_function_registry
-from baserow.contrib.database.formula.types.formula_type import UnTyped
 
 
 def raw_formula_to_untyped_expression(

@@ -25,16 +25,16 @@ with a :
       `web-frontend/modules/database/formula/parser`.
     * A generated parser used for checking formula validity and constructing the python
       AST in the backend can be found
-      in `backend/src/baserow/contrib/database/formulas/parser/generated`.
+      in `backend/src/baserow/formulas/parser/generated`.
 * A python abstract syntax tree used internally in the backend.
-    * See `backend/src/baserow/contrib/database/formulas/ast/tree.py`.
+    * See `backend/src/baserow/formulas/ast/tree.py`.
 * A typing algorithm that is capable of typing a given formula.
     * See the formula types module found
-      in `backend/src/baserow/contrib/database/formulas/types`.
+      in `backend/src/baserow/formulas/types`.
 * Finally, a generator which coverts a typed formula into a Django expression for safe
   evaluation.
     * see the expression generator module found
-      in `backend/src/baserow/contrib/database/formulas/expression_generator`.
+      in `backend/src/baserow/formulas/expression_generator`.
 
 ## Formula Features from a technical perspective
 

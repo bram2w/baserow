@@ -188,6 +188,54 @@ def dict_to_object(values, name="Struct"):
     return namedtuple(name, values.keys())(*values.values())
 
 
+def get_nested_value_from_dict(nested_dict: Dict, value_path_in_dot_notation: str):
+    """
+    This util allows you to get a value from a nested dictionary using dot notation like
+    such:
+
+    data = {
+        "a": {
+            "b": {
+                "c": 123
+            }
+        }
+    }
+
+    result = get_nested_value_from_dict(data, "a.b.c")
+    print(result)  # Output: 123
+
+    It also supports array indexes like such:
+
+    data = {
+        "a": [
+          { b: "1" }, { "b": "123" }
+        ]
+    }
+
+    result = get_nested_value_from_dict(data, "a.1.b")
+    print(result)  # Output: 123
+
+    :param nested_dict: The dict that holds the value
+    :param value_path_in_dot_notation: The path to the value
+    :return: The value held by the path
+    """
+
+    keys = value_path_in_dot_notation.split(".")
+    current_value = nested_dict
+    for key in keys:
+        if isinstance(current_value, dict) and key in current_value:
+            current_value = current_value[key]
+        elif isinstance(current_value, list):
+            try:
+                key = int(key)
+                current_value = current_value[key]
+            except (ValueError, IndexError):
+                return None
+        else:
+            return None
+    return current_value
+
+
 def random_string(length):
     """
     Generates a random string with a given length containing letters and digits.

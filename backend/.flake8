@@ -10,7 +10,7 @@ per-file-ignores =
 exclude =
     .git,
     __pycache__,
-    src/baserow/contrib/database/formula/parser/generated
+    src/baserow/formula/parser/generated
 
 
 [flake8:local-plugins]

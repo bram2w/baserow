@@ -63,7 +63,7 @@ import context from '@baserow/modules/core/mixins/context'
 import {
   autocompleteFormula,
   calculateFilteredFunctionsAndFieldsBasedOnCursorLocation,
-} from '@baserow/modules/database/formula/autocompleter/formulaAutocompleter'
+} from '@baserow/formula/autocompleter/formulaAutocompleter'
 import FormulaFieldItemGroup from '@baserow/modules/database/components/formula/FormulaFieldItemGroup'
 import FormulaFieldItemDescription from '@baserow/modules/database/components/formula/FormulaFieldItemDescription'
 

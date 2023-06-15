@@ -59,7 +59,6 @@ from baserow.contrib.database.formula import (
     BaserowFormulaBooleanType,
     BaserowFormulaCharType,
     BaserowFormulaDateType,
-    BaserowFormulaException,
     BaserowFormulaInvalidType,
     BaserowFormulaNumberType,
     BaserowFormulaSingleSelectType,
@@ -67,7 +66,6 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
-from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
@@ -76,6 +74,8 @@ from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
+from baserow.formula import BaserowFormulaException
+from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater

@@ -2,13 +2,9 @@ from antlr4 import CommonTokenStream, InputStream
 from antlr4.BufferedTokenStream import BufferedTokenStream
 from antlr4.error.ErrorListener import ErrorListener
 
-from baserow.contrib.database.formula.parser.exceptions import BaserowFormulaSyntaxError
-from baserow.contrib.database.formula.parser.generated.BaserowFormula import (
-    BaserowFormula,
-)
-from baserow.contrib.database.formula.parser.generated.BaserowFormulaLexer import (
-    BaserowFormulaLexer,
-)
+from baserow.formula.parser.exceptions import BaserowFormulaSyntaxError
+from baserow.formula.parser.generated.BaserowFormula import BaserowFormula
+from baserow.formula.parser.generated.BaserowFormulaLexer import BaserowFormulaLexer
 
 
 class BaserowFormulaErrorListener(ErrorListener):

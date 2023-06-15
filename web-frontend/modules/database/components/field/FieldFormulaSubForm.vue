@@ -38,7 +38,7 @@ import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import FieldFormulaInitialSubForm from '@baserow/modules/database/components/formula/FieldFormulaInitialSubForm'
 import FormulaAdvancedEditContext from '@baserow/modules/database/components/formula/FormulaAdvancedEditContext'
 import FormulaService from '@baserow/modules/database/services/formula'
-import parseBaserowFormula from '@baserow/modules/database/formula/parser/parser'
+import parseBaserowFormula from '@baserow/formula/parser/parser'
 
 export default {
   name: 'FieldFormulaSubForm',
