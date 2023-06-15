@@ -1,7 +1,7 @@
 import antlr4 from 'antlr4'
-import BaserowFormulaLexer from '@baserow/modules/database/formula/parser/generated/BaserowFormulaLexer'
-import BaserowFormula from '@baserow/modules/database/formula/parser/generated/BaserowFormula'
-import BaserowFormulaParserError from '@baserow/modules/database/formula/parser/errors'
+import BaserowFormulaLexer from '@baserow/formula/parser/generated/BaserowFormulaLexer'
+import BaserowFormula from '@baserow/formula/parser/generated/BaserowFormula'
+import { BaserowFormulaParserError } from '@baserow/formula/parser/errors'
 
 /**
  * Attempts to parse an input string into a Baserow Formula. If it fails a

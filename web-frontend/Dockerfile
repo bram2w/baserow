@@ -59,6 +59,8 @@ EXPOSE 3000
 
 FROM base as dev
 
+COPY --chown=$UID:$GID ./tests /baserow/tests/
+
 # Create symlinks for jest tests
 RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules \
  && ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules

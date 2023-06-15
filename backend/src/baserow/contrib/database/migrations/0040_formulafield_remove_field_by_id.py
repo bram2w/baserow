@@ -4,10 +4,10 @@ from typing import Dict, Optional
 
 from django.db import migrations, models
 
-from baserow.contrib.database.formula import (
+from baserow.contrib.database.formula import FormulaHandler
+from baserow.formula import (
     BaserowFormula,
     BaserowFormulaVisitor,
-    FormulaHandler,
     MaximumFormulaSizeError,
 )
 

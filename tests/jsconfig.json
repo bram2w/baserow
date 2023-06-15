@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+        "baseUrl": "./cases",
+        "paths": {
+            "@baserow_test_cases/*": [
+                "./cases/*"
+            ]
+        }
+    },
+}

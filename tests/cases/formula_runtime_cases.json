@@ -1,0 +1,58 @@
+{
+    "VALID_FORMULA_TESTS": [
+        {
+            "formula": "'test'",
+            "result": "test",
+            "context": {}
+        },
+        {
+            "formula": "1",
+            "result": 1,
+            "context": {}
+        },
+        {
+            "formula": "true",
+            "result": true,
+            "context": {}
+        },
+        {
+            "formula": "false",
+            "result": false,
+            "context": {}
+        },
+        {
+            "formula": "concat('a', 'b')",
+            "result": "ab",
+            "context": {}
+        },
+        {
+            "formula": "get('a.b')",
+            "result": "test",
+            "context": {
+                "a": {
+                    "b": "test"
+                }
+            }
+        },
+        {
+            "formula": "get('a.1.b')",
+            "result": "test",
+            "context": {
+                "a": [
+                    {
+                        "b": "not me"
+                    },
+                    {
+                        "b": "test"
+                    }
+                ]
+            }
+        }
+    ],
+    "INVALID_FORMULA_TESTS": [
+        {
+            "formula": "invalid()",
+            "context": {}
+        }
+    ]
+}

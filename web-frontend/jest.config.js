@@ -1,4 +1,5 @@
 const coverageConfig = require('./coverage.config.js')
+const path = require('path')
 
 module.exports = {
   testEnvironment: 'jsdom',
@@ -6,6 +7,7 @@ module.exports = {
   moduleFileExtensions: ['js', 'json', 'vue'],
   moduleNameMapper: {
     '^@baserow/(.*)$': '<rootDir>/$1',
+    '^@baserow_test_cases/(.*)$': path.join(__dirname, '../tests/cases/$1'),
     '^@/(.*)$': '<rootDir>/$1',
     '^~/(.*)$': '<rootDir>/$1',
     '^vue$': '<rootDir>/node_modules/vue/dist/vue.common.js',

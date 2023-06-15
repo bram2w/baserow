@@ -11,10 +11,10 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.formula import BaserowFormulaNumberType
-from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
+from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 
 
 @pytest.mark.django_db

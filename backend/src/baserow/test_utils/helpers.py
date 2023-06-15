@@ -1,8 +1,10 @@
+import json
+import os
 from contextlib import contextmanager
 from decimal import Decimal
 from ipaddress import ip_network
 from socket import AF_INET, AF_INET6, IPPROTO_TCP, SOCK_STREAM
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type, Union
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -516,3 +518,20 @@ class AnyInt(int):
 
     def __eq__(self, other):
         return isinstance(other, int)
+
+
+def load_test_cases(name: str) -> Union[List, Dict]:
+    """
+    Load test data from the global cases directory. These cases are used to run the
+    same tests with the same data in both frontend and backend.
+    :param name:
+    :return:
+    """
+
+    current_file_path = os.path.abspath(__file__)
+    current_directory = os.path.dirname(current_file_path)
+    cases_path = os.path.join(current_directory, "../../../../tests/cases/")
+    file_path = os.path.join(cases_path, f"{name}.json")
+
+    with open(file_path, "r") as file:
+        return json.load(file)

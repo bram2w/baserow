@@ -98,6 +98,7 @@ ENTRYPOINT ["/usr/bin/tini", "--", "/bin/bash", "/baserow/backend/docker/docker-
 
 FROM core as dev
 
+COPY --chown=$UID:$GID ./tests /baserow/tests/
 
 USER root
 RUN apt-get update &&  \

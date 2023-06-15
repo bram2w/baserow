@@ -22,14 +22,12 @@ from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
 from baserow.contrib.database.fields.models import FormulaField
-from baserow.contrib.database.formula import (
-    BaserowFormulaException,
-    TypeFormulaOperationType,
-)
+from baserow.contrib.database.formula import TypeFormulaOperationType
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
+from baserow.formula import BaserowFormulaException
 
 
 class TypeFormulaView(APIView):
