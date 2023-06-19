@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 from django.core.files.storage import Storage
 from django.core.management.color import no_style
-from django.db import connection
+from django.db import connection, models
 from django.db.transaction import Atomic
 from django.urls import include, path
 from django.utils import timezone, translation
@@ -364,15 +364,23 @@ class DatabaseApplicationType(ApplicationType):
                 serialized_table["_model"] = table_model
                 schema_editor.create_model(table_model)
 
-                # The auto_now_add and auto_now must be disabled for all fields
+                # These field attributes must be disabled for date fields
                 # because the export contains correct values and we don't want them
                 # to be overwritten when importing.
-                for model_field in serialized_table["_model"]._meta.get_fields():
-                    if hasattr(model_field, "auto_now_add"):
-                        model_field.auto_now_add = False
-
-                    if hasattr(model_field, "auto_now"):
-                        model_field.auto_now = False
+                date_fields = filter(
+                    lambda f: isinstance(f, models.DateField),
+                    serialized_table["_model"]._meta.get_fields(),
+                )
+                attrs_to_disable_for_import = [
+                    "auto_now_add",
+                    "auto_now",
+                    "sync_with",
+                    "sync_with_add",
+                ]
+                for date_field in date_fields:
+                    for attr in attrs_to_disable_for_import:
+                        if getattr(date_field, attr, False):
+                            setattr(date_field, attr, False)
 
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
