@@ -246,3 +246,44 @@ def test_created_on_field_adjacent_row(data_fixture):
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id
+
+
+@pytest.mark.django_db
+def test_created_on_and_update_on_values_are_consinstent_when_a_row_is_created_or_edited(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+
+    field_handler = FieldHandler()
+    row_handler = RowHandler()
+
+    data_fixture.create_text_field(table=table, name="text_field", primary=True)
+    created_on_field_date = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="created_on",
+        name="Create Date",
+    )
+    updated_on_field_datetime = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="last_modified",
+        name="Last Modified Datetime",
+        date_include_time=True,
+    )
+    model = table.get_model()
+    row = row_handler.create_row(user=user, table=table, values={}, model=model)
+
+    # The created_on and updated_on fields should be the same when a row is created.
+    assert row.created_on == row.updated_on
+    assert getattr(row, f"field_{created_on_field_date.id}") == row.created_on
+    assert getattr(row, f"field_{updated_on_field_datetime.id}") == row.updated_on
+
+    row = row_handler.update_row(user=user, table=table, row=row, values={})
+
+    # The created_on and updated_on fields should be different when a row is updated,
+    # but the values should be the same among the created_on and updated_on fields.
+    assert row.created_on != row.updated_on
+    assert getattr(row, f"field_{created_on_field_date.id}") == row.created_on
+    assert getattr(row, f"field_{updated_on_field_datetime.id}") == row.updated_on

@@ -69,6 +69,7 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.core.fields import SyncedDateTimeField
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
@@ -1021,7 +1022,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     field_data_is_derived_from_attrs = True
 
     source_field_name = None
-    model_field_class = models.DateTimeField
+    model_field_class = SyncedDateTimeField
     model_field_kwargs = {}
     populate_from_field = None
 
@@ -1098,14 +1099,14 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
     model_class = LastModifiedField
     source_field_name = "updated_on"
     model_field_class = BaserowLastModifiedField
-    model_field_kwargs = {"auto_now": True}
+    model_field_kwargs = {"sync_with": "updated_on"}
 
 
 class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
     type = "created_on"
     model_class = CreatedOnField
     source_field_name = "created_on"
-    model_field_kwargs = {"auto_now_add": True}
+    model_field_kwargs = {"sync_with_add": "created_on"}
 
 
 class LinkRowFieldType(FieldType):
