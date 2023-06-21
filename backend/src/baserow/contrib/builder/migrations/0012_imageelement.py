@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         ("core", "0068_add_user_profile_level_limits"),
-        ("builder", "0010_linkelement"),
+        ("builder", "0011_synced_datetime_field"),
     ]
 
     operations = [
