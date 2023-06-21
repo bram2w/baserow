@@ -9,6 +9,10 @@ export const PLACEMENTS = {
   BEFORE: 'before',
   AFTER: 'after',
 }
+export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
+  numeric: (value) => !isNaN(value),
+  text: () => true, // Everything starts as text
+}
 
 export const IMAGE_SOURCE_TYPES = {
   UPLOAD: 'upload',

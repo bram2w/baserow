@@ -204,6 +204,7 @@ class ElementView(APIView):
             element_type_registry,
             request.data,
             base_serializer_class=UpdateElementSerializer,
+            partial=True,
         )
 
         element_updated = ElementService().update_element(request.user, element, **data)

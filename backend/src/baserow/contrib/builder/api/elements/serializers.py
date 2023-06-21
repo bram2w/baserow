@@ -84,4 +84,4 @@ class MoveElementSerializer(serializers.Serializer):
 
 class PageParameterValueSerializer(serializers.Serializer):
     name = serializers.CharField()
-    value = ExpressionField(allow_blank=True)
+    value = ExpressionField(allow_blank=True, allow_null=True)

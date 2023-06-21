@@ -168,7 +168,8 @@
         "targetNewTab": "New tab",
         "paramPlaceholder": "Enter a value...",
         "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
-        "paramsInErrorButton": "Update parameters"
+        "paramsInErrorButton": "Update parameters",
+        "pageParameterTypeError": "Invalid type"
     },
     "alignmentSelector": {
         "alignment": "Alignment",
