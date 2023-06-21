@@ -4,6 +4,7 @@
       :table="table"
       :view="view"
       :fields="fields"
+      :workspace="database.workspace"
       :read-only="readOnly"
       :store-prefix="storePrefix"
       :include-field-options-on-refresh="true"

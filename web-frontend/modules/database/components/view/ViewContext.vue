@@ -35,7 +35,7 @@
         v-if="
           $hasPermission(
             'database.table.view.duplicate',
-            table,
+            view,
             database.workspace.id
           )
         "

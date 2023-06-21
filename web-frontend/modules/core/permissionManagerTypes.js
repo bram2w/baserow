@@ -13,8 +13,10 @@ export class PermissionManagerType extends Registerable {
    *   the same name.
    * @param {string} operation the operation name.
    * @param {*} context the context object on which the operation applies.
+   * @param {*} workspaceId the workspaceId the permission is being requested in if
+   *   there is a workspace involved, if not then this will be null.
    */
-  hasPermission(permissions, operation, context) {}
+  hasPermission(permissions, operation, context, workspaceId) {}
 
   /**
    * The order value used to sort admin types in the sidebar menu.
@@ -37,7 +39,7 @@ export class CorePermissionManagerType extends PermissionManagerType {
     return 'core'
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     if (permissions.includes(operation)) {
       return true
     }
@@ -49,7 +51,7 @@ export class StaffPermissionManagerType extends PermissionManagerType {
     return 'staff'
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     if (permissions.staff_only_operations.includes(operation)) {
       return permissions.is_staff
     }
@@ -61,7 +63,7 @@ export class WorkspaceMemberPermissionManagerType extends PermissionManagerType 
     return 'member'
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     return permissions
   }
 }
@@ -86,7 +88,7 @@ export class BasicPermissionManagerType extends PermissionManagerType {
     }
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     // Is it an admin only operation?
     if (permissions.admin_only_operations.includes(operation)) {
       // yes, so it should be an admin of the workspace
@@ -108,7 +110,7 @@ export class StaffOnlySettingOperationPermissionManagerType extends PermissionMa
     return 'setting_operation'
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     // Fetch isStaff from the auth store, so we can reactively update the permission.
     const { store } = this.app
     const isStaff = store.getters['auth/isStaff']

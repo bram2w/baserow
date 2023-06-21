@@ -3,21 +3,10 @@
     ref="fieldContextAnchor"
     class="grid-view-aggregation"
     :class="{
-      'read-only':
-        readOnly ||
-        !$hasPermission(
-          'database.table.view.update_field_options',
-          view,
-          database.workspace.id
-        ),
+      'read-only': !userCanMakeAggregations,
     }"
     @click.prevent="
-      !readOnly &&
-        $hasPermission(
-          'database.table.view.update_field_options',
-          view,
-          database.workspace.id
-        ) &&
+      userCanMakeAggregations &&
         $refs[`fieldContext`].toggle(
           $refs.fieldContextAnchor,
           'top',
@@ -96,6 +85,16 @@ export default {
     return { pendingValueUpdate: false }
   },
   computed: {
+    userCanMakeAggregations() {
+      return (
+        !this.readOnly ||
+        this.$hasPermission(
+          'database.table.view.update_field_options',
+          this.view,
+          this.database.workspace.id
+        )
+      )
+    },
     aggregationType() {
       return this.fieldOptions[this.field.id]?.aggregation_type
     },

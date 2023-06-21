@@ -3,18 +3,20 @@
     <div class="kanban-view__stacked-by-title">
       {{ $t('kanbanViewStakedBy.title') }}
     </div>
-    <div class="kanban-view__stacked-by-description">
-      {{ $t('kanbanViewStakedBy.chooseField') }}
-    </div>
     <ChooseSingleSelectField
       :view="view"
       :table="table"
       :fields="fields"
+      :workspace="workspace"
       :value="view.single_select_field"
       :read-only="readOnly"
       :loading="loading"
       @input="update"
-    />
+    >
+      <div class="kanban-view__stacked-by-description">
+        {{ $t('kanbanViewStakedBy.chooseField') }}
+      </div>
+    </ChooseSingleSelectField>
   </div>
 </template>
 
@@ -28,6 +30,10 @@ export default {
   mixins: [kanbanViewHelper],
   props: {
     table: {
+      type: Object,
+      required: true,
+    },
+    workspace: {
       type: Object,
       required: true,
     },

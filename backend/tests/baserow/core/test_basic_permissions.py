@@ -375,6 +375,7 @@ def test_get_permissions(data_fixture):
     print(result)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -394,9 +395,9 @@ def test_get_permissions(data_fixture):
     ]
 
     result = CoreHandler().get_permissions(admin, workspace)
-    print(result)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -435,6 +436,7 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_2)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -456,6 +458,7 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_2, workspace)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -494,6 +497,7 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_3)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -515,6 +519,7 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_3, workspace)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",
@@ -553,6 +558,7 @@ def test_get_permissions(data_fixture):
     result = CoreHandler().get_permissions(user_4, workspace)
 
     assert result == [
+        {"name": "view_ownership", "permissions": {}},
         {"name": "core", "permissions": ["list_workspaces"]},
         {
             "name": "setting_operation",

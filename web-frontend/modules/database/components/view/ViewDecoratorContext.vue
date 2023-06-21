@@ -58,6 +58,7 @@
             v-if="dec.valueProviderType"
             :view="view"
             :table="table"
+            :workspace="database.workspace"
             :fields="fields"
             :read-only="readOnly"
             :options="dec.decoration.value_provider_conf"

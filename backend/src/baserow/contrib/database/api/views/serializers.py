@@ -268,6 +268,7 @@ class ViewSerializer(serializers.ModelSerializer):
     )
     show_logo = serializers.BooleanField(required=False)
     ownership_type = serializers.CharField()
+    created_by_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = View
@@ -286,12 +287,14 @@ class ViewSerializer(serializers.ModelSerializer):
             "public_view_has_password",
             "show_logo",
             "ownership_type",
+            "created_by_id",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
             "public_view_has_password": {"read_only": True},
             "ownership_type": {"read_only": True},
+            "created_by_id": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):

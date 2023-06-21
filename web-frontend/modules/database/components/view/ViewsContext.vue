@@ -56,14 +56,7 @@
       {{ $t('viewsContext.noViews') }}
     </div>
     <div
-      v-if="
-        !readOnly &&
-        $hasPermission(
-          'database.table.create_view',
-          table,
-          database.workspace.id
-        )
-      "
+      v-if="!readOnly && availableViewOwnershipTypesForCreation.length > 0"
       class="select__footer"
     >
       <div class="select__footer-create">
@@ -136,19 +129,17 @@ export default {
     viewOwnershipTypes() {
       return this.$registry.getAll('viewOwnershipType')
     },
-    activeViewOwnershipTypes() {
-      return Object.fromEntries(
-        Object.entries(this.viewOwnershipTypes)
-          .filter(
-            ([key]) =>
-              this.viewOwnershipTypes[key].isDeactivated(
-                this.database.workspace.id
-              ) === false
-          )
-          .sort(
-            (a, b) => a[1].getListViewTypeSort() - b[1].getListViewTypeSort()
-          )
+    availableViewOwnershipTypesForCreation() {
+      return this.activeViewOwnershipTypes.filter((t) =>
+        t.userCanTryCreate(this.table, this.database.workspace.id)
       )
+    },
+    activeViewOwnershipTypes() {
+      return Object.values(this.viewOwnershipTypes)
+        .filter(
+          (type) => type.isDeactivated(this.database.workspace.id) === false
+        )
+        .sort((a, b) => a.getListViewTypeSort() - b.getListViewTypeSort())
     },
   },
   methods: {

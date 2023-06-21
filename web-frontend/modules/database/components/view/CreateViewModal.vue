@@ -13,6 +13,7 @@
       ref="viewForm"
       :default-name="getDefaultName()"
       :database="database"
+      :table="table"
       @submitted="submitted"
     >
       <div class="actions">

@@ -23,6 +23,7 @@ from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
 from baserow.core.models import Workspace, WorkspaceUser
+from baserow.core.registries import OperationType
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -1115,6 +1116,41 @@ class ViewOwnershipType(Instance):
         """
 
         return "table", None
+
+    def before_form_view_submitted(self, form, request):
+        """
+        Called before a form view of this ownership type is submitted. Can be used
+        to perform extra permission checks and raise an exception if something is
+        wrong.
+
+        :param form: The form being submitted
+        :param request: The submission request
+        :return: Nothing
+        """
+
+        pass
+
+    def before_public_view_accessed(self, view):
+        """
+        Called before a view of this ownership type which is publicly shared is
+        accessed. Can be used to perform extra permission checks and raise an exception
+        if something is wrong.
+
+        :param view: The publicly shared view being accessed.
+        :return: Nothing
+        """
+
+        pass
+
+    def get_operation_to_check_to_create_view(self) -> Type[OperationType]:
+        """
+        :return: An OperationType that the user must have to create a view of this
+            ownership type
+        """
+
+        from .operations import CreateViewOperationType
+
+        return CreateViewOperationType
 
 
 class ViewOwnershipTypeRegistry(Registry):

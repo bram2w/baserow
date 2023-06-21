@@ -26,7 +26,7 @@
       <div class="control__elements view-ownership-select">
         <component
           :is="type.getRadioComponent()"
-          v-for="type in viewOwnershipTypes"
+          v-for="type in availableViewOwnershipTypesForCreation"
           :key="type.getType()"
           :view-ownership-type="type"
           :database="database"
@@ -58,6 +58,10 @@ export default {
       type: Object,
       required: true,
     },
+    table: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -69,11 +73,25 @@ export default {
   },
   computed: {
     viewOwnershipTypes() {
-      return this.$registry.getAll('viewOwnershipType')
+      return Object.values(this.$registry.getAll('viewOwnershipType'))
+    },
+    availableViewOwnershipTypesForCreation() {
+      return this.activeViewOwnershipTypes.filter((t) =>
+        t.userCanTryCreate(this.table, this.database.workspace.id)
+      )
+    },
+    activeViewOwnershipTypes() {
+      return this.viewOwnershipTypes
+        .filter((t) => !t.isDeactivated(this.database.workspace.id))
+        .sort((a, b) => b.getListViewTypeSort() - a.getListViewTypeSort())
     },
   },
   mounted() {
     this.$refs.name.focus()
+    const firstAndHenceDefaultOwnershipType =
+      this.availableViewOwnershipTypesForCreation[0]?.getType()
+    this.values.ownershipType =
+      this.defaultValues.ownershipType || firstAndHenceDefaultOwnershipType
   },
   validations: {
     values: {

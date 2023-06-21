@@ -341,7 +341,7 @@ order, if the permission is granted or not given the data from the `permissions`
 property.
 
 For instance the
-`BasicPermissionManagerType.hasPermission(permissions, operation, context)`
+`BasicPermissionManagerType.hasPermission(permissions, operation, context, workspaceId)`
 method will be called with the following object:
 
 ```json
