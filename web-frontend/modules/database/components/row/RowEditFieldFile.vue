@@ -71,6 +71,7 @@ import axios from 'axios'
 import FileInProgress from '@baserow/modules/core/components/files/FileInProgress'
 import FileFailed from '@baserow/modules/core/components/files/FileFailed'
 import FileUploaded from '@baserow/modules/core/components/files/FileUploaded'
+import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 
 export default {
   components: {
@@ -189,12 +190,11 @@ export default {
       this.filesInProgress.splice(index, 1)
     },
     forceAddFile(file, additionalData = {}) {
-      const imageTypes = ['image/jpeg', 'image/jpg', 'image/png']
       const id = uuid()
       const fileData = {
         id,
         visible_name: file.name,
-        isImage: imageTypes.includes(file.type),
+        isImage: IMAGE_FILE_TYPES.includes(file.type),
         percentage: 0,
         ...additionalData,
       }

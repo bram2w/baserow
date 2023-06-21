@@ -1,7 +1,12 @@
 <template>
   <div>
     <h2 class="box__title">{{ $t('uploadFileUserFileUpload.title') }}</h2>
-    <UploadFileDropzone @input="addFile($event)" />
+    <UploadFileDropzone
+      v-if="showDropZone"
+      :multiple-files="multipleFiles"
+      :file-types-acceptable="fileTypesAcceptable"
+      @input="addFile($event)"
+    />
     <ul v-show="files.length > 0" class="upload-files__list">
       <li v-for="file in files" :key="file.id" class="upload-files__item">
         <div class="upload-files__preview">
@@ -71,12 +76,24 @@ import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
 import { generateThumbnail } from '@baserow/modules/core/utils/image'
 import UserFileService from '@baserow/modules/core/services/userFile'
 import UploadFileDropzone from '@baserow/modules/core/components/files/UploadFileDropzone'
+import { getFilesFromEvent } from '@baserow/modules/core/utils/file'
+import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 export default {
   name: 'UploadFileUserFileUpload',
   components: { UploadFileDropzone },
   props: {
     uploadFile: {
       type: Function,
+      required: false,
+      default: null,
+    },
+    multipleFiles: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    fileTypesAcceptable: {
+      type: Array,
       required: false,
       default: null,
     },
@@ -103,6 +120,12 @@ export default {
     uploadFileFunction() {
       return this.uploadFile || UserFileService(this.$client).uploadFile
     },
+    showDropZone() {
+      if (this.multipleFiles) {
+        return true
+      }
+      return this.files.length === 0
+    },
   },
   methods: {
     /**
@@ -110,24 +133,14 @@ export default {
      * drop event, but also via a file upload input event.
      */
     addFile(event) {
-      let files = null
+      const files = getFilesFromEvent(event)
 
-      if (event.target.files) {
-        // Files via the file upload input.
-        files = event.target.files
-      } else if (event.dataTransfer) {
-        // Files via drag and drop.
-        files = event.dataTransfer.files
-      }
-
-      if (files === null) {
+      if (files.length === 0) {
         return
       }
 
-      const imageTypes = ['image/jpeg', 'image/jpg', 'image/png']
-
       Array.from(files).forEach((file) => {
-        const isImage = imageTypes.includes(file.type)
+        const isImage = IMAGE_FILE_TYPES.includes(file.type)
         const item = {
           id: uuid(),
           percentage: 0,

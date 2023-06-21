@@ -17,10 +17,20 @@
 import textElement from '@baserow/modules/builder/mixins/elements/textElement'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 
+/**
+ * @typedef Paragraph
+ * @property {string} content - The text displayed
+ * @property {string} id - The id of the paragraph hashed
+ */
+
 export default {
   name: 'ParagraphElement',
   mixins: [textElement],
   props: {
+    /**
+     * @type {Object}
+     * @property {Array.<Paragraph>} value - A list of paragraphs
+     */
     element: {
       type: Object,
       required: true,

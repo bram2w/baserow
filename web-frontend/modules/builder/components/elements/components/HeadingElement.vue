@@ -12,9 +12,14 @@
 import textElement from '@baserow/modules/builder/mixins/elements/textElement'
 
 export default {
-  name: 'HeaderElement',
+  name: 'HeadingElement',
   mixins: [textElement],
   props: {
+    /**
+     * @type {Object}
+     * @property {number} level - The size of the heading
+     * @property {string} value - The text displayed
+     */
     element: {
       type: Object,
       required: true,

@@ -108,6 +108,7 @@ class ElementsView(APIView):
         request=DiscriminatorCustomFieldsMappingSerializer(
             element_type_registry,
             CreateElementSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -165,6 +166,7 @@ class ElementView(APIView):
         request=CustomFieldRegistryMappingSerializer(
             element_type_registry,
             UpdateElementSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(

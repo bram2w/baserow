@@ -1,3 +1,4 @@
+@import "elements/all";
 @import "page_builder";
 @import "elements_context";
 @import "add_element_card";
@@ -7,11 +8,6 @@
 @import "side_panels";
 @import "empty_side_panel_state";
 @import "page";
-@import "elements/headingElement";
-@import "elements/paragraphElement";
-@import "elements/linkElement";
-@import "elements/forms/paragraphElementForm";
-@import "elements/forms/linkElementForm";
 @import "page_settings_path_params_form_element";
 @import "domain_card";
 @import "dns_status";

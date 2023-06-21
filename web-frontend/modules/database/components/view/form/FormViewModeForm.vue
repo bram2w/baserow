@@ -13,9 +13,7 @@
       @submit.prevent="$emit('submit')"
     >
       <div class="form-view__heading">
-        <div v-if="logoImage !== null" class="form_view__logo">
-          <img class="form_view__logo-img" :src="logoImage.url" width="200" />
-        </div>
+        <Thumbnail v-if="logoImage !== null" :src="logoImage.url" width="200" />
         <h1 v-if="title !== ''" class="form-view__title">{{ title }}</h1>
         <p v-if="description !== ''" class="form-view__description">
           {{ description }}

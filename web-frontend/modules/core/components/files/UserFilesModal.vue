@@ -26,6 +26,8 @@
       <component
         :is="userFileUploadComponent"
         :upload-file="uploadFile"
+        :multiple-files="multipleFiles"
+        :file-types-acceptable="fileTypesAcceptable"
         @uploaded="$emit('uploaded', $event)"
       ></component>
     </template>
@@ -45,6 +47,16 @@ export default {
       default: null,
     },
     userFileUploadTypes: {
+      type: Array,
+      required: false,
+      default: null,
+    },
+    multipleFiles: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+    fileTypesAcceptable: {
       type: Array,
       required: false,
       default: null,

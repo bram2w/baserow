@@ -32,7 +32,7 @@ export default {
     values: {
       deep: true,
       handler(newValues) {
-        this.$emit('values-changed', newValues)
+        this.emitChange(newValues)
       },
     },
   },
@@ -177,6 +177,9 @@ export default {
         }
       }
       return childHandledIt
+    },
+    emitChange(newValues) {
+      this.$emit('values-changed', newValues)
     },
   },
 }

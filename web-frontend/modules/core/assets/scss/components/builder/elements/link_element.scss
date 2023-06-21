@@ -1,0 +1,13 @@
+.link-element {
+  display: flex;
+  padding: 5px 82px;
+}
+
+.link-element__link {
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0;
+  height: 32px;
+  line-height: 32px;
+  border: 1px solid transparent;
+}

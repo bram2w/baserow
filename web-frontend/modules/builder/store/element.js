@@ -95,6 +95,7 @@ const actions = {
     await dispatch('forceCreate', { element, beforeId })
   },
   async update({ dispatch }, { element, values }) {
+    const elementType = this.$registry.get('element', element.type)
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -107,7 +108,10 @@ const actions = {
     await dispatch('forceUpdate', { element, values: newValues })
 
     try {
-      await ElementService(this.$client).update(element.id, values)
+      await ElementService(this.$client).update(
+        element.id,
+        elementType.prepareValuesForRequest(values)
+      )
     } catch (error) {
       await dispatch('forceUpdate', { element, values: oldValues })
       throw error
@@ -116,6 +120,7 @@ const actions = {
 
   async debouncedUpdateSelected({ dispatch, getters }, { values }) {
     const element = getters.getSelected
+    const elementType = this.$registry.get('element', element.type)
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -130,7 +135,10 @@ const actions = {
     return new Promise((resolve, reject) => {
       const fire = async () => {
         try {
-          await ElementService(this.$client).update(element.id, values)
+          await ElementService(this.$client).update(
+            element.id,
+            elementType.prepareValuesForRequest(values)
+          )
           updateContext.lastUpdatedValues = values
           resolve()
         } catch (error) {

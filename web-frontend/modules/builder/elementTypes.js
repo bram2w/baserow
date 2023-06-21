@@ -6,6 +6,8 @@ import LinkElementEdit from '@baserow/modules/builder/components/elements/compon
 import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/ParagraphElementForm'
 import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/HeadingElementForm'
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/LinkElementForm'
+import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/ImageElementForm'
+import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
 
 import _ from 'lodash'
 
@@ -43,6 +45,17 @@ export class ElementType extends Registerable {
    */
   isInError({ element, builder }) {
     return false
+  }
+
+  /**
+   * This hook allows you to change the values given by the form of the element before
+   * they are sent to the backend to update the element.
+   *
+   * @param {object} values - The values of the element
+   * @returns {*}
+   */
+  prepareValuesForRequest(values) {
+    return values
   }
 }
 
@@ -182,5 +195,44 @@ export class LinkElementType extends ElementType {
       return element.navigate_to_url
     }
     return ''
+  }
+}
+
+export class ImageElementType extends ElementType {
+  getType() {
+    return 'image'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.image')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.imageDescription')
+  }
+
+  get iconClass() {
+    return 'image'
+  }
+
+  get component() {
+    return ImageElement
+  }
+
+  get formComponent() {
+    return ImageElementForm
+  }
+
+  prepareValuesForRequest(values) {
+    // We only want to send the name of the image file instead of the entire object
+    // since we only need to link the image file to the element and not copy the entire
+    // data structure.
+    if (values.image_file) {
+      values.image_file_id = values.image_file.id
+      delete values.image_file
+    } else {
+      delete values.image_file_id
+    }
+    return values
   }
 }

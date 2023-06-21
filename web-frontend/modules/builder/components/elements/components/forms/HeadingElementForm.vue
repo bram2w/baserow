@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent>
+  <form @submit.prevent @keydown.enter.prevent>
     <FormElement class="control">
       <label class="control__label">
         {{ $t('headingElementForm.levelTitle') }}
@@ -26,7 +26,7 @@
           v-model="values.value"
           type="text"
           class="input"
-          :placeholder="$t('headingElementForm.textPlaceholder')"
+          :placeholder="$t('elementForms.textInputPlaceholder')"
         />
       </div>
     </FormElement>

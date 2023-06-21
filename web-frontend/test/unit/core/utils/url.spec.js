@@ -1,5 +1,6 @@
 import { isRelativeUrl } from '@baserow/modules/core/utils/url'
 import {
+  isValidAbsoluteURL,
   isValidURL,
   isValidURLWithHttpScheme,
 } from '@baserow/modules/core/utils/string'
@@ -78,6 +79,39 @@ describe('test url utils', () => {
     })
     test.each(invalidURLs)('test with invalid http/s url %s', (url) => {
       expect(isValidURLWithHttpScheme(url)).toBe(false)
+    })
+  })
+  describe('test is valid absolute url', () => {
+    const invalidURLs = [
+      '/test',
+      'test/test',
+      '/',
+      '/dashboard?test=true',
+      'asdasd',
+      'ftp://example.com/file.txt',
+      '//cdn.example.com/lib.js',
+      'git+ssh://example.con/item',
+      'https://test',
+    ]
+    const validURLs = [
+      'https://example.com',
+      'HTTPs://EXAMPLE.COM',
+      'https://www.exmaple.com',
+      'https://example.com/file.txt',
+      'https://cdn.example.com/lib.js',
+      'HtTps://example.con/item',
+      'http://example.com',
+      'HTTP://EXAMPLE.COM',
+      'http://example.com',
+      'http://example.com/file.txt',
+      'http://cdn.example.com/lib.js',
+      'HtTp://example.con/item',
+    ]
+    test.each(validURLs)('test with valid http/s url %s', (url) => {
+      expect(isValidAbsoluteURL(url)).toBe(true)
+    })
+    test.each(invalidURLs)('test with invalid http/s url %s', (url) => {
+      expect(isValidAbsoluteURL(url)).toBe(false)
     })
   })
 })

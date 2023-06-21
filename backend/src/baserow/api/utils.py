@@ -397,12 +397,13 @@ class CustomFieldRegistryMappingSerializer:
     extension class.
     """
 
-    def __init__(self, registry, base_class, many=False):
+    def __init__(self, registry, base_class, many=False, request=False):
         self.read_only = False
         self.registry = registry
         self.base_class = base_class
         self.many = many
         self.partial = False
+        self.request = request
 
 
 class DiscriminatorCustomFieldsMappingSerializer:

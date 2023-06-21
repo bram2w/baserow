@@ -300,17 +300,6 @@
   @include contenteditable-placeholder();
 }
 
-.form_view__logo {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 30px;
-}
-
-.form_view__logo-img {
-  display: block;
-  max-width: 180px;
-}
-
 .form-view__title {
   font-size: 22px;
   font-weight: 700;
