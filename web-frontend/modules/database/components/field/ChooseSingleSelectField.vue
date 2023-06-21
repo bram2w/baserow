@@ -1,5 +1,11 @@
 <template>
   <div>
+    <slot
+      v-if="canCreateSingleSelectField || singleSelectFields.length > 0"
+    ></slot>
+    <div v-else class="warning">
+      {{ $t('chooseSingleSelectField.warningWhenNothingToChooseOrCreate') }}
+    </div>
     <Radio
       v-for="field in singleSelectFields"
       :key="field.id"
@@ -10,7 +16,7 @@
       @input="$emit('input', $event)"
       >{{ field.name }}</Radio
     >
-    <div v-if="!readOnly" class="margin-top-2">
+    <div v-if="canCreateSingleSelectField" class="margin-top-2">
       <a
         ref="createFieldContextLink"
         class="choose-select-field__link margin-right-auto"
@@ -41,6 +47,10 @@ export default {
       type: Object,
       required: true,
     },
+    workspace: {
+      type: Object,
+      required: true,
+    },
     view: {
       type: Object,
       required: true,
@@ -67,6 +77,16 @@ export default {
     },
   },
   computed: {
+    canCreateSingleSelectField() {
+      return (
+        !this.readOnly &&
+        this.$hasPermission(
+          'database.table.create_field',
+          this.table,
+          this.workspace.id
+        )
+      )
+    },
     singleSelectFieldType() {
       return SingleSelectFieldType.getType()
     },

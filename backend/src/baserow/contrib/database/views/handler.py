@@ -32,9 +32,9 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
+    CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
     CreateViewFilterOperationType,
-    CreateViewOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
     DeleteViewFilterOperationType,
@@ -58,6 +58,7 @@ from baserow.contrib.database.views.operations import (
     UpdateViewFieldOptionsOperationType,
     UpdateViewFilterOperationType,
     UpdateViewOperationType,
+    UpdateViewPublicOperationType,
     UpdateViewSlugOperationType,
     UpdateViewSortOperationType,
 )
@@ -446,6 +447,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
+            context=table,
             allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
@@ -597,20 +599,24 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created view instance.
         """
 
-        workspace = table.database.workspace
-        CoreHandler().check_permissions(
-            user, CreateViewOperationType.type, workspace=workspace, context=table
+        view_ownership_type_str = kwargs.get(
+            "ownership_type", OWNERSHIP_TYPE_COLLABORATIVE
         )
-
-        # Figure out which model to use for the given view type.
+        view_ownership_type = view_ownership_type_registry.get(view_ownership_type_str)
         view_type = view_type_registry.get(type_name)
+
+        workspace = table.database.workspace
+
+        CoreHandler().check_permissions(
+            user,
+            view_ownership_type.get_operation_to_check_to_create_view().type,
+            workspace=workspace,
+            context=table,
+        )
         view_type.before_view_create(kwargs, table, user)
 
         model_class = view_type.model_class
         view_values = view_type.prepare_values(kwargs, table, user)
-
-        view_ownership_type = kwargs.get("ownership_type", OWNERSHIP_TYPE_COLLABORATIVE)
-        view_ownership_type_registry.get(view_ownership_type)
 
         allowed_fields = [
             "name",
@@ -624,6 +630,14 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         instance = model_class.objects.create(
             table=table, order=last_order, created_by=user, **view_values
         )
+
+        if instance.public:
+            CoreHandler().check_permissions(
+                user,
+                CreatePublicViewOperationType.type,
+                workspace=workspace,
+                context=table,
+            )
 
         view_type.view_created(view=instance)
         view_created.send(self, view=instance, user=user, type_name=type_name)
@@ -761,7 +775,16 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "public_view_password",
             "show_logo",
         ] + view_type.allowed_fields
+
+        previous_public_value = view.public
         view = set_allowed_attrs(view_values, allowed_fields, view)
+        if previous_public_value != view.public:
+            CoreHandler().check_permissions(
+                user,
+                UpdateViewPublicOperationType.type,
+                workspace=workspace,
+                context=view,
+            )
         view.save()
 
         if "filters_disabled" in view_values:
@@ -798,7 +821,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         user_views = CoreHandler().filter_queryset(
-            user, ListViewsOperationType.type, all_views, workspace=workspace
+            user,
+            ListViewsOperationType.type,
+            all_views,
+            workspace=workspace,
+            context=table,
         )
 
         view_ids = user_views.values_list("id", flat=True)
@@ -2363,6 +2390,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 raise NoAuthorizationToPubliclySharedView(
                     "The view is password protected."
                 )
+
+            view_ownership_type = view_ownership_type_registry.get(view.ownership_type)
+            view_ownership_type.before_public_view_accessed(view)
 
         return view
 

@@ -29,6 +29,7 @@
         <KanbanViewStackedBy
           :table="table"
           :view="view"
+          :workspace="database.workspace"
           :fields="fields"
           :read-only="
             readOnly ||

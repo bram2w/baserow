@@ -1,15 +1,17 @@
 <template>
   <div>
-    <div class="margin-bottom-2">
-      {{ $t('singleSelectColorValueProviderForm.chooseAColor') }}
-    </div>
     <ChooseSingleSelectField
       :view="view"
       :table="table"
       :fields="selectFields"
+      :workspace="workspace"
       :value="value"
       @input="$emit('update', { field_id: $event })"
-    />
+    >
+      <div class="margin-bottom-2">
+        {{ $t('singleSelectColorValueProviderForm.chooseAColor') }}
+      </div>
+    </ChooseSingleSelectField>
   </div>
 </template>
 
@@ -22,6 +24,10 @@ export default {
   components: { ChooseSingleSelectField },
   props: {
     options: {
+      type: Object,
+      required: true,
+    },
+    workspace: {
       type: Object,
       required: true,
     },

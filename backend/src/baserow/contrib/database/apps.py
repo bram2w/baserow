@@ -573,6 +573,8 @@ class DatabaseConfig(AppConfig):
             UseTokenOperationType,
         )
         from .views.operations import (
+            CreateAndUsePersonalViewOperationType,
+            CreatePublicViewOperationType,
             CreateViewDecorationOperationType,
             CreateViewFilterOperationType,
             CreateViewOperationType,
@@ -599,6 +601,7 @@ class DatabaseConfig(AppConfig):
             UpdateViewDecorationOperationType,
             UpdateViewFilterOperationType,
             UpdateViewOperationType,
+            UpdateViewPublicOperationType,
             UpdateViewSlugOperationType,
             UpdateViewSortOperationType,
         )
@@ -636,9 +639,12 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
         operation_type_registry.register(UpdateViewSlugOperationType())
+        operation_type_registry.register(UpdateViewPublicOperationType())
         operation_type_registry.register(ReadViewsOrderOperationType())
         operation_type_registry.register(OrderViewsOperationType())
         operation_type_registry.register(CreateViewOperationType())
+        operation_type_registry.register(CreatePublicViewOperationType())
+        operation_type_registry.register(CreateAndUsePersonalViewOperationType())
         operation_type_registry.register(ReadViewOperationType())
         operation_type_registry.register(UpdateViewOperationType())
         operation_type_registry.register(DeleteViewOperationType())

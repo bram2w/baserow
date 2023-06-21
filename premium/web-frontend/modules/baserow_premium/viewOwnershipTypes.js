@@ -36,4 +36,12 @@ export class PersonalViewOwnershipType extends ViewOwnershipType {
   getListViewTypeSort() {
     return 40
   }
+
+  userCanTryCreate(table, workspaceId) {
+    return this.app.$hasPermission(
+      'database.table.create_and_use_personal_view',
+      table,
+      workspaceId
+    )
+  }
 }

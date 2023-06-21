@@ -47,6 +47,10 @@ class UpdateViewSlugOperationType(ViewOperationType):
     type = "database.table.view.update_slug"
 
 
+class UpdateViewPublicOperationType(ViewOperationType):
+    type = "database.table.view.update_public"
+
+
 class ReadViewsOrderOperationType(DatabaseTableOperationType):
     type = "database.table.read_view_order"
 
@@ -58,6 +62,14 @@ class OrderViewsOperationType(DatabaseTableOperationType):
 
 class CreateViewOperationType(DatabaseTableOperationType):
     type = "database.table.create_view"
+
+
+class CreatePublicViewOperationType(DatabaseTableOperationType):
+    type = "database.table.create_public_view"
+
+
+class CreateAndUsePersonalViewOperationType(DatabaseTableOperationType):
+    type = "database.table.create_and_use_personal_view"
 
 
 class ListViewsOperationType(DatabaseTableOperationType):
