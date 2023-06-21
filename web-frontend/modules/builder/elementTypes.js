@@ -9,9 +9,8 @@ import LinkElementForm from '@baserow/modules/builder/components/elements/compon
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/ImageElementForm'
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
 
-import _ from 'lodash'
-
 import { compile } from 'path-to-regexp'
+import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 
 export class ElementType extends Registerable {
   get name() {
@@ -151,22 +150,45 @@ export class LinkElementType extends ElementType {
     return LinkElementType.arePathParametersInError(element, builder)
   }
 
+  static validatePathParamType(value, type) {
+    const validationFunction = PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[type]
+    return validationFunction !== undefined && validationFunction(value)
+  }
+
   static arePathParametersInError(element, builder) {
     if (
       element.navigation_type === 'page' &&
       !isNaN(element.navigate_to_page_id)
     ) {
-      const destinationPageParamNames = (
-        builder.pages.find(({ id }) => id === element.navigate_to_page_id)
-          ?.path_params || []
-      ).map(({ name }) => name)
+      const destinationPage = builder.pages.find(
+        ({ id }) => id === element.navigate_to_page_id
+      )
 
-      const pageParams = element.page_parameters.map(({ name }) => name)
+      if (destinationPage) {
+        const destinationPageParams = destinationPage.path_params || []
+        const pageParams = element.page_parameters || []
 
-      if (!_.isEqual(destinationPageParamNames, pageParams)) {
-        return true
+        if (destinationPageParams.length !== pageParams.length) {
+          return true
+        }
+
+        for (let i = 0; i < destinationPageParams.length; i++) {
+          const destinationParam = destinationPageParams[i]
+          const pageParam = pageParams[i]
+
+          if (
+            destinationParam.name !== pageParam.name ||
+            !LinkElementType.validatePathParamType(
+              pageParam.value,
+              destinationParam.type
+            )
+          ) {
+            return true
+          }
+        }
       }
     }
+
     return false
   }
 

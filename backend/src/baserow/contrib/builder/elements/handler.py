@@ -135,7 +135,7 @@ class ElementHandler:
         to be set on the element first.
 
         :param element: The element that should be updated.
-        :param values: The values that should be set on the element.
+        :param kwargs: The values that should be set on the element.
         :return: The updated element.
         """
 
@@ -146,7 +146,9 @@ class ElementHandler:
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
 
-        allowed_updates = element_type.prepare_value_for_db(allowed_updates)
+        allowed_updates = element_type.prepare_value_for_db(
+            allowed_updates, instance=element
+        )
 
         for key, value in allowed_updates.items():
             setattr(element, key, value)

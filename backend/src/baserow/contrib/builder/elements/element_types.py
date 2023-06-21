@@ -1,6 +1,8 @@
 from abc import ABC
+from typing import Dict, Optional
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.api.user_files.serializers import UserFileSerializer
 from baserow.contrib.builder.api.validators import image_file_id_validation
@@ -13,6 +15,8 @@ from baserow.contrib.builder.elements.models import (
 )
 from baserow.contrib.builder.elements.registries import ElementType
 from baserow.contrib.builder.elements.types import Expression
+from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.user_files.models import UserFile
 
@@ -107,6 +111,7 @@ class LinkElementType(BaseTextElementType):
 
     type = "link"
     model_class = LinkElement
+    PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP = {"text": str, "numeric": int}
 
     class SerializedDict(ElementDict):
         value: Expression
@@ -162,6 +167,7 @@ class LinkElementType(BaseTextElementType):
             ),
             "navigate_to_page_id": serializers.IntegerField(
                 allow_null=True,
+                default=None,
                 help_text=LinkElement._meta.get_field("navigate_to_page").help_text,
                 required=False,
             ),
@@ -211,6 +217,61 @@ class LinkElementType(BaseTextElementType):
             "width": "auto",
             "alignment": "center",
         }
+
+    def prepare_value_for_db(
+        self, values: Dict, instance: Optional[LinkElement] = None
+    ):
+        page_params = values.get("page_parameters", [])
+        navigate_to_page_id = values.get(
+            "navigate_to_page_id", getattr(instance, "navigate_to_page_id", None)
+        )
+
+        if len(page_params) != 0 and navigate_to_page_id is not None:
+            page = (
+                PageHandler().get_page(navigate_to_page_id)
+                if navigate_to_page_id is not None
+                else instance.navigate_to_page
+            )
+
+            self._raise_if_path_params_are_invalid(page_params, page)
+
+        return values
+
+    def _raise_if_path_params_are_invalid(self, path_params: Dict, page: Page) -> None:
+        """
+        Checks if the path parameters being set are correctly correlated to the
+        path parameters defined for the page.
+
+        :param path_params: The path params defined for the navigation event
+        :param page: The page the element is navigating to
+        :raises ValidationError: If the param does not exist or the type does not match
+        """
+
+        parameter_types = {p["name"]: p["type"] for p in page.path_params}
+
+        for page_parameter in path_params:
+            page_parameter_name = page_parameter["name"]
+            page_parameter_value = page_parameter["value"]
+            page_parameter_type = parameter_types.get(page_parameter_name, None)
+
+            if page_parameter_type is None:
+                raise ValidationError(
+                    f"Page path parameter {page_parameter} does not exist."
+                )
+
+            # We don't need to type check empty values since they can be used as
+            # defaults for page parameters.
+            if page_parameter_value is None or page_parameter_value == "":
+                continue
+
+            try:
+                LinkElementType.PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP[page_parameter_type](
+                    page_parameter_value
+                )
+            except (ValueError, TypeError):
+                raise ValidationError(
+                    f"'{page_parameter_value}' is not of type {page_parameter_type}"
+                )
 
 
 class ImageElementType(ElementType):

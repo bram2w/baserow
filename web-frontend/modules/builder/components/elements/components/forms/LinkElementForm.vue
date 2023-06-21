@@ -80,16 +80,31 @@
         </Alert>
       </template>
       <div v-else class="control__elements link-element-form__params">
-        <template v-for="param in values.page_parameters">
+        <template v-for="(param, index) in values.page_parameters">
           <!-- eslint-disable-next-line vue/require-v-for-key -->
           <label>{{ param.name }}</label>
           <!-- eslint-disable-next-line vue/require-v-for-key -->
-          <input
-            v-model="param.value"
-            type="text"
-            class="input"
-            :placeholder="$t('linkElementForm.paramPlaceholder')"
-          />
+          <div class="control__elements">
+            <input
+              v-model="param.value"
+              :class="{
+                'input--error': $v.values.page_parameters.$each[index].$error,
+              }"
+              type="text"
+              class="input"
+              :placeholder="$t('linkElementForm.paramPlaceholder')"
+              @blur="$v.values.page_parameters.$each[index].$touch()"
+            />
+            <div
+              v-if="
+                $v.values.page_parameters.$each[index].$dirty &&
+                $v.values.page_parameters.$each[index].$error
+              "
+              class="error"
+            >
+              {{ $t('linkElementForm.pageParameterTypeError') }}
+            </div>
+          </div>
         </template>
       </div>
     </FormElement>
@@ -191,6 +206,7 @@ export default {
         this.updatePageParameters()
       },
       deep: true,
+      immediate: true,
     },
     navigateTo(value) {
       if (value === '') {
@@ -205,6 +221,14 @@ export default {
         this.updatePageParameters()
       }
     },
+    destinationPage(value) {
+      this.updatePageParameters()
+
+      // This means that the page select does not exist anymore
+      if (value === undefined) {
+        this.values.navigate_to_page_id = null
+      }
+    },
   },
   mounted() {
     if (LinkElementType.arePathParametersInError(this.values, this.builder)) {
@@ -212,19 +236,41 @@ export default {
     }
   },
   methods: {
+    getPageParameterType(parameterName) {
+      return (this.destinationPage?.path_params || []).find(
+        (pathParam) => pathParam.name === parameterName
+      )?.type
+    },
+    emitChange(newValues) {
+      if (this.isFormValid()) {
+        form.methods.emitChange.bind(this)(newValues)
+      }
+    },
     updatePageParameters() {
       this.values.page_parameters = (
         this.destinationPage?.path_params || []
       ).map(({ name }, index) => {
-        let value = ''
-        // Naive way to keep data when we change the destination page.
-        if (this.values.page_parameters[index]) {
-          value = this.values.page_parameters[index].value
-        }
-        return { name, value }
+        const previousValue = this.values.page_parameters[index]?.value || ''
+        return { name, value: previousValue }
       })
       this.parametersInError = false
+      this.$v.values.page_parameters.$touch()
     },
+    validatePageParameterType(pageParameter) {
+      return LinkElementType.validatePathParamType(
+        pageParameter.value,
+        this.getPageParameterType(pageParameter.name)
+      )
+    },
+  },
+  validations() {
+    return {
+      values: {
+        page_parameters: {
+          $each: { $validator: this.validatePageParameterType },
+        },
+      },
+    }
   },
 }
 </script>
