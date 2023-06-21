@@ -22,9 +22,6 @@ class DatabaseViewObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_table")
 
-    def get_parent(self, context):
-        return context.table
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
             "table", "table__database", "table__database__workspace"
@@ -52,9 +49,6 @@ class DatabaseViewDecorationObjectScopeType(ObjectScopeType):
 
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
-
-    def get_parent(self, context):
-        return context.view
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
@@ -90,9 +84,6 @@ class DatabaseViewSortObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
 
-    def get_parent(self, context):
-        return context.view
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
             "view",
@@ -126,9 +117,6 @@ class DatabaseViewFilterObjectScopeType(ObjectScopeType):
 
     def get_parent_scope(self):
         return object_scope_type_registry.get("database_view")
-
-    def get_parent(self, context):
-        return context.view
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(

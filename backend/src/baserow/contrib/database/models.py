@@ -66,4 +66,5 @@ __all__ = [
 
 
 class Database(Application):
-    pass
+    def get_parent(self):
+        return self.application_ptr

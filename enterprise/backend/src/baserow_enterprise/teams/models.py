@@ -7,6 +7,7 @@ from django.db import models
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     GroupToWorkspaceCompatModelMixin,
+    HierarchicalModelMixin,
     TrashableModelMixin,
 )
 from baserow.core.models import Workspace
@@ -15,7 +16,10 @@ from baserow_enterprise.teams.mixins import ParentTeamTrashableModelMixin
 
 
 class Team(
-    TrashableModelMixin, CreatedAndUpdatedOnMixin, GroupToWorkspaceCompatModelMixin
+    HierarchicalModelMixin,
+    TrashableModelMixin,
+    CreatedAndUpdatedOnMixin,
+    GroupToWorkspaceCompatModelMixin,
 ):
     """
     Represents a collection of `Subject` (`User`, `Team`), in a
@@ -45,6 +49,9 @@ class Team(
             "id",
         )
 
+    def get_parent(self):
+        return self.workspace
+
     def __str__(self) -> str:
         return f"<Team id={self.id}, name={self.name}>"
 
@@ -72,7 +79,9 @@ class Team(
             return role_assignment.role.uid
 
 
-class TeamSubject(ParentTeamTrashableModelMixin, CreatedAndUpdatedOnMixin):
+class TeamSubject(
+    HierarchicalModelMixin, ParentTeamTrashableModelMixin, CreatedAndUpdatedOnMixin
+):
     """
     Represents a single `Subject` (`User`, `Team`) in a `Team`.
     """
@@ -88,6 +97,9 @@ class TeamSubject(ParentTeamTrashableModelMixin, CreatedAndUpdatedOnMixin):
         on_delete=models.CASCADE,
         help_text="The team this subject belongs to.",
     )
+
+    def get_parent(self):
+        return self.team
 
     class Meta:
         ordering = ("id",)

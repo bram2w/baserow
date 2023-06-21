@@ -12,9 +12,6 @@ class TokenObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("workspace")
 
-    def get_parent(self, context):
-        return context.workspace
-
     def get_filter_for_scope_type(self, scope_type, scopes):
         if scope_type.type == WorkspaceObjectScopeType.type:
             return Q(workspace__in=[s.id for s in scopes])

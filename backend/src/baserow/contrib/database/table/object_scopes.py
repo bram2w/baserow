@@ -16,9 +16,6 @@ class DatabaseTableObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("database")
 
-    def get_parent(self, context):
-        return context.database
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
             "database", "database__workspace"
