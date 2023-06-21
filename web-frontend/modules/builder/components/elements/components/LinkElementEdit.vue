@@ -42,7 +42,7 @@ export default {
   computed: {
     classes() {
       return {
-        [`link-element--alignment-${this.element.alignment}`]: true,
+        [`element--alignment-${this.element.alignment}`]: true,
         'element--no-value': !this.element.value,
       }
     },

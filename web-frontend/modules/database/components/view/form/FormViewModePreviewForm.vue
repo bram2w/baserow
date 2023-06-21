@@ -26,21 +26,14 @@
     </div>
     <div class="form-view__body">
       <div class="form-view__heading">
-        <div v-if="view.logo_image !== null" class="form_view__logo">
-          <img
-            class="form_view__logo-img"
-            :src="view.logo_image.url"
-            width="200"
-          />
-          <a
-            v-if="!readOnly"
-            class="form_view__file-delete"
-            @click="updateForm({ logo_image: null })"
-          >
-            <i class="fas fa-times"></i>
-            {{ $t('action.remove') }}
-          </a>
-        </div>
+        <Thumbnail
+          v-if="view.logo_image !== null"
+          class="margin-bottom-3"
+          removable
+          width="200"
+          :src="view.logo_image.url"
+          @remove="updateForm({ logo_image: null })"
+        ></Thumbnail>
         <FormViewImageUpload
           v-else-if="!readOnly"
           class="margin-bottom-3"

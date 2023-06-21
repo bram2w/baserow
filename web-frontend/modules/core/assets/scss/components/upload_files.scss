@@ -11,6 +11,7 @@
 }
 
 .upload-files__dropzone {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,6 +47,13 @@
   margin-top: 8px;
   font-size: 13px;
   font-weight: 600;
+}
+
+.upload-files__dropzone-progress {
+  @include absolute(auto, auto, 0, 0);
+
+  height: 6px;
+  background-color: $color-primary-500;
 }
 
 .upload-files__file-name {

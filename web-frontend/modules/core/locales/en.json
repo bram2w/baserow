@@ -194,6 +194,14 @@
         "clickOrDrop": "Click or drop your files here",
         "retry": "Retry"
     },
+    "uploadFileDropzone": {
+        "drop": "Drop here",
+        "clickOrDrop": "Click or drop your files here",
+        "errorTooManyFilesTitle": "Too many files",
+        "errorTooManyFilesMessage": "You can only upload a single file",
+        "errorWrongFileTypeTitle": "Wrong file type",
+        "errorWrongFileTypeMessage": "You can't upload a file of type {type}"
+    },
     "createApplicationContext": {
         "fromTemplate": "From template"
     },

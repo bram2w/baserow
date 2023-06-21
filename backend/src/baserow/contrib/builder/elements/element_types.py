@@ -2,14 +2,19 @@ from abc import ABC
 
 from rest_framework import serializers
 
+from baserow.api.user_files.serializers import UserFileSerializer
+from baserow.contrib.builder.api.validators import image_file_id_validation
 from baserow.contrib.builder.elements.models import (
+    ALIGNMENTS,
     HeadingElement,
+    ImageElement,
     LinkElement,
     ParagraphElement,
 )
 from baserow.contrib.builder.elements.registries import ElementType
 from baserow.contrib.builder.elements.types import Expression
 from baserow.contrib.builder.types import ElementDict
+from baserow.core.user_files.models import UserFile
 
 
 class BaseTextElementType(ElementType, ABC):
@@ -187,7 +192,7 @@ class LinkElementType(BaseTextElementType):
                 required=False,
             ),
             "alignment": serializers.ChoiceField(
-                choices=LinkElement.ALIGNMENTS.choices,
+                choices=ALIGNMENTS.choices,
                 help_text=LinkElement._meta.get_field("alignment").help_text,
                 required=False,
             ),
@@ -206,3 +211,77 @@ class LinkElementType(BaseTextElementType):
             "width": "auto",
             "alignment": "center",
         }
+
+
+class ImageElementType(ElementType):
+    """
+    A simple image element that can display an image either through a remote source
+    or via an uploaded file
+    """
+
+    type = "image"
+    model_class = ImageElement
+    serializer_field_names = [
+        "image_source_type",
+        "image_file",
+        "image_url",
+        "alt_text",
+        "alignment",
+    ]
+    request_serializer_field_names = [
+        "image_source_type",
+        "image_file_id",
+        "image_url",
+        "alt_text",
+        "alignment",
+    ]
+    allowed_fields = [
+        "image_source_type",
+        "image_file_id",
+        "image_url",
+        "alt_text",
+        "alignment",
+    ]
+
+    class SerializedDict(ElementDict):
+        image_source_type: str
+        image_file: UserFile
+        image_url: str
+        alt_text: str
+
+    def get_sample_params(self):
+        return {
+            "image_source_type": ImageElement.IMAGE_SOURCE_TYPES.UPLOAD,
+            "image_file_id": None,
+            "image_url": "https://test.com/image.png",
+            "alt_text": "some alt text",
+            "alignment": ALIGNMENTS.LEFT,
+        }
+
+    @property
+    def serializer_field_overrides(self):
+        overrides = {
+            "image_file": UserFileSerializer(required=False),
+        }
+
+        overrides.update(super().serializer_field_overrides)
+        return overrides
+
+    @property
+    def request_serializer_field_overrides(self):
+        overrides = {
+            "image_file_id": serializers.IntegerField(
+                allow_null=True,
+                required=False,
+                help_text="The id of the image file",
+                validators=[image_file_id_validation],
+            ),
+            "alignment": serializers.ChoiceField(
+                choices=ALIGNMENTS.choices,
+                help_text=ImageElement._meta.get_field("alignment").help_text,
+                required=False,
+            ),
+        }
+        if super().request_serializer_field_overrides is not None:
+            overrides.update(super().request_serializer_field_overrides)
+        return overrides

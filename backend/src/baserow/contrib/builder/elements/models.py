@@ -9,12 +9,19 @@ from baserow.core.mixins import (
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
+from baserow.core.user_files.models import UserFile
 
 
 class ExpressionField(models.TextField):
     """
     An expression that can reference a data source, a formula or a plain value.
     """
+
+
+class ALIGNMENTS(models.TextChoices):
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
 
 
 def get_default_element_content_type():
@@ -135,11 +142,6 @@ class LinkElement(BaseTextElement):
         SELF = "self"
         BLANK = "blank"
 
-    class ALIGNMENTS(models.TextChoices):
-        LEFT = "left"
-        CENTER = "center"
-        RIGHT = "right"
-
     class WIDTHS(models.TextChoices):
         AUTO = "auto"
         FULL = "full"
@@ -184,6 +186,41 @@ class LinkElement(BaseTextElement):
         choices=WIDTHS.choices,
         max_length=10,
         default=WIDTHS.AUTO,
+    )
+    alignment = models.CharField(
+        choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
+    )
+
+
+class ImageElement(Element):
+    """
+    A simple image element that can display an image either through a remote source
+    or via an uploaded file
+    """
+
+    class IMAGE_SOURCE_TYPES(models.TextChoices):
+        UPLOAD = "upload"
+        URL = "url"
+
+    image_source_type = models.CharField(
+        choices=IMAGE_SOURCE_TYPES.choices,
+        max_length=32,
+        default=IMAGE_SOURCE_TYPES.UPLOAD,
+    )
+    image_file = models.ForeignKey(
+        UserFile,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="image_element_image_file",
+        help_text="An image file uploaded by the user to be used by the element",
+    )
+    image_url = models.URLField(
+        help_text="A link to the image file", blank=True, default="", max_length=1000
+    )
+    alt_text = models.TextField(
+        help_text="Text that is displayed when the image can't load",
+        default="",
+        blank=True,
     )
     alignment = models.CharField(
         choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT

@@ -59,7 +59,9 @@
         "paragraph": "Paragraph",
         "paragraphDescription": "Single line text",
         "link": "Link",
-        "linkDescription": "A link to page/URL"
+        "linkDescription": "A link to page/URL",
+        "image": "Image",
+        "imageDescription": "Display image"
     },
     "addElementButton": {
         "label": "Element"
@@ -85,6 +87,10 @@
     "emptySidePanelState": {
         "message": "Click on one of the elements to see more details"
     },
+    "elementForms": {
+        "textInputPlaceholder": "Enter text...",
+        "urlInputPlaceholder": "Enter url..."
+    },
     "headingElement": {
         "noValue": "No title..."
     },
@@ -102,6 +108,19 @@
         "textTitle": "Text",
         "textPlaceholder": "Enter text...",
         "textError": "The value is invalid."
+    },
+    "imageElement": {
+        "emptyState": "No alt text defined..."
+    },
+    "imageElementForm": {
+        "fileLabel": "Image file",
+        "invalidUrlError": "URL is invalid",
+        "altTextTitle": "Alt text",
+        "altTextDescription": "Is used by screen readers and displayed if the image can't load",
+        "fileSourceTypeUpload": "Upload",
+        "fileSourceTypeURL": "URL",
+        "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
+        "uploadFileButton": "Upload file"
     },
     "domainSettings": {
         "titleOverview": "Domains",
@@ -141,10 +160,6 @@
         "variant": "Variant",
         "variantLink": "Link",
         "variantButton": "Button",
-        "alignment": "Alignment",
-        "alignmentLeft": "Link",
-        "alignmentCenter": "Center",
-        "alignmentRight": "Right",
         "width": "Width",
         "widthAuto": "Auto",
         "widthFull": "Full width",
@@ -154,6 +169,12 @@
         "paramPlaceholder": "Enter a value...",
         "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
         "paramsInErrorButton": "Update parameters"
+    },
+    "alignmentSelector": {
+        "alignment": "Alignment",
+        "alignmentLeft": "Link",
+        "alignmentCenter": "Center",
+        "alignmentRight": "Right"
     },
     "pageSettingsTypes": {
         "pageName": "Page"

@@ -39,6 +39,7 @@ import Badge from '@baserow/modules/core/components/Badge'
 import InputWithIcon from '@baserow/modules/core/components/InputWithIcon'
 import ExpandableCard from '@baserow/modules/core/components/ExpandableCard'
 import RadioButton from '@baserow/modules/core/components/RadioButton'
+import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 
 function setupVue(Vue) {
   Vue.component('Context', Context)
@@ -67,6 +68,7 @@ function setupVue(Vue) {
   Vue.component('ExpandableCard', ExpandableCard)
   Vue.component('Button', Button)
   Vue.component('RadioButton', RadioButton)
+  Vue.component('Thumbnail', Thumbnail)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

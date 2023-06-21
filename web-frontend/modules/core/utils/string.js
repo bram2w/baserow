@@ -55,6 +55,15 @@ export const isValidURLWithHttpScheme = (str) => {
   return !!pattern.test(trimmedStr) && isValidURL(trimmedStr)
 }
 
+/**
+ * An even stricter validator that makes sure that https:// is prepended and that there
+ * is at least a domain name.
+ */
+export const isValidAbsoluteURL = (str) => {
+  const pattern = /^[^\s]{0,255}(\.)[^\s]{2,}$/i
+  return isValidURLWithHttpScheme(str) && pattern.test(str)
+}
+
 export const isValidEmail = (str) => {
   // Please keep these regex in sync with the backend
   // See baserow.contrib.database.fields.field_types.EmailFieldType

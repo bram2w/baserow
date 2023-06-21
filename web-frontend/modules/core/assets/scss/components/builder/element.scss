@@ -155,3 +155,27 @@
   margin-top: 5px;
   color: $color-error-300;
 }
+
+.element--alignment-left {
+  justify-content: start;
+
+  .button--full-width {
+    text-align: left;
+  }
+}
+
+.element--alignment-center {
+  justify-content: center;
+
+  .button--full-width {
+    text-align: center;
+  }
+}
+
+.element--alignment-right {
+  justify-content: end;
+
+  .button--full-width {
+    text-align: right;
+  }
+}

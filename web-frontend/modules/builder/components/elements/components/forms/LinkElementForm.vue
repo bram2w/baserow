@@ -1,5 +1,5 @@
 <template>
-  <form @submit.prevent>
+  <form @submit.prevent @keydown.enter.prevent>
     <FormElement class="control">
       <label class="control__label">
         {{ $t('linkElementForm.text') }}
@@ -107,19 +107,7 @@
       </div>
     </FormElement>
     <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.alignment') }}
-      </label>
-      <div class="control__elements">
-        <RadioButton
-          v-for="alignment in alignments"
-          :key="alignment.value"
-          v-model="values.alignment"
-          :value="alignment.value"
-          :icon="alignment.icon"
-          :title="alignment.name"
-        />
-      </div>
+      <AlignmentSelector v-model="values.alignment" />
     </FormElement>
     <FormElement class="control">
       <label class="control__label">
@@ -153,9 +141,12 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
+import AlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/settings/AlignmentSelector'
+import { ALIGNMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'LinkElementForm',
+  components: { AlignmentSelector },
   mixins: [form],
   props: { builder: { type: Object, required: true } },
   data() {
@@ -170,7 +161,7 @@ export default {
     return {
       values: {
         value: '',
-        alignment: 'left',
+        alignment: ALIGNMENTS.LEFT.value,
         variant: 'link',
         navigation_type: 'page',
         navigate_to_page_id: null,
@@ -181,23 +172,6 @@ export default {
       },
       parametersInError: false,
       navigateTo,
-      alignments: [
-        {
-          name: this.$t('linkElementForm.alignmentLeft'),
-          value: 'left',
-          icon: 'align-left',
-        },
-        {
-          name: this.$t('linkElementForm.alignmentCenter'),
-          value: 'center',
-          icon: 'align-center',
-        },
-        {
-          name: this.$t('linkElementForm.alignmentRight'),
-          value: 'right',
-          icon: 'align-right',
-        },
-      ],
     }
   },
   computed: {
