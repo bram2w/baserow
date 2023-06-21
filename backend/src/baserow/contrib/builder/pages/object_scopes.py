@@ -9,7 +9,6 @@ from baserow.core.object_scopes import (
     WorkspaceObjectScopeType,
 )
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
-from baserow.core.types import ContextObject
 
 
 class BuilderPageObjectScopeType(ObjectScopeType):
@@ -18,9 +17,6 @@ class BuilderPageObjectScopeType(ObjectScopeType):
 
     def get_parent_scope(self) -> Optional["ObjectScopeType"]:
         return object_scope_type_registry.get("builder")
-
-    def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
-        return context.builder
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(

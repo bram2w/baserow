@@ -194,6 +194,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
 
 class WorkspaceUser(
+    HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
     GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
@@ -219,6 +220,9 @@ class WorkspaceUser(
         help_text="The permissions that the user has within the workspace.",
     )
 
+    def get_parent(self):
+        return self.workspace
+
     class Meta:
         unique_together = [["user", "workspace"]]
         ordering = ("order",)
@@ -230,6 +234,7 @@ class WorkspaceUser(
 
 
 class WorkspaceInvitation(
+    HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
     GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
@@ -263,6 +268,9 @@ class WorkspaceInvitation(
         help_text="An optional message that the invitor can provide. This will be "
         "visible to the receiver of the invitation.",
     )
+
+    def get_parent(self):
+        return self.workspace
 
     class Meta:
         ordering = ("id",)

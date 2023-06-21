@@ -8,9 +8,12 @@ import pytest
 from tqdm import tqdm
 
 from baserow.contrib.database.object_scopes import DatabaseObjectScopeType
+from baserow.core.handler import CoreHandler
 from baserow.core.models import WorkspaceUser
 from baserow.core.registries import subject_type_registry
+from baserow.core.snapshots.handler import SnapshotHandler
 from baserow.core.subjects import UserSubjectType
+from baserow.core.utils import Progress
 from baserow_enterprise.exceptions import (
     ScopeNotExist,
     SubjectNotExist,
@@ -1145,3 +1148,40 @@ def test_get_role_per_scope_for_actors_perf(
             role_assignment_handler.get_roles_per_scope_for_actors(
                 workspace, user_subject_type, users
             )
+
+
+@pytest.mark.django_db
+def test_snapshot_with_roles_doesnt_cause_get_permission_objects(
+    data_fixture, enterprise_data_fixture
+):
+    admin = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=admin, members=[user_2])
+    database1 = data_fixture.create_database_application(
+        user=admin, workspace=workspace
+    )
+    table1 = data_fixture.create_database_table(user=admin, database=database1)
+
+    viewer_role = Role.objects.get(uid="VIEWER")
+    builder_role = Role.objects.get(uid="BUILDER")
+    no_role_role = Role.objects.get(uid="NO_ACCESS")
+
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=no_role_role, scope=workspace
+    )
+    RoleAssignmentHandler().assign_role(
+        user_2, workspace, role=viewer_role, scope=table1
+    )
+
+    snapshot = data_fixture.create_snapshot(
+        snapshot_from_application=database1,
+        name="snapshot",
+        created_by=admin,
+    )
+    progress = Progress(total=100)
+
+    SnapshotHandler().perform_create(snapshot, progress)
+
+    # There was a bug where get_permissions would crash if a user had a certain set
+    # of roles on a database that was snapshotted.
+    CoreHandler().get_permissions(user_2, workspace)

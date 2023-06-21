@@ -728,18 +728,6 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
 
         return [parent_scope] + parent_scope.get_parent_scopes()
 
-    def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
-        """
-        Returns the parent object of the given context which belongs to the current
-        scope.
-
-        :param context: The context object which we want the parent for. This object
-            must belong to the current scope.
-        :return: the parent object or `None` if it's a root object.
-        """
-
-        return None
-
     def get_parents(self, context: ContextObject) -> List[ContextObject]:
         """
         Returns all ancestors of the given context which belongs to the current
@@ -750,7 +738,7 @@ class ObjectScopeType(Instance, ModelInstanceMixin):
         :return: the list of parent objects if it's a root object.
         """
 
-        parent = self.get_parent(context)
+        parent = context.get_parent()
 
         if parent is None:
             return []
@@ -951,13 +939,13 @@ class ObjectScopeTypeRegistry(
             if at_scope_type.type == context_scope_type.type:
                 return context
             else:
-                parent_scope = context_scope_type.get_parent(context)
+                parent_scope = context.get_parent()
                 if parent_scope is None:
                     return None
                 else:
                     return self.get_parent(parent_scope, at_scope_type=at_scope_type)
         else:
-            return context_scope_type.get_parent(context)
+            return context.get_parent()
 
     def scope_includes_context(
         self,
@@ -986,7 +974,7 @@ class ObjectScopeTypeRegistry(
             return scope.id == context.id
         else:
             return self.scope_includes_context(
-                scope, context_scope_type.get_parent(context), scope_type=scope_type
+                scope, context.get_parent(), scope_type=scope_type
             )
 
     def scope_type_includes_scope_type(

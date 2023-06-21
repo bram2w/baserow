@@ -32,9 +32,6 @@ class ApplicationObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("workspace")
 
-    def get_parent(self, context):
-        return context.workspace
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related("workspace")
 
@@ -52,9 +49,6 @@ class WorkspaceInvitationObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("workspace")
 
-    def get_parent(self, context):
-        return context.workspace
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related("workspace")
 
@@ -71,9 +65,6 @@ class WorkspaceUserObjectScopeType(ObjectScopeType):
 
     def get_parent_scope(self):
         return object_scope_type_registry.get("workspace")
-
-    def get_parent(self, context):
-        return context.workspace
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related("workspace")

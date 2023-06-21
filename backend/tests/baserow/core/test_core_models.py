@@ -53,7 +53,7 @@ def test_core_models_hierarchy(data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
 
-    assert app.get_parent() == workspace
+    assert app.get_parent() == app.application_ptr
     assert app.get_root() == workspace
 
     assert workspace.get_parent() is None
