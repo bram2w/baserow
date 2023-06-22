@@ -202,5 +202,24 @@
     "publicPage": {
         "siteNotFound": "Site not found",
         "pageNotFound": "Page not found"
+    },
+    "integrationSettings": {
+        "title": "Integrations",
+        "noIntegrationMessage": "You have not yet created any connection. They can be created by adding data source, action or user authentication.",
+        "integrationMessage": "You can create new integrations by adding data source, action or user authentication."
+    },
+    "dataSourceForm": {
+        "namePlaceholder": "Source name",
+        "addIntegration": "Add new integration",
+        "noIntegrations": "you don't have any integration yet",
+        "selectTypeFirst": "Select the service first",
+        "servicePlaceholder": "Select a service",
+        "integrationPlaceholder": "Select an integration",
+        "errorUniqueName": "Data source name must be unique."
+    },
+    "dataSourceContext": {
+        "addDataSource": "Add new data source",
+        "noDataSourceTitle": "You have not yet added a data",
+        "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
     }
 }

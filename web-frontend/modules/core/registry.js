@@ -19,6 +19,14 @@ export class Registerable {
     return this.constructor.getType()
   }
 
+  get type() {
+    return this.constructor.getType()
+  }
+
+  set type(newType) {
+    // Does nothing as the type shouldn't be modifiable
+  }
+
   /**
    * Returns a weight to order the registerable. Used when you want an ordered list
    * of all registered items.

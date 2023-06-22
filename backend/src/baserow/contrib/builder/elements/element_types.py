@@ -34,10 +34,10 @@ class BaseTextElementType(ElementType, ABC):
 
     @property
     def serializer_field_overrides(self):
-        from baserow.contrib.builder.api.elements.serializers import ExpressionField
+        from baserow.core.expression.serializers import ExpressionSerializer
 
         return {
-            "value": ExpressionField(
+            "value": ExpressionSerializer(
                 help_text="The value of the element. Must be an expression.",
                 required=False,
                 allow_blank=True,
@@ -155,9 +155,9 @@ class LinkElementType(BaseTextElementType):
     @property
     def serializer_field_overrides(self):
         from baserow.contrib.builder.api.elements.serializers import (
-            ExpressionField,
             PageParameterValueSerializer,
         )
+        from baserow.core.expression.serializers import ExpressionSerializer
 
         overrides = {
             "navigation_type": serializers.ChoiceField(
@@ -171,7 +171,7 @@ class LinkElementType(BaseTextElementType):
                 help_text=LinkElement._meta.get_field("navigate_to_page").help_text,
                 required=False,
             ),
-            "navigate_to_url": ExpressionField(
+            "navigate_to_url": ExpressionSerializer(
                 help_text=LinkElement._meta.get_field("navigate_to_url").help_text,
                 default="",
                 allow_blank=True,

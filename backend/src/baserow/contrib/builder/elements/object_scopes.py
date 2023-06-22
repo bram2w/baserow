@@ -37,4 +37,7 @@ class BuilderElementObjectScopeType(ObjectScopeType):
         if scope_type.type == BuilderPageObjectScopeType.type:
             return Q(page__in=[s.id for s in scopes])
 
+        if scope_type.type == self.type:
+            return Q(id__in=[s.id for s in scopes])
+
         raise TypeError("The given type is not handled.")

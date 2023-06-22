@@ -1,6 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 
-import PublishActionModal from '@baserow/modules/builder/components/page/PublishActionModal'
+import PublishActionModal from '@baserow/modules/builder/components/page/header/PublishActionModal'
 
 export class PageActionType extends Registerable {
   get label() {
@@ -33,7 +33,7 @@ export class PageActionType extends Registerable {
 }
 
 export class PublishPageActionType extends PageActionType {
-  getType() {
+  static getType() {
     return 'publish'
   }
 
@@ -59,7 +59,7 @@ export class PublishPageActionType extends PageActionType {
 }
 
 export class PreviewPageActionType extends PageActionType {
-  getType() {
+  static getType() {
     return 'preview'
   }
 

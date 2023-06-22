@@ -117,6 +117,27 @@ export const isNumeric = (value) => {
   return /^-?\d+$/.test(value)
 }
 
+/**
+ * Allow to find the next unused name excluding a list of names.
+ * This is the frontend equivalent of backend ".find_unused_name()" method.
+ *
+ * @param {string} baseName
+ * @param {string[]} excludeNames
+ * @returns the first baseName potentially suffixed with a number that is not in
+ * excludedNames.
+ *
+ * @example
+ * // returns 'name'
+ * getNextAvailableNameInSequence('name', []);
+ *
+ * @example
+ * // returns 'name 1'
+ * getNextAvailableNameInSequence('name', ['name']);
+ *
+ * @example
+ * // returns 'name 2'
+ * getNextAvailableNameInSequence('name', ['name', 'name 1', 'name 3']);
+ */
 export const getNextAvailableNameInSequence = (baseName, excludeNames) => {
   let name = baseName
   let i = 0

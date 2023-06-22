@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.contrib.builder.pages.models import Page
+from baserow.core.expression.field import ExpressionField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
@@ -10,12 +11,6 @@ from baserow.core.mixins import (
     TrashableModelMixin,
 )
 from baserow.core.user_files.models import UserFile
-
-
-class ExpressionField(models.TextField):
-    """
-    An expression that can reference a data source, a formula or a plain value.
-    """
 
 
 class ALIGNMENTS(models.TextChoices):
@@ -67,7 +62,7 @@ class Element(
         """
         Returns the last order for the given page.
 
-        :param Page: The page we want the order for.
+        :param page: The page we want the order for.
         :return: The last order.
         """
 

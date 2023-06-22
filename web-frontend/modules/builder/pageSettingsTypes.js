@@ -1,8 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import PageSettings from '@baserow/modules/builder/components/page/PageSettings'
+import PageSettings from '@baserow/modules/builder/components/page/settings/PageSettings'
 
 export class PageSettingType extends Registerable {
-  getType() {
+  static getType() {
     return null
   }
 
@@ -20,7 +20,7 @@ export class PageSettingType extends Registerable {
 }
 
 export class PagePageSettingsType extends PageSettingType {
-  getType() {
+  static getType() {
     return 'page'
   }
 

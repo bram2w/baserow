@@ -88,7 +88,7 @@ export class TableExporterType extends Registerable {
 }
 
 export class CSVTableExporterType extends TableExporterType {
-  getType() {
+  static getType() {
     return 'csv'
   }
 

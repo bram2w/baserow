@@ -2,7 +2,7 @@
   <div class="link-element" :class="classes">
     <Button
       v-if="element.variant === 'button'"
-      type="link"
+      tag="a"
       v-bind="extraAttr"
       :target="element.target"
       :full-width="element.width === 'full'"

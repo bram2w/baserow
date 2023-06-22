@@ -46,7 +46,7 @@ export class WorkspaceSettingsPageType extends Registerable {
 }
 
 export class MembersWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
-  getType() {
+  static getType() {
     return 'members'
   }
 
@@ -66,7 +66,7 @@ export class MembersWorkspaceSettingsPageType extends WorkspaceSettingsPageType 
 }
 
 export class InvitesWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
-  getType() {
+  static getType() {
     return 'invites'
   }
 

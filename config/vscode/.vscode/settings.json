@@ -30,6 +30,9 @@
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
     "eslint.format.enable": true,
+    "eslint.workingDirectories": [
+        {"mode": "auto"}
+    ],
     "python.linting.pylintEnabled": false,
     "files.exclude": {
         "**/.git": true,

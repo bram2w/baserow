@@ -1,11 +1,11 @@
 <template>
   <Modal>
     <h2 class="box__title">{{ $t('addElementModal.title') }}</h2>
-    <InputWithIcon
+    <FormInput
       v-model="search"
       class="margin-bottom-2"
       :placeholder="$t('addElementModal.searchPlaceholder')"
-      icon="search"
+      icon-right="search"
     />
     <div class="add-element-modal__element-cards">
       <AddElementCard

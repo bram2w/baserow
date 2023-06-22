@@ -277,7 +277,7 @@
         "redditTitle": "'Baserow - An open source no-code database",
         "noWorkspaceTitle": "No workspaces found",
         "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
-        "noWorkspaceTextWithoutCreatePermission":  "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
+        "noWorkspaceTextWithoutCreatePermission": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
         "createWorkspace": "Create workspace",
         "becomeGithubSponsor": "Become a GitHub sponsor",
         "starOnGitlab": "Star us on GitLab",
@@ -353,8 +353,8 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaWorkspaceInvitationsName": "Allow signups via workspace invitations",
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
-        "settingAllowNonStaffCreateWorkspaceOperation":  "Allow everyone to create new workspaces",
-        "settingAllowNonStaffCreateWorkspaceOperationDescription":  "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Allow everyone to create new workspaces",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
         "settingTrackWorkspaceUsage": "Track workspace usage",
         "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
@@ -512,5 +512,17 @@
     },
     "highestPaidRoleField": {
         "billable": "Billable"
+    },
+    "integrationCreateEditModal": {
+        "createTitle": "New integration",
+        "editTitle": "Edit integration",
+        "warningTitle": "Warning"
+    },
+    "integrationEditForm": {
+        "name": "Integration name",
+        "namePlaceholder": "Enter integration name..."
+    },
+    "dropdown": {
+        "empty": "No items available"
     }
 }

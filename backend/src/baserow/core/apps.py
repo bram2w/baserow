@@ -263,10 +263,34 @@ class CoreConfig(AppConfig):
     def _setup_health_checks(self):
         from health_check.plugins import plugin_dir
 
+        from baserow.core.integrations.object_scopes import IntegrationObjectScopeType
+        from baserow.core.registries import (
+            object_scope_type_registry,
+            operation_type_registry,
+        )
+
         from .health.custom_health_checks import (
             DebugModeHealthCheck,
             HerokuExternalFileStorageConfiguredHealthCheck,
         )
+
+        object_scope_type_registry.register(IntegrationObjectScopeType())
+
+        from baserow.core.integrations.operations import (
+            CreateIntegrationOperationType,
+            DeleteIntegrationOperationType,
+            ListIntegrationsApplicationOperationType,
+            OrderIntegrationsOperationType,
+            ReadIntegrationOperationType,
+            UpdateIntegrationOperationType,
+        )
+
+        operation_type_registry.register(CreateIntegrationOperationType())
+        operation_type_registry.register(UpdateIntegrationOperationType())
+        operation_type_registry.register(DeleteIntegrationOperationType())
+        operation_type_registry.register(ListIntegrationsApplicationOperationType())
+        operation_type_registry.register(ReadIntegrationOperationType())
+        operation_type_registry.register(OrderIntegrationsOperationType())
 
         plugin_dir.register(DebugModeHealthCheck)
         if getattr(settings, "HEROKU_ENABLED", False):

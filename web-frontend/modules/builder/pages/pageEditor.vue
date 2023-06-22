@@ -14,7 +14,7 @@
 
 <script>
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
-import PageHeader from '@baserow/modules/builder/components/page/PageHeader'
+import PageHeader from '@baserow/modules/builder/components/page/header/PageHeader'
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 

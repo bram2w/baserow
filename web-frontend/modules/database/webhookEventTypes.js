@@ -33,7 +33,7 @@ export class WebhookEventType extends Registerable {
 }
 
 export class RowsCreatedWebhookEventType extends WebhookEventType {
-  getType() {
+  static getType() {
     return 'rows.created'
   }
 
@@ -50,7 +50,7 @@ export class RowsCreatedWebhookEventType extends WebhookEventType {
 }
 
 export class RowsUpdatedWebhookEventType extends WebhookEventType {
-  getType() {
+  static getType() {
     return 'rows.updated'
   }
 
@@ -68,7 +68,7 @@ export class RowsUpdatedWebhookEventType extends WebhookEventType {
 }
 
 export class RowsDeletedWebhookEventType extends WebhookEventType {
-  getType() {
+  static getType() {
     return 'rows.deleted'
   }
 

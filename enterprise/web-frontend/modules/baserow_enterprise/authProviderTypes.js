@@ -18,7 +18,7 @@ import OpenIdIcon from '@baserow_enterprise/assets/images/providers/OpenID.svg'
 import VerifiedProviderIcon from '@baserow_enterprise/assets/images/providers/VerifiedProviderIcon.svg'
 
 export class PasswordAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'password'
   }
 
@@ -48,7 +48,7 @@ export class PasswordAuthProviderType extends AuthProviderType {
 }
 
 export class SamlAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'saml'
   }
 
@@ -104,7 +104,7 @@ export class SamlAuthProviderType extends AuthProviderType {
 }
 
 export class GoogleAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'google'
   }
 
@@ -152,7 +152,7 @@ export class GoogleAuthProviderType extends AuthProviderType {
 }
 
 export class FacebookAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'facebook'
   }
 
@@ -200,7 +200,7 @@ export class FacebookAuthProviderType extends AuthProviderType {
 }
 
 export class GitHubAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'github'
   }
 
@@ -248,7 +248,7 @@ export class GitHubAuthProviderType extends AuthProviderType {
 }
 
 export class GitLabAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'gitlab'
   }
 
@@ -296,7 +296,7 @@ export class GitLabAuthProviderType extends AuthProviderType {
 }
 
 export class OpenIdConnectAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'openid_connect'
   }
 

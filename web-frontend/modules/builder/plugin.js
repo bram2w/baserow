@@ -15,6 +15,7 @@ import pageStore from '@baserow/modules/builder/store/page'
 import elementStore from '@baserow/modules/builder/store/element'
 import domainStore from '@baserow/modules/builder/store/domain'
 import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
+import dataSourceStore from '@baserow/modules/builder/store/dataSource'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
@@ -76,6 +77,7 @@ export default (context) => {
   store.registerModule('element', elementStore)
   store.registerModule('domain', domainStore)
   store.registerModule('publicBuilder', publicBuilderStore)
+  store.registerModule('dataSource', dataSourceStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')

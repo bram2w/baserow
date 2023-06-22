@@ -1,8 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import ElementsContext from '@baserow/modules/builder/components/page/ElementsContext'
-import DataSourceContext from '@baserow/modules/builder/components/page/DataSourceContext'
-import VariablesContext from '@baserow/modules/builder/components/page/VariablesContext'
-import PageSettingsModal from '@baserow/modules/builder/components/page/PageSettingsModal'
+import ElementsContext from '@baserow/modules/builder/components/page/header/ElementsContext'
+import DataSourceContext from '@baserow/modules/builder/components/page/header/DataSourceContext'
+import VariablesContext from '@baserow/modules/builder/components/page/header/VariablesContext'
+import PageSettingsModal from '@baserow/modules/builder/components/page/settings/PageSettingsModal'
 
 export class PageHeaderItemType extends Registerable {
   get label() {
@@ -28,10 +28,14 @@ export class PageHeaderItemType extends Registerable {
   onClick(component, button) {
     component.toggle(button, 'bottom', 'left', 4)
   }
+
+  getOrder() {
+    return 0
+  }
 }
 
 export class ElementsPageHeaderItemType extends PageHeaderItemType {
-  getType() {
+  static getType() {
     return 'elements'
   }
 
@@ -46,10 +50,14 @@ export class ElementsPageHeaderItemType extends PageHeaderItemType {
   get component() {
     return ElementsContext
   }
+
+  getOrder() {
+    return 10
+  }
 }
 
 export class DataSourcesPageHeaderItemType extends PageHeaderItemType {
-  getType() {
+  static getType() {
     return 'data_sources'
   }
 
@@ -64,10 +72,14 @@ export class DataSourcesPageHeaderItemType extends PageHeaderItemType {
   get component() {
     return DataSourceContext
   }
+
+  getOrder() {
+    return 20
+  }
 }
 
 export class VariablesPageHeaderItemType extends PageHeaderItemType {
-  getType() {
+  static getType() {
     return 'variables'
   }
 
@@ -82,10 +94,14 @@ export class VariablesPageHeaderItemType extends PageHeaderItemType {
   get component() {
     return VariablesContext
   }
+
+  getOrder() {
+    return 30
+  }
 }
 
 export class SettingsPageHeaderItemType extends PageHeaderItemType {
-  getType() {
+  static getType() {
     return 'settings'
   }
 
@@ -103,5 +119,9 @@ export class SettingsPageHeaderItemType extends PageHeaderItemType {
 
   onClick(component, button) {
     component.show()
+  }
+
+  getOrder() {
+    return 40
   }
 }

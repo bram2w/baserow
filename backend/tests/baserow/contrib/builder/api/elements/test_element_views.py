@@ -54,7 +54,6 @@ def test_create_element(api_client, data_fixture):
     )
 
     response_json = response.json()
-    print(response_json)
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "heading"
     assert response_json["value"] == ""

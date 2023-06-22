@@ -1,0 +1,25 @@
+{
+    "integrationType": {
+        "localBaserow": "Local Baserow",
+        "localBaserowSummary": "Local Baserow - {name}, {username}",
+        "localBaserowWarning": "Authorizing your account gives everyone who has edit permissions to the application full access to the data you have access to. It’s possible to create a second user, give the right permissions and use that one."
+    },
+    "serviceType": {
+        "localBaserowGetRow": "Get a row",
+        "localBaserowListRows": "List rows"
+    },
+    "localBaserowForm": {
+        "user": "User",
+        "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow group."
+    },
+    "localBaserowGetRowForm": {
+        "tableFieldLabel": "Table",
+        "tableFieldPlaceHolder": "Select a table",
+        "rowFieldLabel": "Row ID",
+        "rowFieldPlaceHolder": "Select a row ID"
+    },
+    "localBaserowListRowsForm": {
+        "tableFieldLabel": "Table",
+        "tableFieldPlaceHolder": "Select a table"
+    }
+}

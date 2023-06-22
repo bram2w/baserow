@@ -17,6 +17,7 @@ from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
 from .action.models import Action
+from .integrations.models import Integration
 from .mixins import (
     CreatedAndUpdatedOnMixin,
     GroupToWorkspaceCompatModelMixin,
@@ -26,6 +27,7 @@ from .mixins import (
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
+from .services.models import Service
 
 __all__ = [
     "Settings",
@@ -42,6 +44,8 @@ __all__ = [
     "Snapshot",
     "DuplicateApplicationJob",
     "InstallTemplateJob",
+    "Integration",
+    "Service",
 ]
 
 

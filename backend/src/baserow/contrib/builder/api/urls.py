@@ -1,5 +1,6 @@
 from django.urls import include, path, re_path
 
+from .data_sources import urls as data_source_urls
 from .domains import urls as domain_urls
 from .elements import urls as element_urls
 from .pages import urls as page_urls
@@ -39,6 +40,13 @@ paths_without_builder_id = [
         ),
     ),
     path(
+        "",
+        include(
+            data_source_urls,
+            namespace="data_source",
+        ),
+    ),
+    path(
         "domains/",
         include(
             (domain_urls.urlpatterns_without_builder_id, page_urls.app_name),
@@ -46,7 +54,6 @@ paths_without_builder_id = [
         ),
     ),
 ]
-
 
 urlpatterns = [
     re_path(

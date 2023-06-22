@@ -51,7 +51,7 @@ export class ImporterType extends Registerable {
 }
 
 export class CSVImporterType extends ImporterType {
-  getType() {
+  static getType() {
     return 'csv'
   }
 
@@ -70,7 +70,7 @@ export class CSVImporterType extends ImporterType {
 }
 
 export class PasteImporterType extends ImporterType {
-  getType() {
+  static getType() {
     return 'paste'
   }
 
@@ -89,7 +89,7 @@ export class PasteImporterType extends ImporterType {
 }
 
 export class XMLImporterType extends ImporterType {
-  getType() {
+  static getType() {
     return 'xml'
   }
 
@@ -108,7 +108,7 @@ export class XMLImporterType extends ImporterType {
 }
 
 export class JSONImporterType extends ImporterType {
-  getType() {
+  static getType() {
     return 'json'
   }
 
