@@ -70,7 +70,7 @@
               {{ $t('linkElementForm.paramsInErrorDescription') }}
             </div>
             <Button
-              color="error"
+              type="error"
               size="tiny"
               @click.prevent="updatePageParameters"
             >

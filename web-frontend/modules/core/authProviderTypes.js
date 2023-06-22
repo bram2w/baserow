@@ -115,7 +115,7 @@ export class AuthProviderType extends Registerable {
 }
 
 export class PasswordAuthProviderType extends AuthProviderType {
-  getType() {
+  static getType() {
     return 'password'
   }
 

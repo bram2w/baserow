@@ -24,6 +24,7 @@ export default function (
   const baseModules = [
     base + '/modules/core/module.js',
     base + '/modules/database/module.js',
+    base + '/modules/integrations/module.js',
   ]
   if (!process.env.BASEROW_OSS_ONLY) {
     baseModules.push(

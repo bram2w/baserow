@@ -6,6 +6,14 @@ from baserow_premium.row_comments.operations import (
     ReadRowCommentsOperationType,
 )
 
+from baserow.contrib.builder.data_sources.operations import (
+    CreateDataSourceOperationType,
+    DeleteDataSourceOperationType,
+    ListDataSourcesPageOperationType,
+    OrderDataSourcesPageOperationType,
+    ReadDataSourceOperationType,
+    UpdateDataSourceOperationType,
+)
 from baserow.contrib.builder.domains.operations import (
     CreateDomainOperationType,
     DeleteDomainOperationType,
@@ -122,6 +130,14 @@ from baserow.contrib.database.webhooks.operations import (
     ReadWebhookOperationType,
     TestTriggerWebhookOperationType,
     UpdateWebhookOperationType,
+)
+from baserow.core.integrations.operations import (
+    CreateIntegrationOperationType,
+    DeleteIntegrationOperationType,
+    ListIntegrationsApplicationOperationType,
+    OrderIntegrationsOperationType,
+    ReadIntegrationOperationType,
+    UpdateIntegrationOperationType,
 )
 from baserow.core.operations import (
     CreateApplicationsWorkspaceOperationType,
@@ -336,6 +352,18 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadDomainOperationType,
         UpdateDomainOperationType,
         PublishDomainOperationType,
+        CreateIntegrationOperationType,
+        DeleteIntegrationOperationType,
+        ListIntegrationsApplicationOperationType,
+        OrderIntegrationsOperationType,
+        ReadIntegrationOperationType,
+        UpdateIntegrationOperationType,
+        CreateDataSourceOperationType,
+        DeleteDataSourceOperationType,
+        ListDataSourcesPageOperationType,
+        OrderDataSourcesPageOperationType,
+        ReadDataSourceOperationType,
+        UpdateDataSourceOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

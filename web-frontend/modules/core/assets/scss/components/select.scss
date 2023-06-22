@@ -46,6 +46,13 @@
   }
 }
 
+.select__items--empty {
+  padding: 20px 10px;
+  white-space: normal;
+  text-align: center;
+  color: $color-neutral-500;
+}
+
 .select__items--expanded {
   max-height: 100%;
   overflow-y: auto;
@@ -56,7 +63,7 @@
   height: 32px;
 
   &::after {
-    content: '';
+    content: "";
     margin-top: -7px;
     margin-left: -7px;
 
@@ -153,6 +160,12 @@
   margin-right: 6px;
 }
 
+.select__item-image {
+  max-width: 15px;
+  max-height: 15px;
+  margin-right: 6px;
+}
+
 .select__item-description {
   font-size: 11px;
   margin-right: -32px;
@@ -241,7 +254,7 @@
     padding-left: 6px;
   }
 
-  &:nth-child(2n+1) {
+  &:nth-child(2n + 1) {
     margin-right: 20px;
   }
 

@@ -14,6 +14,9 @@ class BuilderConfig(AppConfig):
 
         application_type_registry.register(BuilderApplicationType())
 
+        from baserow.contrib.builder.data_sources.object_scopes import (
+            BuilderDataSourceObjectScopeType,
+        )
         from baserow.contrib.builder.domains.object_scopes import (
             BuilderDomainObjectScopeType,
         )
@@ -29,6 +32,7 @@ class BuilderConfig(AppConfig):
         object_scope_type_registry.register(BuilderPageObjectScopeType())
         object_scope_type_registry.register(BuilderElementObjectScopeType())
         object_scope_type_registry.register(BuilderDomainObjectScopeType())
+        object_scope_type_registry.register(BuilderDataSourceObjectScopeType())
 
         from baserow.contrib.builder.operations import (
             ListDomainsBuilderOperationType,
@@ -71,6 +75,22 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateDomainOperationType())
         operation_type_registry.register(PublishDomainOperationType())
         operation_type_registry.register(RestoreDomainOperationType())
+
+        from baserow.contrib.builder.data_sources.operations import (
+            CreateDataSourceOperationType,
+            DeleteDataSourceOperationType,
+            ListDataSourcesPageOperationType,
+            OrderDataSourcesPageOperationType,
+            ReadDataSourceOperationType,
+            UpdateDataSourceOperationType,
+        )
+
+        operation_type_registry.register(CreateDataSourceOperationType())
+        operation_type_registry.register(ListDataSourcesPageOperationType())
+        operation_type_registry.register(ReadDataSourceOperationType())
+        operation_type_registry.register(UpdateDataSourceOperationType())
+        operation_type_registry.register(DeleteDataSourceOperationType())
+        operation_type_registry.register(OrderDataSourcesPageOperationType())
 
         from baserow.contrib.builder.domains.job_types import PublishDomainJobType
         from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
@@ -121,6 +141,10 @@ class BuilderConfig(AppConfig):
         from .domains.receivers import connect_to_domain_pre_delete_signal
 
         connect_to_domain_pre_delete_signal()
+
+        from .data_sources.receivers import connect_to_data_source_pre_delete_signal
+
+        connect_to_data_source_pre_delete_signal()
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

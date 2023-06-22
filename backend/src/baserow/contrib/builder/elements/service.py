@@ -102,6 +102,10 @@ class ElementService:
             context=page,
         )
 
+        # Check we are on the same page.
+        if before and page.id != before.page_id:
+            raise ElementNotInSamePage()
+
         try:
             new_element = self.handler.create_element(
                 element_type, page, before=before, **kwargs

@@ -1,6 +1,6 @@
 <template>
   <component
-    :is="type === 'link' || href ? 'a' : 'button'"
+    :is="tag === 'a' || href ? 'a' : 'button'"
     class="button"
     :class="classes"
     :disable="disabled"
@@ -25,8 +25,8 @@
 <script>
 export default {
   props: {
-    type: {
-      // link - button
+    tag: {
+      // a - button
       required: false,
       type: String,
       default: 'button',
@@ -37,8 +37,8 @@ export default {
       type: String,
       default: '',
     },
-    color: {
-      //  primary - success - warning - error - ghost - light
+    type: {
+      //  primary - success - warning - error - ghost - light - link
       required: false,
       type: String,
       default: '',
@@ -96,12 +96,14 @@ export default {
   },
   computed: {
     classes() {
+      const hasIcon = this.prependIcon || this.appendIcon || this.icon
       const classObj = {
         [`button--${this.size}`]: this.size,
-        [`button--${this.color}`]: this.color,
-        'button--primary': !this.color,
+        [`button--${this.type}`]: this.type,
+        'button--primary': !this.type,
         'button--full-width': this.fullWidth,
-        'button--icon': this.prependIcon || this.appendIcon || this.icon,
+        'button--icon': hasIcon,
+        'button--icon-only': hasIcon && this.$children.length === 0,
         'button--loading': this.loading,
         disabled: this.disabled,
         active: this.active,

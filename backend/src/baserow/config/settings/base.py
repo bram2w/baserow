@@ -100,6 +100,7 @@ INSTALLED_APPS = [
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
+    INSTALLED_APPS.append("baserow.contrib.integrations")
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
@@ -487,6 +488,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Applications"},
         {"name": "Snapshots"},
         {"name": "Jobs"},
+        {"name": "Integrations"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
         {"name": "Database table views"},
@@ -503,9 +505,10 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
         {"name": "Builder pages"},
-        {"name": "Builder page elements"},
+        {"name": "Builder elements"},
         {"name": "Builder domains"},
         {"name": "Builder public"},
+        {"name": "Builder data sources"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {

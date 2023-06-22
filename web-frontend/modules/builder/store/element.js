@@ -139,7 +139,6 @@ const actions = {
             element.id,
             elementType.prepareValuesForRequest(values)
           )
-          updateContext.lastUpdatedValues = values
           resolve()
         } catch (error) {
           // Revert to old values on error
@@ -149,6 +148,7 @@ const actions = {
           })
           reject(error)
         }
+        updateContext.lastUpdatedValues = null
       }
 
       if (updateContext.promiseResolve) {

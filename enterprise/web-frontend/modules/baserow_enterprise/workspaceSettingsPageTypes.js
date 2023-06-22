@@ -2,7 +2,7 @@ import { WorkspaceSettingsPageType } from '@baserow/modules/core/workspaceSettin
 import EnterpriseFeatures from '@baserow_enterprise/features'
 
 export class TeamsWorkspaceSettingsPageType extends WorkspaceSettingsPageType {
-  getType() {
+  static getType() {
     return 'teams'
   }
 

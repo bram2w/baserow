@@ -1,5 +1,5 @@
 <template>
-  <Button color="light" v-bind="restProps" @click.prevent="select(value)">
+  <Button type="light" v-bind="restProps" @click.prevent="select(value)">
     <slot></slot>
   </Button>
 </template>

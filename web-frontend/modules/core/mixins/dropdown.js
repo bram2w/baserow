@@ -19,6 +19,11 @@ export default {
       required: false,
       default: null,
     },
+    placeholder: {
+      type: [String, null],
+      required: false,
+      default: null,
+    },
     showSearch: {
       type: Boolean,
       required: false,
@@ -28,6 +33,11 @@ export default {
       type: Boolean,
       required: false,
       default: true,
+    },
+    showFooter: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
     disabled: {
       type: Boolean,
@@ -48,6 +58,7 @@ export default {
       icon: null,
       query: '',
       hasItems: true,
+      hasDropdownItem: true,
       hover: null,
     }
   },
@@ -57,6 +68,9 @@ export default {
     },
     selectedIcon() {
       return this.getSelectedProperty(this.value, 'icon')
+    },
+    selectedImage() {
+      return this.getSelectedProperty(this.value, 'image')
     },
     realTabindex() {
       // We don't want to be able focus if the dropdown is disabled or if we have
@@ -136,6 +150,8 @@ export default {
       this.hover = this.value
       this.opener = isElementOrigin ? target : null
       this.$emit('show')
+
+      this.hasDropdownItem = this.getDropdownItemComponents().length > 0
 
       this.$nextTick(() => {
         // We have to wait for the input to be visible before we can focus.

@@ -26,6 +26,7 @@ class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
     instance_serializer_class = BuilderSerializer
+    supports_integrations = True
 
     def get_api_urls(self):
         from .api import urls as api_urls

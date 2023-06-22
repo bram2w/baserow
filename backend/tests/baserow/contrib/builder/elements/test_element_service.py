@@ -64,6 +64,22 @@ def test_create_element_before(data_fixture):
 
 
 @pytest.mark.django_db
+def test_create_element_before_not_same_page(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page, order="1.0000")
+    element3 = data_fixture.create_builder_heading_element(order="2.0000")
+
+    element_type = element_type_registry.get("heading")
+    sample_params = element_type.get_sample_params()
+
+    with pytest.raises(ElementNotInSamePage):
+        ElementService().create_element(
+            user, element_type, page=page, before=element3, **sample_params
+        )
+
+
+@pytest.mark.django_db
 def test_get_unique_orders_before_element_triggering_full_page_order_reset(
     data_fixture,
 ):

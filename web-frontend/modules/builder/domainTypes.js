@@ -13,7 +13,7 @@ export class DomainType extends Registerable {
 }
 
 export class CustomDomainType extends DomainType {
-  getType() {
+  static getType() {
     return 'custom'
   }
 

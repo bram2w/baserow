@@ -362,7 +362,7 @@ class PublicElementsView(APIView):
                 "provided Id.",
             )
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="list_public_builder_page_elements",
         description=(
             "Lists all the elements of the page related to the provided parameter. "

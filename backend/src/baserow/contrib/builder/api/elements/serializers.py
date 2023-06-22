@@ -6,19 +6,7 @@ from rest_framework import serializers
 
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
-
-EXPRESSION_TYPES = [
-    ("plain", "Plain"),
-    ("formula", "Formula"),
-    ("data", "Data"),
-]
-
-
-@extend_schema_field(OpenApiTypes.STR)
-class ExpressionField(serializers.CharField):
-    """
-    The expression field can be used to ensure the given data is an expression.
-    """
+from baserow.core.expression.serializers import ExpressionSerializer
 
 
 class ElementSerializer(serializers.ModelSerializer):
@@ -84,4 +72,4 @@ class MoveElementSerializer(serializers.Serializer):
 
 class PageParameterValueSerializer(serializers.Serializer):
     name = serializers.CharField()
-    value = ExpressionField(allow_blank=True, allow_null=True)
+    value = ExpressionSerializer(allow_blank=True)

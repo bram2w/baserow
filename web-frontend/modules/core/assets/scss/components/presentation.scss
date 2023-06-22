@@ -1,0 +1,27 @@
+.presentation {
+  display: flex;
+  align-items: center;
+}
+
+.presentation__content {
+  display: flex;
+  flex-direction: column;
+}
+
+.presentation__avatar {
+  margin-right: 12px;
+}
+
+.presentation__title {
+  font-size: 13px;
+  margin-bottom: 3px;
+
+  @extend %ellipsis;
+}
+
+.presentation__subtitle {
+  color: $color-neutral-500;
+  font-size: 12px;
+
+  @extend %ellipsis;
+}

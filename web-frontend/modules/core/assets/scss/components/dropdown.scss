@@ -46,6 +46,12 @@
   color: $color-neutral-600;
 }
 
+.dropdown__selected-image {
+  margin-right: 4px;
+  max-width: 15px;
+  max-height: 15px;
+}
+
 .dropdown__toggle-icon {
   @include absolute(0, 0, 0, auto);
   @include center-text(32px, 14px);

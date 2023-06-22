@@ -111,7 +111,7 @@ export class BaserowFormulaTypeDefinition extends Registerable {
 }
 
 export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'text'
   }
 
@@ -141,7 +141,7 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'char'
   }
 
@@ -167,7 +167,7 @@ export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'number'
   }
 
@@ -189,7 +189,7 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'boolean'
   }
 
@@ -215,7 +215,7 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'date'
   }
 
@@ -245,7 +245,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'date_interval'
   }
 
@@ -277,7 +277,7 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
 // This type only exists in the frontend and only is referenced by a few weird frontend
 // function defs which we want to show as a 'special' type in the GUI.
 export class BaserowFormulaSpecialType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'special'
   }
 
@@ -303,7 +303,7 @@ export class BaserowFormulaSpecialType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'invalid'
   }
 
@@ -337,7 +337,7 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'array'
   }
 
@@ -414,7 +414,7 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
 }
 
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'single_select'
   }
 
@@ -444,7 +444,7 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
 }
 
 export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
-  getType() {
+  static getType() {
     return 'link'
   }
 

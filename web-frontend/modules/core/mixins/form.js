@@ -178,6 +178,7 @@ export default {
       }
       return childHandledIt
     },
+
     emitChange(newValues) {
       this.$emit('values-changed', newValues)
     },

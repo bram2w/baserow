@@ -16,11 +16,14 @@ from .types import ElementForUpdate
 
 
 class ElementHandler:
-    def get_element(self, element_id: int, base_queryset=None) -> Element:
+    def get_element(
+        self, element_id: int, base_queryset: Optional[QuerySet] = None
+    ) -> Element:
         """
         Returns an element instance from the database.
 
         :param element_id: The ID of the element.
+        :param base_queryset: The base queryset to use to build the query.
         :raises ElementDoesNotExist: If the element can't be found.
         :return: The element instance.
         """
@@ -41,12 +44,13 @@ class ElementHandler:
         return element
 
     def get_element_for_update(
-        self, element_id: int, base_queryset=None
+        self, element_id: int, base_queryset: Optional[QuerySet] = None
     ) -> ElementForUpdate:
         """
         Returns an element instance from the database that can be safely updated.
 
         :param element_id: The ID of the element.
+        :param base_queryset: The base queryset to use to build the query.
         :raises ElementDoesNotExist: If the element can't be found.
         :return: The element instance.
         """
@@ -65,7 +69,7 @@ class ElementHandler:
         page: Page,
         base_queryset: Optional[QuerySet] = None,
         specific: bool = True,
-    ) -> Union[QuerySet[Page], Iterable[Page]]:
+    ) -> Union[QuerySet[Element], Iterable[Element]]:
         """
         Gets all the specific elements of a given page.
 

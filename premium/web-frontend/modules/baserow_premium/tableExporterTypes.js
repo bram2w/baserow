@@ -20,7 +20,7 @@ class PremiumTableExporterType extends TableExporterType {
 }
 
 export class JSONTableExporter extends PremiumTableExporterType {
-  getType() {
+  static getType() {
     return 'json'
   }
 
@@ -47,7 +47,7 @@ export class JSONTableExporter extends PremiumTableExporterType {
 }
 
 export class XMLTableExporter extends PremiumTableExporterType {
-  getType() {
+  static getType() {
     return 'xml'
   }
 

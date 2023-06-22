@@ -59,7 +59,7 @@ export class ElementType extends Registerable {
 }
 
 export class HeadingElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'heading'
   }
 
@@ -85,7 +85,7 @@ export class HeadingElementType extends ElementType {
 }
 
 export class ParagraphElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'paragraph'
   }
 
@@ -111,7 +111,7 @@ export class ParagraphElementType extends ElementType {
 }
 
 export class LinkElementType extends ElementType {
-  getType() {
+  static getType() {
     return 'link'
   }
 

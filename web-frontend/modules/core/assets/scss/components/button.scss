@@ -2,16 +2,16 @@
   cursor: pointer;
   display: inline-block;
   margin-bottom: 0;
+  white-space: nowrap;
+  text-decoration: none;
+  user-select: none;
   color: #fff;
   border: 1px solid transparent;
-  white-space: nowrap;
   text-align: center;
-  vertical-align: middle;
-  text-decoration: none;
+  font-weight: 700;
   border-radius: 3px;
   transition: padding 0.05s ease-in-out;
-  font-weight: 700;
-  user-select: none;
+  vertical-align: middle;
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);
@@ -28,14 +28,10 @@
     opacity: 0.65;
     box-shadow: none;
   }
-}
 
-.button--tiny {
-  @include button-size(12px, 26px, 12px);
-}
-
-.button--large {
-  @include button-size(15px, 44px, 28px);
+  &.button--icon-only {
+    @include button-size(14px, 32px, 6px);
+  }
 }
 
 .button--success {
@@ -67,7 +63,6 @@
   &:focus,
   &:active,
   &.button-loading {
-    text-decoration: none;
     box-shadow: none;
     background-color: $color-neutral-100;
   }
@@ -78,6 +73,66 @@
 
   &.active {
     background-color: $color-primary-100;
+  }
+}
+
+.button--tiny {
+  @include button-size(12px, 26px, 12px);
+
+  &.button--icon-only {
+    @include button-size(12px, 26px, 4px);
+  }
+}
+
+.button--large {
+  @include button-size(15px, 44px, 28px);
+
+  &.button--icon-only {
+    @include button-size(15px, 44px, 12px);
+  }
+}
+
+.button--link {
+  color: $color-primary-500;
+  text-align: left;
+  font-weight: 500;
+  padding: 4px 0;
+  border: none;
+  background: none;
+  vertical-align: baseline;
+  height: auto;
+  line-height: normal;
+  border-radius: 0;
+  transition: none;
+
+  &:hover,
+  &:focus,
+  &:active,
+  &.button--loading {
+    color: $color-neutral-900;
+    box-shadow: none;
+    background: none;
+  }
+
+  &.button--loading {
+    color: transparent;
+  }
+
+  &.button--loading::after {
+    border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
+  }
+
+  &.disabled,
+  &[disabled] {
+    cursor: not-allowed;
+    opacity: 0.65;
+    color: $color-primary-500;
+  }
+
+  &.button--icon-only {
+    height: auto;
+    line-height: normal;
+    padding: 4px 0;
   }
 }
 
@@ -100,7 +155,7 @@
   }
 
   &::after {
-    content: ' ';
+    content: " ";
     position: absolute;
     left: 50%;
     top: 50%;

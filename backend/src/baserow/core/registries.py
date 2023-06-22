@@ -238,6 +238,8 @@ class ApplicationType(
 
     supports_snapshots = True
 
+    supports_integrations = False
+
     def pre_delete(self, application):
         """
         A hook that is called before the application instance is deleted.
