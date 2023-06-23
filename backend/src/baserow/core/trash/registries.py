@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.registry import (
@@ -8,6 +8,9 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
 
 
 class TrashableItemType(ModelInstanceMixin, Instance, ABC):
@@ -62,7 +65,7 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         return False
 
     @abstractmethod
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         """
         Returns the parent for this item.
 
@@ -143,6 +146,9 @@ class TrashableItemType(ModelInstanceMixin, Instance, ABC):
         """
 
         return trashed_item
+
+    def get_owner(self, trashed_item: Any) -> Optional["AbstractUser"]:
+        return None
 
 
 class TrashableItemTypeRegistry(ModelRegistryMixin, Registry):

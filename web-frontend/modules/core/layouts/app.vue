@@ -108,6 +108,7 @@ export default {
           !document.activeElement.isContentEditable
         ) {
           event.shiftKey ? this.redo() : this.undo()
+          event.preventDefault()
         }
       }
     },

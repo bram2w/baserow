@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import connection
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
@@ -16,7 +17,10 @@ from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.signals import table_created, table_updated
 from baserow.contrib.database.views.handler import ViewHandler, ViewIndexingHandler
 from baserow.contrib.database.views.models import View
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_ownership_type_registry,
+    view_type_registry,
+)
 from baserow.contrib.database.views.signals import view_created
 from baserow.core.exceptions import TrashItemDoesNotExist
 from baserow.core.models import TrashEntry
@@ -36,7 +40,7 @@ class TableTrashableItemType(TrashableItemType):
     type = "table"
     model_class = Table
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return trashed_item.database
 
     def get_name(self, trashed_item: Table) -> str:
@@ -194,7 +198,7 @@ class FieldTrashableItemType(TrashableItemType):
     type = "field"
     model_class = Field
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return trashed_item.table
 
     def get_name(self, trashed_item: Field) -> str:
@@ -255,8 +259,8 @@ class RowTrashableItemType(TrashableItemType):
         # to uniquely identify and lookup a specific row.
         return True
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
-        return self._get_table(parent_id)
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
+        return self._get_table(trashed_item.baserow_table_id)
 
     @staticmethod
     def _get_table(parent_id):
@@ -276,7 +280,7 @@ class RowTrashableItemType(TrashableItemType):
     def restore(self, trashed_item, trash_entry: TrashEntry):
         super().restore(trashed_item, trash_entry)
 
-        table = self.get_parent(trashed_item, trash_entry.parent_trash_item_id)
+        table = self.get_parent(trashed_item)
 
         model = table.get_model()
 
@@ -371,8 +375,8 @@ class RowsTrashableItemType(TrashableItemType):
         # A row is not unique just with its ID. We also need the table id (parent id)
         return True
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
-        return self._get_table(parent_id)
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
+        return self._get_table(trashed_item.table_id)
 
     @staticmethod
     def _get_table(parent_id):
@@ -492,7 +496,12 @@ class ViewTrashableItemType(TrashableItemType):
         ViewIndexingHandler.before_view_permanently_deleted(trashed_item)
         trashed_item.delete()
 
-    def get_parent(self, trashed_item: View, parent_id: int) -> Optional[View]:
+    def get_owner(self, trashed_item: View) -> Optional[AbstractUser]:
+        return view_ownership_type_registry.get(
+            trashed_item.ownership_type
+        ).get_trashed_item_owner(trashed_item)
+
+    def get_parent(self, trashed_item: View) -> Optional[Any]:
         return trashed_item.table
 
     def restore(self, trashed_item: View, trash_entry):

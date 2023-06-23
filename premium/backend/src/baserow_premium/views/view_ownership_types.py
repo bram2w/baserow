@@ -17,6 +17,9 @@ class PersonalViewOwnershipType(ViewOwnershipType):
 
     type = "personal"
 
+    def get_trashed_item_owner(self, view):
+        return view.created_by
+
     def can_import_view(self, serialized_values, id_mapping):
         email = serialized_values.get("created_by", None)
         return id_mapping["created_by"].get(email, None) is not None

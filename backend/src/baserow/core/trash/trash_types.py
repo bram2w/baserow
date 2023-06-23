@@ -15,7 +15,7 @@ class ApplicationTrashableItemType(TrashableItemType):
     type = "application"
     model_class = Application
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return trashed_item.workspace
 
     def get_name(self, trashed_item: Application) -> str:
@@ -52,7 +52,7 @@ class WorkspaceTrashableItemType(TrashableItemType):
     type = "workspace"
     model_class = Workspace
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return None
 
     def get_name(self, trashed_item: Workspace) -> str:

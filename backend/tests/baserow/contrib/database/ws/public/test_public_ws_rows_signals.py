@@ -1678,9 +1678,7 @@ def test_when_row_restored_public_views_receive_restricted_row_created_ws_event(
             f"field_{hidden_field.id}": "Hidden",
         },
     )
-    TrashHandler.trash(
-        user, table.database.workspace, table.database, row, parent_id=table.id
-    )
+    TrashHandler.trash(user, table.database.workspace, table.database, row)
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
@@ -1780,9 +1778,7 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
             f"field_{hidden_field.id}": "Hidden",
         },
     )
-    TrashHandler.trash(
-        user, table.database.workspace, table.database, row, parent_id=table.id
-    )
+    TrashHandler.trash(user, table.database.workspace, table.database, row)
     TrashHandler.restore_item(user, "row", row.id, parent_trash_item_id=table.id)
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
@@ -1874,7 +1870,7 @@ def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters
     trashed_rows.rows = [row, row2]
 
     trash_entry = TrashHandler.trash(
-        user, table.database.workspace, table.database, trashed_rows, parent_id=table.id
+        user, table.database.workspace, table.database, trashed_rows
     )
     TrashHandler.restore_item(
         user, "rows", trash_entry.trash_item_id, parent_trash_item_id=table.id

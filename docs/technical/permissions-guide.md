@@ -294,7 +294,7 @@ This call returns `true` if the operation is granted `false` otherwise.
 
 The frontend permissions are calculated with the permission object sent by the
 backend at login for each group the user has access to. Check the
-`.get_permission_object` method from each backend permission manager.
+`.get_permissions_object` method from each backend permission manager.
 
 The permission object looks like this:
 

@@ -1738,7 +1738,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             self, rows=[row], user=user, table=table, model=model
         )
 
-        TrashHandler.trash(user, workspace, table.database, row, parent_id=table.id)
+        TrashHandler.trash(user, workspace, table.database, row)
         rows_deleted_counter.add(
             1,
         )
@@ -1835,9 +1835,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # example used when storing the names in the trash.
         trashed_rows.rows = rows
 
-        TrashHandler.trash(
-            user, workspace, table.database, trashed_rows, parent_id=table.id
-        )
+        TrashHandler.trash(user, workspace, table.database, trashed_rows)
         rows_deleted_counter.add(
             len(row_ids),
         )

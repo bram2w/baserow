@@ -1381,8 +1381,8 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
-# pytest -k "test_get_permission_object_performance" -s --run-disabled-in-ci
-def test_get_permission_object_performance(
+# pytest -k "test_get_permissions_object_performance" -s --run-disabled-in-ci
+def test_get_permissions_object_performance(
     data_fixture, enterprise_data_fixture, profiler
 ):
     user = data_fixture.create_user()
@@ -1461,7 +1461,7 @@ def test_get_permission_object_performance(
         print(q)
     print(len(captured.captured_queries))
 
-    print("----------- get_permission_object perfs ---------------")
+    print("----------- get_permissions_object perfs ---------------")
     with profiler(html_report_name="enterprise_get_permissions_object"):
         for i in range(1000):
             permission_manager.get_permissions_object(user2, workspace=workspace)

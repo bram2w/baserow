@@ -4,11 +4,18 @@ from django.test.utils import override_settings
 
 import pytest
 from baserow_premium.license.exceptions import FeaturesNotAvailableError
-from baserow_premium.row_comments.exceptions import InvalidRowCommentException
+from baserow_premium.row_comments.exceptions import (
+    InvalidRowCommentException,
+    RowCommentDoesNotExist,
+    UserNotRowCommentAuthorException,
+)
 from baserow_premium.row_comments.handler import RowCommentHandler
+from baserow_premium.row_comments.models import RowComment
 from freezegun import freeze_time
 
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.handler import CoreHandler
 
 
 @pytest.mark.django_db
@@ -89,5 +96,120 @@ def test_row_comment_created_signal_called(
 
     mock_row_comment_created.assert_called_once()
     args = mock_row_comment_created.call_args
+
+    assert args == call(RowHandler, row_comment=c, user=user)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comment_can_only_be_updated_by_author(premium_data_fixture):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    other_user = premium_data_fixture.create_user(
+        first_name="other_user", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    with freeze_time("2020-01-01 12:00"):
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+
+    with pytest.raises(UserNotInWorkspace):
+        RowCommentHandler.update_comment(other_user, c, "updated comment")
+
+    CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
+
+    with pytest.raises(UserNotRowCommentAuthorException):
+        RowCommentHandler.update_comment(other_user, c, "updated comment")
+
+    with freeze_time("2020-01-01 12:01"):
+        updated_comment = RowCommentHandler.update_comment(user, c, "updated comment")
+
+    assert updated_comment.comment == "updated comment"
+    assert updated_comment.id == c.id
+    assert updated_comment.created_on.strftime("%Y-%m-%d %H:%M") == "2020-01-01 12:00"
+    assert updated_comment.updated_on.strftime("%Y-%m-%d %H:%M") == "2020-01-01 12:01"
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(DEBUG=True)
+@patch("baserow_premium.row_comments.signals.row_comment_updated.send")
+def test_row_comment_updated_signal_called(
+    mock_row_comment_updated, premium_data_fixture
+):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+
+    RowCommentHandler.update_comment(user, c, "updated comment")
+
+    mock_row_comment_updated.assert_called_once()
+    args = mock_row_comment_updated.call_args
+
+    assert args == call(RowHandler, row_comment=c, user=user)
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comment_can_only_be_deleted_by_author(premium_data_fixture):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    other_user = premium_data_fixture.create_user(
+        first_name="other_user", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    with freeze_time("2020-01-01 12:00"):
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+
+    with pytest.raises(UserNotInWorkspace):
+        RowCommentHandler.delete_comment(other_user, c)
+
+    CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
+
+    with pytest.raises(UserNotRowCommentAuthorException):
+        RowCommentHandler.delete_comment(other_user, c)
+
+    with freeze_time("2020-01-01 12:01"):
+        RowCommentHandler.delete_comment(user, c)
+
+    assert c.trashed
+    with pytest.raises(RowCommentDoesNotExist):
+        RowCommentHandler.get_comment_by_id(user, table.id, c.id)
+
+    trashed_comment = RowComment.objects_and_trash.get(id=c.id)
+    assert trashed_comment.id == c.id
+    assert trashed_comment.trashed
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(DEBUG=True)
+@patch("baserow_premium.row_comments.signals.row_comment_deleted.send")
+def test_row_comment_deleted_signal_called(
+    mock_row_comment_deleted, premium_data_fixture
+):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+
+    RowCommentHandler.delete_comment(user, c)
+
+    mock_row_comment_deleted.assert_called_once()
+    args = mock_row_comment_deleted.call_args
 
     assert args == call(RowHandler, row_comment=c, user=user)

@@ -2,12 +2,18 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from baserow.contrib.database.table.models import Table
-from baserow.core.mixins import CreatedAndUpdatedOnMixin
+from baserow.core.mixins import (
+    CreatedAndUpdatedOnMixin,
+    HierarchicalModelMixin,
+    TrashableModelMixin,
+)
 
 User = get_user_model()
 
 
-class RowComment(CreatedAndUpdatedOnMixin, models.Model):
+class RowComment(
+    CreatedAndUpdatedOnMixin, HierarchicalModelMixin, TrashableModelMixin, models.Model
+):
     """
     A user made comment on a specific row in a user table in Baserow.
     """
@@ -32,3 +38,7 @@ class RowComment(CreatedAndUpdatedOnMixin, models.Model):
         db_table = "database_rowcomment"
         ordering = ("-created_on",)
         indexes = [models.Index(fields=["table", "row_id", "-created_on"])]
+
+    def get_parent(self):
+        table_model = self.table.get_model()
+        return table_model.objects.get(id=self.row_id)

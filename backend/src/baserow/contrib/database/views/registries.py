@@ -1098,6 +1098,11 @@ class ViewOwnershipType(Instance):
 
         return True
 
+    def get_trashed_item_owner(self, view):
+        """Returns the owner of the trashed item."""
+
+        return None
+
     def should_broadcast_signal_to(
         self, view: "View"
     ) -> Tuple[Literal["table", "users", ""], Optional[List[int]]]:

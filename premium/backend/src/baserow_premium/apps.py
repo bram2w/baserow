@@ -8,7 +8,7 @@ class BaserowPremiumConfig(AppConfig):
 
     def ready(self):
         # noinspection PyUnresolvedReferences
-        import baserow_premium.row_comments.recievers  # noqa: F401
+        import baserow_premium.row_comments.receivers  # noqa: F401
         from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
         from baserow_premium.row_comments.row_metadata_types import (
             RowCommentCountMetadataType,
@@ -71,17 +71,35 @@ class BaserowPremiumConfig(AppConfig):
 
         license_type_registry.register(PremiumLicenseType())
 
-        from baserow_premium.row_comments.actions import CreateRowCommentActionType
+        from baserow_premium.row_comments.actions import (
+            CreateRowCommentActionType,
+            DeleteRowCommentActionType,
+            UpdateRowCommentActionType,
+        )
 
         action_type_registry.register(CreateRowCommentActionType())
+        action_type_registry.register(DeleteRowCommentActionType())
+        action_type_registry.register(UpdateRowCommentActionType())
 
         from .row_comments.operations import (
             CreateRowCommentsOperationType,
+            DeleteRowCommentsOperationType,
             ReadRowCommentsOperationType,
+            RestoreRowCommentOperationType,
+            UpdateRowCommentsOperationType,
         )
 
         operation_type_registry.register(ReadRowCommentsOperationType())
+        operation_type_registry.register(DeleteRowCommentsOperationType())
         operation_type_registry.register(CreateRowCommentsOperationType())
+        operation_type_registry.register(RestoreRowCommentOperationType())
+        operation_type_registry.register(UpdateRowCommentsOperationType())
+
+        from baserow.core.trash.registries import trash_item_type_registry
+
+        from .row_comments.trash_types import RowCommentTrashableItemType
+
+        trash_item_type_registry.register(RowCommentTrashableItemType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

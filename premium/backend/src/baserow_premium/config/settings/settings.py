@@ -8,3 +8,6 @@ def setup(settings):
     for db, value in settings.DATABASES:
         value['engine'] = 'some custom engine'
     """
+
+    # How many row comments can be requested at once.
+    settings.ROW_COMMENT_PAGE_SIZE_LIMIT = 200

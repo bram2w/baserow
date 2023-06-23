@@ -1,4 +1,5 @@
 from baserow_premium.license.models import License, LicenseUser
+from baserow_premium.row_comments.models import RowComment
 from baserow_premium.views.models import (
     CalendarView,
     CalendarViewFieldOptions,
@@ -129,4 +130,9 @@ class PremiumFixtures:
     def create_calendar_view_field_option(self, calendar_view, field, **kwargs):
         return CalendarViewFieldOptions.objects.create(
             calendar_view=calendar_view, field=field, **kwargs
+        )
+
+    def create_row_comment(self, user, row, comment):
+        return RowComment.objects.create(
+            user=user, table=row.get_parent(), row_id=row.id, comment=comment
         )

@@ -10,4 +10,22 @@ export const registerRealtimeEvents = (realtime) => {
       rowComment,
     })
   })
+  realtime.registerEvent('row_comment_updated', async ({ store }, data) => {
+    const rowComment = data.row_comment
+    await store.dispatch('row_comments/forceUpdate', {
+      rowComment,
+    })
+  })
+  realtime.registerEvent('row_comment_deleted', async ({ store }, data) => {
+    const rowComment = data.row_comment
+    await store.dispatch('row_comments/forceUpdate', {
+      rowComment,
+    })
+  })
+  realtime.registerEvent('row_comment_restored', async ({ store }, data) => {
+    const rowComment = data.row_comment
+    await store.dispatch('row_comments/forceUpdate', {
+      rowComment,
+    })
+  })
 }

@@ -48,3 +48,9 @@ class PermanentDeletionMaxLocksExceededException(
         "number of PostgreSQL locks per transaction. Please read "
         "https://baserow.io/docs/technical/postgresql-locks"
     )
+
+
+class CannotRestoreItemNotOwnedByUser(Exception):
+    """
+    Raised when attempting to restore an item that is not owned by the user.
+    """

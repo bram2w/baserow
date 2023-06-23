@@ -745,11 +745,7 @@ class RowView(APIView):
                 example_type="get", user_field_names=True
             ),
             400: get_error_schema(
-                [
-                    "ERROR_USER_NOT_IN_GROUP",
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                ]
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_REQUEST_BODY_VALIDATION"]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
             404: get_error_schema(
