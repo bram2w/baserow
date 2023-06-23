@@ -5,7 +5,10 @@ eslint:
 	yarn run eslint || exit;
 
 stylelint:
-	yarn run stylelint || exit;
+	yarn run stylelint && yarn run prettier --check modules/**/*.scss || exit;
+
+format-scss:
+	yarn run prettier --write modules/**/*.scss || exit;
 
 lint: eslint stylelint
 

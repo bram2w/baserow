@@ -3,14 +3,14 @@
 }
 
 .loading-overlay {
-  content: "";
+  content: '';
   background-color: rgba(0, 0, 0, 0.1);
   z-index: 1;
 
   @include absolute(0, 0, 0, 0);
 
   &::after {
-    content: "";
+    content: '';
     margin-left: -7px;
     margin-top: -7px;
     z-index: 1;

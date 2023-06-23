@@ -68,7 +68,7 @@
     &::before {
       @include absolute(0, 0, 0, 0);
 
-      content: "";
+      content: '';
       border: solid 1px $color-primary-500;
       pointer-events: none;
     }

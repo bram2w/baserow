@@ -49,7 +49,7 @@
   cursor: wait;
 
   &::after {
-    content: " ";
+    content: ' ';
     margin-left: -7px;
 
     @include loading(14px);

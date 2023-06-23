@@ -27,9 +27,15 @@
       z-index: 1;
       width: 500%;
       margin-left: -250%;
-      background: linear-gradient(to right, rgba(255, 255, 255, 0) 46%, rgba(255, 255, 255, 0.35) 50%, rgba(255, 255, 255, 0) 54%) 50% 50%;
+      background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0) 46%,
+          rgba(255, 255, 255, 0.35) 50%,
+          rgba(255, 255, 255, 0) 54%
+        )
+        50% 50%;
       animation: card-loading-animation 0.8s linear infinite;
-      content: " ";
+      content: ' ';
       pointer-events: none;
 
       @include absolute(0, 0, 0, 50%);

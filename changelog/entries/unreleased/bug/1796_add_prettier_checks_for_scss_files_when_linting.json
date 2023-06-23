@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Add prettier checks for scss files when linting.",
+    "issue_number": 1796,
+    "bullet_points": [],
+    "created_at": "2023-06-23"
+}

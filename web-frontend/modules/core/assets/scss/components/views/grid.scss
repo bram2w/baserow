@@ -54,7 +54,7 @@
 
   &::before {
     display: none;
-    content: "";
+    content: '';
 
     @include absolute(0, auto, 0, 0);
 
@@ -79,7 +79,7 @@
   cursor: col-resize;
 
   &::before {
-    content: "";
+    content: '';
 
     @include absolute(0, 2px, 0, 2px);
 
@@ -158,17 +158,16 @@
 .grid-view__placeholder {
   position: relative;
   background-color: $white;
-  background-image:
-    linear-gradient(
-      0deg,
-      $color-neutral-200 1.52%,
-      $white 1.52%,
-      $white 50%,
-      $color-neutral-200 50%,
-      $color-neutral-200 51.52%,
-      $white 51.52%,
-      $white 100%
-    );
+  background-image: linear-gradient(
+    0deg,
+    $color-neutral-200 1.52%,
+    $white 1.52%,
+    $white 50%,
+    $color-neutral-200 50%,
+    $color-neutral-200 51.52%,
+    $white 51.52%,
+    $white 100%
+  );
   background-size: 66px 66px;
 }
 
@@ -287,7 +286,11 @@
   @include absolute(0, auto, 0, 0);
 
   width: 18px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0) 100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
   cursor: grab;
   display: none;
 
@@ -323,7 +326,7 @@
       @include loading();
       @include absolute(50%, auto, auto, 6px);
 
-      content: "";
+      content: '';
       margin-top: -0.7rem;
     }
   }
@@ -514,7 +517,7 @@
     cursor: col-resize;
 
     &::before {
-      content: "";
+      content: '';
       border-radius: 2px;
 
       @include absolute(0, 2px, 0, 2px);
@@ -537,7 +540,7 @@
       @include loading();
       @include absolute(50%, 12px, auto, auto);
 
-      content: "";
+      content: '';
       margin-top: -0.7rem;
     }
 

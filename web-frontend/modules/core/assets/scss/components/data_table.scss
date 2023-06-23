@@ -144,8 +144,12 @@
   width: 100%;
 }
 
-.data-table__table-row--hover + .data-table__table-row .data-table__table-cell-content,
-.data-table__table-row--selected + .data-table__table-row .data-table__table-cell-content {
+.data-table__table-row--hover
+  + .data-table__table-row
+  .data-table__table-cell-content,
+.data-table__table-row--selected
+  + .data-table__table-row
+  .data-table__table-cell-content {
   border-top-color: transparent;
 }
 
