@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("core", "0069_synced_datetime_field"),
+        ("core", "0070_integration_service"),
     ]
 
     operations = [
