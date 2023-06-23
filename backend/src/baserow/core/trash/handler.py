@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.db import IntegrityError, OperationalError, transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from loguru import logger
@@ -22,6 +22,7 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.exceptions import (
     CannotDeleteAlreadyDeletedItem,
     CannotRestoreChildBeforeParent,
+    CannotRestoreItemNotOwnedByUser,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
     PermanentDeletionMaxLocksExceededException,
@@ -47,7 +48,6 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         workspace: Workspace,
         application: Optional[Application],
         trash_item,
-        parent_id=None,
         existing_trash_entry: Optional[TrashEntry] = None,
     ) -> TrashEntry:
         """
@@ -57,7 +57,6 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         a configurable timeout period or when the user explicitly empties the
         trash trashed items will be permanently deleted.
 
-        :param parent_id: The id of the parent object if known
         :param requesting_user: The user who is requesting that this item be trashed.
         :param workspace: The workspace the trashed item is in.
         :param application: If the item is in an application the application.
@@ -75,16 +74,18 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         with transaction.atomic():
             trash_item_type = trash_item_type_registry.get_by_model(trash_item)
 
-            _check_parent_id_valid(parent_id, trash_item_type)
-
             if existing_trash_entry is None:
-                parent = trash_item_type.get_parent(trash_item, parent_id)
+                parent = trash_item_type.get_parent(trash_item)
                 if parent is None:
                     parent_name = None
+                    parent_trash_item_id = None
                 else:
                     parent_type = trash_item_type_registry.get_by_model(parent)
                     parent_name = parent_type.get_name(parent)
-
+                    parent_trash_item_id = (
+                        parent.id if trash_item_type.requires_parent_id else None
+                    )
+                _check_parent_id_valid(parent_trash_item_id, trash_item_type)
                 try:
                     trash_entry = TrashEntry.objects.create(
                         user_who_trashed=requesting_user,
@@ -95,7 +96,8 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
                         name=trash_item_type.get_name(trash_item),
                         names=trash_item_type.get_names(trash_item),
                         parent_name=parent_name,
-                        parent_trash_item_id=parent_id,
+                        parent_trash_item_id=parent_trash_item_id,
+                        trash_item_owner=trash_item_type.get_owner(trash_item),
                     )
                 except IntegrityError as e:
                     if "unique constraint" in e.args[0]:
@@ -156,9 +158,14 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
 
             if TrashHandler.item_has_a_trashed_parent(
                 trash_item,
-                parent_id=trash_entry.parent_trash_item_id,
             ):
                 raise CannotRestoreChildBeforeParent()
+
+            if (
+                trash_entry.trash_item_owner is not None
+                and trash_entry.trash_item_owner != user
+            ):
+                raise CannotRestoreItemNotOwnedByUser()
 
             trash_entry.delete()
 
@@ -456,13 +463,14 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
 
         trash_contents = TrashEntry.objects.filter(
             workspace=workspace, should_be_permanently_deleted=False
-        )
+        ).filter(Q(trash_item_owner=user) | Q(trash_item_owner__isnull=True))
+
         if application:
             trash_contents = trash_contents.filter(application=application)
         return trash_contents.order_by("-trashed_at")
 
     @staticmethod
-    def item_has_a_trashed_parent(item, parent_id=None, check_item_also=False):
+    def item_has_a_trashed_parent(item, check_item_also=False):
         """
         Given an instance of a model which is trashable (item) checks if it has a parent
         which is trashed. Returns True if it's parent, or parent's parent (and so on)
@@ -471,8 +479,6 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
         :param check_item_also: If true also checks if the provided item itself is
             trashed and returns True if so.
         :param item: An instance of a trashable model to check.
-        :param parent_id: If the trashable type of the provided instance requires an
-            id to lookup it's parent it must be provided here.
         :return: If the provided item has a trashed parent or not.
         """
 
@@ -482,20 +488,13 @@ class TrashHandler(metaclass=baserow_trace_methods(tracer)):
             return True
 
         while True:
-            _check_parent_id_valid(parent_id, trash_item_type)
-            parent = trash_item_type.get_parent(item, parent_id)
+            parent = trash_item_type.get_parent(item)
             if parent is None:
                 return False
             elif parent.trashed:
                 return True
             else:
                 item = parent
-                # Right now only row the lowest item in the "trash hierarchy" requires
-                # a parent id. Hence we know that as we go up into parents we will
-                # no longer need parent id's to do the lookups. However if in the future
-                # there is an intermediary trashable item which also requires a
-                # parent_id this method will not work and will need to be changed.
-                parent_id = None
                 trash_item_type = trash_item_type_registry.get_by_model(item)
 
 

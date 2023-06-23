@@ -26,6 +26,7 @@ from baserow.core.exceptions import (
 from baserow.core.trash.actions import EmptyTrashActionType, RestoreFromTrashActionType
 from baserow.core.trash.exceptions import (
     CannotRestoreChildBeforeParent,
+    CannotRestoreItemNotOwnedByUser,
     ParentIdMustBeProvidedException,
     ParentIdMustNotBeProvidedException,
     RelatedTableTrashedException,
@@ -33,6 +34,7 @@ from baserow.core.trash.exceptions import (
 from baserow.core.trash.handler import TrashHandler
 
 from .errors import (
+    ERROR_CANNOT_RESTORE_ITEM_NOT_OWNED_BY_USER,
     ERROR_CANNOT_RESTORE_PARENT_BEFORE_CHILD,
     ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED,
     ERROR_PARENT_ID_MUST_BE_PROVIDED,
@@ -68,6 +70,7 @@ class TrashItemView(APIView):
                     "ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED",
                     "ERROR_PARENT_ID_MUST_BE_PROVIDED",
                     "ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED",
+                    "ERROR_CANNOT_RESTORE_ITEM_NOT_OWNED_BY_USER",
                 ]
             ),
         },
@@ -81,6 +84,7 @@ class TrashItemView(APIView):
             ParentIdMustNotBeProvidedException: ERROR_PARENT_ID_MUST_NOT_BE_PROVIDED,
             ParentIdMustBeProvidedException: ERROR_PARENT_ID_MUST_BE_PROVIDED,
             RelatedTableTrashedException: ERROR_CANT_RESTORE_AS_RELATED_TABLE_TRASHED,
+            CannotRestoreItemNotOwnedByUser: ERROR_CANNOT_RESTORE_ITEM_NOT_OWNED_BY_USER,
         }
     )
     def patch(self, request, data):

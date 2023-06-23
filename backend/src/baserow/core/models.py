@@ -397,6 +397,13 @@ class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
     # The actual id of the item that is trashed
     trash_item_id = models.PositiveIntegerField()
 
+    trash_item_owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="private_trash_entries",
+    )
+
     # If the user who trashed something gets deleted we still wish to preserve this
     # trash record as it is independent of if the user exists or not.
     user_who_trashed = models.ForeignKey(

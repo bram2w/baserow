@@ -3,7 +3,10 @@ from django.core.exceptions import ImproperlyConfigured
 
 from baserow_premium.row_comments.operations import (
     CreateRowCommentsOperationType,
+    DeleteRowCommentsOperationType,
     ReadRowCommentsOperationType,
+    RestoreRowCommentOperationType,
+    UpdateRowCommentsOperationType,
 )
 
 from baserow.contrib.builder.data_sources.operations import (
@@ -264,7 +267,10 @@ default_roles[COMMENTER_ROLE_UID].extend(
     default_roles[VIEWER_ROLE_UID]
     + [
         CreateRowCommentsOperationType,
+        DeleteRowCommentsOperationType,
         ReadRowCommentsOperationType,
+        RestoreRowCommentOperationType,
+        UpdateRowCommentsOperationType,
     ]
 )
 default_roles[EDITOR_ROLE_UID].extend(

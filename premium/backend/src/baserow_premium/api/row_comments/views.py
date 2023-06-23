@@ -1,7 +1,19 @@
 from django.conf import settings
 from django.db import transaction
 
-from baserow_premium.row_comments.actions import CreateRowCommentActionType
+from baserow_premium.api.row_comments.errors import (
+    ERROR_ROW_COMMENT_DOES_NOT_EXIST,
+    ERROR_USER_NOT_COMMENT_AUTHOR,
+)
+from baserow_premium.row_comments.actions import (
+    CreateRowCommentActionType,
+    DeleteRowCommentActionType,
+    UpdateRowCommentActionType,
+)
+from baserow_premium.row_comments.exceptions import (
+    RowCommentDoesNotExist,
+    UserNotRowCommentAuthorException,
+)
 from baserow_premium.row_comments.handler import RowCommentHandler
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
@@ -24,7 +36,7 @@ from baserow.core.exceptions import UserNotInWorkspace
 from .serializers import RowCommentCreateSerializer, RowCommentSerializer
 
 
-class RowCommentView(APIView):
+class RowCommentsView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
@@ -90,7 +102,9 @@ class RowCommentView(APIView):
         }
     )
     def get(self, request, table_id, row_id):
-        comments = RowCommentHandler.get_comments(request.user, table_id, row_id)
+        comments = RowCommentHandler.get_comments(
+            request.user, table_id, row_id, include_trashed=True
+        )
 
         if LimitOffsetPagination.limit_query_param in request.GET:
             paginator = LimitOffsetPagination()
@@ -151,3 +165,100 @@ class RowCommentView(APIView):
         )
         context = {"user": request.user}
         return Response(RowCommentSerializer(new_row_comment, context=context).data)
+
+
+class RowCommentView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table the row is in.",
+            ),
+            OpenApiParameter(
+                name="comment_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The row comment to update.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="update_row_comment",
+        description="Update a row comment.",
+        responses={
+            200: RowCommentSerializer,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_USER_NOT_COMMENT_AUTHOR",
+                    "ERROR_BODY_VALIDATION",
+                ]
+            ),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_COMMENT_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowCommentDoesNotExist: ERROR_ROW_COMMENT_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            UserNotRowCommentAuthorException: ERROR_USER_NOT_COMMENT_AUTHOR,
+        }
+    )
+    @validate_body(RowCommentCreateSerializer)
+    @transaction.atomic
+    def patch(self, request, table_id, comment_id, data):
+        updated_row_comment = action_type_registry.get(
+            UpdateRowCommentActionType.type
+        ).do(request.user, table_id, comment_id, data["comment"])
+        context = {"user": request.user}
+        return Response(RowCommentSerializer(updated_row_comment, context=context).data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table the row is in.",
+            ),
+            OpenApiParameter(
+                name="comment_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The row comment to delete.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="delete_row_comment",
+        description="Delete a row comment.",
+        responses={
+            200: RowCommentSerializer,
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_USER_NOT_COMMENT_AUTHOR"]
+            ),
+            401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
+            404: get_error_schema(
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_COMMENT_DOES_NOT_EXIST"]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowCommentDoesNotExist: ERROR_ROW_COMMENT_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            UserNotRowCommentAuthorException: ERROR_USER_NOT_COMMENT_AUTHOR,
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, table_id, comment_id):
+        trashed_comment = action_type_registry.get(DeleteRowCommentActionType.type).do(
+            request.user, table_id, comment_id
+        )
+        context = {"user": request.user}
+        return Response(RowCommentSerializer(trashed_comment, context=context).data)

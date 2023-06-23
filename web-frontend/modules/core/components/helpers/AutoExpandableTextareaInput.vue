@@ -7,6 +7,7 @@
   >
     <div v-if="loading" class="auto-expandable-textarea--loading"></div>
     <AutoExpandableTextarea
+      ref="AutoExpandableTextarea"
       v-model="innerValue"
       :placeholder="placeholder"
       :max-rows="maxRows"
@@ -64,6 +65,11 @@ export default {
       set(value) {
         this.$emit('input', value)
       },
+    },
+  },
+  methods: {
+    focus() {
+      this.$refs.AutoExpandableTextarea.focus()
     },
   },
 }

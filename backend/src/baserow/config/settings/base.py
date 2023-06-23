@@ -12,12 +12,12 @@ from urllib.parse import urljoin, urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
-from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
 from baserow.config.settings.utils import (
     Setting,
+    get_crontab_from_env,
     read_file,
     set_settings_from_env_if_present,
     str_to_bool,
@@ -775,7 +775,7 @@ BATCH_ROWS_SIZE_LIMIT = int(
 )  # How many rows can be modified at once.
 
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
-ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
+
 # How many unique row values can be requested at once.
 UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
 
@@ -802,21 +802,6 @@ BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
-
-
-def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
-    """
-    Parses a crontab from an environment variable if present or instead uses the
-    default.
-
-    Celeries crontab constructor takes the arguments in a different order than the
-    actual crontab spec so we expand and re-order the arguments to match.
-    """
-
-    minute, hour, day_of_month, month_of_year, day_of_week = os.getenv(
-        env_var_name, default_crontab
-    ).split(" ")
-    return crontab(minute, hour, day_of_week, day_of_month, month_of_year)
 
 
 MIDNIGHT_CRONTAB_STR = "0 0 * * *"

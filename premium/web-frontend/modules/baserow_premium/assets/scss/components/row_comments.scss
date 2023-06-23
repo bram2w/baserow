@@ -10,6 +10,10 @@
   height: 100%;
   overflow-y: auto;
   border-top-left-radius: 6px;
+
+  .infinite-scroll {
+    padding-bottom: 10px;
+  }
 }
 
 .row-comments__empty {
@@ -45,13 +49,16 @@
 }
 
 .row-comments__comment {
-  padding: 0 20px;
-  margin: 20px 0;
+  padding: 10px 20px;
+}
+
+.row-comments__comment--editing {
+  background-color: $color-neutral-100;
 }
 
 .row-comments__comment-head {
   display: flex;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 
   .row-comments__comment--right & {
     justify-items: flex-end;
@@ -65,7 +72,6 @@
   background-color: $color-primary-500;
   color: $white;
   font-weight: bold;
-  margin-right: 10px;
 
   @include center-text(30px, 12px);
 
@@ -78,12 +84,22 @@
 .row-comments__comment-head-details {
   width: 100%;
   min-width: 0;
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  gap: 8px;
+  align-items: center;
+
+  .row-comments__comment--right & {
+    justify-content: right;
+  }
 }
 
 .row-comments__comment-head-name {
   @extend %ellipsis;
 
   font-size: 12px;
+  line-height: 22px;
   margin-bottom: 2px;
 
   .row-comments__comment--right & {
@@ -94,7 +110,8 @@
 .row-comments__comment-head-time {
   @extend %ellipsis;
 
-  font-size: 10px;
+  font-size: 12px;
+  font-weight: 400;
   color: $color-neutral-400;
   // Prevent long characters like 'g' in the time display being cut off
   // partway down.
@@ -108,21 +125,54 @@
 .row-comments__comment-text {
   font-size: 13px;
   line-height: 22px;
-  background-color: $color-neutral-200;
-  padding: 10px;
-  margin-right: 20px;
-  border-radius: 6px;
-  border-top-left-radius: 0;
-  white-space: pre-line;
+  background-color: white;
+  padding: 10px 16px;
+  width: fit-content;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: auto;
+  border-radius: 8px;
+  border-top-left-radius: 3px;
   word-wrap: break-word;
+  border: 1px solid $color-neutral-200;
+  box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
+  -webkit-box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
+  -moz-box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
+  white-space: pre-line;
+
+  .auto-expandable-textarea {
+    font-size: 13px;
+  }
 
   .row-comments__comment--right & {
     background-color: $color-primary-200;
+    border: 1px solid $color-primary-200;
     text-align: right;
+    margin-left: auto;
     margin-right: 0;
-    margin-left: 20px;
-    border-top-left-radius: 6px;
+    border-radius: 8px;
+    border-top-right-radius: 3px;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+  }
+
+  .row-comments__comment--editing & {
+    background-color: white;
+    text-align: revert;
+    border: 1px solid $color-neutral-200;
+    margin-right: 20px;
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .auto-expandable-textarea__container {
+    border-radius: 6px;
     border-top-right-radius: 0;
+    border: 1px solid #9fa4ab;
+    background-color: white;
+    padding: 10px;
+    width: 100%;
   }
 }
 
@@ -150,4 +200,61 @@
   &__icon {
     color: $color-neutral-500;
   }
+}
+
+.row-comments__comment-context {
+  color: $color-neutral-500;
+  text-decoration: none;
+  height: 30px;
+  line-height: 30px;
+  width: 20px;
+  text-align: right;
+
+  &:hover {
+    color: $color-neutral-600;
+  }
+
+  .pending {
+    animation: flash 2s linear infinite;
+    color: $color-neutral-200;
+  }
+}
+
+.row_comments__comment-text-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.row-comments__comment-text--trashed {
+  color: $color-neutral-500;
+  font-style: italic;
+  white-space: normal;
+}
+
+.row-comment__day-separator {
+  position: relative;
+  height: 1px;
+  background: $color-neutral-200;
+  margin: 32px 0;
+
+  span {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 8px 12px;
+    border: 1px solid $color-neutral-200;
+    box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
+    border-radius: 80px;
+    font-weight: 600;
+  }
+}
+
+@keyframes flash {
+  0% { opacity: 1; }
+  50% { opacity: 0.1; }
+  100% { opacity: 1; }
 }

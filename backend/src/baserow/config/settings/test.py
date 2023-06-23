@@ -1,3 +1,4 @@
+# flake8: noqa: F405
 from copy import deepcopy
 
 from .base import *  # noqa: F403, F401
@@ -6,7 +7,7 @@ TESTS = True
 
 # This is a hardcoded key for test runs only.
 SECRET_KEY = "test_hardcoded_secret_key"  # nosec
-SIMPLE_JWT["SIGNING_KEY"] = "test_hardcoded_jwt_signing_key"  # noqa: F405
+SIMPLE_JWT["SIGNING_KEY"] = "test_hardcoded_jwt_signing_key"
 
 CELERY_BROKER_BACKEND = "memory"
 CELERY_TASK_ALWAYS_EAGER = True
@@ -15,7 +16,7 @@ CELERY_TASK_EAGER_PROPAGATES = True
 CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 # Open a second database connection that can be used to test transactions.
-DATABASES["default-copy"] = deepcopy(DATABASES["default"])  # noqa: F405
+DATABASES["default-copy"] = deepcopy(DATABASES["default"])
 
 USER_FILES_DIRECTORY = "user_files"
 USER_THUMBNAILS_DIRECTORY = "thumbnails"
@@ -30,16 +31,16 @@ CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "KEY_PREFIX": "baserow-default-cache",
-        "VERSION": VERSION,  # noqa: F405
+        "VERSION": VERSION,
     },
-    GENERATED_MODEL_CACHE_NAME: {  # noqa: F405
+    GENERATED_MODEL_CACHE_NAME: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",  # noqa: F405
+        "KEY_PREFIX": f"baserow-{GENERATED_MODEL_CACHE_NAME}-cache",
         "VERSION": None,
     },
-    CACHALOT_CACHE: {  # noqa: F405
+    CACHALOT_CACHE: {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "KEY_PREFIX": f"baserow-{CACHALOT_CACHE}-cache",  # noqa: F405
+        "KEY_PREFIX": f"baserow-{CACHALOT_CACHE}-cache",
         "VERSION": None,
     },
 }
@@ -47,10 +48,15 @@ CACHES = {
 # Disable the default throttle classes because ConcurrentUserRequestsThrottle is
 # using redis and it will cause errors when running the tests.
 # Look into tests.baserow.api.test_api_utils.py if you need to test the throttle
-REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []  # noqa: F405
+REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = []
 
-if "cachalot" not in INSTALLED_APPS:  # noqa: F405
-    install_cachalot()  # noqa: F405
+if "cachalot" not in INSTALLED_APPS:
+    install_cachalot()
 
 CACHALOT_ENABLED = False
 AUTO_INDEX_VIEW_ENABLED = False
+
+# Ensure the tests never run with the concurrent middleware unless they add it in to
+# prevent failures caused by the middleware itself
+if "baserow.middleware.ConcurrentUserRequestsMiddleware" in MIDDLEWARE:
+    MIDDLEWARE.remove("baserow.middleware.ConcurrentUserRequestsMiddleware")

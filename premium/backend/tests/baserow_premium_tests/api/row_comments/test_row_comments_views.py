@@ -9,13 +9,16 @@ from freezegun import freeze_time
 from rest_framework.reverse import reverse
 from rest_framework.status import (
     HTTP_200_OK,
+    HTTP_204_NO_CONTENT,
     HTTP_400_BAD_REQUEST,
     HTTP_402_PAYMENT_REQUIRED,
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -30,7 +33,7 @@ def test_row_comments_api_view(premium_data_fixture, api_client):
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -47,7 +50,7 @@ def test_row_comments_api_view(premium_data_fixture, api_client):
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             {"comment": "My test comment"},
@@ -59,17 +62,19 @@ def test_row_comments_api_view(premium_data_fixture, api_client):
         "comment": "My test comment",
         "created_on": "2020-01-01T12:00:00Z",
         "first_name": "Test User",
-        "id": 1,
+        "id": AnyInt(),
         "row_id": rows[0].id,
         "table_id": table.id,
         "updated_on": "2020-01-01T12:00:00Z",
+        "edited": False,
         "user_id": user.id,
+        "trashed": False,
     }
     assert response.json() == expected_comment_json
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -96,7 +101,7 @@ def test_row_comments_api_view_without_premium_license(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -124,7 +129,7 @@ def test_row_comments_api_view_without_premium_license_for_workspace(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -135,7 +140,7 @@ def test_row_comments_api_view_without_premium_license_for_workspace(
     alternative_per_workspace_license_service.restrict_user_premium_to(user, 0)
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -156,7 +161,7 @@ def test_row_comments_cant_view_comments_for_invalid_table(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": 9999, "row_id": 0},
         ),
         format="json",
@@ -180,7 +185,7 @@ def test_row_comments_cant_view_comments_for_invalid_row_in_table(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": 9999},
         ),
         format="json",
@@ -207,7 +212,7 @@ def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_workspa
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -217,7 +222,7 @@ def test_row_comments_users_cant_view_comments_for_table_they_are_not_in_workspa
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -238,7 +243,7 @@ def test_row_comments_cant_create_comments_in_invalid_table(
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": 9999, "row_id": 0},
         ),
         {"comment": "Test"},
@@ -263,7 +268,7 @@ def test_row_comments_cant_create_comments_in_invalid_row_in_table(
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": 9999},
         ),
         {"comment": "Test"},
@@ -291,7 +296,7 @@ def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_works
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "Test"},
@@ -302,7 +307,7 @@ def test_row_comments_users_cant_create_comments_for_table_they_are_not_in_works
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "Test"},
@@ -325,7 +330,7 @@ def test_cant_make_a_blank_row_comment(premium_data_fixture, api_client):
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": ""},
@@ -352,7 +357,7 @@ def test_cant_make_a_row_comment_greater_than_max_settings(
     )
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "1" * settings.MAX_ROW_COMMENT_LENGTH},
@@ -363,7 +368,7 @@ def test_cant_make_a_row_comment_greater_than_max_settings(
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "1" * (settings.MAX_ROW_COMMENT_LENGTH + 1)},
@@ -395,7 +400,7 @@ def test_cant_make_a_null_row_comment(premium_data_fixture, api_client):
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {},
@@ -419,7 +424,7 @@ def test_cant_make_a_row_without_premium_license(premium_data_fixture, api_clien
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "test"},
@@ -443,7 +448,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             {"comment": "My test comment"},
@@ -454,7 +459,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -463,13 +468,11 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
     assert response.status_code == HTTP_200_OK
     assert response.json()["results"][0]["row_id"] == rows[0].id
 
-    TrashHandler.trash(
-        user, table.database.workspace, table.database, rows[0], table.id
-    )
+    TrashHandler.trash(user, table.database.workspace, table.database, rows[0])
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -479,7 +482,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "My test comment"},
@@ -492,7 +495,7 @@ def test_trashing_the_row_returns_404_for_comments(premium_data_fixture, api_cli
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -517,7 +520,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             {"comment": "My test comment"},
@@ -528,7 +531,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[1].id},
             ),
             {"comment": "My test comment on other row which should not be deleted"},
@@ -539,7 +542,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -552,9 +555,7 @@ def test_perm_deleting_a_trashed_row_with_comments_cleans_up_the_rows(
     model = table.get_model()
     assert model.objects.count() == 2
 
-    TrashHandler.trash(
-        user, table.database.workspace, table.database, rows[0], table.id
-    )
+    TrashHandler.trash(user, table.database.workspace, table.database, rows[0])
     TrashEntry.objects.update(should_be_permanently_deleted=True)
 
     TrashHandler.permanently_delete_marked_trash()
@@ -582,7 +583,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             {"comment": "My test comment"},
@@ -593,7 +594,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": other_table.id, "row_id": rows[0].id},
             ),
             {"comment": "My test comment on other table which should not be deleted"},
@@ -604,7 +605,7 @@ def test_perm_deleting_a_trashed_table_with_comments_cleans_up_the_rows(
 
     response = api_client.get(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         format="json",
@@ -649,7 +650,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "My test comment"},
@@ -662,7 +663,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             format="json",
@@ -673,7 +674,7 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
 
     response = api_client.post(
         reverse(
-            "api:premium:row_comments:item",
+            "api:premium:row_comments:list",
             kwargs={"table_id": table.id, "row_id": rows[0].id},
         ),
         {"comment": "My test comment from another user"},
@@ -685,10 +686,412 @@ def test_getting_row_comments_executes_fixed_number_of_queries(
     with django_assert_num_queries(expected_num_of_fixed_queries):
         response = api_client.get(
             reverse(
-                "api:premium:row_comments:item",
+                "api:premium:row_comments:list",
                 kwargs={"table_id": table.id, "row_id": rows[0].id},
             ),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
     assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_cant_update_a_row_comment_without_premium_license(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=False
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_update_comments_with_invalid_text(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": 0, "comment_id": 0},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_update_comments_for_invalid_table(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": 0, "comment_id": 0},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_update_comments_for_invalid_comment(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": 0},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_COMMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_only_the_author_can_update_a_row_comment(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="User 1", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="User 2", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_COMMENT_AUTHOR"
+
+    response = api_client.patch(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        {"comment": "updated text"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_cant_delete_a_row_comment_without_premium_license(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=False
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    assert response.json()["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_delete_comments_for_invalid_table(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": 0, "comment_id": 0},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_row_comments_cant_delete_comments_for_invalid_comment(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="Test User", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": 0},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_COMMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_only_the_author_can_delete_a_row_comment(premium_data_fixture, api_client):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="User 1", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="User 2", has_active_premium_license=True
+    )
+    table, fields, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    CoreHandler().add_user_to_workspace(table.database.workspace, other_user)
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_COMMENT_AUTHOR"
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json["id"] == comment.id
+    assert response_json["comment"] == ""
+    assert response_json["trashed"] is True
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_only_the_author_can_see_deleted_row_comment_in_trash(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="User 1", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="User 2", has_active_premium_license=True
+    )
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+    workspace = table.database.workspace
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["trashed"] is True
+
+    response = api_client.get(
+        reverse("api:trash:contents", kwargs={"workspace_id": workspace.id}),
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert len(response.json()["results"]) == 1
+    assert response.json()["results"][0]["trash_item_type"] == "row_comment"
+    assert response.json()["results"][0]["trash_item_id"] == comment.id
+
+    CoreHandler().add_user_to_workspace(workspace, other_user)
+
+    response = api_client.get(
+        reverse("api:trash:contents", kwargs={"workspace_id": workspace.id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert len(response.json()["results"]) == 0
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_only_the_author_can_restore_a_trashed_row_comment(
+    premium_data_fixture, api_client
+):
+    user, token = premium_data_fixture.create_user_and_token(
+        first_name="User 1", has_active_premium_license=True
+    )
+    other_user, other_token = premium_data_fixture.create_user_and_token(
+        first_name="User 2", has_active_premium_license=True
+    )
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second row"], user=user
+    )
+
+    comment = RowComment.objects.create(
+        table=table, row_id=rows[0].id, user=user, comment="My test comment"
+    )
+    workspace = table.database.workspace
+
+    response = api_client.delete(
+        reverse(
+            "api:premium:row_comments:item",
+            kwargs={"table_id": table.id, "comment_id": comment.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    CoreHandler().add_user_to_workspace(workspace, other_user)
+
+    response = api_client.patch(
+        reverse("api:trash:restore"),
+        {
+            "trash_item_type": "row_comment",
+            "trash_item_id": comment.id,
+        },
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_CANNOT_RESTORE_ITEM_NOT_OWNED_BY_USER"
+
+    response = api_client.patch(
+        reverse("api:trash:restore"),
+        {
+            "trash_item_type": "row_comment",
+            "trash_item_id": comment.id,
+        },
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT

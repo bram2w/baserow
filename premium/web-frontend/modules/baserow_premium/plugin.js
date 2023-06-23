@@ -48,6 +48,12 @@ export default (context) => {
     'This functionality requires an active premium license. Please refresh the page.'
   )
 
+  app.$clientErrorMap.setError(
+    'ERROR_USER_NOT_COMMENT_AUTHOR',
+    app.i18n.t('rowComment.errorUserNotCommentAuthorTitle'),
+    app.i18n.t('rowComment.errorUserNotCommentAuthor')
+  )
+
   // Allow locale file hot reloading
   if (isDev && app.i18n) {
     const { i18n } = app

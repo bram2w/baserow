@@ -975,7 +975,6 @@ def test_creating_a_linked_row_pointing_at_trashed_row_works_but_does_not_displa
         database.workspace,
         database,
         trashed_row,
-        parent_id=table_with_trashed_row.id,
     )
 
     response = api_client.post(
