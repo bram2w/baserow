@@ -39,7 +39,7 @@
 
   &::before,
   &::after {
-    content: "";
+    content: '';
     display: block;
     height: 10px;
     width: 100%;
@@ -63,7 +63,7 @@
   height: 32px;
 
   &::after {
-    content: "";
+    content: '';
     margin-top: -7px;
     margin-left: -7px;
 
@@ -92,7 +92,7 @@
   }
 
   &.select__item--loading::before {
-    content: " ";
+    content: ' ';
 
     @include loading(14px);
     @include absolute(9px, 9px, auto, auto);

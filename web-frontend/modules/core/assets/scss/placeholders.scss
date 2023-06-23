@@ -15,7 +15,7 @@
 }
 
 @mixin contenteditable-placeholder() {
-  span[contenteditable="false"][placeholder]:empty::before {
+  span[contenteditable='false'][placeholder]:empty::before {
     color: $color-neutral-500;
     content: attr(placeholder);
   }

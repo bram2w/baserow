@@ -347,7 +347,7 @@
 
     &:not(.form-view__field--selected) {
       &::before {
-        content: "";
+        content: '';
         z-index: 1;
 
         @include absolute(0);

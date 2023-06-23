@@ -32,7 +32,7 @@
   &::before {
     @include absolute(-8px);
 
-    content: "";
+    content: '';
     border-radius: 3px;
     z-index: -1;
   }

@@ -26,7 +26,7 @@
   }
 
   &.tree__item--loading::after {
-    content: " ";
+    content: ' ';
 
     @include loading(14px);
     @include absolute(9px, 9px, auto, auto);
@@ -133,7 +133,7 @@
 
   &::before,
   &::after {
-    content: "";
+    content: '';
     position: absolute;
     left: 12px;
   }

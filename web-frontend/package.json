@@ -89,6 +89,7 @@
     "nodemon": "2.0.22",
     "prettier": "2.8.7",
     "stylelint": "^13.13.1",
+    "stylelint-config-prettier": "^9.0.5",
     "stylelint-config-standard": "^22.0.0",
     "stylelint-webpack-plugin": "^3.0.1"
   }

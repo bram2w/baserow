@@ -30,7 +30,7 @@
 
   &.form-input--loading {
     &::after {
-      content: " ";
+      content: ' ';
       margin-top: -7px;
 
       @include loading(14px);

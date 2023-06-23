@@ -9,7 +9,7 @@
 
   &.context--loading-overlay {
     &::before {
-      content: "";
+      content: '';
       border-radius: 6px;
       background-color: rgba(0, 0, 0, 0.16);
       z-index: 2;
@@ -18,7 +18,7 @@
     }
 
     &::after {
-      content: "";
+      content: '';
       z-index: 2;
       margin: -7px auto auto -7px;
 
@@ -95,7 +95,7 @@
       cursor: initial;
 
       &::before {
-        content: "";
+        content: '';
         z-index: 1;
 
         @include loading(14px);
