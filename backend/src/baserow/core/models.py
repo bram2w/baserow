@@ -365,6 +365,9 @@ class Template(GroupToWorkspaceCompatModelMixin, models.Model):
     class Meta:
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 class UserLogEntry(models.Model):
     actor = models.ForeignKey(User, on_delete=models.CASCADE)
