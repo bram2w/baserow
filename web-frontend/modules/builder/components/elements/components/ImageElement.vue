@@ -9,10 +9,12 @@
 </template>
 
 <script>
+import element from '@baserow/modules/builder/mixins/element'
 import { IMAGE_SOURCE_TYPES } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'ImageElement',
+  mixins: [element],
   props: {
     /**
      * @type {Object}
@@ -36,6 +38,7 @@ export default {
     classes() {
       return {
         [`element--alignment-${this.element.alignment}`]: true,
+        'element--no-value': !this.imageSource && !this.element.alt_text,
       }
     },
   },

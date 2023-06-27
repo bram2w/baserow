@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import textElement from '@baserow/modules/builder/mixins/elements/textElement'
+import element from '@baserow/modules/builder/mixins/element'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 /**
@@ -25,7 +25,7 @@ import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export default {
   name: 'ParagraphElement',
-  mixins: [textElement],
+  mixins: [element],
   props: {
     /**
      * @type {Object}

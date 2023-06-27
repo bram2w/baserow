@@ -1,12 +1,15 @@
 <template>
   <div
-    class="element"
-    :class="{ 'element--active': active, 'element--in-error': inError }"
+    class="element-preview"
+    :class="{
+      'element-preview--active': active,
+      'element-preview--in-error': inError,
+    }"
     @click="$emit('selected')"
   >
     <InsertElementButton
       v-if="active"
-      class="element__insert--top"
+      class="element-preview__insert--top"
       @click="$emit('insert', PLACEMENTS.BEFORE)"
     />
     <ElementMenu
@@ -18,15 +21,14 @@
       @move="$emit('move', $event)"
       @duplicate="$emit('duplicate')"
     />
-    <component
-      :is="elementType.editComponent"
-      class="element__component"
+    <PageRootElement
       :element="element"
       :builder="builder"
-    />
+      :mode="'editing'"
+    ></PageRootElement>
     <InsertElementButton
       v-if="active"
-      class="element__insert--bottom"
+      class="element-preview__insert--bottom"
       @click="$emit('insert', PLACEMENTS.AFTER)"
     />
   </div>
@@ -35,10 +37,12 @@
 <script>
 import ElementMenu from '@baserow/modules/builder/components/elements/ElementMenu'
 import InsertElementButton from '@baserow/modules/builder/components/elements/InsertElementButton'
+import PageRootElement from '@baserow/modules/builder/components/page/PageRootElement'
 import { PLACEMENTS } from '@baserow/modules/builder/enums'
+
 export default {
   name: 'ElementPreview',
-  components: { ElementMenu, InsertElementButton },
+  components: { ElementMenu, InsertElementButton, PageRootElement },
   inject: ['builder'],
   props: {
     element: {

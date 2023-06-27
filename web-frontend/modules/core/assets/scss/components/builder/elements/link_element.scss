@@ -1,13 +1,45 @@
 .link-element {
   display: flex;
-  padding: 5px 82px;
 }
 
 .link-element__link {
   font-size: 14px;
-  font-weight: 700;
-  padding: 0;
-  height: 32px;
-  line-height: 32px;
-  border: 1px solid transparent;
+  color: $black;
+  text-decoration: underline;
+}
+
+.link-element__button {
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-block;
+  color: $white;
+  background-color: $black;
+  line-height: 28px;
+  padding: 0 12px;
+  border-radius: 3px;
+  border: none;
+  white-space: nowrap;
+  text-align: left;
+  text-decoration: none;
+
+  &:hover {
+    background-color: lighten($black, 10%);
+    text-decoration: none;
+  }
+
+  &:focus {
+    background-color: lighten($black, 20%);
+  }
+
+  &--full-width {
+    width: 100%;
+  }
+
+  .element--alignment-center & {
+    text-align: center;
+  }
+
+  .element--alignment-right & {
+    text-align: right;
+  }
 }

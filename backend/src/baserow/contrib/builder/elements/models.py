@@ -51,6 +51,9 @@ class Element(
         on_delete=models.SET(get_default_element_content_type),
     )
 
+    style_padding_top = models.PositiveIntegerField(default=10)
+    style_padding_bottom = models.PositiveIntegerField(default=10)
+
     class Meta:
         ordering = ("order", "id")
 
@@ -86,18 +89,7 @@ class Element(
         return cls.get_unique_orders_before_item(before, queryset)[0]
 
 
-class BaseTextElement(Element):
-    """
-    Base class for text elements.
-    """
-
-    value = ExpressionField(default="")
-
-    class Meta:
-        abstract = True
-
-
-class HeadingElement(BaseTextElement):
+class HeadingElement(Element):
     """
     A Heading element to display a title.
     """
@@ -109,18 +101,21 @@ class HeadingElement(BaseTextElement):
         H4 = 4
         H5 = 5
 
+    value = ExpressionField(default="")
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
 
 
-class ParagraphElement(BaseTextElement):
+class ParagraphElement(Element):
     """
     A simple paragraph.
     """
 
+    value = ExpressionField(default="")
 
-class LinkElement(BaseTextElement):
+
+class LinkElement(Element):
     """
     A simple link.
     """
@@ -141,6 +136,7 @@ class LinkElement(BaseTextElement):
         AUTO = "auto"
         FULL = "full"
 
+    value = ExpressionField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",

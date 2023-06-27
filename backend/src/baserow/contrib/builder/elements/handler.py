@@ -110,7 +110,7 @@ class ElementHandler:
         else:
             order = Element.get_last_order(page)
 
-        shared_allowed_fields = ["type"]
+        shared_allowed_fields = ["type", "style_padding_top", "style_padding_bottom"]
         allowed_values = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
@@ -145,7 +145,7 @@ class ElementHandler:
 
         element_type = element_type_registry.get_by_model(element)
 
-        shared_allowed_fields = []
+        shared_allowed_fields = ["style_padding_top", "style_padding_bottom"]
         allowed_updates = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )

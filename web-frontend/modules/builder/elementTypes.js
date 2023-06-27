@@ -2,7 +2,6 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ParagraphElement from '@baserow/modules/builder/components/elements/components/ParagraphElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
-import LinkElementEdit from '@baserow/modules/builder/components/elements/components/LinkElementEdit'
 import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/ParagraphElementForm'
 import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/HeadingElementForm'
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/LinkElementForm'
@@ -129,10 +128,6 @@ export class LinkElementType extends ElementType {
 
   get component() {
     return LinkElement
-  }
-
-  get editComponent() {
-    return LinkElementEdit
   }
 
   get formComponent() {

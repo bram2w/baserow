@@ -9,11 +9,11 @@
 </template>
 
 <script>
-import textElement from '@baserow/modules/builder/mixins/elements/textElement'
+import element from '@baserow/modules/builder/mixins/element'
 
 export default {
   name: 'HeadingElement',
-  mixins: [textElement],
+  mixins: [element],
   props: {
     /**
      * @type {Object}

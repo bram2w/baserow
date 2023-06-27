@@ -5,9 +5,11 @@
 @import 'add_element_modal';
 @import 'page_preview';
 @import 'element';
+@import 'element_preview';
 @import 'side_panels';
 @import 'empty_side_panel_state';
-@import 'page';
+@import 'page_editor';
+@import 'page_root_element';
 @import 'page_settings_path_params_form_element';
 @import 'domain_card';
 @import 'dns_status';
@@ -15,5 +17,6 @@
 @import 'integration_settings';
 @import 'last_published_domain_date';
 @import 'publish_action_modal';
+@import 'public_page';
 @import 'data_source_context';
 @import 'data_source_form';
