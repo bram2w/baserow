@@ -434,6 +434,29 @@ class TestMigrator:
         return new_state
 
 
+def _set_suffix_to_test_databases(suffix: str) -> None:
+    from django.conf import settings
+
+    for db_settings in settings.DATABASES.values():
+        test_name = db_settings.get("TEST", {}).get("NAME")
+
+        if not test_name:
+            test_name = "test_{}".format(db_settings["NAME"])
+
+        if test_name == ":memory:":
+            continue
+
+        db_settings.setdefault("TEST", {})
+        db_settings["TEST"]["NAME"] = "{}_{}".format(test_name, suffix)
+
+
+def _remove_suffix_from_test_databases(suffix: str) -> None:
+    from django.conf import settings
+
+    for db_settings in settings.DATABASES.values():
+        db_settings["TEST"]["NAME"] = db_settings["TEST"]["NAME"].replace(suffix, "")
+
+
 @pytest.fixture(scope="session")
 def second_separate_database_for_migrations(
     request,
@@ -444,6 +467,11 @@ def second_separate_database_for_migrations(
 
     setup_databases_args = {}
 
+    # Ensure this second database never clashes with the normal test databases
+    # by adding another suffix...
+    suffix = f"second_db_{os.getpid()}"
+    _set_suffix_to_test_databases(suffix)
+
     with django_db_blocker.unblock():
         db_cfg = setup_databases(
             verbosity=request.config.option.verbose,
@@ -451,20 +479,25 @@ def second_separate_database_for_migrations(
             **setup_databases_args,
         )
 
-    def teardown_database() -> None:
-        with django_db_blocker.unblock():
-            try:
-                teardown_databases(db_cfg, verbosity=request.config.option.verbose)
-            except Exception as exc:
-                request.node.warn(
-                    pytest.PytestWarning(
-                        f"Error when trying to teardown test databases: {exc!r}"
+        def teardown_database() -> None:
+            with django_db_blocker.unblock():
+                try:
+                    teardown_databases(db_cfg, verbosity=request.config.option.verbose)
+                except Exception as exc:
+                    request.node.warn(
+                        pytest.PytestWarning(
+                            f"Error when trying to teardown test databases: {exc!r}"
+                        )
                     )
-                )
+                _remove_suffix_from_test_databases(suffix)
 
-    request.addfinalizer(teardown_database)
+        request.addfinalizer(teardown_database)
+        yield
+
+        for _, name, _ in db_cfg:
+            print(f"Created migration database {name}")
 
 
 @pytest.fixture
-def migrator(second_separate_database_for_migrations, transactional_db, reset_schema):
+def migrator(second_separate_database_for_migrations, reset_schema):
     yield TestMigrator()
