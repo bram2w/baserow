@@ -581,6 +581,21 @@ SPECTACULAR_SETTINGS = {
     },
 }
 
+if "builder" not in FEATURE_FLAGS:
+    SPECTACULAR_SETTINGS["TAGS"] = [
+        t
+        for t in SPECTACULAR_SETTINGS["TAGS"]
+        if t["name"]
+        not in [
+            "Integrations",
+            "Builder pages",
+            "Builder elements",
+            "Builder domains",
+            "Builder public",
+            "Builder data sources",
+        ]
+    ]
+
 # Allows accessing and setting values on a dictionary like an object. Using this
 # we can pass plugin authors and other functions a `settings` object which can modify
 # the settings like they expect (settings.SETTING = 'test') etc.
