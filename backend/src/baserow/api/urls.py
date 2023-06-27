@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import include, path
 
 from drf_spectacular.views import SpectacularRedocView
@@ -44,10 +45,6 @@ urlpatterns = (
         path("jobs/", include(jobs_urls, namespace="jobs")),
         path("snapshots/", include(snapshots_urls, namespace="snapshots")),
         path("_health/", include(health_urls, namespace="health")),
-        path(
-            "",
-            include(integrations_urls, namespace="integrations"),
-        ),
         # GroupDeprecation
         path("groups/", include(group_compat_urls, namespace="groups")),
         path(
@@ -62,3 +59,12 @@ urlpatterns = (
     + application_type_registry.api_urls
     + plugin_registry.api_urls
 )
+
+
+if "builder" in settings.FEATURE_FLAGS:
+    urlpatterns.append(
+        path(
+            "",
+            include(integrations_urls, namespace="integrations"),
+        )
+    )
