@@ -1,11 +1,9 @@
 <template>
   <div>
-    <component
-      :is="getType(element).component"
+    <PageRootElement
       v-for="element in elements"
       :key="element.id"
       :element="element"
-      class="element__component"
       :builder="builder"
       :mode="mode"
     />
@@ -13,7 +11,10 @@
 </template>
 
 <script>
+import PageRootElement from '@baserow/modules/builder/components/page/PageRootElement'
+
 export default {
+  components: { PageRootElement },
   inject: ['builder', 'mode'],
   props: {
     page: {
@@ -31,11 +32,6 @@ export default {
     elements: {
       type: Array,
       required: true,
-    },
-  },
-  methods: {
-    getType(element) {
-      return this.$registry.get('element', element.type)
     },
   },
 }

@@ -49,7 +49,7 @@ class PublicElementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Element
-        fields = ("id", "type")
+        fields = ("id", "type", "style_padding_top", "style_padding_bottom")
         extra_kwargs = {
             "id": {"read_only": True},
             "type": {"read_only": True},

@@ -72,5 +72,14 @@ export default {
       mode,
     }
   },
+  head() {
+    return {
+      titleTemplate: '',
+      title: this.page.name,
+      bodyAttrs: {
+        class: 'public-page',
+      },
+    }
+  },
 }
 </script>

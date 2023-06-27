@@ -22,7 +22,14 @@ class ElementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Element
-        fields = ("id", "page_id", "type", "order")
+        fields = (
+            "id",
+            "page_id",
+            "type",
+            "order",
+            "style_padding_top",
+            "style_padding_bottom",
+        )
         extra_kwargs = {
             "id": {"read_only": True},
             "page_id": {"read_only": True},
@@ -50,13 +57,13 @@ class CreateElementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Element
-        fields = ("before_id", "type")
+        fields = ("before_id", "type", "style_padding_top", "style_padding_bottom")
 
 
 class UpdateElementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Element
-        fields = []
+        fields = ("style_padding_top", "style_padding_bottom")
 
 
 class MoveElementSerializer(serializers.Serializer):

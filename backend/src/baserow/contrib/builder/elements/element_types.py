@@ -1,4 +1,3 @@
-from abc import ABC
 from typing import Dict, Optional
 
 from rest_framework import serializers
@@ -21,16 +20,69 @@ from baserow.contrib.builder.types import ElementDict
 from baserow.core.user_files.models import UserFile
 
 
-class BaseTextElementType(ElementType, ABC):
+class HeadingElementType(ElementType):
     """
-    Base class for text elements.
+    A simple heading element that can be used to display a title.
     """
 
+    type = "heading"
+    model_class = HeadingElement
+    serializer_field_names = ["value", "level"]
+    allowed_fields = ["value", "level"]
+
+    class SerializedDict(ElementDict):
+        value: Expression
+        level: int
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.expression.serializers import ExpressionSerializer
+
+        overrides = {
+            "value": ExpressionSerializer(
+                help_text="The value of the element. Must be an expression.",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "level": serializers.IntegerField(
+                help_text="The level of the heading from 1 to 6.",
+                min_value=1,
+                max_value=6,
+                default=1,
+            ),
+        }
+
+        return overrides
+
+    def get_sample_params(self):
+        return {
+            "value": "Corporis perspiciatis",
+            "level": 2,
+        }
+
+
+class ParagraphElementType(ElementType):
+    """
+    A simple paragraph element that can be used to display a paragraph of text.
+    """
+
+    type = "paragraph"
+    model_class = ParagraphElement
     serializer_field_names = ["value"]
     allowed_fields = ["value"]
 
     class SerializedDict(ElementDict):
         value: Expression
+
+    def get_sample_params(self):
+        return {
+            "value": "Suscipit maxime eos ea vel commodi dolore. "
+            "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
+            "Maxime qui nam consequatur. "
+            "Asperiores corporis perspiciatis nam harum veritatis. "
+            "Impedit qui maxime aut illo quod ea molestias."
+        }
 
     @property
     def serializer_field_overrides(self):
@@ -46,65 +98,7 @@ class BaseTextElementType(ElementType, ABC):
         }
 
 
-class HeadingElementType(BaseTextElementType):
-    """
-    A simple heading element that can be used to display a title.
-    """
-
-    type = "heading"
-    model_class = HeadingElement
-
-    class SerializedDict(ElementDict):
-        value: Expression
-        level: int
-
-    @property
-    def serializer_field_names(self):
-        return super().serializer_field_names + ["level"]
-
-    @property
-    def allowed_fields(self):
-        return super().allowed_fields + ["level"]
-
-    @property
-    def serializer_field_overrides(self):
-        overrides = {
-            "level": serializers.IntegerField(
-                help_text="The level of the heading from 1 to 6.",
-                min_value=1,
-                max_value=6,
-                default=1,
-            )
-        }
-        overrides.update(super().serializer_field_overrides)
-        return overrides
-
-    def get_sample_params(self):
-        return {
-            "value": "Corporis perspiciatis",
-            "level": 2,
-        }
-
-
-class ParagraphElementType(BaseTextElementType):
-    """
-    A simple paragraph element that can be used to display a paragraph of text.
-    """
-
-    type = "paragraph"
-    model_class = ParagraphElement
-
-    def get_sample_params(self):
-        return {
-            "value": "Suscipit maxime eos ea vel commodi dolore. "
-            "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
-            "Maxime qui nam consequatur. "
-            "Asperiores corporis perspiciatis nam harum veritatis. "
-            "Impedit qui maxime aut illo quod ea molestias."
-        }
-
-
-class LinkElementType(BaseTextElementType):
+class LinkElementType(ElementType):
     """
     A simple paragraph element that can be used to display a paragraph of text.
     """
@@ -112,37 +106,33 @@ class LinkElementType(BaseTextElementType):
     type = "link"
     model_class = LinkElement
     PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP = {"text": str, "numeric": int}
+    serializer_field_names = [
+        "value",
+        "navigation_type",
+        "navigate_to_page_id",
+        "navigate_to_url",
+        "page_parameters",
+        "variant",
+        "target",
+        "width",
+        "alignment",
+    ]
+    allowed_fields = [
+        "value",
+        "navigation_type",
+        "navigate_to_page_id",
+        "navigate_to_url",
+        "page_parameters",
+        "variant",
+        "target",
+        "width",
+        "alignment",
+    ]
 
     class SerializedDict(ElementDict):
         value: Expression
         destination: Expression
         open_new_tab: bool
-
-    @property
-    def serializer_field_names(self):
-        return super().serializer_field_names + [
-            "navigation_type",
-            "navigate_to_page_id",
-            "navigate_to_url",
-            "page_parameters",
-            "variant",
-            "target",
-            "width",
-            "alignment",
-        ]
-
-    @property
-    def allowed_fields(self):
-        return super().allowed_fields + [
-            "navigation_type",
-            "navigate_to_page_id",
-            "navigate_to_url",
-            "page_parameters",
-            "variant",
-            "target",
-            "width",
-            "alignment",
-        ]
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -160,6 +150,12 @@ class LinkElementType(BaseTextElementType):
         from baserow.core.expression.serializers import ExpressionSerializer
 
         overrides = {
+            "value": ExpressionSerializer(
+                help_text="The value of the element. Must be an expression.",
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
             "navigation_type": serializers.ChoiceField(
                 choices=LinkElement.NAVIGATION_TYPES.choices,
                 help_text=LinkElement._meta.get_field("navigation_type").help_text,
@@ -203,11 +199,11 @@ class LinkElementType(BaseTextElementType):
                 required=False,
             ),
         }
-        overrides.update(super().serializer_field_overrides)
         return overrides
 
     def get_sample_params(self):
         return {
+            "value": "test",
             "navigation_type": "custom",
             "navigate_to_page_id": None,
             "navigate_to_url": "http://example.com",

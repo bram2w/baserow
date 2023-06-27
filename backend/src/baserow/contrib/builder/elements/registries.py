@@ -58,7 +58,12 @@ class ElementType(
         other_properties = {key: getattr(element, key) for key in self.allowed_fields}
 
         serialized = self.SerializedDict(
-            id=element.id, type=self.type, order=element.order, **other_properties
+            id=element.id,
+            type=self.type,
+            order=element.order,
+            style_padding_top=element.style_padding_top,
+            style_padding_bottom=element.style_padding_bottom,
+            **other_properties
         )
 
         return serialized
