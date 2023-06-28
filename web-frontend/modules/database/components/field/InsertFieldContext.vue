@@ -53,8 +53,8 @@ export default {
       }
 
       this.position = position
-      const popupAnchor = position === 'left' ? 'right' : 'left'
-      this.$refs.createFieldContext.toggle(ref, 'bottom', popupAnchor, 0)
+      const toastAnchor = position === 'left' ? 'right' : 'left'
+      this.$refs.createFieldContext.toggle(ref, 'bottom', toastAnchor, 0)
     },
   },
 }

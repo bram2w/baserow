@@ -254,7 +254,7 @@ export default {
           database: this.database,
           table: this.table,
         })
-        await this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('toast/restore', {
           trash_item_type: 'table',
           trash_item_id: this.table.id,
         })

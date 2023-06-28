@@ -34,7 +34,7 @@ export default {
      */
     renameFile(value, index, newName) {
       if (newName === '' || newName === null) {
-        this.$store.dispatch('notification/error', {
+        this.$store.dispatch('toast/error', {
           title: this.$t('fileField.errorEmptyFileNameTitle'),
           message: this.$t('fileField.errorEmptyFileNameMessage'),
         })

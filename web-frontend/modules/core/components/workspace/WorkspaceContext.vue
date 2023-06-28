@@ -102,7 +102,7 @@ export default {
 
       try {
         await this.$store.dispatch('workspace/delete', this.workspace)
-        await this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('toast/restore', {
           trash_item_type: 'workspace',
           trash_item_id: this.workspace.id,
         })

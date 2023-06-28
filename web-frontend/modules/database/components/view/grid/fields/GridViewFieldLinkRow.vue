@@ -121,7 +121,7 @@ export default {
   },
   methods: {
     select() {
-      // While the field is selected we want to open the select row popup by pressing
+      // While the field is selected we want to open the select row toast by pressing
       // the enter key.
       this.$el.keydownEvent = (event) => {
         if (event.key === 'Enter' && !this.modalOpen) {

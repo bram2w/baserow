@@ -77,11 +77,7 @@ export default {
       this.actionGroupId = null
     },
     showError(title, message) {
-      this.$store.dispatch(
-        'notification/error',
-        { title, message },
-        { root: true }
-      )
+      this.$store.dispatch('toast/error', { title, message }, { root: true })
     },
     // eslint-disable-next-line require-await
     async onJobFailed() {

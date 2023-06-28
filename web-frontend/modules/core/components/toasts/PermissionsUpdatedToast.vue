@@ -5,21 +5,21 @@
     simple
     type="warning"
     icon="exclamation"
-    :title="$t('permissionsUpdatedNotification.title')"
+    :title="$t('permissionsUpdatedToast.title')"
     @close="close"
-    >{{ $t('permissionsUpdatedNotification.content') }}
+    >{{ $t('permissionsUpdatedToast.content') }}
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"
       @click="reload()"
-      >{{ $t('permissionsUpdatedNotification.action') }}
+      >{{ $t('permissionsUpdatedToast.action') }}
     </a>
   </Alert>
 </template>
 
 <script>
 export default {
-  name: 'PermissionsUpdatedNotification',
+  name: 'PermissionsUpdatedToast',
   data() {
     return {
       loading: false,
@@ -31,7 +31,7 @@ export default {
       location.reload()
     },
     close() {
-      this.$store.dispatch('notification/setPermissionsUpdated', false)
+      this.$store.dispatch('toast/setPermissionsUpdated', false)
     },
   },
 }

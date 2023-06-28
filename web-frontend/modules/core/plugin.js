@@ -40,7 +40,7 @@ import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
 import workspaceStore from '@baserow/modules/core/store/workspace'
 import jobStore from '@baserow/modules/core/store/job'
-import notificationStore from '@baserow/modules/core/store/notification'
+import toastStore from '@baserow/modules/core/store/toast'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
@@ -116,7 +116,7 @@ export default (context, inject) => {
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)
   store.registerModule('workspace', workspaceStore)
-  store.registerModule('notification', notificationStore)
+  store.registerModule('toast', toastStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
   store.registerModule('integration', integrationStore)

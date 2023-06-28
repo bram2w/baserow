@@ -696,7 +696,7 @@ export default {
             getScrollTop,
           }
         )
-        await this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('toast/restore', {
           trash_item_type: 'row',
           parent_trash_item_id: this.table.id,
           trash_item_id: row.id,
@@ -1040,7 +1040,7 @@ export default {
         return
       }
       try {
-        this.$store.dispatch('notification/setCopying', true)
+        this.$store.dispatch('toast/setCopying', true)
         await this.copySelectionToClipboard(
           this.$store.dispatch(`${gridStore}/getCurrentSelection`, {
             fields: this.allVisibleFields,
@@ -1049,7 +1049,7 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       } finally {
-        this.$store.dispatch('notification/setCopying', false)
+        this.$store.dispatch('toast/setCopying', false)
         // prevent Safari from beeping since window.getSelection() is empty
         event.preventDefault()
       }
@@ -1104,7 +1104,7 @@ export default {
         return
       }
 
-      this.$store.dispatch('notification/setPasting', true)
+      this.$store.dispatch('toast/setPasting', true)
 
       try {
         await this.$store.dispatch(
@@ -1124,7 +1124,7 @@ export default {
         notifyIf(error)
       }
 
-      this.$store.dispatch('notification/setPasting', false)
+      this.$store.dispatch('toast/setPasting', false)
       return true
     },
     /**
@@ -1157,7 +1157,7 @@ export default {
      */
     async clearValuesFromMultipleCellSelection() {
       try {
-        this.$store.dispatch('notification/setClearing', true)
+        this.$store.dispatch('toast/setClearing', true)
 
         await this.$store.dispatch(
           this.storePrefix + 'view/grid/clearValuesFromMultipleCellSelection',
@@ -1171,7 +1171,7 @@ export default {
       } catch (error) {
         notifyIf(error, 'view')
       } finally {
-        this.$store.dispatch('notification/setClearing', false)
+        this.$store.dispatch('toast/setClearing', false)
       }
     },
     /**

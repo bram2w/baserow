@@ -54,7 +54,7 @@ export class BuilderApplicationType extends ApplicationType {
       )
       return true
     } else {
-      $store.dispatch('notification/error', {
+      $store.dispatch('toast/error', {
         title: $i18n.t('applicationType.cantSelectPageTitle'),
         message: $i18n.t('applicationType.cantSelectPageDescription'),
       })

@@ -14,7 +14,7 @@
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 
 export default {
-  name: 'UndoRedoNotification',
+  name: 'UndoRedoToast',
   props: {
     state: {
       type: String,
@@ -31,50 +31,50 @@ export default {
         case UNDO_REDO_STATES.UNDONE:
           return base({
             icon: 'check',
-            title: this.$t('undoRedoNotification.undoneTitle'),
-            content: this.$t('undoRedoNotification.undoneText'),
+            title: this.$t('undoRedoToast.undoneTitle'),
+            content: this.$t('undoRedoToast.undoneText'),
           })
         case UNDO_REDO_STATES.REDONE:
           return base({
             icon: 'check',
-            title: this.$t('undoRedoNotification.redoneTitle'),
-            content: this.$t('undoRedoNotification.redoneText'),
+            title: this.$t('undoRedoToast.redoneTitle'),
+            content: this.$t('undoRedoToast.redoneText'),
           })
         case UNDO_REDO_STATES.UNDOING:
           return base({
             loading: true,
-            title: this.$t('undoRedoNotification.undoingTitle'),
-            content: this.$t('undoRedoNotification.undoingText'),
+            title: this.$t('undoRedoToast.undoingTitle'),
+            content: this.$t('undoRedoToast.undoingText'),
           })
         case UNDO_REDO_STATES.REDOING:
           return base({
             loading: true,
-            title: this.$t('undoRedoNotification.redoingTitle'),
-            content: this.$t('undoRedoNotification.redoingText'),
+            title: this.$t('undoRedoToast.redoingTitle'),
+            content: this.$t('undoRedoToast.redoingText'),
           })
         case UNDO_REDO_STATES.NO_MORE_UNDO:
           return base({
             icon: 'times',
-            title: this.$t('undoRedoNotification.failed'),
-            content: this.$t('undoRedoNotification.noMoreUndo'),
+            title: this.$t('undoRedoToast.failed'),
+            content: this.$t('undoRedoToast.noMoreUndo'),
           })
         case UNDO_REDO_STATES.NO_MORE_REDO:
           return base({
             icon: 'times',
-            title: this.$t('undoRedoNotification.failed'),
-            content: this.$t('undoRedoNotification.noMoreRedo'),
+            title: this.$t('undoRedoToast.failed'),
+            content: this.$t('undoRedoToast.noMoreRedo'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_UNDO:
           return base({
             icon: 'exclamation',
-            title: this.$t('undoRedoNotification.failed'),
-            content: this.$t('undoRedoNotification.skippingUndoDueToError'),
+            title: this.$t('undoRedoToast.failed'),
+            content: this.$t('undoRedoToast.skippingUndoDueToError'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_REDO:
           return base({
             icon: 'exclamation',
-            title: this.$t('undoRedoNotification.failed'),
-            content: this.$t('undoRedoNotification.skippingRedoDueToError'),
+            title: this.$t('undoRedoToast.failed'),
+            content: this.$t('undoRedoToast.skippingRedoDueToError'),
           })
         default:
           return base()

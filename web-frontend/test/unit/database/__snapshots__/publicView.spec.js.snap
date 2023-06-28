@@ -2,11 +2,9 @@
 
 exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
 <div>
-  <div
-    class="notifications"
-  >
+  <div>
     <div
-      class="top-right-notifications"
+      class="toast__top-right"
     >
       <!---->
        
@@ -21,7 +19,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
     </div>
      
     <div
-      class="bottom-right-notifications"
+      class="toast__bottom-right"
     >
       <!---->
        

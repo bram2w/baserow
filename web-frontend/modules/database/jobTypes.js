@@ -28,7 +28,7 @@ export class DuplicateTableJobType extends JobType {
     const { i18n, store } = this.app
 
     store.dispatch(
-      'notification/error',
+      'toast/error',
       {
         title: i18n.t('clientHandler.notCompletedTitle'),
         message: i18n.t('clientHandler.notCompletedDescription'),
@@ -51,7 +51,7 @@ export class DuplicateTableJobType extends JobType {
       data: duplicatedTable,
     })
 
-    store.dispatch('notification/info', {
+    store.dispatch('toast/info', {
       title: i18n.t('duplicateTableJobType.duplicatedTitle'),
       message: duplicatedTable.name,
     })

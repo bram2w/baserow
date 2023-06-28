@@ -77,7 +77,7 @@ export default {
       const files = [...getFilesFromEvent(event)]
 
       if (!this.multipleFiles && files.length > 1) {
-        return this.$store.dispatch('notification/error', {
+        return this.$store.dispatch('toast/error', {
           title: this.$t('uploadFileDropzone.errorTooManyFilesTitle'),
           message: this.$t('uploadFileDropzone.errorTooManyFilesMessage'),
         })
@@ -89,7 +89,7 @@ export default {
         files.forEach((file) => {
           if (!this.fileTypesAcceptable.includes(file.type)) {
             hasInvalidFile = true
-            this.$store.dispatch('notification/error', {
+            this.$store.dispatch('toast/error', {
               title: this.$t('uploadFileDropzone.errorWrongFileTypeTitle'),
               message: this.$t('uploadFileDropzone.errorWrongFileTypeMessage', {
                 type: file.type,

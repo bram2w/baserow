@@ -134,7 +134,7 @@ export class DuplicateApplicationJobType extends JobType {
     const application = job.duplicated_application
     try {
       await store.dispatch('application/forceCreate', application)
-      store.dispatch('notification/info', {
+      store.dispatch('toast/info', {
         title: i18n.t('duplicateApplicationJobType.duplicatedTitle'),
         message: application.name,
       })
@@ -148,7 +148,7 @@ export class DuplicateApplicationJobType extends JobType {
   async onJobFailed(job) {
     const { i18n, store } = this.app
     await store.dispatch(
-      'notification/error',
+      'toast/error',
       {
         title: i18n.t('clientHandler.notCompletedTitle'),
         message: job.human_readable_error,
@@ -196,7 +196,7 @@ export class InstallTemplateJobType extends JobType {
       for (const application of installedApplications) {
         await store.dispatch('application/forceCreate', application)
       }
-      store.dispatch('notification/info', {
+      store.dispatch('toast/info', {
         title: i18n.t('InstallTemplateJobType.installedTitle'),
         message: installedApplications[0].name,
       })
@@ -210,7 +210,7 @@ export class InstallTemplateJobType extends JobType {
   async onJobFailed(job) {
     const { i18n, store } = this.app
     await store.dispatch(
-      'notification/error',
+      'toast/error',
       {
         title: i18n.t('clientHandler.notCompletedTitle'),
         message: i18n.t('clientHandler.notCompletedDescription'),

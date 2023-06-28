@@ -208,40 +208,40 @@
     "applicationForm": {
         "nameLabel": "Name"
     },
-    "connectingNotification": {
+    "connectingToast": {
         "title": "Reconnecting",
         "content": "Reconnecting with server."
     },
-    "failedConnectingNotification": {
+    "failedConnectingToast": {
         "title": "Failed",
         "content": "Connection to the server has failed. Please refresh the page.",
         "action": "Refresh page"
     },
-    "AuthorizationErrorNotification": {
+    "authorizationErrorToast": {
         "title": "Authorization error",
         "content": "It looks like you do not have the permissions to see this resource.",
         "action": "Refresh page"
     },
-    "UserSessionExpiredNotification": {
+    "userSessionExpiredToast": {
         "title": "Session expired",
         "content": "You were logged out because your authentication token has expired. Please login again."
     },
-    "restoreNotification": {
+    "restoreToast": {
         "restore": "Restore deleted {type}"
     },
-    "copyingNotification": {
+    "copyingToast": {
         "title": "Copying...",
         "content": "Preparing your data"
     },
-    "pastingNotification": {
+    "PastingToast": {
         "title": "Pasting...",
         "content": "Preparing your data"
     },
-    "clearingNotification": {
+    "clearingToast": {
         "title": "Clearing...",
         "content": "Preparing your data"
     },
-    "undoRedoNotification": {
+    "undoRedoToast": {
         "undoingTitle": "Undoing...",
         "undoingText": "Undoing your action",
         "undoneTitle": "Undone",
@@ -256,7 +256,7 @@
         "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
         "failed": "Failed"
     },
-    "permissionsUpdatedNotification": {
+    "permissionsUpdatedToast": {
         "title": "Permissions updated",
         "content": "This might affect what you have access to, please reload the page.",
         "action": "Reload"

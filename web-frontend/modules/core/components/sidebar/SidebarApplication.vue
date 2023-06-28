@@ -223,7 +223,7 @@ export default {
 
       try {
         await this.$store.dispatch('application/delete', this.application)
-        await this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('toast/restore', {
           trash_item_type: 'application',
           trash_item_id: this.application.id,
         })

@@ -239,17 +239,17 @@ export default {
       )
 
       if (status === 204 || status === 404) {
-        const translationPath = `table.adjacentRow.notification.notFound.${
+        const translationPath = `table.adjacentRow.toast.notFound.${
           previous ? 'previous' : 'next'
         }`
-        await this.$store.dispatch('notification/info', {
+        await this.$store.dispatch('toast/info', {
           title: this.$t(`${translationPath}.title`),
           message: this.$t(`${translationPath}.message`),
         })
       } else if (status !== 200) {
-        await this.$store.dispatch('notification/error', {
-          title: this.$t(`table.adjacentRow.notification.error.title`),
-          message: this.$t(`table.adjacentRow.notification.error.message`),
+        await this.$store.dispatch('toast/error', {
+          title: this.$t(`table.adjacentRow.toast.error.title`),
+          message: this.$t(`table.adjacentRow.toast.error.message`),
         })
       }
 
