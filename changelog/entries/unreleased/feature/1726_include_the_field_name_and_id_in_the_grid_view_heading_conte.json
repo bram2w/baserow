@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Include the field name and ID in the grid view heading contexts.",
+    "issue_number": 1726,
+    "bullet_points": [],
+    "created_at": "2023-06-26"
+}
