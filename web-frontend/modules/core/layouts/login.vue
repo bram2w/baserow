@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div class="auth__page">
       <nuxt />
     </div>
@@ -8,10 +8,10 @@
 </template>
 
 <script>
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 
 export default {
-  components: { Notifications },
+  components: { Toasts },
   middleware: ['settings', 'urlCheck'],
   head() {
     return {

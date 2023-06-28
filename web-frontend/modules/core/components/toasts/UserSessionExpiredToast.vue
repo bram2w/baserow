@@ -4,15 +4,15 @@
     shadow
     type="info"
     icon="exclamation"
-    :title="$t('UserSessionExpiredNotification.title')"
+    :title="$t('userSessionExpiredToast.title')"
   >
-    {{ $t('UserSessionExpiredNotification.content') }}
+    {{ $t('userSessionExpiredToast.content') }}
   </Alert>
 </template>
 
 <script>
 export default {
-  name: 'UserSessionExpiredNotification',
+  name: 'UserSessionExpiredToast',
   mounted() {
     setTimeout(() => {
       this.acknowledge()
@@ -23,7 +23,7 @@ export default {
   },
   methods: {
     acknowledge() {
-      this.$store.dispatch('notification/setUserSessionExpired', false)
+      this.$store.dispatch('toast/setUserSessionExpired', false)
     },
   },
 }

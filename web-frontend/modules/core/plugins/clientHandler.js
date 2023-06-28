@@ -400,7 +400,7 @@ export class ErrorHandler {
     }
 
     this.store.dispatch(
-      'notification/error',
+      'toast/error',
       {
         title: message.title,
         message: message.message,
@@ -487,7 +487,7 @@ export default function ({ app, store, error }, inject) {
   client.interceptors.request.use(prepareRequestHeaders(store))
 
   // Create a response interceptor to add more detail to the error message
-  // and to create a notification when there is a network error.
+  // and to create a toast when there is a network error.
   client.interceptors.response.use(
     null,
     makeErrorResponseInterceptor(store, app, clientErrorMap, error)

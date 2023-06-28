@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div class="style-guide__wrapper">
       <div class="style-guide">
         <div class="margin-bottom-3">
@@ -427,13 +427,13 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert title="Notification message" icon="exclamation">
+          <Alert title="Toast message" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message">
+          <Alert title="Toast message">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
@@ -443,49 +443,44 @@
             sagittis quam sed, pellentesque orci. Aenean non consequat mi. Nunc
             laoreet ligula a nunc eleifend, nec accumsan felis euismod.
           </Alert>
-          <Alert title="Notification message" type="success" icon="exclamation">
+          <Alert title="Toast message" type="success" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" type="warning" icon="exclamation">
+          <Alert title="Toast message" type="warning" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" type="error" icon="exclamation">
+          <Alert title="Toast message" type="error" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" simple icon="exclamation">
+          <Alert title="Toast message" simple icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" simple>
+          <Alert title="Toast message" simple>
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Toast message" type="success" simple icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
           <Alert
-            title="Notification message"
-            type="success"
-            simple
-            icon="exclamation"
-          >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
-          </Alert>
-          <Alert
-            title="Notification message"
+            title="Toast message"
             type="warning"
             simple
             shadow
@@ -497,7 +492,7 @@
             urna. Praesent.
           </Alert>
           <Alert
-            title="Notification message"
+            title="Toast message"
             type="error"
             simple
             shadow
@@ -1154,45 +1149,45 @@
           <Button
             type="success"
             @click="
-              $store.dispatch('notification/success', {
-                title: 'Custom success notification',
+              $store.dispatch('toast/success', {
+                title: 'Custom success toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle success notification
+            toggle success toast
           </Button>
           <Button
             type="error"
             @click="
-              $store.dispatch('notification/error', {
-                title: 'Custom error notification',
+              $store.dispatch('toast/error', {
+                title: 'Custom error toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle error notification
+            toggle error toast
           </Button>
           <Button
             type="warning"
             @click="
-              $store.dispatch('notification/warning', {
-                title: 'Custom warning notification',
+              $store.dispatch('toast/warning', {
+                title: 'Custom warning toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle warning notification
+            toggle warning toast
           </Button>
           <Button
             @click="
-              $store.dispatch('notification/info', {
-                title: 'Custom info notification',
+              $store.dispatch('toast/info', {
+                title: 'Custom info toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle info notification
+            toggle info toast
           </Button>
         </div>
         <div class="margin-bottom-3">
@@ -1751,13 +1746,13 @@
 </template>
 
 <script>
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 
 export default {
   components: {
-    Notifications,
+    Toasts,
     AutoExpandableTextarea,
   },
   data() {

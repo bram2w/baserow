@@ -43,7 +43,7 @@ export class RealTimeHandler {
       token === null ||
       (!this.authenticationSuccess && token === this.lastToken)
     ) {
-      this.context.store.dispatch('notification/setFailedConnecting', true)
+      this.context.store.dispatch('toast/setFailedConnecting', true)
       return
     }
 
@@ -58,7 +58,7 @@ export class RealTimeHandler {
 
     this.socket = new WebSocket(`${url}?jwt_token=${token}`)
     this.socket.onopen = () => {
-      this.context.store.dispatch('notification/setConnecting', false)
+      this.context.store.dispatch('toast/setConnecting', false)
       this.connected = true
       this.attempts = 0
 
@@ -114,7 +114,7 @@ export class RealTimeHandler {
     }
 
     this.attempts++
-    this.context.store.dispatch('notification/setConnecting', true)
+    this.context.store.dispatch('toast/setConnecting', true)
 
     this.reconnectTimeout = setTimeout(
       () => {
@@ -164,8 +164,8 @@ export class RealTimeHandler {
       this.socket.close()
     }
 
-    this.context.store.dispatch('notification/setConnecting', false)
-    this.context.store.dispatch('notification/setFailedConnecting', false)
+    this.context.store.dispatch('toast/setConnecting', false)
+    this.context.store.dispatch('toast/setFailedConnecting', false)
     clearTimeout(this.reconnectTimeout)
     this.reconnect = false
     this.attempts = 0

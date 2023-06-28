@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div class="form-view__page">
       <div v-if="fields.length === 0" class="form-view__body">
         <div class="form-view__no-fields margin-bottom-4">
@@ -36,7 +36,7 @@
 <script>
 import { clone, isPromise } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import FormService from '@baserow/modules/database/services/view/form'
 import {
   getHiddenFieldNames,
@@ -47,7 +47,7 @@ import FormViewPoweredBy from '@baserow/modules/database/components/view/form/Fo
 
 export default {
   components: {
-    Notifications,
+    Toasts,
     FormViewPoweredBy,
   },
   async asyncData({ params, error, app, route, redirect, store }) {

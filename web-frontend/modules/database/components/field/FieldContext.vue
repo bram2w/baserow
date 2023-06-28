@@ -108,7 +108,7 @@ export default {
         await this.$store.dispatch('field/forceUpdateFields', {
           fields: data.related_fields,
         })
-        await this.$store.dispatch('notification/restore', {
+        await this.$store.dispatch('toast/restore', {
           trash_item_type: 'field',
           trash_item_id: field.id,
         })

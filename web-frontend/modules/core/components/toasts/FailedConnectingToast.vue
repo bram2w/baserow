@@ -1,24 +1,23 @@
 <template>
   <Alert
-    simple
     shadow
+    simple
     type="error"
     icon="exclamation"
-    :title="$t('AuthorizationErrorNotification.title')"
-  >
-    {{ $t('AuthorizationErrorNotification.content') }}
+    :title="$t('failedConnectingToast.title')"
+    >{{ $t('failedConnectingToast.content') }}
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"
       @click="reload()"
-      >{{ $t('AuthorizationErrorNotification.action') }}</a
-    >
+      >{{ $t('failedConnectingToast.action') }}
+    </a>
   </Alert>
 </template>
 
 <script>
 export default {
-  name: 'AuthorizationErrorNotification',
+  name: 'FailedConnectingToast',
   data() {
     return {
       loading: false,

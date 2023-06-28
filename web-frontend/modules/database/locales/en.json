@@ -742,7 +742,7 @@
     },
     "table": {
         "adjacentRow": {
-            "notification": {
+            "toast": {
                 "notFound": {
                     "next": {
                         "title": "No more rows",

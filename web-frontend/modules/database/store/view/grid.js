@@ -1426,7 +1426,7 @@ export const actions = {
     const diff = oldCount - getters.getCount + rowsPopulated.length
     if (!isSingleRowInsertion && diff > 0) {
       dispatch(
-        'notification/success',
+        'toast/success',
         {
           title: this.$i18n.t('gridView.hiddenRowsInsertedTitle'),
           message: this.$i18n.t('gridView.hiddenRowsInsertedMessage', {

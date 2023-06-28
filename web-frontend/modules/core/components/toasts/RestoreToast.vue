@@ -1,17 +1,17 @@
 <template>
   <button
-    class="button undo-delete-notification"
+    class="button toast__undo-delete"
     :disabled="loading"
     :class="{
       'button--loading': loading,
-      'undo-delete-notification--pulsing': pulsing,
+      'toast__undo-delete--pulsing': pulsing,
     }"
     @click="restore"
   >
     <i class="button__icon fas fa-undo"></i>
     {{
-      $t('restoreNotification.restore', {
-        type: $t('trashType.' + notification.data.trash_item_type),
+      $t('restoreToast.restore', {
+        type: $t('trashType.' + toast.data.trash_item_type),
       })
     }}
   </button>
@@ -22,9 +22,9 @@ import TrashService from '@baserow/modules/core/services/trash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  name: 'RestoreNotification',
+  name: 'RestoreToast',
   props: {
-    notification: {
+    toast: {
       type: Object,
       required: true,
     },
@@ -45,13 +45,13 @@ export default {
   },
   methods: {
     close() {
-      this.$store.dispatch('notification/remove', this.notification)
+      this.$store.dispatch('toast/remove', this.toast)
     },
     async restore() {
       this.loading = true
       this.pulsing = false
       try {
-        await TrashService(this.$client).restore(this.notification.data)
+        await TrashService(this.$client).restore(this.toast.data)
       } catch (error) {
         notifyIf(error, 'trash')
       }

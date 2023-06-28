@@ -77,9 +77,9 @@ $z-index-context: 7 !default;
 // and contexts.
 $z-index-tooltip: 8 !default;
 
-// The notifications will be on top of anything else, because the message is temporary
+// The toasts will be on top of anything else, because the message is temporary
 // and must always be visible.
-$z-index-notifications: 9 !default;
+$z-index-toasts: 9 !default;
 
 // normalize overrides
 $base-font-family: $text-font-stack !default;

@@ -1,10 +1,10 @@
 /**
- * Adds a notification error if the error response has 404 status code.
+ * Adds a toast error if the error response has 404 status code.
  */
 export function notifyIf404(dispatch, error, title, message) {
   if (error.response && error.response.status === 404) {
     dispatch(
-      'notification/error',
+      'toast/error',
       {
         title,
         message,

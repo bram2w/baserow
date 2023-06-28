@@ -16,11 +16,11 @@ export const state = () => ({
 })
 
 export const mutations = {
-  ADD(state, notification) {
-    state.items.unshift(notification)
+  ADD(state, toast) {
+    state.items.unshift(toast)
   },
-  REMOVE(state, notification) {
-    const index = state.items.indexOf(notification)
+  REMOVE(state, toast) {
+    const index = state.items.indexOf(toast)
     state.items.splice(index, 1)
   },
   SET_CONNECTING(state, value) {
@@ -54,7 +54,7 @@ export const mutations = {
 
 export const actions = {
   /**
-   * Shows a notification message to the user.
+   * Shows a toast message to the user.
    */
   add({ commit }, { type, title = null, message = null, data = null }) {
     commit('ADD', {
@@ -83,8 +83,8 @@ export const actions = {
       data: restoreData,
     })
   },
-  remove({ commit }, notification) {
-    commit('REMOVE', notification)
+  remove({ commit }, toast) {
+    commit('REMOVE', toast)
   },
   setConnecting({ commit }, value) {
     if (value) {
@@ -120,7 +120,7 @@ export const actions = {
     commit('SET_PERMISSIONS_UPDATED', value)
   },
   userLoggedOut({ commit }) {
-    // Add any notifications here that should be closed when the user logs out
+    // Add any toasts here that should be closed when the user logs out
     commit('SET_PERMISSIONS_UPDATED', false)
     commit('SET_COPYING', false)
     commit('SET_PASTING', false)

@@ -93,7 +93,7 @@ export default {
         const statusCode = e.response?.status
         // hide the authorization error here and show the correct error message
         if (statusCode === 401) {
-          this.$store.dispatch('notification/setAuthorizationError', false)
+          this.$store.dispatch('toast/setAuthorizationError', false)
           this.showError(
             this.$t('publicViewAuthLogin.error.incorrectPasswordTitle'),
             this.$t('publicViewAuthLogin.error.incorrectPasswordText')

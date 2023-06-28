@@ -76,7 +76,7 @@ export default {
       try {
         const field = this.getFirstCompatibleField(this.fields)
         if (field === undefined) {
-          await this.$store.dispatch('notification/error', {
+          await this.$store.dispatch('toast/error', {
             title: this.$t(
               'viewFilterContext.noCompatibleFilterTypesErrorTitle'
             ),

@@ -117,7 +117,7 @@ export class DatabaseApplicationType extends ApplicationType {
       )
       return true
     } else {
-      $store.dispatch('notification/error', {
+      $store.dispatch('toast/error', {
         title: $i18n.t('applicationType.cantSelectTableTitle'),
         message: $i18n.t('applicationType.cantSelectTableDescription'),
       })

@@ -46,37 +46,37 @@ export const mutations = {
 let hideTimeout = null
 
 export const actions = {
-  async undo({ dispatch }, { showLoadingNotification }) {
+  async undo({ dispatch }, { showLoadingToast }) {
     return await dispatch('action', {
-      showLoadingNotification,
+      showLoadingToast,
       serviceMethod: 'undo',
-      doingNotificationState: UNDO_REDO_STATES.UNDOING,
-      doneNotificationState: UNDO_REDO_STATES.UNDONE,
-      nothingToDoNotificationState: UNDO_REDO_STATES.NO_MORE_UNDO,
-      skippedDueToErrorNotificationState: UNDO_REDO_STATES.ERROR_WITH_UNDO,
+      doingToastState: UNDO_REDO_STATES.UNDOING,
+      doneToastState: UNDO_REDO_STATES.UNDONE,
+      nothingToDoToastState: UNDO_REDO_STATES.NO_MORE_UNDO,
+      skippedDueToErrorToastState: UNDO_REDO_STATES.ERROR_WITH_UNDO,
       commitName: 'SET_UNDOING',
     })
   },
-  async redo({ dispatch }, { showLoadingNotification }) {
+  async redo({ dispatch }, { showLoadingToast }) {
     return await dispatch('action', {
-      showLoadingNotification,
+      showLoadingToast,
       serviceMethod: 'redo',
-      doingNotificationState: UNDO_REDO_STATES.REDOING,
-      doneNotificationState: UNDO_REDO_STATES.REDONE,
-      nothingToDoNotificationState: UNDO_REDO_STATES.NO_MORE_REDO,
-      skippedDueToErrorNotificationState: UNDO_REDO_STATES.ERROR_WITH_REDO,
+      doingToastState: UNDO_REDO_STATES.REDOING,
+      doneToastState: UNDO_REDO_STATES.REDONE,
+      nothingToDoToastState: UNDO_REDO_STATES.NO_MORE_REDO,
+      skippedDueToErrorToastState: UNDO_REDO_STATES.ERROR_WITH_REDO,
       commitName: 'SET_REDOING',
     })
   },
   async action(
     { getters, commit, dispatch },
     {
-      showLoadingNotification,
+      showLoadingToast,
       serviceMethod,
-      doingNotificationState,
-      doneNotificationState,
-      nothingToDoNotificationState,
-      skippedDueToErrorNotificationState,
+      doingToastState,
+      doneToastState,
+      nothingToDoToastState,
+      skippedDueToErrorToastState,
       commitName,
     }
   ) {
@@ -87,10 +87,8 @@ export const actions = {
     clearTimeout(hideTimeout)
     commit(commitName, true)
     await dispatch(
-      'notification/setUndoRedoState',
-      showLoadingNotification
-        ? doingNotificationState
-        : UNDO_REDO_STATES.HIDDEN,
+      'toast/setUndoRedoState',
+      showLoadingToast ? doingToastState : UNDO_REDO_STATES.HIDDEN,
       { root: true }
     )
 
@@ -98,15 +96,15 @@ export const actions = {
       const { data } = await UndoRedoService(this.$client)[serviceMethod](
         getters.getCurrentScope
       )
-      const resultCodeToNotificationState = {
-        [UNDO_REDO_RESULT_CODES.SUCCESS]: doneNotificationState,
-        [UNDO_REDO_RESULT_CODES.NOTHING_TO_DO]: nothingToDoNotificationState,
+      const resultCodeToToastState = {
+        [UNDO_REDO_RESULT_CODES.SUCCESS]: doneToastState,
+        [UNDO_REDO_RESULT_CODES.NOTHING_TO_DO]: nothingToDoToastState,
         [UNDO_REDO_RESULT_CODES.SKIPPED_DUE_TO_ERROR]:
-          skippedDueToErrorNotificationState,
+          skippedDueToErrorToastState,
       }
       await dispatch(
-        'notification/setUndoRedoState',
-        resultCodeToNotificationState[data.result_code],
+        'toast/setUndoRedoState',
+        resultCodeToToastState[data.result_code],
         {
           root: true,
         }
@@ -114,7 +112,7 @@ export const actions = {
     } finally {
       hideTimeout = setTimeout(
         () =>
-          dispatch('notification/setUndoRedoState', UNDO_REDO_STATES.HIDDEN, {
+          dispatch('toast/setUndoRedoState', UNDO_REDO_STATES.HIDDEN, {
             root: true,
           }),
         2000
