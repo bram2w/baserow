@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Max and min can be used on date fields",
+    "issue_number": 684,
+    "bullet_points": [],
+    "created_at": "2023-07-04"
+}

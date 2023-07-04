@@ -1831,7 +1831,10 @@ class BaserowMax(OneArgumentBaserowFunction):
     type = "max"
     arg_type = [
         MustBeManyExprChecker(
-            BaserowFormulaTextType, BaserowFormulaNumberType, BaserowFormulaCharType
+            BaserowFormulaTextType,
+            BaserowFormulaNumberType,
+            BaserowFormulaCharType,
+            BaserowFormulaDateType,
         ),
     ]
     aggregate = True
@@ -1851,7 +1854,10 @@ class BaserowMin(OneArgumentBaserowFunction):
     type = "min"
     arg_type = [
         MustBeManyExprChecker(
-            BaserowFormulaTextType, BaserowFormulaNumberType, BaserowFormulaCharType
+            BaserowFormulaTextType,
+            BaserowFormulaNumberType,
+            BaserowFormulaCharType,
+            BaserowFormulaDateType,
         ),
     ]
     aggregate = True
