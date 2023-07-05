@@ -11,6 +11,7 @@ import {
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 /**
  * This view store mixin can be used to efficiently keep and maintain the rows of a
@@ -269,6 +270,7 @@ export default ({ service, customPopulateRow }) => {
         offset: 0,
         limit: getters.getRequestSize,
         search: getters.getServerSearchTerm,
+        searchMode: getDefaultSearchModeFromEnv(this.$env),
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
         orderBy: getOrderBy(rootGetters, getters.getViewId),
@@ -342,6 +344,7 @@ export default ({ service, customPopulateRow }) => {
           limit: rangeToFetch.limit,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          searchMode: getDefaultSearchModeFromEnv(this.$env),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           orderBy: getOrderBy(rootGetters, getters.getViewId),
@@ -399,6 +402,7 @@ export default ({ service, customPopulateRow }) => {
           viewId: getters.getViewId,
           signal: lastRequestController.signal,
           search: getters.getServerSearchTerm,
+          searchMode: getDefaultSearchModeFromEnv(this.$env),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           filters: getFilters(rootGetters, getters.getViewId),
@@ -442,6 +446,7 @@ export default ({ service, customPopulateRow }) => {
             includeFieldOptions,
             signal: lastRequestController.signal,
             search: getters.getServerSearchTerm,
+            searchMode: getDefaultSearchModeFromEnv(this.$env),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             orderBy: getOrderBy(rootGetters, getters.getViewId),
@@ -960,6 +965,7 @@ export default ({ service, customPopulateRow }) => {
           getters.isHidingRowsNotMatchingSearch,
           fields,
           this.$registry,
+          getDefaultSearchModeFromEnv(this.$env),
           overrides
         )
 

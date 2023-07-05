@@ -42,6 +42,8 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
+from ..search.handler import SearchHandler
+from ..table.constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
@@ -725,6 +727,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         from baserow.contrib.database.views.handler import ViewHandler
 
         ViewHandler().field_value_updated(fields)
+        SearchHandler.field_value_updated_or_created(table)
 
         return instance
 
@@ -897,6 +900,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         from baserow.contrib.database.views.handler import ViewHandler
 
         ViewHandler().field_value_updated(updated_fields)
+        SearchHandler.field_value_updated_or_created(table)
 
         rows_updated.send(
             self,
@@ -917,8 +921,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         rows_values: List[Dict[str, Any]],
         before_row: Optional[GeneratedTableModel] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
-        send_signal=True,
-        generate_error_report=False,
+        send_signal: bool = True,
+        generate_error_report: bool = False,
+        skip_search_update: bool = False,
     ) -> List[GeneratedTableModel]:
         """
         Creates new rows for a given table if the user
@@ -931,6 +936,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             the before_row.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
+        :param send_signal: If set to false then it is up to the caller to send the
+            rows_created or similar signal. Defaults to True.
+        :param generate_error_report: When set to True the return
+        :param skip_search_update: If you want to to instead
+            trigger the search handler cells update later on after many create_rows
+            calls then set this to True but make sure you trigger it eventually.
         :return: The created row instances.
         """
 
@@ -1059,6 +1070,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
+        if not skip_search_update:
+            SearchHandler.field_value_updated_or_created(table)
 
         if send_signal:
             rows_to_return = list(
@@ -1165,6 +1178,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 rows_values=chunk,
                 generate_error_report=True,
                 send_signal=False,
+                # Don't trigger loads of search updates for every batch of rows we
+                # create but instead a single one for this entire table at the end.
+                skip_search_update=True,
             )
 
             for valid_index, field_errors in creation_report.items():
@@ -1176,6 +1192,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 progress.increment(len(chunk))
 
             all_created_rows += created_rows
+
+        SearchHandler.field_value_updated_or_created(table)
 
         return all_created_rows, report
 
@@ -1385,6 +1403,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             obj.updated_on = model._meta.get_field("updated_on").pre_save(
                 obj, add=False
             )
+            if table.needs_background_update_column_added:
+                setattr(obj, ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, True)
             row_values = rows_by_id[obj.id]
             values, manytomany_values = self.extract_manytomany_values(
                 row_values, model
@@ -1496,6 +1516,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             through.objects.bulk_create([v for v in values if v is not None])
 
         bulk_update_fields = ["updated_on"]
+        if table.needs_background_update_column_added:
+            bulk_update_fields.append(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME)
         for field in model._field_objects.values():
             field_name = field["name"]
             model_field = model._meta.get_field(field_name)
@@ -1542,6 +1564,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
+        SearchHandler.field_value_updated_or_created(table)
 
         rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)

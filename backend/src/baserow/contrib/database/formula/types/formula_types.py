@@ -3,13 +3,18 @@ from decimal import Decimal
 from typing import Any, List, Optional, Type, Union
 
 from django.db import models
-from django.db.models import JSONField, Q, Value
+from django.db.models import F, Func, JSONField, Q, QuerySet, Value
+from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
 from dateutil import parser
 from rest_framework import serializers
 from rest_framework.fields import Field
 
+from baserow.contrib.database.fields.expressions import (
+    extract_jsonb_array_values_to_single_string,
+    json_extract_path,
+)
 from baserow.contrib.database.fields.mixins import get_date_time_format
 from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
@@ -29,6 +34,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.serializers import LinkSerializer
+from baserow.contrib.database.search.expressions import LocalisedSearchVector
 from baserow.core.utils import list_to_comma_separated_string
 
 
@@ -189,6 +195,41 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
         self,
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return formula_function_registry.get("link")(literal(""))
+
+    def prepare_value_for_search(self, field, queryset):
+        return LocalisedSearchVector(
+            Concat(
+                json_extract_path(F(field.db_column), [Value("label")]),
+                Value(" ("),
+                json_extract_path(F(field.db_column), [Value("url")]),
+                Value(")"),
+                output_field=models.TextField(),
+            )
+        )
+
+    def prepare_value_for_search_in_array(self, field, queryset):
+        def transform_value_to_text_func(x):
+            # Make sure we don't send the keys of the jsonb to ts_vector by extracting
+            # and re-ordering the label/url parameters to match the correct format
+            return Func(
+                x,
+                Value('.*"url".*:.*"([^"]+)".*"label".*:.*"([^"]+)".*'),
+                Value("\\2 (\\1)"),
+                Value("g", output_field=models.TextField()),
+                function="regexp_replace",
+                output_field=models.TextField(),
+            )
+
+        return LocalisedSearchVector(
+            extract_jsonb_array_values_to_single_string(
+                field,
+                queryset,
+                transform_value_to_text_func=transform_value_to_text_func,
+            )
+        )
+
+    def is_searchable(self, field):
+        return True
 
 
 class BaserowFormulaNumberType(
@@ -419,6 +460,16 @@ class BaserowFormulaDateIntervalType(
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return literal(datetime.timedelta(hours=0))
 
+    def is_searchable(self, field):
+        return True
+
+    def prepare_value_for_search(
+        self, field: Field, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        return LocalisedSearchVector(
+            Cast(field.db_column, output_field=models.CharField())
+        )
+
 
 class BaserowFormulaDateType(BaserowFormulaValidType):
     type = "date"
@@ -533,6 +584,29 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
         return Value(timezone.now(), output_field=field)
 
+    def prepare_value_for_search_in_array(self, field, queryset):
+        def transform_value_to_text_func(x):
+            return Func(
+                Func(
+                    # FIXME: what if date_force_timezone is None(user timezone)?
+                    Value(field.date_force_timezone or "UTC"),
+                    Cast(x, output_field=models.DateTimeField()),
+                    function="timezone",
+                    output_field=models.DateTimeField(),
+                ),
+                Value(get_date_time_format(self, "sql")),
+                function="to_char",
+                output_field=models.CharField(),
+            )
+
+        return LocalisedSearchVector(
+            extract_jsonb_array_values_to_single_string(
+                field,
+                queryset,
+                transform_value_to_text_func=transform_value_to_text_func,
+            )
+        )
+
     def __str__(self) -> str:
         date_or_datetime = "datetime" if self.date_include_time else "date"
         optional_time_format = (
@@ -552,6 +626,12 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         super().__init__(**kwargs)
         self.array_formula_type = sub_type.type
         self.sub_type = sub_type
+
+    def prepare_value_for_search(self, field, queryset):
+        return self.sub_type.prepare_value_for_search_in_array(field, queryset)
+
+    def is_searchable(self, field):
+        return True
 
     @classmethod
     def construct_type_from_formula_field(cls, formula_field):
@@ -739,7 +819,6 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
 
     @property
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        # true > true makes no sense
         return []
 
     def get_baserow_field_instance_and_type(self):
@@ -790,6 +869,26 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         return formula_function_registry.get("when_empty")(
             single_select_value, literal("")
         )
+
+    def prepare_value_for_search(self, field, queryset):
+        return LocalisedSearchVector(
+            Cast(F(field.db_column + "__value"), output_field=models.CharField())
+        )
+
+    def prepare_value_for_search_in_array(self, field, queryset):
+        return LocalisedSearchVector(
+            extract_jsonb_array_values_to_single_string(
+                field,
+                queryset,
+                path_to_value_in_jsonb_list=[
+                    Value("value", output_field=models.CharField()),
+                    Value("value", output_field=models.CharField()),
+                ],
+            )
+        )
+
+    def is_searchable(self, field):
+        return True
 
 
 BASEROW_FORMULA_TYPES = [

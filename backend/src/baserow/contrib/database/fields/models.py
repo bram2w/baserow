@@ -22,6 +22,7 @@ from baserow.contrib.database.table.constants import (
     LINK_ROW_THROUGH_TABLE_PREFIX,
     MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX,
     MULTIPLE_SELECT_THROUGH_TABLE_PREFIX,
+    get_tsv_vector_field_name,
 )
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -108,6 +109,13 @@ class Field(
         through_fields=("dependant", "dependency"),
         symmetrical=False,
     )
+    tsvector_column_created = models.BooleanField(
+        default=False,
+        help_text="Indicates whether a `tsvector` has been created for this field yet. "
+        "This value will be False for fields created before the full text "
+        "search release which haven't been lazily migrated yet. Or for "
+        "users who have turned off full text search entirely.",
+    )
 
     class Meta:
         ordering = (
@@ -130,6 +138,14 @@ class Field(
     @property
     def db_column(self):
         return f"field_{self.id}"
+
+    @property
+    def tsv_db_column(self):
+        return get_tsv_vector_field_name(self.id)
+
+    @property
+    def tsv_index_name(self):
+        return f"tbl_tsv_{self.id}_idx"
 
     @property
     def model_attribute_name(self):

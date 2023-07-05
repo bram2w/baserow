@@ -267,6 +267,8 @@ def test_batch_create_rows(api_client, data_fixture):
     row_2 = model.objects.get(pk=2)
     assert getattr(row_1, f"field_{text_field.id}") == "green"
     assert getattr(row_2, f"field_{text_field.id}") == "yellow"
+    assert row_1.needs_background_update
+    assert row_2.needs_background_update
 
 
 @pytest.mark.django_db
@@ -1046,6 +1048,7 @@ def test_batch_update_rows(api_client, data_fixture):
     model = table.get_model()
     row_1 = model.objects.create()
     row_2 = model.objects.create()
+    model.objects.update(needs_background_update=False)
     url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
     request_body = {
         "items": [
@@ -1095,6 +1098,8 @@ def test_batch_update_rows(api_client, data_fixture):
     row_2.refresh_from_db()
     assert getattr(row_1, f"field_{text_field.id}") == "green"
     assert getattr(row_2, f"field_{text_field.id}") == "yellow"
+    assert row_1.needs_background_update
+    assert row_2.needs_background_update
 
 
 @pytest.mark.django_db

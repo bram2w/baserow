@@ -59,6 +59,7 @@ export default {
       if (this.selectedTargetField) {
         return (
           this.selectedTargetField.array_formula_type ||
+          this.selectedTargetField.formula_type ||
           this.selectedTargetField.type
         )
       }

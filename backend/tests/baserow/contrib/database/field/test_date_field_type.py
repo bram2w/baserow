@@ -197,9 +197,9 @@ def test_converting_date_field_value(data_fixture):
             f"field_{date_field_eu.id}": "22-7-2021",
             f"field_{date_field_us.id}": "7-22-2021",
             f"field_{date_field_iso.id}": "2021/7/22",
-            f"field_{date_field_eu_12.id}": "22-7-2021 12:45am",
-            f"field_{date_field_us_12.id}": "7-22-2021 12:45am",
-            f"field_{date_field_iso_12.id}": "2021/7/22 12:45am",
+            f"field_{date_field_eu_12.id}": "22-7-2021 12:45 am",
+            f"field_{date_field_us_12.id}": "7-22-2021 12:45 am",
+            f"field_{date_field_iso_12.id}": "2021/7/22 12:45 am",
             f"field_{date_field_eu_24.id}": "22-7-2021 7:45",
             f"field_{date_field_us_24.id}": "7-22-2021 7:45",
             f"field_{date_field_iso_24.id}": "2021/7/22 7:45",
@@ -429,9 +429,9 @@ def test_converting_date_field_value(data_fixture):
     assert getattr(row_0, f"field_{date_field_eu.id}") == "22/07/2021"
     assert getattr(row_0, f"field_{date_field_us.id}") == "07/22/2021"
     assert getattr(row_0, f"field_{date_field_iso.id}") == "2021-07-22"
-    assert getattr(row_0, f"field_{date_field_eu_12.id}") == "22/07/2021 12:45PM"
-    assert getattr(row_0, f"field_{date_field_us_12.id}") == "07/22/2021 12:45PM"
-    assert getattr(row_0, f"field_{date_field_iso_12.id}") == "2021-07-22 12:45PM"
+    assert getattr(row_0, f"field_{date_field_eu_12.id}") == "22/07/2021 12:45 PM"
+    assert getattr(row_0, f"field_{date_field_us_12.id}") == "07/22/2021 12:45 PM"
+    assert getattr(row_0, f"field_{date_field_iso_12.id}") == "2021-07-22 12:45 PM"
     assert getattr(row_0, f"field_{date_field_eu_24.id}") == "22/07/2021 12:45"
     assert getattr(row_0, f"field_{date_field_us_24.id}") == "07/22/2021 12:45"
     assert getattr(row_0, f"field_{date_field_iso_24.id}") == "2021-07-22 12:45"

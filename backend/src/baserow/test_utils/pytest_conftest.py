@@ -3,8 +3,9 @@ import contextlib
 import os
 from pathlib import Path
 from typing import Dict, Optional
+from unittest.mock import patch
 
-from django.conf import settings
+from django.conf import settings as django_settings
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
@@ -375,7 +376,7 @@ def bypass_check_permissions(
     """
 
     stub_core_permission_manager = StubbedCorePermissionManagerType()
-    first_manager = settings.PERMISSION_MANAGERS[0]
+    first_manager = django_settings.PERMISSION_MANAGERS[0]
     mutable_permission_manager_registry.registry[
         first_manager
     ] = stub_core_permission_manager
@@ -400,7 +401,7 @@ def stub_check_permissions() -> callable:
         stub_core_permission_manager = StubbedCorePermissionManagerType(
             raise_permission_denied
         )
-        first_manager = settings.PERMISSION_MANAGERS[0]
+        first_manager = django_settings.PERMISSION_MANAGERS[0]
         permission_manager_type_registry.registry[
             first_manager
         ] = stub_core_permission_manager
@@ -463,7 +464,7 @@ def second_separate_database_for_migrations(
     django_test_environment: None,
     django_db_blocker,
 ) -> None:
-    from django.test.utils import setup_databases, teardown_databases
+    from django.test.utils import setup_databases
 
     setup_databases_args = {}
 
@@ -482,14 +483,23 @@ def second_separate_database_for_migrations(
         def teardown_database() -> None:
             with django_db_blocker.unblock():
                 try:
-                    teardown_databases(db_cfg, verbosity=request.config.option.verbose)
+                    for c, old_name, destroy in db_cfg:
+                        if old_name != "baserow":
+                            if destroy:
+                                c.creation.destroy_test_db(
+                                    old_name, request.config.option.verbose, False
+                                )
+                        else:
+                            print("Tried to delete the Baserow real database!!")
+                            raise Exception("tried to delete basoerw??")
                 except Exception as exc:
                     request.node.warn(
                         pytest.PytestWarning(
                             f"Error when trying to teardown test databases: {exc!r}"
                         )
                     )
-                _remove_suffix_from_test_databases(suffix)
+                finally:
+                    _remove_suffix_from_test_databases(suffix)
 
         request.addfinalizer(teardown_database)
         yield
@@ -501,3 +511,26 @@ def second_separate_database_for_migrations(
 @pytest.fixture
 def migrator(second_separate_database_for_migrations, reset_schema):
     yield TestMigrator()
+
+
+@pytest.fixture
+def disable_full_text_search(settings):
+    settings.BASEROW_USE_PG_FULLTEXT_SEARCH = False
+
+
+@pytest.fixture
+def enable_singleton_testing(settings):
+    # celery-singleton uses redis to store the lock state
+    # so we need to mock redis to make sure the tests don't fail
+    settings.CACHES = {
+        **django_settings.CACHES,
+        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
+    }
+    from fakeredis import FakeRedis, FakeServer
+
+    fake_redis_server = FakeServer()
+    with patch(
+        "baserow.celery_singleton_backend.get_redis_connection",
+        lambda *a, **kw: FakeRedis(server=fake_redis_server),
+    ):
+        yield

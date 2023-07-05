@@ -2,6 +2,8 @@ from django.conf import settings
 
 from loguru import logger
 
+from baserow.core.utils import exception_capturer
+
 
 class BaserowFormulaException(Exception):
     pass
@@ -25,12 +27,7 @@ def formula_exception_handler(e):
     if settings.DEBUG or settings.TESTS:
         # We want to see any issues immediately in debug mode.
         raise e
-    try:
-        from sentry_sdk import capture_exception
-
-        capture_exception(e)
-    except ImportError:
-        pass
+    exception_capturer(e)
     logger.error(
         f"Formula related error occurred: {e}. Please send this error to the baserow "
         f"developers at https://baserow.io/contact."

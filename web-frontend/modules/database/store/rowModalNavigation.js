@@ -1,5 +1,6 @@
 import RowService from '@baserow/modules/database/services/row'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 /**
  * This store exists to deal with the row edit modal navigation.
@@ -63,6 +64,7 @@ export const actions = {
         viewId,
         rowId: state.row.id,
         search: activeSearchTerm,
+        searchMode: getDefaultSearchModeFromEnv(this.$env),
       })
       if (row) {
         commit('SET_ROW', row)

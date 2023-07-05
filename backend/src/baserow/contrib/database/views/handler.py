@@ -30,6 +30,7 @@ from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
+from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
@@ -1947,6 +1948,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         only_sort_by_field_ids: Optional[Iterable[int]] = None,
         only_search_by_field_ids: Optional[Iterable[int]] = None,
         apply_filters: bool = True,
+        search_mode: Optional[SearchModes] = None,
     ) -> QuerySet:
         """
         Returns a queryset for the provided view which is appropriately sorted,
@@ -1982,7 +1984,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 only_sort_by_field_ids,
             )
         if search is not None:
-            queryset = queryset.search_all_fields(search, only_search_by_field_ids)
+            queryset = queryset.search_all_fields(
+                search, only_search_by_field_ids, search_mode
+            )
         return queryset
 
     def _get_aggregation_lock_cache_key(self, view: View):
@@ -2094,7 +2098,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
-        search=None,
+        search: Optional[str] = None,
+        search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for all aggregation configured for the view in
@@ -2113,6 +2118,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             result.
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
+        :param search_mode: the search mode that the search is using.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :return: A dict of aggregation value
@@ -2171,6 +2177,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 model,
                 with_total=with_total,
                 search=search,
+                search_mode=search_mode,
             )
 
             if not search:
@@ -2206,7 +2213,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         aggregations: Iterable[Tuple[django_models.Field, str]],
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
-        search: Union[str, None] = None,
+        search: Optional[str] = None,
+        search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for given (field, aggregation_type) couple list.
@@ -2221,7 +2229,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
-        :param search: the search string to considerate.
+        :param search: the search string to consider.
+        :param search: the mode that the search is in.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :raises FieldNotInTable: When one of the field doesn't belong to the specified
@@ -2254,7 +2263,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view_type.can_filter:
             queryset = self.apply_filters(view, queryset)
         if search is not None:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         aggregation_dict = {}
 
@@ -2589,6 +2598,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         view: View,
         search: str = None,
+        search_mode: Optional[SearchModes] = None,
         order_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
@@ -2607,6 +2617,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         the field_options.
         :param view: The public view to get rows for.
         :param search: A string to search for in the rows.
+        :param search_mode: The type of search to perform.
         :param order_by: A string to order the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
@@ -2659,7 +2670,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         if search:
-            queryset = queryset.search_all_fields(search, publicly_visible_field_ids)
+            queryset = queryset.search_all_fields(
+                search, publicly_visible_field_ids, search_mode=search_mode
+            )
 
         field_ids = (
             list(set(field_ids) & set(publicly_visible_field_ids))

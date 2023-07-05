@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Rework Baserow row search to be much faster and instead search for words instead of exact matches including punctuation.",
+    "issue_number": 1706,
+    "bullet_points": [],
+    "created_at": "2023-07-03"
+}

@@ -837,3 +837,12 @@ def find_intermediate_order(
         )
 
     return float(Fraction(*find_intermediate_fraction(p1, q1, p2, q2)))
+
+
+def exception_capturer(e):
+    try:
+        from sentry_sdk import capture_exception
+
+        capture_exception(e)
+    except ImportError:
+        pass

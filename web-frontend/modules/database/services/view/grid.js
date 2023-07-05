@@ -9,7 +9,8 @@ export default (client) => {
       signal = null,
       includeFieldOptions = false,
       includeRowMetadata = true,
-      search = false,
+      search = '',
+      searchMode = '',
       publicUrl = false,
       publicAuthToken = null,
       orderBy = '',
@@ -39,6 +40,9 @@ export default (client) => {
 
       if (search) {
         params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       if (orderBy) {
@@ -74,7 +78,8 @@ export default (client) => {
     },
     fetchCount({
       gridId,
-      search,
+      search = '',
+      searchMode = '',
       signal = null,
       publicUrl = false,
       publicAuthToken = null,
@@ -85,6 +90,9 @@ export default (client) => {
 
       if (search) {
         params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       Object.keys(filters).forEach((key) => {
@@ -115,11 +123,19 @@ export default (client) => {
 
       return client.post(`/database/views/grid/${gridId}/`, data)
     },
-    fetchFieldAggregations({ gridId, search, signal = null }) {
+    fetchFieldAggregations({
+      gridId,
+      search = '',
+      searchMode = '',
+      signal = null,
+    }) {
       const params = new URLSearchParams()
 
       if (search) {
         params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       const config = { params }

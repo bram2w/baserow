@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.conf import settings
+from django.core.exceptions import FieldDoesNotExist
 from django.core.files.storage import FileSystemStorage
 from django.db import connection
 from django.test.utils import override_settings
@@ -23,6 +24,9 @@ from baserow.contrib.database.fields.models import (
     TextField,
 )
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
+from baserow.contrib.database.table.constants import (
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+)
 from baserow.contrib.database.table.exceptions import (
     InitialTableDataLimitExceeded,
     InvalidInitialTableData,
@@ -673,3 +677,28 @@ def test_duplicate_interesting_table(data_fixture):
                 original_link.link_row_table_has_related_field
                 == duplicated_link.link_row_table_has_related_field
             )
+
+
+@pytest.mark.django_db()
+def test_create_needs_background_update_column(data_fixture):
+    system_updated_on_columns = [
+        ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+    ]
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(
+        user,
+        needs_background_update_column_added=False,
+    )
+
+    model = table.get_model()
+    for system_updated_on_column in system_updated_on_columns:
+        with pytest.raises(FieldDoesNotExist):
+            model._meta.get_field(system_updated_on_column)
+
+    TableHandler().create_needs_background_update_field(table)
+    table.refresh_from_db()
+    assert table.needs_background_update_column_added
+
+    model = table.get_model()
+    for system_updated_on_column in system_updated_on_columns:
+        model._meta.get_field(system_updated_on_column)

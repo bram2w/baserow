@@ -334,7 +334,9 @@ def test_to_baserow_database_export_without_primary_value():
 
 @pytest.mark.django_db
 @responses.activate
-def test_import_from_airtable_to_workspace(data_fixture, tmpdir):
+def test_import_from_airtable_to_workspace(
+    data_fixture, tmpdir, django_assert_num_queries
+):
     workspace = data_fixture.create_workspace()
     base_path = os.path.join(settings.BASE_DIR, "../../../tests/airtable_responses")
     storage = FileSystemStorage(location=(str(tmpdir)), base_url="http://localhost")

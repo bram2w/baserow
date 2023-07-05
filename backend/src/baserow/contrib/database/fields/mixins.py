@@ -9,7 +9,7 @@ DATE_FORMAT_CHOICES = [(k, v["name"]) for k, v in DATE_FORMAT.items()]
 
 DATE_TIME_FORMAT = {
     "24": {"name": "24 hour", "format": "%H:%M", "sql": "HH24:MI"},
-    "12": {"name": "12 hour", "format": "%I:%M %p", "sql": "HH12:MIAM"},
+    "12": {"name": "12 hour", "format": "%I:%M %p", "sql": "HH12:MI AM"},
 }
 DATE_TIME_FORMAT_CHOICES = [(k, v["name"]) for k, v in DATE_TIME_FORMAT.items()]
 

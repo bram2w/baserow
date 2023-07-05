@@ -1,17 +1,16 @@
 from decimal import Decimal
 from unittest.mock import patch
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.test import override_settings
 
 import pytest
-from fakeredis import FakeRedis, FakeServer
 
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import (
     CannotShareViewTypeError,
@@ -2116,7 +2115,8 @@ def test_get_public_rows_queryset_and_field_ids_view_filters_applied(data_fixtur
 
 
 @pytest.mark.django_db
-def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture):
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture, search_mode):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)
 
@@ -2129,7 +2129,9 @@ def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture):
         queryset,
         field_ids,
         publicly_visible_field_options,
-    ) = ViewHandler().get_public_rows_queryset_and_field_ids(grid_view, search="2")
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, search="2", search_mode=search_mode
+    )
 
     assert queryset.count() == 1
     assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
@@ -2766,24 +2768,9 @@ def test_order_views_ownership_type(data_fixture):
         handler.order_views(user, table, [view2.id])
 
 
-# celery-singleton uses redis to store the lock state
-# so we need to mock redis to make sure the tests don't fail
-fake_redis_server = FakeServer()
-
-
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-    AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
+@override_settings(AUTO_INDEX_VIEW_ENABLED=True)
 @pytest.mark.django_db(transaction=True)
-def test_creating_view_sort_creates_a_new_index(data_fixture):
+def test_creating_view_sort_creates_a_new_index(data_fixture, enable_singleton_testing):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(user=user, table=table)
@@ -2810,19 +2797,11 @@ def test_creating_view_sort_creates_a_new_index(data_fixture):
 
 
 @override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
     AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
 )
 @pytest.mark.django_db(transaction=True)
 def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
-    data_fixture,
+    data_fixture, enable_singleton_testing
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -2877,19 +2856,11 @@ def test_updating_view_sorts_creates_a_new_index_and_delete_the_unused_one(
     assert ViewIndexingHandler.does_index_exist(index_4.name) is False
 
 
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-    AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
+@override_settings(AUTO_INDEX_VIEW_ENABLED=True)
 @pytest.mark.django_db(transaction=True)
-def test_perm_deleting_view_remove_index_if_unused(data_fixture):
+def test_perm_deleting_view_remove_index_if_unused(
+    data_fixture, enable_singleton_testing
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     database = table.database
@@ -2927,19 +2898,11 @@ def test_perm_deleting_view_remove_index_if_unused(data_fixture):
     assert ViewIndexingHandler.does_index_exist(index.name) is False
 
 
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-    AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
+@override_settings(AUTO_INDEX_VIEW_ENABLED=True)
 @pytest.mark.django_db(transaction=True)
-def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
+def test_duplicating_table_do_not_duplicate_indexes(
+    data_fixture, enable_singleton_testing
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(user=user, table=table)
@@ -2966,19 +2929,11 @@ def test_duplicating_table_do_not_duplicate_indexes(data_fixture):
     assert ViewIndexingHandler.does_index_exist(index_2.name) is False
 
 
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-    AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
+@override_settings(AUTO_INDEX_VIEW_ENABLED=True)
 @pytest.mark.django_db(transaction=True)
-def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
+def test_deleting_a_field_of_a_view_sort_update_view_indexes(
+    data_fixture, enable_singleton_testing
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     text_field = data_fixture.create_text_field(user=user, table=table)
@@ -3004,20 +2959,10 @@ def test_deleting_a_field_of_a_view_sort_update_view_indexes(data_fixture):
     assert ViewIndexingHandler.does_index_exist(index.name) is False
 
 
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-    AUTO_INDEX_VIEW_ENABLED=True,
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
+@override_settings(AUTO_INDEX_VIEW_ENABLED=True)
 @pytest.mark.django_db(transaction=True)
 def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_index(
-    data_fixture,
+    data_fixture, enable_singleton_testing
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -3044,20 +2989,13 @@ def test_changing_a_field_type_of_a_view_sort_to_non_orderable_one_delete_view_i
     assert ViewIndexingHandler.does_index_exist(index.name) is False
 
 
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
 @patch("baserow.contrib.database.views.tasks.update_view_index.delay")
 @pytest.mark.django_db(transaction=True)
 def test_loading_a_view_checks_for_db_index_without_additional_queries(
-    mocked_view_index_update_task, data_fixture, django_assert_num_queries
+    mocked_view_index_update_task,
+    data_fixture,
+    enable_singleton_testing,
+    django_assert_num_queries,
 ):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

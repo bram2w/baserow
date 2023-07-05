@@ -876,6 +876,7 @@ def test_row_dependency_update_functions_do_no_row_updates_for_same_table(
     formula_field_type.row_of_dependency_deleted(
         formula_field, row, update_collector, field_cache, []
     )
+    # Does one update to update the last_system_or_user_row_update_on column
     with django_assert_num_queries(0):
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
@@ -1241,7 +1242,9 @@ def test_converting_link_row_field_with_formula_dependency(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_converted_reversed_link_row_field_with_formula_dependency(data_fixture):
+def test_converted_reversed_link_row_field_with_formula_dependency(
+    data_fixture, django_assert_num_queries
+):
     user = data_fixture.create_user()
     table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
 

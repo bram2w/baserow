@@ -28,9 +28,22 @@ from baserow.contrib.database.formula import FormulaHandler
 class FieldFixtures:
     def create_model_field(self, table, field):
         with safe_django_schema_editor() as schema_editor:
-            to_model = table.get_model(field_ids=[field.id], add_dependencies=False)
+            to_model = table.get_model(
+                fields=[field], field_ids=[], add_dependencies=False
+            )
             model_field = to_model._meta.get_field(field.db_column)
             schema_editor.add_field(to_model, model_field)
+
+        if field.tsvector_column_created:
+            self.create_tsv_for_field(field)
+
+    def create_tsv_for_field(self, field):
+        with safe_django_schema_editor() as schema_editor:
+            model = field.table.get_model(
+                fields=[field], field_ids=[], add_dependencies=False
+            )
+            tsv_model_field = model._meta.get_field(field.tsv_db_column)
+            schema_editor.add_field(model, tsv_model_field)
 
     def create_select_option(self, user=None, **kwargs):
         if "value" not in kwargs:
@@ -48,14 +61,7 @@ class FieldFixtures:
         return SelectOption.objects.create(**kwargs)
 
     def create_text_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = TextField.objects.create(**kwargs)
 
@@ -64,7 +70,7 @@ class FieldFixtures:
 
         return field
 
-    def create_long_text_field(self, user=None, create_field=True, **kwargs):
+    def set_test_field_kwarg_defaults(self, user, kwargs):
         if "table" not in kwargs:
             kwargs["table"] = self.create_database_table(user=user)
 
@@ -73,6 +79,11 @@ class FieldFixtures:
 
         if "order" not in kwargs:
             kwargs["order"] = 0
+
+        kwargs.setdefault("tsvector_column_created", True)
+
+    def create_long_text_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LongTextField.objects.create(**kwargs)
 
@@ -82,14 +93,7 @@ class FieldFixtures:
         return field
 
     def create_number_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = NumberField.objects.create(**kwargs)
 
@@ -99,14 +103,7 @@ class FieldFixtures:
         return field
 
     def create_rating_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = RatingField.objects.create(**kwargs)
 
@@ -116,14 +113,7 @@ class FieldFixtures:
         return field
 
     def create_boolean_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = BooleanField.objects.create(**kwargs)
 
@@ -133,17 +123,10 @@ class FieldFixtures:
         return field
 
     def create_date_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         if "date_show_tzinfo" not in kwargs:
             kwargs["date_show_tzinfo"] = False
+
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = DateField.objects.create(**kwargs)
 
@@ -153,19 +136,16 @@ class FieldFixtures:
         return field
 
     def create_link_row_field(
-        self, user=None, create_field=True, setup_dependencies=True, **kwargs
+        self,
+        user=None,
+        create_field=True,
+        setup_dependencies=True,
+        **kwargs,
     ):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         if "link_row_table" not in kwargs:
             kwargs["link_row_table"] = self.create_database_table(user=user)
+
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LinkRowField.objects.create(**kwargs)
 
@@ -178,14 +158,7 @@ class FieldFixtures:
         return field
 
     def create_file_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = FileField.objects.create(**kwargs)
 
@@ -195,14 +168,7 @@ class FieldFixtures:
         return field
 
     def create_single_select_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = SingleSelectField.objects.create(**kwargs)
 
@@ -212,14 +178,7 @@ class FieldFixtures:
         return field
 
     def create_multiple_select_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = MultipleSelectField.objects.create(**kwargs)
 
@@ -231,14 +190,7 @@ class FieldFixtures:
     def create_multiple_collaborators_field(
         self, user=None, create_field=True, **kwargs
     ):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = MultipleCollaboratorsField.objects.create(**kwargs)
 
@@ -248,14 +200,7 @@ class FieldFixtures:
         return field
 
     def create_url_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.url()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = URLField.objects.create(**kwargs)
 
@@ -265,14 +210,7 @@ class FieldFixtures:
         return field
 
     def create_email_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.email()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = EmailField.objects.create(**kwargs)
 
@@ -282,14 +220,7 @@ class FieldFixtures:
         return field
 
     def create_phone_number_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.phone_number()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = PhoneNumberField.objects.create(**kwargs)
 
@@ -299,20 +230,13 @@ class FieldFixtures:
         return field
 
     def create_last_modified_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         if "date_include_time" not in kwargs:
             kwargs["date_include_time"] = False
 
         if "date_show_tzinfo" not in kwargs:
             kwargs["date_show_tzinfo"] = False
+
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LastModifiedField.objects.create(**kwargs)
 
@@ -322,20 +246,13 @@ class FieldFixtures:
         return field
 
     def create_created_on_field(self, user=None, create_field=True, **kwargs):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         if "date_include_time" not in kwargs:
             kwargs["date_include_time"] = False
 
         if "date_show_tzinfo" not in kwargs:
             kwargs["date_show_tzinfo"] = False
+
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = CreatedOnField.objects.create(**kwargs)
 
@@ -352,15 +269,6 @@ class FieldFixtures:
         calculate_cell_values=True,
         **kwargs,
     ):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         if "formula" not in kwargs:
             kwargs["formula"] = "'test'"
 
@@ -381,6 +289,8 @@ class FieldFixtures:
 
         recalculate = kwargs.pop("recalculate", True)
 
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
         field = FormulaField(**kwargs)
         field.save(recalculate=recalculate)
 
@@ -399,18 +309,15 @@ class FieldFixtures:
         return field
 
     def create_lookup_field(
-        self, user=None, create_field=True, setup_dependencies=True, **kwargs
+        self,
+        user=None,
+        create_field=True,
+        setup_dependencies=True,
+        **kwargs,
     ):
-        if "table" not in kwargs:
-            kwargs["table"] = self.create_database_table(user=user)
-
-        if "name" not in kwargs:
-            kwargs["name"] = self.fake.name()
-
-        if "order" not in kwargs:
-            kwargs["order"] = 0
-
         recalculate = kwargs.pop("recalculate", True)
+
+        self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LookupField(**kwargs)
         field.save(recalculate=recalculate)
