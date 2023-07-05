@@ -309,6 +309,7 @@
 .form-view__description {
   font-size: 16px;
   margin: 0;
+  display: inline-block;
 }
 
 .form-view__no-fields {
@@ -436,6 +437,7 @@
   line-height: 160%;
   margin-bottom: 20px;
   color: $color-neutral-500;
+  display: inline-block;
 }
 
 .form-view-field-edit {

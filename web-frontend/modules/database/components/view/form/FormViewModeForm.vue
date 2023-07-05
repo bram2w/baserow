@@ -15,9 +15,11 @@
       <div class="form-view__heading">
         <Thumbnail v-if="logoImage !== null" :src="logoImage.url" width="200" />
         <h1 v-if="title !== ''" class="form-view__title">{{ title }}</h1>
-        <p v-if="description !== ''" class="form-view__description">
-          {{ description }}
-        </p>
+        <!-- prettier-ignore -->
+        <p
+          v-if="description !== ''"
+          class="form-view__description whitespace-pre-wrap"
+        >{{ description }}</p>
       </div>
       <FormPageField
         v-for="field in visibleFields"

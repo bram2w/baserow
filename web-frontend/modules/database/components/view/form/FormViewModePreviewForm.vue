@@ -60,6 +60,7 @@
             ref="description"
             :value="view.description"
             :placeholder="$t('formViewModePreviewForm.descriptionPlaceholder')"
+            :multiline="true"
             @change="updateForm({ description: $event.value })"
             @editing="editingDescription = $event"
           ></Editable>
