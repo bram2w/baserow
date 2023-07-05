@@ -4,9 +4,13 @@ from typing import TYPE_CHECKING, List, Type, TypeVar
 from django.db.models import Expression, Value
 from django.utils.functional import classproperty
 
+from baserow.contrib.database.fields.expressions import (
+    extract_jsonb_array_values_to_single_string,
+)
 from baserow.contrib.database.formula.ast import tree
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
+from baserow.contrib.database.search.expressions import LocalisedSearchVector
 
 T = TypeVar("T", bound="BaserowFormulaType")
 
@@ -352,6 +356,29 @@ class BaserowFormulaType(abc.ABC):
     def __init__(self, nullable=False):
         self.nullable = nullable
 
+    def prepare_value_for_search(self, field, queryset):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_baserow_field_instance_and_type()
+        # Ensure the fake field_instance can have db_column called on it
+        field_instance.id = field.id
+        return field_type.prepare_value_for_search(field_instance, queryset)
+
+    def prepare_value_for_search_in_array(self, field, queryset):
+        return LocalisedSearchVector(
+            extract_jsonb_array_values_to_single_string(field, queryset)
+        )
+
+    def is_searchable(self, field):
+        (
+            field_instance,
+            field_type,
+        ) = self.get_baserow_field_instance_and_type()
+        # Ensure the fake field_instance can have db_column called on it
+        field_instance.id = field.id
+        return field_type.is_searchable(field_instance)
+
 
 class BaserowFormulaInvalidType(BaserowFormulaType):
     is_valid = False
@@ -368,6 +395,15 @@ class BaserowFormulaInvalidType(BaserowFormulaType):
         raise InvalidFormulaType(self.error)
 
     def should_recreate_when_old_type_was(self, old_type: "BaserowFormulaType") -> bool:
+        return False
+
+    def prepare_value_for_search(self, field, queryset):
+        return None
+
+    def prepare_value_for_search_in_array(self, field, queryset):
+        return None
+
+    def is_searchable(self, field) -> bool:
         return False
 
     def __init__(self, error: str, **kwargs):

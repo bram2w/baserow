@@ -1,6 +1,5 @@
 from unittest.mock import patch
 
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.shortcuts import reverse
@@ -8,7 +7,6 @@ from django.test import override_settings
 from django.test.utils import CaptureQueriesContext
 
 import pytest
-from fakeredis import FakeRedis, FakeServer
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -1015,23 +1013,9 @@ def test_view_cant_update_show_logo(data_fixture, api_client):
     assert response_data["show_logo"] is True
 
 
-fake_redis_server = FakeServer()
-
-
-@override_settings(
-    CACHES={
-        **settings.CACHES,
-        "default": {"BACKEND": "django.core.cache.backends.dummy.DummyCache"},
-    },
-)
-@patch(
-    "django_redis.get_redis_connection",
-    lambda *a, **kw: FakeRedis(server=fake_redis_server),
-)
 @pytest.mark.django_db(transaction=True)
 def test_loading_a_sortable_view_will_create_an_index(
-    api_client,
-    data_fixture,
+    api_client, data_fixture, enable_singleton_testing
 ):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)

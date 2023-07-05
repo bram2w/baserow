@@ -37,7 +37,7 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
-from .constants import TABLE_CREATION
+from .constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, TABLE_CREATION
 from .exceptions import (
     FailedToLockTableDueToConflict,
     InitialTableDataDuplicateName,
@@ -46,7 +46,7 @@ from .exceptions import (
     TableDoesNotExist,
     TableNotInDatabase,
 )
-from .models import Table
+from .models import Table, get_row_needs_background_update_index
 from .operations import (
     DeleteDatabaseTableOperationType,
     DuplicateDatabaseTableOperationType,
@@ -216,6 +216,7 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             database=database,
             order=last_order,
             name=name,
+            needs_background_update_column_added=True,
         )
 
         # Let's create the fields before creating the model so that the whole
@@ -231,6 +232,7 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
                 order=index,
                 primary=index == 0,
                 name=name,
+                tsvector_column_created=table.tsvectors_are_supported,
                 **field_config,
             )
             if field_options:
@@ -253,7 +255,7 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
                 fields=fields,
             )
 
-        # Create the table schema in the database database.
+        # Create the table schema in the database.
         with safe_django_schema_editor() as schema_editor:
             # Django only creates indexes when the model is managed.
             model = table.get_model(managed=True)
@@ -676,3 +678,25 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             )["row_count__sum"]
             or 0
         )
+
+    def create_needs_background_update_field(self, table: "Table") -> None:
+        """
+        Responsible for creating the `ROW_NEEDS_BACKGROUND_UPDATES_RUN_COLUMN_NAME` and
+        fields on the `Table`.
+        """
+
+        if table.needs_background_update_column_added:
+            return
+
+        # Prepare a fresh model we can use to create the columns.
+        table.needs_background_update_column_added = True
+        model = table.get_model()
+
+        with safe_django_schema_editor(atomic=False) as schema_editor:
+            needs_background_update_field = model._meta.get_field(
+                ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
+            )
+            schema_editor.add_field(model, needs_background_update_field)
+            schema_editor.add_index(model, get_row_needs_background_update_index(table))
+
+        table.save(update_fields=("needs_background_update_column_added",))

@@ -586,12 +586,8 @@ def test_trashing_table_hides_restores_tokens(api_client, data_fixture):
 
     database_1 = data_fixture.create_database_application(workspace=workspace_1)
     database_2 = data_fixture.create_database_application(workspace=workspace_1)
-    table_1 = data_fixture.create_database_table(
-        database=database_1, create_table=False
-    )
-    table_2 = data_fixture.create_database_table(
-        database=database_1, create_table=False
-    )
+    table_1 = data_fixture.create_database_table(database=database_1)
+    table_2 = data_fixture.create_database_table(database=database_1)
 
     TokenHandler().update_token_permissions(
         user,

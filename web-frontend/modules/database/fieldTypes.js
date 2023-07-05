@@ -310,6 +310,14 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * When searching a cells value this should return the value to match the users
+   * user term against.
+   */
+  toSearchableString(field, value, delimiter = ', ') {
+    return this.toHumanReadableString(field, value, delimiter)
+  }
+
+  /**
    * Should return a sort function that is unique for the field type.
    */
   getSort() {
@@ -1374,6 +1382,10 @@ export class BooleanFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return value ? 'true' : 'false'
+  }
 }
 
 class BaseDateFieldType extends FieldType {
@@ -1421,7 +1433,11 @@ class BaseDateFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value) {
-    const timezone = getFieldTimezone(field)
+    return this._toFormattedString(field, value)
+  }
+
+  _toFormattedString(field, value, guess = true) {
+    const timezone = getFieldTimezone(field, guess)
     const date = moment.utc(value)
     if (timezone !== null) {
       date.tz(timezone)
@@ -1439,6 +1455,10 @@ class BaseDateFieldType extends FieldType {
     } else {
       return ''
     }
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return this._toFormattedString(field, value, false)
   }
 
   prepareValueForCopy(field, value) {
@@ -2934,13 +2954,16 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     if (value === undefined || value === null) {
       return ''
     }
+    const nameList = this._collaboratorCellValueToListOfNames(value)
 
+    return this.app.$papa.arrayToString(nameList)
+  }
+
+  _collaboratorCellValueToListOfNames(value) {
     const workspaces = this.app.store.getters['workspace/getAll']
 
-    let nameList = []
-
     if (workspaces.length > 0) {
-      nameList = value.map((value) => {
+      return value.map((value) => {
         const workspaceUser = this.app.store.getters['workspace/getUserById'](
           value.id
         )
@@ -2948,12 +2971,10 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       })
     } else {
       // public views
-      nameList = value.map((value) => {
+      return value.map((value) => {
         return value.name
       })
     }
-
-    return this.app.$papa.arrayToString(nameList)
   }
 
   prepareRichValueForCopy(field, value) {
@@ -3026,5 +3047,12 @@ export class MultipleCollaboratorsFieldType extends FieldType {
         name: 'John',
       },
     ]
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    if (value === undefined || value === null) {
+      return ''
+    }
+    return this._collaboratorCellValueToListOfNames(value).join(delimiter)
   }
 }

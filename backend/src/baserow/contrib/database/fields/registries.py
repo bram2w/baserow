@@ -5,11 +5,13 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.db import models as django_models
-from django.db.models import BooleanField, DurationField, Q, QuerySet
+from django.db.models import BooleanField, CharField, DurationField, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.db.models.functions import Cast
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.contrib.database.search.expressions import LocalisedSearchVector
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -126,6 +128,27 @@ class FieldType(
         """
 
         return value
+
+    def prepare_value_for_search(
+        self, field: Field, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        """
+        When a row is created, updated or deleted, this `FieldType` method
+        must return a `SearchVector` that informs Postgres full-text search
+        how the column should be prepared so that the table's `tsvector`
+        column can be UPDATEd with it.
+        """
+
+        return LocalisedSearchVector(Cast(field.db_column, output_field=CharField()))
+
+    def is_searchable(self, field: Field) -> bool:
+        """
+        If this field needs a tsv search index column made for it then this should
+        return True. If True is returned then prepare_value_for_search should also
+        be implemented.
+        """
+
+        return True
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -792,7 +815,11 @@ class FieldType(
             if self.can_have_select_options
             else []
         )
-        field = self.model_class(table=table, **serialized_copy)
+        field = self.model_class(
+            table=table,
+            tsvector_column_created=table.tsvectors_are_supported,
+            **serialized_copy,
+        )
         field.save()
 
         id_mapping["database_fields"][field_id] = field.id

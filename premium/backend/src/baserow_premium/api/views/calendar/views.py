@@ -193,7 +193,13 @@ class CalendarViewView(APIView):
             )
             response.update(**serializer_class(view, context=context).data)
 
-        view_loaded.send(sender=self, view=view, table_model=model, user=request.user)
+        view_loaded.send(
+            sender=self,
+            table=view.table,
+            view=view,
+            table_model=model,
+            user=request.user,
+        )
 
         return Response(response)
 

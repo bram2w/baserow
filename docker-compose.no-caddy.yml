@@ -152,6 +152,7 @@ x-backend-variables: &backend-variables
   BASEROW_AUTO_INDEX_VIEW_ENABLED:
   BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED:
   BASEROW_DISABLE_LOCKED_MIGRATIONS:
+  BASEROW_USE_PG_FULLTEXT_SEARCH:
 
 services:
   backend:
@@ -192,6 +193,7 @@ services:
       BASEROW_ENABLE_OTEL:
       BASEROW_DEPLOYMENT_ENV:
       BASEROW_OSS_ONLY:
+      BASEROW_USE_PG_FULLTEXT_SEARCH:
     depends_on:
       - backend
     networks:

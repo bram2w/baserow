@@ -1,6 +1,9 @@
 import { firstBy } from 'thenby'
 import BigNumber from 'bignumber.js'
 import { maxPossibleOrderValue } from '@baserow/modules/database/viewTypes'
+import { escapeRegExp } from '@baserow/modules/core/utils/string'
+import { SearchModes } from '@baserow/modules/database/utils/search'
+import { convertStringToMatchBackendTsvectorData } from '@baserow/modules/database/search/regexes'
 
 /**
  * Generates a sort function based on the provided sortings.
@@ -132,15 +135,41 @@ export const matchSearchFilters = (
   }
 }
 
+function _fullTextSearch(registry, field, value, activeSearchTerm) {
+  const searchableString = registry
+    .get('field', field.type)
+    .toSearchableString(field, value)
+  const fixedValue = convertStringToMatchBackendTsvectorData(searchableString)
+  const fixedTerm = convertStringToMatchBackendTsvectorData(activeSearchTerm)
+  if (fixedTerm.length === 0) {
+    return false
+  } else {
+    const regexMatchingWordsThatStartWithTerm =
+      '(^|\\s+)' + escapeRegExp(fixedTerm)
+    return !!fixedValue.match(
+      new RegExp(regexMatchingWordsThatStartWithTerm, 'gu')
+    )
+  }
+}
+
+function _compatSearchMode(registry, field, value, activeSearchTerm) {
+  return registry
+    .get('field', field.type)
+    .containsFilter(value, activeSearchTerm, field)
+}
+
 export function valueMatchesActiveSearchTerm(
+  searchMode,
   registry,
   field,
   value,
   activeSearchTerm
 ) {
-  return registry
-    .get('field', field.type)
-    .containsFilter(value, activeSearchTerm, field)
+  if (searchMode === SearchModes.MODE_FT_WITH_COUNT) {
+    return _fullTextSearch(registry, field, value, activeSearchTerm)
+  } else {
+    return _compatSearchMode(registry, field, value, activeSearchTerm)
+  }
 }
 
 function _findFieldsInRowMatchingSearch(
@@ -148,21 +177,26 @@ function _findFieldsInRowMatchingSearch(
   activeSearchTerm,
   fields,
   registry,
-  overrides
+  overrides,
+  searchMode
 ) {
   const fieldSearchMatches = new Set()
   // If the row is loading then a temporary UUID is put in its id. We don't want to
   // accidentally match against that UUID as it will be shortly replaced with its
   // real id.
-  if (!row._.loading && row.id.toString().includes(activeSearchTerm)) {
+  if (
+    !row._.loading &&
+    row.id?.toString() === (activeSearchTerm || '').trim()
+  ) {
     fieldSearchMatches.add('row_id')
   }
   for (const field of fields) {
     const fieldName = `field_${field.id}`
     const rowValue =
       fieldName in overrides ? overrides[fieldName] : row[fieldName]
-    if (rowValue) {
+    if (rowValue !== undefined && rowValue !== null) {
       const doesMatch = valueMatchesActiveSearchTerm(
+        searchMode,
         registry,
         field,
         rowValue,
@@ -190,6 +224,7 @@ export function calculateSingleRowSearchMatches(
   hideRowsNotMatchingSearch,
   fields,
   registry,
+  searchMode,
   overrides = {}
 ) {
   const searchIsBlank = activeSearchTerm === ''
@@ -200,7 +235,8 @@ export function calculateSingleRowSearchMatches(
         activeSearchTerm,
         fields,
         registry,
-        overrides
+        overrides,
+        searchMode
       )
 
   const matchSearch =

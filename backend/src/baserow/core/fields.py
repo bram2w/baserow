@@ -28,3 +28,15 @@ class SyncedDateTimeField(models.DateTimeField):
             kwargs.pop("editable", None)
             kwargs.pop("blank", None)
         return name, path, args, kwargs
+
+
+class AutoTrueBooleanField(models.BooleanField):
+    """
+    A `BooleanField` which automatically sets itself to `True` before a save takes
+    place. Used by `ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME` to mark a row as
+    needing a background update after it's been created or updated.
+    """
+
+    def pre_save(self, model_instance, add):
+        setattr(model_instance, self.attname, True)
+        return super().pre_save(model_instance, add)

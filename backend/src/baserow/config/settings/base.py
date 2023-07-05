@@ -873,7 +873,12 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # IF CHANGING KEEP IN SYNC WITH e2e-tests/wait-for-services.sh
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
-MAX_FIELD_LIMIT = 1500
+MAX_FIELD_LIMIT = int(os.getenv("BASEROW_MAX_FIELD_LIMIT", 600))
+INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
+    os.getenv(
+        "BASEROW_INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT", MAX_FIELD_LIMIT
+    )
+)
 
 # If you change this default please also update the default for the web-frontend found
 # in web-frontend/modules/core/module.js:55
@@ -1089,6 +1094,26 @@ LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 MAX_NUMBER_CALENDAR_DAYS = 45
 
 MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
+
+
+# Search specific configuration settings.
+#
+# How long the Postgres full-text search Celery tasks
+# can run for being killed. By default, 15 minutes.
+BASEROW_CELERY_TSV_MODIFICATION_HARD_LIMIT = 60 * 15
+# By default, Baserow will use Postgres full-text as its
+# search backend. If the product is installed on a system
+# with limited disk space, and less accurate results / degraded
+# search performance is acceptable, then switch this setting off.
+BASEROW_USE_PG_FULLTEXT_SEARCH = (
+    os.getenv("BASEROW_USE_PG_FULLTEXT_SEARCH", "true") == "true"
+)
+BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG = os.getenv(
+    "BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG", "simple"
+)
+BASEROW_AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(
+    os.getenv("BASEROW_AUTO_VACUUM_AFTER_SEARCH_UPDATE", "true")
+)
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

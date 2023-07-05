@@ -1,12 +1,12 @@
 from datetime import datetime
 from decimal import Decimal
 from time import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from django.conf import settings
 from django.core.cache import caches
-from django.db import models
-from django.test import override_settings
+from django.db import connection, models
+from django.test.utils import override_settings
 from django.utils.timezone import make_aware, utc
 
 import pytest
@@ -16,6 +16,14 @@ from baserow.contrib.database.fields.exceptions import (
     FilterFieldNotFound,
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
+)
+from baserow.contrib.database.search.handler import (
+    ALL_SEARCH_MODES,
+    SearchHandler,
+    SearchModes,
+)
+from baserow.contrib.database.table.constants import (
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.exceptions import (
@@ -38,7 +46,7 @@ def test_workspace_user_get_next_order(data_fixture):
 
 @pytest.mark.django_db
 def test_get_table_model(data_fixture):
-    default_model_fields_count = 4
+    default_model_fields_count = 5
     table = data_fixture.create_database_table(name="Cars")
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
@@ -54,7 +62,7 @@ def test_get_table_model(data_fixture):
     assert model.__name__ == f"Table{table.id}Model"
     assert model._generated_table_model
     assert model._meta.db_table == f"database_table_{table.id}"
-    assert len(model._meta.get_fields()) == 4 + default_model_fields_count
+    assert len(model._meta.get_fields()) == 7 + default_model_fields_count
 
     color_field = model._meta.get_field("color")
     horsepower_field = model._meta.get_field("horsepower")
@@ -94,7 +102,7 @@ def test_get_table_model(data_fixture):
     model_2 = table.get_model(
         fields=[number_field], field_ids=[text_field.id], attribute_names=True
     )
-    assert len(model_2._meta.get_fields()) == 3 + default_model_fields_count
+    assert len(model_2._meta.get_fields()) == 5 + default_model_fields_count
 
     color_field = model_2._meta.get_field("color")
     assert color_field
@@ -106,7 +114,7 @@ def test_get_table_model(data_fixture):
 
     model_3 = table.get_model()
     assert model_3._meta.db_table == f"database_table_{table.id}"
-    assert len(model_3._meta.get_fields()) == 4 + default_model_fields_count
+    assert len(model_3._meta.get_fields()) == 7 + default_model_fields_count
 
     field_1 = model_3._meta.get_field(f"field_{text_field.id}")
     assert isinstance(field_1, models.TextField)
@@ -125,7 +133,7 @@ def test_get_table_model(data_fixture):
     )
     model = table.get_model(attribute_names=True)
     field_names = [f.name for f in model._meta.get_fields()]
-    assert len(field_names) == 5 + default_model_fields_count
+    assert len(field_names) == 9 + default_model_fields_count
     assert f"{text_field.model_attribute_name}_field_{text_field.id}" in field_names
     assert f"{text_field_2.model_attribute_name}_field_{text_field.id}" in field_names
 
@@ -149,6 +157,37 @@ def test_get_table_model(data_fixture):
     assert fields[text_field_2.id]["field"].id == text_field_2.id
     assert fields[text_field_2.id]["type"].type == "text"
     assert fields[text_field_2.id]["name"] == f"field_{text_field_2.id}"
+
+
+@pytest.mark.django_db
+def test_get_table_model_with_fulltext_search_enabled(data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, order=1, name="Horsepower"
+    )
+    boolean_field = data_fixture.create_boolean_field(
+        table=table, order=2, name="For sale"
+    )
+
+    model = table.get_model()
+    full_text_search_fields = [
+        ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+    ]
+    base_fields = ["id", "created_on", "updated_on", "trashed", "order"]
+    added_fields = [
+        text_field.db_column,
+        text_field.tsv_db_column,
+        number_field.db_column,
+        number_field.tsv_db_column,
+        boolean_field.db_column,
+        boolean_field.tsv_db_column,
+    ]
+    expected_fields = base_fields + added_fields + full_text_search_fields
+    field_names = [field.name for field in model._meta.get_fields()]
+    assert sorted(field_names) == sorted(expected_fields)
 
 
 @pytest.mark.django_db
@@ -181,7 +220,61 @@ def test_enhance_by_fields_queryset(data_fixture):
 
 
 @pytest.mark.django_db
-def test_search_all_fields_queryset(data_fixture):
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.pg_search")
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.compat_search")
+def test_search_all_fields_compat_mode(compat_search, pg_search, data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    model = table.get_model(attribute_names=True)
+    model.objects.all().search_all_fields("bmw", search_mode=SearchModes.MODE_COMPAT)
+    assert not pg_search.called
+    assert compat_search.called
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.pg_search")
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.compat_search")
+def test_search_all_fields_full_text_mode_count(compat_search, pg_search, data_fixture):
+    table = data_fixture.create_database_table(name="Cars")
+    model = table.get_model(attribute_names=True)
+    model.objects.all().search_all_fields(
+        "bmw", search_mode=SearchModes.MODE_FT_WITH_COUNT
+    )
+    assert pg_search.called
+    assert not compat_search.called
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.pg_search")
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.compat_search")
+def test_search_all_fields_full_text_mode_count_with_full_text_disabled(
+    compat_search, pg_search, data_fixture, disable_full_text_search
+):
+    table = data_fixture.create_database_table(name="Cars")
+    model = table.get_model(attribute_names=True)
+    model.objects.all().search_all_fields(
+        "bmw", search_mode=SearchModes.MODE_FT_WITH_COUNT
+    )
+    assert not pg_search.called
+    assert compat_search.called
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.pg_search")
+@patch("baserow.contrib.database.table.models.TableModelQuerySet.compat_search")
+def test_search_all_fields_search_mode_not_implemented(
+    compat_search, pg_search, data_fixture
+):
+    table = data_fixture.create_database_table(name="Cars")
+    model = table.get_model(attribute_names=True)
+    with pytest.raises(NotImplementedError):
+        model.objects.all().search_all_fields("bmw", search_mode="foobar")
+    assert not pg_search.called
+    assert not compat_search.called
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_search_all_fields_queryset(data_fixture, search_mode):
     table = data_fixture.create_database_table(name="Cars")
     data_fixture.create_text_field(table=table, order=0, name="Name")
     data_fixture.create_text_field(table=table, order=1, name="Color")
@@ -226,96 +319,124 @@ def test_search_all_fields_queryset(data_fixture):
         price="20500",
         description="This is the most expensive car we have.",
         date="2005-05-05",
-        datetime=make_aware(datetime(5, 5, 5, 0, 48, 0), utc),
+        datetime=make_aware(datetime(5, 5, 5, 0, 49, 0), utc),
         file=[{"visible_name": "other_file.png"}],
         select=option_b,
-        phonenumber="++--999999",
+        phonenumber="--++999999",
     )
     row_3 = model.objects.create(
         name="Volkswagen",
         color="White",
-        price="5000",
+        price="2050",
         description="The oldest car that we have.",
         date="9999-05-05",
-        datetime=make_aware(datetime(5, 5, 5, 9, 59, 0), utc),
+        datetime=make_aware(datetime(5, 5, 5, 9, 49, 0), utc),
         file=[],
         phonenumber="",
     )
+    SearchHandler.update_tsvector_columns(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
 
-    results = model.objects.all().search_all_fields("FASTEST")
+    def dump_table(table_name):
+        with connection.cursor() as cursor:
+            query = f"SELECT * FROM {table_name}"
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            return rows
+
+    dumped_rows = dump_table(f"database_table_{table.id}")
+    for row in dumped_rows:
+        print(row)
+
+    results = model.objects.all().search_all_fields("FASTEST", search_mode=search_mode)
     assert row_1 in results
 
-    results = model.objects.all().search_all_fields("car")
+    results = model.objects.all().search_all_fields("car", search_mode=search_mode)
     assert len(results) == 3
     assert row_1 in results
     assert row_2 in results
     assert row_3 in results
 
-    results = model.objects.all().search_all_fields("oldest")
+    results = model.objects.all().search_all_fields("oldest", search_mode=search_mode)
     assert len(results) == 1
     assert row_3 in results
 
-    results = model.objects.all().search_all_fields("Audi")
+    results = model.objects.all().search_all_fields("Audi", search_mode=search_mode)
     assert len(results) == 1
     assert row_2 in results
 
-    results = model.objects.all().search_all_fields(str(row_1.id))
+    results = model.objects.all().search_all_fields(
+        str(row_1.id), search_mode=search_mode
+    )
     assert len(results) == 1
     assert row_1 in results
 
-    results = model.objects.all().search_all_fields(str(row_3.id))
+    results = model.objects.all().search_all_fields(
+        str(row_3.id), search_mode=search_mode
+    )
     assert len(results) == 1
     assert row_3 in results
 
-    results = model.objects.all().search_all_fields("500")
+    results = model.objects.all().search_all_fields("205", search_mode=search_mode)
     assert len(results) == 2
     assert row_2 in results
     assert row_3 in results
 
-    results = model.objects.all().search_all_fields("0" + str(row_1.id))
+    results = model.objects.all().search_all_fields(
+        "0" + str(row_1.id), search_mode=search_mode
+    )
     assert len(results) == 0
 
-    results = model.objects.all().search_all_fields("05/05/9999")
+    results = model.objects.all().search_all_fields(
+        "05/05/9999", search_mode=search_mode
+    )
     assert len(results) == 1
     assert row_3 in results
 
-    results = model.objects.all().search_all_fields("07/08/4006")
+    results = model.objects.all().search_all_fields(
+        "07/08/4006", search_mode=search_mode
+    )
     assert len(results) == 1
     assert row_1 in results
 
-    results = model.objects.all().search_all_fields("00:")
+    results = model.objects.all().search_all_fields(":49", search_mode=search_mode)
+    assert len(results) == 2
+    assert row_2 in results
+    assert row_3 in results
+
+    results = model.objects.all().search_all_fields(".png", search_mode=search_mode)
     assert len(results) == 2
     assert row_1 in results
     assert row_2 in results
 
-    results = model.objects.all().search_all_fields(".png")
+    results = model.objects.all().search_all_fields(
+        "test_file", search_mode=search_mode
+    )
+    assert len(results) == 1
+    assert row_1 in results
+
+    results = model.objects.all().search_all_fields("Option", search_mode=search_mode)
     assert len(results) == 2
     assert row_1 in results
     assert row_2 in results
 
-    results = model.objects.all().search_all_fields("test_file")
+    results = model.objects.all().search_all_fields("Option B", search_mode=search_mode)
     assert len(results) == 1
-    assert row_1 in results
+    assert row_2 in results
 
-    results = model.objects.all().search_all_fields("Option")
+    results = model.objects.all().search_all_fields("999999", search_mode=search_mode)
+    assert len(results) == 1
+    assert row_2 in results
+
+    results = model.objects.all().search_all_fields("99999", search_mode=search_mode)
     assert len(results) == 2
     assert row_1 in results
     assert row_2 in results
 
-    results = model.objects.all().search_all_fields("Option B")
-    assert len(results) == 1
-    assert row_2 in results
-
-    results = model.objects.all().search_all_fields("999999")
-    assert len(results) == 1
-    assert row_2 in results
-
-    results = model.objects.all().search_all_fields("99999")
-    assert len(results) == 2
-    assert row_1 in results
-    assert row_2 in results
-
-    results = model.objects.all().search_all_fields("white car")
+    results = model.objects.all().search_all_fields(
+        "white car", search_mode=search_mode
+    )
     assert len(results) == 0
 
 

@@ -1,9 +1,11 @@
 import os
+import re
 import sys
 import time
 from collections import defaultdict
 from decimal import Decimal
 from math import ceil
+from typing import List, Tuple
 
 from django.core.management.base import BaseCommand
 from django.db.models import Max
@@ -13,9 +15,18 @@ from faker import Faker
 from tqdm import tqdm
 
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.management.utils import run_command_concurrently
 from baserow.core.utils import grouper
+
+
+def underscore(word: str) -> str:
+    word = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", word)
+    word = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", word)
+    word = word.replace("-", "_")
+    word = word.replace(" ", "_")
+    return word.lower()
 
 
 class Command(BaseCommand):
@@ -27,6 +38,15 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "limit", type=int, help="Amount of rows that need to be inserted."
+        )
+        parser.add_argument(
+            "--replicate-to-table-ids",
+            type=str,
+            nargs="*",
+            help="Optional, replicate the rows into other table IDs at the same time. "
+            "Useful if you're trying to benchmark exact tables against one "
+            "another. The tables in `replicate_to_table_ids` *must* have the "
+            "exact field names and types as in `table_id`.",
         )
         parser.add_argument(
             "--concurrency",
@@ -45,6 +65,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         table_id = options["table_id"]
+        replicate_to_table_ids = options["replicate_to_table_ids"] or []
+
         limit = options["limit"]
         concurrency = options["concurrency"]
         batch_size = options["batch_size"]
@@ -59,7 +81,71 @@ class Command(BaseCommand):
                 )
                 sys.exit(1)
 
-            fill_table_rows(limit, table, batch_size)
+            source_table_model = table.get_model()
+
+            # If we've been given tables to replicate to...
+            replicated_table_models = []
+            if replicate_to_table_ids:
+                # `run_command_concurrently` needs to receive a string, so
+                # `replicate_to_table_ids` is a list of strings. To query for
+                # the tables however, we need integer, so map over them and cast to int.
+                replicate_to_table_ids_int = list(
+                    map(lambda tbl_id: int(tbl_id), replicate_to_table_ids)
+                )
+                # Find all tables using their PK.
+                replicated_tables = Table.objects.filter(
+                    pk__in=replicate_to_table_ids_int
+                )
+                # Pluck out the IDs from the queryset.
+                replicated_table_ids_found = list(
+                    map(lambda tbl: tbl.id, replicated_tables)
+                )
+                # If the IDs don't match those we're expecting, then
+                # one or more of those IDs couldn't be found.
+                if replicate_to_table_ids_int != replicated_table_ids_found:
+                    # Figure out which IDs are unknown to us and write an error.
+                    replicated_table_ids_unknowns = list(
+                        set(replicate_to_table_ids_int)
+                        - set(replicated_table_ids_found)
+                    )
+                    replicated_table_ids_unknown_str = ", ".join(
+                        map(lambda t: str(t), replicated_table_ids_unknowns)
+                    )
+                    self.stdout.write(
+                        self.style.ERROR(
+                            "Unable to find table(s) "
+                            f"{replicated_table_ids_unknown_str} to "
+                            "replicate to."
+                        )
+                    )
+                    sys.exit(1)
+
+                # We found all tables properly, so we'll now fetch
+                # all generated table models for those tables.
+                replicated_table_models = list(
+                    map(lambda tbl: tbl.get_model(), replicated_tables)
+                )
+                # Finally, the last check is to validate that all fields
+                # (by name and type) match those in the source table, `table`.
+                try:
+                    validate_replicated_tables(
+                        source_table_model, replicated_table_models
+                    )
+                except ValueError as e:
+                    self.stdout.write(self.style.ERROR(e.args[0]))
+                    sys.exit(1)
+
+            fill_table_rows(
+                limit,
+                table,
+                batch_size,
+                source_table_model=source_table_model,
+                replicated_table_models=replicated_table_models,
+            )
+
+            SearchHandler.update_tsvector_columns(
+                table, update_tsvectors_for_changed_rows_only=False
+            )
 
         else:
             run_command_concurrently(
@@ -68,6 +154,8 @@ class Command(BaseCommand):
                     "fill_table_rows",
                     str(table_id),
                     str(int(limit / concurrency)),
+                    "--replicate-to-table-ids",
+                    *replicate_to_table_ids,
                     "--concurrency",
                     "1",
                     "--batch-size",
@@ -75,6 +163,7 @@ class Command(BaseCommand):
                 ],
                 concurrency,
             )
+
         tock = time.time()
         self.stdout.write(
             self.style.SUCCESS(
@@ -83,16 +172,93 @@ class Command(BaseCommand):
         )
 
 
-def create_row_instance_and_relations(model, fake, cache, order):
+def extract_table_fields(model) -> List[Tuple[str, str]]:
+    """
+    Given a generated table model, will return a list of tuples where
+    each tuple represents a field name and field type combination. Used
+    by `validate_replicated_tables` to ensure each replicated table
+    matching the source table's fields.
+    """
+
+    table_field_map = []
+    for _, field_object in model._field_objects.items():
+        field_type = field_object["type"].type
+        field_name = underscore(field_object["field"].name.lower())
+        table_field_map.append(
+            (
+                field_name,
+                field_type,
+            )
+        )
+    return table_field_map
+
+
+def validate_replicated_tables(source_table_model, replicated_table_models):
+    """
+    Given the source table generated model, and its replicated tables' generated
+    models, will ensure that all replicated tables have the same field name/type
+    pairs as in the source table. If there are any new/removed fields, an error will
+    be raised. This is necessary so that we can cleanly replicate each new row in
+    `source_table_model` to tables in `replicated_table_models`.
+    """
+
+    source_field_map = extract_table_fields(source_table_model)
+
+    for model in replicated_table_models:
+        model_field_map = extract_table_fields(model)
+        if model_field_map != source_field_map:
+            exc_msg = (
+                f"The fields in table {model.baserow_table_id} do not match "
+                f"those in source table {source_table_model.baserow_table_id}."
+            )
+            subtractive_changes = dict(set(source_field_map) - set(model_field_map))
+            if subtractive_changes:
+                exc_msg += f"\n\nFields missing from table {model.baserow_table_id}:\n"
+                for field_name, field_type in subtractive_changes.items():
+                    exc_msg += f"- {field_name} (type: {field_type})"
+            additive_changes = dict(set(model_field_map) - set(source_field_map))
+            if additive_changes:
+                exc_msg += f"\n\nFields added in table {model.baserow_table_id}:\n"
+                for field_name, field_type in additive_changes.items():
+                    exc_msg += f"- {field_name} (type: {field_type})"
+            raise ValueError(exc_msg)
+
+
+def generate_values_for_one_or_more_tables(models, fake, cache):
+    """
+    Given a list of generated table models (the source table, and optionally if set,
+    the replicated tables), this function will group matching fields together using
+    their name and type. This is used by `fill_table_rows` to generate a random value
+    for a field type *once* and re-use it across the replicated tables.
+    """
+
+    grouped_fields_by_name_and_type = defaultdict(lambda: defaultdict(list))
+    for model in models:
+        for _, field_object in model._field_objects.items():
+            field_type = field_object["type"].type
+            field_name = underscore(field_object["field"].name.lower())
+            key = f"{field_type}_{field_name}"
+            field_object["baserow_table_id"] = model.baserow_table_id
+            grouped_fields_by_name_and_type[key]["field_objects"].append(field_object)
+
+    fields_grouped_by_table = defaultdict(dict)
+    for _, meta in grouped_fields_by_name_and_type.items():
+        random_value = None
+        for field_object in meta["field_objects"]:
+            if random_value is None:
+                random_value = field_object["type"].random_value(
+                    field_object["field"], fake, cache
+                )
+            field_id = field_object["field"].id
+            table_id = field_object["baserow_table_id"]
+            fields_grouped_by_table[table_id][f"field_{field_id}"] = random_value
+
+    return fields_grouped_by_table
+
+
+def create_row_instance_and_relations(values, model, fake, cache, order):
     # Based on the random_value function we have for each type we can
     # build a dict with a random value for each field.
-    values = {
-        f"field_{field_id}": field_object["type"].random_value(
-            field_object["field"], fake, cache
-        )
-        for field_id, field_object in model._field_objects.items()
-    }
-
     values, manytomany_values = RowHandler().extract_manytomany_values(values, model)
 
     values["order"] = order
@@ -150,10 +316,19 @@ def bulk_create_rows(model, rows):
     create_many_to_many_relations(model, rows)
 
 
-def fill_table_rows(limit, table, batch_size=-1):
+def fill_table_rows(
+    limit, table, batch_size=-1, source_table_model=None, replicated_table_models=None
+):
     fake = Faker()
     cache = {}
-    model = table.get_model()
+
+    if source_table_model:
+        model = source_table_model
+        models = [model] + replicated_table_models
+    else:
+        model = table.get_model()
+        models = [model]
+
     # Find out what the highest order is because we want to append the new rows.
     order = ceil(model.objects.aggregate(max=Max("order")).get("max") or Decimal("0"))
     if batch_size <= 0:
@@ -164,14 +339,24 @@ def fill_table_rows(limit, table, batch_size=-1):
         desc=f"Adding {limit} rows to table {table.pk} in worker {os.getpid()}",
     ) as pbar:
         for group in grouper(batch_size, range(limit)):
-            rows = []
+            rows = defaultdict(list)
             for _ in group:
                 order += Decimal("1")
-                instance, relations = create_row_instance_and_relations(
-                    model, fake, cache, order
+                fields_grouped_by_table = generate_values_for_one_or_more_tables(
+                    models, fake, cache
                 )
-                rows.append((instance, relations))
-                pbar.update(1)
 
-            pbar.refresh()
-            bulk_create_rows(model, rows)
+                for model in models:
+                    instance, relations = create_row_instance_and_relations(
+                        fields_grouped_by_table[model.baserow_table_id],
+                        model,
+                        fake,
+                        cache,
+                        order,
+                    )
+                    rows[model.baserow_table_id].append((instance, relations))
+                    pbar.update(1)
+
+            for model in models:
+                pbar.refresh()
+                bulk_create_rows(model, rows[model.baserow_table_id])

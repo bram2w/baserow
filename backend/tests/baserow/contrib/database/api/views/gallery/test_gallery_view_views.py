@@ -11,6 +11,7 @@ from rest_framework.status import (
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 
 
 @pytest.mark.django_db
@@ -156,7 +157,8 @@ def test_list_rows_include_field_options(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_list_rows_search(api_client, data_fixture):
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_list_rows_search(api_client, data_fixture, search_mode):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -180,9 +182,15 @@ def test_list_rows_search(api_client, data_fixture):
         **{f"field_{text_field.id}": "Robin Backham"}
     )
 
+    SearchHandler.update_tsvector_columns(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
+
     url = reverse("api:database:views:gallery:list", kwargs={"view_id": gallery.id})
     response = api_client.get(
-        url, {"search": search_term}, **{"HTTP_AUTHORIZATION": f"JWT {token}"}
+        url,
+        {"search": search_term, "search_mode": search_mode},
+        **{"HTTP_AUTHORIZATION": f"JWT {token}"},
     )
 
     response_json = response.json()
@@ -628,7 +636,10 @@ def test_list_rows_public_filters_by_visible_and_hidden_columns(
 
 
 @pytest.mark.django_db
-def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixture):
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_list_rows_public_only_searches_by_visible_columns(
+    api_client, data_fixture, search_mode
+):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
 
@@ -664,13 +675,16 @@ def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixt
         values={"public": search_term, "hidden": "other"},
         user_field_names=True,
     )
+    SearchHandler.update_tsvector_columns(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
 
     # Get access as an anonymous user
     response = api_client.get(
         reverse(
             "api:database:views:gallery:public_rows", kwargs={"slug": gallery_view.slug}
         )
-        + f"?search={search_term}"
+        + f"?search={search_term}&search_mode={search_mode}"
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json

@@ -103,7 +103,7 @@ COPY --chown=$UID:$GID ./tests /baserow/tests/
 USER root
 RUN apt-get update &&  \
     apt-get install -y --no-install-recommends \
-    graphviz \
+    graphviz apache2-utils \
     && apt-get autoclean \
     && apt-get clean \
     && apt-get autoremove \

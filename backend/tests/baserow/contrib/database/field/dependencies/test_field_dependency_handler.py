@@ -1,11 +1,6 @@
-from django.conf import settings
-
 import pytest
 from pytest_unordered import unordered
 
-from baserow.contrib.database.fields.dependencies.circular_reference_checker import (
-    will_cause_circular_dep,
-)
 from baserow.contrib.database.fields.dependencies.exceptions import (
     SelfReferenceFieldDependencyError,
 )
@@ -14,22 +9,6 @@ from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
-
-
-@pytest.mark.django_db
-def test_deep_circular_ref(data_fixture, django_assert_num_queries):
-    depth = settings.MAX_FIELD_REFERENCE_DEPTH
-    starting_field = data_fixture.create_text_field()
-    previous_field = starting_field
-    for i in range(depth):
-        new_field = data_fixture.create_text_field(table=starting_field.table)
-        FieldDependency.objects.create(dependant=previous_field, dependency=new_field)
-        previous_field = new_field
-
-    with django_assert_num_queries(1):
-        assert will_cause_circular_dep(previous_field, starting_field)
-    with django_assert_num_queries(1):
-        assert not will_cause_circular_dep(starting_field, previous_field)
 
 
 @pytest.mark.django_db

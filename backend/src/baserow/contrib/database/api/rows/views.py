@@ -100,6 +100,7 @@ from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
+from ..constants import SEARCH_MODE_API_PARAM
 from .schemas import row_names_response_schema
 from .serializers import (
     BatchCreateRowsQueryParamsSerializer,
@@ -245,6 +246,7 @@ class RowsView(APIView):
                 type=OpenApiTypes.INT,
                 description="Includes all the filters and sorts of the provided view.",
             ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table rows"],
         operation_id="list_database_table_rows",
@@ -319,6 +321,7 @@ class RowsView(APIView):
 
         TokenHandler().check_table_permissions(request, "read", table, False)
         search = query_params.get("search")
+        search_mode = query_params.get("search_mode")
         order_by = query_params.get("order_by")
         include = query_params.get("include")
         exclude = query_params.get("exclude")
@@ -349,7 +352,7 @@ class RowsView(APIView):
             queryset = view_handler.apply_sorting(view, queryset)
 
         if search:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         if order_by:
             queryset = queryset.order_by_fields_string(order_by, user_field_names)
@@ -1325,6 +1328,7 @@ class RowAdjacentView(APIView):
                 description="If provided, the adjacent row will be one that matches"
                 "the search query.",
             ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table rows"],
         operation_id="get_adjacent_database_table_row",
@@ -1368,6 +1372,7 @@ class RowAdjacentView(APIView):
         view_id = query_params.get("view_id")
         user_field_names = query_params.get("user_field_names")
         search = query_params.get("search")
+        search_mode = query_params.get("search_mode")
 
         table = TableHandler().get_table(table_id)
         CoreHandler().check_permissions(
@@ -1381,7 +1386,7 @@ class RowAdjacentView(APIView):
         queryset = model.objects.all().enhance_by_fields()
 
         if search is not None:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         view = None
         if view_id:

@@ -5,7 +5,7 @@ import { User } from "../fixtures/user";
 export class BaserowPage {
   readonly page: Page
   readonly baseUrl = baserowConfig.PUBLIC_WEB_FRONTEND_URL
-  readonly pageUrl: string
+  pageUrl: string
 
   constructor(page: Page) {
     this.page = page

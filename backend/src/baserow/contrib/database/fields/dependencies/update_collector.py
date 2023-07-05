@@ -1,12 +1,16 @@
 from collections import defaultdict
 from typing import Dict, List, Optional, Set, Tuple, cast
 
-from django.db.models import Expression, Q
+from django.db.models import Expression, Q, Value
 
 from baserow.contrib.database.fields.dependencies.exceptions import InvalidViaPath
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.signals import field_updated
+from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.table.constants import (
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.signals import table_updated
 
@@ -63,6 +67,10 @@ class PathBasedUpdateStatementCollector:
                 )
             else:
                 self.update_statements[field.db_column] = update_statement
+                if self.table.needs_background_update_column_added:
+                    self.update_statements[
+                        ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
+                    ] = Value(True)
         else:
             next_via_field_link = path_from_starting_table[0]
             if next_via_field_link.link_row_table != self.table:
@@ -239,7 +247,7 @@ class FieldUpdateCollector:
         )
 
     def apply_updates_and_get_updated_fields(
-        self, field_cache: FieldCache
+        self, field_cache: FieldCache, skip_search_updates=False
     ) -> List[Field]:
         """
         Triggers all update statements to be executed in the correct order in as few
@@ -252,6 +260,14 @@ class FieldUpdateCollector:
             self._starting_row_ids,
             deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
         )
+
+        if not skip_search_updates:
+            for table in self._updated_tables.values():
+                if not self._starting_table or table.id != self._starting_table.id:
+                    SearchHandler.field_value_updated_or_created(
+                        table,
+                    )
+
         return self._for_table(self._starting_table)
 
     def send_additional_field_updated_signals(self):

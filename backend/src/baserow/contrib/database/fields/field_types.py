@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from itertools import cycle
 from random import randint, randrange, sample
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 from django.contrib.auth import get_user_model
@@ -16,7 +16,17 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import CharField, DateTimeField, F, Func, Q, QuerySet, Value
+from django.db.models import (
+    CharField,
+    DateTimeField,
+    F,
+    Func,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -78,6 +88,7 @@ from baserow.core.utils import list_to_comma_separated_string
 from baserow.formula import BaserowFormulaException
 from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 
+from ..search.expressions import LocalisedSearchVector
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -103,6 +114,7 @@ from .exceptions import (
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
+from .expressions import extract_jsonb_array_values_to_single_string
 from .field_filters import (
     AnnotatedQ,
     contains_filter,
@@ -774,6 +786,33 @@ class DateFieldType(FieldType):
             }
         )
 
+    def prepare_value_for_search(
+        self,
+        field: Union[DateField, LastModifiedField, CreatedOnField],
+        queryset: QuerySet,
+    ) -> Optional[LocalisedSearchVector]:
+        """
+        Prepares a `DateField`, `LastModifiedField` or `CreatedOnField`
+        for search, by converting the value to its timezone (if the field's
+        `date_force_timezone` has been set, otherwise UTC) and then calling
+        `to_char` so that it's formatted properly.
+        """
+
+        return LocalisedSearchVector(
+            Func(
+                Func(
+                    # FIXME: what if date_force_timezone is None(user timezone)?
+                    Value(field.date_force_timezone or "UTC", output_field=CharField()),
+                    F(field.db_column),
+                    function="timezone",
+                    output_field=DateTimeField(),
+                ),
+                Value(field.get_psql_format()),
+                function="to_char",
+                output_field=CharField(),
+            )
+        )
+
     def prepare_value_for_db(self, instance, value):
         """
         This method accepts a string, date object or datetime object. If the value is a
@@ -1182,6 +1221,14 @@ class LinkRowFieldType(FieldType):
     _can_order_by = False
     can_be_primary_field = False
     can_get_unique_values = False
+
+    def prepare_value_for_search(
+        self, field: Field, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        return None
+
+    def is_searchable(self, field: Field) -> bool:
+        return False
 
     def enhance_queryset(self, queryset, field, name):
         """
@@ -1734,7 +1781,7 @@ class LinkRowFieldType(FieldType):
             user=user,
             table=field.link_row_table,
             type_name=self.type,
-            do_schema_change=False,
+            skip_django_schema_editor_add_field=False,
             name=related_field_name,
             link_row_table=field.table,
             link_row_related_field=field,
@@ -1816,7 +1863,7 @@ class LinkRowFieldType(FieldType):
                     table=to_field.link_row_table,
                     type_name=self.type,
                     name=related_field_name,
-                    do_schema_change=False,
+                    skip_django_schema_editor_add_field=False,
                     link_row_table=to_field.table,
                     link_row_related_field=to_field,
                     link_row_relation_id=to_field.link_row_relation_id,
@@ -1870,7 +1917,7 @@ class LinkRowFieldType(FieldType):
                 user=user,
                 table=to_field.link_row_table,
                 type_name=self.type,
-                do_schema_change=False,
+                skip_django_schema_editor_add_field=False,
                 name=related_field_name,
                 link_row_table=to_field.table,
                 link_row_related_field=to_field,
@@ -1977,11 +2024,6 @@ class LinkRowFieldType(FieldType):
             # set it right now.
             related_field.link_row_related_field_id = field.id
             related_field.save()
-            # By returning None, the field is ignored when creating the table schema
-            # and inserting the data, which is exactly what we want because the
-            # through table has already been created and will result in an error if
-            # we do it again.
-            return None
 
         return field
 
@@ -2120,6 +2162,23 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = True
     can_get_unique_values = False
+
+    def prepare_value_for_search(
+        self, field: FileField, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        """
+        Prepares a `FileField`.
+        """
+
+        return LocalisedSearchVector(
+            extract_jsonb_array_values_to_single_string(
+                field,
+                queryset,
+                path_to_value_in_jsonb_list=[
+                    Value("visible_name", output_field=CharField())
+                ],
+            )
+        )
 
     def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
@@ -2473,6 +2532,17 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     ) -> int:
         return getattr(row, f"{field_name}_id")
 
+    def prepare_value_for_search(
+        self, field: SingleSelectField, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        return LocalisedSearchVector(
+            Subquery(
+                queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__value")[
+                    :1
+                ]
+            )
+        )
+
     def prepare_value_for_db(self, instance, value):
         return self.prepare_value_for_db_in_bulk(
             instance, {0: value}, continue_on_error=False
@@ -2756,6 +2826,17 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(name)
+
+    def prepare_value_for_search(
+        self, field: MultipleSelectField, queryset
+    ) -> Optional[LocalisedSearchVector]:
+        return LocalisedSearchVector(
+            Subquery(
+                queryset.filter(pk=OuterRef("pk")).values(
+                    aggregated=StringAgg(f"{field.db_column}__value", " ")
+                )[:1]
+            )
+        )
 
     def prepare_value_for_db(self, instance, value):
         return self.prepare_value_for_db_in_bulk(
@@ -3131,6 +3212,16 @@ class FormulaFieldType(ReadOnlyFieldType):
         BaserowFormulaException: ERROR_WITH_FORMULA,
         OperationalError: _stack_error_mapper,
     }
+
+    def prepare_value_for_search(
+        self, field: FormulaField, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        return self.to_baserow_formula_type(field.specific).prepare_value_for_search(
+            field, queryset
+        )
+
+    def is_searchable(self, field: FormulaField) -> bool:
+        return self.to_baserow_formula_type(field.specific).is_searchable(field)
 
     @staticmethod
     def compatible_with_formula_types(*compatible_formula_types: List[str]):
@@ -4079,6 +4170,17 @@ class MultipleCollaboratorsFieldType(FieldType):
         )
         return serializers.ListSerializer(
             child=field_serializer, required=required, **kwargs
+        )
+
+    def prepare_value_for_search(
+        self, field: MultipleCollaboratorsField, queryset: QuerySet
+    ) -> Optional[LocalisedSearchVector]:
+        return LocalisedSearchVector(
+            Subquery(
+                queryset.filter(pk=OuterRef("pk")).values(
+                    aggregated=StringAgg(f"{field.db_column}__first_name", " ")
+                )[:1]
+            )
         )
 
     def get_internal_value_from_db(

@@ -7,7 +7,8 @@ export default (client) => {
       limit = 100,
       offset = null,
       includeFieldOptions = false,
-      search = false,
+      search = '',
+      searchMode = '',
       signal = null,
       publicUrl = false,
       publicAuthToken = null,
@@ -36,6 +37,9 @@ export default (client) => {
 
       if (search) {
         params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       if (orderBy) {
@@ -72,7 +76,8 @@ export default (client) => {
     },
     fetchCount({
       viewId,
-      search,
+      search = '',
+      searchMode = '',
       signal = null,
       publicUrl = false,
       publicAuthToken = null,
@@ -84,6 +89,9 @@ export default (client) => {
 
       if (search) {
         params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       Object.keys(filters).forEach((key) => {

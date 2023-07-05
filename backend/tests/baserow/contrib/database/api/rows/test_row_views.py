@@ -14,6 +14,7 @@ from rest_framework.status import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.tokens.handler import TokenHandler
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -2021,7 +2022,8 @@ def test_get_row_adjacent_view_invalid_requests(api_client, data_fixture):
 
 
 @pytest.mark.django_db
-def test_get_row_adjacent_search(api_client, data_fixture):
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_get_row_adjacent_search(api_client, data_fixture, search_mode):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -2038,14 +2040,17 @@ def test_get_row_adjacent_search(api_client, data_fixture):
             {f"field_{field.id}": "c"},
         ],
     )
+    SearchHandler.update_tsvector_columns(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
 
     response = api_client.get(
         reverse(
             "api:database:rows:adjacent",
             kwargs={"table_id": table.id, "row_id": row_2.id},
         ),
-        data={"search": "a"},
+        data={"search": "a", "search_mode": search_mode},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
-    assert response.status_code == HTTP_204_NO_CONTENT
+    assert response.status_code == HTTP_204_NO_CONTENT, response.json()

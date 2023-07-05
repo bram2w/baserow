@@ -59,6 +59,7 @@ from baserow.core.utils import (
     set_allowed_attrs,
 )
 
+from ..search.handler import SearchHandler
 from .backup_handler import FieldDataBackupHandler
 from .dependencies.handler import FieldDependencyHandler
 from .dependencies.update_collector import FieldUpdateCollector
@@ -222,7 +223,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         table: Table,
         type_name: str,
         primary=False,
-        do_schema_change=True,
+        skip_django_schema_editor_add_field=True,
         return_updated_fields=False,
         primary_key=None,
         **kwargs,
@@ -236,8 +237,10 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             the field_type_registry.
         :param primary: Every table needs at least a primary field which cannot be
             deleted and is a representation of the whole row.
-        :param do_schema_change: Indicates whether or not he actual database schema
-            change has be made.
+        :param skip_django_schema_editor_add_field: Indicates whether the
+            actual database schema change has to be made. You may want to do this
+            if you are making two Baserow fields which share the same m2m table. For
+            the second field you create, you don't want to create the m2m table again.
         :param return_updated_fields: When True any other fields who changed as a
             result of this field creation are returned with their new field instances.
         :param kwargs: The field values that need to be set upon creation.
@@ -295,6 +298,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             order=last_order,
             primary=primary,
             pk=primary_key,
+            tsvector_column_created=table.tsvectors_are_supported,
             **field_values,
         )
 
@@ -303,12 +307,14 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         FieldDependencyHandler.rebuild_dependencies(instance, field_cache)
 
         # Add the field to the table schema.
-        with safe_django_schema_editor() as schema_editor:
+        with safe_django_schema_editor(atomic=False) as schema_editor:
             to_model = instance.table.get_model(field_ids=[], fields=[instance])
             model_field = to_model._meta.get_field(instance.db_column)
 
-            if do_schema_change:
+            if skip_django_schema_editor_add_field:
                 schema_editor.add_field(to_model, model_field)
+
+            SearchHandler.after_field_created(instance)
 
         field_type.after_create(
             instance,
@@ -402,14 +408,15 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 "Field itself."
             )
 
-        workspace = field.table.database.workspace
+        table = field.table
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user, UpdateFieldOperationType.type, workspace=workspace, context=field
         )
 
         old_field = deepcopy(field)
         from_field_type = field_type_registry.get_by_model(field)
-        from_model = field.table.get_model(field_ids=[], fields=[field])
+        from_model = table.get_model(field_ids=[], fields=[field])
         to_field_type_name = new_type_name or from_field_type.type
 
         # If the provided field type does not match with the current one we need to
@@ -464,6 +471,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             )
         ):
             ViewHandler().field_type_changed(field)
+        SearchHandler.entire_field_values_changed_or_created(
+            field.table, updated_fields=[field]
+        )
 
         # Before a field is updated we are going to call the before_schema_change
         # method of the old field because some cleanup of related instances might
@@ -986,6 +996,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 field_cache
             )
             ViewHandler().field_updated(updated_fields)
+            SearchHandler.entire_field_values_changed_or_created(
+                field.table, updated_fields=[field]
+            )
 
             if send_field_restored_signal:
                 field_restored.send(

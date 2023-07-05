@@ -29,6 +29,7 @@ from baserow.core.trash.registries import TrashableItemType
 
 from ..fields.operations import RestoreFieldOperationType
 from ..rows.operations import RestoreDatabaseRowOperationType
+from ..search.handler import SearchHandler
 from ..table.operations import RestoreDatabaseTableOperationType
 from ..views.operations import RestoreViewOperationType
 from .models import TrashedRows
@@ -235,13 +236,14 @@ class FieldTrashableItemType(TrashableItemType):
 
         # Remove the field from the table schema.
         with safe_django_schema_editor() as schema_editor:
-            from_model = field.table.get_model(field_ids=[], fields=[field])
+            table = field.table
+            from_model = table.get_model(field_ids=[], fields=[field])
             model_field = from_model._meta.get_field(field.db_column)
             schema_editor.remove_field(from_model, model_field)
 
-        field.delete()
+            field.delete()
 
-        # After the field is deleted we are going to to call the after_delete method of
+        # After the field is deleted we are going to call the after_delete method of
         # the field type because some instance cleanup might need to happen.
         field_type.after_delete(field, from_model, connection)
 
@@ -307,6 +309,7 @@ class RowTrashableItemType(TrashableItemType):
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
         ViewHandler().field_value_updated(updated_fields)
+        SearchHandler.field_value_updated_or_created(table)
 
         rows_created.send(
             self,
@@ -434,6 +437,9 @@ class RowsTrashableItemType(TrashableItemType):
                     path_to_starting_table,
                 )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
+
+        ViewHandler().field_value_updated(updated_fields)
+        SearchHandler.field_value_updated_or_created(table)
 
         if len(rows_to_restore) < 50:
             rows_created.send(
