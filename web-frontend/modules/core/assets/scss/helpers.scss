@@ -146,6 +146,10 @@
   overflow: hidden !important;
 }
 
+.whitespace-pre-wrap {
+  white-space: pre-wrap;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);

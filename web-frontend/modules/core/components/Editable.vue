@@ -3,7 +3,11 @@
     ref="editable"
     :contenteditable="editing"
     :placeholder="placeholder"
-    :class="{ 'forced-user-select-initial': editing }"
+    :class="{
+      'forced-user-select-initial': editing,
+      'whitespace-pre-wrap': multiline,
+      'editable--multi-line': multiline,
+    }"
     @input="update"
     @keydown="keydown"
     @focusout="change"
@@ -26,6 +30,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    multiline: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {
@@ -97,7 +106,14 @@ export default {
      */
     update(event) {
       const target = event.target
-      const text = target.textContent
+      let text = target.textContent
+
+      if (this.multiline && target.innerText !== undefined) {
+        // textContent doesn't support new lines
+        // so we need innerText in multiline mode
+        text = target.innerText
+      }
+
       this.newValue = text
     },
     /**
@@ -116,6 +132,11 @@ export default {
      * to end the editing and save the value.
      */
     keydown(event) {
+      // Allow users to create new lines with Shift+Enter
+      if (event.key === 'Enter' && event.shiftKey && this.multiline) {
+        return false
+      }
+
       if (event.key === 'Enter' || event.key === 'Escape') {
         event.preventDefault()
         this.change()
