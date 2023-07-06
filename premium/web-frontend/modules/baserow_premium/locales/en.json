@@ -45,7 +45,9 @@
         "edited": "edited",
         "commentTrashed": "This comment has been deleted.",
         "errorUserNotCommentAuthorTitle": "Cannot update or delete.",
-        "errorUserNotCommentAuthor": "Only the author of the comment can update or delete it."
+        "errorUserNotCommentAuthor": "Only the author of the comment can update or delete it.",
+        "errorInvalidCommentMentionTitle": "Invalid mention",
+        "errorInvalidCommentMention": "The mentioned user does not exist."
     },
     "rowCommentContext": {
         "edit": "Edit comment",

@@ -24,7 +24,7 @@
           </span>
         </div>
         <a
-          v-if="ownComment && !editing && (!comment.trashed || deleting)"
+          v-if="ownComment && !editing && !comment.trashed"
           ref="commentContextLink"
           :class="{ disabled: operationPending }"
           class="row-comments__comment-context"
@@ -45,50 +45,53 @@
         ></RowCommentContext>
       </div>
     </div>
-    <div v-if="editing">
-      <AutoExpandableTextareaInput
-        ref="autoExpandableTextareaInput"
-        v-model="commentText"
-        class="row-comments__comment-text row-comments__comment-text--editing"
-        @entered="stopEdit(true)"
-      >
-      </AutoExpandableTextareaInput>
-      <div class="row_comments__comment-text-actions">
-        <button
-          class="button button--ghost"
-          :disabled="updating"
-          @click="stopEdit()"
-        >
-          {{ $t('action.cancel') }}
-        </button>
-        <button class="button button--primary" @click="stopEdit(true)">
-          {{ $t('action.save') }}
-        </button>
-      </div>
-    </div>
     <div
-      v-else-if="comment.trashed"
+      v-if="comment.trashed"
       class="row-comments__comment-text row-comments__comment-text--trashed"
     >
       {{ $t('rowComment.commentTrashed') }}
     </div>
-    <div v-else class="row-comments__comment-text">{{ comment.comment }}</div>
+    <div
+      v-else
+      class="row-comments__comment-text"
+      :class="{ 'row-comments__comment-text--editing': editing }"
+    >
+      <RichTextEditor
+        ref="editor"
+        v-model="message"
+        :editable="editing"
+        @entered="stopEdit(true)"
+      />
+    </div>
+    <div v-if="editing" class="row_comments__comment-text-actions">
+      <button
+        class="button button--ghost"
+        :disabled="updating"
+        @click="stopEdit()"
+      >
+        {{ $t('action.cancel') }}
+      </button>
+      <button class="button button--primary" @click="stopEdit(true)">
+        {{ $t('action.save') }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
+import _ from 'lodash'
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowCommentContext from '@baserow_premium/components/row_comments/RowCommentContext'
-import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
+import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 
 import moment from '@baserow/modules/core/moment'
 
 export default {
   name: 'RowComment',
   components: {
-    AutoExpandableTextareaInput,
     RowCommentContext,
+    RichTextEditor,
   },
   props: {
     comment: {
@@ -109,7 +112,7 @@ export default {
       editing: false,
       updating: false,
       deleting: false,
-      commentText: '',
+      message: this.cloneCommentMessage(),
     }
   },
   computed: {
@@ -161,10 +164,14 @@ export default {
       return tooltip
     },
   },
-  unmounted() {
-    if (this.$el.onClickOutside) {
-      document.removeEventListener('click', this.$el.onClickOutside)
-    }
+  watch: {
+    'comment.message': {
+      handler(newVal, oldVal) {
+        if (!_.isEqual(oldVal, newVal)) {
+          this.message = this.cloneCommentMessage()
+        }
+      },
+    },
   },
   methods: {
     getLocalizedMoment(timestamp) {
@@ -180,12 +187,14 @@ export default {
         )
       }
     },
+    cloneCommentMessage() {
+      return JSON.parse(JSON.stringify(this.comment.message))
+    },
     startEdit() {
-      this.commentText = this.comment.comment
       this.$refs.commentContext.hide()
       this.editing = true
 
-      this.$el.onClickOutside = (evt) => {
+      const onClickOutside = (evt) => {
         if (
           !this.$el.contains(evt.target) &&
           !this.$refs.commentContext.$el.contains(evt.target)
@@ -193,24 +202,25 @@ export default {
           this.stopEdit()
         }
       }
-      document.addEventListener('click', this.$el.onClickOutside)
-
-      this.$nextTick(() => {
-        this.$refs.autoExpandableTextareaInput.focus()
-      })
+      document.addEventListener('click', onClickOutside)
+      for (const evt of ['stop-edit', 'hook:beforeDestroy']) {
+        this.$once(evt, () => {
+          document.removeEventListener('click', onClickOutside)
+        })
+      }
     },
     async stopEdit(save = false) {
-      document.removeEventListener('click', this.$el.onClickOutside)
+      this.$emit('stop-edit')
       this.editing = false
 
       if (save) {
         await this.updateComment()
       } else {
-        this.commentText = this.comment.comment
+        this.message = this.cloneCommentMessage()
       }
     },
     async updateComment() {
-      if (!this.commentText) {
+      if (!this.message) {
         return
       }
 
@@ -219,7 +229,7 @@ export default {
         await this.$store.dispatch('row_comments/updateComment', {
           tableId: this.comment.table_id,
           commentId: this.comment.id,
-          commentText: this.commentText,
+          message: this.message,
         })
       } catch (error) {
         notifyIf(error, 'application')

@@ -32,7 +32,11 @@ class RowComment(
         on_delete=models.SET_NULL,
         help_text="The user who made the comment.",
     )
-    comment = models.TextField(help_text="The users comment.")
+    comment = models.TextField(
+        help_text="The users comment.", null=True, editable=False
+    )  # Deprecated, will be removed in a future release.
+    message = models.JSONField(default=dict, help_text="The rich text comment content.")
+    mentions = models.ManyToManyField(User, related_name="row_comment_mentions")
 
     class Meta:
         db_table = "database_rowcomment"

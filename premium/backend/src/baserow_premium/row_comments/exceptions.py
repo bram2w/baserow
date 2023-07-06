@@ -11,3 +11,7 @@ class RowCommentDoesNotExist(RowComment.DoesNotExist):
 
 class UserNotRowCommentAuthorException(Exception):
     pass
+
+
+class InvalidRowCommentMentionException(Exception):
+    pass

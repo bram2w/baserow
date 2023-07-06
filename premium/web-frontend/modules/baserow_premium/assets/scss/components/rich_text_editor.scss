@@ -1,0 +1,30 @@
+.rich-text-editor {
+  width: 100%;
+  background-color: white;
+  max-height: 60vh;
+  overflow-y: auto;
+  text-align: left;
+
+  p {
+    color: revert;
+  }
+}
+
+.rich-text-editor__mention {
+  border-radius: 3px;
+  padding: 0 2px;
+  background-color: rgba(6, 46, 71, 0.08);
+  font-weight: 600;
+}
+
+.rich-text-editor__mention--current-user {
+  color: $color-primary-700;
+  background-color: $color-primary-100;
+}
+
+.rich-text-editor__mention-dropdown {
+  .dropdown__items {
+    bottom: 42px;
+    top: auto;
+  }
+}

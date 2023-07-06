@@ -55,7 +55,6 @@
                 <div
                   v-for="(c, index) in comments"
                   :key="'row-comment-' + c.id"
-                  :comment="c"
                 >
                   <div
                     v-if="isNewDayForComments(index)"
@@ -82,13 +81,7 @@
             "
             class="row-comments__foot"
           >
-            <AutoExpandableTextareaInput
-              ref="AutoExpandableTextarea"
-              v-model="comment"
-              :placeholder="$t('rowCommentSidebar.comment')"
-              @entered="postComment"
-            >
-            </AutoExpandableTextareaInput>
+            <RichTextEditor v-model="comment" @entered="postComment()" />
           </div>
         </div>
       </div>
@@ -102,17 +95,17 @@ import moment from '@baserow/modules/core/moment'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
-import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
+import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
 import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   name: 'RowCommentsSidebar',
   components: {
-    AutoExpandableTextareaInput,
     InfiniteScroll,
     RowComment,
     PremiumModal,
+    RichTextEditor,
   },
   props: {
     database: {
@@ -141,6 +134,7 @@ export default {
       )
     },
     ...mapGetters({
+      loggedUserId: 'auth/getUserId',
       comments: 'row_comments/getSortedRowComments',
       loading: 'row_comments/getLoading',
       loaded: 'row_comments/getLoaded',
@@ -215,7 +209,7 @@ export default {
         })
     },
     async postComment() {
-      const comment = this.comment.trim()
+      const comment = this.comment
       if (
         !comment ||
         !this.$hasPermission(
@@ -231,7 +225,7 @@ export default {
         await this.$store.dispatch('row_comments/postComment', {
           tableId: this.table.id,
           rowId: this.row.id,
-          comment,
+          message: comment,
         })
         this.$refs.infiniteScroll.scrollToStart()
       } catch (e) {

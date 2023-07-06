@@ -22,9 +22,10 @@ def test_row_comment_created(mock_broadcast_to_channel_group, premium_data_fixtu
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+    message = premium_data_fixture.create_comment_message_from_plain_text("comment")
 
     with freeze_time("2020-01-02 12:00"):
-        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
     args = mock_broadcast_to_channel_group.delay.call_args
@@ -32,7 +33,12 @@ def test_row_comment_created(mock_broadcast_to_channel_group, premium_data_fixtu
     assert args[0][0] == f"table-{table.id}"
     assert args[0][1]["type"] == "row_comment_created"
     assert args[0][1]["row_comment"] == {
-        "comment": "comment",
+        "message": {
+            "type": "doc",
+            "content": [
+                {"type": "paragraph", "content": [{"type": "text", "text": "comment"}]}
+            ],
+        },
         "created_on": "2020-01-02T12:00:00Z",
         "first_name": "test_user",
         "id": c.id,
@@ -54,15 +60,19 @@ def test_row_comment_updated(premium_data_fixture):
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+    message = premium_data_fixture.create_comment_message_from_plain_text("comment")
 
     with freeze_time("2020-01-02 12:00"):
-        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 
+    updated_message = premium_data_fixture.create_comment_message_from_plain_text(
+        "updated comment"
+    )
     with patch(
         "baserow.ws.registries.broadcast_to_channel_group"
     ) as mock_broadcast_to_channel_group:
         with freeze_time("2020-01-02 12:01"):
-            RowCommentHandler.update_comment(user, c, "updated comment")
+            RowCommentHandler.update_comment(user, c, updated_message)
 
         mock_broadcast_to_channel_group.delay.assert_called_once()
         args = mock_broadcast_to_channel_group.delay.call_args
@@ -70,7 +80,15 @@ def test_row_comment_updated(premium_data_fixture):
         assert args[0][0] == f"table-{table.id}"
         assert args[0][1]["type"] == "row_comment_updated"
         assert args[0][1]["row_comment"] == {
-            "comment": "updated comment",
+            "message": {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "updated comment"}],
+                    }
+                ],
+            },
             "created_on": "2020-01-02T12:00:00Z",
             "first_name": "test_user",
             "id": c.id,
@@ -92,9 +110,10 @@ def test_row_comment_deleted(premium_data_fixture):
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+    message = premium_data_fixture.create_comment_message_from_plain_text("comment")
 
     with freeze_time("2020-01-02 12:00"):
-        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 
     with patch(
         "baserow.ws.registries.broadcast_to_channel_group"
@@ -108,7 +127,7 @@ def test_row_comment_deleted(premium_data_fixture):
         assert args[0][0] == f"table-{table.id}"
         assert args[0][1]["type"] == "row_comment_deleted"
         assert args[0][1]["row_comment"] == {
-            "comment": "",
+            "message": None,
             "created_on": "2020-01-02T12:00:00Z",
             "first_name": "test_user",
             "id": c.id,
@@ -131,9 +150,10 @@ def test_row_comment_restored(premium_data_fixture):
     table, fields, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row"], user=user
     )
+    message = premium_data_fixture.create_comment_message_from_plain_text("comment")
 
     with freeze_time("2020-01-02 12:00"), transaction_atomic():
-        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, "comment")
+        c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
         DeleteRowCommentActionType.do(user, table.id, c.id)
 
     with patch(
@@ -152,7 +172,15 @@ def test_row_comment_restored(premium_data_fixture):
         assert args[0][0] == f"table-{table.id}"
         assert args[0][1]["type"] == "row_comment_restored"
         assert args[0][1]["row_comment"] == {
-            "comment": "comment",
+            "message": {
+                "type": "doc",
+                "content": [
+                    {
+                        "type": "paragraph",
+                        "content": [{"type": "text", "text": "comment"}],
+                    }
+                ],
+            },
             "created_on": "2020-01-02T12:00:00Z",
             "first_name": "test_user",
             "id": c.id,

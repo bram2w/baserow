@@ -30,7 +30,7 @@
           class="select__search-input"
           :placeholder="searchText"
           tabindex="0"
-          @keyup="search(query)"
+          @keyup="search"
         />
       </div>
       <ul
@@ -39,6 +39,7 @@
         v-auto-overflow-scroll
         class="select__items"
         tabindex=""
+        @scroll="scroll"
       >
         <FieldCollaboratorDropdownItem
           v-if="showEmptyValue"
@@ -47,7 +48,7 @@
           :color="''"
         ></FieldCollaboratorDropdownItem>
         <FieldCollaboratorDropdownItem
-          v-for="collaborator in collaborators"
+          v-for="collaborator in results"
           :key="collaborator.user_id"
           :name="collaborator.name"
           :value="collaborator.user_id"
@@ -61,13 +62,13 @@
 </template>
 
 <script>
-import dropdown from '@baserow/modules/core/mixins/dropdown'
+import inMemoryPaginatedDropdown from '@baserow/modules/core/mixins/inMemoryPaginatedDropdown'
 import FieldCollaboratorDropdownItem from '@baserow/modules/database/components/field/FieldCollaboratorDropdownItem'
 
 export default {
   name: 'FieldCollaboratorDropdown',
   components: { FieldCollaboratorDropdownItem },
-  mixins: [dropdown],
+  mixins: [inMemoryPaginatedDropdown],
   props: {
     collaborators: {
       type: Array,
@@ -81,12 +82,14 @@ export default {
   },
   computed: {
     isNotFound() {
-      return this.query !== '' && !this.hasItems
+      return this.results.length === 0 && this.query !== ''
     },
   },
   methods: {
-    forceRefreshSelectedValue() {
-      dropdown.methods.forceRefreshSelectedValue.call(this)
+    filterItems(search) {
+      return this.collaborators.filter((collaborator) => {
+        return collaborator.name.toLowerCase().includes(search.toLowerCase())
+      })
     },
   },
 }

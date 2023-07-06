@@ -5,12 +5,14 @@ export default (client) => {
         `/row_comments/${tableId}/${rowId}/?offset=${offset}&limit=${limit}`
       )
     },
-    create(tableId, rowId, comment) {
-      return client.post(`/row_comments/${tableId}/${rowId}/`, { comment })
+    create(tableId, rowId, message) {
+      return client.post(`/row_comments/${tableId}/${rowId}/`, {
+        message,
+      })
     },
-    update(tableId, commentId, comment) {
+    update(tableId, commentId, message) {
       return client.patch(`/row_comments/${tableId}/comment/${commentId}/`, {
-        comment,
+        message,
       })
     },
     delete(tableId, commentId) {

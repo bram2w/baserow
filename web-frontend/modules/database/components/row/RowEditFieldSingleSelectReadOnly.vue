@@ -1,5 +1,10 @@
 <template>
-  <RowEditFieldSingleSelect :read-only="true" :field="field" :value="value">
+  <RowEditFieldSingleSelect
+    :read-only="true"
+    :field="field"
+    :value="value"
+    :workspace-id="workspaceId"
+  >
   </RowEditFieldSingleSelect>
 </template>
 

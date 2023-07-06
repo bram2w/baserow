@@ -195,7 +195,7 @@ export default {
 
       // If the user clicks outside the dropdown while the list of choices of open we
       // have to hide them.
-      this.$el.clickOutsideEventCancel = onClickOutside(this.$el, (target) => {
+      const clickOutsideEventCancel = onClickOutside(this.$el, (target) => {
         if (
           // Check if the context menu is still open
           this.open &&
@@ -206,8 +206,9 @@ export default {
           this.hide()
         }
       })
+      this.$once('hide', clickOutsideEventCancel)
 
-      this.$el.keydownEvent = (event) => {
+      const keydownEvent = (event) => {
         if (
           // Check if the context menu is still open
           this.open &&
@@ -233,7 +234,10 @@ export default {
           this.hide()
         }
       }
-      document.body.addEventListener('keydown', this.$el.keydownEvent)
+      document.body.addEventListener('keydown', keydownEvent)
+      this.$once('hide', () => {
+        document.body.removeEventListener('keydown', keydownEvent)
+      })
     },
     /**
      * Hides the list of choices. If something change in this method, you might need
@@ -247,9 +251,6 @@ export default {
       // Make sure that all the items are visible the next time we open the dropdown.
       this.query = ''
       this.search(this.query)
-
-      this.$el.clickOutsideEventCancel()
-      document.body.removeEventListener('keydown', this.$el.keydownEvent)
     },
     /**
      * Selects a new value which will also be

@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import transaction
 
 from baserow_premium.api.row_comments.errors import (
+    ERROR_INVALID_COMMENT_MENTION,
     ERROR_ROW_COMMENT_DOES_NOT_EXIST,
     ERROR_USER_NOT_COMMENT_AUTHOR,
 )
@@ -11,6 +12,7 @@ from baserow_premium.row_comments.actions import (
     UpdateRowCommentActionType,
 )
 from baserow_premium.row_comments.exceptions import (
+    InvalidRowCommentMentionException,
     RowCommentDoesNotExist,
     UserNotRowCommentAuthorException,
 )
@@ -103,7 +105,7 @@ class RowCommentsView(APIView):
     )
     def get(self, request, table_id, row_id):
         comments = RowCommentHandler.get_comments(
-            request.user, table_id, row_id, include_trashed=True
+            request.user, table_id, row_id, include_trash=True
         )
 
         if LimitOffsetPagination.limit_query_param in request.GET:
@@ -155,13 +157,14 @@ class RowCommentsView(APIView):
             TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
             RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            InvalidRowCommentMentionException: ERROR_INVALID_COMMENT_MENTION,
         }
     )
     @validate_body(RowCommentCreateSerializer)
     @transaction.atomic
     def post(self, request, table_id, row_id, data):
         new_row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
-            request.user, table_id, row_id, data["comment"]
+            request.user, table_id, row_id, data["message"]
         )
         context = {"user": request.user}
         return Response(RowCommentSerializer(new_row_comment, context=context).data)
@@ -192,6 +195,7 @@ class RowCommentView(APIView):
                 [
                     "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_USER_NOT_COMMENT_AUTHOR",
+                    "ERROR_INVALID_COMMENT_MENTION",
                     "ERROR_BODY_VALIDATION",
                 ]
             ),
@@ -207,14 +211,16 @@ class RowCommentView(APIView):
             RowCommentDoesNotExist: ERROR_ROW_COMMENT_DOES_NOT_EXIST,
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
             UserNotRowCommentAuthorException: ERROR_USER_NOT_COMMENT_AUTHOR,
+            InvalidRowCommentMentionException: ERROR_INVALID_COMMENT_MENTION,
         }
     )
     @validate_body(RowCommentCreateSerializer)
     @transaction.atomic
     def patch(self, request, table_id, comment_id, data):
+        comment = data.get("message", data.get("comment", None))
         updated_row_comment = action_type_registry.get(
             UpdateRowCommentActionType.type
-        ).do(request.user, table_id, comment_id, data["comment"])
+        ).do(request.user, table_id, comment_id, comment)
         context = {"user": request.user}
         return Response(RowCommentSerializer(updated_row_comment, context=context).data)
 

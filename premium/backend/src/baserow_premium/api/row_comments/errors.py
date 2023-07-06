@@ -11,3 +11,9 @@ ERROR_USER_NOT_COMMENT_AUTHOR = (
     HTTP_400_BAD_REQUEST,
     "The requesting user is not the author of the comment.",
 )
+
+ERROR_INVALID_COMMENT_MENTION = (
+    "ERROR_INVALID_COMMENT_MENTION",
+    HTTP_400_BAD_REQUEST,
+    "You cannot mention users that are not part of the workspace.",
+)
