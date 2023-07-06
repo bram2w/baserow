@@ -22,11 +22,12 @@ def test_create_row_comment_action_type(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
-        user, table.id, rows[0].id, "comment"
+        user, table.id, rows[0].id, message
     )
-    assert row_comment.comment == "comment"
+    assert row_comment.message == message
 
 
 @pytest.mark.undo_redo
@@ -40,11 +41,12 @@ def test_can_undo_creating_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
-        user, table.id, rows[0].id, "comment"
+        user, table.id, rows[0].id, message
     )
-    assert row_comment.comment == "comment"
+    assert row_comment.message == message
     assert RowComment.objects.count() == 1
 
     actions_undone = ActionHandler.undo(
@@ -68,11 +70,12 @@ def test_can_undo_redo_creating_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
     row_comment = action_type_registry.get(CreateRowCommentActionType.type).do(
-        user, table.id, rows[0].id, "comment"
+        user, table.id, rows[0].id, message
     )
-    assert row_comment.comment == "comment"
+    assert row_comment.message == message
     assert RowComment.objects.count() == 1
 
     ActionHandler.undo(
@@ -99,15 +102,17 @@ def test_can_undo_updating_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
-    row_comment = RowCommentHandler.create_comment(
-        user, table.id, rows[0].id, "comment"
+    row_comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
+
+    updated_message = premium_data_fixture.create_comment_message_from_plain_text(
+        "Updated comment"
     )
-
     row_comment = action_type_registry.get(UpdateRowCommentActionType.type).do(
-        user, table.id, row_comment.id, "updated comment"
+        user, table.id, row_comment.id, updated_message
     )
-    assert row_comment.comment == "updated comment"
+    assert row_comment.message == updated_message
 
     actions_undone = ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
@@ -116,7 +121,7 @@ def test_can_undo_updating_row_comments(premium_data_fixture):
     assert_undo_redo_actions_are_valid(actions_undone, [UpdateRowCommentActionType])
 
     row_comment.refresh_from_db()
-    assert row_comment.comment == "comment"
+    assert row_comment.message == message
 
 
 @pytest.mark.undo_redo
@@ -130,15 +135,17 @@ def test_can_undo_redo_updating_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
-    row_comment = RowCommentHandler.create_comment(
-        user, table.id, rows[0].id, "comment"
+    row_comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
+
+    updated_message = premium_data_fixture.create_comment_message_from_plain_text(
+        "Updated comment"
     )
-
     row_comment = action_type_registry.get(UpdateRowCommentActionType.type).do(
-        user, table.id, row_comment.id, "updated comment"
+        user, table.id, row_comment.id, updated_message
     )
-    assert row_comment.comment == "updated comment"
+    assert row_comment.message == updated_message
 
     ActionHandler.undo(
         user, [TableActionScopeType.value(table_id=table.id)], session_id
@@ -151,7 +158,7 @@ def test_can_undo_redo_updating_row_comments(premium_data_fixture):
     assert_undo_redo_actions_are_valid(actions_redone, [UpdateRowCommentActionType])
 
     row_comment.refresh_from_db()
-    assert row_comment.comment == "updated comment"
+    assert row_comment.message == updated_message
 
 
 @pytest.mark.undo_redo
@@ -165,10 +172,9 @@ def test_can_undo_deleting_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
-    row_comment = RowCommentHandler.create_comment(
-        user, table.id, rows[0].id, "comment"
-    )
+    row_comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 
     row_comment = action_type_registry.get(DeleteRowCommentActionType.type).do(
         user, table.id, row_comment.id
@@ -196,10 +202,9 @@ def test_can_undo_redo_deleting_row_comments(premium_data_fixture):
     table = premium_data_fixture.create_database_table(user=user)
     premium_data_fixture.create_text_field(table=table)
     rows = premium_data_fixture.create_rows_in_table(table, [[]])
+    message = premium_data_fixture.create_comment_message_from_plain_text("Test")
 
-    row_comment = RowCommentHandler.create_comment(
-        user, table.id, rows[0].id, "comment"
-    )
+    row_comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
 
     row_comment = action_type_registry.get(DeleteRowCommentActionType.type).do(
         user, table.id, row_comment.id

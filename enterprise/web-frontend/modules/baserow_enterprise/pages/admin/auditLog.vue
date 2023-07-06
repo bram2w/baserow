@@ -211,14 +211,14 @@ export default {
         this.filters = { ...this.filters, [key]: value }
       }
     },
-    filterUser(user) {
-      this.setFilter('user_id', user.id)
+    filterUser(userId) {
+      this.setFilter('user_id', userId)
     },
     fetchUsers(page, search) {
       return this.service.fetchUsers(page, search)
     },
-    filterWorkspace(workspace) {
-      this.setFilter('workspace_id', workspace.id)
+    filterWorkspace(workspaceId) {
+      this.setFilter('workspace_id', workspaceId)
     },
     fetchWorkspaces(page, search) {
       return this.service.fetchWorkspaces(page, search)
@@ -226,8 +226,8 @@ export default {
     fetchActionTypes(page, search) {
       return this.service.fetchActionTypes(page, search)
     },
-    filterActionType(actionType) {
-      this.setFilter('action_type', actionType.id)
+    filterActionType(actionTypeId) {
+      this.setFilter('action_type', actionTypeId)
     },
     filterFromTimestamp(fromTimestamp) {
       if (fromTimestamp && moment(fromTimestamp).isValid()) {

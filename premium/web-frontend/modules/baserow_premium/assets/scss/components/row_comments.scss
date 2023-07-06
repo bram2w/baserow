@@ -166,13 +166,8 @@
     width: 100%;
   }
 
-  .auto-expandable-textarea__container {
-    border-radius: 6px;
-    border-top-right-radius: 0;
-    border: 1px solid #9fa4ab;
-    background-color: white;
-    padding: 10px;
-    width: 100%;
+  & p {
+    color: revert;
   }
 }
 
@@ -181,6 +176,12 @@
   flex-shrink: 0;
   padding: 20px;
   border-top: solid 1px $color-neutral-200;
+
+  .rich-text-editor {
+    border: 1px solid #9fa4ab;
+    border-radius: 3px;
+    padding: 8px 12px 8px 12px;
+  }
 }
 
 .row-comments-expand-button {

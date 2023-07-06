@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
@@ -27,7 +28,7 @@ class CreateRowCommentActionType(UndoableActionType):
     @dataclasses.dataclass
     class Params:
         comment_id: int
-        comment_content: str
+        message: Dict[str, Any]
         row_id: int
         table_id: int
         table_name: str
@@ -38,7 +39,11 @@ class CreateRowCommentActionType(UndoableActionType):
 
     @classmethod
     def do(
-        cls, user: AbstractUser, table_id: int, row_id: int, comment: str
+        cls,
+        user: AbstractUser,
+        table_id: int,
+        row_id: int,
+        message: Dict[str, Any],
     ) -> RowComment:
         """
         Creates a new comment for the given row.
@@ -48,7 +53,7 @@ class CreateRowCommentActionType(UndoableActionType):
         Redo this action will restore the comment.
         """
 
-        row_comment = RowCommentHandler.create_comment(user, table_id, row_id, comment)
+        row_comment = RowCommentHandler.create_comment(user, table_id, row_id, message)
 
         table = TableHandler().get_table(table_id)
         database = table.database
@@ -58,7 +63,7 @@ class CreateRowCommentActionType(UndoableActionType):
             user,
             cls.Params(
                 row_comment.id,
-                comment,
+                row_comment.message,
                 row_id,
                 table.id,
                 table.name,
@@ -101,7 +106,7 @@ class UpdateRowCommentActionType(UndoableActionType):
     @dataclasses.dataclass
     class Params:
         comment_id: int
-        comment_content: str
+        message: Dict[str, Any]
         row_id: int
         table_id: int
         table_name: str
@@ -109,7 +114,7 @@ class UpdateRowCommentActionType(UndoableActionType):
         database_name: str
         workspace_id: int
         workspace_name: str
-        original_comment_content: str
+        original_message: Dict[str, Any]
 
     @classmethod
     def do(
@@ -134,7 +139,7 @@ class UpdateRowCommentActionType(UndoableActionType):
         table = row_comment.table
         database = table.database
         workspace = database.workspace
-        original_comment_content = row_comment.comment
+        original_message = row_comment.message
 
         updated_comment = RowCommentHandler.update_comment(
             user, row_comment, comment_content
@@ -144,7 +149,7 @@ class UpdateRowCommentActionType(UndoableActionType):
             user,
             cls.Params(
                 row_comment.id,
-                updated_comment.comment,
+                updated_comment.message,
                 row_comment.row_id,
                 table.id,
                 table.name,
@@ -152,7 +157,7 @@ class UpdateRowCommentActionType(UndoableActionType):
                 database.name,
                 workspace.id,
                 workspace.name,
-                original_comment_content=original_comment_content,
+                original_message,
             ),
             cls.scope(table_id),
             workspace,
@@ -164,16 +169,14 @@ class UpdateRowCommentActionType(UndoableActionType):
         row_comment = RowCommentHandler.get_comment_by_id(
             user, params.table_id, params.comment_id
         )
-        RowCommentHandler.update_comment(
-            user, row_comment, params.original_comment_content
-        )
+        RowCommentHandler.update_comment(user, row_comment, params.original_message)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):
         row_comment = RowCommentHandler.get_comment_by_id(
             user, params.table_id, params.comment_id
         )
-        RowCommentHandler.update_comment(user, row_comment, params.comment_content)
+        RowCommentHandler.update_comment(user, row_comment, params.message)
 
     @classmethod
     def scope(cls, table_id: int):
@@ -191,6 +194,7 @@ class DeleteRowCommentActionType(UndoableActionType):
     @dataclasses.dataclass
     class Params:
         comment_id: int
+        message: Dict[str, Any]
         row_id: int
         table_id: int
         table_name: str
@@ -222,6 +226,7 @@ class DeleteRowCommentActionType(UndoableActionType):
             user,
             cls.Params(
                 row_comment.id,
+                row_comment.message,
                 row_comment.row_id,
                 table.id,
                 table.name,

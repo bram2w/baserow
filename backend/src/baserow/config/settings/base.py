@@ -887,8 +887,6 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = int(
 )
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
 
-MAX_ROW_COMMENT_LENGTH = 10000
-
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 # For now force the old os dependant behaviour of file uploads as users might be relying

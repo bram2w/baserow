@@ -53,6 +53,11 @@ export default (context) => {
     app.i18n.t('rowComment.errorUserNotCommentAuthorTitle'),
     app.i18n.t('rowComment.errorUserNotCommentAuthor')
   )
+  app.$clientErrorMap.setError(
+    'ERROR_INVALID_COMMENT_MENTION',
+    app.i18n.t('rowComment.errorInvalidCommentMentionTitle'),
+    app.i18n.t('rowComment.errorInvalidCommentMention')
+  )
 
   // Allow locale file hot reloading
   if (isDev && app.i18n) {

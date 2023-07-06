@@ -38,6 +38,7 @@
   border-radius: 100%;
   margin-left: 0;
   margin-right: -14px;
+  z-index: 1;
 
   @include center-text(24px, 12px);
 }

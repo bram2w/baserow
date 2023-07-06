@@ -1,10 +1,13 @@
-from django.contrib.auth import get_user_model
+from typing import Any, Dict
+
+from django.contrib.auth.models import AbstractUser
 from django.db.models import QuerySet
 
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
 from baserow_premium.row_comments.exceptions import (
     InvalidRowCommentException,
+    InvalidRowCommentMentionException,
     RowCommentDoesNotExist,
     UserNotRowCommentAuthorException,
 )
@@ -25,19 +28,21 @@ from baserow.contrib.database.rows.exceptions import RowDoesNotExist
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.handler import CoreHandler
+from baserow.core.prosemirror.utils import (
+    extract_mentioned_users_in_workspace,
+    is_valid_prosemirror_document,
+)
 from baserow.core.trash.handler import TrashHandler
-
-User = get_user_model()
 
 
 class RowCommentHandler:
     @classmethod
     def get_comments(
         cls,
-        requesting_user: User,
+        requesting_user: AbstractUser,
         table_id: int,
         row_id: int,
-        include_trashed: bool = False,
+        include_trash: bool = False,
     ) -> QuerySet:
         """
         Returns all the row comments for a given row in a table.
@@ -45,7 +50,7 @@ class RowCommentHandler:
         :param requesting_user: The user who is requesting to lookup the row comments.
         :param table_id: The table to find the row in.
         :param row_id: The id of the row to get comments for.
-        :param include_trashed: If True, trashed comments will be included in the
+        :param include_trash: If True, trashed comments will be included in the
             queryset.
         :return: A queryset of all row comments for that particular row.
         :raises TableDoesNotExist: If the table does not exist.
@@ -70,7 +75,7 @@ class RowCommentHandler:
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
 
         row_comment_manager = RowComment.objects
-        if include_trashed:
+        if include_trash:
             row_comment_manager = RowComment.objects_and_trash
 
         return (
@@ -81,7 +86,7 @@ class RowCommentHandler:
 
     @classmethod
     def get_comment_by_id(
-        cls, requesting_user: User, table_id: int, comment_id: int
+        cls, requesting_user: AbstractUser, table_id: int, comment_id: int
     ) -> RowComment:
         """
         Returns the row comment for a given comment id.
@@ -124,7 +129,11 @@ class RowCommentHandler:
 
     @classmethod
     def create_comment(
-        cls, requesting_user: User, table_id: int, row_id: int, comment: str
+        cls,
+        requesting_user: AbstractUser,
+        table_id: int,
+        row_id: int,
+        message: Dict[str, Any],
     ) -> RowComment:
         """
         Creates a new row comment on the specified row.
@@ -132,53 +141,69 @@ class RowCommentHandler:
         :param requesting_user: The user who is making the comment.
         :param table_id: The table to find the row in.
         :param row_id: The id of the row to post the comment on.
-        :param comment: The comment to post.
+        :param message: The comment content to post. It must be a dict
+            containing a valid prosemirror document.
         :return: The newly created RowComment instance.
         :raises TableDoesNotExist: If the table does not exist.
         :raises RowDoesNotExist: If the row does not exist.
-        :raises UserNotInWorkspace: If the user is not a member of the workspace that
-            the table is in.
-        :raises InvalidRowCommentException: If the comment is blank or None.
+        :raises UserNotInWorkspace: If the user is not a member of the workspace
+            that the table is in.
+        :raises InvalidRowCommentException: If the comment content is not a
+            valid prosemirror doc.
         """
 
         table = TableHandler().get_table(table_id)
+        workspace = table.database.workspace
         LicenseHandler.raise_if_user_doesnt_have_feature(
-            PREMIUM, requesting_user, table.database.workspace
+            PREMIUM, requesting_user, workspace
         )
-
-        if comment is None or comment == "":
-            raise InvalidRowCommentException()
 
         # TODO: RBAC -> When row level permissions are introduced we also need to check
         #       that the user can see the row
         CoreHandler().check_permissions(
             requesting_user,
             CreateRowCommentsOperationType.type,
-            workspace=table.database.workspace,
+            workspace=workspace,
             context=table,
         )
 
         RowHandler().has_row(requesting_user, table, row_id, raise_error=True)
+
+        if not is_valid_prosemirror_document(message):
+            raise InvalidRowCommentException()
+
+        try:
+            mentioned_users = extract_mentioned_users_in_workspace(message, workspace)
+        except ValueError:
+            raise InvalidRowCommentMentionException()
+
         row_comment = RowComment.objects.create(
-            user=requesting_user, table=table, row_id=row_id, comment=comment
-        )
-        row_comment_created.send(
-            RowHandler,
-            row_comment=row_comment,
             user=requesting_user,
+            table=table,
+            row_id=row_id,
+            message=message,
+            comment=message,
         )
+
+        if mentioned_users:
+            row_comment.mentions.set(mentioned_users)
+
+        row_comment_created.send(cls, row_comment=row_comment, user=requesting_user)
         return row_comment
 
     @classmethod
     def update_comment(
-        cls, requesting_user: User, row_comment: RowComment, comment_content: str
+        cls,
+        requesting_user: AbstractUser,
+        row_comment: RowComment,
+        message: Dict[str, Any],
     ) -> RowComment:
         """
         Updates a new row comment on the specified row.
 
         :param requesting_user: The user who is making the comment.
         :param row_comment: The comment content for the update.
-        :param comment_content: The new content of the comment.
+        :param message: The new content of the comment.
         :return: The updated RowComment instance.
         :raises PermissionException: If the user does not have permission to delete
             the comment.
@@ -188,10 +213,11 @@ class RowCommentHandler:
         """
 
         table = row_comment.table
+        workspace = table.database.workspace
         CoreHandler().check_permissions(
             requesting_user,
             UpdateRowCommentsOperationType.type,
-            workspace=table.database.workspace,
+            workspace=workspace,
             context=table,
         )
 
@@ -199,21 +225,29 @@ class RowCommentHandler:
         if row_comment.user_id != requesting_user.id:
             raise UserNotRowCommentAuthorException()
 
-        if comment_content is None or comment_content == "":
+        if not is_valid_prosemirror_document(message):
             raise InvalidRowCommentException()
 
-        row_comment.comment = comment_content
-        row_comment.save(update_fields=["comment", "updated_on"])
+        try:
+            mentioned_users = extract_mentioned_users_in_workspace(message, workspace)
+        except ValueError:
+            raise InvalidRowCommentMentionException()
+
+        row_comment.message = message
+        row_comment.save(update_fields=["message", "updated_on"])
+
+        if mentioned_users:
+            row_comment.mentions.set(mentioned_users)
 
         row_comment_updated.send(
-            RowHandler,
+            cls,
             row_comment=row_comment,
             user=requesting_user,
         )
         return row_comment
 
     @classmethod
-    def delete_comment(cls, requesting_user: User, row_comment: RowComment):
+    def delete_comment(cls, requesting_user: AbstractUser, row_comment: RowComment):
         """
         Set a row comment marked as trashed and so it will not be visible to
         users anymore.
@@ -241,8 +275,4 @@ class RowCommentHandler:
 
         TrashHandler.trash(requesting_user, database.workspace, database, row_comment)
 
-        row_comment_deleted.send(
-            RowHandler,
-            row_comment=row_comment,
-            user=requesting_user,
-        )
+        row_comment_deleted.send(cls, row_comment=row_comment, user=requesting_user)
