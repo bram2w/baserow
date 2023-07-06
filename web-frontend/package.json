@@ -23,8 +23,7 @@
     "test-core-coverage": "JEST_JUNIT_OUTPUT_DIR=../reports/ jest --config jest.config.js -i --verbose --ci --forceExit --collectCoverage --coverageDirectory=\"./reports/coverage/\"",
     "test-premium-coverage": "jest --config ../premium/web-frontend/jest.config.js -i --verbose --ci --forceExit --collectCoverage --coverageDirectory=\"./reports/coverage/\"",
     "test-enterprise-coverage": "jest --config ../enterprise/web-frontend/jest.config.js -i --verbose --ci --forceExit --collectCoverage --coverageDirectory=\"./reports/coverage/\"",
-    "test-coverage": "yarn test-core-coverage && yarn test-premium-coverage && yarn test-enterprise-coverage",
-    "jest": "yarn test"
+    "test-coverage": "yarn test-core-coverage && yarn test-premium-coverage && yarn test-enterprise-coverage"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.3",

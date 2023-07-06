@@ -93,8 +93,36 @@ export class BaserowFormulaTypeDefinition extends Registerable {
     return FunctionalFormulaArrayItem
   }
 
-  getCanSortInView() {
+  getCanSortInView(field) {
     return true
+  }
+
+  canBeSortedWhenInArray(field) {
+    return false
+  }
+
+  getSort(name, order, field) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this.getFieldType()
+    )
+    return underlyingFieldType.getSort(name, order, field)
+  }
+
+  _mapFormulaTypeToFieldType(formulaType) {
+    return this.app.$registry.get('formula_type', formulaType).getFieldType()
+  }
+
+  getSortIndicator(field) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.formula_type)
+    )
+    return underlyingFieldType.getSortIndicator()
+  }
+
+  mapToSortableArray(element) {
+    return element.value
   }
 
   toHumanReadableString(field, value) {
@@ -138,6 +166,10 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
   getSortOrder() {
     return 1
   }
+
+  canBeSortedWhenInArray(field) {
+    return true
+  }
 }
 
 export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
@@ -164,6 +196,10 @@ export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
   getSortOrder() {
     return 1
   }
+
+  canBeSortedWhenInArray(field) {
+    return true
+  }
 }
 
 export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
@@ -185,6 +221,10 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
 
   getSortOrder() {
     return 2
+  }
+
+  canBeSortedWhenInArray(field) {
+    return true
   }
 }
 
@@ -211,6 +251,10 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
 
   getFunctionalGridViewFieldArrayComponent() {
     return FunctionalFormulaBooleanArrayItem
+  }
+
+  canBeSortedWhenInArray(field) {
+    return true
   }
 }
 
@@ -241,6 +285,14 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
 
   canRepresentDate() {
     return true
+  }
+
+  canBeSortedWhenInArray(field) {
+    return true
+  }
+
+  mapToSortableArray(element) {
+    return element.value
   }
 }
 
@@ -331,7 +383,7 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return 9
   }
 
-  getCanSortInView() {
+  getCanSortInView(field) {
     return false
   }
 }
@@ -341,7 +393,7 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     return 'array'
   }
 
-  getFieldType() {
+  getFieldType(field) {
     return 'text'
   }
 
@@ -396,8 +448,74 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     return 'array'
   }
 
-  getCanSortInView() {
-    return false
+  getCanSortInView(field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+    return subType.canBeSortedWhenInArray(field)
+  }
+
+  getSort(name, order, field) {
+    const subType = this.app.$registry.get(
+      'formula_type',
+      field.array_formula_type
+    )
+
+    const innerSortFunction = subType.getSort(name, order, field)
+
+    return (a, b) => {
+      const valuesA = a[name].map(subType.mapToSortableArray)
+      const valuesB = b[name].map(subType.mapToSortableArray)
+
+      for (let i = 0; i < Math.max(valuesA.length, valuesB.length); i++) {
+        let compared = 0
+
+        const isAdefined = valuesA[i] || valuesA[i] === ''
+        const isBdefined = valuesB[i] || valuesB[i] === ''
+
+        if (isAdefined && isBdefined) {
+          compared = innerSortFunction(
+            { [name]: valuesA[i] },
+            { [name]: valuesB[i] }
+          )
+        } else if (
+          isAdefined &&
+          (valuesB[i] === undefined || valuesB[i] === false)
+        ) {
+          compared = order === 'ASC' ? 1 : -1
+        } else if (
+          isBdefined &&
+          (valuesA[i] === undefined || valuesA[i] === false)
+        ) {
+          compared = order === 'ASC' ? -1 : 1
+        } else if (isAdefined && valuesB[i] === null) {
+          compared = order === 'ASC' ? -1 : 1
+        } else if (isBdefined && valuesA[i] === null) {
+          compared = order === 'ASC' ? 1 : -1
+        } else if (valuesA[i] === null && valuesB[i] === undefined) {
+          compared = order === 'ASC' ? 1 : -1
+        } else if (valuesA[i] === undefined && valuesB[i] === null) {
+          compared = order === 'ASC' ? -1 : 1
+        } else if (valuesA[i] === false && valuesB[i] !== false) {
+          compared = order === 'ASC' ? 1 : -1
+        } else if (valuesA[i] !== false && valuesB[i] === false) {
+          compared = order === 'ASC' ? -1 : 1
+        }
+
+        if (compared !== 0) {
+          return compared
+        }
+      }
+    }
+  }
+
+  getSortIndicator(field) {
+    const underlyingFieldType = this.app.$registry.get(
+      'field',
+      this._mapFormulaTypeToFieldType(field.array_formula_type)
+    )
+    return underlyingFieldType.getSortIndicator()
   }
 
   toHumanReadableString(field, value) {
@@ -438,8 +556,16 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
     return 8
   }
 
-  getCanSortInView() {
-    return false
+  getCanSortInView(field) {
+    return true
+  }
+
+  canBeSortedWhenInArray(field) {
+    return true
+  }
+
+  mapToSortableArray(element) {
+    return element.value
   }
 }
 
@@ -492,7 +618,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
     return this.toHumanReadableString(field, value)
   }
 
-  getCanSortInView() {
+  getCanSortInView(field) {
     return false
   }
 }

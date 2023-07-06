@@ -15,7 +15,7 @@ lint: eslint stylelint
 lint-javascript: lint
 
 jest:
-	yarn jest || exit;
+	yarn test || exit;
 
 test: jest
 

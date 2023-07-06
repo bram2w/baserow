@@ -1,3 +1,4 @@
+from decimal import Decimal
 from io import BytesIO
 
 from django.urls import reverse
@@ -19,6 +20,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaNumberType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 
@@ -2201,3 +2203,100 @@ def test_converting_a_lookup_field_doesnt_break_its_dependants(
 
     assert list(specific_iterator(dependant.field_dependencies.all())) == [lookup]
     assert list(specific_iterator(lookup.dependant_fields.all())) == [dependant]
+
+
+@pytest.mark.django_db
+def test_lookup_field_type_sorting_array_numbers(
+    data_fixture,
+):
+    view_handler = ViewHandler()
+    row_handler = RowHandler()
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="db")
+
+    # related table
+    related_table = data_fixture.create_database_table(
+        name="Related table", database=database
+    )
+    related_primary_field = data_fixture.create_number_field(
+        table=related_table, order=1, primary=True, name="number"
+    )
+
+    related_table_model = related_table.get_model()
+    r_11 = related_table_model.objects.create(
+        **{f"field_{related_primary_field.id}": 11}
+    )
+    r_1 = related_table_model.objects.create(**{f"field_{related_primary_field.id}": 1})
+    r_22 = related_table_model.objects.create(
+        **{f"field_{related_primary_field.id}": 22}
+    )
+    r_2 = related_table_model.objects.create(**{f"field_{related_primary_field.id}": 2})
+    r_111 = related_table_model.objects.create(
+        **{f"field_{related_primary_field.id}": 111}
+    )
+
+    # main table
+    table = data_fixture.create_database_table(name="Main table", database=database)
+    primary_field = data_fixture.create_text_field(
+        table=table, order=1, primary=True, name="Primary text"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        name="link", table=table, link_row_table=related_table
+    )
+
+    lookup_field = data_fixture.create_lookup_field(
+        table=table,
+        through_field=link_row_field,
+        target_field=related_primary_field,
+        through_field_name=link_row_field.name,
+        target_field_name=related_primary_field.name,
+    )
+
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    unsorted_rows = [
+        [r_2.id, r_1.id],
+        [r_1.id],
+        [r_1.id, r_2.id],
+        [],
+        [r_2.id, r_111.id],
+        [r_2.id],
+        [r_11.id],
+    ]
+
+    for row_list in unsorted_rows:
+        row_handler.create_row(
+            user=user, table=table, values={f"field_{link_row_field.id}": row_list}
+        )
+
+    expected = [
+        [Decimal("11")],
+        [Decimal("2"), Decimal("111")],
+        [Decimal("2")],
+        [Decimal("1"), Decimal("2")],
+        [Decimal("1"), Decimal("2")],
+        [Decimal("1")],
+        None,
+    ]
+
+    model = table.get_model()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=lookup_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup_numbers = [
+        getattr(r, f"field_{lookup_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup_numbers == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup_numbers = [
+        getattr(r, f"field_{lookup_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup_numbers == expected

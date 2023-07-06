@@ -666,7 +666,6 @@ export class TextFieldType extends FieldType {
     return (a, b) => {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
-
       return order === 'ASC'
         ? stringA.localeCompare(stringB)
         : stringB.localeCompare(stringA)
@@ -2680,12 +2679,15 @@ export class FormulaFieldType extends FieldType {
     )
   }
 
+  getCanSortInView(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.getCanSortInView(field)
+  }
+
   getSort(name, order, field) {
-    const underlyingFieldType = this.app.$registry.get(
-      'field',
-      this._mapFormulaTypeToFieldType(field.formula_type)
-    )
-    return underlyingFieldType.getSort(name, order)
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getSort(name, order, field)
   }
 
   getEmptyValue(field) {
@@ -2740,11 +2742,9 @@ export class FormulaFieldType extends FieldType {
   }
 
   getSortIndicator(field) {
-    const underlyingFieldType = this.app.$registry.get(
-      'field',
-      this._mapFormulaTypeToFieldType(field.formula_type)
-    )
-    return underlyingFieldType.getSortIndicator()
+    return this.app.$registry
+      .get('formula_type', field.formula_type)
+      .getSortIndicator(field)
   }
 
   getFormComponent() {
@@ -2765,11 +2765,6 @@ export class FormulaFieldType extends FieldType {
 
   canBeReferencedByFormulaField() {
     return true
-  }
-
-  getCanSortInView(field) {
-    const subType = this.app.$registry.get('formula_type', field.formula_type)
-    return subType.getCanSortInView()
   }
 
   canRepresentDate(field) {

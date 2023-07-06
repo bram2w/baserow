@@ -161,7 +161,7 @@ def test_trashing_a_link_row_field_breaks_vias(
 
 
 @pytest.mark.django_db
-def trashing_a_lookup_target_still_has_the_dep_depend_on_the_through_field(
+def test_trashing_a_lookup_target_still_has_the_dep_depend_on_the_through_field(
     data_fixture,
 ):
     table = data_fixture.create_database_table()
@@ -175,8 +175,10 @@ def trashing_a_lookup_target_still_has_the_dep_depend_on_the_through_field(
     )
     lookup_field = data_fixture.create_lookup_field(
         table=table,
-        through_field_id=link_row_field.id,
-        target_field=target_field.id,
+        through_field=link_row_field,
+        target_field=target_field,
+        through_field_name=link_row_field.name,
+        target_field_name=target_field.name,
         setup_dependencies=False,
     )
 
@@ -186,26 +188,23 @@ def trashing_a_lookup_target_still_has_the_dep_depend_on_the_through_field(
 
     target_field.trashed = True
     target_field.save()
+
+    assert target_field.dependants.exists()
+    assert link_row_field.dependencies.count() == 1
+    assert lookup_field.dependencies.count() == 1
+
     FieldDependencyHandler.break_dependencies_delete_dependants(target_field)
 
     # The trashed field is no longer part of the graph
-    assert not target_field.dependencies.exists()
-    assert not target_field.vias.exists()
     assert not target_field.dependants.exists()
+    assert link_row_field.dependencies.count() == 1
+    assert lookup_field.dependencies.count() == 1
 
-    # The lookup still has two deps, one to the link row field, the other to the broken
-    # target
-    assert lookup_field.dependencies.count() == 2
-    assert FieldDependency.objects.count() == 2
-    assert lookup_field.dependent_fields.get().specific == link_row_field
+    assert FieldDependency.objects.filter(via=link_row_field).count() == 2
     assert FieldDependency.objects.filter(
         broken_reference_field_name=target_field.name,
         dependency__isnull=True,
         via=link_row_field,
-        dependant=lookup_field,
-    ).get()
-    assert FieldDependency.objects.filter(
-        dependency=link_row_field,
         dependant=lookup_field,
     ).get()
 

@@ -444,25 +444,28 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 expression_name = field_annotated_order_by.expression.name
                 filter_key = f"{expression_name}{order_direction_suffix}"
 
-                value = field_type.get_value_for_filter(row, field_name)
+                value = field_type.get_value_for_filter(row, field)
+                if value is not None:
+                    q_kwargs = copy(previous_fields)
+                    q_kwargs[filter_key] = value
 
-                q_kwargs = copy(previous_fields)
-                q_kwargs[filter_key] = value
+                    q = Q(**q_kwargs)
 
-                q = Q(**q_kwargs)
+                    # As the key we want to use the field name without any direction
+                    # suffix.
+                    # In the case of a "normal" field type, that will just be the
+                    # field_name
+                    # But in the case of a more complex field type, it might be the
+                    # expression name.
+                    # An expression name could look like `field_1__value` while a
+                    # field name
+                    # will always be like `field_1`.
+                    previous_fields[expression_name or field_name] = value
 
-                # As the key we want to use the field name without any direction suffix.
-                # In the case of a "normal" field type, that will just be the field_name
-                # But in the case of a more complex field type, it might be the
-                # expression name.
-                # An expression name could look like `field_1__value` while a field name
-                # will always be like `field_1`.
-                previous_fields[expression_name or field_name] = value
+                    if annotation:
+                        q = AnnotatedQ(annotation=annotation, q=q)
 
-                if annotation:
-                    q = AnnotatedQ(annotation=annotation, q=q)
-
-                filter_builder.filter(q)
+                    filter_builder.filter(q)
 
         # Append default sorting
         for field_name in default_sorting:

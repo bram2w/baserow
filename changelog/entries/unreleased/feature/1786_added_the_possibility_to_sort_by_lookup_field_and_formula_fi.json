@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Added the possibility to sort by lookup field and formula field resulting in a lookup for arrays of texts, numbers, booleans, and single selects",
+    "issue_number": 1786,
+    "bullet_points": [],
+    "created_at": "2023-07-03"
+}
