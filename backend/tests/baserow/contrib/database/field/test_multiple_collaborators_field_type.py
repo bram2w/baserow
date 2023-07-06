@@ -11,6 +11,7 @@ from baserow.contrib.database.fields.models import MultipleCollaboratorsField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
@@ -131,11 +132,12 @@ def test_get_set_export_serialized_value_multiple_collaborators_field(data_fixtu
         },
     )
 
+    config = ImportExportConfig(include_permission_data=False)
     exported_applications = core_handler.export_workspace_applications(
-        workspace, BytesIO()
+        workspace, BytesIO(), config
     )
     imported_applications, id_mapping = core_handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, BytesIO(), None
+        imported_workspace, exported_applications, BytesIO(), config, None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]

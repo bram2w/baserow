@@ -29,6 +29,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
@@ -732,7 +733,11 @@ def test_import_export_multiple_select_field(data_fixture):
     field_serialized = field_type.export_serialized(field)
     id_mapping = {}
     field_imported = field_type.import_serialized(
-        table, field_serialized, id_mapping, DeferredFieldFkUpdater()
+        table,
+        field_serialized,
+        ImportExportConfig(include_permission_data=True),
+        id_mapping,
+        DeferredFieldFkUpdater(),
     )
 
     assert field_imported.select_options.all().count() == 4
@@ -798,11 +803,13 @@ def test_get_set_export_serialized_value_multiple_select_field(
     )
     assert len(SelectOption.objects.all()) == 3
 
+    config = ImportExportConfig(include_permission_data=False)
+
     exported_applications = core_handler.export_workspace_applications(
-        workspace, BytesIO()
+        workspace, BytesIO(), config
     )
     imported_applications, id_mapping = core_handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, BytesIO(), None
+        imported_workspace, exported_applications, BytesIO(), config, None
     )
     imported_database = imported_applications[0]
     imported_table = imported_database.table_set.all()[0]

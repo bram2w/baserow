@@ -23,6 +23,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
+from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -881,11 +882,13 @@ def test_import_export_link_row_field(data_fixture):
         values={f"field_{link_row_field.id}": [c_row.id, c_row_2.id]},
     )
 
+    config = ImportExportConfig(include_permission_data=False)
+
     exported_applications = core_handler.export_workspace_applications(
-        database.workspace, BytesIO()
+        database.workspace, BytesIO(), config
     )
     imported_applications, id_mapping = core_handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, BytesIO(), None
+        imported_workspace, exported_applications, BytesIO(), config, None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

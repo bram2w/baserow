@@ -43,6 +43,7 @@ from baserow.core.models import (
     WorkspaceUser,
 )
 from baserow.core.operations import ReadWorkspaceOperationType
+from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.user_files.models import UserFile
 
@@ -1141,9 +1142,12 @@ def test_export_import_workspace_application(data_fixture):
     data_fixture.create_database_table(database=database)
 
     handler = CoreHandler()
-    exported_applications = handler.export_workspace_applications(workspace, BytesIO())
+    config = ImportExportConfig(include_permission_data=False)
+    exported_applications = handler.export_workspace_applications(
+        workspace, BytesIO(), config
+    )
     imported_applications, id_mapping = handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, BytesIO(), None
+        imported_workspace, exported_applications, BytesIO(), config, None
     )
 
     assert len(imported_applications) == 1

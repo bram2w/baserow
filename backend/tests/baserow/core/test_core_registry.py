@@ -9,11 +9,6 @@ from baserow.core.exceptions import (
     InstanceTypeAlreadyRegistered,
     InstanceTypeDoesNotExist,
 )
-from baserow.core.registries import (
-    BaserowImportExportMode,
-    SerializationProcessorRegistry,
-    SerializationProcessorType,
-)
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
@@ -204,34 +199,3 @@ def test_get_serializer(data_fixture):
 
     serializer = registry.get_serializer(database, request=True)
     assert "order" in serializer.data
-
-
-def test_serialization_processor_registry_get_all_for_mode_matching_mode():
-    class MatchingProcessorType(SerializationProcessorType):
-        type = "matching_processor_type"
-        import_export_mode = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK
-
-    processor_type = MatchingProcessorType()
-    registry = SerializationProcessorRegistry()
-    registry.register(processor_type)
-
-    assert registry.get_all_for_mode(
-        BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK
-    ) == [processor_type]
-
-
-def test_serialization_processor_registry_get_all_for_mode_mismatching_mode():
-    class MatchingProcessorType(SerializationProcessorType):
-        type = "mismatching_processor_type"
-        import_export_mode = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK
-
-    processor_type = MatchingProcessorType()
-    registry = SerializationProcessorRegistry()
-    registry.register(processor_type)
-
-    assert (
-        registry.get_all_for_mode(
-            BaserowImportExportMode.TARGETING_DIFF_WORKSPACE_NEW_PK
-        )
-        == []
-    )

@@ -11,6 +11,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import NumberField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
@@ -198,7 +199,11 @@ def test_import_export_number_field(data_fixture):
     number_field_type = field_type_registry.get_by_model(number_field)
     number_serialized = number_field_type.export_serialized(number_field)
     number_field_imported = number_field_type.import_serialized(
-        number_field.table, number_serialized, {}, DeferredFieldFkUpdater()
+        number_field.table,
+        number_serialized,
+        ImportExportConfig(include_permission_data=True),
+        {},
+        DeferredFieldFkUpdater(),
     )
     assert number_field.number_negative == number_field_imported.number_negative
     assert number_field.number_decimal_places == (

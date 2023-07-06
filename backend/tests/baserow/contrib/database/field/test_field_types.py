@@ -17,6 +17,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -30,7 +31,11 @@ def test_import_export_text_field(data_fixture):
     text_field_type = field_type_registry.get_by_model(text_field)
     text_serialized = text_field_type.export_serialized(text_field)
     text_field_imported = text_field_type.import_serialized(
-        text_field.table, text_serialized, id_mapping, DeferredFieldFkUpdater()
+        text_field.table,
+        text_serialized,
+        ImportExportConfig(include_permission_data=True),
+        id_mapping,
+        DeferredFieldFkUpdater(),
     )
     assert text_field.id != text_field_imported.id
     assert text_field.name == text_field_imported.name
@@ -66,6 +71,7 @@ def test_import_export_formula_field(data_fixture, api_client):
     formula_field_imported = formula_field_type.import_serialized(
         text_field_in_diff_table.table,
         formula_serialized,
+        ImportExportConfig(include_permission_data=True),
         id_mapping,
         DeferredFieldFkUpdater(),
     )
@@ -670,7 +676,11 @@ def test_import_export_lookup_field(data_fixture, api_client):
 
     deferred_field_fk_updater = DeferredFieldFkUpdater()
     lookup_field_imported = lookup_field_type.import_serialized(
-        table_a, lookup_serialized, id_mapping, deferred_field_fk_updater
+        table_a,
+        lookup_serialized,
+        ImportExportConfig(include_permission_data=True),
+        id_mapping,
+        deferred_field_fk_updater,
     )
     assert lookup.id != lookup_field_imported.id
     assert lookup_field_imported.name == "lookup"
