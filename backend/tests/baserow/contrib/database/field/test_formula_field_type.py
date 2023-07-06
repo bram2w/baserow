@@ -1,5 +1,7 @@
 import inspect
+from datetime import datetime
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from django.db import transaction
 from django.db.models import TextField
@@ -15,7 +17,7 @@ from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.field_types import FormulaFieldType
 from baserow.contrib.database.fields.fields import BaserowExpressionField
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import FormulaField, LookupField
+from baserow.contrib.database.fields.models import FormulaField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.formula import (
     BaserowFormulaInvalidType,
@@ -1052,35 +1054,11 @@ def test_cannot_create_view_filter_or_sort_on_invalid_field(data_fixture):
     )
     data_fixture.create_select_option(field=option_field, value="A", color="blue")
     data_fixture.create_select_option(field=option_field, value="B", color="red")
-    single_select_formula_field = FieldHandler().create_field(
-        user=user,
-        table=table,
-        type_name="formula",
-        name="2",
-        formula="field('option_field')",
-    )
-    lookup_field = FieldHandler().create_field(
-        user=user,
-        table=table,
-        type_name="lookup",
-        name="lookup",
-        through_field_name=link.name,
-        target_field_name="primary",
-    )
-
     broken_formula_field = FormulaField.objects.get(id=broken_formula_field.id)
-    single_select_formula_field = FormulaField.objects.get(
-        id=single_select_formula_field.id
-    )
-    lookup_field = LookupField.objects.get(id=lookup_field.id)
     assert broken_formula_field.formula_type == "invalid"
-    assert single_select_formula_field.formula_type == "single_select"
-    assert lookup_field.formula_type == "array"
 
     fields_which_cant_yet_be_sorted_or_filtered = [
         broken_formula_field,
-        single_select_formula_field,
-        lookup_field,
     ]
     for field in fields_which_cant_yet_be_sorted_or_filtered:
         for view_filter_type in view_filter_type_registry.get_all():
@@ -1543,3 +1521,637 @@ def test_has_compatible_model_fields(instance1, instance2, is_compatible):
     FormulaFieldType().has_compatible_model_fields(
         instance1, instance2
     ) is is_compatible
+
+
+def _create_arr_sort_fixture(
+    data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+):
+    row_handler = RowHandler()
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="db")
+
+    # related table
+    related_table = data_fixture.create_database_table(
+        name="Related table", database=database
+    )
+    related_primary_field = create_primary_field(related_table)
+    related_table_model = related_table.get_model()
+
+    related_table_rows = {}
+    for dv in distinct_values:
+        related_table_rows[dv] = related_table_model.objects.create(
+            **{f"field_{related_primary_field.id}": dv}
+        )
+
+    # main table
+    table = data_fixture.create_database_table(name="Main table", database=database)
+    data_fixture.create_text_field(
+        table=table, order=1, primary=True, name="Primary text"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        name="link", table=table, link_row_table=related_table
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula_lookup",
+        formula=f"lookup('{link_row_field.name}', '{related_primary_field.name}')",
+        formula_type=formula_type,
+    )
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    for index, field_values in enumerate(unsorted_rows):
+        for index2, value in enumerate(field_values):
+            unsorted_rows[index][index2] = related_table_rows[value].id
+
+    for row_list in unsorted_rows:
+        row_handler.create_row(
+            user=user, table=table, values={f"field_{link_row_field.id}": row_list}
+        )
+
+    return table.get_model(), formula_field, grid_view
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_text(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_text_field(
+            table=table, order=1, primary=True, name="Primary text"
+        )
+
+    distinct_values = ["a", "b", "aa", "bb", "aaa", ""]
+    formula_type = "text"
+    unsorted_rows = [
+        ["b", "a"],
+        ["a"],
+        ["a", "b"],
+        [],
+        ["b", "aaa"],
+        ["b"],
+        [""],
+        ["aa"],
+    ]
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        ["b", "aaa"],
+        ["b"],
+        ["aa"],
+        ["a", "b"],
+        ["a", "b"],
+        ["a"],
+        [""],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_numbers(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_number_field(
+            table=table, order=1, primary=True, name="number"
+        )
+
+    formula_type = "number"
+    distinct_values = [1, 2, 11, 22, 111, None]
+    unsorted_rows = [
+        [Decimal("2"), Decimal("1")],
+        [Decimal("1")],
+        [Decimal("1"), Decimal("2")],
+        [],
+        [Decimal("2"), Decimal("111")],
+        [Decimal("2")],
+        [None],
+        [Decimal("11")],
+    ]
+
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        [None],
+        [Decimal("11")],
+        [Decimal("2"), Decimal("111")],
+        [Decimal("2")],
+        [Decimal("1"), Decimal("2")],
+        [Decimal("1"), Decimal("2")],
+        [Decimal("1")],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_numbers_fractions(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_number_field(
+            table=table, order=1, primary=True, name="number", number_decimal_places=2
+        )
+
+    formula_type = "number"
+    distinct_values = [
+        Decimal("1.00"),
+        Decimal("1.60"),
+        Decimal("111.00"),
+        Decimal("2.20"),
+        Decimal("2.32"),
+        Decimal("1.50"),
+        Decimal("2.00"),
+        Decimal("2.33"),
+        None,
+    ]
+    unsorted_rows = [
+        [Decimal("1.60"), Decimal("1.00")],
+        [Decimal("2.20")],
+        [Decimal("2.32"), Decimal("2.00")],
+        [],
+        [Decimal("1.50"), Decimal("111.00")],
+        [Decimal("2.00")],
+        [None],
+        [Decimal("2.33")],
+    ]
+
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        [None],
+        [Decimal("111.00"), Decimal("1.50")],
+        [Decimal("2.33")],
+        [Decimal("2.32"), Decimal("2.00")],
+        [Decimal("2.20")],
+        [Decimal("2.00")],
+        [Decimal("1.00"), Decimal("1.60")],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_boolean(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_boolean_field(
+            table=table, order=1, primary=True, name="boolean"
+        )
+
+    distinct_values = [True, False]
+    formula_type = "boolean"
+    unsorted_rows = [
+        [False, True],
+        [True],
+        [True, False],
+        [],
+        [False, True],
+        [False],
+        [True],
+    ]
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        [True, False],
+        [True, False],
+        [True, False],
+        [True],
+        [True],
+        [False],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_single_select(
+    data_fixture,
+):
+    row_handler = RowHandler()
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="db")
+
+    # related table
+    related_table = data_fixture.create_database_table(
+        name="Related table", database=database
+    )
+    related_primary_field = data_fixture.create_single_select_field(
+        table=related_table, order=1, primary=True, name="Primary text"
+    )
+    distinct_values = ["a", "b", "aa", "bb", "aaa", None]
+    distinct_values_id_mapping = {}
+    for dv in distinct_values:
+        if dv:
+            option = data_fixture.create_select_option(
+                field=related_primary_field, value=dv, color="blue"
+            )
+        else:
+            option = None
+        distinct_values_id_mapping[dv] = option
+
+    related_table_model = related_table.get_model()
+    related_table_rows = {}
+    for dv in distinct_values:
+        related_table_rows[dv] = related_table_model.objects.create(
+            **{f"field_{related_primary_field.id}": distinct_values_id_mapping[dv]}
+        )
+
+    # main table
+    table = data_fixture.create_database_table(name="Main table", database=database)
+    data_fixture.create_text_field(
+        table=table, order=1, primary=True, name="Primary text"
+    )
+    link_row_field = data_fixture.create_link_row_field(
+        name="link", table=table, link_row_table=related_table
+    )
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula_lookup",
+        formula=f"lookup('{link_row_field.name}', '{related_primary_field.name}')",
+        formula_type="single_select",
+    )
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    unsorted_rows = [
+        ["b", "a"],
+        ["a"],
+        ["a", "b"],
+        [],
+        ["b", "aaa"],
+        ["b"],
+        ["aa"],
+        [None],
+    ]
+
+    for index, field_values in enumerate(unsorted_rows):
+        for index2, value in enumerate(field_values):
+            unsorted_rows[index][index2] = related_table_rows[value].id
+
+    for row_list in unsorted_rows:
+        row_handler.create_row(
+            user=user, table=table, values={f"field_{link_row_field.id}": row_list}
+        )
+
+    expected = [
+        [None],
+        ["b", "aaa"],
+        ["b"],
+        ["aa"],
+        ["a", "b"],
+        ["a", "b"],
+        ["a"],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    model = table.get_model()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_datetimes(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_date_field(
+            table=table, order=1, primary=True, name="date", date_include_time=True
+        )
+
+    formula_type = "date"
+    distinct_values = [
+        datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 1, 15, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 15, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 15, 15, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+        None,
+    ]
+    unsorted_rows = [
+        [
+            datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+        ],
+        [
+            datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 1, 2, 15, 15, tzinfo=ZoneInfo("UTC")),
+        ],
+        [
+            datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC")),
+        ],
+        [],
+        [datetime(2020, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC"))],
+        [datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))],
+        [None],
+        [datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC"))],
+    ]
+
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        [None],
+        [datetime(2020, 2, 15, 0, 0)],
+        [datetime(2020, 2, 1, 0, 0)],
+        [
+            datetime(2020, 1, 1, 15, 15),
+            datetime(2020, 2, 15, 0, 0),
+        ],
+        [
+            datetime(2020, 1, 1, 15, 15),
+            datetime(2020, 1, 2, 15, 15),
+        ],
+        [
+            datetime(2020, 1, 1, 0, 0),
+            datetime(2020, 1, 2, 0, 0),
+        ],
+        [datetime(2020, 1, 1, 0, 0)],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_field_type_lookup_sorting_array_dates(
+    data_fixture,
+):
+    def create_primary_field(table):
+        return data_fixture.create_date_field(
+            table=table, order=1, primary=True, name="date", date_include_time=False
+        )
+
+    formula_type = "date"
+    distinct_values = [
+        datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 1, 15, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 15, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 1, 2, 15, 15, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC")),
+        datetime(2020, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+        None,
+    ]
+    unsorted_rows = [
+        [
+            datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 1, 2, 0, 0, tzinfo=ZoneInfo("UTC")),
+        ],
+        [
+            datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 1, 2, 15, 15, tzinfo=ZoneInfo("UTC")),
+        ],
+        [
+            datetime(2020, 1, 1, 15, 15, tzinfo=ZoneInfo("UTC")),
+            datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC")),
+        ],
+        [],
+        [datetime(2020, 2, 1, 0, 0, tzinfo=ZoneInfo("UTC"))],
+        [datetime(2020, 1, 1, 0, 0, tzinfo=ZoneInfo("UTC"))],
+        [None],
+        [datetime(2020, 2, 15, 0, 0, tzinfo=ZoneInfo("UTC"))],
+    ]
+
+    model, formula_field, grid_view = _create_arr_sort_fixture(
+        data_fixture, create_primary_field, formula_type, distinct_values, unsorted_rows
+    )
+
+    expected = [
+        [None],
+        [datetime(2020, 2, 15, 0, 0)],
+        [datetime(2020, 2, 1, 0, 0)],
+        [
+            datetime(2020, 1, 1, 0, 0),
+            datetime(2020, 2, 15, 0, 0),
+        ],
+        [
+            datetime(2020, 1, 1, 0, 0),
+            datetime(2020, 1, 2, 0, 0),
+        ],
+        [
+            datetime(2020, 1, 1, 0, 0),
+            datetime(2020, 1, 2, 0, 0),
+        ],
+        [datetime(2020, 1, 1, 0, 0)],
+        None,
+    ]
+
+    view_handler = ViewHandler()
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="DESC"
+    )
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    assert sorted_lookup == expected
+
+    sort.order = "ASC"
+    sort.save()
+    sorted_rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    sorted_lookup = [
+        getattr(r, f"field_{formula_field.id}_agg_sort_array") for r in sorted_rows
+    ]
+
+    expected.reverse()
+
+    assert sorted_lookup == expected
+
+
+@pytest.mark.django_db
+def test_formula_single_select_field_type_sorting(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user, name="Placeholder")
+    table = data_fixture.create_database_table(name="Example", database=database)
+    field = data_fixture.create_single_select_field(table=table)
+    option_c = data_fixture.create_select_option(field=field, value="C", color="blue")
+    option_a = data_fixture.create_select_option(field=field, value="A", color="blue")
+    option_b = data_fixture.create_select_option(field=field, value="B", color="blue")
+    formula_field = data_fixture.create_formula_field(
+        table=table,
+        name="formula",
+        formula=f"field('{field.name}')",
+        formula_type="single_select",
+    )
+    grid_view = data_fixture.create_grid_view(table=table)
+
+    view_handler = ViewHandler()
+    row_handler = RowHandler()
+
+    row_1 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": option_b.id}
+    )
+    row_2 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": option_a.id}
+    )
+    row_3 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": option_c.id}
+    )
+    row_4 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": option_b.id}
+    )
+    row_5 = row_handler.create_row(
+        user=user, table=table, values={f"field_{field.id}": None}
+    )
+
+    sort = data_fixture.create_view_sort(
+        view=grid_view, field=formula_field, order="ASC"
+    )
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_2.id, row_1.id, row_4.id, row_3.id]
+
+    sort.order = "DESC"
+    sort.save()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_3.id, row_1.id, row_4.id, row_2.id, row_5.id]
+
+    sort.order = "ASC"
+    sort.save()
+    model = table.get_model()
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_5.id, row_2.id, row_1.id, row_4.id, row_3.id]
