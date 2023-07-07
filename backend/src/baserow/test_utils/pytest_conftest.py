@@ -484,14 +484,12 @@ def second_separate_database_for_migrations(
             with django_db_blocker.unblock():
                 try:
                     for c, old_name, destroy in db_cfg:
-                        if old_name != "baserow":
-                            if destroy:
-                                c.creation.destroy_test_db(
-                                    old_name, request.config.option.verbose, False
-                                )
-                        else:
-                            print("Tried to delete the Baserow real database!!")
-                            raise Exception("tried to delete basoerw??")
+                        c.creation.destroy_test_db(
+                            old_name,
+                            request.config.option.verbose,
+                            False,
+                            suffix=suffix,
+                        )
                 except Exception as exc:
                     request.node.warn(
                         pytest.PytestWarning(
