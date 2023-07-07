@@ -239,17 +239,4 @@ export class ImageElementType extends ElementType {
   get formComponent() {
     return ImageElementForm
   }
-
-  prepareValuesForRequest(values) {
-    // We only want to send the name of the image file instead of the entire object
-    // since we only need to link the image file to the element and not copy the entire
-    // data structure.
-    if (values.image_file) {
-      values.image_file_id = values.image_file.id
-      delete values.image_file
-    } else {
-      delete values.image_file_id
-    }
-    return values
-  }
 }

@@ -2,6 +2,7 @@ from django.apps import AppConfig
 
 from baserow.core.registries import object_scope_type_registry, operation_type_registry
 from baserow.core.trash.registries import trash_item_type_registry
+from baserow.core.usage.registries import workspace_storage_usage_item_registry
 
 
 class BuilderConfig(AppConfig):
@@ -45,6 +46,14 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(OrderPagesBuilderOperationType())
         operation_type_registry.register(ListDomainsBuilderOperationType())
         operation_type_registry.register(OrderDomainsBuilderOperationType())
+
+        from baserow.contrib.builder.elements.usage_types import (
+            ImageElementWorkspaceStorageUsageItem,
+        )
+
+        workspace_storage_usage_item_registry.register(
+            ImageElementWorkspaceStorageUsageItem()
+        )
 
         from baserow.contrib.builder.pages.operations import (
             CreatePageOperationType,

@@ -3,8 +3,8 @@ from typing import Dict, Optional
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from baserow.api.user_files.serializers import UserFileSerializer
-from baserow.contrib.builder.api.validators import image_file_id_validation
+from baserow.api.user_files.serializers import UserFileField, UserFileSerializer
+from baserow.contrib.builder.api.validators import image_file_validation
 from baserow.contrib.builder.elements.models import (
     ALIGNMENTS,
     HeadingElement,
@@ -287,14 +287,14 @@ class ImageElementType(ElementType):
     ]
     request_serializer_field_names = [
         "image_source_type",
-        "image_file_id",
+        "image_file",
         "image_url",
         "alt_text",
         "alignment",
     ]
     allowed_fields = [
         "image_source_type",
-        "image_file_id",
+        "image_file",
         "image_url",
         "alt_text",
         "alignment",
@@ -309,7 +309,7 @@ class ImageElementType(ElementType):
     def get_sample_params(self):
         return {
             "image_source_type": ImageElement.IMAGE_SOURCE_TYPES.UPLOAD,
-            "image_file_id": None,
+            "image_file": None,
             "image_url": "https://test.com/image.png",
             "alt_text": "some alt text",
             "alignment": ALIGNMENTS.LEFT,
@@ -327,11 +327,12 @@ class ImageElementType(ElementType):
     @property
     def request_serializer_field_overrides(self):
         overrides = {
-            "image_file_id": serializers.IntegerField(
+            "image_file": UserFileField(
                 allow_null=True,
                 required=False,
-                help_text="The id of the image file",
-                validators=[image_file_id_validation],
+                default=None,
+                help_text="The image file",
+                validators=[image_file_validation],
             ),
             "alignment": serializers.ChoiceField(
                 choices=ALIGNMENTS.choices,

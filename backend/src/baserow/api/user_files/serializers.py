@@ -54,7 +54,6 @@ class UserFileSerializer(
     class Meta:
         model = UserFile
         fields = (
-            "id",
             "size",
             "mime_type",
             "is_image",
