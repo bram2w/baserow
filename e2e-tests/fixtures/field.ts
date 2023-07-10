@@ -1,6 +1,4 @@
 import { getClient } from '../client'
-import { faker } from '@faker-js/faker'
-import {Database} from "./database";
 import {User} from "./user";
 import {Table} from "./table";
 
@@ -25,31 +23,37 @@ export async function createField(user: User, fieldName: string, type: string, f
         type: type,
         ...fieldSettings
     })
-    return new Field(
+    const field1 = new Field(
         response.data.id,
         response.data.name,
         response.data.type,
         table,
         response.data
-    )
+    );
+    console.log(`created field ${field1.name} in ${field1.table.name}`)
+    return field1
 }
 
 export async function updateField(user: User, fieldName: string, type: string, fieldSettings: any, field: Field): Promise<Field> {
-    const response: any = await getClient(user).patch(`database/fields/${field.id}/`, {
+    const data = {
         name: fieldName,
         type: type,
         ...fieldSettings
-    })
-    return new Field(
+    };
+    const response: any = await getClient(user).patch(`database/fields/${field.id}/`, data)
+    const f = new Field(
         response.data.id,
         response.data.name,
         response.data.type,
         field.table,
         response.data
     )
+    console.log(`update field ${field.name} in ${f.name} in ${f.table.name}`)
+    return f
 }
 
 export async function deleteField(user: User, field: Field): Promise<void> {
+    console.log(`deleting field ${field.name} in ${field.table.name}`)
     await getClient(user).delete(`database/fields/${field.id}/`)
 }
 

@@ -169,8 +169,8 @@ class TableModelQuerySet(models.QuerySet):
 
     def search_all_fields(
         self,
-        search,
-        only_search_by_field_ids=None,
+        search: str,
+        only_search_by_field_ids: Optional[Iterable[int]] = None,
         search_mode: Optional[SearchModes] = None,
     ):
         """
@@ -180,11 +180,9 @@ class TableModelQuerySet(models.QuerySet):
         searched.
 
         :param search: The search query.
-        :type search: str
         :param only_search_by_field_ids: Only field ids in this iterable will be
             filtered by the search term. Other fields not in the iterable will be
             ignored and not be filtered.
-        :type only_search_by_field_ids: Optional[Iterable[int]]
         :param search_mode: In `MODE_COMPAT` we will use the old search method, using
             the LIKE operator on each column. In `MODE_FT_WITH_COUNT`  we will switch
             to using Postgres full-text search.
@@ -198,7 +196,7 @@ class TableModelQuerySet(models.QuerySet):
         # If we are searching with Postgres full text search (whether with
         # or without a COUNT)...
         if search_mode == SearchModes.MODE_FT_WITH_COUNT:
-            # If `BASEROW_USE_PG_FULLTEXT_SEARCH` is enabled, then use
+            # If `USE_PG_FULLTEXT_SEARCH` is enabled, then use
             # the Postgres full-text search functionality instead.
             if self.model.baserow_table.tsvectors_are_supported:
                 return self.pg_search(search, only_search_by_field_ids)
@@ -764,7 +762,7 @@ class Table(
             fields = []
 
         # By default, we create an index on the `order` and `id`
-        # columns. If `BASEROW_USE_PG_FULLTEXT_SEARCH` is enabled, which
+        # columns. If `USE_PG_FULLTEXT_SEARCH` is enabled, which
         # it is by default, we'll include a GIN index on the table's
         # `tsvector` column.
         indexes = [

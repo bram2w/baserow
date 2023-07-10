@@ -165,6 +165,6 @@ export class TablePage extends BaserowPage {
     }
 
     async waitForFirstCellToBeBlank() {
-        await expect(this.firstNonPrimaryCell.locator('*')).toHaveCount(0)
+        await expect(this.firstNonPrimaryCell.locator('div *')).toHaveCount(0)
     }
 }

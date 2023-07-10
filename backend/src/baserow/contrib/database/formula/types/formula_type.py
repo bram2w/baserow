@@ -11,7 +11,6 @@ from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOr
 from baserow.contrib.database.formula.ast import tree
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
-from baserow.contrib.database.search.expressions import LocalisedSearchVector
 
 T = TypeVar("T", bound="BaserowFormulaType")
 
@@ -406,19 +405,17 @@ class BaserowFormulaType(abc.ABC):
     def __init__(self, nullable=False):
         self.nullable = nullable
 
-    def prepare_value_for_search(self, field, queryset):
+    def get_search_expression(self, field, queryset):
         (
             field_instance,
             field_type,
         ) = self.get_baserow_field_instance_and_type()
         # Ensure the fake field_instance can have db_column called on it
         field_instance.id = field.id
-        return field_type.prepare_value_for_search(field_instance, queryset)
+        return field_type.get_search_expression(field_instance, queryset)
 
-    def prepare_value_for_search_in_array(self, field, queryset):
-        return LocalisedSearchVector(
-            extract_jsonb_array_values_to_single_string(field, queryset)
-        )
+    def get_search_expression_in_array(self, field, queryset) -> Expression:
+        return extract_jsonb_array_values_to_single_string(field, queryset)
 
     def is_searchable(self, field):
         (
@@ -447,11 +444,11 @@ class BaserowFormulaInvalidType(BaserowFormulaType):
     def should_recreate_when_old_type_was(self, old_type: "BaserowFormulaType") -> bool:
         return False
 
-    def prepare_value_for_search(self, field, queryset):
-        return None
+    def get_search_expression(self, field, queryset) -> Expression:
+        return Value(None)
 
-    def prepare_value_for_search_in_array(self, field, queryset):
-        return None
+    def get_search_expression_in_array(self, field, queryset) -> Expression:
+        return Value(None)
 
     def is_searchable(self, field) -> bool:
         return False

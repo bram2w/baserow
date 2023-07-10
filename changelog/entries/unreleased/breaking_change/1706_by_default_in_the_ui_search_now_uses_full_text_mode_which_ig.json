@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "By default in the UI search now uses full text mode which ignores punctuation and behaves differently than the previous exact matching. For now the API defaults to search_mode=compat, however in the coming months we will switch the API default to the new mode instead.",
+    "issue_number": 1706,
+    "bullet_points": [],
+    "created_at": "2023-07-08"
+}

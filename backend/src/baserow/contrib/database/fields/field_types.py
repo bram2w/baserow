@@ -19,6 +19,7 @@ from django.db import OperationalError, models
 from django.db.models import (
     CharField,
     DateTimeField,
+    Expression,
     F,
     Func,
     OuterRef,
@@ -88,7 +89,6 @@ from baserow.core.utils import list_to_comma_separated_string
 from baserow.formula import BaserowFormulaException
 from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 
-from ..search.expressions import LocalisedSearchVector
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -786,11 +786,11 @@ class DateFieldType(FieldType):
             }
         )
 
-    def prepare_value_for_search(
+    def get_search_expression(
         self,
         field: Union[DateField, LastModifiedField, CreatedOnField],
         queryset: QuerySet,
-    ) -> Optional[LocalisedSearchVector]:
+    ) -> Expression:
         """
         Prepares a `DateField`, `LastModifiedField` or `CreatedOnField`
         for search, by converting the value to its timezone (if the field's
@@ -798,19 +798,17 @@ class DateFieldType(FieldType):
         `to_char` so that it's formatted properly.
         """
 
-        return LocalisedSearchVector(
+        return Func(
             Func(
-                Func(
-                    # FIXME: what if date_force_timezone is None(user timezone)?
-                    Value(field.date_force_timezone or "UTC", output_field=CharField()),
-                    F(field.db_column),
-                    function="timezone",
-                    output_field=DateTimeField(),
-                ),
-                Value(field.get_psql_format()),
-                function="to_char",
-                output_field=CharField(),
-            )
+                # FIXME: what if date_force_timezone is None(user timezone)?
+                Value(field.date_force_timezone or "UTC", output_field=CharField()),
+                F(field.db_column),
+                function="timezone",
+                output_field=DateTimeField(),
+            ),
+            Value(field.get_psql_format()),
+            function="to_char",
+            output_field=CharField(),
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -1222,13 +1220,35 @@ class LinkRowFieldType(FieldType):
     can_be_primary_field = False
     can_get_unique_values = False
 
-    def prepare_value_for_search(
-        self, field: Field, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
-        return None
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        remote_field = queryset.model._meta.get_field(field.db_column).remote_field
+        remote_model = remote_field.model
 
-    def is_searchable(self, field: Field) -> bool:
-        return False
+        primary_field_object = next(
+            object
+            for object in remote_model._field_objects.values()
+            if object["field"].primary
+        )
+        primary_field = primary_field_object["field"]
+        primary_field_type = primary_field_object["type"]
+        qs = remote_model.objects.filter(
+            **{f"{remote_field.related_name}__id": OuterRef("pk")}
+        ).order_by()
+        # noinspection PyTypeChecker
+        return Subquery(
+            # This first values call forces django to group by the ID of the outer
+            # table we are updating rows in.
+            qs.values(f"{remote_field.related_name}__id")
+            .annotate(
+                value=StringAgg(
+                    primary_field_type.get_search_expression(
+                        primary_field, remote_model.objects
+                    ),
+                    " ",
+                )
+            )
+            .values("value")[:1]
+        )
 
     def enhance_queryset(self, queryset, field, name):
         """
@@ -2127,6 +2147,46 @@ class LinkRowFieldType(FieldType):
         # ourself.
         return FieldDependencyHandler.get_via_dependants_of_link_field(field)
 
+    def row_of_dependency_updated(
+        self,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: List["LinkRowField"],
+    ):
+        update_collector.add_field_which_has_changed(
+            field, via_path_to_starting_table, send_field_updated_signal=False
+        )
+        super().row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
+        )
+
+    def field_dependency_updated(
+        self,
+        field: Field,
+        updated_field: Field,
+        updated_old_field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
+    ):
+        update_collector.add_field_which_has_changed(
+            field, via_path_to_starting_table, send_field_updated_signal=False
+        )
+        super().field_dependency_updated(
+            field,
+            updated_field,
+            updated_old_field,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
+        )
+
 
 class EmailFieldType(CharFieldMatchingRegexFieldType):
     type = "email"
@@ -2163,21 +2223,17 @@ class FileFieldType(FieldType):
     can_be_in_form_view = True
     can_get_unique_values = False
 
-    def prepare_value_for_search(
-        self, field: FileField, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
+    def get_search_expression(self, field: FileField, queryset: QuerySet) -> Expression:
         """
         Prepares a `FileField`.
         """
 
-        return LocalisedSearchVector(
-            extract_jsonb_array_values_to_single_string(
-                field,
-                queryset,
-                path_to_value_in_jsonb_list=[
-                    Value("visible_name", output_field=CharField())
-                ],
-            )
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            path_to_value_in_jsonb_list=[
+                Value("visible_name", output_field=CharField())
+            ],
         )
 
     def _extract_file_names(self, value):
@@ -2532,15 +2588,11 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     ) -> int:
         return getattr(row, f"{field_name}_id")
 
-    def prepare_value_for_search(
+    def get_search_expression(
         self, field: SingleSelectField, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
-        return LocalisedSearchVector(
-            Subquery(
-                queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__value")[
-                    :1
-                ]
-            )
+    ) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__value")[:1]
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -2827,15 +2879,11 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(name)
 
-    def prepare_value_for_search(
-        self, field: MultipleSelectField, queryset
-    ) -> Optional[LocalisedSearchVector]:
-        return LocalisedSearchVector(
-            Subquery(
-                queryset.filter(pk=OuterRef("pk")).values(
-                    aggregated=StringAgg(f"{field.db_column}__value", " ")
-                )[:1]
-            )
+    def get_search_expression(self, field: MultipleSelectField, queryset) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(
+                aggregated=StringAgg(f"{field.db_column}__value", " ")
+            )[:1]
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -3213,10 +3261,10 @@ class FormulaFieldType(ReadOnlyFieldType):
         OperationalError: _stack_error_mapper,
     }
 
-    def prepare_value_for_search(
+    def get_search_expression(
         self, field: FormulaField, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
-        return self.to_baserow_formula_type(field.specific).prepare_value_for_search(
+    ) -> Expression:
+        return self.to_baserow_formula_type(field.specific).get_search_expression(
             field, queryset
         )
 
@@ -4184,15 +4232,13 @@ class MultipleCollaboratorsFieldType(FieldType):
             child=field_serializer, required=required, **kwargs
         )
 
-    def prepare_value_for_search(
+    def get_search_expression(
         self, field: MultipleCollaboratorsField, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
-        return LocalisedSearchVector(
-            Subquery(
-                queryset.filter(pk=OuterRef("pk")).values(
-                    aggregated=StringAgg(f"{field.db_column}__first_name", " ")
-                )[:1]
-            )
+    ) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(
+                aggregated=StringAgg(f"{field.db_column}__first_name", " ")
+            )[:1]
         )
 
     def get_internal_value_from_db(

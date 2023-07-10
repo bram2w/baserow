@@ -108,7 +108,7 @@ def extract_jsonb_array_values_to_single_string(
     path_to_value_in_jsonb_list: Optional[List[Expression]] = None,
     transform_value_to_text_func: Optional[Callable[[Expression], Expression]] = None,
     extract_as_text: bool = True,
-    delimiter=" ",
+    delimiter: str = " ",
 ):
     """
     For a field whose cells contain a JSONB list of objects (File and Lookup fields)

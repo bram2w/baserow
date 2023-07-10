@@ -14,7 +14,7 @@ from baserow.core.user_files.handler import UserFileHandler
 
 
 @pytest.mark.django_db(transaction=True)
-def test_textfield_prepare_value_for_search(data_fixture, enable_singleton_testing):
+def test_textfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
         database = data_fixture.create_database_application(user=user)
@@ -38,7 +38,7 @@ def test_textfield_prepare_value_for_search(data_fixture, enable_singleton_testi
 
 
 @pytest.mark.django_db(transaction=True)
-def test_longtextfield_prepare_value_for_search(data_fixture, enable_singleton_testing):
+def test_longtextfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
         database = data_fixture.create_database_application(user=user)
@@ -62,7 +62,7 @@ def test_longtextfield_prepare_value_for_search(data_fixture, enable_singleton_t
 
 
 @pytest.mark.django_db(transaction=True)
-def test_numberfield_prepare_value_for_search(data_fixture, enable_singleton_testing):
+def test_numberfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
         database = data_fixture.create_database_application(user=user)
@@ -86,7 +86,7 @@ def test_numberfield_prepare_value_for_search(data_fixture, enable_singleton_tes
 
 
 @pytest.mark.django_db(transaction=True)
-def test_filefield_prepare_value_for_search(
+def test_filefield_get_search_expression(
     data_fixture, tmpdir, enable_singleton_testing
 ):
     with transaction.atomic():
@@ -136,7 +136,7 @@ def test_filefield_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_urlfield_prepare_value_for_search(data_fixture, enable_singleton_testing):
+def test_urlfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
         database = data_fixture.create_database_application(user=user)
@@ -160,7 +160,7 @@ def test_urlfield_prepare_value_for_search(data_fixture, enable_singleton_testin
 
 
 @pytest.mark.django_db(transaction=True)
-def test_emailfield_prepare_value_for_search(data_fixture, enable_singleton_testing):
+def test_emailfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
         database = data_fixture.create_database_application(user=user)
@@ -184,7 +184,7 @@ def test_emailfield_prepare_value_for_search(data_fixture, enable_singleton_test
 
 
 @pytest.mark.django_db(transaction=True)
-def test_datefield_without_time_prepare_value_for_search(
+def test_datefield_without_time_get_search_expression(
     data_fixture, enable_singleton_testing
 ):
     with transaction.atomic():
@@ -210,7 +210,7 @@ def test_datefield_without_time_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_datefield_with_time_prepare_value_for_search(
+def test_datefield_with_time_get_search_expression(
     data_fixture, enable_singleton_testing
 ):
     with transaction.atomic():
@@ -238,7 +238,7 @@ def test_datefield_with_time_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_singleselectfield_prepare_value_for_search(
+def test_singleselectfield_get_search_expression(
     data_fixture, enable_singleton_testing
 ):
     with transaction.atomic():
@@ -271,9 +271,7 @@ def test_singleselectfield_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_multiselectfield_prepare_value_for_search(
-    data_fixture, enable_singleton_testing
-):
+def test_multiselectfield_get_search_expression(data_fixture, enable_singleton_testing):
     with transaction.atomic():
         user = data_fixture.create_user()
 
@@ -326,7 +324,7 @@ def test_multiselectfield_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_collaboratorfield_prepare_value_for_search(
+def test_collaboratorfield_get_search_expression(
     data_fixture, enable_singleton_testing
 ):
     with transaction.atomic():
@@ -367,7 +365,7 @@ def test_collaboratorfield_prepare_value_for_search(
 
 
 @pytest.mark.django_db(transaction=True)
-def test_lookupfield_prepare_value_for_search(
+def test_lookupfield_get_search_expression(
     data_fixture,
     enable_singleton_testing,
     django_assert_num_queries,
@@ -433,5 +431,67 @@ def test_lookupfield_prepare_value_for_search(
 
     qs = model.objects.all().pg_search("clive")
     assert qs.get().id == table_b_looking_up_jeff_and_clive.id
+
+    assert not model.objects.all().pg_search("steve").exists()
+
+
+@pytest.mark.django_db(transaction=True)
+def test_linkrowfield_get_search_expression(
+    data_fixture,
+    enable_singleton_testing,
+    django_assert_num_queries,
+):
+    with transaction.atomic():
+        workspace = data_fixture.create_workspace()
+        creator = data_fixture.create_user(workspace=workspace)
+        table_a, table_b, link_field = data_fixture.create_two_linked_tables(
+            user=creator, table_kwargs={"force_add_tsvectors": True}
+        )
+
+        table_a_primary = table_a.field_set.get(primary=True)
+
+        table_a_row_1 = RowHandler().create_row(
+            user=creator,
+            table=table_a,
+            values={
+                f"{link_field.db_column}": [],
+                f"{table_a_primary.db_column}": "jeff",
+            },
+        )
+        table_a_row_2 = RowHandler().create_row(
+            user=creator,
+            table=table_a,
+            values={
+                f"{link_field.db_column}": [],
+                f"{table_a_primary.db_column}": "clive",
+            },
+        )
+        table_b_row_linking_to_jeff = RowHandler().create_row(
+            user=creator,
+            table=table_b,
+            values={
+                f"field_{link_field.link_row_related_field_id}": [table_a_row_1.id]
+            },
+        )
+        table_b_linking_to_jeff_and_clive = RowHandler().create_row(
+            user=creator,
+            table=table_b,
+            values={
+                f"field_{link_field.link_row_related_field_id}": [
+                    table_a_row_1.id,
+                    table_a_row_2.id,
+                ]
+            },
+        )
+    model = table_b.get_model()
+
+    qs = list(model.objects.all().pg_search("jeff").values_list("id", flat=True))
+    assert qs == [
+        table_b_row_linking_to_jeff.id,
+        table_b_linking_to_jeff_and_clive.id,
+    ]
+
+    qs = model.objects.all().pg_search("clive")
+    assert qs.get().id == table_b_linking_to_jeff_and_clive.id
 
     assert not model.objects.all().pg_search("steve").exists()

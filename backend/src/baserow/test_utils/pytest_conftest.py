@@ -513,7 +513,7 @@ def migrator(second_separate_database_for_migrations, reset_schema):
 
 @pytest.fixture
 def disable_full_text_search(settings):
-    settings.BASEROW_USE_PG_FULLTEXT_SEARCH = False
+    settings.USE_PG_FULLTEXT_SEARCH = False
 
 
 @pytest.fixture

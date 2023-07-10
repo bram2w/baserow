@@ -1,5 +1,4 @@
-import { getClient } from '../client'
-import { faker } from '@faker-js/faker'
+import {getClient} from '../client'
 import {Database} from "./database";
 import {User} from "./user";
 

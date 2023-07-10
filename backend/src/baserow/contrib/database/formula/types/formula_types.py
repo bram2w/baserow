@@ -36,7 +36,6 @@ from baserow.contrib.database.formula.types.formula_type import (
     UnTyped,
 )
 from baserow.contrib.database.formula.types.serializers import LinkSerializer
-from baserow.contrib.database.search.expressions import LocalisedSearchVector
 from baserow.core.utils import list_to_comma_separated_string
 
 
@@ -210,18 +209,16 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return formula_function_registry.get("link")(literal(""))
 
-    def prepare_value_for_search(self, field, queryset):
-        return LocalisedSearchVector(
-            Concat(
-                json_extract_path(F(field.db_column), [Value("label")]),
-                Value(" ("),
-                json_extract_path(F(field.db_column), [Value("url")]),
-                Value(")"),
-                output_field=models.TextField(),
-            )
+    def get_search_expression(self, field, queryset):
+        return Concat(
+            json_extract_path(F(field.db_column), [Value("label")]),
+            Value(" ("),
+            json_extract_path(F(field.db_column), [Value("url")]),
+            Value(")"),
+            output_field=models.TextField(),
         )
 
-    def prepare_value_for_search_in_array(self, field, queryset):
+    def get_search_expression_in_array(self, field, queryset):
         def transform_value_to_text_func(x):
             # Make sure we don't send the keys of the jsonb to ts_vector by extracting
             # and re-ordering the label/url parameters to match the correct format
@@ -234,12 +231,10 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
                 output_field=models.TextField(),
             )
 
-        return LocalisedSearchVector(
-            extract_jsonb_array_values_to_single_string(
-                field,
-                queryset,
-                transform_value_to_text_func=transform_value_to_text_func,
-            )
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            transform_value_to_text_func=transform_value_to_text_func,
         )
 
     def is_searchable(self, field):
@@ -499,12 +494,8 @@ class BaserowFormulaDateIntervalType(
     def is_searchable(self, field):
         return True
 
-    def prepare_value_for_search(
-        self, field: Field, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
-        return LocalisedSearchVector(
-            Cast(field.db_column, output_field=models.CharField())
-        )
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Cast(field.db_column, output_field=models.CharField())
 
 
 class BaserowFormulaDateType(BaserowFormulaValidType):
@@ -621,7 +612,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
         return Value(timezone.now(), output_field=field)
 
-    def prepare_value_for_search_in_array(self, field, queryset):
+    def get_search_expression_in_array(self, field, queryset):
         def transform_value_to_text_func(x):
             return Func(
                 Func(
@@ -636,12 +627,10 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
                 output_field=models.CharField(),
             )
 
-        return LocalisedSearchVector(
-            extract_jsonb_array_values_to_single_string(
-                field,
-                queryset,
-                transform_value_to_text_func=transform_value_to_text_func,
-            )
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            transform_value_to_text_func=transform_value_to_text_func,
         )
 
     def get_order_by_in_array_expr(self, field, field_name, order_direction):
@@ -668,8 +657,8 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         self.array_formula_type = sub_type.type
         self.sub_type = sub_type
 
-    def prepare_value_for_search(self, field, queryset):
-        return self.sub_type.prepare_value_for_search_in_array(field, queryset)
+    def get_search_expression(self, field, queryset):
+        return self.sub_type.get_search_expression_in_array(field, queryset)
 
     def is_searchable(self, field):
         return True
@@ -938,21 +927,17 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
             single_select_value, literal("")
         )
 
-    def prepare_value_for_search(self, field, queryset):
-        return LocalisedSearchVector(
-            Cast(F(field.db_column + "__value"), output_field=models.CharField())
-        )
+    def get_search_expression(self, field, queryset):
+        return Cast(F(field.db_column + "__value"), output_field=models.CharField())
 
-    def prepare_value_for_search_in_array(self, field, queryset):
-        return LocalisedSearchVector(
-            extract_jsonb_array_values_to_single_string(
-                field,
-                queryset,
-                path_to_value_in_jsonb_list=[
-                    Value("value", output_field=models.CharField()),
-                    Value("value", output_field=models.CharField()),
-                ],
-            )
+    def get_search_expression_in_array(self, field, queryset):
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            path_to_value_in_jsonb_list=[
+                Value("value", output_field=models.CharField()),
+                Value("value", output_field=models.CharField()),
+            ],
         )
 
     def is_searchable(self, field):

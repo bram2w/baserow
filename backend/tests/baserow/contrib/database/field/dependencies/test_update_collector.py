@@ -73,9 +73,8 @@ def test_can_add_fields_in_same_starting_table_with_row_filter(
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.fields.signals.field_updated.send")
 def test_can_only_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m(
-    send_mock, api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
@@ -110,42 +109,44 @@ def test_can_only_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m(
     first_table_2_row.save()
 
     field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(
-        second_table, starting_row_ids=[second_table_a_row.id]
-    )
-    update_collector.add_field_with_pending_update_statement(
-        first_table_primary_field,
-        Value("other"),
-        via_path_to_starting_table=[link_row_field],
-    )
-    # Cache the models so we are only asserting about the update queries
-    field_cache.cache_model(first_table.get_model())
-    field_cache.cache_model(second_table.get_model())
-    # Only one field was updated so only one update statement is expected
-    with django_assert_num_queries(1):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields(
-            field_cache
+    with patch(
+        "baserow.contrib.database.fields.signals.field_updated.send"
+    ) as send_mock:
+        update_collector = FieldUpdateCollector(
+            second_table, starting_row_ids=[second_table_a_row.id]
         )
+        update_collector.add_field_with_pending_update_statement(
+            first_table_primary_field,
+            Value("other"),
+            via_path_to_starting_table=[link_row_field],
+        )
+        # Cache the models so we are only asserting about the update queries
+        field_cache.cache_model(first_table.get_model())
+        field_cache.cache_model(second_table.get_model())
+        # Only one field was updated so only one update statement is expected
+        with django_assert_num_queries(1):
+            updated_fields = update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
 
-    # No field in the starting table (second_table) was updated
-    assert updated_fields == []
-    first_table_1_row.refresh_from_db()
-    first_table_2_row.refresh_from_db()
-    assert first_table_1_row.primary == "other"
-    assert first_table_2_row.primary == "2"
+        # No field in the starting table (second_table) was updated
+        assert updated_fields == []
+        first_table_1_row.refresh_from_db()
+        first_table_2_row.refresh_from_db()
+        assert first_table_1_row.primary == "other"
+        assert first_table_2_row.primary == "2"
 
-    send_mock.assert_not_called()
-    update_collector.send_additional_field_updated_signals()
-    send_mock.assert_called_once()
-    assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
-    assert send_mock.call_args[1]["user"] is None
-    assert send_mock.call_args[1]["related_fields"] == []
+        send_mock.assert_not_called()
+        update_collector.send_additional_field_updated_signals()
+        send_mock.assert_called_once()
+        assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
+        assert send_mock.call_args[1]["user"] is None
+        assert send_mock.call_args[1]["related_fields"] == []
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.fields.signals.field_updated.send")
 def test_can_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m_and_back(
-    send_mock, api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
@@ -182,56 +183,58 @@ def test_can_trigger_update_for_rows_joined_to_a_starting_row_across_a_m2m_and_b
     first_table_2_row.link.add(second_table_b_row.id)
     first_table_2_row.save()
 
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(
-        second_table, starting_row_ids=[second_table_a_row.id]
-    )
-    update_collector.add_field_with_pending_update_statement(
-        first_table_primary_field,
-        Value("other"),
-        via_path_to_starting_table=[link_row_field],
-    )
-    update_collector.add_field_with_pending_update_statement(
-        second_table_primary_field,
-        Value("other"),
-        via_path_to_starting_table=[
-            link_row_field,
-            link_row_field.link_row_related_field,
-        ],
-    )
-    # Cache the models so we are only asserting about the update queries
-    field_cache.cache_model(first_table.get_model())
-    field_cache.cache_model(second_table.get_model())
-    # Two fields were updated with an update statement for each table
-    with django_assert_num_queries(2):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields(
-            field_cache
+    with patch(
+        "baserow.contrib.database.fields.signals.field_updated.send"
+    ) as send_mock:
+        field_cache = FieldCache()
+        update_collector = FieldUpdateCollector(
+            second_table, starting_row_ids=[second_table_a_row.id]
         )
+        update_collector.add_field_with_pending_update_statement(
+            first_table_primary_field,
+            Value("other"),
+            via_path_to_starting_table=[link_row_field],
+        )
+        update_collector.add_field_with_pending_update_statement(
+            second_table_primary_field,
+            Value("other"),
+            via_path_to_starting_table=[
+                link_row_field,
+                link_row_field.link_row_related_field,
+            ],
+        )
+        # Cache the models so we are only asserting about the update queries
+        field_cache.cache_model(first_table.get_model())
+        field_cache.cache_model(second_table.get_model())
+        # Two fields were updated with an update statement for each table
+        with django_assert_num_queries(2):
+            updated_fields = update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
 
-    assert updated_fields == [second_table_primary_field]
-    first_table_1_row.refresh_from_db()
-    first_table_2_row.refresh_from_db()
-    second_table_a_row.refresh_from_db()
-    second_table_b_row.refresh_from_db()
-    second_table_unlinked_row.refresh_from_db()
-    assert first_table_1_row.primary == "other"
-    assert first_table_2_row.primary == "2"
-    assert second_table_a_row.primary == "other"
-    assert second_table_b_row.primary == "other"
-    assert second_table_unlinked_row.primary == "unlinked"
+        assert updated_fields == [second_table_primary_field]
+        first_table_1_row.refresh_from_db()
+        first_table_2_row.refresh_from_db()
+        second_table_a_row.refresh_from_db()
+        second_table_b_row.refresh_from_db()
+        second_table_unlinked_row.refresh_from_db()
+        assert first_table_1_row.primary == "other"
+        assert first_table_2_row.primary == "2"
+        assert second_table_a_row.primary == "other"
+        assert second_table_b_row.primary == "other"
+        assert second_table_unlinked_row.primary == "unlinked"
 
-    send_mock.assert_not_called()
-    update_collector.send_additional_field_updated_signals()
-    send_mock.assert_called_once()
-    assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
-    assert send_mock.call_args[1]["user"] is None
-    assert send_mock.call_args[1]["related_fields"] == []
+        send_mock.assert_not_called()
+        update_collector.send_additional_field_updated_signals()
+        send_mock.assert_called_once()
+        assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
+        assert send_mock.call_args[1]["user"] is None
+        assert send_mock.call_args[1]["related_fields"] == []
 
 
 @pytest.mark.django_db
-@patch("baserow.contrib.database.fields.signals.field_updated.send")
 def test_update_statements_at_the_same_path_node_are_grouped_into_one(
-    send_mock, api_client, data_fixture, django_assert_num_queries
+    api_client, data_fixture, django_assert_num_queries
 ):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)
@@ -271,55 +274,58 @@ def test_update_statements_at_the_same_path_node_are_grouped_into_one(
     first_table_2_row.link.add(second_table_b_row.id)
     first_table_2_row.save()
 
-    field_cache = FieldCache()
-    update_collector = FieldUpdateCollector(
-        second_table, starting_row_ids=[second_table_a_row.id]
-    )
-    update_collector.add_field_with_pending_update_statement(
-        first_table_primary_field,
-        Value("other"),
-        via_path_to_starting_table=[link_row_field],
-    )
-    update_collector.add_field_with_pending_update_statement(
-        first_table_other_field,
-        Value("updated"),
-        via_path_to_starting_table=[link_row_field],
-    )
-    update_collector.add_field_with_pending_update_statement(
-        second_table_primary_field,
-        Value("other"),
-        via_path_to_starting_table=[
-            link_row_field,
-            link_row_field.link_row_related_field,
-        ],
-    )
-    # Cache the models so we are only asserting about the update queries
-    field_cache.cache_model(first_table.get_model())
-    field_cache.cache_model(second_table.get_model())
-    # Three fields were updated but two are in the same path node (same table) and so
-    # only one update per table expected
-    with django_assert_num_queries(2):
-        updated_fields = update_collector.apply_updates_and_get_updated_fields(
-            field_cache
+    with patch(
+        "baserow.contrib.database.fields.signals.field_updated.send"
+    ) as send_mock:
+        field_cache = FieldCache()
+        update_collector = FieldUpdateCollector(
+            second_table, starting_row_ids=[second_table_a_row.id]
         )
+        update_collector.add_field_with_pending_update_statement(
+            first_table_primary_field,
+            Value("other"),
+            via_path_to_starting_table=[link_row_field],
+        )
+        update_collector.add_field_with_pending_update_statement(
+            first_table_other_field,
+            Value("updated"),
+            via_path_to_starting_table=[link_row_field],
+        )
+        update_collector.add_field_with_pending_update_statement(
+            second_table_primary_field,
+            Value("other"),
+            via_path_to_starting_table=[
+                link_row_field,
+                link_row_field.link_row_related_field,
+            ],
+        )
+        # Cache the models so we are only asserting about the update queries
+        field_cache.cache_model(first_table.get_model())
+        field_cache.cache_model(second_table.get_model())
+        # Three fields were updated but two are in the same path node (same table) and
+        # so only one update per table expected
+        with django_assert_num_queries(2):
+            updated_fields = update_collector.apply_updates_and_get_updated_fields(
+                field_cache
+            )
 
-    assert updated_fields == [second_table_primary_field]
-    first_table_1_row.refresh_from_db()
-    first_table_2_row.refresh_from_db()
-    second_table_a_row.refresh_from_db()
-    second_table_b_row.refresh_from_db()
-    second_table_unlinked_row.refresh_from_db()
-    assert first_table_1_row.primary == "other"
-    assert first_table_1_row.other == "updated"
-    assert first_table_2_row.primary == "2"
-    assert first_table_2_row.other == "y"
-    assert second_table_a_row.primary == "other"
-    assert second_table_b_row.primary == "other"
-    assert second_table_unlinked_row.primary == "unlinked"
+        assert updated_fields == [second_table_primary_field]
+        first_table_1_row.refresh_from_db()
+        first_table_2_row.refresh_from_db()
+        second_table_a_row.refresh_from_db()
+        second_table_b_row.refresh_from_db()
+        second_table_unlinked_row.refresh_from_db()
+        assert first_table_1_row.primary == "other"
+        assert first_table_1_row.other == "updated"
+        assert first_table_2_row.primary == "2"
+        assert first_table_2_row.other == "y"
+        assert second_table_a_row.primary == "other"
+        assert second_table_b_row.primary == "other"
+        assert second_table_unlinked_row.primary == "unlinked"
 
-    send_mock.assert_not_called()
-    update_collector.send_additional_field_updated_signals()
-    send_mock.assert_called_once()
-    assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
-    assert send_mock.call_args[1]["user"] is None
-    assert send_mock.call_args[1]["related_fields"] == [first_table_other_field]
+        send_mock.assert_not_called()
+        update_collector.send_additional_field_updated_signals()
+        send_mock.assert_called_once()
+        assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
+        assert send_mock.call_args[1]["user"] is None
+        assert send_mock.call_args[1]["related_fields"] == [first_table_other_field]

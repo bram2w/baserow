@@ -1966,6 +1966,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             fields provide those field ids in this optional iterable. Other fields
              not present in the iterable will not be searched and filtered down by the
              search term.
+        :param apply_filters: Whether to apply view filters to the resulting queryset.
+        :param search_mode: The type of search to perform if a search term is provided.
         :return: The appropriate queryset for the provided view.
         """
 
