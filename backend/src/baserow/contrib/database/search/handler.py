@@ -338,7 +338,7 @@ class SearchHandler(
             and field_ids_to_restrict_update_to is not None
         ):
             raise ValueError(
-                "Mst always update all fields when updating rows "
+                "Must always update all fields when updating rows "
                 "with needs_background_update=True."
             )
 
@@ -369,6 +369,7 @@ class SearchHandler(
         was_full_column_update = not update_tsvectors_for_changed_rows_only
         if (
             was_full_column_update
+            and collected_vectors
             and settings.AUTO_VACUUM_AFTER_SEARCH_UPDATE
             and not settings.TESTS
         ):

@@ -6,6 +6,11 @@ from django.core.management.base import BaseCommand
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
+from baserow.core.registries import ImportExportConfig
+
+cli_import_export_config = ImportExportConfig(
+    include_permission_data=False, reduce_disk_space_usage=False
+)
 
 
 class Command(BaseCommand):
@@ -62,6 +67,7 @@ class Command(BaseCommand):
             exported_applications = CoreHandler().export_workspace_applications(
                 workspace,
                 files_buffer=files_buffer,
+                import_export_config=cli_import_export_config,
             )
 
         with open(export_path, "w") as export_buffer:

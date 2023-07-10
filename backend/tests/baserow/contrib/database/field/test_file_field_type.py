@@ -12,6 +12,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.exceptions import (
     InvalidUserFileNameError,
     UserFileDoesNotExist,
@@ -225,8 +226,13 @@ def test_import_export_file_field(data_fixture, tmpdir):
     )
 
     files_buffer = BytesIO()
+    config = ImportExportConfig(include_permission_data=False)
+
     exported_applications = core_handler.export_workspace_applications(
-        database.workspace, files_buffer=files_buffer, storage=storage
+        database.workspace,
+        files_buffer=files_buffer,
+        storage=storage,
+        import_export_config=config,
     )
 
     # We expect that the exported zip file contains the user file used in the created
@@ -259,7 +265,7 @@ def test_import_export_file_field(data_fixture, tmpdir):
     ] = "test2.txt"
 
     imported_applications, id_mapping = core_handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, files_buffer, storage
+        imported_workspace, exported_applications, files_buffer, config, storage
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

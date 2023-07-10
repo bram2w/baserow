@@ -12,7 +12,7 @@ from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.exceptions import BuilderDoesNotExist
 from baserow.contrib.builder.models import Builder
 from baserow.core.exceptions import IdDoesNotExist
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress
 
@@ -163,8 +163,12 @@ class DomainHandler:
 
         builder_application_type = application_type_registry.get("builder")
 
+        import_export_config = ImportExportConfig(
+            include_permission_data=True, reduce_disk_space_usage=False
+        )
+
         exported_builder = builder_application_type.export_serialized(
-            builder, None, default_storage
+            builder, import_export_config, None, default_storage
         )
 
         progress.increment(by=50)
@@ -173,6 +177,7 @@ class DomainHandler:
         duplicate_builder = builder_application_type.import_serialized(
             None,
             exported_builder,
+            import_export_config,
             id_mapping,
             None,
             default_storage,

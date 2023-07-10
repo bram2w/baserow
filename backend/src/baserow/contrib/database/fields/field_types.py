@@ -83,12 +83,14 @@ from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
+from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 from baserow.formula import BaserowFormulaException
 from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 
+from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -2002,6 +2004,7 @@ class LinkRowFieldType(FieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Optional[Field]:
@@ -2034,7 +2037,11 @@ class LinkRowFieldType(FieldType):
             serialized_copy["link_row_relation_id"] = related_field.link_row_relation_id
 
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
 
         if related_field_found:
@@ -3498,6 +3505,7 @@ class FormulaFieldType(ReadOnlyFieldType):
 
         if should_send_signals_at_end:
             update_collector.apply_updates_and_get_updated_fields(field_cache)
+            SearchHandler().entire_field_values_changed_or_created(field.table, [field])
             update_collector.send_force_refresh_signals_for_all_updated_tables()
 
     def row_of_dependency_updated(
@@ -3810,6 +3818,7 @@ class CountFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -3819,7 +3828,11 @@ class CountFieldType(FormulaFieldType):
         # the mapping.
         original_through_field_id = serialized_copy.pop("through_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id
@@ -3956,6 +3969,7 @@ class RollupFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -3966,7 +3980,11 @@ class RollupFieldType(FormulaFieldType):
         original_through_field_id = serialized_copy.pop("through_field_id")
         original_target_field_id = serialized_copy.pop("target_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id
@@ -4192,6 +4210,7 @@ class LookupFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -4202,7 +4221,11 @@ class LookupFieldType(FormulaFieldType):
         original_through_field_id = serialized_copy.pop("through_field_id")
         original_target_field_id = serialized_copy.pop("target_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id

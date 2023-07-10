@@ -6,6 +6,9 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from baserow.core.handler import CoreHandler
+from baserow.core.management.commands.export_workspace_applications import (
+    cli_import_export_config,
+)
 from baserow.core.models import Workspace
 
 
@@ -66,9 +69,7 @@ class Command(BaseCommand):
             # By default, we won't import any registry data. This is because
             # `RoleAssignment` can't be imported if the subjects are teams.
             applications, _ = handler.import_applications_to_workspace(
-                workspace,
-                content,
-                files_buffer,
+                workspace, content, files_buffer, cli_import_export_config
             )
 
             if files_buffer:

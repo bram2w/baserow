@@ -32,6 +32,7 @@ from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.export_serialized import CoreExportSerializedStructure
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
+from baserow.core.registries import ImportExportConfig
 from baserow.core.utils import ChildProgressBuilder, remove_invalid_surrogate_characters
 
 from .exceptions import AirtableBaseNotPublic, AirtableShareIsNotABase
@@ -608,11 +609,18 @@ class AirtableHandler:
             download_files_buffer,
         )
 
+        import_export_config = ImportExportConfig(
+            # We are not yet downloading any role/permission data from airtable so
+            # nothing to import
+            include_permission_data=False,
+            reduce_disk_space_usage=False,
+        )
         # Import the converted data using the existing method to avoid duplicate code.
         databases, _ = CoreHandler().import_applications_to_workspace(
             workspace,
             [baserow_database_export],
             files_buffer,
+            import_export_config,
             storage=storage,
             progress_builder=progress.create_child_builder(represents_progress=600),
         )

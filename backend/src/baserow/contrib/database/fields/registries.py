@@ -18,6 +18,7 @@ from django.db.models.functions import Cast
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -786,6 +787,7 @@ class FieldType(
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Field:
@@ -798,6 +800,8 @@ class FieldType(
             be imported.
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
         :param deferred_fk_update_collector: An object than can be used to defer
             setting FK's to other fields until after all fields have been created
             and we know their IDs.
@@ -818,9 +822,10 @@ class FieldType(
             if self.can_have_select_options
             else []
         )
+        should_create_tsvector_column = not import_export_config.reduce_disk_space_usage
         field = self.model_class(
             table=table,
-            tsvector_column_created=table.tsvectors_are_supported,
+            tsvector_column_created=should_create_tsvector_column,
             **serialized_copy,
         )
         field.save()

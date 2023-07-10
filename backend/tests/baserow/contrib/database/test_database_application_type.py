@@ -7,7 +7,7 @@ from pytz import UTC
 from baserow.contrib.database.fields.models import FormulaField, TextField
 from baserow.contrib.database.table.models import Table
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import ImportExportConfig, application_type_registry
 
 
 @pytest.mark.django_db
@@ -35,7 +35,8 @@ def test_import_export_database(data_fixture):
     row.refresh_from_db()
 
     database_type = application_type_registry.get("database")
-    serialized = database_type.export_serialized(database, None, None)
+    config = ImportExportConfig(include_permission_data=True)
+    serialized = database_type.export_serialized(database, config)
 
     # Delete the updated on, because the import should also be compatible with
     # without these values present.
@@ -47,7 +48,12 @@ def test_import_export_database(data_fixture):
 
     with freeze_time("2022-01-01 12:00"):
         imported_database = database_type.import_serialized(
-            imported_workspace, serialized, id_mapping, None, None
+            imported_workspace,
+            serialized,
+            config,
+            id_mapping,
+            None,
+            None,
         )
 
     assert imported_database.id != database.id
