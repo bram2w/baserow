@@ -7,13 +7,13 @@ class LocalisedSearchVector(SearchVector):
     A `SearchVector` which is responsible for two additional requirements:
 
     1. The `SearchVector.config` is always set to what the value of
-        `BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG` is set to.
+        `PG_SEARCH_CONFIG` is set to.
     2. The `Expression` given to it is always wrapped in `special_char_tokenizer`,
         a Django `Func` which converts specific characters in the text into spaces.
         See `special_char_tokenizer`'s docstring for more detailed information.
 
     Any new `FieldType` which should be searchable should have its
-    `prepare_value_for_search` return a `LocalisedSearchVector`, in only very
+    `get_search_expression` return a `LocalisedSearchVector`, in only very
     specific cases would a `SearchVector` be used outside `FieldType`.
     """
 

@@ -5,13 +5,19 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.db import models as django_models
-from django.db.models import BooleanField, CharField, DurationField, Q, QuerySet
+from django.db.models import (
+    BooleanField,
+    CharField,
+    DurationField,
+    Expression,
+    Q,
+    QuerySet,
+)
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.db.models.functions import Cast
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
-from baserow.contrib.database.search.expressions import LocalisedSearchVector
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -129,22 +135,19 @@ class FieldType(
 
         return value
 
-    def prepare_value_for_search(
-        self, field: Field, queryset: QuerySet
-    ) -> Optional[LocalisedSearchVector]:
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         """
-        When a row is created, updated or deleted, this `FieldType` method
-        must return a `SearchVector` that informs Postgres full-text search
-        how the column should be prepared so that the table's `tsvector`
-        column can be UPDATEd with it.
+        When a field/row is created, updated or restored, this `FieldType` method
+        must return a django expression that can be cast to string that will be used
+        to create this fields search index column.
         """
 
-        return LocalisedSearchVector(Cast(field.db_column, output_field=CharField()))
+        return Cast(field.db_column, output_field=CharField())
 
     def is_searchable(self, field: Field) -> bool:
         """
         If this field needs a tsv search index column made for it then this should
-        return True. If True is returned then prepare_value_for_search should also
+        return True. If True is returned then get_search_expression should also
         be implemented.
         """
 

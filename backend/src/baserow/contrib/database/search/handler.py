@@ -17,6 +17,7 @@ from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.search.exceptions import (
     PostgresFullTextSearchDisabledException,
 )
+from baserow.contrib.database.search.expressions import LocalisedSearchVector
 from baserow.contrib.database.search.regexes import (
     RE_ONE_OR_MORE_WHITESPACE,
     RE_REMOVE_ALL_PUNCTUATION_ALREADY_REMOVED_FROM_TSVS_FOR_QUERY,
@@ -68,11 +69,11 @@ class SearchHandler(
 ):
     @classmethod
     def full_text_enabled(cls):
-        return settings.BASEROW_USE_PG_FULLTEXT_SEARCH
+        return settings.USE_PG_FULLTEXT_SEARCH
 
     @classmethod
     def search_config(cls):
-        return settings.BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG
+        return settings.PG_SEARCH_CONFIG
 
     @classmethod
     def special_char_tokenizer(cls, expression: Expression) -> Func:
@@ -100,9 +101,9 @@ class SearchHandler(
           in the beginning, middle or end of the string. This is to match
           Postgres' removal of hyphens in the simple dictionary.
 
-        :param expression: The Expression which a `FieldType.prepare_value_for_search`
-            has returned to `LocalisedSearchVector`, which in turn has called this
-            classmethod so that we convert the Expression's text into specific tokens.
+        :param expression: The Expression which a `FieldType.get_search_expression`
+            which has called this classmethod so that we convert the Expression's text
+            into specific tokens.
         :return: Func
         """
 
@@ -234,7 +235,7 @@ class SearchHandler(
     ) -> List[FieldWithSearchVector]:
         """
         Responsible for finding all specific fields in a table, then per `FieldType`,
-        calling `prepare_value_for_search` to get its `SearchVector` object, if
+        calling `get_search_expression` to get its `SearchVector` object, if
         the field type is searchable.
         """
 
@@ -256,7 +257,9 @@ class SearchHandler(
 
         field_type = field_type_registry.get_by_model(field)
         if field_type.is_searchable(field):
-            search_vector = field_type.prepare_value_for_search(field, queryset)
+            search_vector = LocalisedSearchVector(
+                field_type.get_search_expression(field, queryset)
+            )
         else:
             search_vector = Value(None)
         return FieldWithSearchVector(field, search_vector)
@@ -366,7 +369,7 @@ class SearchHandler(
         was_full_column_update = not update_tsvectors_for_changed_rows_only
         if (
             was_full_column_update
-            and settings.BASEROW_AUTO_VACUUM_AFTER_SEARCH_UPDATE
+            and settings.AUTO_VACUUM_AFTER_SEARCH_UPDATE
             and not settings.TESTS
         ):
             cls.vacuum_table(table)

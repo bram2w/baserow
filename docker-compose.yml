@@ -152,6 +152,7 @@ x-backend-variables: &backend-variables
   BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED:
   BASEROW_DISABLE_LOCKED_MIGRATIONS:
   BASEROW_USE_PG_FULLTEXT_SEARCH:
+  BASEROW_AUTO_VACUUM:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing

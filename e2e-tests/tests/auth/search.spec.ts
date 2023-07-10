@@ -11,9 +11,11 @@ import {
     deleteAllNonPrimaryFieldsFromTable,
     deleteField,
     Field,
+    getFieldsForTable,
     updateField
 } from "../../fixtures/field";
 import {updateRows} from "../../fixtures/rows";
+import ro from "@faker-js/faker/locales/ro";
 
 let user = null;
 let sharedPageTestData: SharedTestData = null;
@@ -91,7 +93,7 @@ class TestCase {
         if (this.subFieldSetup.setCellFunc) {
             await this.subFieldSetup.setCellFunc(tablePage, this.cellValue)
         } else {
-            const rowValue = {id:1}
+            const rowValue = {id: 1}
             rowValue[this.subFieldSetup.field.name] = null
             await updateRows(user, sharedPageTestData.tableA, [rowValue])
             rowValue[this.subFieldSetup.field.name] = this.cellValue
@@ -111,7 +113,7 @@ class SubFieldSetup {
     field: Field
     otherFields: Field[]
 
-    constructor(public name: string, public fieldType: FieldType, public fieldSettings: any, public otherFieldsToMake: () => any[], public setCellFunc: Function | null, public testCaseInputs: TestCaseInput[]) {
+    constructor(public name: string, public fieldType: FieldType, public fieldSettings: () => any, public otherFieldsToMakeOrUpdate: () => any[], public setCellFunc: Function | null, public testCaseInputs: TestCaseInput[]) {
         this.setup = false
         this.testCases = []
         for (let i = 0; i < testCaseInputs.length; i++) {
@@ -133,14 +135,24 @@ class SubFieldSetup {
         // Premake the field so it always the first field in the list
         this.field = await createField(user, this.name, 'text', {}, sharedPageTestData.tableA)
         this.otherFields = []
-        for (const otherField of this.otherFieldsToMake()) {
-            this.otherFields.push(await createField(user, otherField.name, otherField.type, otherField.settings, otherField.table))
+        for (const otherField of this.otherFieldsToMakeOrUpdate()) {
+            if (otherField.updatePrimary) {
+                const primary = await this._getPrimary(otherField);
+                this.otherFields.push(await updateField(user, otherField.name, otherField.type, otherField.settings, primary))
+            } else {
+                this.otherFields.push(await createField(user, otherField.name, otherField.type, otherField.settings, otherField.table))
+            }
         }
-        this.field = await updateField(user, this.name, this.fieldType.type, this.fieldSettings, this.field)
+        this.field = await updateField(user, this.name, this.fieldType.type, this.fieldSettings(), this.field)
         // Double check page is as expected
         await tablePage.waitForLoadingOverlayToDisappear()
         await expect(tablePage.fields()).toHaveCount(this.expectedNumFields(), {timeout: 30000})
         this.setup = true
+    }
+
+    private async _getPrimary(otherField) {
+        const fields = await getFieldsForTable(user, otherField.table)
+        return fields.filter((f) => f.fieldSettings.primary)[0];
     }
 
     private expectedNumFields() {
@@ -151,7 +163,21 @@ class SubFieldSetup {
     async tearDown(tablePage: TablePage) {
         await deleteField(user, this.field)
         for (const otherField of this.otherFields.reverse()) {
-            await deleteField(user, otherField)
+            if (otherField.fieldSettings.primary) {
+                const primary = await this._getPrimary(otherField);
+                await updateField(user, primary.name, 'text', {}, primary)
+                const blankRows = []
+                for(let i = 1; i < 3; i++){
+                    const o = {
+                        id: i
+                    }
+                    o[primary.name] = null
+                    blankRows.push(o)
+                }
+                await updateRows(user, primary.table, blankRows)
+            } else {
+                await deleteField(user, otherField)
+            }
         }
         await expect(tablePage.fields()).toHaveCount(1)
     }
@@ -175,7 +201,7 @@ type SubFieldSetupInput = {
     name?: string,
     testCases?: TestCaseInput[]
     fieldSettings?: Record<string, any>,
-    otherFieldsToMake?: () => FieldInput[],
+    otherFieldsToMakeOrUpdate?: () => FieldInput[],
     setCellValueFunc?: (TablePage, any) => void
 }
 
@@ -185,14 +211,24 @@ class FieldType {
     constructor(public type: string, public subFieldSetupInputs: SubFieldSetupInput[], public defaultSubFieldSetupValue: SubFieldSetupInput) {
         this.subFieldSetups = subFieldSetupInputs.map((i) => new SubFieldSetup(i.name,
             this,
-            {...defaultSubFieldSetupValue.fieldSettings, ...i.fieldSettings},
+            () => {
+                let defaultFieldSettings = defaultSubFieldSetupValue.fieldSettings;
+                if (typeof defaultFieldSettings === 'function') {
+                    defaultFieldSettings = defaultFieldSettings()
+                }
+                return {...
+                    defaultFieldSettings,
+                ...
+                    i.fieldSettings
+                }
+            },
             () => {
                 let result = []
-                if(defaultSubFieldSetupValue.otherFieldsToMake){
-                    result = result.concat(defaultSubFieldSetupValue.otherFieldsToMake())
+                if (defaultSubFieldSetupValue.otherFieldsToMakeOrUpdate) {
+                    result = result.concat(defaultSubFieldSetupValue.otherFieldsToMakeOrUpdate())
                 }
-                if(i.otherFieldsToMake){
-                    result = result.concat(i.otherFieldsToMake())
+                if (i.otherFieldsToMakeOrUpdate) {
+                    result = result.concat(i.otherFieldsToMakeOrUpdate())
                 }
                 return result
             },
@@ -246,31 +282,31 @@ function doesNotMatchRowId(...searches: string[]): TestCaseInput {
     }
 }
 
+const setTargetFieldAndLinkCellValuesFunc = (targetName) => {
+    return async function (tablePage: TablePage, cellValue: any[]) {
+        await updateRows(user, sharedPageTestData.tableA, [{
+            id: 1,
+            'link_to_b': []
+        }])
+        await tablePage.waitForFirstCellToBeBlank()
+        const rowUpdates = []
+        const linkIds = []
+        for (let i = 0; i < cellValue.length; i++) {
+            const rowId = i + 1;
+            const row = {id: rowId};
+            row[targetName] = cellValue[i]
+            rowUpdates.push(row)
+            linkIds.push(rowId)
+        }
+        await updateRows(user, sharedPageTestData.tableB, rowUpdates)
+        await updateRows(user, sharedPageTestData.tableA, [{
+            id: 1,
+            'link_to_b': linkIds
+        }])
+        await tablePage.waitForFirstCellNotBeBlank()
+    };
+};
 const fieldTypes = [
-    new FieldType(
-        'number',
-        [
-            {
-                name: 'number field with 4 DP',
-                testCases: [
-                    matches(5.234, '5', '5.2', '+5.23'),
-                    matches(-5.234, '-5', '-5.2', '-5.23'),
-                    doesNotMatch(-5.234, '5', '5.2')
-                ],
-                fieldSettings: {number_decimal_places:4, number_negative:true}
-            },
-            {
-                name: 'number field with 0 DP',
-                testCases: [
-                    matches(5, '5'),
-                    matches(-5, '-5'),
-                    doesNotMatch(-5, '5', '5.2', 'a')
-                ],
-                fieldSettings: {number_decimal_places:0, number_negative: true}
-            },
-        ],
-        {}
-    ),
     new FieldType(
         'lookup',
         [
@@ -279,7 +315,7 @@ const fieldTypes = [
                 testCases: [
                     matchesWithoutSelf(['2023-01-10T00:00:00Z', '4023-01-10T12:00:00Z'], '10/01/4023'),
                 ],
-                otherFieldsToMake: () => [
+                otherFieldsToMakeOrUpdate: () => [
                     {
                         "type": "date",
                         "name": "target",
@@ -297,7 +333,7 @@ const fieldTypes = [
                 testCases: [
                     matches(['test', 'other'], 't', 'te', 'tes', 'test'),
                 ],
-                otherFieldsToMake: () => [
+                otherFieldsToMakeOrUpdate: () => [
                     {
                         "type": "text",
                         "name": "target",
@@ -307,31 +343,12 @@ const fieldTypes = [
             },
         ],
         {
-            setCellValueFunc: async function (tablePage: TablePage, cellValue: any[]) {
-                await updateRows(user, sharedPageTestData.tableA, [{
-                    id: 1,
-                    'link_to_b': []
-                }])
-                await tablePage.waitForFirstCellToBeBlank()
-                const rowUpdates = []
-                const linkIds = []
-                for (let i = 0; i < cellValue.length; i++) {
-                    const rowId = i+1;
-                    rowUpdates.push({'target': cellValue[i], id: rowId})
-                    linkIds.push(rowId)
-                }
-                await updateRows(user, sharedPageTestData.tableB, rowUpdates)
-                await updateRows(user, sharedPageTestData.tableA, [{
-                    id: 1,
-                    'link_to_b':linkIds
-                }])
-                await tablePage.waitForFirstCellNotBeBlank()
-            },
+            setCellValueFunc: setTargetFieldAndLinkCellValuesFunc('target'),
             fieldSettings: {
                 'target_field_name': 'target',
                 'through_field_name': 'link_to_b'
             },
-            otherFieldsToMake: () => [
+            otherFieldsToMakeOrUpdate: () => [
                 {
                     "type": "link_row",
                     "name": "link_to_b",
@@ -342,6 +359,63 @@ const fieldTypes = [
                 },
             ],
         },
+    ),
+    new FieldType(
+        'link_row',
+        [
+            {
+                name: 'link of date field',
+                testCases: [
+                    matchesWithoutSelf(['2023-01-10T00:00:00Z', '4023-01-10T12:00:00Z'], '10/01/4023'),
+                ],
+                otherFieldsToMakeOrUpdate: () => [
+                    {
+                        "updatePrimary": true,
+                        "type": "date",
+                        "name": "primary",
+                        "table": sharedPageTestData.tableB,
+                        settings: {
+                            "date_format": "EU",
+                            "date_include_time": true,
+                            "date_force_timezone": "UTC"
+                        }
+                    },
+                ],
+            },
+        ],
+        {
+            setCellValueFunc: setTargetFieldAndLinkCellValuesFunc('primary'),
+            fieldSettings: () => {
+                return {
+                    name: 'link_to_b',
+                    "link_row_table_id": sharedPageTestData.tableB.id,
+                }
+            },
+        },
+    ),
+    new FieldType(
+        'number',
+        [
+            {
+                name: 'number field with 4 DP',
+                testCases: [
+                    matches(5.234, '5', '5.2', '+5.23'),
+                    matches(-5.234, '-5', '-5.2', '-5.23'),
+                    doesNotMatch(-5.234, '5', '5.2')
+                ],
+                fieldSettings: {number_decimal_places: 4, number_negative: true}
+            },
+            {
+                name: 'number field with 0 DP',
+                testCases: [
+                    matches(5, '5'),
+                    matches(-5, '-5'),
+                    doesNotMatch(-5, '5', '5.2', 'a')
+                ],
+                fieldSettings: {number_decimal_places: 0, number_negative: true}
+            },
+        ],
+        {}
     ),
     new FieldType(
         'text',

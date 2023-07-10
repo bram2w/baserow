@@ -1095,23 +1095,18 @@ MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
 
 
 # Search specific configuration settings.
-#
-# How long the Postgres full-text search Celery tasks
-# can run for being killed. By default, 15 minutes.
-BASEROW_CELERY_TSV_MODIFICATION_HARD_LIMIT = 60 * 15
+CELERY_SEARCH_UPDATE_HARD_TIME_LIMIT = int(
+    os.getenv("BASEROW_CELERY_SEARCH_UPDATE_HARD_TIME_LIMIT", 60 * 30)
+)
 # By default, Baserow will use Postgres full-text as its
 # search backend. If the product is installed on a system
 # with limited disk space, and less accurate results / degraded
 # search performance is acceptable, then switch this setting off.
-BASEROW_USE_PG_FULLTEXT_SEARCH = (
-    os.getenv("BASEROW_USE_PG_FULLTEXT_SEARCH", "true") == "true"
+USE_PG_FULLTEXT_SEARCH = str_to_bool(
+    (os.getenv("BASEROW_USE_PG_FULLTEXT_SEARCH", "true"))
 )
-BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG = os.getenv(
-    "BASEROW_USE_PG_FULLTEXT_SEARCH_CONFIG", "simple"
-)
-BASEROW_AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(
-    os.getenv("BASEROW_AUTO_VACUUM_AFTER_SEARCH_UPDATE", "true")
-)
+PG_SEARCH_CONFIG = os.getenv("BASEROW_PG_SEARCH_CONFIG", "simple")
+AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(os.getenv("BASEROW_AUTO_VACUUM", "true"))
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini
