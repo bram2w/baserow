@@ -63,7 +63,8 @@
     "uuid": "9.0.0",
     "vue-chartjs": "4.1.2",
     "vuejs-datepicker": "1.6.2",
-    "vuelidate": "0.7.7"
+    "vuelidate": "0.7.7",
+    "flush-promises": "^1.0.2"
   },
   "devDependencies": {
     "@babel/core": "7.21.4",
@@ -86,7 +87,6 @@
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-standard": ">=4.0.0",
     "eslint-plugin-vue": "9.10.0",
-    "flush-promises": "^1.0.2",
     "jest": "29.5.0",
     "jest-environment-jsdom": "^29.5.0",
     "jest-junit": "15.0.0",
