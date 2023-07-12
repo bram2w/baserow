@@ -57,8 +57,8 @@ COPY --chown=$UID:$GID ./backend/docker/mime.types /etc/
 
 # Install non-dev base dependencies into a virtual env.
 COPY --chown=$UID:$GID ./backend/requirements/base.txt /baserow/requirements/
-RUN python3 -m pip install --no-cache-dir --no-warn-script-location --disable-pip-version-check --upgrade pip==22.0.3
-RUN python3 -m pip install --no-cache-dir --no-warn-script-location --upgrade virtualenv==20.13.1 && python3 -m virtualenv /baserow/venv
+RUN python3 -m pip install --no-cache-dir --no-warn-script-location --disable-pip-version-check --upgrade pip==23.1.2
+RUN python3 -m pip install --no-cache-dir --no-warn-script-location --upgrade virtualenv==20.23.1 && python3 -m virtualenv /baserow/venv
 
 ENV PIP_CACHE_DIR=/tmp/baserow_pip_cache
 # hadolint ignore=SC1091,DL3042
