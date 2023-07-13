@@ -101,7 +101,7 @@ export default {
       try {
         const { data } = await LicenseService(this.$client).addUser(
           this.license.id,
-          event.id
+          event
         )
         this.license.users.push(data)
         this.license.seats_taken += 1
