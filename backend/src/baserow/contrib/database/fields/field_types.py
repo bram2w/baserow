@@ -88,7 +88,7 @@ from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 from baserow.formula import BaserowFormulaException
-from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
+from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
 from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY

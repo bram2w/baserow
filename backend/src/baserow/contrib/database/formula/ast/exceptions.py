@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from baserow.formula.exceptions import BaserowFormulaException
+from baserow.formula.parser.exceptions import BaserowFormulaException
 
 
 class InvalidStringLiteralProvided(BaserowFormulaException):

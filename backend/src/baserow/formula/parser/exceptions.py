@@ -1,4 +1,12 @@
-from baserow.formula.exceptions import BaserowFormulaException
+class BaserowFormulaException(Exception):
+    pass
+
+
+class FormulaFunctionTypeDoesNotExist(Exception):
+    """
+    Raised when trying to get a formula function from the registry that doesn't
+    exist.
+    """
 
 
 class InvalidNumberOfArguments(BaserowFormulaException):
@@ -10,6 +18,14 @@ class InvalidNumberOfArguments(BaserowFormulaException):
         super().__init__(
             f"{error_prefix} given to the {function_def}, it must instead "
             f"be given {function_def.num_args}"
+        )
+
+
+class InvalidFormulaArgumentType(BaserowFormulaException):
+    def __init__(self, function_def, arg):
+        super().__init__(
+            f"The argument {arg} given to the function {function_def} is of the "
+            f"wrong type"
         )
 
 

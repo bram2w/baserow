@@ -33,7 +33,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaInvalidType,
     BaserowFormulaType,
 )
-from baserow.formula.exceptions import formula_exception_handler
+from baserow.core.formula.exceptions import formula_exception_handler
 from baserow.formula.parser.exceptions import MaximumFormulaSizeError
 
 

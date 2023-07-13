@@ -14,3 +14,19 @@ export class UnknownOperatorError extends Error {
     this.operatorName = operatorName
   }
 }
+
+export class InvalidNumberOfArguments extends Error {
+  constructor(formulaFunctionType, args) {
+    super()
+    this.formulaFunctionType = formulaFunctionType
+    this.args = args
+  }
+}
+
+export class InvalidFormulaArgumentType extends Error {
+  constructor(formulaFunctionType, arg) {
+    super()
+    this.formulaFunctionType = formulaFunctionType
+    this.arg = arg
+  }
+}

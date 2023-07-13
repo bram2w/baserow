@@ -53,6 +53,11 @@ import es from '@baserow/modules/core/locales/es.json'
 import it from '@baserow/modules/core/locales/it.json'
 import pl from '@baserow/modules/core/locales/pl.json'
 import { DefaultErrorPageType } from '@baserow/modules/core/errorPageTypes'
+import {
+  RuntimeAdd,
+  RuntimeConcat,
+  RuntimeGet,
+} from '@baserow/modules/core/runtimeFormulaTypes'
 
 export default (context, inject) => {
   const { store, isDev, app } = context
@@ -81,6 +86,7 @@ export default (context, inject) => {
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
+  registry.registerNamespace('runtime_formula_type')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
@@ -138,4 +144,8 @@ export default (context, inject) => {
   )
 
   registry.register('errorPage', new DefaultErrorPageType(context))
+
+  registry.register('runtime_formula_type', new RuntimeConcat(context))
+  registry.register('runtime_formula_type', new RuntimeGet(context))
+  registry.register('runtime_formula_type', new RuntimeAdd(context))
 }

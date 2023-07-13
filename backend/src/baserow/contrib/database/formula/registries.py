@@ -1,5 +1,5 @@
 from baserow.core.registry import Registry
-from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
+from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
 
 class BaserowFormulaFunctionRegistry(Registry):

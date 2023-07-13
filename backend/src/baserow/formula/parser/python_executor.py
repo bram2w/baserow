@@ -1,17 +1,32 @@
+from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 from _decimal import Decimal
 
-from baserow.core.utils import get_nested_value_from_dict
 from baserow.formula import BaserowFormula, BaserowFormulaVisitor
 from baserow.formula.parser.exceptions import (
+    BaserowFormulaSyntaxError,
     FieldByIdReferencesAreDeprecated,
+    FormulaFunctionTypeDoesNotExist,
     UnknownOperator,
 )
 
 
+class FunctionCollection(ABC):
+    @abstractmethod
+    def get(self, name: str):
+        """
+        Needs to return a function given the name of the function
+        :param name: The name of the function
+        :return: The function itself
+        """
+
+        pass
+
+
 class BaserowPythonExecutor(BaserowFormulaVisitor):
-    def __init__(self, context: Dict[str, Any] = None):
+    def __init__(self, functions: FunctionCollection, context: Dict[str, Any] = None):
+        self.functions = functions
         self.context = context
 
     def visitRoot(self, ctx: BaserowFormula.RootContext):
@@ -44,16 +59,21 @@ class BaserowPythonExecutor(BaserowFormulaVisitor):
 
         return self._do_func(function_argument_expressions, function_name)
 
-    def _do_func(self, function_argument_expressions, function_name):
+    def _do_func(self, function_argument_expressions, function_name: str):
         args = [expr.accept(self) for expr in function_argument_expressions]
-        if (
-            function_name == "concat"
-        ):  # TODO use the existing formula_function_registry here
-            return "".join([str(a) for a in args])
-        elif function_name == "get":
-            return get_nested_value_from_dict(self.context, args[0])
-        else:
-            raise UnknownOperator(function_name)
+        formula_function_type = self._get_formula_function_type(function_name)
+
+        formula_function_type.validate_args(args)
+
+        args_parsed = formula_function_type.parse_args(args)
+
+        return formula_function_type.execute(self.context, args_parsed)
+
+    def _get_formula_function_type(self, function_name):
+        try:
+            return self.functions.get(function_name)
+        except FormulaFunctionTypeDoesNotExist:
+            raise BaserowFormulaSyntaxError(f"{function_name} is not a valid function")
 
     def visitBinaryOp(self, ctx: BaserowFormula.BinaryOpContext):
         if ctx.PLUS():
@@ -79,9 +99,7 @@ class BaserowPythonExecutor(BaserowFormulaVisitor):
         else:
             raise UnknownOperator(ctx.getText())
 
-        self._do_func(ctx.expr(), op)
-
-        raise UnknownOperator(ctx.getText())
+        return self._do_func(ctx.expr(), op)
 
     def visitFunc_name(self, ctx: BaserowFormula.Func_nameContext):
         return ctx.getText()
