@@ -5,17 +5,6 @@ from loguru import logger
 from baserow.core.utils import exception_capturer
 
 
-class BaserowFormulaException(Exception):
-    pass
-
-
-class FormulaFunctionTypeDoesNotExist(Exception):
-    """
-    Raised when trying to get a formula function from the registry that doesn't
-    exist.
-    """
-
-
 def formula_exception_handler(e):
     """
     Attempts to send formula errors to sentry in non debug mode and logs errors. In

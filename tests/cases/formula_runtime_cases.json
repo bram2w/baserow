@@ -47,11 +47,37 @@
                     }
                 ]
             }
+        },
+        {
+            "formula": "1 + 2",
+            "result": 3,
+            "context": {}
+        },
+        {
+            "formula": "get('a') + get('b')",
+            "result": 4,
+            "context": {"a":  1, "b":  3}
         }
     ],
     "INVALID_FORMULA_TESTS": [
         {
             "formula": "invalid()",
+            "context": {}
+        },
+        {
+            "formula": "1 + 'hello'",
+            "context": {}
+        },
+        {
+            "formula": "get(1,2)",
+            "context": {}
+        },
+        {
+            "formula": "concat()",
+            "context": {}
+        },
+        {
+            "formula": "concat('a')",
             "context": {}
         }
     ]

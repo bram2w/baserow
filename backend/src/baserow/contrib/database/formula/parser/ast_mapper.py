@@ -11,10 +11,10 @@ from baserow.contrib.database.formula.ast.tree import (
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.formula_type import UnTyped
-from baserow.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.formula.parser.exceptions import (
     BaserowFormulaSyntaxError,
     FieldByIdReferencesAreDeprecated,
+    FormulaFunctionTypeDoesNotExist,
     InvalidNumberOfArguments,
     MaximumFormulaSizeError,
     UnknownOperator,

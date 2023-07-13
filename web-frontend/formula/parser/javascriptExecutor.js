@@ -1,10 +1,16 @@
 import BaserowFormulaVisitor from '@baserow/formula/parser/generated/BaserowFormulaVisitor'
 import { UnknownOperatorError } from '@baserow/formula/parser/errors'
-import _ from 'lodash'
 
-export default class JavascriptExecutor extends BaserowFormulaVisitor {
-  constructor(context = {}) {
+export class FunctionCollection {
+  get(name) {
+    throw new Error('needs to be implemented')
+  }
+}
+
+export class JavascriptExecutor extends BaserowFormulaVisitor {
+  constructor(functions, context = {}) {
     super()
+    this.functions = functions
     this.context = context
   }
 
@@ -53,13 +59,13 @@ export default class JavascriptExecutor extends BaserowFormulaVisitor {
       expr.accept(this)
     )
 
-    if (functionName === 'concat') {
-      return args.join('')
-    } else if (functionName === 'get') {
-      return _.get(this.context, args[0])
-    } else {
-      throw new UnknownOperatorError(functionName)
-    }
+    const formulaFunctionType = this.functions.get(functionName)
+
+    formulaFunctionType.validateArgs(args)
+
+    const argsParsed = formulaFunctionType.parseArgs(args)
+
+    return formulaFunctionType.execute(this.context, argsParsed)
   }
 
   visitBinaryOp(ctx) {
@@ -89,9 +95,7 @@ export default class JavascriptExecutor extends BaserowFormulaVisitor {
       throw new UnknownOperatorError(ctx.getText())
     }
 
-    this.doFunc(ctx.expr(), op)
-
-    throw new UnknownOperatorError(ctx.getText())
+    return this.doFunc(ctx.expr(), op)
   }
 
   visitFuncName(ctx) {

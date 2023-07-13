@@ -28,6 +28,12 @@ class CoreConfig(AppConfig):
         # GroupDeprecation
         trash_item_type_registry.register(GroupTrashableItemType())
 
+        from baserow.core.formula.registries import (
+            register_runtime_formula_function_types,
+        )
+
+        register_runtime_formula_function_types()
+
         from baserow.core.permission_manager import (
             BasicPermissionManagerType,
             CorePermissionManagerType,
