@@ -867,9 +867,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             getattr(row, name).set(value)
 
         row.save()
-        rows_updated_counter.add(
-            1,
-        )
+        rows_updated_counter.add(1)
 
         update_collector = FieldUpdateCollector(
             table,

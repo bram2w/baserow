@@ -6,7 +6,6 @@ import pytest
 from baserow_premium.license.exceptions import FeaturesNotAvailableError
 from baserow_premium.row_comments.exceptions import (
     InvalidRowCommentException,
-    InvalidRowCommentMentionException,
     RowCommentDoesNotExist,
     UserNotRowCommentAuthorException,
 )
@@ -102,7 +101,7 @@ def test_row_comment_created_signal_called(
     mock_row_comment_created.assert_called_once()
     args = mock_row_comment_created.call_args
 
-    assert args == call(RowCommentHandler, row_comment=c, user=user)
+    assert args == call(RowCommentHandler, row_comment=c, user=user, mentions=[])
 
 
 @pytest.mark.django_db
@@ -166,7 +165,7 @@ def test_row_comment_updated_signal_called(
     mock_row_comment_updated.assert_called_once()
     args = mock_row_comment_updated.call_args
 
-    assert args == call(RowCommentHandler, row_comment=c, user=user)
+    assert args == call(RowCommentHandler, row_comment=c, user=user, mentions=[])
 
 
 @pytest.mark.django_db
@@ -227,7 +226,7 @@ def test_row_comment_deleted_signal_called(
     mock_row_comment_deleted.assert_called_once()
     args = mock_row_comment_deleted.call_args
 
-    assert args == call(RowCommentHandler, row_comment=c, user=user)
+    assert args == call(RowCommentHandler, row_comment=c, user=user, mentions=[])
 
 
 @pytest.mark.django_db(transaction=True)
@@ -244,7 +243,7 @@ def test_row_comment_mentions_are_created(premium_data_fixture):
         has_active_premium_license=True,
         workspace=table.database.workspace,
     )
-    message = premium_data_fixture.create_comment_message_from_mentions([user2])
+    message = premium_data_fixture.create_comment_message_with_mentions([user2])
 
     with freeze_time("2020-01-02 12:00"):
         c = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
@@ -266,7 +265,7 @@ def test_row_comment_cant_mention_user_outside_workspace(premium_data_fixture):
         has_active_premium_license=True,
     )
 
-    message = premium_data_fixture.create_comment_message_from_mentions([user2])
+    message = premium_data_fixture.create_comment_message_with_mentions([user2])
 
-    with pytest.raises(InvalidRowCommentMentionException):
-        RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
+    comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
+    assert comment.mentions.count() == 0

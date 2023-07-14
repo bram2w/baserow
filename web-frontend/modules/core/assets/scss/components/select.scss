@@ -83,6 +83,10 @@
   border-radius: 3px;
   user-select: none;
 
+  &.select__item--has-notification {
+    padding-right: 48px;
+  }
+
   &:last-child {
     margin-bottom: 0;
   }
@@ -150,6 +154,10 @@
 
   @extend %ellipsis;
   @extend %select__item-size;
+
+  span:first-child {
+    @extend %ellipsis;
+  }
 }
 
 .select__item-name-text {

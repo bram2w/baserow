@@ -34,6 +34,7 @@ from baserow.core.exceptions import (
     WorkspaceUserIsLastAdmin,
 )
 from baserow.core.handler import CoreHandler
+from baserow.core.notifications.handler import NotificationHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from .errors import ERROR_GROUP_USER_IS_LAST_ADMIN
@@ -68,6 +69,13 @@ class WorkspacesView(APIView):
             .get_workspaceuser_workspace_queryset()
             .filter(user=request.user)
         )
+
+        workspaceuser_workspaces = (
+            NotificationHandler.annotate_workspaces_with_unread_notifications_count(
+                request.user, workspaceuser_workspaces, outer_ref_key="workspace_id"
+            )
+        )
+
         serializer = WorkspaceUserWorkspaceSerializer(
             workspaceuser_workspaces, many=True
         )

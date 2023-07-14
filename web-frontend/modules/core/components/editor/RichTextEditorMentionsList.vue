@@ -76,8 +76,14 @@ export default {
       return this.collaborators
     },
     onKeyDown({ event }) {
-      if (event.key === 'Enter' && this.open) {
-        return true // insert the selected item
+      if (this.open) {
+        if (event.key === 'Enter') {
+          return true // insert the selected item
+        }
+        if (event.key === 'Tab') {
+          this.select(this.hover)
+          return true
+        }
       }
     },
     _select(collaborator) {

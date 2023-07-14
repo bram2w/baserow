@@ -1109,7 +1109,7 @@ def test_user_con_be_mentioned_in_message(premium_data_fixture, api_client):
         first_name="Test User 2", workspace=table.database.workspace
     )
 
-    message = premium_data_fixture.create_comment_message_from_mentions([user_2])
+    message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
@@ -1147,12 +1147,12 @@ def test_user_cant_be_mentioned_in_comments_if_outside_workspace(
     user, token = premium_data_fixture.create_user_and_token(
         first_name="Test User", has_active_premium_license=True
     )
-    table, fields, rows = premium_data_fixture.build_table(
+    table, _, rows = premium_data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
     user_2 = premium_data_fixture.create_user(first_name="Test User 2")
 
-    message = premium_data_fixture.create_comment_message_from_mentions([user_2])
+    message = premium_data_fixture.create_comment_message_with_mentions([user_2])
 
     with freeze_time("2020-01-01 12:00"):
         response = api_client.post(
@@ -1164,10 +1164,8 @@ def test_user_cant_be_mentioned_in_comments_if_outside_workspace(
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_INVALID_COMMENT_MENTION"
-
-    assert RowComment.objects.first() is None
+    assert response.status_code == HTTP_200_OK
+    assert RowComment.objects.first().mentions.count() == 0
 
 
 @pytest.mark.django_db
@@ -1186,7 +1184,7 @@ def test_multiple_users_can_be_mentioned_in_a_comment(premium_data_fixture, api_
         first_name="Test User 3", workspace=table.database.workspace
     )
 
-    message = premium_data_fixture.create_comment_message_from_mentions(
+    message = premium_data_fixture.create_comment_message_with_mentions(
         [user_2, user_3]
     )
 

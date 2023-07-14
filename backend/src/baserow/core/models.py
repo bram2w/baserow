@@ -27,6 +27,7 @@ from .mixins import (
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
+from .notifications.models import Notification
 from .services.models import Service
 
 __all__ = [
@@ -46,6 +47,7 @@ __all__ = [
     "InstallTemplateJob",
     "Integration",
     "Service",
+    "Notification",
 ]
 
 

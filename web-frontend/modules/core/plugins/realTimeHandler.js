@@ -316,6 +316,41 @@ export class RealTimeHandler {
         })
       }
     })
+
+    // invitations
+    this.registerEvent('workspace_invitation_created', ({ store }, data) => {
+      store.dispatch('auth/forceCreateWorkspaceInvitation', data.invitation)
+    })
+
+    this.registerEvent('workspace_invitation_accepted', ({ store }, data) => {
+      store.dispatch('auth/forceAcceptWorkspaceInvitation', data.invitation)
+    })
+
+    this.registerEvent('workspace_invitation_rejected', ({ store }, data) => {
+      store.dispatch('auth/forceRejectWorkspaceInvitation', data.invitation)
+    })
+
+    // notifications
+
+    this.registerEvent('notifications_created', ({ store }, data) => {
+      store.dispatch('notification/forceCreateInBulk', {
+        notifications: data.notifications,
+      })
+    })
+
+    this.registerEvent('notification_marked_as_read', ({ store }, data) => {
+      store.dispatch('notification/forceMarkAsRead', {
+        notification: data.notification,
+      })
+    })
+
+    this.registerEvent('all_notifications_marked_as_read', ({ store }) => {
+      store.dispatch('notification/forceMarkAllAsRead')
+    })
+
+    this.registerEvent('all_notifications_cleared', ({ store }) => {
+      store.dispatch('notification/forceClearAll')
+    })
   }
 }
 

@@ -88,6 +88,9 @@ from .signals import (
     before_workspace_user_updated,
     workspace_created,
     workspace_deleted,
+    workspace_invitation_accepted,
+    workspace_invitation_created,
+    workspace_invitation_rejected,
     workspace_updated,
     workspace_user_added,
     workspace_user_deleted,
@@ -1024,6 +1027,15 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             },
         )
 
+        try:
+            invited_user = User.objects.get(email=invitation.email)
+        except User.DoesNotExist:
+            invited_user = None
+
+        workspace_invitation_created.send(
+            sender=self, invitation=invitation, invited_user=invited_user
+        )
+
         self.send_workspace_invitation_email(invitation, base_url)
 
         return invitation
@@ -1101,6 +1113,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "user."
             )
 
+        workspace_invitation_rejected.send(
+            sender=self, invitation=invitation, user=user
+        )
+
         invitation.delete()
 
     def add_user_to_workspace(
@@ -1165,6 +1181,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             invitation.workspace, user, permissions=invitation.permissions
         )
 
+        workspace_invitation_accepted.send(
+            sender=self, invitation=invitation, user=user
+        )
         invitation.delete()
 
         return workspace_user

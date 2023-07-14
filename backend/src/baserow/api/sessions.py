@@ -88,7 +88,11 @@ def get_client_undo_redo_action_group_id(user: AbstractUser):
 
 
 def set_user_websocket_id(user, request):
-    user.web_socket_id = request.headers.get(settings.WEBSOCKET_ID_HEADER)
+    _set_user_websocket_id(user, request.headers.get(settings.WEBSOCKET_ID_HEADER))
+
+
+def _set_user_websocket_id(user, websocket_id):
+    user.web_socket_id = websocket_id
 
 
 def get_user_remote_ip_address_from_request(request):

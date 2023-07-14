@@ -7,6 +7,9 @@ from baserow.api.applications.serializers import (
     get_application_serializer,
 )
 from baserow.api.user.serializers import PublicUserSerializer
+from baserow.api.workspaces.invitations.serializers import (
+    UserWorkspaceInvitationSerializer,
+)
 from baserow.api.workspaces.serializers import (
     WorkspaceSerializer,
     WorkspaceUserSerializer,
@@ -319,5 +322,52 @@ def applications_reordered(sender, workspace, order, user, **kwargs):
                 "order": order,
             },
             getattr(user, "web_socket_id", None),
+        )
+    )
+
+
+@receiver(signals.workspace_invitation_created)
+def notify_workspace_invitation_created(
+    sender, invitation, invited_user=None, **kwargs
+):
+    if invited_user is not None:
+        serialized_data = UserWorkspaceInvitationSerializer(invitation).data
+        transaction.on_commit(
+            lambda: broadcast_to_users.delay(
+                [invited_user.id],
+                {
+                    "type": "workspace_invitation_created",
+                    "invitation": serialized_data,
+                },
+            )
+        )
+
+
+@receiver(signals.workspace_invitation_accepted)
+def notify_workspace_invitation_accepted(sender, invitation, user, **kwargs):
+    # invitation will be deleted on commit, so serialize it now to have the id
+    serialized_data = UserWorkspaceInvitationSerializer(invitation).data
+    transaction.on_commit(
+        lambda: broadcast_to_users.delay(
+            [user.id],
+            {
+                "type": "workspace_invitation_accepted",
+                "invitation": serialized_data,
+            },
+        )
+    )
+
+
+@receiver(signals.workspace_invitation_rejected)
+def notify_workspace_invitation_rejected(sender, invitation, user, **kwargs):
+    # invitation will be deleted on commit, so serialize it now to have the id
+    serialized_data = UserWorkspaceInvitationSerializer(invitation).data
+    transaction.on_commit(
+        lambda: broadcast_to_users.delay(
+            [user.id],
+            {
+                "type": "workspace_invitation_rejected",
+                "invitation": serialized_data,
+            },
         )
     )

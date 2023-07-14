@@ -29,6 +29,11 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Application
+from baserow.core.notifications.operations import (
+    ClearNotificationsOperationType,
+    ListNotificationsOperationType,
+    MarkNotificationAsReadOperationType,
+)
 from baserow.core.operations import (
     CreateWorkspaceOperationType,
     DeleteApplicationOperationType,
@@ -1045,8 +1050,12 @@ def test_get_permissions_object_with_teams(
 
     perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
-    assert all([not perm["default"] for perm in perms.values()])
-    assert all([not perm["exceptions"] for perm in perms.values()])
+    for operation_type in [
+        UpdateApplicationOperationType,
+        ReadDatabaseTableOperationType,
+    ]:
+        assert perms[operation_type.type]["default"] is False
+        assert perms[operation_type.type]["exceptions"] == []
 
     # The user role should take the precedence
     RoleAssignmentHandler().assign_role(user, workspace_1, role=role_builder)
@@ -1254,6 +1263,9 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
         CreateWorkspaceOperationType.type,
         ListWorkspacesOperationType.type,
         UpdateSettingsOperationType.type,
+        ClearNotificationsOperationType.type,
+        ListNotificationsOperationType.type,
+        MarkNotificationAsReadOperationType.type,
     ]
 
     all_ops_in_roles = set()

@@ -53,6 +53,9 @@
         "edit": "Edit comment",
         "delete": "Delete comment"
     },
+    "rowCommentMentionNotification": {
+        "title": "{sender} mentioned you in {table}"
+    },
     "trashType": {
         "row_comment": "row comment"
     },

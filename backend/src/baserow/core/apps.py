@@ -80,6 +80,11 @@ class CoreConfig(AppConfig):
         subject_type_registry.register(UserSubjectType())
         subject_type_registry.register(AnonymousUserSubjectType())
 
+        from .notifications.operations import (
+            ClearNotificationsOperationType,
+            ListNotificationsOperationType,
+            MarkNotificationAsReadOperationType,
+        )
         from .operations import (
             CreateApplicationsWorkspaceOperationType,
             CreateInvitationsWorkspaceOperationType,
@@ -118,6 +123,9 @@ class CoreConfig(AppConfig):
             ReadWorkspaceTrashOperationType,
         )
 
+        operation_type_registry.register(ClearNotificationsOperationType())
+        operation_type_registry.register(ListNotificationsOperationType())
+        operation_type_registry.register(MarkNotificationAsReadOperationType())
         operation_type_registry.register(CreateApplicationsWorkspaceOperationType())
         operation_type_registry.register(CreateWorkspaceOperationType())
         operation_type_registry.register(CreateInvitationsWorkspaceOperationType())
@@ -244,10 +252,14 @@ class CoreConfig(AppConfig):
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
 
+        from baserow.api.notifications.user_data_types import (
+            UnreadUserNotificationsCountPermissionsDataType,
+        )
         from baserow.api.user.registries import user_data_registry
         from baserow.api.user.user_data_types import GlobalPermissionsDataType
 
         user_data_registry.register(GlobalPermissionsDataType())
+        user_data_registry.register(UnreadUserNotificationsCountPermissionsDataType())
 
         from baserow.core.auth_provider.auth_provider_types import (
             PasswordAuthProviderType,
@@ -255,6 +267,24 @@ class CoreConfig(AppConfig):
         from baserow.core.registries import auth_provider_type_registry
 
         auth_provider_type_registry.register(PasswordAuthProviderType())
+
+        import baserow.core.notifications.receivers  # noqa: F401
+        from baserow.core.notification_types import (
+            WorkspaceInvitationAcceptedNotificationType,
+            WorkspaceInvitationCreatedNotificationType,
+            WorkspaceInvitationRejectedNotificationType,
+        )
+        from baserow.core.notifications.registries import notification_type_registry
+
+        notification_type_registry.register(
+            WorkspaceInvitationAcceptedNotificationType()
+        )
+        notification_type_registry.register(
+            WorkspaceInvitationCreatedNotificationType()
+        )
+        notification_type_registry.register(
+            WorkspaceInvitationRejectedNotificationType()
+        )
 
         self._setup_health_checks()
 

@@ -142,7 +142,7 @@ class PremiumFixtures:
     def create_comment_message_from_plain_text(self, plain_text):
         return prosemirror_doc_from_plain_text(plain_text)
 
-    def create_comment_message_from_mentions(self, mentions):
+    def create_comment_message_with_mentions(self, mentions):
         return schema.node(
             "doc",
             {},

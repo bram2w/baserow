@@ -36,6 +36,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.rowDoesNotExistTitle'),
         app.i18n.t('clientHandler.rowDoesNotExistDescription')
       ),
+      ERROR_NOTIFICATION_DOES_NOT_EXIST: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.notificationDoesNotExistTitle'),
+        app.i18n.t('clientHandler.notificationDoesNotExistDescription')
+      ),
       ERROR_FILE_SIZE_TOO_LARGE: new ResponseErrorMessage(
         app.i18n.t('clientHandler.fileSizeTooLargeTitle'),
         app.i18n.t('clientHandler.fileSizeTooLargeDescription')

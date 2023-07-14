@@ -227,6 +227,8 @@
         "tableDoesNotExistDescription": "The action couldn't be completed because the related table doesn't exist anymore.",
         "rowDoesNotExistTitle": "Row doesn't exist.",
         "rowDoesNotExistDescription": "The action couldn't be completed because the related row doesn't exist anymore.",
+        "notificationDoesNotExistTitle": "Notification doesn't exist.",
+        "notificationDoesNotExistDescription": "The action couldn't be completed because the related doesn't exist anymore.",
         "fileSizeTooLargeTitle": "File too large",
         "fileSizeTooLargeDescription": "The provided file is too large.",
         "invalidFileTitle": "Invalid file",
