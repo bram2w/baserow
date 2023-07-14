@@ -133,6 +133,10 @@ class WorkspaceUserWorkspaceSerializer(serializers.Serializer):
     permissions = serializers.CharField(
         read_only=True, help_text="The requesting user's permissions for the workspace."
     )
+    unread_notifications_count = serializers.IntegerField(
+        read_only=True,
+        help_text="The number of unread notifications for the requesting user.",
+    )
 
 
 class UpdateWorkspaceUserSerializer(serializers.ModelSerializer):

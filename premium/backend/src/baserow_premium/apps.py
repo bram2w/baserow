@@ -113,3 +113,11 @@ class BaserowPremiumConfig(AppConfig):
         from .permission_manager import ViewOwnershipPermissionManagerType
 
         permission_manager_type_registry.register(ViewOwnershipPermissionManagerType())
+
+        from baserow_premium.row_comments.notification_types import (
+            RowCommentMentionNotificationType,
+        )
+
+        from baserow.core.notifications.registries import notification_type_registry
+
+        notification_type_registry.register(RowCommentMentionNotificationType())

@@ -14,6 +14,7 @@ from .auth_provider import urls as auth_provider_urls
 from .health import urls as health_urls
 from .integrations import urls as integrations_urls
 from .jobs import urls as jobs_urls
+from .notifications import urls as notifications_urls
 from .settings import urls as settings_urls
 from .snapshots import urls as snapshots_urls
 from .spectacular.views import CachedSpectacularJSONAPIView
@@ -55,6 +56,7 @@ urlpatterns = (
         path(
             "templates/", include(templates_compat_urls, namespace="templates_compat")
         ),
+        path("notifications/", include(notifications_urls, namespace="notifications")),
     ]
     + application_type_registry.api_urls
     + plugin_registry.api_urls

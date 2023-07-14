@@ -6,7 +6,6 @@
         v-for="invitation in workspaceInvitations"
         :key="'invitation-' + invitation.id"
         :invitation="invitation"
-        @remove="removeInvitation($event)"
         @invitation-accepted="invitationAccepted($event)"
       ></WorkspaceInvitation>
       <div class="dashboard__container">
@@ -61,7 +60,6 @@ import DashboardWorkspace from '@baserow/modules/core/components/dashboard/Dashb
 import DashboardHelp from '@baserow/modules/core/components/dashboard/DashboardHelp'
 import DashboardNoWorkspaces from '@baserow/modules/core/components/dashboard/DashboardNoWorkspaces'
 import DashboardSidebar from '@baserow/modules/core/components/dashboard/DashboardSidebar'
-import AuthService from '@baserow/modules/core/services/auth'
 
 export default {
   components: {
@@ -78,13 +76,11 @@ export default {
    * pending workspace invitations.
    */
   async asyncData(context) {
-    const { error, app } = context
+    const { error, app, store } = context
     try {
-      const { data } = await AuthService(app.$client).dashboard()
-      let asyncData = {
-        workspaceInvitations: data.workspace_invitations,
-        workspaceComponentArguments: {},
-      }
+      await store.dispatch('auth/fetchWorkspaceInvitations')
+      let asyncData = { workspaceComponentArguments: {} }
+
       // Loop over all the plugin and call the `fetchAsyncDashboardData` because there
       // might be plugins that extend the dashboard and we want to fetch that async data
       // here.
@@ -105,6 +101,7 @@ export default {
   computed: {
     ...mapGetters({
       sortedWorkspaces: 'workspace/getAllSorted',
+      workspaceInvitations: 'auth/getWorkspaceInvitations',
     }),
     ...mapState({
       user: (state) => state.auth.user,
@@ -113,16 +110,6 @@ export default {
     }),
   },
   methods: {
-    /**
-     * When a workspace invitation has been rejected or accepted, it can be removed from the
-     * list because in both situations the invitation itself is deleted.
-     */
-    removeInvitation(invitation) {
-      const index = this.workspaceInvitations.findIndex(
-        (i) => i.id === invitation.id
-      )
-      this.workspaceInvitations.splice(index, 1)
-    },
     /**
      * Make sure that the selected workspace is visible.
      */

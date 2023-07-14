@@ -30,7 +30,8 @@
         "admin": "Admin",
         "dashboard": "Dashboard",
         "trash": "Trash",
-        "settings": "Settings"
+        "settings": "Settings",
+        "notifications": "Notifications"
     },
     "accountForm": {
         "nameLabel": "Your name",
@@ -44,6 +45,17 @@
     },
     "settingsModal": {
         "title": "Settings"
+    },
+    "notificationPanel": {
+        "title": "Notifications",
+        "markAllAsRead": "Mark all as read",
+        "clearAll": "Clear all",
+        "noNotificationTitle": "You don't have any notifications",
+        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow."
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Are you sure you want to clear all notifications?",
+        "message": "All the notifications will be permanently deleted and you won't be able to see them again." 
     },
     "passwordSettings": {
         "title": "Change password",
@@ -534,5 +546,17 @@
     },
     "richTextEditorMentionsList": {
         "notFound": "No users found"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} has accepted your invitation to join {workspaceName}"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} has rejected your invitation to join {workspaceName}"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} has invited you to join {workspaceName}"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} is here! Check out what's new."
     }
 }

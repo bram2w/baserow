@@ -62,8 +62,13 @@
   }
 
   &.tree__action--has-options,
+  &.tree__action--has-counter,
   &.tree__action--has-right-icon {
     padding-right: 32px;
+  }
+
+  &.tree__action--has-notification {
+    padding-right: 48px;
   }
 }
 
@@ -240,4 +245,20 @@
   &:hover {
     color: $color-neutral-700;
   }
+}
+
+.tree__counter {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 19px;
+  height: 16px;
+  border-radius: 80px;
+  background-color: $color-primary-500;
+  color: white;
+  font-weight: 700;
+  text-align: center;
+  line-height: 16px;
+  font-size: 11px;
 }

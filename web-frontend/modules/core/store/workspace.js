@@ -197,7 +197,7 @@ export const actions = {
   /**
    * Fetches all the workspaces of an authenticated user.
    */
-  async fetchAll({ commit }) {
+  async fetchAll({ commit, dispatch, state }) {
     commit('SET_LOADING', true)
 
     try {
@@ -207,8 +207,17 @@ export const actions = {
     } catch {
       commit('SET_ITEMS', [])
     }
-
     commit('SET_LOADING', false)
+
+    if (state.items.length > 0) {
+      // Every workspace contains an unread notifications count for the user,
+      // so let's update that.
+      dispatch(
+        'notification/setPerWorkspaceUnreadCount',
+        { workspaces: state.items },
+        { root: true }
+      )
+    }
   },
   /**
    * Creates a new workspace with the given values.
@@ -360,6 +369,7 @@ export const actions = {
         root: true,
       }
     )
+    dispatch('notification/setWorkspace', { workspace }, { root: true })
     return workspace
   },
   /**

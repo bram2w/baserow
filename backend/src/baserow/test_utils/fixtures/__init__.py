@@ -8,6 +8,7 @@ from .field import FieldFixtures
 from .file_import import FileImportFixtures
 from .integration import IntegrationFixtures
 from .job import JobFixtures
+from .notifications import NotificationsFixture
 from .page import PageFixtures
 from .row import RowFixture
 from .service import ServiceFixtures
@@ -47,6 +48,7 @@ class Fixtures(
     IntegrationFixtures,
     ServiceFixtures,
     DataSourceFixtures,
+    NotificationsFixture,
 ):
     def __init__(self, fake=None):
         self.fake = fake

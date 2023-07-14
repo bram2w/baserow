@@ -60,10 +60,9 @@ def extract_mentioned_users_in_workspace(
     """
 
     mentioned_user_ids = extract_mentioned_user_ids(json_doc)
-    qs = workspace.users.filter(id__in=mentioned_user_ids, profile__to_be_deleted=False)
-    if qs.count() != len(mentioned_user_ids):
-        raise ValueError("Cannot mention users that are not in the workspace.")
-    return qs
+    return workspace.users.filter(
+        id__in=mentioned_user_ids, profile__to_be_deleted=False
+    )
 
 
 def prosemirror_doc_from_plain_text(plain_text_message) -> Dict[str, Any]:

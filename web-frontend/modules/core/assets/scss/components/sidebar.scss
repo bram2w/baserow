@@ -232,3 +232,13 @@
     overflow: hidden;
   }
 }
+
+.sidebar__unread-notifications-icon {
+  position: absolute;
+  top: 12px;
+  right: 32px;
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: $color-primary-500;
+}

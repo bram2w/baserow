@@ -115,7 +115,9 @@ class RowCommentHandler:
             context=table,
         )
 
-        queryset = RowComment.objects.select_related("table__database__workspace")
+        queryset = RowComment.objects.select_related(
+            "table__database__workspace"
+        ).prefetch_related("mentions")
 
         try:
             row_comment = queryset.get(pk=comment_id)
@@ -173,7 +175,7 @@ class RowCommentHandler:
             raise InvalidRowCommentException()
 
         try:
-            mentioned_users = extract_mentioned_users_in_workspace(message, workspace)
+            mentions = extract_mentioned_users_in_workspace(message, workspace)
         except ValueError:
             raise InvalidRowCommentMentionException()
 
@@ -185,10 +187,12 @@ class RowCommentHandler:
             comment=message,
         )
 
-        if mentioned_users:
-            row_comment.mentions.set(mentioned_users)
+        if mentions:
+            row_comment.mentions.set(mentions)
 
-        row_comment_created.send(cls, row_comment=row_comment, user=requesting_user)
+        row_comment_created.send(
+            cls, row_comment=row_comment, user=requesting_user, mentions=list(mentions)
+        )
         return row_comment
 
     @classmethod
@@ -229,20 +233,22 @@ class RowCommentHandler:
             raise InvalidRowCommentException()
 
         try:
-            mentioned_users = extract_mentioned_users_in_workspace(message, workspace)
+            new_mentions = extract_mentioned_users_in_workspace(message, workspace)
+            old_mentions = row_comment.mentions.all()
         except ValueError:
             raise InvalidRowCommentMentionException()
 
         row_comment.message = message
         row_comment.save(update_fields=["message", "updated_on"])
 
-        if mentioned_users:
-            row_comment.mentions.set(mentioned_users)
+        if new_mentions:
+            row_comment.mentions.set(new_mentions)
 
         row_comment_updated.send(
             cls,
             row_comment=row_comment,
             user=requesting_user,
+            mentions=list(set(new_mentions) - set(old_mentions)),
         )
         return row_comment
 
@@ -275,4 +281,10 @@ class RowCommentHandler:
 
         TrashHandler.trash(requesting_user, database.workspace, database, row_comment)
 
-        row_comment_deleted.send(cls, row_comment=row_comment, user=requesting_user)
+        mentions = list(row_comment.mentions.all())
+        row_comment_deleted.send(
+            cls,
+            row_comment=row_comment,
+            user=requesting_user,
+            mentions=mentions,
+        )

@@ -188,7 +188,7 @@ export default {
       }
     },
     cloneCommentMessage() {
-      return JSON.parse(JSON.stringify(this.comment.message))
+      return structuredClone(this.comment.message)
     },
     startEdit() {
       this.$refs.commentContext.hide()

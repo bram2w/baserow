@@ -372,7 +372,6 @@ def test_get_permissions(data_fixture):
     )
 
     result = CoreHandler().get_permissions(admin)
-    print(result)
 
     assert result == [
         {"name": "view_ownership", "permissions": {}},

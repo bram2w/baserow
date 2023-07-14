@@ -33,7 +33,6 @@
 </template>
 
 <script>
-import WorkspaceService from '@baserow/modules/core/services/workspace'
 import ApplicationService from '@baserow/modules/core/services/application'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
@@ -56,8 +55,10 @@ export default {
       this.rejectLoading = true
 
       try {
-        await WorkspaceService(this.$client).rejectInvitation(invitation.id)
-        this.$emit('remove', invitation)
+        await this.$store.dispatch(
+          'auth/rejectWorkspaceInvitation',
+          invitation.id
+        )
       } catch (error) {
         this.rejectLoading = false
         notifyIf(error, 'workspace')
@@ -71,11 +72,12 @@ export default {
       this.acceptLoading = true
 
       try {
-        const { data: workspace } = await WorkspaceService(
-          this.$client
-        ).acceptInvitation(invitation.id)
+        const workspace = await this.$store.dispatch(
+          'auth/acceptWorkspaceInvitation',
+          invitation.id
+        )
 
-        this.$emit('invitation-accepted', { invitation, workspace })
+        this.$emit('invitation-accepted', { workspace })
 
         // The accept endpoint returns a workspace user object that we can add to the
         // store. Also the applications that we just fetched can be added to the
@@ -101,7 +103,6 @@ export default {
             this.$store.dispatch('application/forceCreate', application)
           })
         }
-        this.$emit('remove', invitation)
       } catch (error) {
         this.acceptLoading = false
         notifyIf(error, 'workspace')

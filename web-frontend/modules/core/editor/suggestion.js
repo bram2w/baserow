@@ -15,11 +15,9 @@ export default ({ VueComponent, context }) => ({
   items: ({ query }) => {
     const { $store } = context
     const workspace = $store.getters['workspace/getSelected']
-    const loggedUserId = $store.getters['auth/getUserId']
     return workspace.users.filter(
       (user) =>
         user.name.toLowerCase().includes(query.toLowerCase()) &&
-        user.user_id !== loggedUserId &&
         user.to_be_deleted === false
     )
   },

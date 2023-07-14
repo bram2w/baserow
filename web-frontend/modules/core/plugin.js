@@ -33,6 +33,12 @@ import {
   MembersWorkspaceSettingsPageType,
   InvitesWorkspaceSettingsPageType,
 } from '@baserow/modules/core/workspaceSettingsPageTypes'
+import {
+  WorkspaceInvitationCreatedNotificationType,
+  WorkspaceInvitationAcceptedNotificationType,
+  WorkspaceInvitationRejectedNotificationType,
+  BaserowVersionUpgradeNotificationType,
+} from '@baserow/modules/core/notificationTypes'
 
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
@@ -44,6 +50,7 @@ import toastStore from '@baserow/modules/core/store/toast'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
 import integrationStore from '@baserow/modules/core/store/integration'
+import notificationStore from '@baserow/modules/core/store/notification'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -87,6 +94,7 @@ export default (context, inject) => {
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
   registry.registerNamespace('runtime_formula_type')
+  registry.registerNamespace('notification')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
@@ -129,6 +137,7 @@ export default (context, inject) => {
 
   registry.registerNamespace('integration')
   registry.registerNamespace('service')
+  store.registerModule('notification', notificationStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
@@ -148,4 +157,22 @@ export default (context, inject) => {
   registry.register('runtime_formula_type', new RuntimeConcat(context))
   registry.register('runtime_formula_type', new RuntimeGet(context))
   registry.register('runtime_formula_type', new RuntimeAdd(context))
+
+  // Notification types
+  registry.register(
+    'notification',
+    new WorkspaceInvitationCreatedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new WorkspaceInvitationAcceptedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new WorkspaceInvitationRejectedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new BaserowVersionUpgradeNotificationType(context)
+  )
 }

@@ -1,7 +1,14 @@
+from typing import List
+
 from django.contrib.auth import get_user_model
 
 from baserow.core.handler import CoreHandler
 from baserow.core.models import WorkspaceUser
+from baserow.core.notifications.operations import (
+    ClearNotificationsOperationType,
+    ListNotificationsOperationType,
+    MarkNotificationAsReadOperationType,
+)
 
 from .exceptions import (
     IsNotAdminError,
@@ -90,6 +97,11 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
 
     type = "member"
     supported_actor_types = [UserSubjectType.type]
+    ALWAYS_ALLOWED_OPERATIONS: List[str] = [
+        ClearNotificationsOperationType.type,
+        ListNotificationsOperationType.type,
+        MarkNotificationAsReadOperationType.type,
+    ]
 
     def check_multiple_permissions(self, checks, workspace=None, include_trash=False):
         if workspace is None:
@@ -107,6 +119,8 @@ class WorkspaceMemberOnlyPermissionManagerType(PermissionManagerType):
         for check in checks:
             if check.actor.id not in user_ids_in_workspace:
                 permission_by_check[check] = UserNotInWorkspace(check.actor, workspace)
+            elif check.operation_name in self.ALWAYS_ALLOWED_OPERATIONS:
+                permission_by_check[check] = True
 
         return permission_by_check
 
