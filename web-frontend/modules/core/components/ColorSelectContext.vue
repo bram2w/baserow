@@ -26,9 +26,10 @@ import context from '@baserow/modules/core/mixins/context'
 import { colors as colorList } from '@baserow/modules/core/utils/colors'
 
 const defaultColors = [
-  colorList.slice(0, 5),
-  colorList.slice(5, 10),
-  colorList.slice(10, 15),
+  colorList.slice(0, 10),
+  colorList.slice(10, 20),
+  colorList.slice(20, 30),
+  colorList.slice(30, 40),
 ]
 
 export default {
