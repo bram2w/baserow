@@ -67,6 +67,7 @@ export default {
         .get('field', this.fieldType)
         .acceptSplitCommaSeparatedSelectOptions()
       this.values.select_options = []
+      const usedColors = []
       try {
         const { data } = await FieldService(this.$client).getUniqueRowValues(
           this._props.defaultValues.id,
@@ -74,9 +75,11 @@ export default {
           splitCommaSeparated
         )
         for (const value of data.values) {
+          const color = randomColor(usedColors)
+          usedColors.push(color)
           this.values.select_options.push({
             value,
-            color: randomColor(),
+            color,
           })
         }
       } catch (e) {
