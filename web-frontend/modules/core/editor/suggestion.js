@@ -31,8 +31,8 @@ export default ({ VueComponent, context }) => ({
         component = new VueRenderer(VueComponent, {
           parent: this,
           propsData: remapPropsForDropdown(props),
-          i18n: $i18n,
-          nextTick: $nextTick,
+          $i18n,
+          $nextTick,
         })
 
         if (!props.clientRect) {
