@@ -17,6 +17,8 @@ import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 import suggestion from '@baserow/modules/core/editor/suggestion'
 import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
+import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
+import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
 
 // Please, note that we need to remap Enter to Shift-Enter for every extension
 // relying on it in order to emit an event when the user presses Enter.
@@ -100,6 +102,10 @@ export default {
   mounted() {
     const loggedUserId = this.loggedUserId
     const originalRenderHTML = Mention.config.renderHTML
+    // The imported vue doesn't seem to have these directives used by the
+    // RichTextEditorMentionsList below, we need to manually register them.
+    Vue.directive('preventParentScroll', preventParentScroll)
+    Vue.directive('autoOverflowScroll', autoOverflowScroll)
     const mentionsExt = Mention.extend({
       renderHTML({ node, HTMLAttributes }) {
         let className = 'rich-text-editor__mention'

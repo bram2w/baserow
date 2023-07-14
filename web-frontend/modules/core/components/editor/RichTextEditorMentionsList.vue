@@ -27,7 +27,7 @@
         ></FieldCollaboratorDropdownItem>
       </ul>
       <div v-show="isNotFound" class="select__description">
-        {{ $i18n.t('richTextEditorMentionsList.notFound') }}
+        {{ notFoundErrorMessage }}
       </div>
     </div>
   </div>
@@ -54,6 +54,11 @@ export default {
   computed: {
     isNotFound() {
       return this.results.length === 0
+    },
+    notFoundErrorMessage() {
+      // Must use $options for it to work in the saas, something to do with how this
+      // is manually rendered...
+      return this.$options.$i18n.t('richTextEditorMentionsList.notFound')
     },
   },
   watch: {
