@@ -16,6 +16,7 @@ export default {
       if (notification.read) {
         return
       }
+
       try {
         await this.$store.dispatch('notification/markAsRead', { notification })
       } catch (err) {

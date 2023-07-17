@@ -9,6 +9,9 @@
         <template #sender>
           <strong>{{ notification.sender.first_name }}</strong>
         </template>
+        <template #row>
+          <strong>{{ notification.data.row_id }}</strong>
+        </template>
         <template #table>
           <strong>{{ notification.data.table_name }}</strong>
         </template>

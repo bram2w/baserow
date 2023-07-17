@@ -77,13 +77,14 @@ export default {
       })
     },
     filterItems() {
-      // No need to filter items here as collaborators are already filtered.
+      // No need to filter items because `suggestion` filters them already.
       return this.collaborators
     },
     onKeyDown({ event }) {
       if (this.open) {
+        // return true to insert the selected item
         if (event.key === 'Enter') {
-          return true // insert the selected item
+          return true
         }
         if (event.key === 'Tab') {
           this.select(this.hover)

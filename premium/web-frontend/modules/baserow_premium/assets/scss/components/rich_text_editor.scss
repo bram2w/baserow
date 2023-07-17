@@ -22,9 +22,22 @@
   background-color: $color-primary-100;
 }
 
+.rich-text-editor__mention--user-gone {
+  text-decoration: line-through;
+  background-color: $color-error-100;
+}
+
 .rich-text-editor__mention-dropdown {
   .dropdown__items {
     bottom: 42px;
     top: auto;
   }
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: $color-neutral-500;
+  pointer-events: none;
+  height: 0;
 }

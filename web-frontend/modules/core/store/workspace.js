@@ -50,6 +50,7 @@ export const state = () => ({
   loading: false,
   items: [],
   selected: {},
+  userIdsInSelected: new Set(),
 })
 
 export const mutations = {
@@ -102,6 +103,7 @@ export const mutations = {
     })
     workspace._.selected = true
     state.selected = workspace
+    state.userIdsInSelected = new Set(workspace.users?.map((u) => u.user_id))
   },
   UNSELECT(state) {
     Object.values(state.items).forEach((item) => {
@@ -115,6 +117,7 @@ export const mutations = {
     )
     if (workspaceIndex !== -1) {
       state.items[workspaceIndex].users.push(values)
+      state.userIdsInSelected.add(values.user_id)
     }
   },
   UPDATE_WORKSPACE_USER(state, { workspaceId, id, values }) {
@@ -143,9 +146,15 @@ export const mutations = {
     if (workspaceIndex === -1) {
       return
     }
-    state.items[workspaceIndex].users = state.items[
-      workspaceIndex
-    ].users.filter((item) => item.id !== id)
+    const usersIndex = state.items[workspaceIndex].users.findIndex(
+      (item) => item.id === id
+    )
+    if (usersIndex === -1) {
+      return
+    }
+    const user = state.items[workspaceIndex].users[usersIndex]
+    state.userIdsInSelected.delete(user.user_id)
+    state.items[workspaceIndex].users.splice(usersIndex, 1)
   },
   SET_PERMISSIONS(state, { workspaceId, permissions }) {
     const workspaceIndex = state.items.findIndex(
@@ -514,6 +523,9 @@ export const getters = {
     }
 
     return state.selected
+  },
+  isUserIdMemberOfSelectedWorkspace: (state) => (userId) => {
+    return state.userIdsInSelected.has(userId)
   },
   getAllUsers(state) {
     const users = {}

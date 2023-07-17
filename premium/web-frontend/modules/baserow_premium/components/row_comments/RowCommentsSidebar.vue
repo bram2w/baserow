@@ -81,7 +81,11 @@
             "
             class="row-comments__foot"
           >
-            <RichTextEditor v-model="comment" @entered="postComment()" />
+            <RichTextEditor
+              v-model="comment"
+              :placeholder="$t('rowCommentSidebar.comment')"
+              @entered="postComment()"
+            />
           </div>
         </div>
       </div>

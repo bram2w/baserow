@@ -32,7 +32,12 @@ export const getRichClipboard = async (event) => {
   let clipboardData = localStorage.getItem(LOCAL_STORAGE_CLIPBOARD_KEY)
   try {
     clipboardData = JSON.parse(clipboardData)
-    if (clipboardData.text === textRawData) {
+    const clipboardDataTextToCompare = clipboardData.text.replaceAll(
+      '\r\n',
+      '\n'
+    )
+    const textRawDataToCompare = textRawData.replaceAll('\r\n', '\n')
+    if (clipboardDataTextToCompare === textRawDataToCompare) {
       jsonRawData = clipboardData.json
     } else {
       throw new Error(

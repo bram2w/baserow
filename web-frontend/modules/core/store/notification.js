@@ -38,7 +38,7 @@ export const mutations = {
     state.totalCount = totalCount || notifications.length
   },
   ADD_NOTIFICATIONS(state, { notifications, totalCount }) {
-    notifications.forEach((notification) => {
+    notifications.reverse().forEach((notification) => {
       const existingIndex = state.items.findIndex(
         (c) => c.id === notification.id
       )

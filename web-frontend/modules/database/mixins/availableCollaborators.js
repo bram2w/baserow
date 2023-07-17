@@ -12,9 +12,10 @@ export default {
       if (!Array.isArray(this.value)) {
         return []
       }
-      const ids = this.value.map((item) => item.id)
+
+      const ids = new Set(this.value.map((item) => item.id))
       const result = this.workspaceCollaborators.filter(
-        (item) => !ids.includes(item.user_id)
+        (item) => !ids.has(item.user_id)
       )
       return result
     },

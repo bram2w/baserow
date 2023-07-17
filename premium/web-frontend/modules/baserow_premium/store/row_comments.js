@@ -248,6 +248,9 @@ export const actions = {
   },
   async forceUpdate({ commit, getters }, { rowComment }) {
     const originalComment = getters.getCommentById(rowComment.id)
+    if (!originalComment) {
+      return
+    }
     // update comment count in views if needed
     if (originalComment.trashed !== rowComment.trashed) {
       const updateCountInViews = rowComment.trashed
