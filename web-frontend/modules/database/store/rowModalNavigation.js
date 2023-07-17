@@ -23,6 +23,7 @@ export const state = () => ({
    * also not be part of the `rows` in the `rowModal` store.
    */
   row: null,
+  failedToFetchTableRowId: null,
 })
 
 export const mutations = {
@@ -35,12 +36,17 @@ export const mutations = {
   SET_ROW(state, row) {
     state.row = row
   },
+  SET_FAILED_TO_FETCH_TABLE_ROW_ID(state, tableAndRowId) {
+    state.failedToFetchTableRowId = tableAndRowId
+  },
 }
 export const actions = {
   clearRow({ commit }) {
+    commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', null)
     commit('CLEAR_ROW')
   },
   setRow({ commit }, row) {
+    commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', null)
     commit('SET_ROW', row)
   },
   async fetchRow({ commit }, { tableId, rowId }) {
@@ -49,6 +55,7 @@ export const actions = {
       commit('SET_ROW', row)
       return row
     } catch (error) {
+      commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', { tableId, rowId })
       notifyIf(error, 'row')
     }
   },
@@ -90,6 +97,9 @@ export const getters = {
   },
   getRow(state) {
     return state.row
+  },
+  getFailedToFetchTableRowId(state) {
+    return state.failedToFetchTableRowId
   },
 }
 

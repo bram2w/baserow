@@ -9,7 +9,7 @@
       :table-loading="tableLoading"
       store-prefix="page/"
       @selected-view="selectedView"
-      @selected-row="selectRow"
+      @selected-row="navigateToRowModal"
       @navigate-previous="
         (row, activeSearchTerm) => setAdjacentRow(true, row, activeSearchTerm)
       "
@@ -39,6 +39,50 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('view/unselect')
     this.$store.dispatch('table/unselect')
+    next()
+  },
+  async beforeRouteUpdate(to, from, next) {
+    function parseIntOrNull(x) {
+      return x != null ? parseInt(x) : null
+    }
+    const currentRowId = parseIntOrNull(to.params?.rowId)
+    const currentTableId = parseIntOrNull(to.params.tableId)
+
+    const storeRow = this.$store.getters['rowModalNavigation/getRow']
+    const failedToFetchTableRowId =
+      this.$store.getters['rowModalNavigation/getFailedToFetchTableRowId']
+    if (currentRowId == null) {
+      await this.$store.dispatch('rowModalNavigation/clearRow')
+    } else if (
+      failedToFetchTableRowId &&
+      parseIntOrNull(failedToFetchTableRowId?.rowId) === currentRowId &&
+      parseIntOrNull(failedToFetchTableRowId?.tableId) === currentTableId
+    ) {
+      return next({
+        name: 'database-table',
+        params: {
+          ...to.params,
+          rowId: null,
+        },
+      })
+    } else if (
+      storeRow?.id !== currentRowId ||
+      storeRow?.table_id !== currentTableId
+    ) {
+      const row = await this.$store.dispatch('rowModalNavigation/fetchRow', {
+        tableId: currentTableId,
+        rowId: currentRowId,
+      })
+      if (row == null) {
+        return next({
+          name: 'database-table',
+          params: {
+            ...to.params,
+            rowId: null,
+          },
+        })
+      }
+    }
     next()
   },
   layout: 'app',
@@ -127,14 +171,10 @@ export default {
     }
 
     if (params.rowId) {
-      try {
-        await store.dispatch('rowModalNavigation/fetchRow', {
-          tableId,
-          rowId: params.rowId,
-        })
-      } catch (e) {
-        return error({ statusCode: 404, message: 'Row not found.' })
-      }
+      await store.dispatch('rowModalNavigation/fetchRow', {
+        tableId,
+        rowId: params.rowId,
+      })
     }
 
     return data
@@ -186,7 +226,7 @@ export default {
     async setAdjacentRow(previous, row = null, activeSearchTerm = null) {
       if (row) {
         await this.$store.dispatch('rowModalNavigation/setRow', row)
-        this.updatePath(row.id)
+        this.navigateToRowModal(row.id)
       } else {
         // If the row isn't provided then the row is
         // probably not visible to the user at the moment
@@ -194,21 +234,10 @@ export default {
         await this.fetchAdjacentRow(previous, activeSearchTerm)
       }
     },
-    async selectRow(rowId) {
-      if (rowId) {
-        const row = await this.$store.dispatch('rowModalNavigation/fetchRow', {
-          tableId: this.table.id,
-          rowId,
-        })
-        if (row) {
-          this.updatePath(rowId)
-        }
-      } else {
-        await this.$store.dispatch('rowModalNavigation/clearRow')
-        this.updatePath(rowId)
-      }
+    selectRow(rowId) {
+      this.navigateToRowModal(rowId)
     },
-    updatePath(rowId) {
+    navigateToRowModal(rowId) {
       if (
         this.$route.params.rowId !== undefined &&
         this.$route.params.rowId === rowId
@@ -216,16 +245,16 @@ export default {
         return
       }
 
-      const newPath = this.$nuxt.$router.resolve({
+      const location = {
         name: rowId ? 'database-table-row' : 'database-table',
         params: {
           databaseId: this.database.id,
           tableId: this.table.id,
-          viewId: this.view?.id,
+          viewId: this.$route.params.viewId,
           rowId,
         },
-      }).href
-      history.replaceState({}, null, newPath)
+      }
+      this.$nuxt.$router.push(location)
     },
     async fetchAdjacentRow(previous, activeSearchTerm = null) {
       const { row, status } = await this.$store.dispatch(
@@ -254,7 +283,7 @@ export default {
       }
 
       if (row) {
-        this.updatePath(row.id)
+        this.navigateToRowModal(row.id)
       }
     },
   },
