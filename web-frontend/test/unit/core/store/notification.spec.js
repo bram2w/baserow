@@ -34,14 +34,14 @@ describe('Notification store', () => {
     const notifications = store.getters['notification/getAll']
     expect(JSON.parse(JSON.stringify(notifications))).toStrictEqual([
       {
-        id: 2,
-        type: 'test 2',
+        id: 1,
+        type: 'test',
         workspace: { id: 1 },
         read: false,
       },
       {
-        id: 1,
-        type: 'test',
+        id: 2,
+        type: 'test 2',
         workspace: { id: 1 },
         read: false,
       },

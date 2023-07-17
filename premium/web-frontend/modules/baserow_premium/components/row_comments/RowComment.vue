@@ -197,7 +197,8 @@ export default {
       const onClickOutside = (evt) => {
         if (
           !this.$el.contains(evt.target) &&
-          !this.$refs.commentContext.$el.contains(evt.target)
+          !this.$refs.commentContext.$el.contains(evt.target) &&
+          !evt.composedPath().includes(this.$el)
         ) {
           this.stopEdit()
         }

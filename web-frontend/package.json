@@ -33,6 +33,7 @@
     "@tiptap/extension-hard-break": "^2.0.3",
     "@tiptap/extension-mention": "^2.0.3",
     "@tiptap/extension-paragraph": "^2.0.3",
+    "@tiptap/extension-placeholder": "^2.0.3",
     "@tiptap/extension-text": "^2.0.3",
     "@tiptap/pm": "^2.0.3",
     "@tiptap/suggestion": "^2.0.3",
@@ -45,6 +46,7 @@
     "chartjs-adapter-moment": "1.0.1",
     "cookie-universal-nuxt": "2.2.2",
     "cross-env": "^7.0.2",
+    "flush-promises": "^1.0.2",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "markdown-it": "13.0.1",
@@ -63,8 +65,7 @@
     "uuid": "9.0.0",
     "vue-chartjs": "4.1.2",
     "vuejs-datepicker": "1.6.2",
-    "vuelidate": "0.7.7",
-    "flush-promises": "^1.0.2"
+    "vuelidate": "0.7.7"
   },
   "devDependencies": {
     "@babel/core": "7.21.4",

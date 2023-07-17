@@ -85,6 +85,11 @@ export default {
       return this.results.length === 0 && this.query !== ''
     },
   },
+  watch: {
+    collaborators() {
+      this.fetch(1, this.query)
+    },
+  },
   methods: {
     filterItems(search) {
       return this.collaborators.filter((collaborator) => {

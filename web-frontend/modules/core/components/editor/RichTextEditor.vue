@@ -7,6 +7,7 @@ import Vue from 'vue'
 import _ from 'lodash'
 import { mapGetters } from 'vuex'
 import { Editor, EditorContent } from '@tiptap/vue-2'
+import { Placeholder } from '@tiptap/extension-placeholder'
 import { Mention } from '@tiptap/extension-mention'
 import { Document } from '@tiptap/extension-document'
 import { Paragraph } from '@tiptap/extension-paragraph'
@@ -67,6 +68,10 @@ export default {
       type: [Object, String],
       required: true,
     },
+    placeholder: {
+      type: String,
+      default: null,
+    },
     editable: {
       type: Boolean,
       default: true,
@@ -80,6 +85,9 @@ export default {
   computed: {
     ...mapGetters({
       loggedUserId: 'auth/getUserId',
+      workspace: 'workspace/getSelected',
+      isUserIdMemberOfSelectedWorkspace:
+        'workspace/isUserIdMemberOfSelectedWorkspace',
     }),
   },
   watch: {
@@ -106,11 +114,15 @@ export default {
     // RichTextEditorMentionsList below, we need to manually register them.
     Vue.directive('preventParentScroll', preventParentScroll)
     Vue.directive('autoOverflowScroll', autoOverflowScroll)
+    const isUserInWorkspace =
+      this.$store.getters['workspace/isUserIdMemberOfSelectedWorkspace']
     const mentionsExt = Mention.extend({
       renderHTML({ node, HTMLAttributes }) {
         let className = 'rich-text-editor__mention'
         if (node.attrs.id === loggedUserId) {
           className += ' rich-text-editor__mention--current-user'
+        } else if (!isUserInWorkspace(node.attrs.id)) {
+          className += ' rich-text-editor__mention--user-gone'
         }
         return originalRenderHTML.call(this, {
           node,
@@ -132,6 +144,13 @@ export default {
       enterKeyExt,
       mentionsExt,
     ]
+    if (this.placeholder) {
+      extensions.push(
+        Placeholder.configure({
+          placeholder: this.placeholder,
+        })
+      )
+    }
     this.editor = new Editor({
       content: this.value,
       editable: this.editable,

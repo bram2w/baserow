@@ -135,7 +135,10 @@ export default {
         notifyIf(e, 'application')
       }
     },
-    show(target) {
+    async show(target) {
+      if (!this.loaded) {
+        await this.initialLoad()
+      }
       this.open = true
       const opener = target
       const removeOnClickOutsideHandler = onClickOutside(this.$el, (target) => {

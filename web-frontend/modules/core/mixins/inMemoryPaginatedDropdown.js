@@ -14,7 +14,7 @@ export default {
         },
       }
     },
-    _search() {
+    search() {
       this.fetch(this.page, this.query)
     },
   },
