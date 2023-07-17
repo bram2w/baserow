@@ -40,11 +40,7 @@
         ></EditRoleContext>
       </template>
     </CrudTable>
-    <WorkspaceMemberInviteModal
-      ref="inviteModal"
-      :workspace="workspace"
-      @invite-submitted="$refs.crudTable.fetch()"
-    />
+    <WorkspaceMemberInviteModal ref="inviteModal" :workspace="workspace" />
   </div>
 </template>
 
@@ -145,6 +141,12 @@ export default {
       return columns
     },
   },
+  beforeMount() {
+    this.$bus.$on('invite-submitted', this.inviteSubmitted)
+  },
+  beforeDestroy() {
+    this.$bus.$off('invite-submitted', this.inviteSubmitted)
+  },
   methods: {
     onRowContext({ row, event, target }) {
       event.preventDefault()
@@ -178,6 +180,9 @@ export default {
         this.$refs.crudTable.updateRow(oldInvitation)
         notifyIf(error, 'workspace')
       }
+    },
+    inviteSubmitted(values) {
+      this.$refs.crudTable.upsertRow(values)
     },
   },
 }

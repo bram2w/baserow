@@ -200,14 +200,7 @@
               <WorkspaceMemberInviteModal
                 ref="inviteModal"
                 :workspace="selectedWorkspace"
-                @invite-submitted="
-                  $router.push({
-                    name: 'settings-invites',
-                    params: {
-                      workspaceId: selectedWorkspace.id,
-                    },
-                  })
-                "
+                @invite-submitted="handleInvite"
               />
             </li>
             <nuxt-link
@@ -526,6 +519,16 @@ export default {
         })
       } catch (error) {
         notifyIf(error, 'application')
+      }
+    },
+    handleInvite(event) {
+      if (this.$route.name !== 'settings-invites') {
+        this.$router.push({
+          name: 'settings-invites',
+          params: {
+            workspaceId: this.selectedWorkspace.id,
+          },
+        })
       }
     },
   },
