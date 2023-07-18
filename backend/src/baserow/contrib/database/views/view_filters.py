@@ -911,6 +911,37 @@ class DateNotEqualViewFilterType(NotViewFilterTypeMixin, DateEqualViewFilterType
     type = "date_not_equal"
 
 
+class DateAfterDaysAgoViewFilterType(TimezoneAwareDateViewFilterType):
+    """
+    The "is after days ago" filter checks if the field value falls within the specified
+    number of past days, including the current date. The filter only includes records
+    with field values on or after the date calculated based on the given number of days
+    ago from the current date.
+
+    The filter takes the timezone into consideration when performing the date
+    calculations.
+    """
+
+    type = "date_after_days_ago"
+
+    def is_empty_filter(self, filter_value: str) -> bool:
+        return super().is_empty_filter(filter_value) or filter_value == "0"
+
+    def get_filter_date(
+        self, filter_value: str, timezone: pytz.BaseTzInfo
+    ) -> Union[datetime, date]:
+        # Calculate and return the date `filter_value` days ago in the given timezone
+        filter_date = datetime.now(tz=timezone) - timedelta(days=int(filter_value))
+        return filter_date.date()
+
+    def get_filter_query_dict(
+        self, field_name: str, aware_filter_date: Union[date, datetime], now: datetime
+    ) -> Dict:
+        return {
+            f"{field_name}__gte": aware_filter_date,
+        }
+
+
 class SingleSelectEqualViewFilterType(ViewFilterType):
     """
     The single select equal filter accepts a select option id as filter value. This
