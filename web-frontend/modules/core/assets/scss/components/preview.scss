@@ -51,17 +51,15 @@
   user-select: none;
 
   &.preview--hidden {
+    position: absolute;
     visibility: hidden;
-
-    @include absolute(-99999px, -99999px);
   }
 }
 
 .preview__audio {
   &.preview--hidden {
+    position: absolute;
     visibility: hidden;
-
-    @include absolute(-99999px, -99999px);
   }
 }
 
@@ -71,8 +69,7 @@
   border: none;
 
   &.preview--hidden {
+    position: absolute;
     visibility: hidden;
-
-    @include absolute(-99999px, -99999px);
   }
 }
