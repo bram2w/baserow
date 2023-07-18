@@ -4,6 +4,7 @@ import {
   DateBeforeOrEqualViewFilterType,
   DateBeforeViewFilterType,
   DateBeforeTodayViewFilterType,
+  DateAfterDaysAgoViewFilterType,
   DateAfterViewFilterType,
   DateAfterOrEqualViewFilterType,
   DateAfterTodayViewFilterType,
@@ -953,6 +954,67 @@ const linkRowNotContainsCases = [
   },
 ]
 
+const dateDaysAfterValidCases = [
+  {
+    rowValue: moment.utc().subtract(5, 'days').format(),
+    filterValue: 'UTC?10',
+    expected: true,
+  },
+  {
+    rowValue: moment.utc().subtract(10, 'days').format(),
+    filterValue: 'UTC?10',
+    expected: true,
+  },
+  {
+    rowValue: moment.utc().subtract(21, 'days').format(),
+    filterValue: '30',
+    expected: true,
+  },
+  {
+    rowValue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
+    filterValue: 'Europe/Berlin?10',
+    expected: true,
+  },
+]
+
+const dateDaysAfterInvalidCases = [
+  {
+    rowValue: moment.utc().subtract(15, 'days').format(),
+    filterValue: 'UTC?10',
+    expected: false,
+  },
+  {
+    rowValue: null,
+    filterValue: 'UTC?15',
+    expected: false,
+  },
+  {
+    rowValue: moment.utc().subtract(5, 'days').format(),
+    filterValue: 'UTC?-10',
+    expected: false,
+  },
+  {
+    rowValue: moment.utc().subtract(20, 'days').format(),
+    filterValue: 'Europe/Berlin?10',
+    expected: false,
+  },
+  {
+    rowValue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
+    filterValue: '?',
+    expected: false,
+  },
+  {
+    rowvalue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
+    filterValue: 'UTC?abc',
+    expected: false,
+  },
+  {
+    rowvalue: moment.utc().subtract(10, 'days').add(5, 'hours').format(),
+    filterValue: 'UTC? ',
+    expected: false,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -1134,6 +1196,28 @@ describe('All Tests', () => {
     'LinkRowNotContainsFilterType',
     (values) => {
       const result = new LinkRowNotContainsFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(dateDaysAfterValidCases)(
+    'DateDaysAfterValidFilterType',
+    (values) => {
+      const result = new DateAfterDaysAgoViewFilterType().matches(
+        values.rowValue,
+        values.filterValue
+      )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(dateDaysAfterInvalidCases)(
+    'DateDaysAfterInvalidFilterType',
+    (values) => {
+      const result = new DateAfterDaysAgoViewFilterType().matches(
         values.rowValue,
         values.filterValue
       )

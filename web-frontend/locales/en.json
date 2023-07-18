@@ -153,6 +153,7 @@
         "isBeforeOrEqualDate": "is before or same date",
         "isAfterDate": "is after date",
         "isAfterOrEqualDate": "is after or same date",
+        "isAfterDaysAgo": "is after days ago",
         "isNotDate": "is not date",
         "isToday": "is today",
         "beforeToday": "is before today",

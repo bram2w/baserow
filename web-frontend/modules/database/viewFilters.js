@@ -710,6 +710,64 @@ export class DateAfterViewFilterType extends LocalizedDateViewFilterType {
     return rowDate.isAfter(filterDate, 'day')
   }
 }
+export class DateAfterDaysAgoViewFilterType extends LocalizedDateViewFilterType {
+  static getType() {
+    return 'date_after_days_ago'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isAfterDaysAgo')
+  }
+
+  getExample() {
+    return '20'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumberWithTimeZone
+  }
+
+  getCompatibleFieldTypes() {
+    return [
+      'date',
+      'last_modified',
+      'created_on',
+      FormulaFieldType.compatibleWithFormulaTypes('date'),
+    ]
+  }
+
+  matches(rowValue, filterValue) {
+    if (rowValue === null || !moment.utc(rowValue).isValid()) {
+      return false
+    }
+
+    const [timezone, rawDaysAgo] = this.splitTimezoneAndValue(filterValue)
+    const daysAgo = parseInt(rawDaysAgo, 10)
+
+    if (isNaN(daysAgo)) {
+      return false
+    }
+
+    // Convert rowValue to a date object and adjust to timezone if provided.
+    let rowDate = moment.utc(rowValue)
+    if (timezone !== null) {
+      rowDate = rowDate.tz(timezone)
+    }
+
+    // Create a date object for current date and adjust to timezone if provided.
+    let now = moment.utc()
+    if (timezone !== null) {
+      now = now.tz(timezone)
+    }
+
+    // Calculate the date daysAgo days from now.
+    const daysAgoDate = now.subtract(daysAgo, 'days')
+
+    // Check if rowDate is the same as or after daysAgoDate.
+    return rowDate.isSameOrAfter(daysAgoDate, 'day')
+  }
+}
 
 export class DateAfterOrEqualViewFilterType extends LocalizedDateViewFilterType {
   static getType() {
