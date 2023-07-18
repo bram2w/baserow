@@ -190,7 +190,8 @@
     "memberRolesMembersList": {
         "remove": "Verwijder",
         "teamMembersCount": "{count} teamleden",
-        "adminHelpText": "Beheerders kunnen rollen van andere beheerders beperken."
+        "adminHelpText": "Beheerders kunnen rollen van andere beheerders beperken.",
+        "noMembers": "Er zijn geen leden geselecteerd. Gebruik de selectieknop om er een toe te voegen."
     },
     "roleAssignmentModal": {
         "membersTab": "Leden",
@@ -271,5 +272,8 @@
     },
     "loginButton": {
         "continueWith": "Doorgaan met"
+    },
+    "snapshotModalWarning": {
+        "message": "Houd er rekening mee dat een momentopname alle machtigingen bevat die zijn ingesteld voor de applicatie en de bijbehorende tabellen."
     }
 }

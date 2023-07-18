@@ -25,7 +25,8 @@
         "dashboard": "Dashboard",
         "trash": "Prullenbak",
         "settings": "Instellingen",
-        "members": "Leden"
+        "members": "Leden",
+        "notifications": "Meldingen"
     },
     "accountForm": {
         "nameLabel": "Je naam",
@@ -519,5 +520,111 @@
     },
     "highestPaidRoleField": {
         "billable": "Factureerbaar"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "message": "Alle meldingen worden permanent verwijderd en u kunt ze niet meer zien.",
+        "title": "Weet je zeker dat je alle meldingen wilt wissen?"
+    },
+    "notificationPanel": {
+        "title": "Meldingen",
+        "markAllAsRead": "Alles markeren als gelezen",
+        "clearAll": "Alles wissen",
+        "noNotification": "We zullen u op de hoogte brengen van belangrijke updates en wanneer u op Baserow wordt vermeld.",
+        "noNotificationTitle": "Je hebt geen meldingen"
+    },
+    "uploadFileDropzone": {
+        "drop": "Laat hier los",
+        "clickOrDrop": "Klik of sleep je bestanden naar hier",
+        "errorTooManyFilesMessage": "Je kunt slechts één bestand uploaden",
+        "errorWrongFileTypeTitle": "Verkeerd bestandstype",
+        "errorWrongFileTypeMessage": "Je kunt geen bestand van het type {type} uploaden",
+        "errorTooManyFilesTitle": "Te veel bestanden"
+    },
+    "connectingToast": {
+        "title": "Opnieuw verbinden",
+        "content": "Opnieuw verbinding maken met de server."
+    },
+    "failedConnectingToast": {
+        "title": "Mislukt",
+        "content": "Verbinding met de server is mislukt. Vernieuw de pagina.",
+        "action": "Pagina vernieuwen"
+    },
+    "authorizationErrorToast": {
+        "content": "Het lijkt erop dat je niet de rechten hebt om deze bron te zien.",
+        "title": "Autorisatiefout",
+        "action": "Pagina vernieuwen"
+    },
+    "copyingToast": {
+        "title": "Kopiëren...",
+        "content": "Voorbereiding van uw gegevens"
+    },
+    "PastingToast": {
+        "title": "Plakken...",
+        "content": "Voorbereiding van uw gegevens"
+    },
+    "clearingToast": {
+        "title": "Wissen...",
+        "content": "Voorbereiding van uw gegevens"
+    },
+    "undoRedoToast": {
+        "noMoreUndo": "Geen acties meer om ongedaan te maken",
+        "skippingUndoDueToError": "Ongedaan maken mislukt door onbekende fout, overslaan.",
+        "redoingTitle": "Opnieuw doen...",
+        "redoingText": "Je actie overnieuw doen",
+        "redoneTitle": "Opnieuw gedaan",
+        "redoneText": "Actie is opnieuw gedaan",
+        "noMoreRedo": "Geen acties meer om opnieuw te doen",
+        "failed": "Mislukt",
+        "skippingRedoDueToError": "Opnieuw uitvoeren mislukt vanwege onbekende fout, overslaan.",
+        "undoingText": "Je actie ongedaan maken",
+        "undoneText": "Actie is ongedaan gemaakt",
+        "undoingTitle": "Ongedaan maken...",
+        "undoneTitle": "Ongedaan gemaakt"
+    },
+    "permissionsUpdatedToast": {
+        "title": "Machtigingen bijgewerkt",
+        "content": "Dit kan invloed hebben op waar u toegang toe heeft, gelieve de pagina opnieuw te laden.",
+        "action": "Herladen"
+    },
+    "integrationCreateEditModal": {
+        "editTitle": "Integratie bewerken",
+        "warningTitle": "Waarschuwing",
+        "createTitle": "Nieuwe integratie"
+    },
+    "integrationEditForm": {
+        "name": "Naam integratie",
+        "namePlaceholder": "Voer de integratie naam in..."
+    },
+    "styleSidePanel": {
+        "paddingTop": "Opvulling bovenkant",
+        "paddingBottom": "Opvulling onderkant"
+    },
+    "userSessionExpiredToast": {
+        "title": "Sessie verlopen",
+        "content": "Je bent uitgelogd omdat uw authenticatie token is verlopen. Log opnieuw in."
+    },
+    "restoreToast": {
+        "restore": "Herstel verwijderd {type}"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} afgewezen"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} heeft je uitgenodigd om lid te worden van {workspaceName}"
+    },
+    "dropdown": {
+        "empty": "Geen items beschikbaar"
+    },
+    "styleBoxForm": {
+        "paddingError": "De waarde moet een geheel getal zijn tussen 0 en 200."
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} heeft uw uitnodiging om lid te worden van {workspaceName} geaccepteerd"
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "Geen gebruikers gevonden"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} is hier! Bekijk wat er nieuw is."
     }
 }

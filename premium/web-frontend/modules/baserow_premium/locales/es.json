@@ -13,7 +13,8 @@
             "licenses": "Licencias"
         },
         "viewType": {
-            "kanban": "tabla kanban"
+            "kanban": "tabla kanban",
+            "calendar": "Calendario"
         },
         "exporterType": {
             "json": "Exportar a JSON",
@@ -31,7 +32,17 @@
     },
     "rowComment": {
         "you": "Tú",
-        "anonymous": "Anónimo"
+        "anonymous": "Anónimo",
+        "edited": "editado",
+        "deleting": "borrando",
+        "updating": "actualizando",
+        "commentTrashed": "Este comentario ha sido borrado.",
+        "errorInvalidCommentMentionTitle": "Mención inválida",
+        "creating": "creando",
+        "created": "creado",
+        "errorUserNotCommentAuthorTitle": "No se puede actualizar ni eliminar.",
+        "errorUserNotCommentAuthor": "Sólo el autor del comentario puede actualizarlo o eliminarlo.",
+        "errorInvalidCommentMention": "El usuario mencionado no existe."
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Registrar una licencia",
@@ -114,7 +125,7 @@
         "warning": {
             "changeEmail": "Cambiar la dirección de correo electrónico de este usuario significa que cuando inician sesión deben usar la nueva dirección de correo electrónico para hacerlo. Esto debe ser comunicado con ese usuario.",
             "inactiveUser": "Cuando un usuario se marca como inactivo, no puede iniciar sesión.",
-            "userStaff": "Hacer que el usuario sea personal les otorga acceso de administrador a todos los usuarios, todos los grupos y la capacidad de revocar sus propios permisos de personal."
+            "userStaff": "Convertir al usuario en personal le da acceso de administrador a todos los usuarios, todos los espacios de trabajo, y la capacidad de revocar tus propios permisos de personal."
         },
         "error": {
             "invalidName": "Ingrese un nombre completo válido, debe tener más de 2 letras y menos de 150.",
@@ -127,7 +138,7 @@
     "deleteUserModal": {
         "title": "Eliminar {username}",
         "confirmation": "¿Está seguro de que desea eliminar el usuario: {name}?",
-        "comment1": "La cuenta de usuario se eliminará, sin embargo, los grupos de los que el usuario es miembro seguirán existiendo. El grupo de usuarios no se eliminará, incluso si este usuario es el último usuario del grupo. Eliminar el último usuario de un grupo evita que cualquiera pueda acceder a ese grupo.",
+        "comment1": "La cuenta de usuario se eliminará, pero los espacios de trabajo de los que el usuario es miembro seguirán existiendo. El espacio de trabajo del usuario no se eliminará, incluso si este usuario es el último usuario en el espacio de trabajo. Si se elimina el último usuario de un espacio de trabajo, nadie podrá acceder a ese espacio de trabajo.",
         "comment2": "Después de eliminar un usuario, es posible que un nuevo usuario se registre nuevamente utilizando la dirección de correo electrónico de los usuarios eliminados. Para asegurarse de que no puedan volver a registrarse, desactive al usuario y no lo elimine.",
         "delete": "Eliminar usuario {username}"
     },
@@ -236,7 +247,7 @@
         "supportFeatureName": "Soporte"
     },
     "conditionalColorValueProviderForm": {
-        "addCondition": "Añadir condición",
+        "addCondition": "añadir condición",
         "colorAlwaysApply": "Este color se aplica por defecto. Puede añadir condiciones haciendo clic en el botón \"Añadir condición\".",
         "addColor": "añadir color"
     },
@@ -280,7 +291,8 @@
         "admin": "Funciones de administración",
         "surveyForm": "Formulario de encuesta",
         "publicLogoRemoval": "Eliminación del logo público",
-        "personalViews": "Vistas personales"
+        "personalViews": "Vistas personales",
+        "calendarView": "Vista del calendario"
     },
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",
@@ -300,5 +312,37 @@
     },
     "viewsContext": {
         "personal": "Personal"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{enviador} te mencionó en la fila {fila} en {tabla}"
+    },
+    "calendarDateSelector": {
+        "today": "Hoy"
+    },
+    "rowCommentContext": {
+        "edit": "Editar comentario",
+        "delete": "Eliminar comentario"
+    },
+    "trashType": {
+        "row_comment": "comentario de fila"
+    },
+    "calendarViewHeader": {
+        "displayBy": "Mostrar por",
+        "displayedBy": "Mostrado por el campo \"{nombreDeCampo}\"",
+        "labels": "Etiquetas"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 más... | {cuentaDeFilasEscondidas} más..."
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "inténtalo de nuevo"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "¿Qué campo deseas utilizar para esta vista?",
+        "noCompatibleDateFields": "No hay campos de fecha en esta tabla, por favor crea uno primero."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Elegir campo de fecha",
+        "save": "Guardar"
     }
 }

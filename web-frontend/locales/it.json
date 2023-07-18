@@ -31,10 +31,12 @@
         "duplicate": "Duplica",
         "remove": "Rimuovi",
         "login": "Login",
-        "download": "Download"
+        "download": "Download",
+        "copyToClipboard": "Copia nella clipboard"
     },
     "adminType": {
-        "settings": "Impostazioni"
+        "settings": "Impostazioni",
+        "health": "Stato dei servizi"
     },
     "applicationType": {
         "database": "Database",
@@ -91,7 +93,9 @@
         "phoneNumber": "Numero di telefono",
         "formula": "Formula",
         "lookup": "Cerca",
-        "multipleCollaborators": "Collaboratori"
+        "multipleCollaborators": "Collaboratori",
+        "count": "Conteggio",
+        "rollup": "Rollup"
     },
     "fieldErrors": {
         "invalidNumber": "Numero non valido",
@@ -125,8 +129,10 @@
         "multipleSelect": "Accetta una matrice di interi, ognuno dei quali rappresenta l'id dell'opzione di selezione scelta.",
         "phoneNumber": "Accetta un numero di telefono che ha una lunghezza massima di 100 caratteri composto unicamente da cifre, spazi e dai seguenti caratteri: Nx,._+*()#=;/- .",
         "formula": "Un campo di sola lettura definito da una formula scritta nel linguaggio delle formule Baserow.",
-        "lookup": "Un campo di sola lettura collegato a un campo di riga di collegamento che restituisce una matrice di valori e id di riga dal campo di ricerca scelto nella tabella collegata.",
-        "multipleCollaborators": "Accetta una lista di oggetti contenenti l'id dell'utente."
+        "lookup": "Un campo di sola lettura collegato a un campo di tipo \"Collega a tabella\" che restituisce una matrice di valori e id di riga dal campo di ricerca scelto nella tabella collegata.",
+        "multipleCollaborators": "Accetta una lista di oggetti contenenti l'id dell'utente.",
+        "rollup": "Un campo in sola lettura connesso ad un campo di tipo \"Collega a tabella\" che esegue la funzione prescelta sulla tabella collegata.",
+        "count": "Un campo in sola lettura connesso ad un campo di tipo \"Collega a tabella\" che conta il numero di elementi inseriti."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -157,7 +163,12 @@
         "beforeToday": "È prima di oggi",
         "afterToday": "È dopo di oggi",
         "doesntContainWord": "non contiene la parola",
-        "containsWord": "contiene la parola"
+        "containsWord": "contiene la parola",
+        "isAfterOrEqualDate": "È dopo o lo stesso giorno",
+        "isBeforeOrEqualDate": "È prima o lo stesso giorno",
+        "isWithinWeeks": "È entro un numero di settimane",
+        "isWithinDays": "È entro un numero di giorni",
+        "isWithinMonths": "È entro un numero di mesi"
     },
     "viewType": {
         "grid": "Griglia",
@@ -264,7 +275,9 @@
         "lastAdminTitle": "L'ultimo ammistratore del progetto non può essere rimosso",
         "lastAdminMessage": "Un progetto deve avere almeno un amministratore.",
         "maxLocksPerTransactionExceededDescription": "Baserow ha cercato di eliminare definitivamente gli oggetti nel cestino, ma il limite`max_locks_per_transaction` del database è stato superato.",
-        "maxLocksPerTransactionExceededTitle": "Problema imprevisto con il database PostgreSQL"
+        "maxLocksPerTransactionExceededTitle": "Problema imprevisto con il database PostgreSQL",
+        "notificationDoesNotExistDescription": "L'azione non può essere completata perchè la relativa notifica non esiste più.",
+        "notificationDoesNotExistTitle": "La notifica non esiste."
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -327,10 +340,10 @@
         "equalDescription": "Restituisce se i suoi due argomenti hanno lo stesso valore.",
         "ifDescription": "Se il primo argomento è vero, allora restituisce il secondo argomento, altrimenti restituisce il terzo.",
         "toTextDescription": "Converte l'input in testo.",
-        "datetimeFormatDescription": "Converte la data in testo dato un modo di formattazione della data.",
+        "datetimeFormatDescription": "Converte la data da UTC in testo dato un formato per la data. Utilizza `datetime_format_tz` per specificare una data in un fuso orario diversa da UTC.",
         "toNumberDescription": "Converte l'input in un numero, se possibile.",
         "fieldDescription": "Restituisce il campo nominato dal singolo argomento di testo.",
-        "lookupDescription": "Cerca i valori da un campo in un'altra tabella per le righe in un campo di riga di collegamento. Il primo argomento deve essere il nome di un campo riga di collegamento nella tabella corrente e il secondo deve essere il nome di un campo nella tabella collegata.",
+        "lookupDescription": "Cerca i valori da un campo in un'altra tabella per le righe in un campo \"Collega a tabella\". Il primo argomento deve essere il nome di un campo riga di collegamento nella tabella corrente e il secondo deve essere il nome di un campo nella tabella collegata.",
         "isBlankDescription": "Restituisce true se l'argomento è vuoto, altrimenti false.",
         "tDescription": "Restituisce il valore degli argomenti se è testo, altrimenti ''.",
         "notDescription": "Restituisce false se l'argomento è true e true se l'argomento è false.",
@@ -338,7 +351,7 @@
         "greaterThanOrEqualDescription": "Restituisce true se il primo argomento è maggiore o uguale al secondo, altrimenti false.",
         "lessThanDescription": "Restituisce true se il primo argomento è inferiore al secondo, altrimenti false.",
         "lessThanOrEqualDescription": "Restituisce true se il primo argomento è minore o uguale al secondo, altrimenti false.",
-        "toDateDescription": "Restituisce il primo argomento convertito in una data, se fornita una stringa di formato data come secondo argomento.",
+        "toDateDescription": "Restituisce il primo argomento convertito in una data in UTC, se fornita una stringa di formato data come secondo argomento. Utilizza `to_date_tz` per specificare un fuso orario diverso da UTC.",
         "dayDescription": "Restituisce il giorno del mese come numero tra 1 e 31 dall'argomento.",
         "dateDiffDescription": "Data un'unità di data da misurare come primo argomento ('anno', 'mese', 'settimana', 'giorno', 'ora', 'minuto', 'secondi') calcola e restituisce il numero di unità dal secondo argomento al terzo.",
         "andDescription": "Restituisce l'and logico del primo e del secondo argomento, quindi se sono entrambi veri allora il risultato è vero, altrimenti è falso.",
@@ -398,7 +411,8 @@
         "todayDescription": "Ritorna la data corrente.",
         "toDateTzDescription": "Ritorna il primo argomento convertito in una data a partire dal una stringa per il formato come secondo argomento e un fuso orario come terzo argomento.",
         "isNanDescription": "Ritorna true se l'argomento è 'NaN', falso altrimenti.",
-        "whenNanDescription": "Ritorna il primo argomento se l'argomento non è 'NaN',il secondo argomento altrimenti"
+        "whenNanDescription": "Ritorna il primo argomento se l'argomento non è 'NaN',il secondo argomento altrimenti",
+        "datetimeFormatTzDescription": "Converte la data in test dato un formato per la data."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"
@@ -406,5 +420,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "{name} invalido",
         "invalidUrlEnvVarDescription": "La variabile d'ambiente {name} è stata impostata ad un valore non valido. L'admin dovrebbe cambiare {name} con un indirizzo valido, nel formato http:// o https:// e poi riavviare Baserow per sistemare l'errore."
+    },
+    "emailTester": {
+        "title": "Testa l'invio di email",
+        "targetEmailLabel": "Indirizzo di spedizione",
+        "configLink": "Aiuto in linea per la configurazione della email",
+        "success": "Email inviata correttamente",
+        "submit": "Invia email di test",
+        "invalidTargetEmail": "Indirizzo email invalido"
+    },
+    "health": {
+        "description": "Questi controlli mostrano l'attuale stato di salute della tua istanza di Baserow.",
+        "title": "Controlli di stato di servizio in Baserow"
     }
 }

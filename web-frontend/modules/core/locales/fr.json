@@ -25,7 +25,8 @@
         "dashboard": "Accueil",
         "trash": "Corbeille",
         "settings": "Mon compte",
-        "members": "Membres"
+        "members": "Membres",
+        "notifications": "Notifications"
     },
     "accountForm": {
         "nameLabel": "Votre nom",
@@ -519,5 +520,111 @@
     },
     "editRoleContext": {
         "billableRolesLink": "Documentation sur les rôles facturables"
+    },
+    "notificationPanel": {
+        "title": "Notifications",
+        "clearAll": "Effacer tout",
+        "markAllAsRead": "Marquer tout comme lu",
+        "noNotificationTitle": "Vous n'avez aucune notification",
+        "noNotification": "Nous vous informerons des mises à jour importantes et à chaque fois que vous serez mentionné sur Baserow."
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Êtes-vous sûr·e de vouloir supprimer toutes les notifications ?",
+        "message": "Toutes les notifications seront définitivement supprimées et vous ne serez plus en mesure de les consulter."
+    },
+    "uploadFileDropzone": {
+        "errorTooManyFilesMessage": "Vous ne pouvez envoyer qu'un seul fichier",
+        "errorWrongFileTypeTitle": "Type de fichier incorrect",
+        "errorWrongFileTypeMessage": "Vous ne pouvez pas télécharger un fichier de type {type}",
+        "drop": "Déposer ici",
+        "clickOrDrop": "Cliquez ou déposez vos fichiers ici",
+        "errorTooManyFilesTitle": "Trop de fichiers"
+    },
+    "connectingToast": {
+        "title": "Reconnexion",
+        "content": "Reconnexion au serveur."
+    },
+    "failedConnectingToast": {
+        "title": "Échec",
+        "content": "La connexion avec le serveur a été interrompue. Merci de rafraîchir la page.",
+        "action": "Actualiser la page"
+    },
+    "authorizationErrorToast": {
+        "title": "Erreur d’autorisation",
+        "content": "Vous ne semblez pas avoir la permission de visualiser cette ressource.",
+        "action": "Actualiser la page"
+    },
+    "userSessionExpiredToast": {
+        "content": "Vous avez été déconnecté·e car votre jeton d'authentification a expiré. Veuillez vous reconnecter.",
+        "title": "Session expirée"
+    },
+    "restoreToast": {
+        "restore": "Restauration de {type}"
+    },
+    "copyingToast": {
+        "title": "Copie...",
+        "content": "Préparation de vos données"
+    },
+    "PastingToast": {
+        "content": "Préparation de vos données",
+        "title": "Collage..."
+    },
+    "undoRedoToast": {
+        "undoneTitle": "Annulée",
+        "undoneText": "L’action est annulée",
+        "noMoreUndo": "Plus d’action à annuler",
+        "undoingText": "Annulation de votre action",
+        "skippingUndoDueToError": "L’annulation a échoué en raison d’une erreur inconnue, étape ignorée.",
+        "redoingTitle": "Rétablissement...",
+        "redoneTitle": "Rétablie",
+        "redoneText": "L'action est rétablie",
+        "noMoreRedo": "Plus d’action à rétablir",
+        "skippingRedoDueToError": "Le rétablissement a échoué en raison d’une erreur inconnue, étape ignorée.",
+        "failed": "Échec",
+        "redoingText": "Rétablissement de votre action",
+        "undoingTitle": "Annulation..."
+    },
+    "permissionsUpdatedToast": {
+        "content": "Cela pourrait affecter ce à quoi vous avez accès, veuillez recharger la page.",
+        "action": "Recharger",
+        "title": "Autorisations mises à jour"
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "Aucun utilisateur trouvé"
+    },
+    "versionUpgradeNotification": {
+        "title": "La version {version} est arrivé ! Découvrez les nouveautés."
+    },
+    "clearingToast": {
+        "title": "Nettoyage...",
+        "content": "Préparation de vos données"
+    },
+    "integrationCreateEditModal": {
+        "editTitle": "Modifier l’intégration",
+        "warningTitle": "Avertissement",
+        "createTitle": "Nouvelle intégration"
+    },
+    "integrationEditForm": {
+        "name": "Nom de l’intégration",
+        "namePlaceholder": "Saisissez le nom de l'intégration..."
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} vous a invité à rejoindre {workspaceName}"
+    },
+    "dropdown": {
+        "empty": "Aucune entrée disponible"
+    },
+    "styleSidePanel": {
+        "paddingTop": "Espacement haut",
+        "paddingBottom": "Espacement bas"
+    },
+    "styleBoxForm": {
+        "paddingError": "La valeur doit être un entier compris entre 0 et 200."
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} a accepté votre invitation à rejoindre {workspaceName}"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} a rejeté votre invitation à rejoindre {workspaceName}"
     }
 }
