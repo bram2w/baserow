@@ -598,7 +598,8 @@
         "decorator": "Colore | 1 Colore | {count} Colori"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "aggiungi selezione singola"
+        "addSelectField": "aggiungi selezione singola",
+        "warningWhenNothingToChooseOrCreate": "Non ci sono campi a selezione singola da scegliere e tu non hai i permessi per crearne uno."
     },
     "viewDecoratorContext": {
         "addDecorator": "Aggiungi colorazione"
@@ -728,6 +729,22 @@
                         "message": "Non è presente nessuna riga precedente"
                     }
                 }
+            },
+            "toast": {
+                "error": {
+                    "message": "C'è stato un errore nella richiesta",
+                    "title": "Errore imprevisto"
+                },
+                "notFound": {
+                    "previous": {
+                        "title": "Nessun altra riga",
+                        "message": "Non c'e una riga precedente"
+                    },
+                    "next": {
+                        "title": "Nessun altra riga",
+                        "message": "Non c'è una riga successiva"
+                    }
+                }
             }
         }
     },
@@ -758,5 +775,13 @@
     "gridViewRowsAddContext": {
         "title": "Crea più righe",
         "choice": "Aggiungi {rowAmountChoice} righe"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "selectThroughFieldLabel": "Seleziona il campo \"Collega a tabella\"",
+        "noTable": "Devi avere almeno un campo di tipo \"Collega a tabella\" per creare questo campo."
+    },
+    "fieldRollupSubForm": {
+        "selectTargetFieldLabel": "Scegli un campo di rollup",
+        "label": "Funzione di rollup"
     }
 }

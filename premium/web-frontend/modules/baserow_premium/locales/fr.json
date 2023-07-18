@@ -32,7 +32,17 @@
     },
     "rowComment": {
         "you": "Vous",
-        "anonymous": "Anonyme"
+        "anonymous": "Anonyme",
+        "deleting": "suppression",
+        "created": "créé",
+        "commentTrashed": "Ce commentaire a été supprimé.",
+        "errorUserNotCommentAuthorTitle": "Impossible de mettre à jour ou de supprimer.",
+        "errorUserNotCommentAuthor": "Seul l’auteur du commentaire peut le mettre à jour ou le supprimer.",
+        "creating": "création",
+        "updating": "mise à jour",
+        "edited": "édité",
+        "errorInvalidCommentMentionTitle": "Mention invalide",
+        "errorInvalidCommentMention": "L’utilisateur mentionné n’existe pas."
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Activer une licence",
@@ -254,7 +264,7 @@
     },
     "conditionalColorValueProviderForm": {
         "addColor": "Ajouter une couleur",
-        "addCondition": "Ajouter une condition",
+        "addCondition": "ajouter une condition",
         "colorAlwaysApply": "Cette couleur s'applique par défaut. Vous pouvez ajouter des conditions en cliquant sur le bouton « Ajouter une condition »."
     },
     "redirectToBaserowModal": {
@@ -323,5 +333,15 @@
     "dateFieldSelectForm": {
         "dateField": "Quel champ souhaitez-vous utiliser pour cette vue ?",
         "noCompatibleDateFields": "Il n’y a pas de champs de date dans ce tableau, veuillez d’abord en créer un."
+    },
+    "rowCommentContext": {
+        "edit": "Modifier le commentaire",
+        "delete": "Supprimer le commentaire"
+    },
+    "trashType": {
+        "row_comment": "commentaire de ligne"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} vous a mentionné dans la ligne {row} de la table {table}"
     }
 }

@@ -423,7 +423,7 @@
         "noSortTitle": "Todavía no has creado una clasificación",
         "noSortText": "Ordenar le permite ordenar filas por un campo.",
         "sortBy": "Ordenar por",
-        "thenBy": "Ordenar por",
+        "thenBy": "Luego por",
         "addSort": "elegir un campo para ordenar por"
     },
     "viewSort": {
@@ -598,7 +598,8 @@
         "decorator": "Color | 1 Color | {recuento} Colores"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "añadir campo de selección individual"
+        "addSelectField": "añadir campo de selección individual",
+        "warningWhenNothingToChooseOrCreate": "No hay campos de selección únicos para elegir y no tienes permisos para hacer uno."
     },
     "viewDecoratorContext": {
         "addDecorator": "añadir decorador"
@@ -679,7 +680,7 @@
         "snapshotDeletedErrorMessage": "La imagen no ha podido ser eliminada. Favor de intentarlo otra vez mas tarde.",
         "title": "imágenes",
         "description": "Las imágenes instantáneas son una copia completa de su base de datos del momento en que fueron creadas. Al restaurarlas se creará una duplicación de esos datos. Las instantáneas se eliminan automáticamente después de un año.",
-        "descriptionLimits": "Puedes tener un máximo de {n} imágenes por grupo. | Puedes tener un máximo de {n} imágenes por grupo. | Puede tener un máximo de {n} imágenes por grupo.",
+        "descriptionLimits": "Puedes tener un máximo de {n} instantáneas por espacio de trabajo. | Puedes tener un máximo de {n} instantáneas por espacio de trabajo. | Puedes tener un máximo de {n} instantáneas por espacio de trabajo.",
         "snapshot": "Imagen",
         "limitReached": "Se ha alcanzado el límite de imágenes máximas.",
         "importingState": "Creando",
@@ -729,6 +730,22 @@
                         "message": "No hay fila anterior"
                     }
                 }
+            },
+            "toast": {
+                "notFound": {
+                    "previous": {
+                        "message": "No hay fila anterior",
+                        "title": "No hay más filas"
+                    },
+                    "next": {
+                        "title": "No hay más filas",
+                        "message": "No hay siguiente fila"
+                    }
+                },
+                "error": {
+                    "title": "Ha ocurrido un error",
+                    "message": "Ocurrió un error al recuperar la fila adyacente"
+                }
             }
         }
     },
@@ -758,5 +775,13 @@
     "gridViewRowsAddContext": {
         "title": "Crear varias filas",
         "choice": "Añade {rowAmountChoice} filas"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "noTable": "Necesitas al menos un campo de enlace a tabla para crear este campo.",
+        "selectThroughFieldLabel": "Selecciona un campo de enlace a la tabla"
+    },
+    "fieldRollupSubForm": {
+        "label": "Función de enrollado",
+        "selectTargetFieldLabel": "Selecciona un campo para enrollar"
     }
 }

@@ -25,7 +25,8 @@
         "dashboard": "Tablero",
         "trash": "Papelera",
         "settings": "Ajustes",
-        "members": "Miembros"
+        "members": "Miembros",
+        "notifications": "Notificaciones"
     },
     "accountForm": {
         "nameLabel": "Tu nombre",
@@ -74,7 +75,7 @@
         "passwordRepeat": "Repita la contraseña"
     },
     "invitationTitle": "Invitación",
-    "invitationMessage": "{invitedBy} te ha invitado a unirte a {group}.",
+    "invitationMessage": "{invitadoPor} te ha invitado a unirte a {espacio de trabajo}.",
     "workspaceForm": {
         "nameLabel": "Nombre"
     },
@@ -162,9 +163,9 @@
         "andMore": "... y {cuenta} más"
     },
     "trashModal": {
-        "emptyTitle": "No se encontraron grupos",
-        "emptyMessage": "No eres miembro de ningún grupo. Las aplicaciones, como las bases de datos, pertenecen a un grupo, por lo que, para crearlas, debe crear un grupo.",
-        "emptyMessageWithoutCreatePermission": "No eres miembro de ningún grupo. Las aplicaciones como las bases de datos pertenecen a un grupo, así que para crearlas tendrás que ser invitado primero a un grupo por un administrador."
+        "emptyTitle": "No se han encontrado espacios de trabajo",
+        "emptyMessage": "No eres miembro de ningún espacio de trabajo. Las aplicaciones como las bases de datos pertenecen a un espacio de trabajo, por lo que para crearlas es necesario crear un espacio de trabajo.",
+        "emptyMessageWithoutCreatePermission": "No eres miembro de ningún espacio de trabajo. Las aplicaciones como las bases de datos pertenecen a un espacio de trabajo, por lo que para crearlas necesitarás que un administrador te invite primero a un espacio de trabajo."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Subir desde una URL",
@@ -261,11 +262,11 @@
         "namePlaceholder": "Introduce tu nombre..."
     },
     "forgotPassword": {
-        "title": "Se te olvidó tu contraseña",
+        "title": "Contraseña olvidada",
         "message": "Por favor, introduzca su dirección de correo electrónico en el formulario. Si encontramos una cuenta, le enviaremos un correo electrónico con un enlace para restablecer su contraseña.",
         "submit": "Enviar enlace",
         "confirmation": "Si su dirección de correo electrónico existe en nuestra base de datos, recibirá un enlace de restablecimiento de contraseña en su dirección de correo electrónico en unos minutos.",
-        "disabled": "Se te olvidó tu contraseña",
+        "disabled": "Contraseña olvidada está desactivada",
         "disabledMessage": "No es posible restablecer la contraseña porque ha sido deshabilitada.",
         "loginText": "¿Ya tienes cuenta y contraseña?"
     },
@@ -456,13 +457,13 @@
                 "name": "Nombre",
                 "teams": "Equipos",
                 "highestRole": "Cargo más alto",
-                "highestRoleHelpText": "El rol más alto que este usuario tiene asignado directamente o desde un equipo, sobre cualquier cosa en este grupo"
+                "highestRoleHelpText": "El rol más alto asignado a este usuario directamente o desde un equipo, sobre cualquier cosa en este espacio de trabajo"
             },
             "actions": {
-                "remove": "Eliminar del grupo",
+                "remove": "Quitar del espacio de trabajo",
                 "copyEmail": "Copiar correo electrónico"
             },
-            "title": "{usuarioCantidad} Miembros en {nombreDelGrupo}",
+            "title": "{cuentaDeUsuario} Miembros en {nombreDelEspacioDeTrabajo}",
             "inviteMember": "Invitar a un miembro"
         },
         "invitesTable": {
@@ -475,10 +476,10 @@
                 "copyEmail": "Copiar correo electrónico",
                 "remove": "Cancelar la invitación"
             },
-            "title": "{invitacionesCantidad} Invitaciones pendientes en {nombreDelGrupo}"
+            "title": "{invitacionesCantidad} Invitaciones pendientes en {nombreDeEspacioDeTrabajo}"
         },
         "membersInviteModal": {
-            "title": "Invitar a miembros del grupo",
+            "title": "Invitar a miembros del espacio de trabajo",
             "errors": {
                 "userAlreadyInWorkspace": {
                     "title": "El usuario ya está en el grupo.",
@@ -486,7 +487,7 @@
                 }
             },
             "submit": "Enviar invitación",
-            "helpIconText": "El rol seleccionado será el rol por defecto de los usuarios en este grupo."
+            "helpIconText": "El rol seleccionado será el rol por defecto de los usuarios en este espacio de trabajo."
         },
         "membersTabTitle": "Miembros",
         "invitesTabTitle": "Invitaciones"
@@ -519,5 +520,111 @@
     },
     "highestPaidRoleField": {
         "billable": "Facturable"
+    },
+    "failedConnectingToast": {
+        "title": "Fallido",
+        "content": "La conexión con el servidor ha fallado. Por favor, actualiza la página.",
+        "action": "Refrescar página"
+    },
+    "userSessionExpiredToast": {
+        "title": "Sesión expirada",
+        "content": "Se ha cerrado la sesión porque tu token de autenticación ha expirado. Vuelva a iniciar sesión."
+    },
+    "authorizationErrorToast": {
+        "action": "Refrescar página",
+        "title": "Error de autorización",
+        "content": "Parece que no tienes permiso de ver este recurso."
+    },
+    "restoreToast": {
+        "restore": "Restaurar {tipo} borrado"
+    },
+    "undoRedoToast": {
+        "undoneText": "La acción está deshecha",
+        "failed": "Fallido",
+        "undoingTitle": "Deshaciendo...",
+        "undoneTitle": "Deshecho",
+        "noMoreUndo": "No más acciones que deshacer",
+        "redoingTitle": "Rehaciendo...",
+        "redoneTitle": "Rehecho",
+        "noMoreRedo": "No más acciones que rehacer",
+        "undoingText": "Deshaciendo tu acción",
+        "skippingUndoDueToError": "Deshacer falló por un error desconocido, omitiéndolo.",
+        "redoingText": "Rehaciendo tu acción",
+        "redoneText": "Acción rehecha",
+        "skippingRedoDueToError": "Rehacer falló por un error desconocido, omitiéndolo."
+    },
+    "PastingToast": {
+        "content": "Preparando tus datos",
+        "title": "Pegando..."
+    },
+    "clearingToast": {
+        "content": "Preparando tus datos",
+        "title": "Borrando..."
+    },
+    "permissionsUpdatedToast": {
+        "action": "Recargar",
+        "title": "Permisos actualizados",
+        "content": "Esto puede afectar a lo que tiene acceso, por favor, vuelve a cargar la página."
+    },
+    "integrationEditForm": {
+        "name": "Nombre de la integración",
+        "namePlaceholder": "Introduce el nombre de la integración..."
+    },
+    "integrationCreateEditModal": {
+        "editTitle": "Editar integración",
+        "createTitle": "Nueva integración",
+        "warningTitle": "Advertencia"
+    },
+    "dropdown": {
+        "empty": "No hay artículos disponibles"
+    },
+    "styleSidePanel": {
+        "paddingBottom": "Acolchado inferior",
+        "paddingTop": "Acolchado superior"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{enviador} ha aceptado su invitación para unirse a {nombreDeEspacioDeTrabajo}"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{enviador} te ha invitado a unirte a {nombreDelEspacioDeTrabajo}"
+    },
+    "notificationPanel": {
+        "clearAll": "Borrar todo",
+        "noNotification": "Te notificaremos las actualizaciones importantes y cada vez que te mencionen en Baserow.",
+        "title": "Notificaciones",
+        "markAllAsRead": "Marcar todo como leído",
+        "noNotificationTitle": "No tienes notificaciones"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "¿Estás seguro de que quieres borrar todas las notificaciones?",
+        "message": "Todas las notificaciones se borrarán permanentemente y no podrás volver a verlas."
+    },
+    "uploadFileDropzone": {
+        "errorTooManyFilesMessage": "Sólo puedes cargar un único archivo",
+        "drop": "Déjalo aquí",
+        "clickOrDrop": "Haz clic o suelta tus archivos aquí",
+        "errorTooManyFilesTitle": "Demasiados archivos",
+        "errorWrongFileTypeTitle": "Tipo de archivo incorrecto",
+        "errorWrongFileTypeMessage": "No se puede cargar un archivo de tipo {tipo}"
+    },
+    "connectingToast": {
+        "content": "Reconectando con el servidor.",
+        "title": "Reconectando"
+    },
+    "copyingToast": {
+        "title": "Copiando...",
+        "content": "Preparando sus datos"
+    },
+    "styleBoxForm": {
+        "paddingError": "El valor debe ser un número entero entre 0 y 200."
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "No se encontraron usuarios"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{enviador} ha rechazado su invitación para unirse a {nombreDeEspacioDeTrabajo}"
+    },
+    "versionUpgradeNotification": {
+        "title": "{versión} ¡ya está aquí! Descubre qué hay de nuevo."
     }
 }

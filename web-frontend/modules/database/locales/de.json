@@ -595,7 +595,8 @@
         "linkError": "Der Link sollte wie folgt aussehen: https://airtable.com/shrxxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "einzelnes Auswahlfeld hinzufügen"
+        "addSelectField": "einzelnes Auswahlfeld hinzufügen",
+        "warningWhenNothingToChooseOrCreate": "Es gibt keine einzelnen Auswahlfelder, aus denen Sie auswählen können, und Sie haben keine Berechtigung, eines zu erstellen."
     },
     "shareViewEnablePasswordModal": {
         "newPasswordTitle": "Geben Sie ein password ein",
@@ -721,6 +722,22 @@
                     "title": "Fehler aufgetreten",
                     "message": "Beim Abrufen der angrenzenden Zeile ist ein Fehler aufgetreten"
                 }
+            },
+            "toast": {
+                "notFound": {
+                    "previous": {
+                        "message": "Es gibt keine vorherige Zeile",
+                        "title": "Keine Zeilen mehr"
+                    },
+                    "next": {
+                        "title": "Keine Zeilen mehr",
+                        "message": "Es gibt keine nächste Zeile"
+                    }
+                },
+                "error": {
+                    "title": "Ein Fehler ist aufgetreten",
+                    "message": "Beim Abrufen der angrenzenden Zeile ist ein Fehler aufgetreten"
+                }
             }
         }
     },
@@ -758,5 +775,13 @@
     "viewOwnershipType": {
         "personal": "Persönlich",
         "collaborative": "Kollaborativ"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "noTable": "Sie benötigen mindestens einen Link zum Tabellenfeld, um dieses Feld zu erstellen.",
+        "selectThroughFieldLabel": "Wählen Sie eine Verknüpfung zum Tabellenfeld aus"
+    },
+    "fieldRollupSubForm": {
+        "selectTargetFieldLabel": "Wählen Sie ein Feld aus, für das ein Rollup durchgeführt werden soll",
+        "label": "Rollup-Funktion"
     }
 }

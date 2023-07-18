@@ -212,7 +212,8 @@
     "memberRolesMembersList": {
         "remove": "Supprimer",
         "teamMembersCount": "{count} membres de l’équipe",
-        "adminHelpText": "Les administrateurs peuvent restreindre les rôles des autres administrateurs."
+        "adminHelpText": "Les administrateurs peuvent restreindre les rôles des autres administrateurs.",
+        "noMembers": "Aucun membre n’a été sélectionné. Utilisez le bouton de sélection pour en ajouter un."
     },
     "roleAssignmentModal": {
         "subjectTypeNameTeams": "équipes",
@@ -271,5 +272,8 @@
     },
     "memberRolesTableContexItem": {
         "label": "Gérer les membres"
+    },
+    "snapshotModalWarning": {
+        "message": "Veuillez noter qu’une sauvegarde inclura toutes les autorisations définies sur l’application et ses tables."
     }
 }

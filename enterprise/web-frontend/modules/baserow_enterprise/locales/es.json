@@ -5,8 +5,8 @@
         "rbac": "RBAC",
         "sso": "SSO",
         "deactivated": "Disponible en versión para empresas",
-        "overflowWarning": "Tienes demasiados usuarios no espectadores y has agotado todas tus plazas de pago. Cambia los usuarios a espectadores en la página de miembros de cada grupo.",
-        "licenseDescription": "Los visores son gratuitos con Baserow empresarial. Si un usuario tiene cualquier otro rol, en cualquier grupo, entonces utilizará un asiento de pago automáticamente."
+        "overflowWarning": "Tienes demasiados usuarios no espectadores y has agotado todas tus plazas de pago. Cambia los usuarios a espectadores en la página de miembros de cada espacio de trabajo.",
+        "licenseDescription": "Los visores son gratuitos con Baserow Enterprise. Si un usuario tiene cualquier otro rol, en cualquier otro espacio de trabajo, entonces utilizará un asiento de pago automáticamente."
     },
     "clientHandler": {
         "cannotDisableAllAuthProvidersTitle": "Último proveedor habilitado",
@@ -18,12 +18,12 @@
     "createTeamModal": {
         "title": "Crear equipo",
         "invalidNameTitle": "Por favor, utilice un nombre diferente",
-        "invalidNameMessage": "Este nombre de equipo ya está en uso en el grupo especificado."
+        "invalidNameMessage": "Este nombre de equipo ya está en uso en el espacio de trabajo especificado."
     },
     "updateTeamModal": {
         "title": "Actualizar {teamName}",
         "invalidNameTitle": "Por favor, utilice un nombre diferente",
-        "invalidNameMessage": "Este nombre de equipo ya está en uso en el grupo especificado."
+        "invalidNameMessage": "Este nombre de equipo ya está en uso en el espacio de trabajo especificado."
     },
     "manageTeamForm": {
         "nameTitle": "Nombre",
@@ -39,7 +39,7 @@
         "remove": "Borrar equipo"
     },
     "teamsTable": {
-        "title": "{teamCount} equipos en {groupName}",
+        "title": "{cuentaEquipos} equipos en {nombreDelEspacioDeTrabajo}",
         "createNew": "Crear equipo",
         "nameColumn": "Nombre",
         "roleHelpText": "Puede anularse con roles en bases de datos y tablas.",
@@ -148,7 +148,7 @@
         },
         "editor": {
             "name": "Editor",
-            "description": "Puede editar completamente los datos pero no configurar aplicaciones o grupos."
+            "description": "Puede editar completamente los datos pero no configurar aplicaciones o espacios de trabajo."
         },
         "commenter": {
             "name": "Comentador",
@@ -160,7 +160,7 @@
         },
         "noRoleLowPriority": {
             "name": "Sin rol",
-            "description": "Obtener el rol de grupo por defecto de sus equipos."
+            "description": "Obtener el rol de espacio de trabajo predeterminado de sus equipos."
         },
         "noAccess": {
             "description": "No se puede acceder a nada.",
@@ -168,7 +168,7 @@
         },
         "admin": {
             "name": "Admin",
-            "description": "Puede completamente configurar y editar grupos y aplicaciones."
+            "description": "Puede configurar y editar completamente los espacios de trabajo y las aplicaciones."
         }
     },
     "memberRolesModal": {
@@ -186,17 +186,17 @@
             "everyoneHasAccess": "Todos en el espacio de trabajo {nombre} pueden acceder a esta base de datos.",
             "onlyYouHaveAccess": "Sólo tú puedes acceder a esta base de datos.",
             "warningTitle": "¡Otros usuarios podrían heredar el acceso!",
-            "warningMessage": "Otros usuarios podrían heredar el acceso a través de sus respectivos roles en el grupo padre.",
-            "headerTooltip": "Los roles de base de datos prevalecerán sobre los roles de grupo."
+            "warningMessage": "Otros usuarios pueden heredar el acceso a través de sus respectivos roles en el espacio de trabajo principal.",
+            "headerTooltip": "Las funciones de la base de datos prevalecerán sobre las funciones del espacio de trabajo."
         },
         "table": {
             "title": "{nombre} tabla",
             "selectMembers": "Seleccionar miembros",
             "onlyYouHaveAccess": "Sólo tú puedes acceder a esta tabla.",
-            "warningMessage": "Otros usuarios podrían heredar el acceso a través de sus respectivos roles en la base de datos o grupo padre.",
+            "warningMessage": "Otros usuarios podrían heredar el acceso a través de sus respectivos roles en la base de datos o espacio de trabajo padre.",
             "everyoneHasAccess": "Todos en el espacio de trabajo {nombre} pueden acceder a esta tabla.",
             "warningTitle": "¡Otros usuarios podrían heredar el acceso!",
-            "headerTooltip": "Los roles de tabla prevalecerán sobre los roles de grupo y de base de datos."
+            "headerTooltip": "Los roles de tabla prevalecerán sobre los roles de espacio de trabajo y base de datos."
         }
     },
     "memberRolesShareToggle": {
@@ -253,7 +253,8 @@
     "memberRolesMembersList": {
         "remove": "Quitar",
         "adminHelpText": "Los administradores pueden restringir las funciones de otros administradores.",
-        "teamMembersCount": "{cuenta} miembros del equipo"
+        "teamMembersCount": "{cuenta} miembros del equipo",
+        "noMembers": "No se ha seleccionado ningún miembro. Utiliza el botón de selección para añadir uno."
     },
     "selectMembersList": {
         "searchPlaceholder": "Buscar miembros...",
@@ -271,5 +272,8 @@
     },
     "loginButton": {
         "continueWith": "Continuar con"
+    },
+    "snapshotModalWarning": {
+        "message": "Ten en cuenta que una instantánea incluirá todos los permisos establecidos en la aplicación y sus tablas."
     }
 }

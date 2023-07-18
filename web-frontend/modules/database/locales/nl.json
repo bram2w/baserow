@@ -595,7 +595,8 @@
         "linkError": "De link moet er als volgt uitzien: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "enkelvoudig keuzeveld toevoegen"
+        "addSelectField": "enkelvoudig keuzeveld toevoegen",
+        "warningWhenNothingToChooseOrCreate": "Er zijn geen enkele selectie velden om uit te kiezen en u hebt geen machtigingen om er een te maken."
     },
     "viewDecorator": {
         "decorator": "Kleur | 1 Kleur | {tellen} Kleuren"
@@ -706,6 +707,22 @@
                     "title": "Fout opgetreden",
                     "message": "Er is een fout opgetreden tijdens het ophalen van de aangrenzende rij"
                 }
+            },
+            "toast": {
+                "notFound": {
+                    "next": {
+                        "title": "Geen rijen meer",
+                        "message": "Er is geen volgende rij"
+                    },
+                    "previous": {
+                        "title": "Geen rijen meer",
+                        "message": "Er is geen vorige rij"
+                    }
+                },
+                "error": {
+                    "title": "Fout opgetreden",
+                    "message": "Er is een fout opgetreden tijdens het ophalen van de aangrenzende rij"
+                }
             }
         }
     },
@@ -758,5 +775,13 @@
     "gridViewRowsAddContext": {
         "title": "Maak meerdere rijen",
         "choice": "Voeg {rijAmountChoice} rijen toe"
+    },
+    "fieldRollupSubForm": {
+        "label": "Rollup functie",
+        "selectTargetFieldLabel": "Selecteer een veld om op te rollen"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "noTable": "Je hebt minstens één link naar tabel nodig om dit veld te creëren.",
+        "selectThroughFieldLabel": "Selecteer een link naar tabel veld"
     }
 }

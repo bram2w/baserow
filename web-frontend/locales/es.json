@@ -31,10 +31,12 @@
         "duplicate": "Duplicar",
         "remove": "Eliminar",
         "login": "Iniciar sesión",
-        "download": "Descargar"
+        "download": "Descargar",
+        "copyToClipboard": "Copiar al portapapeles"
     },
     "adminType": {
-        "settings": "Ajustes"
+        "settings": "Ajustes",
+        "health": "Salud"
     },
     "applicationType": {
         "database": "Base de datos",
@@ -69,7 +71,7 @@
     },
     "permission": {
         "admin": "Admin",
-        "adminDescription": "Puede configurar y editar completamente grupos y aplicaciones.",
+        "adminDescription": "Puede configurar y editar completamente los espacios de trabajo y las aplicaciones.",
         "member": "Miembro",
         "memberDescription": "Puede configurar y editar aplicaciones completamente."
     },
@@ -91,7 +93,9 @@
         "phoneNumber": "Número de teléfono",
         "formula": "Fórmula",
         "lookup": "Buscar",
-        "multipleCollaborators": "Colaboradores"
+        "multipleCollaborators": "Colaboradores",
+        "count": "Cuenta",
+        "rollup": "Enrollable"
     },
     "fieldErrors": {
         "invalidNumber": "Número invalido",
@@ -125,8 +129,10 @@
         "multipleSelect": "Acepta una matriz de enteros mixtos o valores de texto, cada uno de los cuales representa el ID o el valor de la opción de selección elegida. En el caso de un valor de texto, se selecciona la primera opción coincidente.",
         "phoneNumber": "Acepta un número de teléfono que tenga una longitud máxima de 100 caracteres que consista únicamente en dígitos, espacios y los siguientes caracteres: Nx,._+*()#=;/- .",
         "formula": "Un campo de solo lectura definido por una fórmula escrita en el lenguaje de fórmulas de Baserow.",
-        "lookup": "Un campo de solo lectura conectado a un campo de fila de vínculo que devuelve una matriz de valores e ID de fila del campo de búsqueda elegido en la tabla vinculada.",
-        "multipleCollaborators": "Acepta una matriz de objetos donde cada objeto contiene el ID de un usuario."
+        "lookup": "Un campo de sólo lectura conectado a un campo de enlace a tabla que devuelve una matriz de valores e ids de fila del campo de búsqueda elegido en la tabla enlazada.",
+        "multipleCollaborators": "Acepta una matriz de objetos donde cada objeto contiene el ID de un usuario.",
+        "count": "Campo de sólo lectura conectado a un campo de enlace a tabla que devuelve el número de relaciones.",
+        "rollup": "Campo de sólo lectura conectado a un campo vinculado a una tabla que devuelve los valores del campo de búsqueda elegido en la tabla vinculada."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -157,7 +163,12 @@
         "afterToday": "es después de hoy",
         "beforeToday": "es antes de hoy",
         "containsWord": "contiene palabras",
-        "doesntContainWord": "no contiene palabras"
+        "doesntContainWord": "no contiene palabras",
+        "isBeforeOrEqualDate": "es antes o en la misma fecha",
+        "isAfterOrEqualDate": "es después o la misma fecha",
+        "isWithinDays": "está dentro de días",
+        "isWithinWeeks": "es dentro de semanas",
+        "isWithinMonths": "es dentro de meses"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -251,7 +262,7 @@
         "snapshotBeingCreatedDescription": "No es posible crear varias imágenes al mismo tiempo.",
         "snapshotBeingRestoredTitle": "Se está restaurando la imagen",
         "maximumSnapshotsReachedTitle": "Límite de imágenes alcanzado",
-        "maximumSnapshotsReachedDescription": "Se ha alcanzado el número máximo de imágenes de un grupo.",
+        "maximumSnapshotsReachedDescription": "Se ha alcanzado el número máximo de instantáneas en un espacio de trabajo.",
         "snapshotBeingRestoredDescription": "No es posible utilizar las imágenes que se están restaurando en ese momento.",
         "snapshotBeingDeletedTitle": "La imagen se está borrando",
         "snapshotNameNotUniqueTitle": "El nombre de la imagen debe ser único.",
@@ -261,10 +272,12 @@
         "snapshotOperationLimitExceededDescription": "Se ha alcanzado el límite del número de operaciones de imagenes instantáneas en ejecución. Favor de esperar hasta que termine la operación anterior.",
         "disabledPasswordProviderTitle": "La autentificación por contraseña está deshabilitada.",
         "disabledPasswordProviderMessage": "Utiliza otro proveedor de autentificación.",
-        "lastAdminTitle": "No se puede eliminar el último administrador del grupo",
-        "lastAdminMessage": "Un grupo debe tener al menos un administrador.",
+        "lastAdminTitle": "No se puede eliminar el último administrador del espacio de trabajo",
+        "lastAdminMessage": "Un espacio de trabajo debe tener al menos un administrador.",
         "maxLocksPerTransactionExceededTitle": "Problema detectado con PostgreSQL",
-        "maxLocksPerTransactionExceededDescription": "Baserow intentó eliminar permanentemente los elementos de la papelera, pero excedió los bloqueos disponibles especificados en `max_locks_per_transaction`."
+        "maxLocksPerTransactionExceededDescription": "Baserow intentó eliminar permanentemente los elementos de la papelera, pero excedió los bloqueos disponibles especificados en `max_locks_per_transaction`.",
+        "notificationDoesNotExistTitle": "La notificación no existe.",
+        "notificationDoesNotExistDescription": "La acción no se ha podido completar porque lo relacionado ya no existe."
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -327,10 +340,10 @@
         "equalDescription": "Devuelve si sus dos argumentos tienen el mismo valor.",
         "ifDescription": "Si el primer argumento es verdadero, devuelve el segundo argumento; de lo contrario, devuelve el tercero.",
         "toTextDescription": "Convierte la entrada en texto.",
-        "datetimeFormatDescription": "Convierte la fecha en texto dada una forma de formatear la fecha.",
+        "datetimeFormatDescription": "Convierte la fecha en texto dada una forma de formatear la fecha. Siempre está en UTC. Utilice `datetime_format_tz` para especificar una zona horaria.",
         "toNumberDescription": "Convierte la entrada en un número si es posible.",
         "fieldDescription": "Devuelve el campo nombrado por el argumento de texto único.",
-        "lookupDescription": "Busca los valores de un campo en otra tabla para filas en un campo de fila de enlace. El primer argumento debe ser el nombre de un campo de fila de vínculo en la tabla actual y el segundo debe ser el nombre de un campo en la tabla vinculada.",
+        "lookupDescription": "Busca los valores de un campo de otra tabla para las filas de un campo vinculado a la tabla. El primer argumento debe ser el nombre de un campo de enlace a tabla en la tabla actual y el segundo debe ser el nombre de un campo en la tabla enlazada.",
         "isBlankDescription": "Devuelve verdadero si el argumento está vacío o no se usa; de lo contrario, devuelve falso.",
         "tDescription": "Devuelve el valor de los argumentos si es texto, pero de lo contrario ''.",
         "notDescription": "Devuelve falso si el argumento es verdadero y verdadero si el argumento es falso.",
@@ -338,7 +351,7 @@
         "greaterThanOrEqualDescription": "Devuelve verdadero si el primer argumento es mayor o igual que el segundo; de lo contrario, devuelve falso.",
         "lessThanDescription": "Devuelve verdadero si el primer argumento es menor que el segundo, de lo contrario, es falso.",
         "lessThanOrEqualDescription": "Devuelve verdadero si el primer argumento es menor o igual que el segundo; de lo contrario, devuelve falso.",
-        "toDateDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento.",
+        "toDateDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento. Siempre está en UTC. Utilice `to_date_tz` para especificar una zona horaria.",
         "dayDescription": "Devuelve el día del mes como un número entre 1 y 31 del argumento.",
         "dateDiffDescription": "Dada una unidad de fecha para medir como primer argumento ('año', 'mes', 'semana', 'día', 'hora', 'minuto', 'segundos') calcula y devuelve el número de unidades del segundo argumento al tercero.",
         "andDescription": "Devuelve el lógico del primer y segundo argumento, por lo que si ambos son verdaderos entonces el resultado es verdadero, de lo contrario es falso.",
@@ -399,7 +412,8 @@
         "nowDescription": "Devuelve la fecha y hora actuales en utc.",
         "todayDescription": "Devuelve la fecha actual en utc.",
         "whenNanDescription": "Devuelve el primer argumento si no es 'NaN'. Devuelve el segundo argumento si el primer argumento es 'NaN'",
-        "toDateTzDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento y la zona horaria proporcionada como tercer argumento."
+        "toDateTzDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento y la zona horaria proporcionada como tercer argumento.",
+        "datetimeFormatTzDescription": "Convierte la fecha en texto dada una forma de formatear la fecha en la zona horaria especificada."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"
@@ -407,5 +421,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "{Nombre} inválido",
         "invalidUrlEnvVarDescription": "La variable de entorno {name} se ha establecido en un valor no válido. El administrador de su sitio debe cambiar {name} por una URL válida que empiece por http:// o https:// y luego reiniciar Baserow para solucionar este error."
+    },
+    "health": {
+        "description": "Estas comprobaciones muestran el estado actual de tu instalación Baserow.",
+        "title": "Chequeos de salud de Baserow"
+    },
+    "emailTester": {
+        "invalidTargetEmail": "Correo electrónico inválido",
+        "title": "Comprobador de correo electrónico",
+        "targetEmailLabel": "Correo electrónico de destino",
+        "submit": "Enviar correo electrónico de prueba",
+        "success": "Correo electrónico de prueba enviado correctamente",
+        "configLink": "Ayuda para la configuración del correo electrónico"
     }
 }
