@@ -1,5 +1,38 @@
 # Changelog
 
+## Released 1.19.0
+
+### New features
+* After field updates, deletions and creations Baserow now automatically vacuums the table in a background task to improve performance and reduce table disk size. This can be disabled by setting the new env var BASEROW_AUTO_VACUUM=false. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
+* Rework Baserow row search to be much faster, work for all field types and instead search for words instead of exact matches including punctuation. Please note this new full text search mode can increase the disk space used by your Baserow tables upto 3x, to prevent this you can disable the new search and stick with the legacy slower but lower disk space usage search by setting the new env var BASEROW_USE_PG_FULLTEXT_SEARCH=false. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
+* Add new filter `is after days ago` for filtering records within a specified number of past days. [#1721](https://gitlab.com/baserow/baserow/-/issues/1721)
+* Include the field name and ID in the grid view heading contexts. [#1726](https://gitlab.com/baserow/baserow/-/issues/1726)
+* allow viewers commenters and editors to make personal views [#1737](https://gitlab.com/baserow/baserow/-/issues/1737)
+* Mention other users in rows comments. [#1761](https://gitlab.com/baserow/baserow/-/issues/1761)
+* Create a notification panel to show notifications [#1775](https://gitlab.com/baserow/baserow/-/issues/1775)
+* Added the possibility to sort by lookup field and formula field resulting in a lookup for arrays of texts, numbers, booleans, and single selects [#1786](https://gitlab.com/baserow/baserow/-/issues/1786)
+* Add options to edit and delete row comments. [#560](https://gitlab.com/baserow/baserow/-/issues/560)
+* Allow line breaks in form view descriptions [#955](https://gitlab.com/baserow/baserow/-/issues/955)
+* Introduced the yellow, purple, brown and pink colors.
+* Added "Advertising Campaigns", "Company Advertising Campaigns", "Furniture, Fixtures, and Equipment Manager", "Household Chores", "Non-emergency Call Center", "Tourism Agency Manager", "Venture Capital Investments", "Copy Management", "Performance Reviews" and "Personal Finance Manager" template.
+
+### Bug fixes
+* Automatically add https protcol when it is missing from links [#1237](https://gitlab.com/baserow/baserow/-/issues/1237)
+* Add prettier checks for scss files when linting. [#1796](https://gitlab.com/baserow/baserow/-/issues/1796)
+* fix inviting member whilst on invite page causing crash [#1848](https://gitlab.com/baserow/baserow/-/issues/1848)
+* Max and min can be used on date fields [#684](https://gitlab.com/baserow/baserow/-/issues/684)
+
+### Refactors
+* Move formula language into its own module [#1768](https://gitlab.com/baserow/baserow/-/issues/1768)
+* Fix last modified not matching created on when making new rows [#1779](https://gitlab.com/baserow/baserow/-/issues/1779)
+
+### Breaking API changes
+* Baserows default max per table field limit now defaults to 600 due to full text search and undo/redo needing to use the rest of the postgres 1600 column limit. This can be reverted using the new BASEROW_MAX_FIELD_LIMIT env var. If you want to have more than 600 fields we also recommend you turn off full text search as it needs an extra column per field to work, this can be done by setting BASEROW_USE_PG_FULLTEXT_SEARCH to false. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
+* Before when searching for a number say 1, it would match the row with id 1, 10, 11, 12 etc. Now it will only match rows with that exact id, so searching for 1 will match the row with id 1 and not the row with id 10 etc. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
+* By default in the UI search now uses full text mode which ignores punctuation and behaves differently than the previous exact matching. For now the API defaults to search_mode=compat, however in the coming months we will switch the API default to the new mode instead. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
+* Creating and updating row comments using the API endpoint '/api/row_comments' now requires a valid ProseMirror JSON document. See 'baserow.core.prosemirror.schema' for details. [#1761](https://gitlab.com/baserow/baserow/-/issues/1761)
+
+
 ## Released 1.18.0
 
 ### New features
