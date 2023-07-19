@@ -78,7 +78,6 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
 )
 from baserow.contrib.database.models import Table
-from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.handler import CoreHandler
@@ -1897,17 +1896,19 @@ class LinkRowFieldType(FieldType):
                 and to_link_row_table_has_related_field
                 and from_field.link_row_table != to_field.link_row_table
             ):
-                # We are changing the related fields table so we need to invalidate
-                # its old model cache as this will not happen automatically.
-                invalidate_table_in_model_cache(from_field.link_row_table_id)
-
                 from_field.link_row_related_field.name = related_field_name
-                from_field.link_row_related_field.table = to_field.link_row_table
                 from_field.link_row_related_field.link_row_table = to_field.table
                 from_field.link_row_related_field.order = (
                     self.model_class.get_last_order(to_field.link_row_table)
                 )
-                from_field.link_row_related_field.save()
+                FieldHandler().move_field_between_tables(
+                    from_field.link_row_related_field, to_field.link_row_table
+                )
+                # We've changed the link_row_related_field on the from_field model
+                # instance, make sure we also update the to_field instance to have
+                # this updated instance so if it is used later it isn't stale and
+                # pointing at the wrong table.
+                to_field.link_row_related_field = from_field.link_row_related_field
 
     def after_update(
         self,

@@ -60,6 +60,7 @@ from baserow.core.utils import (
 )
 
 from ..search.handler import SearchHandler
+from ..table.cache import invalidate_table_in_model_cache
 from .backup_handler import FieldDataBackupHandler
 from .dependencies.handler import FieldDependencyHandler
 from .dependencies.update_collector import FieldUpdateCollector
@@ -1018,6 +1019,34 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 field_restored.send(self, field=field, user=None, related_fields=[])
             else:
                 raise e
+
+    def move_field_between_tables(self, field_to_move, target_table):
+        """
+        Currently Link Row fields can have their Field instance moved between tables
+        without the PK of the Field changing. This occurs when editing the link row
+        field and pointing it at a new table when it was pointing at a different table
+        to begin with.
+
+        This method mainly exists to make it clearer to anyone reading the field handler
+        that sometimes Field instances can literally jump tables, and any other systems
+        working with fields need to handle this fact.
+        """
+
+        from .field_types import LinkRowFieldType
+
+        field_type = field_type_registry.get_by_model(field_to_move)
+        if field_type.type != LinkRowFieldType.type:
+            raise NotImplementedError(
+                "Can only currently move link row fields between tables."
+            )
+
+        original_table_id = field_to_move.table_id
+        field_to_move.table = target_table
+        field_to_move.save()
+        # We are changing the related fields table so we need to invalidate
+        # its old model cache as this will not happen automatically.
+        invalidate_table_in_model_cache(original_table_id)
+        SearchHandler.after_field_moved_between_tables(field_to_move, original_table_id)
 
     def get_unique_row_values(
         self, field: Field, limit: int, split_comma_separated: bool = False

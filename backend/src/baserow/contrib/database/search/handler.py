@@ -179,21 +179,25 @@ class SearchHandler(
         """
 
         if field.tsvector_column_created:
-            with safe_django_schema_editor(atomic=False) as schema_editor:
-                to_model = field.table.get_model(
-                    fields=[field], field_ids=[], add_dependencies=False
-                )
-                tsv_model_field = to_model._meta.get_field(field.tsv_db_column)
-                schema_editor.add_field(to_model, tsv_model_field)
-                schema_editor.add_index(
-                    to_model,
-                    GinIndex(
-                        fields=[field.tsv_db_column],
-                        name=field.tsv_index_name,
-                    ),
-                )
+            cls._create_tsv_column(field)
             cls.entire_field_values_changed_or_created(
                 field.table, updated_fields=[field]
+            )
+
+    @classmethod
+    def _create_tsv_column(cls, field):
+        with safe_django_schema_editor(atomic=False) as schema_editor:
+            to_model = field.table.get_model(
+                fields=[field], field_ids=[], add_dependencies=False
+            )
+            tsv_model_field = to_model._meta.get_field(field.tsv_db_column)
+            schema_editor.add_field(to_model, tsv_model_field)
+            schema_editor.add_index(
+                to_model,
+                GinIndex(
+                    fields=[field.tsv_db_column],
+                    name=field.tsv_index_name,
+                ),
             )
 
     @classmethod
@@ -540,3 +544,13 @@ class SearchHandler(
             raise e
         traceback.print_exc()
         exception_capturer(e)
+
+    @classmethod
+    def after_field_moved_between_tables(
+        cls, moved_field: "Field", original_table_id: int
+    ):
+        if moved_field.tsvector_column_created:
+            cls._drop_column_if_table_exists(
+                f"database_table_{original_table_id}", moved_field.tsv_db_column
+            )
+            cls._create_tsv_column(moved_field)
