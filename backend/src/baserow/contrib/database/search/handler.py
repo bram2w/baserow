@@ -169,20 +169,19 @@ class SearchHandler(
             return escaped_query
 
     @classmethod
-    def after_field_created(
-        cls,
-        field: "Field",
-    ):
+    def after_field_created(cls, field: "Field", skip_search_updates: bool = False):
         """
         :param field: The Baserow field which was created in this table.
+        :param skip_search_updates: Whether to update the fields after.
         :return: None
         """
 
         if field.tsvector_column_created:
             cls._create_tsv_column(field)
-            cls.entire_field_values_changed_or_created(
-                field.table, updated_fields=[field]
-            )
+            if not skip_search_updates:
+                cls.entire_field_values_changed_or_created(
+                    field.table, updated_fields=[field]
+                )
 
     @classmethod
     def _create_tsv_column(cls, field):

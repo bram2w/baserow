@@ -167,6 +167,10 @@ class PathBasedUpdateStatementCollector:
             )
 
             qs = qs.filter(filter_for_rows_connected_to_starting_row)
+        if starting_row_ids is None:
+            # We aren't updating individual rows but instead entire columns, so don't
+            # set this per row attribute.
+            self.update_statements.pop(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, None)
         qs.update(**self.update_statements)
 
     def _include_rows_connected_to_deleted_m2m_relationships(
@@ -331,9 +335,17 @@ class FieldUpdateCollector:
         if not skip_search_updates:
             for table in self._updated_tables.values():
                 if not self._starting_table or table.id != self._starting_table.id:
-                    SearchHandler.field_value_updated_or_created(
-                        table,
-                    )
+                    if self._starting_row_ids is not None:
+                        # The cascade was only for some specific rows and not the
+                        # entire field
+                        SearchHandler.field_value_updated_or_created(
+                            table,
+                        )
+                    else:
+                        # The cascade was for the entire field
+                        SearchHandler.entire_field_values_changed_or_created(
+                            table, self._for_table(table)
+                        )
 
         return self._for_table(self._starting_table)
 

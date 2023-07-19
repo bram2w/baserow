@@ -31,7 +31,28 @@ def test_can_add_fields_with_update_statements_in_same_starting_table(
 
 
 @pytest.mark.django_db
-def test_updates_set_them_to_need_background_updates(
+def test_updates_set_them_to_need_background_updates_when_editting_rows(
+    api_client, data_fixture, django_assert_num_queries
+):
+    field = data_fixture.create_text_field(name="field")
+    model = field.table.get_model(attribute_names=True)
+    row = model.objects.create(field="starting value")
+    model.objects.update(needs_background_update=False)
+    row.refresh_from_db()
+    assert not row.needs_background_update
+
+    update_collector = FieldUpdateCollector(field.table, starting_row_ids=[row.id])
+    field_cache = FieldCache()
+    update_collector.add_field_with_pending_update_statement(field, Value("other"))
+    updated_fields = update_collector.apply_updates_and_get_updated_fields(field_cache)
+
+    assert updated_fields == [field]
+    row.refresh_from_db()
+    assert row.needs_background_update
+
+
+@pytest.mark.django_db
+def test_updates_set_them_to_not_need_background_update_when_not_edditing_rows(
     api_client, data_fixture, django_assert_num_queries
 ):
     field = data_fixture.create_text_field(name="field")
@@ -48,7 +69,7 @@ def test_updates_set_them_to_need_background_updates(
 
     assert updated_fields == [field]
     row.refresh_from_db()
-    assert row.needs_background_update
+    assert not row.needs_background_update
 
 
 @pytest.mark.django_db

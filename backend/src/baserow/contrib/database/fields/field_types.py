@@ -1807,6 +1807,7 @@ class LinkRowFieldType(FieldType):
             link_row_table=field.table,
             link_row_related_field=field,
             link_row_relation_id=field.link_row_relation_id,
+            skip_search_updates=True,
         )
         field.save()
 
@@ -1889,6 +1890,7 @@ class LinkRowFieldType(FieldType):
                     link_row_related_field=to_field,
                     link_row_relation_id=to_field.link_row_relation_id,
                     has_related_field=True,
+                    skip_search_updates=True,
                 )
                 to_field.save()
             elif (
@@ -1945,6 +1947,7 @@ class LinkRowFieldType(FieldType):
                 link_row_table=to_field.table,
                 link_row_related_field=to_field,
                 link_row_relation_id=to_field.link_row_relation_id,
+                skip_search_updates=True,
             )
             to_field.save()
 
