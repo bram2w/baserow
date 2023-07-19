@@ -456,7 +456,7 @@ class TableModelQuerySet(models.QuerySet):
 class TableModelTrashAndObjectsManager(models.Manager):
     def get_queryset(self):
         qs = TableModelQuerySet(self.model, using=self._db)
-        for field in self.model.get_fields_with_tsv():
+        for field in self.model.get_fields_with_search_index(include_trash=True):
             try:
                 qs = qs.defer(field.tsv_db_column)
             except DjangoFieldDoesNotExist:
@@ -554,20 +554,16 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         ]
 
     @classmethod
-    def get_fields_with_search_index(cls) -> List[Field]:
+    def get_fields_with_search_index(cls, include_trash=False) -> List[Field]:
         """
         Returns a list of fields which do have a tsvector column.
         """
 
-        return [field for field in cls.get_fields() if field.tsvector_column_created]
-
-    @classmethod
-    def get_fields_with_tsv(cls) -> List[Field]:
-        """
-        Returns a list of fields that have a tsv column.
-        """
-
-        return [field for field in cls.get_fields() if field.tsvector_column_created]
+        return [
+            field
+            for field in cls.get_fields(include_trash)
+            if field.tsvector_column_created
+        ]
 
     @classmethod
     def get_searchable_fields(
@@ -590,8 +586,8 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
                 yield field
 
     @classmethod
-    def get_fields(cls):
-        return [o["field"] for o in cls.get_field_objects()]
+    def get_fields(cls, include_trash=False):
+        return [o["field"] for o in cls.get_field_objects(include_trash)]
 
     class Meta:
         abstract = True
