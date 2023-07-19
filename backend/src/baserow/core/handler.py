@@ -72,7 +72,7 @@ from .operations import (
     UpdateWorkspaceUserOperationType,
 )
 from .registries import (
-    BaserowImportExportMode,
+    ImportExportConfig,
     application_type_registry,
     object_scope_type_registry,
     operation_type_registry,
@@ -88,6 +88,9 @@ from .signals import (
     before_workspace_user_updated,
     workspace_created,
     workspace_deleted,
+    workspace_invitation_accepted,
+    workspace_invitation_created,
+    workspace_invitation_rejected,
     workspace_updated,
     workspace_user_added,
     workspace_user_deleted,
@@ -1024,6 +1027,15 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             },
         )
 
+        try:
+            invited_user = User.objects.get(email=invitation.email)
+        except User.DoesNotExist:
+            invited_user = None
+
+        workspace_invitation_created.send(
+            sender=self, invitation=invitation, invited_user=invited_user
+        )
+
         self.send_workspace_invitation_email(invitation, base_url)
 
         return invitation
@@ -1101,6 +1113,10 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 "user."
             )
 
+        workspace_invitation_rejected.send(
+            sender=self, invitation=invitation, user=user
+        )
+
         invitation.delete()
 
     def add_user_to_workspace(
@@ -1165,6 +1181,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             invitation.workspace, user, permissions=invitation.permissions
         )
 
+        workspace_invitation_accepted.send(
+            sender=self, invitation=invitation, user=user
+        )
         invitation.delete()
 
         return workspace_user
@@ -1355,11 +1374,16 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         progress = ChildProgressBuilder.build(progress_builder, child_total=100)
         progress.increment(by=start_progress)
 
+        duplicate_import_export_config = ImportExportConfig(
+            include_permission_data=True, reduce_disk_space_usage=False
+        )
         # export the application
         specific_application = application.specific
         application_type = application_type_registry.get_by_model(specific_application)
         try:
-            serialized = application_type.export_serialized(specific_application)
+            serialized = application_type.export_serialized(
+                specific_application, duplicate_import_export_config
+            )
         except OperationalError as e:
             # Detect if this `OperationalError` is due to us exceeding the
             # lock count in `max_locks_per_transaction`. If it is, we'll
@@ -1382,6 +1406,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         new_application_clone = application_type.import_serialized(
             workspace,
             serialized,
+            duplicate_import_export_config,
             id_mapping,
             progress_builder=progress.create_child_builder(
                 represents_progress=import_progress
@@ -1478,10 +1503,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         workspace,
         files_buffer,
+        import_export_config: ImportExportConfig,
         storage=None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_DIFF_WORKSPACE_NEW_PK,
     ):
         """
         Exports the applications of a workspace to a list. They can later be imported
@@ -1498,9 +1521,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :type files_buffer: IOBase
         :param storage: The storage where the files can be loaded from.
         :type storage: Storage or None
-        :param baserow_import_export_mode: defines which Baserow import/export mode to
-            use, defaults to `TARGETING_DIFF_WORKSPACE_NEW_PK`.
-        :type baserow_import_export_mode: enum
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
         :return: A list containing the exported applications.
         :rtype: list
         """
@@ -1516,7 +1538,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 application_type = application_type_registry.get_by_model(application)
                 with application_type.export_safe_transaction_context(application):
                     exported_application = application_type.export_serialized(
-                        application, files_zip, storage, baserow_import_export_mode
+                        application, import_export_config, files_zip, storage
                     )
                 exported_applications.append(exported_application)
 
@@ -1527,11 +1549,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         workspace: Workspace,
         exported_applications: List[Dict[str, Any]],
         files_buffer: IO[bytes],
+        import_export_config: ImportExportConfig,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_DIFF_WORKSPACE_NEW_PK,
     ) -> Tuple[List[Application], Dict[str, Any]]:
         """
         Imports multiple exported applications into the given workspace. It is
@@ -1547,9 +1567,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param storage: The storage where the files can be copied to.
         :param progress_builder: If provided will be used to build a child progress bar
             and report on this methods progress to the parent of the progress_builder.
-        :param baserow_import_export_mode: defines which Baserow import/export mode to
-            use, defaults to `TARGETING_DIFF_WORKSPACE_NEW_PK`.
-        :type baserow_import_export_mode: enum
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
         :return: The newly created applications based on the import and a dict
             containing a mapping of old ids to new ids.
         """
@@ -1570,13 +1589,13 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 imported_application = application_type.import_serialized(
                     workspace,
                     application,
+                    import_export_config,
                     id_mapping,
                     files_zip,
                     storage,
                     progress_builder=progress.create_child_builder(
                         represents_progress=1000
                     ),
-                    baserow_import_export_mode=baserow_import_export_mode,
                 )
                 imported_application.order = next_application_order_value
                 next_application_order_value += 1
@@ -1644,6 +1663,13 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
         installed_categories = list(TemplateCategory.objects.all())
 
+        sync_templates_import_export_config = ImportExportConfig(
+            include_permission_data=False,
+            # Without reducing disk space usage Baserow after first time install
+            # takes up over 1GB of disk space.
+            reduce_disk_space_usage=True,
+        )
+
         # Loop over the JSON template files in the directory to see which database
         # templates need to be created or updated.
         templates = list(
@@ -1701,6 +1727,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                     workspace,
                     parsed_json["export"],
                     files_buffer=files_buffer,
+                    import_export_config=sync_templates_import_export_config,
                     storage=storage,
                 )
 
@@ -1820,6 +1847,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             workspace,
             parsed_json["export"],
             files_buffer=files_buffer,
+            import_export_config=ImportExportConfig(
+                include_permission_data=False, reduce_disk_space_usage=False
+            ),
             storage=storage,
             progress_builder=progress_builder,
         )

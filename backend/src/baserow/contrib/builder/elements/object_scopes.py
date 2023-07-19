@@ -10,7 +10,6 @@ from baserow.core.object_scopes import (
     WorkspaceObjectScopeType,
 )
 from baserow.core.registries import ObjectScopeType, object_scope_type_registry
-from baserow.core.types import ContextObject
 
 
 class BuilderElementObjectScopeType(ObjectScopeType):
@@ -19,9 +18,6 @@ class BuilderElementObjectScopeType(ObjectScopeType):
 
     def get_parent_scope(self) -> Optional["ObjectScopeType"]:
         return object_scope_type_registry.get("builder_page")
-
-    def get_parent(self, context: ContextObject) -> Optional[ContextObject]:
-        return context.page
 
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related(
@@ -40,5 +36,8 @@ class BuilderElementObjectScopeType(ObjectScopeType):
 
         if scope_type.type == BuilderPageObjectScopeType.type:
             return Q(page__in=[s.id for s in scopes])
+
+        if scope_type.type == self.type:
+            return Q(id__in=[s.id for s in scopes])
 
         raise TypeError("The given type is not handled.")

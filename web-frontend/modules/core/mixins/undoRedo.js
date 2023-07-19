@@ -10,16 +10,16 @@ export default {
     }),
   },
   methods: {
-    async undo(showLoadingNotification = true) {
-      await this.action('undo', showLoadingNotification)
+    async undo(showLoadingToast = true) {
+      await this.action('undo', showLoadingToast)
     },
-    async redo(showLoadingNotification = true) {
-      await this.action('redo', showLoadingNotification)
+    async redo(showLoadingToast = true) {
+      await this.action('redo', showLoadingToast)
     },
-    async action(name, showLoadingNotification = true) {
+    async action(name, showLoadingToast = true) {
       try {
         await this.$store.dispatch(`undoRedo/${name}`, {
-          showLoadingNotification,
+          showLoadingToast,
         })
       } catch (e) {
         notifyIf(e)

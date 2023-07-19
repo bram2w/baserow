@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Dict, Optional, Type, TypeVar
 
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -29,7 +29,18 @@ class ElementType(
 
     SerializedDict: Type[ElementDictSubClass]
 
-    def prepare_value_for_db(self, values):
+    def prepare_value_for_db(self, values: Dict, instance: Optional[Element] = None):
+        """
+        This function allows you to hook into the moment an element is created or
+        updated. If the element is updated `instance` will be defined, and you can use
+        `instance` to extract any context data that might be required for the
+        implementation of this hook.
+
+        :param values: The values that are being updated
+        :param instance: (optional) The existing instance that is being updated
+        :return:
+        """
+
         return values
 
     def export_serialized(
@@ -47,7 +58,12 @@ class ElementType(
         other_properties = {key: getattr(element, key) for key in self.allowed_fields}
 
         serialized = self.SerializedDict(
-            id=element.id, type=self.type, order=element.order, **other_properties
+            id=element.id,
+            type=self.type,
+            order=element.order,
+            style_padding_top=element.style_padding_top,
+            style_padding_bottom=element.style_padding_bottom,
+            **other_properties
         )
 
         return serialized

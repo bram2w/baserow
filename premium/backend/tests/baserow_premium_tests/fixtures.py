@@ -1,4 +1,5 @@
 from baserow_premium.license.models import License, LicenseUser
+from baserow_premium.row_comments.models import RowComment
 from baserow_premium.views.models import (
     CalendarView,
     CalendarViewFieldOptions,
@@ -7,6 +8,8 @@ from baserow_premium.views.models import (
 )
 
 from baserow.contrib.database.fields.models import Field
+from baserow.core.prosemirror.schema import schema
+from baserow.core.prosemirror.utils import prosemirror_doc_from_plain_text
 
 VALID_ONE_SEAT_LICENSE = (
     # id: "1", instance_id: "1"
@@ -130,3 +133,29 @@ class PremiumFixtures:
         return CalendarViewFieldOptions.objects.create(
             calendar_view=calendar_view, field=field, **kwargs
         )
+
+    def create_row_comment(self, user, row, comment):
+        return RowComment.objects.create(
+            user=user, table=row.get_parent(), row_id=row.id, comment=comment
+        )
+
+    def create_comment_message_from_plain_text(self, plain_text):
+        return prosemirror_doc_from_plain_text(plain_text)
+
+    def create_comment_message_with_mentions(self, mentions):
+        return schema.node(
+            "doc",
+            {},
+            [
+                schema.node(
+                    "paragraph",
+                    {},
+                    [
+                        schema.node(
+                            "mention", {"id": mention.id, "label": mention.first_name}
+                        )
+                        for mention in mentions
+                    ],
+                )
+            ],
+        ).to_json()

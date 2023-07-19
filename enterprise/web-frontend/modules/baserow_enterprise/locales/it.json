@@ -201,7 +201,8 @@
     "memberRolesMembersList": {
         "teamMembersCount": "{count} membri del team",
         "remove": "Rimuovi",
-        "adminHelpText": "Gli amministratore possono modificare i permessi di altri amministratori."
+        "adminHelpText": "Gli amministratore possono modificare i permessi di altri amministratori.",
+        "noMembers": "Seleziona almeno un utente con l'apposito pulsante."
     },
     "selectSubjectsListFooter": {
         "invite": "Invita {count} {type}",
@@ -271,5 +272,8 @@
     },
     "userTeamsField": {
         "no_records": "Nessun team"
+    },
+    "snapshotModalWarning": {
+        "message": "Ricorda che gli snapshots includeranno tutti i permessi impostati a livello di applicazione e tabelle."
     }
 }

@@ -28,6 +28,7 @@ from baserow.api.schemas import (
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
+from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
@@ -103,6 +104,7 @@ from baserow.core.db import specific_iterator
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
 
+from ..constants import SEARCH_MODE_API_PARAM
 from .errors import (
     ERROR_CANNOT_SHARE_VIEW_TYPE,
     ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
@@ -1657,6 +1659,14 @@ class PublicViewLinkRowFieldLookupView(APIView):
                 required=True,
                 description="The field id of the link row field.",
             ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="If provided only rows with data that matches the search "
+                "query are going to be returned.",
+            ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table views"],
         operation_id="database_table_public_view_link_row_field_lookup",
@@ -1683,7 +1693,8 @@ class PublicViewLinkRowFieldLookupView(APIView):
             NoAuthorizationToPubliclySharedView: ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
         }
     )
-    def get(self, request: Request, slug: str, field_id: int) -> Response:
+    @validate_query_parameters(SearchQueryParamSerializer, return_validated=True)
+    def get(self, request: Request, slug: str, field_id: int, query_params) -> Response:
         handler = ViewHandler()
         view = handler.get_public_view_by_slug(
             request.user,
@@ -1705,7 +1716,8 @@ class PublicViewLinkRowFieldLookupView(APIView):
         except ObjectDoesNotExist as exc:
             raise FieldDoesNotExist("The view field option does not exist.") from exc
 
-        search = request.GET.get("search")
+        search = query_params.get("search")
+        search_mode = query_params.get("search_mode")
         link_row_field = field_option.field.specific
         table = link_row_field.link_row_table
         primary_field = table.field_set.filter(primary=True).first()
@@ -1732,7 +1744,7 @@ class PublicViewLinkRowFieldLookupView(APIView):
             queryset = queryset.filter(id__in=view_queryset)
 
         if search:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)

@@ -76,6 +76,7 @@
   @extend %ellipsis;
 
   min-width: 0;
+  line-height: 22px;
   color: $color-primary-900;
 }
 
@@ -230,4 +231,14 @@
     width: 18px;
     overflow: hidden;
   }
+}
+
+.sidebar__unread-notifications-icon {
+  position: absolute;
+  top: 12px;
+  right: 32px;
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: $color-primary-500;
 }

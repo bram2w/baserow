@@ -149,7 +149,10 @@ x-backend-variables: &backend-variables
   BASEROW_CACHALOT_UNCACHABLE_TABLES:
   BASEROW_CACHALOT_TIMEOUT:
   BASEROW_AUTO_INDEX_VIEW_ENABLED:
+  BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED:
   BASEROW_DISABLE_LOCKED_MIGRATIONS:
+  BASEROW_USE_PG_FULLTEXT_SEARCH:
+  BASEROW_AUTO_VACUUM:
 
 services:
   # A caddy reverse proxy sitting in-front of all the services. Responsible for routing
@@ -175,7 +178,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.18.0
+    image: baserow/backend:1.19.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -188,7 +191,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.18.0
+    image: baserow/web-frontend:1.19.0
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -208,13 +211,14 @@ services:
       BASEROW_ENABLE_OTEL:
       BASEROW_DEPLOYMENT_ENV:
       BASEROW_OSS_ONLY:
+      BASEROW_USE_PG_FULLTEXT_SEARCH:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.18.0
+    image: baserow/backend:1.19.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -231,7 +235,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.18.0
+    image: baserow/backend:1.19.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -248,7 +252,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.18.0
+    image: baserow/backend:1.19.0
     restart: unless-stopped
     command: celery-beat
     environment:

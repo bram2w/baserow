@@ -8,11 +8,18 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import allowed_includes, map_exceptions, validate_body
+from baserow.api.decorators import (
+    allowed_includes,
+    map_exceptions,
+    validate_body,
+    validate_query_parameters,
+)
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
+from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.serializers import get_example_pagination_serializer_class
+from baserow.contrib.database.api.constants import SEARCH_MODE_API_PARAM
 from baserow.contrib.database.api.fields.errors import (
     ERROR_FIELD_DOES_NOT_EXIST,
     ERROR_FIELD_NOT_IN_TABLE,
@@ -180,6 +187,7 @@ class GridViewView(APIView):
                     "response. "
                 ),
             ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table grid view"],
         operation_id="list_database_table_grid_view_rows",
@@ -227,7 +235,8 @@ class GridViewView(APIView):
         }
     )
     @allowed_includes("field_options", "row_metadata")
-    def get(self, request, view_id, field_options, row_metadata):
+    @validate_query_parameters(SearchQueryParamSerializer, return_validated=True)
+    def get(self, request, view_id, field_options, row_metadata, query_params):
         """
         Lists all the rows of a grid view, paginated either by a page or offset/limit.
         If the limit get parameter is provided the limit/offset pagination will be used
@@ -237,7 +246,6 @@ class GridViewView(APIView):
         `field_options` are provided in the include GET parameter.
         """
 
-        search = request.GET.get("search")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
 
@@ -263,7 +271,11 @@ class GridViewView(APIView):
         )
 
         model = view.table.get_model()
-        queryset = view_handler.get_queryset(view, search, model)
+        queryset = view_handler.get_queryset(
+            view,
+            search=query_params.get("search"),
+            search_mode=query_params.get("search_mode"),
+        )
 
         if "count" in request.GET:
             return Response({"count": queryset.count()})
@@ -297,7 +309,13 @@ class GridViewView(APIView):
             )
             response.data.update(row_metadata=row_metadata)
 
-        view_loaded.send(sender=self, view=view, table_model=model, user=request.user)
+        view_loaded.send(
+            sender=self,
+            table=view.table,
+            view=view,
+            table_model=model,
+            user=request.user,
+        )
         return response
 
     @extend_schema(
@@ -402,6 +420,7 @@ class GridViewFieldAggregationsView(APIView):
                     "returned with the result."
                 ),
             ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table grid view"],
         operation_id="get_database_table_grid_view_field_aggregations",
@@ -432,7 +451,8 @@ class GridViewFieldAggregationsView(APIView):
         }
     )
     @allowed_includes("total")
-    def get(self, request, view_id, total):
+    @validate_query_parameters(SearchQueryParamSerializer, return_validated=True)
+    def get(self, request, view_id, total, query_params):
         """
         Returns the aggregation values for the specified view considering the filters
         and the search term defined for this grid view.
@@ -440,7 +460,8 @@ class GridViewFieldAggregationsView(APIView):
         asked.
         """
 
-        search = request.GET.get("search")
+        search = query_params.get("search")
+        search_mode = query_params.get("search_mode")
         view_handler = ViewHandler()
         view = view_handler.get_view(view_id, GridView)
 
@@ -448,7 +469,7 @@ class GridViewFieldAggregationsView(APIView):
         # Note: we can't optimize model by giving a model with just
         # the aggregated field because we may need other fields for filtering
         result = view_handler.get_view_field_aggregations(
-            request.user, view, with_total=total, search=search
+            request.user, view, with_total=total, search=search, search_mode=search_mode
         )
 
         # Decimal("NaN") can't be serialized, therefore we have to replace it
@@ -700,6 +721,7 @@ class PublicGridViewRowsView(APIView):
                     "response. "
                 ),
             ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table grid view"],
         operation_id="public_list_database_table_grid_view_rows",
@@ -749,7 +771,10 @@ class PublicGridViewRowsView(APIView):
         }
     )
     @allowed_includes("field_options")
-    def get(self, request: Request, slug: str, field_options: bool) -> Response:
+    @validate_query_parameters(SearchQueryParamSerializer, return_validated=True)
+    def get(
+        self, request: Request, slug: str, field_options: bool, query_params
+    ) -> Response:
         """
         Lists all the rows of a grid view, paginated either by a page or offset/limit.
         If the limit get parameter is provided the limit/offset pagination will be used
@@ -759,7 +784,8 @@ class PublicGridViewRowsView(APIView):
         `field_options` are provided in the include GET parameter.
         """
 
-        search = request.GET.get("search")
+        search = query_params.get("search")
+        search_mode = query_params.get("search_mode")
         order_by = request.GET.get("order_by")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
@@ -788,6 +814,7 @@ class PublicGridViewRowsView(APIView):
         ) = ViewHandler().get_public_rows_queryset_and_field_ids(
             view,
             search=search,
+            search_mode=search_mode,
             order_by=order_by,
             include_fields=include_fields,
             exclude_fields=exclude_fields,

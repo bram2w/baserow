@@ -37,7 +37,27 @@
     },
     "rowComment": {
         "you": "You",
-        "anonymous": "Anonymous"
+        "anonymous": "Anonymous",
+        "creating": "creating",
+        "updating": "updating",
+        "deleting": "deleting",
+        "created" : "created",
+        "edited": "edited",
+        "commentTrashed": "This comment has been deleted.",
+        "errorUserNotCommentAuthorTitle": "Cannot update or delete.",
+        "errorUserNotCommentAuthor": "Only the author of the comment can update or delete it.",
+        "errorInvalidCommentMentionTitle": "Invalid mention",
+        "errorInvalidCommentMention": "The mentioned user does not exist."
+    },
+    "rowCommentContext": {
+        "edit": "Edit comment",
+        "delete": "Delete comment"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} mentioned you in row {row} in {table}"
+    },
+    "trashType": {
+        "row_comment": "row comment"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Register a license",

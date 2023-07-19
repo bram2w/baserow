@@ -3,7 +3,6 @@
     <PaginatedDropdown
       :fetch-page="fetchPage"
       :value="dropdownValue"
-      :initial-display-name="initialDisplayName"
       :class="{ 'dropdown--error': touched && !valid }"
       :fetch-on-open="lazyLoad"
       :disabled="readOnly"
@@ -45,10 +44,7 @@ export default {
   },
   computed: {
     dropdownValue() {
-      return this.value.length === 0 ? null : this.value[0].id
-    },
-    initialDisplayName() {
-      return this.value.length === 0 ? null : this.value[0].value
+      return this.value.length === 0 ? null : this.value[0]
     },
   },
   methods: {
@@ -64,12 +60,8 @@ export default {
         publicAuthToken
       )
     },
-    updateValue({ id, value }) {
-      this.$emit(
-        'update',
-        value === null || value === '' ? [] : [{ id, value }],
-        this.value
-      )
+    updateValue(selectedId) {
+      this.$emit('update', [selectedId], this.value)
     },
   },
 }

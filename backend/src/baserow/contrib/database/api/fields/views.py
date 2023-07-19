@@ -217,8 +217,7 @@ class FieldsView(APIView):
             "response key."
         ),
         request=DiscriminatorCustomFieldsMappingSerializer(
-            field_type_registry,
-            CreateFieldSerializer,
+            field_type_registry, CreateFieldSerializer, request=True
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -405,10 +404,11 @@ class FieldView(APIView):
         """Updates the field if the user belongs to the workspace."""
 
         field = FieldHandler().get_specific_field_for_update(field_id)
-        type_name = type_from_data_or_registry(request.data, field_type_registry, field)
-        field_type = field_type_registry.get(type_name)
+        field_type = type_from_data_or_registry(
+            request.data, field_type_registry, field
+        )
         data = validate_data_custom_fields(
-            type_name,
+            field_type.type,
             field_type_registry,
             request.data,
             base_serializer_class=UpdateFieldSerializer,
@@ -420,7 +420,7 @@ class FieldView(APIView):
         with field_type.map_api_exceptions():
             field, related_fields = action_type_registry.get_by_type(
                 UpdateFieldActionType
-            ).do(request.user, field, type_name, **data)
+            ).do(request.user, field, field_type.type, **data)
 
         serializer = field_type_registry.get_serializer(
             field, FieldSerializerWithRelatedFields, related_fields=related_fields

@@ -7,7 +7,7 @@ export class PathParamType extends Registerable {
 }
 
 export class TextPathParamType extends PathParamType {
-  getType() {
+  static getType() {
     return 'text'
   }
 
@@ -21,7 +21,7 @@ export class TextPathParamType extends PathParamType {
 }
 
 export class NumericPathParamType extends PathParamType {
-  getType() {
+  static getType() {
     return 'numeric'
   }
 

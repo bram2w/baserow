@@ -20,6 +20,12 @@
       @extend %option-shadow;
     }
   }
+
+  &.background-color--darker-#{$color} {
+    .background-color--darker-#{$color} & {
+      @extend %option-shadow;
+    }
+  }
 }
 
 @mixin add-shadow-on-same-background() {
@@ -28,4 +34,9 @@
   @include add-shadow('gray');
   @include add-shadow('green');
   @include add-shadow('orange');
+  @include add-shadow('yellow');
+  @include add-shadow('purple');
+  @include add-shadow('pink');
+  @include add-shadow('brown');
+  @include add-shadow('cyan');
 }

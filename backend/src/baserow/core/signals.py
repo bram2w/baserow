@@ -27,3 +27,7 @@ application_deleted = Signal()
 applications_reordered = Signal()
 
 permissions_updated = Signal()
+
+workspace_invitation_created = Signal()
+workspace_invitation_accepted = Signal()
+workspace_invitation_rejected = Signal()

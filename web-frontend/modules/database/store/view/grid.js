@@ -17,6 +17,7 @@ import {
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 const ORDER_STEP = '1'
 const ORDER_STEP_BEFORE = '0.00000000000000000001'
@@ -124,7 +125,7 @@ export const mutations = {
     state.hideRowsNotMatchingSearch = true
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
-    state.activeSearchTerm = activeSearchTerm
+    state.activeSearchTerm = activeSearchTerm.trim()
     state.hideRowsNotMatchingSearch = hideRowsNotMatchingSearch
   },
   SET_LAST_GRID_ID(state, gridId) {
@@ -580,6 +581,7 @@ export const actions = {
           limit: requestLimit,
           signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
+          searchMode: getDefaultSearchModeFromEnv(this.$env),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -740,6 +742,7 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
+      searchMode: getDefaultSearchModeFromEnv(this.$env),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -787,6 +790,7 @@ export const actions = {
       .fetchCount({
         gridId,
         search: getters.getServerSearchTerm,
+        searchMode: getDefaultSearchModeFromEnv(this.$env),
         signal: lastRefreshRequestController.signal,
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
@@ -812,6 +816,7 @@ export const actions = {
             includeFieldOptions,
             signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
+            searchMode: getDefaultSearchModeFromEnv(this.$env),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -1011,6 +1016,7 @@ export const actions = {
       ).fetchFieldAggregations({
         gridId: view.id,
         search,
+        searchMode: getDefaultSearchModeFromEnv(this.$env),
         signal: lastAggregationRequest.controller.signal,
       })
 
@@ -1280,6 +1286,7 @@ export const actions = {
       offset: startIndex,
       limit,
       search: getters.getServerSearchTerm,
+      searchMode: getDefaultSearchModeFromEnv(this.$env),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -1426,7 +1433,7 @@ export const actions = {
     const diff = oldCount - getters.getCount + rowsPopulated.length
     if (!isSingleRowInsertion && diff > 0) {
       dispatch(
-        'notification/success',
+        'toast/success',
         {
           title: this.$i18n.t('gridView.hiddenRowsInsertedTitle'),
           message: this.$i18n.t('gridView.hiddenRowsInsertedMessage', {
@@ -2211,6 +2218,7 @@ export const actions = {
         getters.isHidingRowsNotMatchingSearch,
         fields,
         this.$registry,
+        getDefaultSearchModeFromEnv(this.$env),
         overrides
       )
 

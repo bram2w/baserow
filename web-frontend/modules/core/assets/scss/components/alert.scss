@@ -4,7 +4,13 @@
   margin: 30px 0;
   padding: 20px;
 
-  @include alert-style($color-primary-100, $color-primary-300, $color-primary-900, $color-primary-700, $color-primary-400);
+  @include alert-style(
+    $color-primary-100,
+    $color-primary-300,
+    $color-primary-900,
+    $color-primary-700,
+    $color-primary-400
+  );
 
   &.alert--has-icon {
     position: relative;
@@ -48,13 +54,31 @@
 }
 
 .alert--success {
-  @include alert-style($color-success-100, $color-success-300, $color-success-900, $color-success-700, $color-success-400);
+  @include alert-style(
+    $color-success-100,
+    $color-success-300,
+    $color-success-900,
+    $color-success-700,
+    $color-success-400
+  );
 }
 
 .alert--warning {
-  @include alert-style($color-warning-100, $color-warning-300, $color-warning-900, $color-warning-700, $color-warning-400);
+  @include alert-style(
+    $color-warning-100,
+    $color-warning-300,
+    $color-warning-900,
+    $color-warning-700,
+    $color-warning-400
+  );
 }
 
 .alert--error {
-  @include alert-style($color-error-100, $color-error-300, $color-error-900, $color-error-700, $color-error-400);
+  @include alert-style(
+    $color-error-100,
+    $color-error-300,
+    $color-error-900,
+    $color-error-700,
+    $color-error-400
+  );
 }

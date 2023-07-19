@@ -92,7 +92,7 @@ Authorization: JWT {YOUR_TOKEN}
 ```
 or
 ```
-curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOKEN}' -i https://api.baserow.io/api/workspaces/'
+curl -X GET -H 'Content-Type: application/json' -H 'Authorization: JWT {YOUR_TOKEN}' -i 'https://api.baserow.io/api/workspaces/'
 ```
 
 ## Common issues

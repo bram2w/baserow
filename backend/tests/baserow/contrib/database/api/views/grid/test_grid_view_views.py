@@ -21,6 +21,7 @@ from baserow.contrib.database.rows.registries import (
     RowMetadataType,
     row_metadata_registry,
 )
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import GridView
 from baserow.contrib.database.views.registries import view_aggregation_type_registry
@@ -2070,7 +2071,10 @@ def test_list_rows_public_filters_by_visible_and_hidden_columns(
 
 
 @pytest.mark.django_db
-def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixture):
+@pytest.mark.parametrize("search_mode", ALL_SEARCH_MODES)
+def test_list_rows_public_only_searches_by_visible_columns(
+    api_client, data_fixture, search_mode
+):
     user, token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
 
@@ -2104,11 +2108,14 @@ def test_list_rows_public_only_searches_by_visible_columns(api_client, data_fixt
         values={"public": search_term, "hidden": "other"},
         user_field_names=True,
     )
+    SearchHandler.update_tsvector_columns(
+        table, update_tsvectors_for_changed_rows_only=False
+    )
 
     # Get access as an anonymous user
     response = api_client.get(
         reverse("api:database:views:grid:public_rows", kwargs={"slug": grid_view.slug})
-        + f"?search={search_term}"
+        + f"?search={search_term}&search_mode={search_mode}"
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK, response_json
@@ -2500,3 +2507,29 @@ def test_user_with_wrong_password_cant_get_info_about_a_public_password_protecte
         format="json",
     )
     assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_invalid_search_mode_raises(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    grid_view = data_fixture.create_grid_view(
+        table=table,
+        user=user,
+    )
+
+    response = api_client.get(
+        reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+        + f"?search=test&search_mode=invalid"
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json == {
+        "detail": {
+            "search_mode": [
+                {"code": "invalid_choice", "error": '"invalid" is not a valid choice.'}
+            ]
+        },
+        "error": "ERROR_QUERY_PARAMETER_VALIDATION",
+    }

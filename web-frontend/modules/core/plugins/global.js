@@ -22,6 +22,9 @@ import Tab from '@baserow/modules/core/components/Tab'
 import List from '@baserow/modules/core/components/List'
 import HelpIcon from '@baserow/modules/core/components/HelpIcon'
 import Button from '@baserow/modules/core/components/Button'
+import Avatar from '@baserow/modules/core/components/Avatar'
+import Presentation from '@baserow/modules/core/components/Presentation'
+import FormInput from '@baserow/modules/core/components/FormInput'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -36,9 +39,9 @@ import userFileUpload from '@baserow/modules/core/directives/userFileUpload'
 import autoScroll from '@baserow/modules/core/directives/autoScroll'
 import clickOutside from '@baserow/modules/core/directives/clickOutside'
 import Badge from '@baserow/modules/core/components/Badge'
-import InputWithIcon from '@baserow/modules/core/components/InputWithIcon'
 import ExpandableCard from '@baserow/modules/core/components/ExpandableCard'
 import RadioButton from '@baserow/modules/core/components/RadioButton'
+import Thumbnail from '@baserow/modules/core/components/Thumbnail'
 
 function setupVue(Vue) {
   Vue.component('Context', Context)
@@ -63,10 +66,13 @@ function setupVue(Vue) {
   Vue.component('List', List)
   Vue.component('HelpIcon', HelpIcon)
   Vue.component('Badge', Badge)
-  Vue.component('InputWithIcon', InputWithIcon)
   Vue.component('ExpandableCard', ExpandableCard)
   Vue.component('Button', Button)
   Vue.component('RadioButton', RadioButton)
+  Vue.component('Thumbnail', Thumbnail)
+  Vue.component('Avatar', Avatar)
+  Vue.component('Presentation', Presentation)
+  Vue.component('FormInput', FormInput)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)

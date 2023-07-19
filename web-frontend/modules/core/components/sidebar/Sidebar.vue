@@ -113,7 +113,14 @@
           </li>
           <template v-if="hasSelectedWorkspace && !isCollapsed">
             <li class="tree__item margin-top-2">
-              <div class="tree__action tree__action--has-options">
+              <div
+                :title="selectedWorkspace.name"
+                class="tree__action tree__action--has-options"
+                :class="{
+                  'tree__action--has-notification':
+                    unreadNotificationsInOtherWorkspaces,
+                }"
+              >
                 <a
                   ref="workspaceSelectToggle"
                   class="tree__link tree__link--group"
@@ -130,8 +137,12 @@
                     ref="rename"
                     :value="selectedWorkspace.name"
                     @change="renameWorkspace(selectedWorkspace, $event)"
-                  ></Editable
-                ></a>
+                  ></Editable>
+                </a>
+                <span
+                  v-if="unreadNotificationsInOtherWorkspaces"
+                  class="sidebar__unread-notifications-icon"
+                ></span>
                 <a
                   ref="contextLink"
                   class="tree__options"
@@ -154,6 +165,21 @@
                 ></WorkspaceContext>
               </div>
             </li>
+            <li class="tree__item">
+              <div class="tree__action tree__action--has-counter">
+                <a
+                  class="tree__link"
+                  @click="$refs.notificationPanel.toggle($event.currentTarget)"
+                >
+                  <i class="tree__icon tree__icon--type fas fa-bell"></i>
+                  {{ $t('sidebar.notifications') }}
+                </a>
+                <span v-show="unreadNotificationCount" class="tree__counter">{{
+                  unreadNotificationCount >= 10 ? '9+' : unreadNotificationCount
+                }}</span>
+              </div>
+              <NotificationPanel ref="notificationPanel" />
+            </li>
             <li
               v-if="
                 $hasPermission(
@@ -174,14 +200,7 @@
               <WorkspaceMemberInviteModal
                 ref="inviteModal"
                 :workspace="selectedWorkspace"
-                @invite-submitted="
-                  $router.push({
-                    name: 'settings-invites',
-                    params: {
-                      workspaceId: selectedWorkspace.id,
-                    },
-                  })
-                "
+                @invite-submitted="handleInvite"
               />
             </li>
             <nuxt-link
@@ -366,6 +385,7 @@ import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
 import WorkspaceMemberInviteModal from '@baserow/modules/core/components/workspace/WorkspaceMemberInviteModal'
 import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
+import NotificationPanel from '@baserow/modules/core/components/NotificationPanel'
 
 export default {
   name: 'Sidebar',
@@ -380,6 +400,7 @@ export default {
     CreateWorkspaceModal,
     TrashModal,
     WorkspaceMemberInviteModal,
+    NotificationPanel,
   },
   mixins: [editWorkspace, undoRedo],
   data() {
@@ -449,6 +470,9 @@ export default {
       email: 'auth/getUsername',
       hasSelectedWorkspace: 'workspace/hasSelected',
       isCollapsed: 'sidebar/isCollapsed',
+      unreadNotificationCount: 'notification/getUnreadCount',
+      unreadNotificationsInOtherWorkspaces:
+        'notification/anyOtherWorkspaceWithUnread',
     }),
   },
   methods: {
@@ -495,6 +519,16 @@ export default {
         })
       } catch (error) {
         notifyIf(error, 'application')
+      }
+    },
+    handleInvite(event) {
+      if (this.$route.name !== 'settings-invites') {
+        this.$router.push({
+          name: 'settings-invites',
+          params: {
+            workspaceId: this.selectedWorkspace.id,
+          },
+        })
       }
     },
   },

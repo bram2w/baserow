@@ -61,6 +61,31 @@ $color-error-700: #9c2e1f !default;
 $color-error-800: #6e160b !default;
 $color-error-900: #4d0c03 !default;
 
+$color-yellow-100: #fffdeb !default;
+$color-yellow-200: #fff8b8 !default;
+$color-yellow-300: #fff79e !default;
+$color-yellow-400: #fff261 !default;
+
+$color-purple-100: #f0dff7 !default;
+$color-purple-200: #e3b2f7 !default;
+$color-purple-300: #d596f2 !default;
+$color-purple-400: #c96df2 !default;
+
+$color-pink-100: #f7e1f2 !default;
+$color-pink-200: #f7b2e7 !default;
+$color-pink-300: #f285d9 !default;
+$color-pink-400: #ff6dde !default;
+
+$color-brown-100: #f5e6dc !default;
+$color-brown-200: #f5ceb0 !default;
+$color-brown-300: #f5c098 !default;
+$color-brown-400: #f5a96e !default;
+
+$color-cyan-100: #ebffff !default;
+$color-cyan-200: #bdfdff !default;
+$color-cyan-300: #a8fbff !default;
+$color-cyan-400: #91f8ff !default;
+
 // all z-indexes
 $z-index-layout-col-1: 3 !default;
 $z-index-layout-col-2: 2 !default;
@@ -77,9 +102,9 @@ $z-index-context: 7 !default;
 // and contexts.
 $z-index-tooltip: 8 !default;
 
-// The notifications will be on top of anything else, because the message is temporary
+// The toasts will be on top of anything else, because the message is temporary
 // and must always be visible.
-$z-index-notifications: 9 !default;
+$z-index-toasts: 9 !default;
 
 // normalize overrides
 $base-font-family: $text-font-stack !default;
@@ -102,3 +127,5 @@ $file-field-modal-body-nav-width: 120px !default;
 $file-field-modal-foot-height: 108px !default;
 
 $dashboard-breakpoint: 1100px;
+
+$builder-page-max-width: 1280px;

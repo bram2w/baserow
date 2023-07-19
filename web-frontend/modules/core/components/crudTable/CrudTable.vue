@@ -306,6 +306,16 @@ export default {
       )
       Object.assign(this.rows[i], updatedRow)
     },
+    upsertRow(row) {
+      const i = this.rows.findIndex(
+        (u) => u[this.rowIdKey] === row[this.rowIdKey]
+      )
+      if (i >= 0) {
+        Object.assign(this.rows[i], row)
+      } else {
+        this.rows.unshift(row)
+      }
+    },
     deleteRow(rowId) {
       const i = this.rows.findIndex((u) => u[this.rowIdKey] === rowId)
       this.rows.splice(i, 1)

@@ -14,11 +14,19 @@
         "errorPathNotUnique": "Un chemin similaire existe déjà",
         "errorValidPathCharacters": "Le chemin contient des caractères invalides",
         "errorStartingSlash": "Un chemin doit commencer par un '/'",
-        "pathLabel": "Chemin"
+        "pathLabel": "Chemin",
+        "nameTitle": "Nom",
+        "nameSubtitle": "Nom unique de la page",
+        "pathSubtitle": "Un paramètre peut être ajouté en faisant précéder son nom par « : ». Par exemple - /page/:id -",
+        "pathParamsTitle": "Paramètres de chemin",
+        "pathParamsSubtitle": "Sont définis par - :parameter - dans le chemin",
+        "pathParamsSubtitleTutorial": "Les paramètres de chemin peuvent être utilisés pour charger dynamiquement les données, en fonction du paramètre fourni. Ajoutez - :parameter - au chemin pour en ajouter un.",
+        "pathTitle": "Chemin"
     },
     "builderSettingTypes": {
         "integrationsName": "Intégrations",
-        "themeName": "Thème"
+        "themeName": "Thème",
+        "domainsName": "Domaines"
     },
     "builderForm": {
         "submit": "Ajouter une application"
@@ -39,7 +47,11 @@
         "heading": "Titre",
         "paragraph": "Paragraphe",
         "paragraphDescription": "Texte simple",
-        "headingDescription": "Titre de page"
+        "headingDescription": "Titre de page",
+        "link": "Lien",
+        "linkDescription": "Un lien vers une page/URL",
+        "image": "Image",
+        "imageDescription": "Affiche une image"
     },
     "elementMenu": {
         "moveDown": "Descendre",
@@ -82,5 +94,138 @@
         "textTitle": "Texte",
         "textPlaceholder": "Saisir le texte...",
         "textError": "La valeur est invalide."
+    },
+    "pageErrors": {
+        "errorPathNotUnique": "Un chemin similaire existe déjà",
+        "errorUniquePathParams": "Les paramètres de chemin doivent être uniques.",
+        "errorNameNotUnique": "Une page avec le même nom existe déjà",
+        "errorValidPathCharacters": "Le chemin contient des caractères invalides",
+        "errorStartingSlash": "Un chemin doit commencer par un '/'"
+    },
+    "publishActionModal": {
+        "publish": "Publier",
+        "publishSucceedTitle": "Site publié",
+        "publishSucceedDescription": "Le site a été publié avec succès.",
+        "publishFailedTitle": "La publication du site a échoué",
+        "publishFailedDescription": "La publication du site a échoué. Veuillez réessayer plus tard.",
+        "openInNewTab": "Ouvrir dans un nouvel onglet",
+        "title": "Publication",
+        "noDomain": "Vous devez disposer d’au moins un domaine pour publier votre application.",
+        "description": "Mettez votre application en ligne en publiant sur l’un des domaines. Notez que votre application peut avoir plusieurs domaines, chacun avec une version différente de l’application."
+    },
+    "pageActionTypes": {
+        "preview": "Aperçu",
+        "publish": "Publication"
+    },
+    "lastPublishedDomainDate": {
+        "neverPublished": "jamais",
+        "lastPublished": "Dernière publication :"
+    },
+    "elementForms": {
+        "textInputPlaceholder": "Saisissez un texte...",
+        "urlInputPlaceholder": "Saisissez une URL..."
+    },
+    "imageElement": {
+        "emptyState": "Aucun texte alternatif défini..."
+    },
+    "imageElementForm": {
+        "fileLabel": "Image",
+        "invalidUrlError": "L’URL n’est pas valide",
+        "altTextTitle": "Texte alternatif",
+        "urlWarning": "Remarque : assurez-vous que vous contrôlez ou faites confiance à l'URL saisie.",
+        "uploadFileButton": "Envoyer un fichier",
+        "fileSourceTypeUpload": "Envoyer",
+        "fileSourceTypeURL": "URL",
+        "altTextDescription": "Est utilisé par les lecteurs d'écran et affiché si l'image ne peut pas être chargée"
+    },
+    "domainSettings": {
+        "titleOverview": "Domaines",
+        "titleAddDomain": "Ajouter un domaine",
+        "addDomain": "Ajouter un domaine",
+        "noDomainMessage": "Vous n’avez pas encore associé de domaine à cette application. Vous devez ajouter un domaine pour pouvoir publier votre application. Vous pouvez publier différentes versions de votre application pour chaque domaine répertorié ici."
+    },
+    "dnsStatus": {
+        "description": "Accédez aux paramètres DNS de vos domaines et apportez les modifications suivantes",
+        "valueHeader": "Valeur",
+        "typeHeader": "Type",
+        "hostHeader": "Hôte"
+    },
+    "customDomainForm": {
+        "domainNameLabel": "Nom de domaine",
+        "notUniqueDomain": "Le domaine fourni est déjà utilisé",
+        "invalidDomain": "Le nom de domaine fourni est invalide"
+    },
+    "domainCard": {
+        "refresh": "Actualiser les paramètres",
+        "detailLabel": "Afficher les détails"
+    },
+    "domainTypes": {
+        "customName": "Domaine personnalisé"
+    },
+    "linkElement": {
+        "noValue": "Sans nom..."
+    },
+    "linkElementForm": {
+        "text": "Texte",
+        "textPlaceholder": "Saisissez le texte...",
+        "navigateTo": "Naviguer vers",
+        "navigateToNotSet": "Aucune destination",
+        "navigateToCustom": "URL personnalisée",
+        "url": "URL de destination",
+        "urlPlaceholder": "Saisissez une URL...",
+        "variant": "Variante",
+        "paramsInErrorButton": "Mettre à jour les paramètres",
+        "widthFull": "Pleine largeur",
+        "widthAuto": "Auto",
+        "paramPlaceholder": "Entrez une valeur...",
+        "variantLink": "Lien",
+        "variantButton": "Bouton",
+        "width": "Largeur",
+        "targetSelf": "Même onglet",
+        "target": "Ouvrir dans...",
+        "targetNewTab": "Nouvel onglet",
+        "pageParameterTypeError": "Type non valide",
+        "paramsInErrorDescription": "Les paramètres enregistrés ne correspondent pas aux paramètres de la page. La page a probablement été mise à jour ou supprimée."
+    },
+    "alignmentSelector": {
+        "alignment": "Alignement",
+        "alignmentLeft": "Lien",
+        "alignmentCenter": "Centré",
+        "alignmentRight": "Droite"
+    },
+    "pageSettings": {
+        "pageUpdatedTitle": "Mise à jour",
+        "pageUpdatedDescription": "Les paramètres de la page ont été mis à jour.",
+        "title": "Page"
+    },
+    "pathParamTypes": {
+        "textName": "Texte",
+        "numericName": "Numérique"
+    },
+    "publicPage": {
+        "pageNotFound": "Page non trouvée",
+        "siteNotFound": "Site introuvable"
+    },
+    "integrationSettings": {
+        "title": "Intégrations",
+        "noIntegrationMessage": "Vous n’avez pas encore créé d'intégration. Elles peuvent être créés en ajoutant une source de données, une action ou une source d'authentification.",
+        "integrationMessage": "Vous pouvez créer une intégration en ajoutant une source de données, une action ou une source d'authentification utilisateur."
+    },
+    "dataSourceForm": {
+        "namePlaceholder": "Nom de la source",
+        "addIntegration": "Ajouter une intégration",
+        "noIntegrations": "Vous n’avez aucune d’intégration",
+        "selectTypeFirst": "Sélectionnez d'abord le service",
+        "servicePlaceholder": "Sélectionnez un service",
+        "errorUniqueName": "Le nom de la source de données doit être unique.",
+        "integrationPlaceholder": "Sélectionnez une intégration"
+    },
+    "dataSourceContext": {
+        "addDataSource": "Ajouter une source de données",
+        "noDataSourceMessage": "Les source de données peuvent être utilisées pour récupérer des données à partir de sources internes ou externes et les afficher sur la page.",
+        "noDataSourceTitle": "Vous n’avez pas encore ajouté de source de données"
+    },
+    "pageSettingsTypes": {
+        "pageName": "Page"
     }
 }

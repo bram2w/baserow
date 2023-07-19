@@ -37,10 +37,16 @@ export default {
       this.$emit('show')
       window.addEventListener('keyup', this.keyup)
       document.body.classList.add('prevent-scroll')
-      this.$el.mouseDownEvent = (event) => {
+      const mouseDownEvent = (event) => {
         this.downElement = event.target
       }
-      document.body.addEventListener('mousedown', this.$el.mouseDownEvent)
+      document.body.addEventListener('mousedown', mouseDownEvent)
+
+      this.$once('hidden', () => {
+        document.body.removeEventListener('mousedown', mouseDownEvent)
+        document.body.classList.remove('prevent-scroll')
+        window.removeEventListener('keyup', this.keyup)
+      })
     },
     /**
      * Hide the modal.
@@ -59,10 +65,6 @@ export default {
       if (emit) {
         this.$emit('hidden')
       }
-
-      window.removeEventListener('keyup', this.keyup)
-      document.body.classList.remove('prevent-scroll')
-      document.body.removeEventListener('mousedown', this.$el.mouseDownEvent)
     },
     /**
      * If someone actually clicked on the modal wrapper and not one of his children the

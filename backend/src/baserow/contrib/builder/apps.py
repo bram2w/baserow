@@ -2,6 +2,7 @@ from django.apps import AppConfig
 
 from baserow.core.registries import object_scope_type_registry, operation_type_registry
 from baserow.core.trash.registries import trash_item_type_registry
+from baserow.core.usage.registries import workspace_storage_usage_item_registry
 
 
 class BuilderConfig(AppConfig):
@@ -14,6 +15,9 @@ class BuilderConfig(AppConfig):
 
         application_type_registry.register(BuilderApplicationType())
 
+        from baserow.contrib.builder.data_sources.object_scopes import (
+            BuilderDataSourceObjectScopeType,
+        )
         from baserow.contrib.builder.domains.object_scopes import (
             BuilderDomainObjectScopeType,
         )
@@ -29,6 +33,7 @@ class BuilderConfig(AppConfig):
         object_scope_type_registry.register(BuilderPageObjectScopeType())
         object_scope_type_registry.register(BuilderElementObjectScopeType())
         object_scope_type_registry.register(BuilderDomainObjectScopeType())
+        object_scope_type_registry.register(BuilderDataSourceObjectScopeType())
 
         from baserow.contrib.builder.operations import (
             ListDomainsBuilderOperationType,
@@ -41,6 +46,14 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(OrderPagesBuilderOperationType())
         operation_type_registry.register(ListDomainsBuilderOperationType())
         operation_type_registry.register(OrderDomainsBuilderOperationType())
+
+        from baserow.contrib.builder.elements.usage_types import (
+            ImageElementWorkspaceStorageUsageItem,
+        )
+
+        workspace_storage_usage_item_registry.register(
+            ImageElementWorkspaceStorageUsageItem()
+        )
 
         from baserow.contrib.builder.pages.operations import (
             CreatePageOperationType,
@@ -71,6 +84,22 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateDomainOperationType())
         operation_type_registry.register(PublishDomainOperationType())
         operation_type_registry.register(RestoreDomainOperationType())
+
+        from baserow.contrib.builder.data_sources.operations import (
+            CreateDataSourceOperationType,
+            DeleteDataSourceOperationType,
+            ListDataSourcesPageOperationType,
+            OrderDataSourcesPageOperationType,
+            ReadDataSourceOperationType,
+            UpdateDataSourceOperationType,
+        )
+
+        operation_type_registry.register(CreateDataSourceOperationType())
+        operation_type_registry.register(ListDataSourcesPageOperationType())
+        operation_type_registry.register(ReadDataSourceOperationType())
+        operation_type_registry.register(UpdateDataSourceOperationType())
+        operation_type_registry.register(DeleteDataSourceOperationType())
+        operation_type_registry.register(OrderDataSourcesPageOperationType())
 
         from baserow.contrib.builder.domains.job_types import PublishDomainJobType
         from baserow.contrib.builder.pages.job_types import DuplicatePageJobType
@@ -103,6 +132,7 @@ class BuilderConfig(AppConfig):
 
         from .elements.element_types import (
             HeadingElementType,
+            ImageElementType,
             LinkElementType,
             ParagraphElementType,
         )
@@ -111,6 +141,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(HeadingElementType())
         element_type_registry.register(ParagraphElementType())
         element_type_registry.register(LinkElementType())
+        element_type_registry.register(ImageElementType())
 
         from .domains.trash_types import DomainTrashableItemType
 
@@ -119,6 +150,10 @@ class BuilderConfig(AppConfig):
         from .domains.receivers import connect_to_domain_pre_delete_signal
 
         connect_to_domain_pre_delete_signal()
+
+        from .data_sources.receivers import connect_to_data_source_pre_delete_signal
+
+        connect_to_data_source_pre_delete_signal()
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

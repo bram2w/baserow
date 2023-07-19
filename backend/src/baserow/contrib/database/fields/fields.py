@@ -10,9 +10,10 @@ from django.db.models.fields.related_descriptors import (
 from django.utils.functional import cached_property
 
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
+from baserow.core.fields import SyncedDateTimeField
 
 
-class BaserowLastModifiedField(models.DateTimeField):
+class BaserowLastModifiedField(SyncedDateTimeField):
     requires_refresh_after_update = True
 
 

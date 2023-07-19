@@ -48,17 +48,26 @@
               :max-count="totalCount"
               :loading="loading"
               :reverse="true"
+              :render-end="false"
               @load-next-page="nextPage"
             >
               <template #default>
-                <RowComment
-                  v-for="c in comments"
+                <div
+                  v-for="(c, index) in comments"
                   :key="'row-comment-' + c.id"
-                  :comment="c"
-                />
-              </template>
-              <template #end>
-                <div class="row-comments__end-line"></div>
+                >
+                  <div
+                    v-if="isNewDayForComments(index)"
+                    class="row-comment__day-separator"
+                  >
+                    <span>{{ formatSeparatorDate(c) }}</span>
+                  </div>
+                  <RowComment
+                    :comment="c"
+                    :can-edit="canEditComments"
+                    :can-delete="canDeleteComments"
+                  />
+                </div>
               </template>
             </InfiniteScroll>
           </div>
@@ -72,13 +81,11 @@
             "
             class="row-comments__foot"
           >
-            <AutoExpandableTextareaInput
-              ref="AutoExpandableTextarea"
+            <RichTextEditor
               v-model="comment"
               :placeholder="$t('rowCommentSidebar.comment')"
-              @entered="postComment"
-            >
-            </AutoExpandableTextareaInput>
+              @entered="postComment()"
+            />
           </div>
         </div>
       </div>
@@ -88,20 +95,21 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import moment from '@baserow/modules/core/moment'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
-import AutoExpandableTextareaInput from '@baserow/modules/core/components/helpers/AutoExpandableTextareaInput'
+import RichTextEditor from '@baserow/modules/core/components/editor/RichTextEditor.vue'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
 import PremiumFeatures from '@baserow_premium/features'
 
 export default {
   name: 'RowCommentsSidebar',
   components: {
-    AutoExpandableTextareaInput,
     InfiniteScroll,
     RowComment,
     PremiumModal,
+    RichTextEditor,
   },
   props: {
     database: {
@@ -122,11 +130,6 @@ export default {
       comment: '',
     }
   },
-  watch: {
-    async hasPremiumFeaturesEnabled() {
-      await this.initialLoad()
-    },
-  },
   computed: {
     hasPremiumFeaturesEnabled() {
       return this.$hasFeature(
@@ -135,6 +138,7 @@ export default {
       )
     },
     ...mapGetters({
+      loggedUserId: 'auth/getUserId',
       comments: 'row_comments/getSortedRowComments',
       loading: 'row_comments/getLoading',
       loaded: 'row_comments/getLoaded',
@@ -142,6 +146,40 @@ export default {
       totalCount: 'row_comments/getTotalCount',
       additionalUserData: 'auth/getAdditionalUserData',
     }),
+    canEditComments() {
+      return this.$hasPermission(
+        'database.table.update_comment',
+        this.table,
+        this.database.workspace.id
+      )
+    },
+    canDeleteComments() {
+      return this.$hasPermission(
+        'database.table.delete_comment',
+        this.table,
+        this.database.workspace.id
+      )
+    },
+    isNewDayForComments() {
+      return (index) => {
+        if (index === this.comments.length - 1) {
+          return true
+        }
+        const tzone = moment.tz.guess()
+        const previousCreationDate = moment
+          .utc(this.comments[index].created_on)
+          .tz(tzone)
+        const currentCreationDate = moment
+          .utc(this.comments[index + 1].created_on)
+          .tz(tzone)
+        return !previousCreationDate.isSame(currentCreationDate, 'day')
+      }
+    },
+  },
+  watch: {
+    async hasPremiumFeaturesEnabled() {
+      await this.initialLoad()
+    },
   },
   async created() {
     await this.initialLoad()
@@ -163,8 +201,19 @@ export default {
         notifyIf(e, 'application')
       }
     },
+    formatSeparatorDate(comment) {
+      return moment
+        .utc(comment.created_on)
+        .tz(moment.tz.guess())
+        .calendar(null, {
+          sameDay: '[Today]',
+          lastDay: '[Yesterday]',
+          lastWeek: 'LL',
+          sameElse: 'LL',
+        })
+    },
     async postComment() {
-      const comment = this.comment.trim()
+      const comment = this.comment
       if (
         !comment ||
         !this.$hasPermission(
@@ -176,13 +225,11 @@ export default {
         return
       }
       try {
-        const tableId = this.table.id
-        const rowId = this.row.id
         this.comment = ''
         await this.$store.dispatch('row_comments/postComment', {
-          tableId,
-          rowId,
-          comment,
+          tableId: this.table.id,
+          rowId: this.row.id,
+          message: comment,
         })
         this.$refs.infiniteScroll.scrollToStart()
       } catch (e) {
@@ -191,11 +238,9 @@ export default {
     },
     async nextPage() {
       try {
-        const tableId = this.table.id
-        const rowId = this.row.id
         await this.$store.dispatch('row_comments/fetchNextSetOfComments', {
-          tableId,
-          rowId,
+          tableId: this.table.id,
+          rowId: this.row.id,
         })
       } catch (e) {
         notifyIf(e, 'application')

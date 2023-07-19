@@ -1,0 +1,7 @@
+{
+    "type": "breaking_change",
+    "message": "Creating and updating row comments using the API endpoint '/api/row_comments' now requires a valid ProseMirror JSON document. See 'baserow.core.prosemirror.schema' for details.",
+    "issue_number": 1761,
+    "bullet_points": [],
+    "created_at": "2023-06-27"
+}

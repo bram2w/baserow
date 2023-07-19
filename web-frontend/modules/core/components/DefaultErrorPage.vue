@@ -81,14 +81,14 @@ export default {
     }),
   },
   created() {
-    const showSessionExpiredNotification =
+    const showSessionExpiredToast =
       this.$store.getters['auth/isUserSessionExpired']
-    if (showSessionExpiredNotification) {
+    if (showSessionExpiredToast) {
       this.redirecting = true
       logoutAndRedirectToLogin(
         this.$router,
         this.$store,
-        showSessionExpiredNotification
+        showSessionExpiredToast
       )
     }
   },

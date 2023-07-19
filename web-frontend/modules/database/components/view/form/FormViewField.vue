@@ -45,6 +45,7 @@
             ref="description"
             :value="fieldOptions.description"
             :placeholder="$t('formViewField.descriptionPlaceholder')"
+            :multiline="true"
             @change="
               $emit('updated-field-options', { description: $event.value })
             "

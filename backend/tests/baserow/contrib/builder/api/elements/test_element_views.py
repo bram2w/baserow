@@ -9,7 +9,7 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
-from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.elements.models import Element, LinkElement
 
 
 @pytest.mark.django_db
@@ -54,7 +54,6 @@ def test_create_element(api_client, data_fixture):
     )
 
     response_json = response.json()
-    print(response_json)
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "heading"
     assert response_json["value"] == ""
@@ -324,3 +323,32 @@ def test_delete_element_element_not_exist(api_client, data_fixture):
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_link_element_path_parameter_wrong_type(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder)
+    page_with_params = data_fixture.create_builder_page(
+        builder=builder,
+        path="/test/:id",
+        path_params=[{"name": "id", "type": "numeric"}],
+    )
+
+    link_element = data_fixture.create_builder_link_element(
+        page=page,
+        navigation_type=LinkElement.NAVIGATION_TYPES.PAGE,
+        navigate_to_page=page_with_params,
+    )
+
+    url = reverse("api:builder:element:item", kwargs={"element_id": link_element.id})
+    response = api_client.patch(
+        url,
+        {"page_parameters": [{"name": "id", "value": "not a number"}]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 400
+    assert response.json()[0] == "'not a number' is not of type numeric"

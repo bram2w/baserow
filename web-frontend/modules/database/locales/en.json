@@ -679,7 +679,8 @@
         "linkError": "The link should look like: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "add single select field"
+        "addSelectField": "add single select field",
+        "warningWhenNothingToChooseOrCreate": "There are no single select fields to choose from and you do not have permissions to make one."
     },
     "viewDecoratorContext": {
         "addDecorator": "add decorator"
@@ -741,7 +742,7 @@
     },
     "table": {
         "adjacentRow": {
-            "notification": {
+            "toast": {
                 "notFound": {
                     "next": {
                         "title": "No more rows",

@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Rework Baserow row search to be much faster, work for all field types and instead search for words instead of exact matches including punctuation. Please note this new full text search mode can increase the disk space used by your Baserow tables upto 3x, to prevent this you can disable the new search and stick with the legacy slower but lower disk space usage search by setting the new env var BASEROW_USE_PG_FULLTEXT_SEARCH=false.",
+    "issue_number": 1706,
+    "bullet_points": [],
+    "created_at": "2023-07-03"
+}

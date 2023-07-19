@@ -5,9 +5,8 @@
         <div class="form-view__field-name">
           {{ field.name }}
         </div>
-        <div class="form-view__field-description">
-          {{ field.description }}
-        </div>
+        <!-- prettier-ignore -->
+        <div class="form-view__field-description whitespace-pre-wrap">{{ field.description }}</div>
         <component
           :is="getFieldComponent()"
           :key="field.field.id"

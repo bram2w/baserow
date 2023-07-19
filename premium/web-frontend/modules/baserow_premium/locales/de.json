@@ -32,7 +32,17 @@
     },
     "rowComment": {
         "you": "Sie",
-        "anonymous": "Anonym"
+        "anonymous": "Anonym",
+        "creating": "Erstellen",
+        "updating": "Aktualisierung",
+        "commentTrashed": "Dieser Kommentar wurde gelöscht.",
+        "deleting": "löschen",
+        "created": "erstellt",
+        "errorUserNotCommentAuthorTitle": "Kann nicht aktualisiert oder gelöscht werden.",
+        "edited": "bearbeitet",
+        "errorUserNotCommentAuthor": "Nur der Autor des Kommentars kann ihn aktualisieren oder löschen.",
+        "errorInvalidCommentMentionTitle": "Ungültige Erwähnung",
+        "errorInvalidCommentMention": "Der erwähnte Benutzer existiert nicht."
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Eine Lizenz registrieren",
@@ -158,7 +168,7 @@
         "selectOption": "Option auswählen"
     },
     "kanbanViewStakedBy": {
-        "title": "Arbeitsbereichsfeld",
+        "title": "Gruppen Feld",
         "chooseField": "Nach welchem einzelnen Feld sollen die Karten gestapelt werden?"
     },
     "kanbanViewStack": {
@@ -323,5 +333,15 @@
     },
     "calendarMonthDay": {
         "hiddenRowsCount": "0 | 1 mehr... | {hiddenRowsCount} mehr..."
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} hat Sie in Zeile {row} in {table} erwähnt"
+    },
+    "trashType": {
+        "row_comment": "Zeilenkommentar"
+    },
+    "rowCommentContext": {
+        "delete": "Kommentar löschen",
+        "edit": "Kommentar bearbeiten"
     }
 }

@@ -17,12 +17,17 @@
             class="dropdown__selected-icon fas"
             :class="'fa-' + selectedIcon"
           />
+          <img
+            v-if="selectedImage"
+            class="dropdown__selected-image"
+            :src="selectedImage"
+          />
           {{ selectedName }}
         </slot>
       </template>
       <template v-else>
         <slot name="defaultValue">
-          {{ $t('action.makeChoice') }}
+          {{ placeholder ? placeholder : $t('action.makeChoice') }}
         </slot>
       </template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
@@ -40,9 +45,23 @@
           @keyup="search(query)"
         />
       </div>
-      <ul ref="items" v-auto-overflow-scroll class="select__items" tabindex="">
+      <ul
+        v-show="hasDropdownItem"
+        ref="items"
+        v-auto-overflow-scroll
+        class="select__items"
+        tabindex=""
+      >
         <slot></slot>
       </ul>
+      <div v-if="!hasDropdownItem" class="select__items--empty">
+        <slot name="emptyState">
+          {{ $t('dropdown.empty') }}
+        </slot>
+      </div>
+      <div v-if="showFooter" class="select__footer">
+        <slot name="footer"></slot>
+      </div>
     </div>
   </div>
 </template>

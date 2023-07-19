@@ -3,6 +3,7 @@ import Vue from 'vue'
 import _ from 'lodash'
 
 import AuthService from '@baserow/modules/core/services/auth'
+import WorkspaceService from '@baserow/modules/core/services/workspace'
 import { setToken, unsetToken } from '@baserow/modules/core/utils/auth'
 import { unsetWorkspaceCookie } from '@baserow/modules/core/utils/workspace'
 import { v4 as uuidv4 } from 'uuid'
@@ -23,6 +24,8 @@ export const state = () => ({
   preventSetToken: false,
   untrustedClientSessionId: uuidv4(),
   userSessionExpired: false,
+  workspaceInvitations: [],
+  umreadUserNotificationCount: 0,
 })
 
 export const mutations = {
@@ -93,6 +96,20 @@ export const mutations = {
   SET_USER_SESSION_EXPIRED(state, expired) {
     state.userSessionExpired = expired
   },
+  SET_WORKSPACE_INVIATIONS(state, invitations) {
+    state.workspaceInvitations = invitations
+  },
+  ADD_WORKSPACE_INVITATION(state, invitation) {
+    state.workspaceInvitations.push(invitation)
+  },
+  REMOVE_WORKSPACE_INVITATION(state, invitationId) {
+    const existingIndex = state.workspaceInvitations.findIndex(
+      (c) => c.id === invitationId
+    )
+    if (existingIndex !== -1) {
+      state.workspaceInvitations.splice(existingIndex, 1)
+    }
+  },
 }
 
 export const actions = {
@@ -100,9 +117,9 @@ export const actions = {
    * Authenticate a user by his email and password. If successful commit the
    * token to the state and start the refresh timeout to stay authenticated.
    */
-  async login({ commit, getters }, { email, password }) {
+  async login({ getters, dispatch }, { email, password }) {
     const { data } = await AuthService(this.$client).login(email, password)
-    commit('SET_USER_DATA', data)
+    dispatch('setUserData', data)
 
     if (!getters.getPreventSetToken) {
       setToken(this.app, getters.refreshToken)
@@ -134,7 +151,7 @@ export const actions = {
       templateId
     )
     setToken(this.app, data.refresh_token)
-    commit('SET_USER_DATA', data)
+    dispatch('setUserData', data)
   },
   /**
    * Logs off the user by removing the token as a cookie and clearing the user
@@ -170,7 +187,7 @@ export const actions = {
       const { data } = await AuthService(this.$client).refresh(refreshToken)
       // if ROTATE_REFRESH_TOKEN=False in the backend the response will not contain
       // a new refresh token. In that case, we keep the one we just used.
-      commit('SET_USER_DATA', {
+      dispatch('setUserData', {
         refresh_token: refreshToken,
         tokenUpdatedAt,
         ...data,
@@ -221,6 +238,14 @@ export const actions = {
     commit('UPDATE_USER_DATA', data)
     this.app.$bus.$emit('user-data-updated', data)
   },
+  setUserData({ commit, dispatch }, data) {
+    commit('SET_USER_DATA', data)
+    dispatch(
+      'notification/setUserUnreadCount',
+      { count: data.user_notifications?.unread_count },
+      { root: true }
+    )
+  },
   forceSetUserData({ commit }, data) {
     commit('SET_USER_DATA', data)
   },
@@ -231,6 +256,31 @@ export const actions = {
     unsetToken(this.app)
     unsetWorkspaceCookie(this.app)
     commit('SET_USER_SESSION_EXPIRED', value)
+  },
+  async fetchWorkspaceInvitations({ commit }) {
+    const { data } = await AuthService(this.$client).dashboard()
+    commit('SET_WORKSPACE_INVIATIONS', data.workspace_invitations)
+    return data.workspace_invitations
+  },
+  forceCreateWorkspaceInvitation({ commit }, invitation) {
+    commit('ADD_WORKSPACE_INVITATION', invitation)
+  },
+  async acceptWorkspaceInvitation({ commit }, invitationId) {
+    const { data: workspace } = await WorkspaceService(
+      this.$client
+    ).acceptInvitation(invitationId)
+    commit('REMOVE_WORKSPACE_INVITATION', invitationId)
+    return workspace
+  },
+  forceAcceptWorkspaceInvitation({ commit }, invitation) {
+    commit('REMOVE_WORKSPACE_INVITATION', invitation.id)
+  },
+  async rejectWorkspaceInvitation({ commit }, invitationId) {
+    await WorkspaceService(this.$client).rejectInvitation(invitationId)
+    commit('REMOVE_WORKSPACE_INVITATION', invitationId)
+  },
+  forceRejectWorkspaceInvitation({ commit }, invitation) {
+    commit('REMOVE_WORKSPACE_INVITATION', invitation.id)
   },
 }
 
@@ -290,6 +340,9 @@ export const getters = {
   },
   isUserSessionExpired: (state) => {
     return state.userSessionExpired
+  },
+  getWorkspaceInvitations(state) {
+    return state.workspaceInvitations
   },
 }
 

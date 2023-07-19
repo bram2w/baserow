@@ -18,7 +18,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.jobs.handler import JobHandler
 from baserow.core.jobs.models import Job
 from baserow.core.models import Application, Snapshot, User, Workspace
-from baserow.core.registries import application_type_registry
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.signals import application_created
 from baserow.core.snapshots.exceptions import (
     MaximumSnapshotsReached,
@@ -380,9 +380,12 @@ class SnapshotHandler:
         )
 
         application_type = application_type_registry.get_by_model(application)
+        snapshot_import_export_config = ImportExportConfig(
+            include_permission_data=True, reduce_disk_space_usage=True
+        )
         try:
             exported_application = application_type.export_serialized(
-                application, None, default_storage
+                application, snapshot_import_export_config, None, default_storage
             )
         except OperationalError as e:
             # Detect if this `OperationalError` is due to us exceeding the
@@ -402,6 +405,7 @@ class SnapshotHandler:
         application_type.import_serialized(
             None,
             exported_application,
+            snapshot_import_export_config,
             id_mapping,
             None,
             default_storage,
@@ -434,14 +438,19 @@ class SnapshotHandler:
 
         application = snapshot.snapshot_to_application.specific
         application_type = application_type_registry.get_by_model(application)
+
+        restore_snapshot_import_export_config = ImportExportConfig(
+            include_permission_data=True, reduce_disk_space_usage=False
+        )
         exported_application = application_type.export_serialized(
-            application, None, default_storage
+            application, restore_snapshot_import_export_config, None, default_storage
         )
         progress.increment(by=50)
 
         imported_application = application_type.import_serialized(
             snapshot.snapshot_from_application.workspace,
             exported_application,
+            restore_snapshot_import_export_config,
             {},
             None,
             default_storage,

@@ -82,6 +82,7 @@ class CustomFieldRegistryMappingSerializerExtension(MappingSerializerExtension):
                 meta_ref_name=(
                     f"{types.type}_{base_ref_name}" if base_ref_name else None
                 ),
+                request_serializer=self.target.request,
             )
             for types in self.target.registry.registry.values()
         }

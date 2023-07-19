@@ -17,14 +17,22 @@
         "pathLabel": "Pad",
         "errorPathNotUnique": "Een pagina met deze naam bestaat al",
         "errorStartingSlash": "Een pad moet beginnen met een '/'",
-        "errorValidPathCharacters": "Het pad bevat ongeldige tekens"
+        "errorValidPathCharacters": "Het pad bevat ongeldige tekens",
+        "pathParamsTitle": "Pad parameters",
+        "pathParamsSubtitle": "Worden gedefinieerd door :parameter in het pad",
+        "nameSubtitle": "Unieke naam van de pagina",
+        "pathTitle": "Pad",
+        "pathParamsSubtitleTutorial": "Pad parameters kunnen worden gebruikt om gegevens dynamisch te laden, afhankelijk van de opgegeven parameter. Voeg :parameter toe aan het pad om er een toe te voegen.",
+        "nameTitle": "Naam",
+        "pathSubtitle": "Een parameter kan worden toegevoegd via :parameter"
     },
     "builderForm": {
         "submit": "Applicatie toevoegen"
     },
     "builderSettingTypes": {
         "themeName": "Thema",
-        "integrationsName": "Integraties"
+        "integrationsName": "Integraties",
+        "domainsName": "Domeinen"
     },
     "elementMenu": {
         "moveUp": "Verplaats omhoog",
@@ -43,7 +51,11 @@
         "heading": "Kop",
         "headingDescription": "Titel paginakop",
         "paragraph": "Paragraaf",
-        "paragraphDescription": "Tekst op één regel"
+        "paragraphDescription": "Tekst op één regel",
+        "link": "Link",
+        "image": "Afbeelding",
+        "linkDescription": "Een link naar pagina/URL",
+        "imageDescription": "Afbeelding weergeven"
     },
     "addElementButton": {
         "label": "Element"
@@ -82,5 +94,138 @@
         "textTitle": "Tekst",
         "textPlaceholder": "Tekst invoeren...",
         "textError": "De waarde is ongeldig."
+    },
+    "pageErrors": {
+        "errorPathNotUnique": "Een pad met deze naam bestaat al",
+        "errorValidPathCharacters": "Het pad bevat ongeldige tekens",
+        "errorUniquePathParams": "Pad parameters moeten uniek zijn.",
+        "errorStartingSlash": "Een pad moet beginnen met een '/'",
+        "errorNameNotUnique": "Een pagina met deze naam bestaat al"
+    },
+    "pageActionTypes": {
+        "preview": "Voorbeeld",
+        "publish": "Publiceren"
+    },
+    "publishActionModal": {
+        "title": "Publiceren",
+        "description": "Breng uw app live door te publiceren naar een van de domeinen. Houd er rekening mee dat uw applicatie meerdere domeinen kan hebben, die elk een andere versie van de applicatie hebben.",
+        "publish": "Publiceren",
+        "publishSucceedTitle": "Site gepubliceerd",
+        "publishSucceedDescription": "De site is met succes gepubliceerd.",
+        "publishFailedTitle": "Publiceren van de site is mislukt",
+        "publishFailedDescription": "Het publiceren van de site is mislukt. Probeer het later opnieuw.",
+        "openInNewTab": "Openen in nieuw tabblad",
+        "noDomain": "Je moet ten minste één domein hebben om uw applicatie te kunnen publiceren."
+    },
+    "lastPublishedDomainDate": {
+        "neverPublished": "nooit",
+        "lastPublished": "Laatst gepubliceerd:"
+    },
+    "imageElementForm": {
+        "invalidUrlError": "URL is ongeldig",
+        "altTextTitle": "Alt tekst",
+        "altTextDescription": "Wordt gebruikt door schermlezers en weergegeven als de afbeelding niet kan worden geladen",
+        "fileLabel": "Afbeeldingsbestand",
+        "fileSourceTypeURL": "URL",
+        "fileSourceTypeUpload": "Uploaden",
+        "urlWarning": "Opmerking: zorg ervoor dat u controle heeft over de ingevoerde URL of deze vertrouwt.",
+        "uploadFileButton": "Upload bestand"
+    },
+    "domainSettings": {
+        "titleOverview": "Domeinen",
+        "noDomainMessage": "Je hebt nog geen domein aan deze applicatie gekoppeld. Je moet een domein toevoegen om uw applicatie te kunnen publiceren. Je kunt verschillende versies van je applicatie publiceren voor elk domein dat hier wordt vermeld.",
+        "titleAddDomain": "Domein toevoegen",
+        "addDomain": "Domein toevoegen"
+    },
+    "domainCard": {
+        "refresh": "Instellingen vernieuwen",
+        "detailLabel": "Toon details"
+    },
+    "domainTypes": {
+        "customName": "Aangepast domein"
+    },
+    "linkElement": {
+        "noValue": "Naamloos..."
+    },
+    "linkElementForm": {
+        "text": "Tekst",
+        "textPlaceholder": "Tekst invoeren...",
+        "navigateTo": "Navigeer naar",
+        "navigateToNotSet": "Geen bestemming",
+        "navigateToCustom": "Aangepaste URL",
+        "variantButton": "Knop",
+        "width": "Breedte",
+        "target": "Open in...",
+        "targetSelf": "Zelfde tabblad",
+        "paramsInErrorDescription": "De opgeslagen parameters komen niet overeen met de paginaparameters. De pagina is waarschijnlijk verwijderd of bijgewerkt.",
+        "pageParameterTypeError": "Ongeldig type",
+        "url": "Bestemmings-URL",
+        "widthAuto": "Auto",
+        "targetNewTab": "Nieuw tabblad",
+        "urlPlaceholder": "Voer een URL in...",
+        "variant": "Variant",
+        "widthFull": "Volle breedte",
+        "variantLink": "Link",
+        "paramPlaceholder": "Voer een waarde in...",
+        "paramsInErrorButton": "Parameters bijwerken"
+    },
+    "alignmentSelector": {
+        "alignment": "Uitlijning",
+        "alignmentLeft": "Link",
+        "alignmentCenter": "Centreren",
+        "alignmentRight": "Rechts"
+    },
+    "pageSettings": {
+        "pageUpdatedTitle": "Gewijzigd",
+        "pageUpdatedDescription": "De pagina-instellingen zijn bijgewerkt.",
+        "title": "Pagina"
+    },
+    "pathParamTypes": {
+        "textName": "Tekst",
+        "numericName": "Numeriek"
+    },
+    "publicPage": {
+        "siteNotFound": "Site niet gevonden",
+        "pageNotFound": "Pagina niet gevonden"
+    },
+    "integrationSettings": {
+        "title": "Integraties",
+        "integrationMessage": "Je kunt nieuwe integraties maken door gegevensbron, actie of gebruikers authenticatie toe te voegen.",
+        "noIntegrationMessage": "Je hebt nog geen verbinding gemaakt. Ze kunnen worden gemaakt door gegevensbron, actie of gebruikers authenticatie toe te voegen."
+    },
+    "dataSourceForm": {
+        "addIntegration": "Nieuwe integratie toevoegen",
+        "noIntegrations": "je hebt nog geen integratie",
+        "integrationPlaceholder": "Selecteer een integratie",
+        "errorUniqueName": "Data bron naam moet uniek zijn.",
+        "selectTypeFirst": "Selecteer eerst de dienst",
+        "servicePlaceholder": "Selecteer een dienst",
+        "namePlaceholder": "Bron naam"
+    },
+    "dataSourceContext": {
+        "addDataSource": "Nieuwe gegevensbron toevoegen",
+        "noDataSourceTitle": "Je hebt nog geen data toegevoegd",
+        "noDataSourceMessage": "Data kan worden gebruikt om gegevens op te halen uit interne of externe bronnen en deze op de pagina weer te geven."
+    },
+    "imageElement": {
+        "emptyState": "Geen alt-tekst gedefinieerd..."
+    },
+    "elementForms": {
+        "textInputPlaceholder": "Voer tekst in...",
+        "urlInputPlaceholder": "Voer url in..."
+    },
+    "dnsStatus": {
+        "hostHeader": "Host",
+        "description": "Ga naar de DNS-instellingen van je domeinen en breng de volgende wijzigingen aan",
+        "valueHeader": "Waarde",
+        "typeHeader": "Type"
+    },
+    "customDomainForm": {
+        "domainNameLabel": "Domeinnaam",
+        "notUniqueDomain": "Het opgegeven domein is al in gebruik",
+        "invalidDomain": "De opgegeven domeinnaam is ongeldig"
+    },
+    "pageSettingsTypes": {
+        "pageName": "Pagina"
     }
 }

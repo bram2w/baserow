@@ -6,7 +6,7 @@
     :fetch-on-open="true"
     :disabled="disabled"
     class="filters__value-dropdown dropdown--tiny"
-    @input="$emit('input', $event.id)"
+    @input="$emit('input', $event)"
   ></PaginatedDropdown>
   <a
     v-else

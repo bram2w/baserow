@@ -2,8 +2,8 @@ import typing
 
 from django.db import connection
 
-from baserow.contrib.database.formula.parser.exceptions import MaximumFormulaSizeError
 from baserow.contrib.database.formula.types.visitors import FormulaTypingVisitor
+from baserow.formula.parser.exceptions import MaximumFormulaSizeError
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import FormulaField
@@ -68,7 +68,9 @@ def recreate_formula_field_if_needed(
     if force_recreate_column or _check_if_formula_type_change_requires_drop_recreate(
         old_field, field.cached_formula_type
     ):
-        model = field.table.get_model(fields=[field], add_dependencies=False)
+        model = field.table.get_model(
+            fields=[field], field_ids=[], add_dependencies=False
+        )
         from baserow.contrib.database.fields.registries import field_converter_registry
 
         field_converter_registry.get("formula").alter_field(

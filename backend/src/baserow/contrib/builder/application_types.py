@@ -18,7 +18,7 @@ from baserow.contrib.builder.types import BuilderDict, PageDict
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.db import specific_iterator
 from baserow.core.models import Application, Workspace
-from baserow.core.registries import ApplicationType, BaserowImportExportMode
+from baserow.core.registries import ApplicationType, ImportExportConfig
 from baserow.core.utils import ChildProgressBuilder
 
 
@@ -26,6 +26,7 @@ class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
     instance_serializer_class = BuilderSerializer
+    supports_integrations = True
 
     def get_api_urls(self):
         from .api import urls as api_urls
@@ -85,11 +86,9 @@ class BuilderApplicationType(ApplicationType):
     def export_serialized(
         self,
         builder: Builder,
+        import_export_config: ImportExportConfig,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> BuilderDict:
         """
         Exports the builder application type to a serialized format that can later
@@ -103,7 +102,7 @@ class BuilderApplicationType(ApplicationType):
         serialized_pages = self.export_pages_serialized(pages, files_zip, storage)
 
         serialized = super().export_serialized(
-            builder, files_zip, storage, baserow_import_export_mode
+            builder, import_export_config, files_zip, storage
         )
 
         return BuilderDict(pages=serialized_pages, **serialized)
@@ -193,6 +192,7 @@ class BuilderApplicationType(ApplicationType):
         self,
         workspace: Workspace,
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
@@ -211,6 +211,7 @@ class BuilderApplicationType(ApplicationType):
         application = super().import_serialized(
             workspace,
             serialized_values,
+            import_export_config,
             id_mapping,
             files_zip,
             storage,

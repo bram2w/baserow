@@ -1,0 +1,389 @@
+from typing import Dict
+
+from django.db import transaction
+
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_body_custom_fields,
+)
+from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
+from baserow.api.utils import (
+    CustomFieldRegistryMappingSerializer,
+    DiscriminatorCustomFieldsMappingSerializer,
+    validate_data,
+    validate_data_custom_fields,
+)
+from baserow.contrib.builder.api.data_sources.errors import (
+    ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+    ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
+)
+from baserow.contrib.builder.api.data_sources.serializers import (
+    BaseUpdateDataSourceSerializer,
+    CreateDataSourceSerializer,
+    DataSourceSerializer,
+    MoveDataSourceSerializer,
+    UpdateDataSourceSerializer,
+)
+from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceDoesNotExist,
+    DataSourceNotInSamePage,
+)
+from baserow.contrib.builder.data_sources.handler import DataSourceHandler
+from baserow.contrib.builder.data_sources.service import DataSourceService
+from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
+from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.core.services.registries import service_type_registry
+
+
+class DataSourcesView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns only the data_sources of the page related to the "
+                "provided Id.",
+            )
+        ],
+        tags=["Builder data sources"],
+        operation_id="list_builder_page_data_sources",
+        description=(
+            "Lists all the data_sources of the page related to the provided parameter if "
+            "the user has access to the related builder's workspace. "
+            "If the workspace is related to a template, then this endpoint will be "
+            "publicly accessible."
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                service_type_registry, DataSourceSerializer, many=True
+            ),
+            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request, page_id):
+        """
+        Responds with a list of serialized data_sources that belong to the page if the
+        user has access to that page.
+        """
+
+        page = PageHandler().get_page(page_id)
+
+        data_sources = DataSourceService().get_data_sources(request.user, page)
+
+        data = [
+            service_type_registry.get_serializer(
+                data_source.service,
+                DataSourceSerializer,
+                context={"data_source": data_source},
+            ).data
+            if data_source.service
+            else DataSourceSerializer(
+                data_source, context={"data_source": data_source}
+            ).data
+            for data_source in data_sources
+        ]
+        return Response(data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Creates a data_source for the builder page related to the "
+                "provided value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="create_builder_page_data_source",
+        description="Creates a new builder data_source",
+        request=DiscriminatorCustomFieldsMappingSerializer(
+            service_type_registry,
+            CreateDataSourceSerializer,
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                service_type_registry, DataSourceSerializer
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+            DataSourceNotInSamePage: ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
+        }
+    )
+    @validate_body_custom_fields(
+        service_type_registry,
+        base_serializer_class=CreateDataSourceSerializer,
+        allow_empty_type=True,
+    )
+    def post(self, request, data: Dict, page_id: int):
+        """Creates a new data_source."""
+
+        type_name = data.pop("type", None)
+        before_id = data.pop("before_id", None)
+
+        page = PageHandler().get_page(page_id)
+
+        before = DataSourceHandler().get_data_source(before_id) if before_id else None
+
+        service_type = service_type_registry.get(type_name) if type_name else None
+
+        data_source = DataSourceService().create_data_source(
+            request.user, page, service_type=service_type, before=before, **data
+        )
+
+        if data_source.service:
+            serializer = service_type_registry.get_serializer(
+                data_source.service,
+                DataSourceSerializer,
+                context={"data_source": data_source},
+            )
+        else:
+            serializer = DataSourceSerializer(
+                data_source, context={"data_source": data_source}
+            )
+        return Response(serializer.data)
+
+
+class DataSourceView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="update_builder_page_data_source",
+        description="Updates an existing builder data_source.",
+        request=CustomFieldRegistryMappingSerializer(
+            service_type_registry,
+            UpdateDataSourceSerializer,
+        ),
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                service_type_registry, DataSourceSerializer
+            ),
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+        }
+    )
+    def patch(self, request, data_source_id: int):
+        """
+        Update a data_source.
+        """
+
+        data_source = DataSourceHandler().get_data_source_for_update(data_source_id)
+
+        service_type_from_query = None
+        service_type_from_service = None
+        change_service_type = False
+        service_type = None
+
+        # Do we have a service?
+        if data_source.service is not None:
+            # Yes, let's read the service type from it.
+            service_type_from_service = service_type_registry.get_by_model(
+                data_source.service.specific
+            )
+            # data["service_type"] = service_type_from_service
+            service_type = service_type_from_service
+
+        # Do we have a service type in the query payload
+        if "type" in request.data:
+            request_type_name = request.data["type"]
+            if request_type_name:
+                service_type_from_query = service_type_registry.get(request_type_name)
+
+            # Is this service type different from the current service type?
+            if service_type_from_query != service_type_from_service:
+                # Add the found service type
+                change_service_type = True
+                service_type = service_type_from_query
+
+        if service_type:
+            # We have a service type so either we have a service or a type in the query
+            # We need to validate the incoming data against the serializer related to
+            # the given type
+            data = validate_data_custom_fields(
+                service_type.type,
+                service_type_registry,
+                request.data,
+                base_serializer_class=UpdateDataSourceSerializer,
+                return_validated=True,
+            )
+
+        else:
+            # No service nor type, we should validate with the default serializer
+            data = validate_data(BaseUpdateDataSourceSerializer, request.data)
+
+        if change_service_type:
+            data["new_service_type"] = service_type_from_query
+
+        data_source_updated = DataSourceService().update_data_source(
+            request.user, data_source, service_type=service_type, **data
+        )
+
+        if data_source_updated.service:
+            serializer = service_type_registry.get_serializer(
+                data_source_updated.service,
+                DataSourceSerializer,
+                context={"data_source": data_source_updated},
+            )
+        else:
+            serializer = DataSourceSerializer(
+                data_source_updated, context={"data_source": data_source_updated}
+            )
+
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="delete_builder_page_data_source",
+        description="Deletes the data_source related by the given id.",
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(["ERROR_DATA_SOURCE_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+        }
+    )
+    @transaction.atomic
+    def delete(self, request, data_source_id: int):
+        """
+        Deletes an data_source.
+        """
+
+        data_source = DataSourceHandler().get_data_source_for_update(data_source_id)
+
+        DataSourceService().delete_data_source(request.user, data_source)
+
+        return Response(status=204)
+
+
+class MoveDataSourceView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source to move",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="move_builder_page_data_source",
+        description=(
+            "Moves the data_source in the page before another data_source or at the end of "
+            "the page if no before data_source is given. The data_sources must belong to the "
+            "same page."
+        ),
+        request=MoveDataSourceSerializer,
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                service_type_registry, DataSourceSerializer
+            ),
+            400: get_error_schema(
+                ["ERROR_REQUEST_BODY_VALIDATION", "ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE"]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            DataSourceNotInSamePage: ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
+        }
+    )
+    @validate_body(MoveDataSourceSerializer)
+    def patch(self, request, data: Dict, data_source_id: int):
+        """
+        Moves the data_source in the page before another data_source or at the end of
+        the page if no before data_source is given.
+        """
+
+        data_source = DataSourceHandler().get_data_source_for_update(data_source_id)
+
+        before_id = data.get("before_id", None)
+
+        before = None
+        if before_id:
+            before = DataSourceHandler().get_data_source(before_id)
+
+        moved_data_source = DataSourceService().move_data_source(
+            request.user, data_source, before
+        )
+
+        serializer = service_type_registry.get_serializer(
+            moved_data_source.service,
+            DataSourceSerializer,
+            context={"data_source": moved_data_source},
+        )
+        return Response(serializer.data)

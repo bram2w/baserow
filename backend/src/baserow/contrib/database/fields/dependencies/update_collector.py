@@ -1,12 +1,15 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, Set, Tuple, cast
+from typing import Dict, List, NamedTuple, Optional, Set, Tuple, cast
 
-from django.db.models import Expression, Q
+from django.db.models import Expression, Q, Value
 
-from baserow.contrib.database.fields.dependencies.exceptions import InvalidViaPath
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.signals import field_updated
+from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.table.constants import (
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+)
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.signals import table_updated
 
@@ -42,31 +45,45 @@ class PathBasedUpdateStatementCollector:
         update_statement: Expression,
         path_from_starting_table: Optional[List[LinkRowField]] = None,
     ):
+        self._add_update_statement_or_mark_as_changed_for_field(
+            field, update_statement, path_from_starting_table
+        )
+
+    def mark_field_as_changed(
+        self,
+        field: Field,
+        path_from_starting_table: Optional[List[LinkRowField]] = None,
+    ):
+        self._add_update_statement_or_mark_as_changed_for_field(
+            field, None, path_from_starting_table
+        )
+
+    def _add_update_statement_or_mark_as_changed_for_field(
+        self,
+        field: Field,
+        update_statement: Optional[Expression],
+        path_from_starting_table: Optional[List[LinkRowField]] = None,
+    ):
         if not path_from_starting_table:
             if self.table != field.table:
-                # We have been given an update statement for a different table, but
-                # we don't have a path back to the starting table. This only occurs
-                # when a link row field has been converted to another type, which will
-                # have deleted the m2m connection entirely. In this situation we just
-                # want to update all the cells of the dependant fields because they will
-                # have all been affected by the deleted connection.
-                broken_name = f"broken_connection_to_table_{field.table_id}"
-                if broken_name not in self.sub_paths:
-                    collector = PathBasedUpdateStatementCollector(
-                        field.table, None, connection_is_broken=True
-                    )
-                    self.sub_paths[broken_name] = collector
-                else:
-                    collector = self.sub_paths[broken_name]
-                collector.add_update_statement(
+                collector = self._get_collector_for_broken_connection(field)
+                collector._add_update_statement_or_mark_as_changed_for_field(
                     field, update_statement, path_from_starting_table
                 )
             else:
-                self.update_statements[field.db_column] = update_statement
+                if update_statement is not None:
+                    self.update_statements[field.db_column] = update_statement
+                if self.table.needs_background_update_column_added:
+                    self.update_statements[
+                        ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
+                    ] = Value(True)
         else:
             next_via_field_link = path_from_starting_table[0]
             if next_via_field_link.link_row_table != self.table:
-                raise InvalidViaPath()
+                # A link row field has been edited and this has been triggered by the
+                # related link field that is being deleted, nothing to do as a separate
+                # update will fix this column.
+                return
             next_link_db_column = next_via_field_link.db_column
             if next_link_db_column not in self.sub_paths:
                 self.sub_paths[next_link_db_column] = PathBasedUpdateStatementCollector(
@@ -74,9 +91,28 @@ class PathBasedUpdateStatementCollector:
                     next_via_field_link,
                     connection_is_broken=self.connection_is_broken,
                 )
-            self.sub_paths[next_link_db_column].add_update_statement(
+            self.sub_paths[
+                next_link_db_column
+            ]._add_update_statement_or_mark_as_changed_for_field(
                 field, update_statement, path_from_starting_table[1:]
             )
+
+    def _get_collector_for_broken_connection(self, field):
+        # We have been given an update statement for a different table, but
+        # we don't have a path back to the starting table. This only occurs
+        # when a link row field has been converted to another type, which will
+        # have deleted the m2m connection entirely. In this situation we just
+        # want to update all the cells of the dependant fields because they will
+        # have all been affected by the deleted connection.
+        broken_name = f"broken_connection_to_table_{field.table_id}"
+        if broken_name not in self.sub_paths:
+            collector = PathBasedUpdateStatementCollector(
+                field.table, None, connection_is_broken=True
+            )
+            self.sub_paths[broken_name] = collector
+        else:
+            collector = self.sub_paths[broken_name]
+        return collector
 
     def execute_all(
         self,
@@ -131,6 +167,10 @@ class PathBasedUpdateStatementCollector:
             )
 
             qs = qs.filter(filter_for_rows_connected_to_starting_row)
+        if starting_row_ids is None:
+            # We aren't updating individual rows but instead entire columns, so don't
+            # set this per row attribute.
+            self.update_statements.pop(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, None)
         qs.update(**self.update_statements)
 
     def _include_rows_connected_to_deleted_m2m_relationships(
@@ -177,6 +217,11 @@ class PathBasedUpdateStatementCollector:
         return filters
 
 
+class UpdatedField(NamedTuple):
+    field: Field
+    send_field_update_signal: bool = True
+
+
 class FieldUpdateCollector:
     """
     From a starting table this class collects updated fields and an update
@@ -199,7 +244,9 @@ class FieldUpdateCollector:
             will only update rows which join back to these starting rows.
         """
 
-        self._updated_fields_per_table: Dict[int, Dict[int, Field]] = defaultdict(dict)
+        self._updated_fields_per_table: Dict[
+            int, Dict[int, UpdatedField]
+        ] = defaultdict(dict)
         self._updated_tables = {}
         self._starting_row_ids = starting_row_ids
         self._starting_table = starting_table
@@ -231,15 +278,47 @@ class FieldUpdateCollector:
         """
 
         # noinspection PyTypeChecker
-        self._updated_fields_per_table[field.table_id][field.id] = field
+        self._updated_fields_per_table[field.table_id][field.id] = UpdatedField(field)
         if field.table_id not in self._updated_tables:
             self._updated_tables[field.table_id] = field.table
         self._update_statement_collector.add_update_statement(
             field, update_statement, via_path_to_starting_table
         )
 
+    def add_field_which_has_changed(
+        self,
+        field: Field,
+        via_path_to_starting_table: Optional[List[LinkRowField]] = None,
+        send_field_updated_signal: bool = True,
+    ):
+        """
+        Stores the provided field as an updated one to send in field updated signals
+        when triggered to do so. Call this when you have no update statement to run
+        for the field's cells, but they have still changed and so other cascading
+        updates or background row tasks still need to be run for them
+
+        :param field: The field which has had cell values changed.
+        :param via_path_to_starting_table: A list of link row fields which lead from
+            the self.starting_table to the table containing field. Used to properly
+            order the update statements so the graph is updated in sequence and also
+            used if self.starting_row_ids is set so only rows which join back to the
+            starting rows via this path are updated.
+        :param send_field_updated_signal: Whether to send a field_updated signal
+            for this field at the end.
+        """
+
+        # noinspection PyTypeChecker
+        self._updated_fields_per_table[field.table_id][field.id] = UpdatedField(
+            field, send_field_updated_signal
+        )
+        if field.table_id not in self._updated_tables:
+            self._updated_tables[field.table_id] = field.table
+        self._update_statement_collector.mark_field_as_changed(
+            field, via_path_to_starting_table
+        )
+
     def apply_updates_and_get_updated_fields(
-        self, field_cache: FieldCache
+        self, field_cache: FieldCache, skip_search_updates=False
     ) -> List[Field]:
         """
         Triggers all update statements to be executed in the correct order in as few
@@ -252,6 +331,22 @@ class FieldUpdateCollector:
             self._starting_row_ids,
             deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
         )
+
+        if not skip_search_updates:
+            for table in self._updated_tables.values():
+                if not self._starting_table or table.id != self._starting_table.id:
+                    if self._starting_row_ids is not None:
+                        # The cascade was only for some specific rows and not the
+                        # entire field
+                        SearchHandler.field_value_updated_or_created(
+                            table,
+                        )
+                    else:
+                        # The cascade was for the entire field
+                        SearchHandler.entire_field_values_changed_or_created(
+                            table, self._for_table(table)
+                        )
+
         return self._for_table(self._starting_table)
 
     def send_additional_field_updated_signals(self):
@@ -263,7 +358,10 @@ class FieldUpdateCollector:
         will be all the other updated fields in that table.
         """
 
-        for field, related_fields in self._get_updated_fields_per_table():
+        for (
+            field,
+            related_fields,
+        ) in self._get_updated_fields_to_send_signals_for_per_table():
             if field.table != self._starting_table:
                 field_updated.send(
                     self,
@@ -276,12 +374,19 @@ class FieldUpdateCollector:
         for table in self._updated_tables.values():
             table_updated.send(self, table=table, user=None, force_table_refresh=True)
 
-    def _get_updated_fields_per_table(self) -> List[Tuple[Field, List[Field]]]:
+    def _get_updated_fields_to_send_signals_for_per_table(
+        self,
+    ) -> List[Tuple[Field, List[Field]]]:
         result = []
         for fields_dict in self._updated_fields_per_table.values():
-            fields = list(fields_dict.values())
-            result.append((fields[0], fields[1:]))
+            fields = [
+                f.field for f in fields_dict.values() if f.send_field_update_signal
+            ]
+            if fields:
+                result.append((fields[0], fields[1:]))
         return result
 
     def _for_table(self, table) -> List[Field]:
-        return list(self._updated_fields_per_table.get(table.id, {}).values())
+        return [
+            f.field for f in self._updated_fields_per_table.get(table.id, {}).values()
+        ]

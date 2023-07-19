@@ -87,6 +87,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             class="dropdown__selected"
           >
             <!---->
+             
+            <!---->
             
         Name
        
@@ -128,6 +130,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Name"
@@ -148,6 +152,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -172,6 +178,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Flag"
@@ -184,6 +192,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -198,6 +210,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           <a
             class="dropdown__selected"
           >
+            <!---->
+             
             <!---->
             
         viewFilter.is
@@ -240,6 +254,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.is"
@@ -260,6 +276,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -284,6 +302,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.contains"
@@ -304,6 +324,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -328,6 +350,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.containsWord"
@@ -348,6 +372,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -372,6 +398,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.lengthIsLowerThan"
@@ -392,6 +420,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -416,6 +446,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.isNotEmpty"
@@ -428,6 +460,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -465,6 +501,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             class="dropdown__selected"
           >
             <!---->
+             
+            <!---->
             
         viewFilterContext.and
        
@@ -493,6 +531,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilterContext.and"
@@ -516,6 +556,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilterContext.or"
@@ -528,6 +570,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
          
@@ -544,6 +590,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           <a
             class="dropdown__selected"
           >
+            <!---->
+             
             <!---->
             
         Stars
@@ -586,6 +634,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Name"
@@ -606,6 +656,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -630,6 +682,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Flag"
@@ -642,6 +696,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -656,6 +714,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           <a
             class="dropdown__selected"
           >
+            <!---->
+             
             <!---->
             
         viewFilter.is
@@ -698,6 +758,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.is"
@@ -718,6 +780,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -742,6 +806,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.higherThan"
@@ -764,6 +830,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.lowerThan"
@@ -776,6 +844,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -875,6 +947,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             class="dropdown__selected"
           >
             <!---->
+             
+            <!---->
             
         Stars
        
@@ -916,6 +990,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Name"
@@ -936,6 +1012,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -960,6 +1038,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Flag"
@@ -972,6 +1052,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -986,6 +1070,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
           <a
             class="dropdown__selected"
           >
+            <!---->
+             
             <!---->
             
         viewFilter.is
@@ -1028,6 +1114,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.is"
@@ -1048,6 +1136,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -1072,6 +1162,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.higherThan"
@@ -1094,6 +1186,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.lowerThan"
@@ -1106,6 +1200,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -1205,6 +1303,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             class="dropdown__selected"
           >
             <!---->
+             
+            <!---->
             
         Stars
        
@@ -1246,6 +1346,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Name"
@@ -1266,6 +1368,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -1290,6 +1394,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="Flag"
@@ -1302,6 +1408,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -1316,6 +1426,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
           <a
             class="dropdown__selected"
           >
+            <!---->
+             
             <!---->
             
         viewFilter.is
@@ -1358,6 +1470,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.is"
@@ -1378,6 +1492,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   <div
                     class="select__item-name"
                   >
+                    <!---->
+                     
                     <!---->
                      
                     <span
@@ -1402,6 +1518,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.higherThan"
@@ -1424,6 +1542,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   >
                     <!---->
                      
+                    <!---->
+                     
                     <span
                       class="select__item-name-text"
                       title="viewFilter.lowerThan"
@@ -1436,6 +1556,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                 </a>
               </li>
             </ul>
+             
+            <!---->
+             
+            <!---->
           </div>
         </div>
       </div>

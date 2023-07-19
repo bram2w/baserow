@@ -256,7 +256,9 @@ def aggregate_wrapper(
     expr: Expression = Subquery(
         model.objects_and_trash.annotate(**pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
-        .values(result=expr_with_metadata.expression),
+        .values("id")
+        .annotate(result=expr_with_metadata.expression)
+        .values("result"),
     )
 
     output_field = expr_with_metadata.expression.output_field

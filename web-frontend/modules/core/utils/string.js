@@ -55,6 +55,15 @@ export const isValidURLWithHttpScheme = (str) => {
   return !!pattern.test(trimmedStr) && isValidURL(trimmedStr)
 }
 
+/**
+ * An even stricter validator that makes sure that https:// is prepended and that there
+ * is at least a domain name.
+ */
+export const isValidAbsoluteURL = (str) => {
+  const pattern = /^[^\s]{0,255}(\.)[^\s]{2,}$/i
+  return isValidURLWithHttpScheme(str) && pattern.test(str)
+}
+
 export const isValidEmail = (str) => {
   // Please keep these regex in sync with the backend
   // See baserow.contrib.database.fields.field_types.EmailFieldType
@@ -108,6 +117,27 @@ export const isNumeric = (value) => {
   return /^-?\d+$/.test(value)
 }
 
+/**
+ * Allow to find the next unused name excluding a list of names.
+ * This is the frontend equivalent of backend ".find_unused_name()" method.
+ *
+ * @param {string} baseName
+ * @param {string[]} excludeNames
+ * @returns the first baseName potentially suffixed with a number that is not in
+ * excludedNames.
+ *
+ * @example
+ * // returns 'name'
+ * getNextAvailableNameInSequence('name', []);
+ *
+ * @example
+ * // returns 'name 1'
+ * getNextAvailableNameInSequence('name', ['name']);
+ *
+ * @example
+ * // returns 'name 2'
+ * getNextAvailableNameInSequence('name', ['name', 'name 1', 'name 3']);
+ */
 export const getNextAvailableNameInSequence = (baseName, excludeNames) => {
   let name = baseName
   let i = 0

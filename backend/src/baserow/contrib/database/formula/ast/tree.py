@@ -12,14 +12,12 @@ from baserow.contrib.database.formula.ast.exceptions import (
     InvalidStringLiteralProvided,
     TooLargeStringLiteralProvided,
 )
-from baserow.contrib.database.formula.parser.parser import (
-    convert_string_to_string_literal_token,
-)
 from baserow.contrib.database.formula.types import formula_type
 from baserow.contrib.database.formula.types.type_checker import (
     SingleArgumentTypeChecker,
 )
 from baserow.core.registry import Instance
+from baserow.formula.parser.parser import convert_string_to_string_literal_token
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.formula.expression_generator.generator import (

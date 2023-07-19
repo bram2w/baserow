@@ -4,7 +4,9 @@ from baserow.contrib.database.table.models import Table
 
 
 class TableFixtures:
-    def create_database_table(self, user=None, create_table=True, **kwargs):
+    def create_database_table(
+        self, user=None, create_table=True, force_add_tsvectors=True, **kwargs
+    ):
         if "database" not in kwargs:
             kwargs["database"] = self.create_database_application(user=user)
 
@@ -14,11 +16,14 @@ class TableFixtures:
         if "order" not in kwargs:
             kwargs["order"] = 0
 
+        kwargs.setdefault("needs_background_update_column_added", True)
+
         table = Table.objects.create(**kwargs)
 
         if create_table:
+            model = table.get_model(force_add_tsvectors=force_add_tsvectors)
             with safe_django_schema_editor() as schema_editor:
-                schema_editor.create_model(table.get_model())
+                schema_editor.create_model(model)
 
         return table
 
@@ -47,7 +52,9 @@ class TableFixtures:
 
         return table, fields, created_rows
 
-    def create_two_linked_tables(self, user=None, table_b=None, **kwargs):
+    def create_two_linked_tables(
+        self, user=None, table_b=None, table_kwargs=None, **kwargs
+    ):
         if user is None:
             user = self.create_user()
 
@@ -59,9 +66,14 @@ class TableFixtures:
         else:
             database = kwargs["database"]
 
-        table_a = self.create_database_table(database=database, name="table_a")
+        table_kwargs = table_kwargs or {}
+        table_a = self.create_database_table(
+            database=database, name="table_a", **table_kwargs
+        )
         if table_b is None:
-            table_b = self.create_database_table(database=database, name="table_b")
+            table_b = self.create_database_table(
+                database=database, name="table_b", **table_kwargs
+            )
 
         if not table_a.field_set.filter(primary=True).exists():
             self.create_text_field(table=table_a, name="primary", primary=True)

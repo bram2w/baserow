@@ -36,6 +36,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.rowDoesNotExistTitle'),
         app.i18n.t('clientHandler.rowDoesNotExistDescription')
       ),
+      ERROR_NOTIFICATION_DOES_NOT_EXIST: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.notificationDoesNotExistTitle'),
+        app.i18n.t('clientHandler.notificationDoesNotExistDescription')
+      ),
       ERROR_FILE_SIZE_TOO_LARGE: new ResponseErrorMessage(
         app.i18n.t('clientHandler.fileSizeTooLargeTitle'),
         app.i18n.t('clientHandler.fileSizeTooLargeDescription')
@@ -400,7 +404,7 @@ export class ErrorHandler {
     }
 
     this.store.dispatch(
-      'notification/error',
+      'toast/error',
       {
         title: message.title,
         message: message.message,
@@ -487,7 +491,7 @@ export default function ({ app, store, error }, inject) {
   client.interceptors.request.use(prepareRequestHeaders(store))
 
   // Create a response interceptor to add more detail to the error message
-  // and to create a notification when there is a network error.
+  // and to create a toast when there is a network error.
   client.interceptors.response.use(
     null,
     makeErrorResponseInterceptor(store, app, clientErrorMap, error)

@@ -1,6 +1,9 @@
 from collections import defaultdict
 
 from django.conf import settings
+from django.db import transaction
+
+from loguru import logger
 
 from baserow.config.celery import app
 from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
@@ -134,3 +137,33 @@ def unsubscribe_user_from_table_currently_subscribed_to(
         WorkspaceObjectScopeType.type,
         workspace_id,
     )
+
+
+@app.task(
+    bind=True,
+    queue="export",
+)
+def setup_new_background_update_and_search_columns(self, table_id: int):
+    """ """
+
+    from baserow.contrib.database.search.exceptions import (
+        PostgresFullTextSearchDisabledException,
+    )
+    from baserow.contrib.database.search.handler import SearchHandler
+    from baserow.contrib.database.table.handler import TableHandler
+
+    with transaction.atomic():
+        table = TableHandler().get_table_for_update(table_id)
+        TableHandler().create_needs_background_update_field(table)
+
+        try:
+            SearchHandler.sync_tsvector_columns(table)
+        except PostgresFullTextSearchDisabledException:
+            logger.debug(f"Postgres full-text search is disabled.")
+
+    try:
+        SearchHandler.update_tsvector_columns(
+            table, update_tsvectors_for_changed_rows_only=False
+        )
+    except PostgresFullTextSearchDisabledException:
+        logger.debug(f"Postgres full-text search is disabled.")

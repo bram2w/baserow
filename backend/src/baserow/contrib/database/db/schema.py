@@ -1,4 +1,5 @@
 import contextlib
+from typing import Optional, Set
 
 from django.db import connection, transaction
 from django.db.backends.base.schema import BaseDatabaseSchemaEditor
@@ -239,7 +240,7 @@ def _build_schema_editor_class(name, classes):
         )
     regular_schema_editor = connection.SchemaEditorClass
     schema_editor_class = type(name, (*classes, regular_schema_editor), {})
-    return schema_editor_class, regular_schema_editor
+    return schema_editor_class
 
 
 @contextlib.contextmanager
@@ -269,25 +270,29 @@ class SafeBaserowPostgresSchemaEditor:
         self-referencing link_rows when importing data without errors.
         """
 
+        self.create_model_tracking_created_m2ms(model)
+
+    def create_model_tracking_created_m2ms(
+        self, model, already_created_through_table_names: Optional[Set[str]] = None
+    ):
         sql, params = self.table_sql(model)
         # Prevent using [] as params, in the case a literal '%' is used in the
         # definition
         self.execute(sql, params or None)
-
         # Add any field index and index_together's
         self.deferred_sql.extend(self._model_indexes_sql(model))
-
+        if already_created_through_table_names is None:
+            already_created_through_table_names = set()
         # Make M2M tables
-        already_created_through_table_name = set()
         for field in model._meta.local_many_to_many:
             remote_through = field.remote_field.through
             db_table = remote_through._meta.db_table
             if (
                 field.remote_field.through._meta.auto_created
-                and db_table not in already_created_through_table_name
+                and db_table not in already_created_through_table_names
             ):
                 self.create_model(remote_through)
-                already_created_through_table_name.add(db_table)
+                already_created_through_table_names.add(db_table)
 
     def delete_model(self, model):
         """
@@ -356,19 +361,21 @@ def safe_django_schema_editor(atomic=True, name=None, classes=None, **kwargs):
 
     classes.append(SafeBaserowPostgresSchemaEditor)
 
-    (
-        BaserowSafeDjangoPostgresSchemaEditor,
-        regular_schema_editor,
-    ) = _build_schema_editor_class(name, classes)
+    regular_schema_editor = connection.SchemaEditorClass
+
+    if not issubclass(regular_schema_editor, SafeBaserowPostgresSchemaEditor):
+        # Only override the connections schema editor if we haven't already done it
+        # in an outer safe schema editor context.
+        BaserowSafeDjangoPostgresSchemaEditor = _build_schema_editor_class(
+            name, classes
+        )
+        connection.SchemaEditorClass = BaserowSafeDjangoPostgresSchemaEditor
 
     kwargs.setdefault("connection", connection)
 
     try:
-        connection.SchemaEditorClass = BaserowSafeDjangoPostgresSchemaEditor
         with optional_atomic(atomic=atomic):
-            with BaserowSafeDjangoPostgresSchemaEditor(
-                atomic=False, **kwargs
-            ) as schema_editor:
+            with connection.SchemaEditorClass(atomic=False, **kwargs) as schema_editor:
                 yield schema_editor
     finally:
         connection.SchemaEditorClass = regular_schema_editor

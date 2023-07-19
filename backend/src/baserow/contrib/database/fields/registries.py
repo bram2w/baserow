@@ -5,11 +5,20 @@ from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
 from django.db import models as django_models
-from django.db.models import BooleanField, DurationField, Q, QuerySet
+from django.db.models import (
+    BooleanField,
+    CharField,
+    DurationField,
+    Expression,
+    Q,
+    QuerySet,
+)
 from django.db.models.fields.related import ForeignKey, ManyToManyField
+from django.db.models.functions import Cast
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
     APIUrlsRegistryMixin,
@@ -126,6 +135,24 @@ class FieldType(
         """
 
         return value
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        """
+        When a field/row is created, updated or restored, this `FieldType` method
+        must return a django expression that can be cast to string that will be used
+        to create this fields search index column.
+        """
+
+        return Cast(field.db_column, output_field=CharField())
+
+    def is_searchable(self, field: Field) -> bool:
+        """
+        If this field needs a tsv search index column made for it then this should
+        return True. If True is returned then get_search_expression should also
+        be implemented.
+        """
+
+        return True
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -664,8 +691,8 @@ class FieldType(
         self, field, field_name, order_direction
     ) -> OptionallyAnnotatedOrderBy:
         """
-        This hook can be called to generate a different order by expression. By default
-        None is returned which means the normal field sorting will be applied.
+        This hook can be called to generate a different order by expression.
+        By default the normal field sorting will be applied.
         Optionally a different expression can be generated. This is for example used
         by the single select field generates a mapping achieve the correct sorting
         based on the select option value.
@@ -760,6 +787,7 @@ class FieldType(
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Field:
@@ -772,6 +800,8 @@ class FieldType(
             be imported.
         :param id_mapping: The map of exported ids to newly created ids that must be
             updated when a new instance has been created.
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
         :param deferred_fk_update_collector: An object than can be used to defer
             setting FK's to other fields until after all fields have been created
             and we know their IDs.
@@ -792,7 +822,12 @@ class FieldType(
             if self.can_have_select_options
             else []
         )
-        field = self.model_class(table=table, **serialized_copy)
+        should_create_tsvector_column = not import_export_config.reduce_disk_space_usage
+        field = self.model_class(
+            table=table,
+            tsvector_column_created=should_create_tsvector_column,
+            **serialized_copy,
+        )
         field.save()
 
         id_mapping["database_fields"][field_id] = field.id
@@ -1454,7 +1489,7 @@ class FieldType(
 
         return []
 
-    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
         """
         Returns the value of a field in a row that can be used for SQL filtering.
         Usually this is just a string or int value stored in the row but for
@@ -1464,11 +1499,11 @@ class FieldType(
         method.
 
         :param row: The row which contains the field value.
-        :param field_name: The name of the field to get the value for.
+        :param field: The instance of the field to get the value for.
         :return: The value of the field in the row in a filterable format.
         """
 
-        return getattr(row, field_name)
+        return getattr(row, field.db_column)
 
     def can_represent_date(self, field):
         """Indicates whether the field can be used to represent date or datetime."""

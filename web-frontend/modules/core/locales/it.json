@@ -25,7 +25,8 @@
         "dashboard": "Dashboard",
         "trash": "Cestino",
         "settings": "Impostazioni",
-        "members": "Membri"
+        "members": "Membri",
+        "notifications": "Notifiche"
     },
     "accountForm": {
         "nameLabel": "Il tuo nome",
@@ -519,5 +520,111 @@
     },
     "editRoleContext": {
         "billableRolesLink": "Documentazione per i ruoli a pagamento"
+    },
+    "connectingToast": {
+        "title": "Riconnettendo",
+        "content": "Riconnettendo con il server."
+    },
+    "integrationEditForm": {
+        "name": "Nome integrazione",
+        "namePlaceholder": "Inserisci il nome dell'integrazione..."
+    },
+    "authorizationErrorToast": {
+        "content": "Sembra tu non abbia i permessi per vedere questa risorsa.",
+        "action": "Aggiorna la pagina",
+        "title": "Errore di autorizzazione"
+    },
+    "uploadFileDropzone": {
+        "drop": "Trascina qui",
+        "clickOrDrop": "Clicca o trascina i file qui",
+        "errorTooManyFilesTitle": "Troppi file",
+        "errorWrongFileTypeMessage": "Non puoi caricare un file di tipo {type}",
+        "errorTooManyFilesMessage": "Puoi caricare un solo file",
+        "errorWrongFileTypeTitle": "Tipo di file non permesso"
+    },
+    "notificationPanel": {
+        "title": "Notifiche",
+        "noNotificationTitle": "Non hai nessuna notifica",
+        "noNotification": "Ti invieremo una notifica per aggiornamenti importanti o quando vieni taggato in Baserow.",
+        "markAllAsRead": "Segna tutte come lette",
+        "clearAll": "Elimina tutte"
+    },
+    "userSessionExpiredToast": {
+        "title": "Sessione scaduta",
+        "content": "Sei stato disconnesso perchè il token per la tua sessione è scaduto. Effettua il login nuovamente per tornare ad utilizzare Baserow."
+    },
+    "copyingToast": {
+        "title": "Copiando...",
+        "content": "Preparando i tuoi dati"
+    },
+    "undoRedoToast": {
+        "redoingText": "Ripristinando la tua azione",
+        "redoneText": "L'azione è stata ripristinata",
+        "redoingTitle": "Ripristinando...",
+        "undoingTitle": "Annullando...",
+        "undoingText": "Annullando la tua azione",
+        "undoneTitle": "Annullata",
+        "undoneText": "L'azione è stata annullata",
+        "noMoreUndo": "Nessuna azione da annullare",
+        "skippingUndoDueToError": "Annullamento fallito a causa di un errore.",
+        "redoneTitle": "Ripristinato",
+        "noMoreRedo": "Nessuna azione da ripristinare",
+        "skippingRedoDueToError": "Il ripristino è fallito a causa di un errore.",
+        "failed": "Fallito"
+    },
+    "failedConnectingToast": {
+        "title": "Fallito",
+        "content": "La connessione al server è fallita. Prova ad aggiornare la pagina.",
+        "action": "Aggiorna la pagina"
+    },
+    "permissionsUpdatedToast": {
+        "title": "Permessi modfiicati",
+        "content": "Questo potrebbe avere conseguenze su quello che puoi vedere, per favore, aggiorna la pagina.",
+        "action": "Ricarica"
+    },
+    "PastingToast": {
+        "title": "Incollando...",
+        "content": "Preparando i tuoi dati"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Sei sicuro di voler eliminare tutte le notifiche?",
+        "message": "Tutte le notifiche verranno permanentemente eliminate e non sarà possibile vederle di nuovo."
+    },
+    "restoreToast": {
+        "restore": "Ripristinato dal cestino {type}"
+    },
+    "clearingToast": {
+        "title": "Cancellando...",
+        "content": "Preparando i tuoi dati"
+    },
+    "dropdown": {
+        "empty": "Nessun elemento disponibile"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} ha accettato il tuo invito per far parte di {workspaceName}"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} ti ha invitato a far parte di {workspaceName}"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} è qui! Clicca per vedere le novità."
+    },
+    "integrationCreateEditModal": {
+        "createTitle": "Nuova integrazione",
+        "editTitle": "Modifica integrazione",
+        "warningTitle": "Avviso"
+    },
+    "styleSidePanel": {
+        "paddingTop": "Spazio superiore",
+        "paddingBottom": "Spazio inferiore"
+    },
+    "styleBoxForm": {
+        "paddingError": "Il valore deve essere un intero tra 0 e 200."
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "Nessun utente trovato"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} ha rifiutato il tuo invito per far parte di {workspaceName}"
     }
 }

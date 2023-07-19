@@ -33,7 +33,12 @@ export default function ({ app }, inject) {
     for (const perm of perms) {
       const { name, permissions } = perm
       const manager = $registry.get('permissionManager', name)
-      const result = manager.hasPermission(permissions, operation, context)
+      const result = manager.hasPermission(
+        permissions,
+        operation,
+        context,
+        workspaceId
+      )
 
       if ([true, false].includes(result)) {
         return result

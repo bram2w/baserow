@@ -12,7 +12,7 @@ class DomainTrashableItemType(TrashableItemType):
     type = "builder_domain"
     model_class = Domain
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return trashed_item.builder
 
     def get_name(self, trashed_item: Domain) -> str:

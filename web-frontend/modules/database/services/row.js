@@ -114,6 +114,7 @@ export default (client) => {
       viewId = null,
       previous = false,
       search = null,
+      searchMode = null,
     }) {
       const searchSanitized = search === '' ? null : search
       return client.get(`/database/rows/table/${tableId}/${rowId}/adjacent/`, {
@@ -121,6 +122,7 @@ export default (client) => {
           previous,
           search: searchSanitized,
           view_id: viewId,
+          search_mode: searchMode,
         },
       })
     },

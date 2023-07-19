@@ -15,11 +15,6 @@ class DatabaseObjectScopeType(ObjectScopeType):
     def get_parent_scope(self):
         return object_scope_type_registry.get("application")
 
-    def get_parent(self, context):
-        # Parent is the Application here even if it's at the "same" level
-        # but it's a more generic type
-        return context.application_ptr
-
     def get_enhanced_queryset(self):
         return self.get_base_queryset().prefetch_related("workspace")
 

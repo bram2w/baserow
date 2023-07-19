@@ -276,6 +276,7 @@ class DatabaseConfig(AppConfig):
             ContainsNotViewFilterType,
             ContainsViewFilterType,
             ContainsWordViewFilterType,
+            DateAfterDaysAgoViewFilterType,
             DateAfterOrEqualViewFilterType,
             DateAfterTodayViewFilterType,
             DateAfterViewFilterType,
@@ -331,6 +332,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())
         view_filter_type_registry.register(DateBeforeOrEqualViewFilterType())
+        view_filter_type_registry.register(DateAfterDaysAgoViewFilterType())
         view_filter_type_registry.register(DateAfterViewFilterType())
         view_filter_type_registry.register(DateAfterOrEqualViewFilterType())
         view_filter_type_registry.register(DateNotEqualViewFilterType())
@@ -573,6 +575,8 @@ class DatabaseConfig(AppConfig):
             UseTokenOperationType,
         )
         from .views.operations import (
+            CreateAndUsePersonalViewOperationType,
+            CreatePublicViewOperationType,
             CreateViewDecorationOperationType,
             CreateViewFilterOperationType,
             CreateViewOperationType,
@@ -599,6 +603,7 @@ class DatabaseConfig(AppConfig):
             UpdateViewDecorationOperationType,
             UpdateViewFilterOperationType,
             UpdateViewOperationType,
+            UpdateViewPublicOperationType,
             UpdateViewSlugOperationType,
             UpdateViewSortOperationType,
         )
@@ -636,9 +641,12 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
         operation_type_registry.register(UpdateViewSlugOperationType())
+        operation_type_registry.register(UpdateViewPublicOperationType())
         operation_type_registry.register(ReadViewsOrderOperationType())
         operation_type_registry.register(OrderViewsOperationType())
         operation_type_registry.register(CreateViewOperationType())
+        operation_type_registry.register(CreatePublicViewOperationType())
+        operation_type_registry.register(CreateAndUsePersonalViewOperationType())
         operation_type_registry.register(ReadViewOperationType())
         operation_type_registry.register(UpdateViewOperationType())
         operation_type_registry.register(DeleteViewOperationType())
@@ -695,12 +703,14 @@ class DatabaseConfig(AppConfig):
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
+        import baserow.contrib.database.search.signals  # noqa: F403, F401
         import baserow.contrib.database.ws.signals  # noqa: F403, F401
 
         post_migrate.connect(safely_update_formula_versions, sender=self)
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
+        import baserow.contrib.database.search.tasks  # noqa: F401
         import baserow.contrib.database.views.tasks  # noqa: F401
 
 

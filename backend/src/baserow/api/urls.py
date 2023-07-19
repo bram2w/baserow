@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import include, path
 
 from drf_spectacular.views import SpectacularRedocView
@@ -11,7 +12,9 @@ from baserow.core.registries import application_type_registry, plugin_registry
 from .applications import urls as application_urls
 from .auth_provider import urls as auth_provider_urls
 from .health import urls as health_urls
+from .integrations import urls as integrations_urls
 from .jobs import urls as jobs_urls
+from .notifications import urls as notifications_urls
 from .settings import urls as settings_urls
 from .snapshots import urls as snapshots_urls
 from .spectacular.views import CachedSpectacularJSONAPIView
@@ -53,7 +56,17 @@ urlpatterns = (
         path(
             "templates/", include(templates_compat_urls, namespace="templates_compat")
         ),
+        path("notifications/", include(notifications_urls, namespace="notifications")),
     ]
     + application_type_registry.api_urls
     + plugin_registry.api_urls
 )
+
+
+if "builder" in settings.FEATURE_FLAGS:
+    urlpatterns.append(
+        path(
+            "",
+            include(integrations_urls, namespace="integrations"),
+        )
+    )

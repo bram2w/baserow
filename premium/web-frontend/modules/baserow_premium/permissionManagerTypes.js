@@ -1,0 +1,33 @@
+import { PermissionManagerType } from '@baserow/modules/core/permissionManagerTypes'
+
+export class ViewOwnershipPermissionManagerType extends PermissionManagerType {
+  static getType() {
+    return 'view_ownership'
+  }
+
+  hasPermission(permissions, operation, context, workspaceId) {
+    const operationsOnAnExistingViewAllowedIfPersonalViewAndCreatedBy = [
+      'database.table.view.create_filter',
+      'database.table.view.create_sort',
+      'database.table.view.sort.update',
+      'database.table.view.sort.delete',
+      'database.table.view.update_field_options',
+      'database.table.view.update',
+      'database.table.view.delete',
+      'database.table.view.duplicate',
+      'database.table.view.filter.update',
+      'database.table.view.filter.delete',
+      'database.table.view.update_field_options',
+    ]
+    const { store } = this.app
+    const userId = store.getters['auth/getUserId']
+    if (
+      operationsOnAnExistingViewAllowedIfPersonalViewAndCreatedBy.includes(
+        operation
+      ) &&
+      context.ownership_type === 'personal'
+    ) {
+      return context.created_by_id === userId
+    }
+  }
+}

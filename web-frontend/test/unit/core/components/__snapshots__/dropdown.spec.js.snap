@@ -55,6 +55,10 @@ exports[`Dropdown component Test slots 1`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -108,6 +112,8 @@ exports[`Dropdown component With items 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -120,6 +126,10 @@ exports[`Dropdown component With items 1`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -132,6 +142,8 @@ exports[`Dropdown component With items 2`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         A
@@ -174,6 +186,8 @@ exports[`Dropdown component With items 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -197,6 +211,8 @@ exports[`Dropdown component With items 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="B"
@@ -218,6 +234,8 @@ exports[`Dropdown component With items 2`] = `
           <div
             class="select__item-name"
           >
+            <!---->
+             
             <!---->
              
             <span
@@ -245,6 +263,8 @@ exports[`Dropdown component With items 2`] = `
               class="select__item-icon fas fa-fw fa-times"
             />
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="D"
@@ -268,6 +288,8 @@ exports[`Dropdown component With items 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="E"
@@ -286,6 +308,10 @@ exports[`Dropdown component With items 2`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -330,6 +356,8 @@ exports[`Dropdown component With items 3`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -353,6 +381,8 @@ exports[`Dropdown component With items 3`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="B"
@@ -365,6 +395,10 @@ exports[`Dropdown component With items 3`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -407,6 +441,10 @@ exports[`Dropdown component basics 1`] = `
       class="select__items"
       tabindex=""
     />
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -436,6 +474,10 @@ exports[`Dropdown component basics 2`] = `
       class="select__items"
       tabindex=""
     />
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -478,6 +520,10 @@ exports[`Dropdown component basics 3`] = `
       class="select__items"
       tabindex=""
     />
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -490,6 +536,8 @@ exports[`Dropdown component change value prop 1`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         B
@@ -532,6 +580,8 @@ exports[`Dropdown component change value prop 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -555,6 +605,8 @@ exports[`Dropdown component change value prop 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="B"
@@ -567,6 +619,10 @@ exports[`Dropdown component change value prop 1`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -579,6 +635,8 @@ exports[`Dropdown component test focus 1`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         A
@@ -621,6 +679,8 @@ exports[`Dropdown component test focus 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -633,6 +693,10 @@ exports[`Dropdown component test focus 1`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -645,6 +709,8 @@ exports[`Dropdown component test focus 2`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         A
@@ -687,6 +753,8 @@ exports[`Dropdown component test focus 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -699,6 +767,10 @@ exports[`Dropdown component test focus 2`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -711,6 +783,8 @@ exports[`Dropdown component test interactions 1`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         A
@@ -753,6 +827,8 @@ exports[`Dropdown component test interactions 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -776,6 +852,8 @@ exports[`Dropdown component test interactions 1`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="B"
@@ -788,6 +866,10 @@ exports[`Dropdown component test interactions 1`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;
@@ -800,6 +882,8 @@ exports[`Dropdown component test interactions 2`] = `
   <a
     class="dropdown__selected"
   >
+    <!---->
+     
     <!---->
     
         B
@@ -842,6 +926,8 @@ exports[`Dropdown component test interactions 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="A"
@@ -865,6 +951,8 @@ exports[`Dropdown component test interactions 2`] = `
           >
             <!---->
              
+            <!---->
+             
             <span
               class="select__item-name-text"
               title="B"
@@ -877,6 +965,10 @@ exports[`Dropdown component test interactions 2`] = `
         </a>
       </li>
     </ul>
+     
+    <!---->
+     
+    <!---->
   </div>
 </div>
 `;

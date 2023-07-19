@@ -35,6 +35,7 @@ def test_list_workspaces(api_client, data_fixture):
     assert response_json[1]["order"] == 2
     assert response_json[1]["name"] == user_workspace_2.workspace.name
     assert response_json[1]["permissions"] == "ADMIN"
+    assert response_json[0]["unread_notifications_count"] == 0
 
 
 @pytest.mark.django_db

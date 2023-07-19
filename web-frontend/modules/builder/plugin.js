@@ -15,10 +15,12 @@ import pageStore from '@baserow/modules/builder/store/page'
 import elementStore from '@baserow/modules/builder/store/element'
 import domainStore from '@baserow/modules/builder/store/domain'
 import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
+import dataSourceStore from '@baserow/modules/builder/store/dataSource'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
   HeadingElementType,
+  ImageElementType,
   ParagraphElementType,
   LinkElementType,
 } from '@baserow/modules/builder/elementTypes'
@@ -75,6 +77,7 @@ export default (context) => {
   store.registerModule('element', elementStore)
   store.registerModule('domain', domainStore)
   store.registerModule('publicBuilder', publicBuilderStore)
+  store.registerModule('dataSource', dataSourceStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -105,6 +108,7 @@ export default (context) => {
   app.$registry.register('element', new HeadingElementType(context))
   app.$registry.register('element', new ParagraphElementType(context))
   app.$registry.register('element', new LinkElementType(context))
+  app.$registry.register('element', new ImageElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

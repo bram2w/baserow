@@ -5,6 +5,7 @@ from baserow.contrib.builder.elements.models import HeadingElement, ParagraphEle
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
+from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -34,7 +35,9 @@ def test_builder_application_export(data_fixture):
     element2 = data_fixture.create_builder_paragraph_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)
 
-    serialized = BuilderApplicationType().export_serialized(builder)
+    serialized = BuilderApplicationType().export_serialized(
+        builder, ImportExportConfig(include_permission_data=True)
+    )
 
     assert serialized == {
         "pages": [
@@ -49,12 +52,16 @@ def test_builder_application_export(data_fixture):
                         "id": element1.id,
                         "type": "heading",
                         "order": element1.order,
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
                         "value": element1.value,
                         "level": element1.level,
                     },
                     {
                         "id": element2.id,
                         "type": "paragraph",
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
                         "order": element2.order,
                         "value": element2.value,
                     },
@@ -70,6 +77,8 @@ def test_builder_application_export(data_fixture):
                     {
                         "id": element3.id,
                         "type": "heading",
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
                         "order": element3.order,
                         "value": element3.value,
                         "level": element3.level,
@@ -137,8 +146,9 @@ def test_builder_application_import(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
 
+    config = ImportExportConfig(include_permission_data=True)
     builder = BuilderApplicationType().import_serialized(
-        workspace, IMPORT_REFERENCE, {}
+        workspace, IMPORT_REFERENCE, config, {}
     )
 
     assert builder.id != IMPORT_REFERENCE["id"]

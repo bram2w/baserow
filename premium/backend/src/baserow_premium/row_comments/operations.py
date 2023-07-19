@@ -7,3 +7,15 @@ class ReadRowCommentsOperationType(DatabaseTableOperationType):
 
 class CreateRowCommentsOperationType(DatabaseTableOperationType):
     type = "database.table.create_comment"
+
+
+class UpdateRowCommentsOperationType(DatabaseTableOperationType):
+    type = "database.table.update_comment"
+
+
+class DeleteRowCommentsOperationType(DatabaseTableOperationType):
+    type = "database.table.delete_comment"
+
+
+class RestoreRowCommentOperationType(DatabaseTableOperationType):
+    type = "database.table.restore_comment"

@@ -31,10 +31,12 @@
         "duplicate": "Dupliceer",
         "remove": "Verwijder",
         "login": "Inloggen",
-        "download": "Downloaden"
+        "download": "Downloaden",
+        "copyToClipboard": "Naar klembord kopiëren"
     },
     "adminType": {
-        "settings": "Instellingen"
+        "settings": "Instellingen",
+        "health": "Gezondheid"
     },
     "applicationType": {
         "database": "Database",
@@ -91,7 +93,9 @@
         "phoneNumber": "Telefoonnummer",
         "formula": "Formule",
         "lookup": "Lookup (opzoeken)",
-        "multipleCollaborators": "Medewerkers"
+        "multipleCollaborators": "Medewerkers",
+        "count": "Tellen",
+        "rollup": "Rollup"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -126,7 +130,9 @@
         "phoneNumber": "Accepteert een telefoonnummer met een maximale lengte van 100 tekens, uitsluitend bestaande uit cijfers, spaties en de volgende tekens: Nx,._+*()#=;/- .",
         "formula": "Een alleen-lezen veld gedefinieerd door een formule geschreven in de Baserow formule-taal.",
         "lookup": "Een alleen-lezen veld verbonden met een link-rij veld dat een array van waarden en rij ids van het gekozen lookup-veld in de gelinkte tabel retourneert.",
-        "multipleCollaborators": "Accepteert een array van objecten waarbij elk object een gebruikers-ID bevat."
+        "multipleCollaborators": "Accepteert een array van objecten waarbij elk object een gebruikers-ID bevat.",
+        "rollup": "Een alleen-lezen veld dat is verbonden met een link naar een tabel veld dat de waardes oprolt van het gekozen lookup veld in de gekoppelde tabel.",
+        "count": "Een alleen-lezen veld dat is verbonden met een link naar een tabel veld dat het aantal relaties retourneert."
     },
     "viewFilter": {
         "contains": "bevat",
@@ -157,7 +163,12 @@
         "afterToday": "is na vandaag",
         "beforeToday": "is voor vandaag",
         "containsWord": "bevat woord",
-        "doesntContainWord": "bevat geen woord"
+        "doesntContainWord": "bevat geen woord",
+        "isWithinDays": "is binnen dagen",
+        "isWithinWeeks": "is binnen weken",
+        "isBeforeOrEqualDate": "is voor of dezelfde datum",
+        "isAfterOrEqualDate": "is na of dezelfde datum",
+        "isWithinMonths": "is binnen maanden"
     },
     "viewType": {
         "grid": "Raster",
@@ -264,7 +275,9 @@
         "lastAdminTitle": "Kan laatste werkruimte beheerder niet verwijderen",
         "lastAdminMessage": "Een werkruimte moet minstens één beheerder hebben.",
         "maxLocksPerTransactionExceededTitle": "PostgreSQL probleem ontdekt",
-        "maxLocksPerTransactionExceededDescription": "Baserow probeerde de weggegooide items permanent te verwijderen, maar overschreed de beschikbare sloten gespecificeerd in `max_locks_per_transaction`."
+        "maxLocksPerTransactionExceededDescription": "Baserow probeerde de weggegooide items permanent te verwijderen, maar overschreed de beschikbare sloten gespecificeerd in `max_locks_per_transaction`.",
+        "notificationDoesNotExistDescription": "De actie kan niet worden voltooid omdat de gerelateerde niet meer bestaat.",
+        "notificationDoesNotExistTitle": "Melding bestaat niet."
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -399,7 +412,8 @@
         "nowDescription": "Geeft de huidige datum en tijd terug in UTC.",
         "todayDescription": "Geeft de huidige datum terug in UTC.",
         "toDateTzDescription": "Retourneert het eerste argument geconverteerd naar een datum met als tweede argument een tekenreeks voor datumnotatie en de tijdzone als derde argument.",
-        "whenNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is."
+        "whenNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is.",
+        "datetimeFormatTzDescription": "Converteert de datum naar tekst op de manier waarop de datum wordt opgemaakt in de tijdzone."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"
@@ -407,5 +421,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "Ongeldig {name}",
         "invalidUrlEnvVarDescription": "De omgevingsvariabele {name} is op een ongeldige waarde ingesteld. De sitebeheerder moet {name} veranderen in een geldige URL die begint met http:// of https:// en dan Baserow opnieuw opstarten om deze fout te herstellen."
+    },
+    "emailTester": {
+        "invalidTargetEmail": "Ongeldig e-mailadres",
+        "success": "Test-e-mail succesvol verzonden",
+        "targetEmailLabel": "Doel e-mail",
+        "title": "E-mail tester",
+        "submit": "Stuur een testmail",
+        "configLink": "Help bij e-mailconfiguratie"
+    },
+    "health": {
+        "title": "Baserow gezondheidscontroles",
+        "description": "Deze controles tonen de huidige status van uw Baserow-installatie."
     }
 }

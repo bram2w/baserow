@@ -1,9 +1,8 @@
 export default {
   computed: {
     workspaceCollaborators() {
-      const workspaceId = this.$store.getters['workspace/selectedId']
-      const workspace = this.$store.getters['workspace/get'](workspaceId)
-      return workspace.users
+      const workspace = this.$store.getters['workspace/getSelected']
+      return workspace.users.filter((user) => user.to_be_deleted === false)
     },
     availableCollaborators() {
       // When converting from a CollaboratorField to another field it can happen
@@ -13,9 +12,10 @@ export default {
       if (!Array.isArray(this.value)) {
         return []
       }
-      const ids = this.value.map((item) => item.id)
+
+      const ids = new Set(this.value.map((item) => item.id))
       const result = this.workspaceCollaborators.filter(
-        (item) => !ids.includes(item.user_id)
+        (item) => !ids.has(item.user_id)
       )
       return result
     },

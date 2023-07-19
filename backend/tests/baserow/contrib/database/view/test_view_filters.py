@@ -6000,3 +6000,99 @@ def test_after_or_equal_date_view_filter(data_fixture):
         view_filter.value = "Pacific/Honolulu?2021-01-01"
         view_filter.save()
         assert get_filtered_row_ids() == [rows[1].id, rows[2].id]
+
+
+@pytest.mark.django_db
+def test_date_after_days_ago_filter_type(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    date_field = data_fixture.create_date_field(table=table, date_include_time=False)
+
+    model = table.get_model()
+
+    row_day_1 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2023, 1, 1),
+        }
+    )
+    row_day_2 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2023, 1, 2),
+        }
+    )
+    row_day_3 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2023, 1, 3),
+        }
+    )
+    row_day_4 = model.objects.create(
+        **{
+            f"field_{date_field.id}": date(2023, 1, 4),
+        }
+    )
+    handler = ViewHandler()
+
+    filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=date_field,
+        type="date_after_days_ago",
+        value="UTC?1",
+    )
+
+    def apply_filter():
+        return list(handler.apply_filters(grid_view, model.objects.all()).all())
+
+    with freeze_time("2023-01-04 10:00", tz_offset=2):
+        filter.value = "Europe/Berlin?2"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_2, row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 10:00"):
+        filter.value = "UTC?3"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_1, row_day_2, row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 10:00"):
+        filter.value = "1"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 10:00"):
+        filter.value = "0"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_1, row_day_2, row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 10:00"):
+        filter.value = " "
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_1, row_day_2, row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 10:00", tz_offset=0):
+        filter.value = "GMT?1"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_3, row_day_4]
+
+    with freeze_time("2023-01-04 11:00", tz_offset=1):
+        filter.value = "CET?1"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_3, row_day_4]
+
+    with freeze_time("2019-01-04 11:00"):
+        filter.value = "UTC?100"
+        filter.save()
+        rows = apply_filter()
+        assert rows == [row_day_1, row_day_2, row_day_3, row_day_4]
+
+    with freeze_time("2019-01-04 11:00"):
+        filter.value = "ABC"
+        filter.save()
+        rows = apply_filter()
+        assert rows == []

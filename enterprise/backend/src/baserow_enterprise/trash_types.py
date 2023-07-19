@@ -12,7 +12,7 @@ class TeamTrashableItemType(TrashableItemType):
     type = "team"
     model_class = Team
 
-    def get_parent(self, trashed_item: Any, parent_id: int) -> Optional[Any]:
+    def get_parent(self, trashed_item: Any) -> Optional[Any]:
         return trashed_item.workspace
 
     def get_name(self, trashed_item: Team) -> str:

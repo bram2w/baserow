@@ -300,17 +300,6 @@
   @include contenteditable-placeholder();
 }
 
-.form_view__logo {
-  position: relative;
-  display: inline-block;
-  margin-bottom: 30px;
-}
-
-.form_view__logo-img {
-  display: block;
-  max-width: 180px;
-}
-
 .form-view__title {
   font-size: 22px;
   font-weight: 700;
@@ -320,6 +309,7 @@
 .form-view__description {
   font-size: 16px;
   margin: 0;
+  display: inline-block;
 }
 
 .form-view__no-fields {
@@ -358,7 +348,7 @@
 
     &:not(.form-view__field--selected) {
       &::before {
-        content: "";
+        content: '';
         z-index: 1;
 
         @include absolute(0);
@@ -447,6 +437,7 @@
   line-height: 160%;
   margin-bottom: 20px;
   color: $color-neutral-500;
+  display: inline-block;
 }
 
 .form-view-field-edit {

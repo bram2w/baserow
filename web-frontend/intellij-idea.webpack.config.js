@@ -30,6 +30,7 @@ module.exports = {
         __dirname,
         '../enterprise/web-frontend/test'
       ),
+      '@baserow_test_cases': path.resolve(__dirname, '../tests/cases'),
     },
   },
 }

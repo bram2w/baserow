@@ -3,6 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 import pytest
 
 from baserow.contrib.database.table.handler import TableHandler
+from baserow.core.registries import ImportExportConfig
 from baserow_enterprise.role.handler import RoleAssignmentHandler
 from baserow_enterprise.role.models import Role
 from baserow_enterprise.structure_types import RoleAssignmentSerializationProcessorType
@@ -21,10 +22,12 @@ def test_export_serialized_structure_on_database(enterprise_data_fixture):
     database = enterprise_data_fixture.create_database_application(workspace=workspace)
     application = database.application_ptr
 
+    config = ImportExportConfig(include_permission_data=True)
+
     role = Role.objects.get(uid="ADMIN")
     RoleAssignmentHandler().assign_role(user, workspace, role, application)
     serialized_structure = enterprise_structure.export_serialized(
-        workspace, application
+        workspace, application, config
     )
 
     content_types = ContentType.objects.get_for_models(user, application)
@@ -49,8 +52,9 @@ def test_import_serialized_structure_on_database(enterprise_data_fixture):
 
     role = Role.objects.get(uid="ADMIN")
     RoleAssignmentHandler().assign_role(user, workspace, role, application)
+    config = ImportExportConfig(include_permission_data=True)
     serialized_structure = enterprise_structure.export_serialized(
-        workspace, application
+        workspace, application, config
     )
 
     new_database = enterprise_data_fixture.create_database_application(
@@ -59,7 +63,7 @@ def test_import_serialized_structure_on_database(enterprise_data_fixture):
     new_application = new_database.application_ptr
 
     enterprise_structure.import_serialized(
-        workspace, new_application, serialized_structure
+        workspace, new_application, serialized_structure, config
     )
 
     role_assignments = RoleAssignmentHandler().get_role_assignments(
@@ -82,11 +86,15 @@ def test_export_serialized_structure_on_table(enterprise_data_fixture):
     workspace = enterprise_data_fixture.create_workspace(user=user)
     database = enterprise_data_fixture.create_database_application(workspace=workspace)
 
+    config = ImportExportConfig(include_permission_data=True)
+
     role = Role.objects.get(uid="ADMIN")
     table, _ = TableHandler().create_table(user, database, name="Table")
     RoleAssignmentHandler().assign_role(user, workspace, role, table)
 
-    serialized_structure = enterprise_structure.export_serialized(workspace, table)
+    serialized_structure = enterprise_structure.export_serialized(
+        workspace, table, config
+    )
 
     content_types = ContentType.objects.get_for_models(user, table)
     assert serialized_structure == {
@@ -107,13 +115,19 @@ def test_import_serialized_structure_on_table(enterprise_data_fixture):
     workspace = enterprise_data_fixture.create_workspace(user=user)
     database = enterprise_data_fixture.create_database_application(workspace=workspace)
 
+    config = ImportExportConfig(include_permission_data=True)
+
     role = Role.objects.get(uid="ADMIN")
     table, _ = TableHandler().create_table(user, database, name="Table")
     RoleAssignmentHandler().assign_role(user, workspace, role, table)
-    serialized_structure = enterprise_structure.export_serialized(workspace, table)
+    serialized_structure = enterprise_structure.export_serialized(
+        workspace, table, config
+    )
 
     new_table, _ = TableHandler().create_table(user, database, name="New table")
-    enterprise_structure.import_serialized(workspace, new_table, serialized_structure)
+    enterprise_structure.import_serialized(
+        workspace, new_table, serialized_structure, config
+    )
 
     role_assignments = RoleAssignmentHandler().get_role_assignments(
         workspace, new_table

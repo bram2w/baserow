@@ -104,7 +104,7 @@
   }
 
   &.dashboard__group-title--loading::after {
-    content: "";
+    content: '';
 
     @include loading(14px);
     @include absolute(6px, 0, auto, auto);
@@ -161,7 +161,7 @@
     &::before {
       @include absolute(-8px);
 
-      content: "";
+      content: '';
       background-color: $color-neutral-100;
       border-radius: 3px;
       z-index: -1;

@@ -60,12 +60,12 @@ export default {
         // The public accept url is the page where the user can publicly navigate too,
         // to accept the workspace invitation.
         const acceptUrl = `${this.$env.PUBLIC_WEB_FRONTEND_URL}/workspace-invitation`
-        await WorkspaceService(this.$client).sendInvitation(
+        const { data } = await WorkspaceService(this.$client).sendInvitation(
           this.workspace.id,
           acceptUrl,
           values
         )
-        this.$refs.inviteForm.reset()
+        this.$bus.$emit('invite-submitted', data)
         this.$emit('invite-submitted')
         this.hide()
       } catch (error) {

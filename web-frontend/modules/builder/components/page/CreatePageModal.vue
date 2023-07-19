@@ -25,7 +25,7 @@
 <script>
 import modal from '@baserow/modules/core/mixins/modal'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import PageSettingsForm from '@baserow/modules/builder/components/page/PageSettingsForm'
+import PageSettingsForm from '@baserow/modules/builder/components/page/settings/PageSettingsForm'
 
 export default {
   name: 'CreatePageModal',

@@ -268,7 +268,7 @@
         "search": "Rechercher dans la table"
     },
     "rowEditModal": {
-        "addField": "Ajouter un champ",
+        "addField": "ajouter un champ",
         "showHiddenFields": "Afficher les champs masqués",
         "hideHiddenFields": "Masquer les champs cachés"
     },
@@ -543,7 +543,7 @@
         "intro": "Après avoir créé votre base de données et une clé d'API dans votre {settingsLink} Baserow fourni ses propres API REST pour créer, lire, mettre à jour et supprimer des lignes.",
         "settings": "compte",
         "selectApplicationTitle": "Choisissez une base de donnée :",
-        "signIn": "S'identifier",
+        "signIn": "S'identifier pour commencer",
         "back": "Retourner à l'accueil"
     },
     "viewAggregationType": {
@@ -595,7 +595,8 @@
         "linkError": "Le lien devrait ressembler à : https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "Ajouter une liste déroulante"
+        "addSelectField": "Ajouter une liste déroulante",
+        "warningWhenNothingToChooseOrCreate": "Il n’y a pas de champ de sélection unique disponible et vous n’avez pas les permissions nécessaires pour en créer un."
     },
     "viewDecorator": {
         "decorator": "Couleur | 1 Couleur | {count} Couleurs"
@@ -725,6 +726,22 @@
                     "message": "Une erreur s’est produite lors de la récupération de la ligne adjacente",
                     "title": "Une erreur s'est produite"
                 }
+            },
+            "toast": {
+                "notFound": {
+                    "previous": {
+                        "message": "Il n’y a pas de ligne précédente",
+                        "title": "Plus de ligne"
+                    },
+                    "next": {
+                        "title": "Plus de ligne",
+                        "message": "Il n’y a pas de ligne suivante"
+                    }
+                },
+                "error": {
+                    "message": "Une erreur s’est produite lors de la récupération de la ligne adjacente",
+                    "title": "Une erreur est survenue"
+                }
             }
         }
     },
@@ -758,5 +775,13 @@
     "viewOwnershipType": {
         "collaborative": "Collaboratif",
         "personal": "Personnel"
+    },
+    "fieldRollupSubForm": {
+        "label": "Fonction de cumul",
+        "selectTargetFieldLabel": "Sélectionner un champ à cumuler"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "noTable": "Vous avez besoin d’au moins un champ te type « lien vers une table » pour créer ce champ.",
+        "selectThroughFieldLabel": "Sélectionner un champ « lien vers une table »"
     }
 }

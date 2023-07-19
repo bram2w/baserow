@@ -11,10 +11,11 @@ from baserow.contrib.database.fields.exceptions import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.formula import BaserowFormulaNumberType
-from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
+from baserow.core.registries import ImportExportConfig
+from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
 
 @pytest.mark.django_db
@@ -584,11 +585,12 @@ def test_import_export_tables_with_rollup_fields(
         rollup_function="sum",
     )
 
+    config = ImportExportConfig(include_permission_data=False)
     exported_applications = core_handler.export_workspace_applications(
-        database.workspace, BytesIO()
+        database.workspace, BytesIO(), config
     )
     imported_applications, id_mapping = core_handler.import_applications_to_workspace(
-        imported_workspace, exported_applications, BytesIO(), None
+        imported_workspace, exported_applications, BytesIO(), config, None
     )
     imported_database = imported_applications[0]
     imported_tables = imported_database.table_set.all()

@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 
-import baserow.contrib.builder.pages.models
+import baserow.contrib.builder.pages.models  # unimport:skip
 
 
 class Migration(migrations.Migration):

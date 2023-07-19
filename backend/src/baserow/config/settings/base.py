@@ -12,12 +12,12 @@ from urllib.parse import urljoin, urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
-from celery.schedules import crontab
 from corsheaders.defaults import default_headers
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
 from baserow.config.settings.utils import (
     Setting,
+    get_crontab_from_env,
     read_file,
     set_settings_from_env_if_present,
     str_to_bool,
@@ -100,6 +100,7 @@ INSTALLED_APPS = [
 
 if "builder" in FEATURE_FLAGS:
     INSTALLED_APPS.append("baserow.contrib.builder")
+    INSTALLED_APPS.append("baserow.contrib.integrations")
 
 ADDITIONAL_APPS = os.getenv("ADDITIONAL_APPS", "").split(",")
 if ADDITIONAL_APPS is not None:
@@ -472,7 +473,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.18.0",
+    "VERSION": "1.19.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -487,6 +488,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Applications"},
         {"name": "Snapshots"},
         {"name": "Jobs"},
+        {"name": "Integrations"},
         {"name": "Database tables"},
         {"name": "Database table fields"},
         {"name": "Database table views"},
@@ -503,9 +505,10 @@ SPECTACULAR_SETTINGS = {
         {"name": "Database table webhooks"},
         {"name": "Database tokens"},
         {"name": "Builder pages"},
-        {"name": "Builder page elements"},
+        {"name": "Builder elements"},
         {"name": "Builder domains"},
         {"name": "Builder public"},
+        {"name": "Builder data sources"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -577,6 +580,21 @@ SPECTACULAR_SETTINGS = {
         "EventTypesEnum": ["rows.created", "rows.updated", "rows.deleted"],
     },
 }
+
+if "builder" not in FEATURE_FLAGS:
+    SPECTACULAR_SETTINGS["TAGS"] = [
+        t
+        for t in SPECTACULAR_SETTINGS["TAGS"]
+        if t["name"]
+        not in [
+            "Integrations",
+            "Builder pages",
+            "Builder elements",
+            "Builder domains",
+            "Builder public",
+            "Builder data sources",
+        ]
+    ]
 
 # Allows accessing and setting values on a dictionary like an object. Using this
 # we can pass plugin authors and other functions a `settings` object which can modify
@@ -772,7 +790,7 @@ BATCH_ROWS_SIZE_LIMIT = int(
 )  # How many rows can be modified at once.
 
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
-ROW_COMMENT_PAGE_SIZE_LIMIT = 200  # How many row comments can be requested at once.
+
 # How many unique row values can be requested at once.
 UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
 
@@ -799,21 +817,6 @@ BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB = int(
 EXPORT_FILES_DIRECTORY = "export_files"
 EXPORT_CLEANUP_INTERVAL_MINUTES = 5
 EXPORT_FILE_EXPIRE_MINUTES = 60
-
-
-def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
-    """
-    Parses a crontab from an environment variable if present or instead uses the
-    default.
-
-    Celeries crontab constructor takes the arguments in a different order than the
-    actual crontab spec so we expand and re-order the arguments to match.
-    """
-
-    minute, hour, day_of_month, month_of_year, day_of_week = os.getenv(
-        env_var_name, default_crontab
-    ).split(" ")
-    return crontab(minute, hour, day_of_week, day_of_month, month_of_year)
 
 
 MIDNIGHT_CRONTAB_STR = "0 0 * * *"
@@ -870,7 +873,12 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 # IF CHANGING KEEP IN SYNC WITH e2e-tests/wait-for-services.sh
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
-MAX_FIELD_LIMIT = 1500
+MAX_FIELD_LIMIT = int(os.getenv("BASEROW_MAX_FIELD_LIMIT", 600))
+INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
+    os.getenv(
+        "BASEROW_INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT", MAX_FIELD_LIMIT
+    )
+)
 
 # If you change this default please also update the default for the web-frontend found
 # in web-frontend/modules/core/module.js:55
@@ -878,8 +886,6 @@ HOURS_UNTIL_TRASH_PERMANENTLY_DELETED = int(
     os.getenv("HOURS_UNTIL_TRASH_PERMANENTLY_DELETED", 24 * 3)
 )
 OLD_TRASH_CLEANUP_CHECK_INTERVAL_MINUTES = 5
-
-MAX_ROW_COMMENT_LENGTH = 10000
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
@@ -1077,11 +1083,30 @@ BASEROW_NOWAIT_FOR_LOCKS = not bool(
     os.getenv("BASEROW_WAIT_INSTEAD_OF_409_CONFLICT_ERROR", False)
 )
 
+BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED = (
+    os.getenv("BASEROW_PERSONAL_VIEW_LOWEST_ROLE_ALLOWED", "viewer").strip().upper()
+)
+
 LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 
 MAX_NUMBER_CALENDAR_DAYS = 45
 
 MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
+
+
+# Search specific configuration settings.
+CELERY_SEARCH_UPDATE_HARD_TIME_LIMIT = int(
+    os.getenv("BASEROW_CELERY_SEARCH_UPDATE_HARD_TIME_LIMIT", 60 * 30)
+)
+# By default, Baserow will use Postgres full-text as its
+# search backend. If the product is installed on a system
+# with limited disk space, and less accurate results / degraded
+# search performance is acceptable, then switch this setting off.
+USE_PG_FULLTEXT_SEARCH = str_to_bool(
+    (os.getenv("BASEROW_USE_PG_FULLTEXT_SEARCH", "true"))
+)
+PG_SEARCH_CONFIG = os.getenv("BASEROW_PG_SEARCH_CONFIG", "simple")
+AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(os.getenv("BASEROW_AUTO_VACUUM", "true"))
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

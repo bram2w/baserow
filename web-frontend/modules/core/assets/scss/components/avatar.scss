@@ -1,0 +1,51 @@
+.avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 36px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border: 1px solid transparent;
+
+  @include center-text(36px, 15px);
+}
+
+.avatar--size-large {
+  flex: 0 0 42px;
+
+  @include center-text(42px, 16px);
+}
+
+.avatar--size-tiny {
+  flex: 0 0 32px;
+
+  @include center-text(32px, 14px);
+}
+
+.avatar--rounded {
+  border-radius: 50%;
+}
+
+.avatar__image {
+  max-width: calc(100% - 20px);
+  max-height: calc(100% - 20px);
+}
+
+.avatar--success {
+  background-color: $color-success-500;
+}
+
+.avatar--warning {
+  background-color: $color-warning-500;
+}
+
+.avatar--error {
+  background-color: $color-error-500;
+}
+
+.avatar--ghost {
+  background-color: $white;
+  border-color: $color-neutral-400;
+  color: $color-primary-900;
+}

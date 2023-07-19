@@ -33,6 +33,12 @@ import {
   MembersWorkspaceSettingsPageType,
   InvitesWorkspaceSettingsPageType,
 } from '@baserow/modules/core/workspaceSettingsPageTypes'
+import {
+  WorkspaceInvitationCreatedNotificationType,
+  WorkspaceInvitationAcceptedNotificationType,
+  WorkspaceInvitationRejectedNotificationType,
+  BaserowVersionUpgradeNotificationType,
+} from '@baserow/modules/core/notificationTypes'
 
 import settingsStore from '@baserow/modules/core/store/settings'
 import applicationStore from '@baserow/modules/core/store/application'
@@ -40,9 +46,11 @@ import authProviderStore from '@baserow/modules/core/store/authProvider'
 import authStore from '@baserow/modules/core/store/auth'
 import workspaceStore from '@baserow/modules/core/store/workspace'
 import jobStore from '@baserow/modules/core/store/job'
-import notificationStore from '@baserow/modules/core/store/notification'
+import toastStore from '@baserow/modules/core/store/toast'
 import sidebarStore from '@baserow/modules/core/store/sidebar'
 import undoRedoStore from '@baserow/modules/core/store/undoRedo'
+import integrationStore from '@baserow/modules/core/store/integration'
+import notificationStore from '@baserow/modules/core/store/notification'
 
 import en from '@baserow/modules/core/locales/en.json'
 import fr from '@baserow/modules/core/locales/fr.json'
@@ -52,6 +60,11 @@ import es from '@baserow/modules/core/locales/es.json'
 import it from '@baserow/modules/core/locales/it.json'
 import pl from '@baserow/modules/core/locales/pl.json'
 import { DefaultErrorPageType } from '@baserow/modules/core/errorPageTypes'
+import {
+  RuntimeAdd,
+  RuntimeConcat,
+  RuntimeGet,
+} from '@baserow/modules/core/runtimeFormulaTypes'
 
 export default (context, inject) => {
   const { store, isDev, app } = context
@@ -80,6 +93,8 @@ export default (context, inject) => {
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
+  registry.registerNamespace('runtime_formula_type')
+  registry.registerNamespace('notification')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
@@ -115,9 +130,14 @@ export default (context, inject) => {
   store.registerModule('auth', authStore)
   store.registerModule('job', jobStore)
   store.registerModule('workspace', workspaceStore)
-  store.registerModule('notification', notificationStore)
+  store.registerModule('toast', toastStore)
   store.registerModule('sidebar', sidebarStore)
   store.registerModule('undoRedo', undoRedoStore)
+  store.registerModule('integration', integrationStore)
+
+  registry.registerNamespace('integration')
+  registry.registerNamespace('service')
+  store.registerModule('notification', notificationStore)
 
   registry.register('authProvider', new PasswordAuthProviderType(context))
   registry.register('job', new DuplicateApplicationJobType(context))
@@ -133,4 +153,26 @@ export default (context, inject) => {
   )
 
   registry.register('errorPage', new DefaultErrorPageType(context))
+
+  registry.register('runtime_formula_type', new RuntimeConcat(context))
+  registry.register('runtime_formula_type', new RuntimeGet(context))
+  registry.register('runtime_formula_type', new RuntimeAdd(context))
+
+  // Notification types
+  registry.register(
+    'notification',
+    new WorkspaceInvitationCreatedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new WorkspaceInvitationAcceptedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new WorkspaceInvitationRejectedNotificationType(context)
+  )
+  registry.register(
+    'notification',
+    new BaserowVersionUpgradeNotificationType(context)
+  )
 }

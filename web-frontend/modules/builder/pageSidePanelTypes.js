@@ -19,7 +19,7 @@ export class pageSidePanelType extends Registerable {
 }
 
 export class GeneralPageSidePanelType extends pageSidePanelType {
-  getType() {
+  static getType() {
     return 'general'
   }
 
@@ -37,7 +37,7 @@ export class GeneralPageSidePanelType extends pageSidePanelType {
 }
 
 export class StylePageSidePanelType extends pageSidePanelType {
-  getType() {
+  static getType() {
     return 'style'
   }
 
@@ -55,7 +55,7 @@ export class StylePageSidePanelType extends pageSidePanelType {
 }
 
 export class VisibilityPageSidePanelType extends pageSidePanelType {
-  getType() {
+  static getType() {
     return 'visibility'
   }
 
@@ -73,7 +73,7 @@ export class VisibilityPageSidePanelType extends pageSidePanelType {
 }
 
 export class EventsPageSidePanelType extends pageSidePanelType {
-  getType() {
+  static getType() {
     return 'events'
   }
 

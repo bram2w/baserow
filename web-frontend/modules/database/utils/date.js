@@ -59,14 +59,15 @@ export const getTimeHumanReadableFormat = (type) => {
  * set, the timezone of the user is returned.
  *
  * @param {Object} field The field object
+ * @param {boolean} guess Whether or not to try guess the users timezone
  * @returns {String} The timezone for the field
  * @example
  * getFieldTimezone({ date_include_time: true, date_force_timezone: 'Europe/Amsterdam' }) // => 'Europe/Amsterdam'
  * getFieldTimezone({ date_include_time: false }) // => 'UTC'
  */
-export const getFieldTimezone = (field) => {
+export const getFieldTimezone = (field, guess = true) => {
   return field.date_include_time
-    ? field.date_force_timezone || moment.tz.guess()
+    ? field.date_force_timezone || (guess && moment.tz.guess())
     : null
 }
 

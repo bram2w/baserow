@@ -25,7 +25,8 @@
         "dashboard": "Dashboard",
         "trash": "Papierkorb",
         "settings": "Einstellungen",
-        "members": "Mitglieder"
+        "members": "Mitglieder",
+        "notifications": "Benachrichtigungen"
     },
     "accountForm": {
         "nameLabel": "Ihr Name",
@@ -519,5 +520,111 @@
     },
     "highestPaidRoleField": {
         "billable": "Verrechenbar"
+    },
+    "uploadFileDropzone": {
+        "errorWrongFileTypeMessage": "Sie können keine Datei vom Typ {type} hochladen",
+        "errorTooManyFilesTitle": "Zu viele Dateien",
+        "drop": "Hier fallen lassen",
+        "errorWrongFileTypeTitle": "Falscher Datei Typ",
+        "errorTooManyFilesMessage": "Sie können nur eine einzelne Datei hochladen",
+        "clickOrDrop": "Klicken Sie hier oder legen Sie Ihre Dateien ab"
+    },
+    "notificationPanel": {
+        "markAllAsRead": "Alle als gelesen markieren",
+        "title": "Mitteilungen",
+        "noNotification": "Wir benachrichtigen Sie über wichtige Updates und jedes Mal, wenn Sie auf Baserow erwähnt werden.",
+        "clearAll": "Alle löschen",
+        "noNotificationTitle": "Sie haben keine Benachrichtigungen"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Sind Sie sicher, dass Sie alle Benachrichtigungen löschen möchten?",
+        "message": "Alle Benachrichtigungen werden dauerhaft gelöscht und Sie können sie nicht mehr sehen."
+    },
+    "connectingToast": {
+        "title": "Wiederverbindung",
+        "content": "Wiederherstellung der Verbindung mit dem Server."
+    },
+    "failedConnectingToast": {
+        "content": "Die Verbindung zum Server ist fehlgeschlagen. Bitte aktualisieren Sie die Seite.",
+        "title": "Fehlgeschlagen",
+        "action": "Seite aktualisieren"
+    },
+    "userSessionExpiredToast": {
+        "content": "Sie wurden abgemeldet, weil Ihr Authentifizierungstoken abgelaufen ist. Bitte loggen Sie sich erneut ein.",
+        "title": "Sitzung abgelaufen"
+    },
+    "restoreToast": {
+        "restore": "Gelöschten {type} wiederherstellen"
+    },
+    "copyingToast": {
+        "title": "Kopieren...",
+        "content": "Aufbereitung Ihrer Daten"
+    },
+    "undoRedoToast": {
+        "noMoreUndo": "Keine Aktionen zum rückgängig machen übrig",
+        "redoneText": "Aktion ist wiederhergestellt",
+        "skippingRedoDueToError": "Wieder ausführen hat aufgrund eines unbekannten Fehler nicht funktioniert, überspringen.",
+        "failed": "Fehlgeschlagen",
+        "undoingTitle": "Rückgängig machen...",
+        "undoingText": "Aktion rückgängig machen",
+        "undoneTitle": "Rückgängig gemacht",
+        "undoneText": "Aktion ist rückgängig gemacht",
+        "skippingUndoDueToError": "Rückgängig machen hat aufgrund eines unbekannten Fehlers nicht funktioniert, überspringen.",
+        "redoingText": "Deine Aktion wird wieder hergestellt",
+        "redoingTitle": "Wiederherstellen...",
+        "redoneTitle": "Wiederhergestellt",
+        "noMoreRedo": "Keine Aktionen zum wieder-ausführen übrig"
+    },
+    "permissionsUpdatedToast": {
+        "content": "Dies kann sich darauf auswirken, worauf Sie Zugriff haben, bitte laden Sie die Seite neu.",
+        "action": "Neu laden",
+        "title": "Berechtigungen aktualisiert"
+    },
+    "integrationCreateEditModal": {
+        "createTitle": "Neue Integration",
+        "warningTitle": "Warnung",
+        "editTitle": "Integration bearbeiten"
+    },
+    "integrationEditForm": {
+        "name": "Integrationsname",
+        "namePlaceholder": "Geben Sie den Namen der Integration ein..."
+    },
+    "dropdown": {
+        "empty": "Keine Stücke verfügbar"
+    },
+    "styleBoxForm": {
+        "paddingError": "Der Wert muss eine ganze Zahl zwischen 0 und 200 sein."
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} hat Ihre Einladung zur Teilnahme an {workspaceName} abgelehnt"
+    },
+    "authorizationErrorToast": {
+        "content": "Anscheinend sind Sie nicht berechtigt, diese Ressource anzuzeigen.",
+        "title": "Autorisierungsfehler",
+        "action": "Seite aktualisieren"
+    },
+    "clearingToast": {
+        "title": "Löschen...",
+        "content": "Aufbereitung Ihrer Daten"
+    },
+    "PastingToast": {
+        "title": "Einfügen...",
+        "content": "Aufbereitung Ihrer Daten"
+    },
+    "styleSidePanel": {
+        "paddingTop": "Padding top",
+        "paddingBottom": "Padding bottom"
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "Keine Benutzer gefunden"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} hat Ihre Einladung angenommen, {workspaceName} beizutreten"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} hat Sie eingeladen, {workspaceName} beizutreten"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} ist da! Sehen Sie sich an, was es Neues gibt."
     }
 }

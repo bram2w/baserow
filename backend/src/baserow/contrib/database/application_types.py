@@ -4,7 +4,7 @@ from zipfile import ZipFile
 
 from django.core.files.storage import Storage
 from django.core.management.color import no_style
-from django.db import connection
+from django.db import connection, models
 from django.db.transaction import Atomic
 from django.urls import include, path
 from django.utils import timezone, translation
@@ -23,7 +23,7 @@ from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.models import Application, Workspace
 from baserow.core.registries import (
     ApplicationType,
-    BaserowImportExportMode,
+    ImportExportConfig,
     serialization_processor_registry,
 )
 from baserow.core.trash.handler import TrashHandler
@@ -33,6 +33,7 @@ from .constants import IMPORT_SERIALIZED_IMPORTING, IMPORT_SERIALIZED_IMPORTING_
 from .db.atomic import read_repeatable_single_database_atomic_transaction
 from .export_serialized import DatabaseExportSerializedStructure
 from .fields.deferred_field_fk_updater import DeferredFieldFkUpdater
+from .search.handler import SearchHandler
 from .table.models import Table
 
 
@@ -69,11 +70,9 @@ class DatabaseApplicationType(ApplicationType):
     def export_tables_serialized(
         self,
         tables: List[Table],
+        import_export_config: ImportExportConfig,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> List[Dict[str, Any]]:
         """
         Exports the tables provided  to a serialized format that can later be
@@ -126,26 +125,22 @@ class DatabaseApplicationType(ApplicationType):
                 views=serialized_views,
                 rows=serialized_rows,
             )
-            # Annotate any `SerializationProcessorType` we have.
-            for (
-                serialized_structure
-            ) in serialization_processor_registry.get_all_for_mode(
-                baserow_import_export_mode
-            ):
-                structure.update(
-                    **serialized_structure.export_serialized(workspace, table)
+
+            for serialized_structure in serialization_processor_registry.get_all():
+                extra_data = serialized_structure.export_serialized(
+                    workspace, table, import_export_config
                 )
+                if extra_data is not None:
+                    structure.update(**extra_data)
             serialized_tables.append(structure)
         return serialized_tables
 
     def export_serialized(
         self,
         database: Database,
+        import_export_config: ImportExportConfig,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> Dict[str, Any]:
         """
         Exports the database application type to a serialized format that can later
@@ -160,11 +155,11 @@ class DatabaseApplicationType(ApplicationType):
         )
 
         serialized_tables = self.export_tables_serialized(
-            tables, files_zip, storage, baserow_import_export_mode
+            tables, import_export_config, files_zip, storage
         )
 
         serialized = super().export_serialized(
-            database, files_zip, storage, baserow_import_export_mode
+            database, import_export_config, files_zip, storage
         )
         serialized.update(
             **DatabaseExportSerializedStructure.database(tables=serialized_tables)
@@ -223,13 +218,11 @@ class DatabaseApplicationType(ApplicationType):
         database: Database,
         serialized_tables: List[Dict[str, Any]],
         id_mapping: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
         external_table_fields_to_import: List[Tuple[Table, Dict[str, Any]]] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> List[Table]:
         """
         Imports tables exported by the `export_tables_serialized` method. Look at
@@ -251,9 +244,8 @@ class DatabaseApplicationType(ApplicationType):
             field to import.
             Useful for when importing a single table which also needs to add related
             fields to other existing tables in the database.
-        :param baserow_import_export_mode: defines which Baserow import/export mode to
-            use, defaults to `TARGETING_SAME_WORKSPACE_NEW_PK`.
-        :type baserow_import_export_mode: enum
+        :param import_export_config: provides configuration options for the
+            import/export process to customize how it works.
         :return: The list of created tables
         """
 
@@ -283,17 +275,17 @@ class DatabaseApplicationType(ApplicationType):
                 database=database,
                 name=serialized_table["name"],
                 order=serialized_table["order"],
+                needs_background_update_column_added=True,
             )
             id_mapping["database_tables"][serialized_table["id"]] = table_instance.id
             serialized_table["_object"] = table_instance
-            serialized_table["_field_objects"] = []
+            serialized_table["field_instances"] = []
             imported_tables.append(table_instance)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         # Because view properties might depend on fields, we first want to create all
         # the fields.
-        fields_excluding_reversed_linked_fields = []
-        none_field_count = 0
+        all_fields = []
         deferred_fk_update_collector = DeferredFieldFkUpdater()
         for serialized_table in serialized_tables:
             for serialized_field in serialized_table["fields"]:
@@ -301,27 +293,25 @@ class DatabaseApplicationType(ApplicationType):
                 field_instance = field_type.import_serialized(
                     serialized_table["_object"],
                     serialized_field,
+                    import_export_config,
                     id_mapping,
                     deferred_fk_update_collector,
                 )
 
-                if field_instance:
-                    serialized_table["_field_objects"].append(field_instance)
-                    fields_excluding_reversed_linked_fields.append(
-                        (field_type, field_instance)
-                    )
-                else:
-                    none_field_count += 1
+                serialized_table["field_instances"].append(field_instance)
+                all_fields.append((field_type, field_instance))
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         for external_table, serialized_field in external_table_fields_to_import or []:
             field_type = field_type_registry.get(serialized_field["type"])
-            field_type.import_serialized(
+            external_field = field_type.import_serialized(
                 external_table,
                 serialized_field,
+                import_export_config,
                 id_mapping,
                 deferred_fk_update_collector,
             )
+            SearchHandler.after_field_created(external_field)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         deferred_fk_update_collector.run_deferred_fk_updates(
@@ -332,15 +322,22 @@ class DatabaseApplicationType(ApplicationType):
         # be called on all of its dependants. This ensures that formulas recalculate
         # themselves now that all fields exist.
         field_cache = FieldCache()
-        for field_type, field_instance in fields_excluding_reversed_linked_fields:
+        for field_type, field_instance in all_fields:
             field_type.after_import_serialized(field_instance, field_cache, id_mapping)
 
         # The loop above might have recalculated the formula fields in the list,
         # we need to refresh the instances we have as a result as they might be stale.
-        for field_type, field_instance in fields_excluding_reversed_linked_fields:
+        for field_type, field_instance in all_fields:
             if field_type.needs_refresh_after_import_serialized:
                 field_instance.refresh_from_db()
 
+        # schema_editor.create_model will also create any m2m/through tables which
+        # connect two models together. Once we create_model on the first model
+        # the m2m will be made, so if we blindly call create_model on the second
+        # model it will crash as the m2m connecting those two models already exists.
+        # So instead we keep track of which m2m's have already been made to not
+        # make them twice!
+        already_created_through_table_names = set()
         # Now that the all tables and fields exist, we can create the views and create
         # the table schema in the database.
         for serialized_table in serialized_tables:
@@ -352,39 +349,61 @@ class DatabaseApplicationType(ApplicationType):
                 )
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
-            # We don't need to create all the fields individually because the schema
-            # editor can handle the creation of the table schema in one go.
             with safe_django_schema_editor() as schema_editor:
                 table_model = table.get_model(
-                    fields=serialized_table["_field_objects"],
+                    fields=serialized_table["field_instances"],
                     field_ids=[],
                     managed=True,
                     add_dependencies=False,
                 )
                 serialized_table["_model"] = table_model
-                schema_editor.create_model(table_model)
+                # We don't need to create all the fields individually because the schema
+                # editor can handle the creation of the table schema in one go.
+                schema_editor.create_model_tracking_created_m2ms(
+                    table_model, already_created_through_table_names
+                )
 
-                # The auto_now_add and auto_now must be disabled for all fields
+                # These field attributes must be disabled for date fields
                 # because the export contains correct values and we don't want them
                 # to be overwritten when importing.
-                for model_field in serialized_table["_model"]._meta.get_fields():
-                    if hasattr(model_field, "auto_now_add"):
-                        model_field.auto_now_add = False
-
-                    if hasattr(model_field, "auto_now"):
-                        model_field.auto_now = False
+                date_fields = filter(
+                    lambda f: isinstance(f, models.DateField),
+                    serialized_table["_model"]._meta.get_fields(),
+                )
+                attrs_to_disable_for_import = [
+                    "auto_now_add",
+                    "auto_now",
+                    "sync_with",
+                    "sync_with_add",
+                ]
+                for date_field in date_fields:
+                    for attr in attrs_to_disable_for_import:
+                        if getattr(date_field, attr, False):
+                            setattr(date_field, attr, False)
 
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         # Now that everything is in place we can start filling the table with the rows
         # in an efficient matter by using the bulk_create functionality.
         table_cache: Dict[str, Any] = {}
+        # Similar to above but now instead of creating the m2m tables
+        # we will be inserting data into them. And so we don't want to do this twice
+        # so we keep track of m2m/through tables we've already inserted all the data
+        # for.
+        already_filled_up_through_table_names = set()
         for serialized_table in serialized_tables:
             table_model = serialized_table["_model"]
-            field_ids = [
-                field_object.id for field_object in serialized_table["_field_objects"]
-            ]
             rows_to_be_inserted = []
+
+            m2m_fields_to_not_import_as_already_done = set()
+            for field in table_model._meta.get_fields():
+                if isinstance(field, models.ManyToManyField):
+                    remote_through = field.remote_field.through
+                    db_table = remote_through._meta.db_table
+                    if db_table in already_filled_up_through_table_names:
+                        m2m_fields_to_not_import_as_already_done.add(field.name)
+                    else:
+                        already_filled_up_through_table_names.add(db_table)
 
             for serialized_row in serialized_table["rows"]:
                 created_on = serialized_row.get("created_on")
@@ -410,18 +429,17 @@ class DatabaseApplicationType(ApplicationType):
                 for serialized_field in serialized_table["fields"]:
                     field_type = field_type_registry.get(serialized_field["type"])
                     new_field_id = id_mapping["database_fields"][serialized_field["id"]]
+                    new_field_name = f"field_{new_field_id}"
                     field_name = f'field_{serialized_field["id"]}'
 
-                    # If the new field id is not present in the field_ids then we don't
-                    # want to set that value on the row. This is because upon creation
-                    # of the field there could be a deliberate choice not to populate
-                    # that field. This is for example the case with the related field
-                    # of the `link_row` field which would result in duplicates if we
-                    # would populate.
-                    if new_field_id in field_ids and field_name in serialized_row:
+                    if (
+                        field_name in serialized_row
+                        and new_field_name
+                        not in m2m_fields_to_not_import_as_already_done
+                    ):
                         field_type.set_import_serialized_value(
                             row_instance,
-                            f'field_{id_mapping["database_fields"][serialized_field["id"]]}',
+                            new_field_name,
                             serialized_row[field_name],
                             id_mapping,
                             table_cache,
@@ -453,12 +471,14 @@ class DatabaseApplicationType(ApplicationType):
 
         # The progress off `apply_updates_and_get_updated_fields` takes 5% of the
         # total progress of this import.
-        for field_type, field_instance in fields_excluding_reversed_linked_fields:
+        for field_type, field_instance in all_fields:
             update_collector = FieldUpdateCollector(field_instance.table)
             field_type.after_rows_imported(
                 field_instance, update_collector, field_cache, []
             )
-            update_collector.apply_updates_and_get_updated_fields(field_cache)
+            update_collector.apply_updates_and_get_updated_fields(
+                field_cache, skip_search_updates=True
+            )
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         # Finally, now that everything has been created, loop over the
@@ -466,31 +486,27 @@ class DatabaseApplicationType(ApplicationType):
         # metadata is imported too.
         source_workspace = Workspace.objects.get(pk=id_mapping["import_workspace_id"])
         for serialized_table in serialized_tables:
+            table = serialized_table["_object"]
+            if not import_export_config.reduce_disk_space_usage:
+                SearchHandler.entire_field_values_changed_or_created(table)
             for (
-                serialized_structure
-            ) in serialization_processor_registry.get_all_for_mode(
-                baserow_import_export_mode
-            ):
-                serialized_structure.import_serialized(
-                    source_workspace, serialized_table["_object"], serialized_table
+                serialized_structure_processor
+            ) in serialization_processor_registry.get_all():
+                serialized_structure_processor.import_serialized(
+                    source_workspace, table, serialized_table, import_export_config
                 )
 
-        # Add the remaining none fields that we must not include in the import
-        # because they were for example reversed link row fields.
-        progress.increment(none_field_count, state=IMPORT_SERIALIZED_IMPORTING)
         return imported_tables
 
     def import_serialized(
         self,
         workspace: Workspace,
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
         progress_builder: Optional[ChildProgressBuilder] = None,
-        baserow_import_export_mode: Optional[
-            BaserowImportExportMode
-        ] = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK,
     ) -> Application:
         """
         Imports a database application exported by the `export_serialized` method.
@@ -504,11 +520,11 @@ class DatabaseApplicationType(ApplicationType):
         application = super().import_serialized(
             workspace,
             serialized_values,
+            import_export_config,
             id_mapping,
             files_zip,
             storage,
             progress.create_child_builder(represents_progress=database_progress),
-            baserow_import_export_mode=baserow_import_export_mode,
         )
 
         database = application.specific
@@ -520,10 +536,10 @@ class DatabaseApplicationType(ApplicationType):
                 database,
                 serialized_values["tables"],
                 id_mapping,
+                import_export_config,
                 files_zip,
                 storage,
                 progress.create_child_builder(represents_progress=table_progress),
-                baserow_import_export_mode=baserow_import_export_mode,
             )
 
         return database

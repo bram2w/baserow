@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from baserow_premium.license.handler import LicenseHandler
 
 from baserow.core.models import Application
-from baserow.core.registries import BaserowImportExportMode, SerializationProcessorType
+from baserow.core.registries import ImportExportConfig, SerializationProcessorType
 from baserow.core.types import SerializationProcessorScope
 from baserow.core.utils import atomic_if_not_already
 from baserow_enterprise.features import RBAC
@@ -30,7 +30,6 @@ class EnterpriseExportSerializedStructure:
 class RoleAssignmentSerializationProcessorType(SerializationProcessorType):
     type = "role_assignment_serialization_processors"
     structure = EnterpriseExportSerializedStructure
-    import_export_mode = BaserowImportExportMode.TARGETING_SAME_WORKSPACE_NEW_PK
 
     @classmethod
     def import_serialized(
@@ -38,11 +37,18 @@ class RoleAssignmentSerializationProcessorType(SerializationProcessorType):
         workspace: "Workspace",
         scope: SerializationProcessorScope,
         serialized_scope: dict,
-    ) -> None:
+        import_export_config: ImportExportConfig,
+    ):
         """
         Responsible for importing any `role_assignments` in `serialized_scope`
         into a newly restored/duplicated scope in `scope`.
         """
+
+        if not import_export_config.include_permission_data:
+            # We cannot yet export RBAC roles to another workspace as we would also need
+            # to export all subjects to the new workspace also or somehow allow to user
+            # to choose how to map subjects.
+            return
 
         # Application subclass scopes can't be passed to
         # the role assignment handler. See #1624.
@@ -71,11 +77,18 @@ class RoleAssignmentSerializationProcessorType(SerializationProcessorType):
         cls,
         workspace: "Workspace",
         scope: SerializationProcessorScope,
+        import_export_config: ImportExportConfig,
     ) -> dict[str, Any]:
         """
         Exports the `role_assignments` in `scope` when it is being exported
         by an application type `export_serialized`.
         """
+
+        if not import_export_config.include_permission_data:
+            # We cannot yet export RBAC roles to another workspace as we would also need
+            # to export all subjects to the new workspace also or somehow allow to user
+            # to choose how to map subjects.
+            return
 
         # Do not export anything if the workspace doesn't have RBAC enabled.
         if not LicenseHandler.workspace_has_feature(RBAC, workspace):

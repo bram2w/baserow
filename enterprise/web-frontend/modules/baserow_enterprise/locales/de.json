@@ -215,7 +215,8 @@
     "memberRolesMembersList": {
         "adminHelpText": "Admins können die Rollen anderer Admins einschränken.",
         "remove": "Entfernen",
-        "teamMembersCount": "{count} Teammitglieder"
+        "teamMembersCount": "{count} Teammitglieder",
+        "noMembers": "Es wurden keine Mitglieder ausgewählt. Verwenden Sie die Auswahltaste, um eine hinzuzufügen."
     },
     "roleAssignmentModal": {
         "membersTab": "Mitglieder",
@@ -271,5 +272,8 @@
     "membersRoleField": {
         "noAccessHelpText": "Dieser Benutzer benötigt expliziten Zugriff auf Ressourcen.",
         "adminHelpText": "Administratoren können die Rollen anderer Administratoren einschränken."
+    },
+    "snapshotModalWarning": {
+        "message": "Bitte beachten Sie, dass ein Snapshot alle Berechtigungen enthält, die für die Anwendung und ihre Tabellen festgelegt wurden."
     }
 }

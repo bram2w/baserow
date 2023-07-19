@@ -31,10 +31,12 @@
         "duplicate": "Dupliquer",
         "remove": "Supprimer",
         "login": "S'identifier",
-        "download": "Télécharger"
+        "download": "Télécharger",
+        "copyToClipboard": "Copier dans le presse-papier"
     },
     "adminType": {
-        "settings": "Paramètres"
+        "settings": "Paramètres",
+        "health": "Santé"
     },
     "applicationType": {
         "database": "Base de données",
@@ -91,7 +93,9 @@
         "phoneNumber": "Téléphone",
         "formula": "Formule",
         "lookup": "Champ rapporté",
-        "multipleCollaborators": "Collaborateurs"
+        "multipleCollaborators": "Collaborateurs",
+        "count": "Compteur",
+        "rollup": "Rollup"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -117,7 +121,7 @@
         "dateResponse": "La réponse sera une date au format ISO.",
         "dateTimeResponse": "La réponse sera une date/heure au format ISO.",
         "lastModifiedReadOnly": "La date de modification de la ligne, en lecture seule.",
-        "createdOnReadOnly": "La date de modification de la ligne, en lecture seule.",
+        "createdOnReadOnly": "La date de création de la ligne est en lecture seule.",
         "url": "Accepte une URL valide.",
         "email": "Accepte une adresse électronique valide.",
         "file": "Accepte un tableau d'objet contenant au moins le nom du fichier utilisateur. Vous pouvez utiliser l'API « Envoi de fichier » pour envoyer des fichiers. La réponse à ces appels peut-être fournie directement en tant qu'objet ici. Les différentes API sont listées dans la barre latérale gauche.",
@@ -125,8 +129,10 @@
         "multipleSelect": "Accepte un tableau d'entiers mixtes ou de valeurs textuelles représentant chacun l'identifiant ou la valeur de l'option de sélection choisie. Dans le cas d'une valeur textuelle, la première option correspondante est sélectionnée.",
         "phoneNumber": "Accepte un numéro de téléphone d'une longueur maximum de 100 caractères qui doivent être des chiffres, des espaces ou les caractères suivants : Nx,._+*()#=;/- .",
         "formula": "Un champ en lecture seule défini par une formule rédigée dans le format spécifique de Baserow.",
-        "lookup": "Un champ en lecture seule associé à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
-        "multipleCollaborators": "Accepte un tableau d'objets où chaque objet contient l'identifiant d'un utilisateur."
+        "lookup": "Un champ en lecture seule relié à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
+        "multipleCollaborators": "Accepte un tableau d'objets où chaque objet contient l'identifiant d'un utilisateur.",
+        "count": "Un champ en lecture seule relié à un champ « lien vers une table » qui renvoie le nombre de relations dans ce champ pour la ligne.",
+        "rollup": "Champ en lecture seule relié à un champ « lien vers une table » qui renvoie le cumul choisi pour les valeurs d'un champ particulier de la table liée."
     },
     "viewFilter": {
         "contains": "contient",
@@ -157,7 +163,12 @@
         "beforeToday": "est avant aujourd'hui",
         "afterToday": "est après aujourd'hui",
         "containsWord": "contient le mot",
-        "doesntContainWord": "ne contient pas le mot"
+        "doesntContainWord": "ne contient pas le mot",
+        "isAfterOrEqualDate": "postérieur ou identique à la date",
+        "isWithinDays": "dans les X jours",
+        "isWithinWeeks": "dans les X semaines",
+        "isBeforeOrEqualDate": "antérieure ou identique à la date",
+        "isWithinMonths": "dans les X mois"
     },
     "viewType": {
         "grid": "Tableau",
@@ -178,7 +189,7 @@
         "field": "champ",
         "row": "ligne",
         "view": "vue",
-        "rows": "Lignes"
+        "rows": "lignes"
     },
     "webhook": {
         "request": "Requête",
@@ -264,7 +275,9 @@
         "lastAdminTitle": "Impossible de supprimer le dernier administrateur du projet",
         "lastAdminMessage": "Un projet doit avoir au moins un administrateur.",
         "maxLocksPerTransactionExceededTitle": "Problème avec PostgreSQL",
-        "maxLocksPerTransactionExceededDescription": "Baserow a tenté de supprimer définitivement les éléments mis à la corbeille, mais a dépassé les verrous disponibles spécifiés dans `max_locks_per_transaction`."
+        "maxLocksPerTransactionExceededDescription": "Baserow a tenté de supprimer définitivement les éléments mis à la corbeille, mais a dépassé les verrous disponibles spécifiés dans `max_locks_per_transaction`.",
+        "notificationDoesNotExistTitle": "La notification n’existe pas.",
+        "notificationDoesNotExistDescription": "L’action n’a pas pu être terminée car le lien n’existe plus."
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -327,10 +340,10 @@
         "equalDescription": "Retourne vrai si ses deux arguments sont égaux.",
         "ifDescription": "Si le premier argument est évalué à 'vrai' alors retourne le second argument, sinon retourne le troisième argument.",
         "toTextDescription": "Convertit l'argument en texte.",
-        "datetimeFormatDescription": "Convertit la date en texte en fonction de la façon dont elle est formatée.",
+        "datetimeFormatDescription": "Convertit la date en texte en fonction de la façon dont elle est formatée. Le résultat est toujours en UTC. Utilisez `datetime_format_tz` pour préciser une timezone.",
         "toNumberDescription": "Convertit l'argument en nombre si cela est possible.",
         "fieldDescription": "Retourne le champ désigné par le nom en argument.",
-        "lookupDescription": "Rapporte la valeur d'un champ d'une autre table. Le premier argument doit être le nom d'un champ de lien de la table courante vers une autre table et le second argument doit être le nom d'un champ dans la table liée.",
+        "lookupDescription": "Rapporte la valeur d'un champ d'une autre table. Le premier argument doit être le nom d'un champ de lien vers une autre table et le second argument doit être le nom d'un champ dans la table liée.",
         "isBlankDescription": "Retourne true si l'argument est null, empty ou blank, false sinon.",
         "tDescription": "Retourne l'argument si c'est un texte et une chaîne vide autrement.",
         "notDescription": "Retourne faux si l'argument est vrai, vrai sinon.",
@@ -338,7 +351,7 @@
         "greaterThanOrEqualDescription": "Retourne vrai si le premier argument est supérieur ou égal au second.",
         "lessThanDescription": "Retourne vrai si le premier argument et strictement inférieur au second.",
         "lessThanOrEqualDescription": "Retourne vrai si le premier argument et inférieur ou égal au second.",
-        "toDateDescription": "Retourne le premier argument converti en date selon le format défini en second argument.",
+        "toDateDescription": "Retourne le premier argument converti en date selon le format défini en second argument. Le résultat est toujours en UTC. Utilisez `to_date_tz` pour préciser une timezone.",
         "dayDescription": "Retourne le jour de la date en argument en tant qu'entier compris entre 1 et 31.",
         "dateDiffDescription": "Étant donné l'unité de mesure définie par le premier argument ('year', 'month', 'week', 'day', 'hour', 'minute', 'seconds') calcule et retourne le nombre d'unité pour aller du second argument au troisième.",
         "andDescription": "Retourne le ET logique entre le premier et le second argument. Si les deux arguments sont vrais alors le résultat est vrai, sinon le résultat est faux.",
@@ -399,7 +412,8 @@
         "nowDescription": "Renvoie la date et l’heure actuelles en UTC.",
         "todayDescription": "Retourne la date actuelle en UTC.",
         "toDateTzDescription": "Renvoie le premier argument converti en date à partir de la chaîne de caractères représentant le format de cette date en deuxième argument et du fuseau horaire fourni en troisième argument.",
-        "whenNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le second argument si le premier argument est 'NaN'"
+        "whenNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le second argument si le premier argument est 'NaN'",
+        "datetimeFormatTzDescription": "Convertit la date en texte en donnant un moyen de formater la date dans le fuseau horaire spécifié."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -407,5 +421,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "{name} invalide",
         "invalidUrlEnvVarDescription": "La variable d'environnement {name} a été définie sur une valeur invalide. L'administrateur de votre site doit changer {name} en une URL valide commençant par http:// ou https:// et ensuite redémarrer Baserow pour corriger cette erreur."
+    },
+    "emailTester": {
+        "title": "Testeur de courriel",
+        "targetEmailLabel": "Courriel ciblé",
+        "configLink": "Aide à la configuration des courriels",
+        "success": "Courriel test envoyé avec succès",
+        "submit": "Envoyer un courriel de test",
+        "invalidTargetEmail": "Adresse courriel invalide"
+    },
+    "health": {
+        "description": "Ces indicateurs indiquent l’état actuel de votre installation de Baserow.",
+        "title": "Bilans de santé de Baserow"
     }
 }

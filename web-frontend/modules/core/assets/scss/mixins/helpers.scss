@@ -54,8 +54,9 @@
   }
 
   /* stylelint-disable-next-line at-rule-no-unknown */
-  @else if ($top != null and $right != null and $bottom == null and
-  $left == null) {
+  @else if
+    ($top != null and $right != null and $bottom == null and $left == null)
+  {
     top: $top;
     right: $right;
     bottom: $top;

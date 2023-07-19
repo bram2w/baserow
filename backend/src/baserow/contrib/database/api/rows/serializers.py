@@ -7,6 +7,7 @@ from django.db.models.base import ModelBase
 from loguru import logger
 from rest_framework import serializers
 
+from baserow.api.search.serializers import SearchQueryParamSerializer
 from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -341,9 +342,8 @@ class BatchCreateRowsQueryParamsSerializer(serializers.Serializer):
     before = serializers.IntegerField(required=False)
 
 
-class ListRowsQueryParamsSerializer(serializers.Serializer):
+class ListRowsQueryParamsSerializer(SearchQueryParamSerializer, serializers.Serializer):
     user_field_names = serializers.BooleanField(required=False, default=False)
-    search = serializers.CharField(required=False)
     order_by = serializers.CharField(required=False)
     include = serializers.CharField(required=False)
     exclude = serializers.CharField(required=False)
@@ -391,8 +391,7 @@ def get_example_batch_rows_serializer_class(example_type="get", user_field_names
     return class_object
 
 
-class GetRowAdjacentSerializer(serializers.Serializer):
+class GetRowAdjacentSerializer(SearchQueryParamSerializer, serializers.Serializer):
     user_field_names = serializers.BooleanField(required=False, default=False)
     previous = serializers.BooleanField(required=False, default=False)
     view_id = serializers.IntegerField(required=False)
-    search = serializers.CharField(required=False, allow_null=True, default=None)

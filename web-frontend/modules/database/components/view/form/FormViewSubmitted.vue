@@ -1,9 +1,7 @@
 <template>
   <div class="form-view__submitted">
     <template v-if="isRedirect">
-      <div class="form-view__submitted-message">
-        Thanks for submitting the form!
-      </div>
+      <div class="form-view__submitted-message">{{ defaultActionMessage }}</div>
       <div class="form-view__redirecting-description">
         You're being redirected to {{ submitActionRedirectUrl }}.
       </div>
@@ -11,9 +9,8 @@
         <div class="loading-absolute-center"></div>
       </div>
     </template>
-    <div v-else class="form-view__submitted-message">
-      {{ submitActionMessage || 'Thanks for submitting the form!' }}
-    </div>
+    <!-- prettier-ignore -->
+    <div v-else class="form-view__submitted-message whitespace-pre-wrap">{{ submitActionMessageOrDefault }}</div>
     <FormViewPoweredBy v-if="showLogo"></FormViewPoweredBy>
   </div>
 </template>
@@ -42,6 +39,14 @@ export default {
     showLogo: {
       type: Boolean,
       required: true,
+    },
+  },
+  computed: {
+    defaultActionMessage() {
+      return 'Thanks for submitting the form!'
+    },
+    submitActionMessageOrDefault() {
+      return this.submitActionMessage || this.defaultActionMessage
     },
   },
 }

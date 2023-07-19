@@ -15,5 +15,18 @@ export function getClient(user?: User) {
   if (user !== undefined) {
     instance.defaults.headers.Authorization = `JWT ${user.accessToken}`
   }
-  return instance
+
+// Add a response interceptor
+    instance.interceptors.response.use(function (response) {
+        // Do something with response data
+        return response;
+    }, function (error) {
+        if (error.response) {
+            console.error('API response error:', JSON.stringify(error.response.data));
+        }
+        // Do something with response error
+        return Promise.reject(error);
+    });
+
+    return instance
 }

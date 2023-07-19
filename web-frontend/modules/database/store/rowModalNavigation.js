@@ -1,5 +1,6 @@
 import RowService from '@baserow/modules/database/services/row'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 /**
  * This store exists to deal with the row edit modal navigation.
@@ -22,6 +23,7 @@ export const state = () => ({
    * also not be part of the `rows` in the `rowModal` store.
    */
   row: null,
+  failedToFetchTableRowId: null,
 })
 
 export const mutations = {
@@ -34,12 +36,17 @@ export const mutations = {
   SET_ROW(state, row) {
     state.row = row
   },
+  SET_FAILED_TO_FETCH_TABLE_ROW_ID(state, tableAndRowId) {
+    state.failedToFetchTableRowId = tableAndRowId
+  },
 }
 export const actions = {
   clearRow({ commit }) {
+    commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', null)
     commit('CLEAR_ROW')
   },
   setRow({ commit }, row) {
+    commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', null)
     commit('SET_ROW', row)
   },
   async fetchRow({ commit }, { tableId, rowId }) {
@@ -48,6 +55,7 @@ export const actions = {
       commit('SET_ROW', row)
       return row
     } catch (error) {
+      commit('SET_FAILED_TO_FETCH_TABLE_ROW_ID', { tableId, rowId })
       notifyIf(error, 'row')
     }
   },
@@ -63,6 +71,7 @@ export const actions = {
         viewId,
         rowId: state.row.id,
         search: activeSearchTerm,
+        searchMode: getDefaultSearchModeFromEnv(this.$env),
       })
       if (row) {
         commit('SET_ROW', row)
@@ -88,6 +97,9 @@ export const getters = {
   },
   getRow(state) {
     return state.row
+  },
+  getFailedToFetchTableRowId(state) {
+    return state.failedToFetchTableRowId
   },
 }
 

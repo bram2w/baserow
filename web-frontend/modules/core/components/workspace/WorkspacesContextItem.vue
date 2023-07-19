@@ -5,15 +5,20 @@
       active: workspace._.selected,
       'select__item--loading':
         workspace._.loading || workspace._.additionalLoading,
+      'select__item--has-notification': hasUnreadNotifications,
     }"
   >
     <a class="select__item-link" @click="selectWorkspace(workspace)">
-      <div class="select__item-name">
+      <div :title="workspace.name" class="select__item-name">
         <Editable
           ref="rename"
           :value="workspace.name"
           @change="renameWorkspace(workspace, $event)"
         ></Editable>
+        <span
+          v-if="hasUnreadNotifications"
+          class="sidebar__unread-notifications-icon"
+        ></span>
       </div>
     </a>
     <a
@@ -44,6 +49,13 @@ export default {
     workspace: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    hasUnreadNotifications() {
+      return this.$store.getters['notification/workspaceHasUnread'](
+        this.workspace.id
+      )
     },
   },
 }

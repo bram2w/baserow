@@ -30,11 +30,12 @@ from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.signals import rows_created
+from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
+    CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
     CreateViewFilterOperationType,
-    CreateViewOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
     DeleteViewFilterOperationType,
@@ -58,6 +59,7 @@ from baserow.contrib.database.views.operations import (
     UpdateViewFieldOptionsOperationType,
     UpdateViewFilterOperationType,
     UpdateViewOperationType,
+    UpdateViewPublicOperationType,
     UpdateViewSlugOperationType,
     UpdateViewSortOperationType,
 )
@@ -446,6 +448,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
+            context=table,
             allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
@@ -597,20 +600,24 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :return: The created view instance.
         """
 
-        workspace = table.database.workspace
-        CoreHandler().check_permissions(
-            user, CreateViewOperationType.type, workspace=workspace, context=table
+        view_ownership_type_str = kwargs.get(
+            "ownership_type", OWNERSHIP_TYPE_COLLABORATIVE
         )
-
-        # Figure out which model to use for the given view type.
+        view_ownership_type = view_ownership_type_registry.get(view_ownership_type_str)
         view_type = view_type_registry.get(type_name)
+
+        workspace = table.database.workspace
+
+        CoreHandler().check_permissions(
+            user,
+            view_ownership_type.get_operation_to_check_to_create_view().type,
+            workspace=workspace,
+            context=table,
+        )
         view_type.before_view_create(kwargs, table, user)
 
         model_class = view_type.model_class
         view_values = view_type.prepare_values(kwargs, table, user)
-
-        view_ownership_type = kwargs.get("ownership_type", OWNERSHIP_TYPE_COLLABORATIVE)
-        view_ownership_type_registry.get(view_ownership_type)
 
         allowed_fields = [
             "name",
@@ -624,6 +631,14 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         instance = model_class.objects.create(
             table=table, order=last_order, created_by=user, **view_values
         )
+
+        if instance.public:
+            CoreHandler().check_permissions(
+                user,
+                CreatePublicViewOperationType.type,
+                workspace=workspace,
+                context=table,
+            )
 
         view_type.view_created(view=instance)
         view_created.send(self, view=instance, user=user, type_name=type_name)
@@ -761,7 +776,16 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "public_view_password",
             "show_logo",
         ] + view_type.allowed_fields
+
+        previous_public_value = view.public
         view = set_allowed_attrs(view_values, allowed_fields, view)
+        if previous_public_value != view.public:
+            CoreHandler().check_permissions(
+                user,
+                UpdateViewPublicOperationType.type,
+                workspace=workspace,
+                context=view,
+            )
         view.save()
 
         if "filters_disabled" in view_values:
@@ -798,7 +822,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         user_views = CoreHandler().filter_queryset(
-            user, ListViewsOperationType.type, all_views, workspace=workspace
+            user,
+            ListViewsOperationType.type,
+            all_views,
+            workspace=workspace,
+            context=table,
         )
 
         view_ids = user_views.values_list("id", flat=True)
@@ -1920,6 +1948,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         only_sort_by_field_ids: Optional[Iterable[int]] = None,
         only_search_by_field_ids: Optional[Iterable[int]] = None,
         apply_filters: bool = True,
+        search_mode: Optional[SearchModes] = None,
     ) -> QuerySet:
         """
         Returns a queryset for the provided view which is appropriately sorted,
@@ -1937,6 +1966,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             fields provide those field ids in this optional iterable. Other fields
              not present in the iterable will not be searched and filtered down by the
              search term.
+        :param apply_filters: Whether to apply view filters to the resulting queryset.
+        :param search_mode: The type of search to perform if a search term is provided.
         :return: The appropriate queryset for the provided view.
         """
 
@@ -1955,7 +1986,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 only_sort_by_field_ids,
             )
         if search is not None:
-            queryset = queryset.search_all_fields(search, only_search_by_field_ids)
+            queryset = queryset.search_all_fields(
+                search, only_search_by_field_ids, search_mode
+            )
         return queryset
 
     def _get_aggregation_lock_cache_key(self, view: View):
@@ -2067,7 +2100,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
-        search=None,
+        search: Optional[str] = None,
+        search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for all aggregation configured for the view in
@@ -2086,6 +2120,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             result.
         :param search: the search string to considerate. If the search parameter is
             defined, we don't use the cache so we recompute aggregation on the fly.
+        :param search_mode: the search mode that the search is using.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :return: A dict of aggregation value
@@ -2144,6 +2179,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 model,
                 with_total=with_total,
                 search=search,
+                search_mode=search_mode,
             )
 
             if not search:
@@ -2179,7 +2215,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         aggregations: Iterable[Tuple[django_models.Field, str]],
         model: Union[GeneratedTableModel, None] = None,
         with_total: bool = False,
-        search: Union[str, None] = None,
+        search: Optional[str] = None,
+        search_mode: Optional[SearchModes] = None,
     ) -> Dict[str, Any]:
         """
         Returns a dict of aggregation for given (field, aggregation_type) couple list.
@@ -2194,7 +2231,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             automatically.
         :param with_total: Whether the total row count should be returned in the
             result.
-        :param search: the search string to considerate.
+        :param search: the search string to consider.
+        :param search: the mode that the search is in.
         :raises FieldAggregationNotSupported: When the view type doesn't support
             field aggregation.
         :raises FieldNotInTable: When one of the field doesn't belong to the specified
@@ -2227,7 +2265,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view_type.can_filter:
             queryset = self.apply_filters(view, queryset)
         if search is not None:
-            queryset = queryset.search_all_fields(search)
+            queryset = queryset.search_all_fields(search, search_mode=search_mode)
 
         aggregation_dict = {}
 
@@ -2363,6 +2401,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 raise NoAuthorizationToPubliclySharedView(
                     "The view is password protected."
                 )
+
+            view_ownership_type = view_ownership_type_registry.get(view.ownership_type)
+            view_ownership_type.before_public_view_accessed(view)
 
         return view
 
@@ -2559,6 +2600,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         view: View,
         search: str = None,
+        search_mode: Optional[SearchModes] = None,
         order_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
@@ -2577,6 +2619,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         the field_options.
         :param view: The public view to get rows for.
         :param search: A string to search for in the rows.
+        :param search_mode: The type of search to perform.
         :param order_by: A string to order the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
@@ -2629,7 +2672,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         if search:
-            queryset = queryset.search_all_fields(search, publicly_visible_field_ids)
+            queryset = queryset.search_all_fields(
+                search, publicly_visible_field_ids, search_mode=search_mode
+            )
 
         field_ids = (
             list(set(field_ids) & set(publicly_visible_field_ids))

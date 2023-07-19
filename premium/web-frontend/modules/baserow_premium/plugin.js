@@ -37,6 +37,8 @@ import it from '@baserow_premium/locales/it.json'
 import pl from '@baserow_premium/locales/pl.json'
 import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
 import { PersonalViewOwnershipType } from '@baserow_premium/viewOwnershipTypes'
+import { ViewOwnershipPermissionManagerType } from '@baserow_premium/permissionManagerTypes'
+import { RowCommentMentionNotificationType } from '@baserow_premium/notificationTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -45,6 +47,17 @@ export default (context) => {
     'ERROR_FEATURE_NOT_AVAILABLE',
     'License required',
     'This functionality requires an active premium license. Please refresh the page.'
+  )
+
+  app.$clientErrorMap.setError(
+    'ERROR_USER_NOT_COMMENT_AUTHOR',
+    app.i18n.t('rowComment.errorUserNotCommentAuthorTitle'),
+    app.i18n.t('rowComment.errorUserNotCommentAuthor')
+  )
+  app.$clientErrorMap.setError(
+    'ERROR_INVALID_COMMENT_MENTION',
+    app.i18n.t('rowComment.errorInvalidCommentMentionTitle'),
+    app.i18n.t('rowComment.errorInvalidCommentMention')
   )
 
   // Allow locale file hot reloading
@@ -103,6 +116,11 @@ export default (context) => {
 
   app.$registry.register('license', new PremiumLicenseType(context))
 
+  app.$registry.register(
+    'permissionManager',
+    new ViewOwnershipPermissionManagerType(context)
+  )
+
   registerRealtimeEvents(app.$realtime)
 
   // Overwrite the existing database application type with the one customized for
@@ -110,5 +128,9 @@ export default (context) => {
   app.$registry.register(
     'application',
     new PremiumDatabaseApplicationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new RowCommentMentionNotificationType(context)
   )
 }

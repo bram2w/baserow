@@ -11,6 +11,7 @@ from typing import (
     Union,
 )
 
+from django.db.models import Model
 from django.utils.encoding import force_str
 
 from rest_framework import serializers, status
@@ -21,7 +22,7 @@ from rest_framework.serializers import ModelSerializer
 from baserow.core.exceptions import InstanceTypeDoesNotExist
 
 if TYPE_CHECKING:
-    from baserow.core.registry import Registry
+    from baserow.core.registry import Registry, Instance
 
 from .exceptions import RequestBodyValidationException
 
@@ -187,6 +188,7 @@ def validate_data_custom_fields(
     base_serializer_class: Optional[Type[ModelSerializer]] = None,
     type_attribute_name: str = "type",
     partial: bool = False,
+    return_validated: bool = False,
     allow_empty_type: bool = False,
 ) -> Dict[str, Any]:
     """
@@ -233,7 +235,9 @@ def validate_data_custom_fields(
             }
             serializer_class = type_instance.get_serializer_class(**serializer_kwargs)
 
-    return validate_data(serializer_class, data, partial=partial)
+    return validate_data(
+        serializer_class, data, partial=partial, return_validated=return_validated
+    )
 
 
 def get_request(args: List[Any]) -> Request:
@@ -253,30 +257,28 @@ def get_request(args: List[Any]) -> Request:
 
 
 def type_from_data_or_registry(
-    data, registry, model_instance, type_attribute_name="type"
-):
+    data: Dict,
+    registry: "Registry",
+    model_instance: Model,
+    type_attribute_name: str = "type",
+) -> "Instance":
     """
     Returns the type in the provided data else the type will be returned via the
     registry.
 
     :param data: The data that might contains the type name.
-    :type data: dict
     :param registry: The registry where to get the type instance from if not provided in
         the data.
-    :type registry: Registry
     :param model_instance: The model instance we want to know the type from if not
         provided in the data.
-    :type model_instance: Model
     :param type_attribute_name: The expected type attribute name in the data.
-    :type type_attribute_name: str
     :return: The extracted type.
-    :rtype: str
     """
 
     if type_attribute_name in data:
-        return data[type_attribute_name]
+        return registry.get(data[type_attribute_name])
     else:
-        return registry.get_by_model(model_instance.specific_class).type
+        return registry.get_by_model(model_instance.specific_class)
 
 
 def generate_meta_ref_name_based_on_model(model_, base_class=None):
@@ -397,12 +399,13 @@ class CustomFieldRegistryMappingSerializer:
     extension class.
     """
 
-    def __init__(self, registry, base_class, many=False):
+    def __init__(self, registry, base_class, many=False, request=False):
         self.read_only = False
         self.registry = registry
         self.base_class = base_class
         self.many = many
         self.partial = False
+        self.request = request
 
 
 class DiscriminatorCustomFieldsMappingSerializer:

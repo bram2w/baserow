@@ -2,14 +2,21 @@ import datetime
 from decimal import Decimal
 from typing import Any, List, Optional, Type, Union
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
-from django.db.models import JSONField, Q, Value
+from django.db.models import Expression, F, Func, JSONField, Q, QuerySet, Value
+from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
 from dateutil import parser
 from rest_framework import serializers
 from rest_framework.fields import Field
 
+from baserow.contrib.database.fields.expressions import (
+    extract_jsonb_array_values_to_single_string,
+    json_extract_path,
+)
+from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.mixins import get_date_time_format
 from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
@@ -81,6 +88,7 @@ class BaserowFormulaTextType(
 ):
     type = "text"
     baserow_field_type = "text"
+    can_order_by_in_array = True
 
     def cast_to_text(
         self,
@@ -92,10 +100,21 @@ class BaserowFormulaTextType(
         # arg.
         return arg
 
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name, "value", "text", output_field=models.TextField()
+        )
+
 
 class BaserowFormulaCharType(BaserowFormulaBaseTextType, BaserowFormulaValidType):
     type = "char"
     baserow_field_type = "text"
+    can_order_by_in_array = True
+
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name, "value", "text", output_field=models.TextField()
+        )
 
 
 class BaserowFormulaLinkType(BaserowFormulaTextType):
@@ -190,6 +209,37 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return formula_function_registry.get("link")(literal(""))
 
+    def get_search_expression(self, field, queryset):
+        return Concat(
+            json_extract_path(F(field.db_column), [Value("label")]),
+            Value(" ("),
+            json_extract_path(F(field.db_column), [Value("url")]),
+            Value(")"),
+            output_field=models.TextField(),
+        )
+
+    def get_search_expression_in_array(self, field, queryset):
+        def transform_value_to_text_func(x):
+            # Make sure we don't send the keys of the jsonb to ts_vector by extracting
+            # and re-ordering the label/url parameters to match the correct format
+            return Func(
+                x,
+                Value('.*"url".*:.*"([^"]+)".*"label".*:.*"([^"]+)".*'),
+                Value("\\2 (\\1)"),
+                Value("g", output_field=models.TextField()),
+                function="regexp_replace",
+                output_field=models.TextField(),
+            )
+
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            transform_value_to_text_func=transform_value_to_text_func,
+        )
+
+    def is_searchable(self, field):
+        return True
+
 
 class BaserowFormulaNumberType(
     BaserowFormulaTypeHasEmptyBaserowExpression, BaserowFormulaValidType
@@ -198,6 +248,7 @@ class BaserowFormulaNumberType(
     baserow_field_type = "number"
     user_overridable_formatting_option_fields = ["number_decimal_places"]
     MAX_DIGITS = 50
+    can_order_by_in_array = True
 
     def __init__(self, number_decimal_places: int, **kwargs):
         super().__init__(**kwargs)
@@ -264,6 +315,16 @@ class BaserowFormulaNumberType(
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return literal(0)
 
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name,
+            "value",
+            "numeric",
+            output_field=ArrayField(
+                base_field=models.DecimalField(max_digits=50, decimal_places=0)
+            ),
+        )
+
     def __str__(self) -> str:
         return f"number({self.number_decimal_places})"
 
@@ -273,6 +334,7 @@ class BaserowFormulaBooleanType(
 ):
     type = "boolean"
     baserow_field_type = "boolean"
+    can_order_by_in_array = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -298,6 +360,16 @@ class BaserowFormulaBooleanType(
         self, expr: "BaserowExpression[BaserowFormulaValidType]"
     ):
         return expr
+
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name,
+            "value",
+            "boolean",
+            output_field=ArrayField(
+                base_field=models.DecimalField(max_digits=50, decimal_places=0)
+            ),
+        )
 
 
 def _calculate_addition_interval_type(
@@ -419,6 +491,12 @@ class BaserowFormulaDateIntervalType(
     ) -> "BaserowExpression[BaserowFormulaValidType]":
         return literal(datetime.timedelta(hours=0))
 
+    def is_searchable(self, field):
+        return True
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Cast(field.db_column, output_field=models.CharField())
+
 
 class BaserowFormulaDateType(BaserowFormulaValidType):
     type = "date"
@@ -432,6 +510,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
     ]
     nullable_option_fields = ["date_force_timezone"]
     can_represent_date = True
+    can_order_by_in_array = True
 
     def __init__(
         self,
@@ -533,6 +612,32 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
         return Value(timezone.now(), output_field=field)
 
+    def get_search_expression_in_array(self, field, queryset):
+        def transform_value_to_text_func(x):
+            return Func(
+                Func(
+                    # FIXME: what if date_force_timezone is None(user timezone)?
+                    Value(field.date_force_timezone or "UTC"),
+                    Cast(x, output_field=models.DateTimeField()),
+                    function="timezone",
+                    output_field=models.DateTimeField(),
+                ),
+                Value(get_date_time_format(self, "sql")),
+                function="to_char",
+                output_field=models.CharField(),
+            )
+
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            transform_value_to_text_func=transform_value_to_text_func,
+        )
+
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleKeyArrayExpression(
+            field_name, "value", "timestamp", output_field=models.DateTimeField()
+        )
+
     def __str__(self) -> str:
         date_or_datetime = "datetime" if self.date_include_time else "date"
         optional_time_format = (
@@ -546,12 +651,17 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     user_overridable_formatting_option_fields = [
         "array_formula_type",
     ]
-    can_order_by = False
 
     def __init__(self, sub_type: BaserowFormulaValidType, **kwargs):
         super().__init__(**kwargs)
         self.array_formula_type = sub_type.type
         self.sub_type = sub_type
+
+    def get_search_expression(self, field, queryset):
+        return self.sub_type.get_search_expression_in_array(field, queryset)
+
+    def is_searchable(self, field):
+        return True
 
     @classmethod
     def construct_type_from_formula_field(cls, formula_field):
@@ -722,6 +832,32 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             human_readable_values.append(export_value)
         return human_readable_values
 
+    @property
+    def can_order_by(self) -> bool:
+        return self.sub_type.can_order_by_in_array
+
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        expr = self.sub_type.get_order_by_in_array_expr(
+            field, field_name, order_direction
+        )
+        annotation_name = f"{field_name}_agg_sort_array"
+        annotation = {annotation_name: expr}
+        field_expr = F(annotation_name)
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(
+            annotation=annotation, order=field_order_by, can_be_indexed=False
+        )
+
+    def get_value_for_filter(self, row, field) -> any:
+        return None
+
     def __str__(self) -> str:
         return f"array({self.sub_type})"
 
@@ -729,7 +865,8 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
 class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
     type = "single_select"
     baserow_field_type = "single_select"
-    can_order_by = False
+    can_order_by = True
+    can_order_by_in_array = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -739,7 +876,6 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
 
     @property
     def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
-        # true > true makes no sense
         return []
 
     def get_baserow_field_instance_and_type(self):
@@ -789,6 +925,49 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         )
         return formula_function_registry.get("when_empty")(
             single_select_value, literal("")
+        )
+
+    def get_search_expression(self, field, queryset):
+        return Cast(F(field.db_column + "__value"), output_field=models.CharField())
+
+    def get_search_expression_in_array(self, field, queryset):
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            path_to_value_in_jsonb_list=[
+                Value("value", output_field=models.CharField()),
+                Value("value", output_field=models.CharField()),
+            ],
+        )
+
+    def is_searchable(self, field):
+        return True
+
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        field_expr = F(f"{field_name}__value")
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(order=field_order_by, can_be_indexed=True)
+
+    def get_value_for_filter(self, row, field) -> any:
+        return getattr(row, field.db_column)["value"]
+
+    def get_order_by_in_array_expr(self, field, field_name, order_direction):
+        return JSONBSingleInnerKeyArrayExpression(
+            field_name,
+            "value",
+            "jsonb",
+            "value",
+            "text",
+            output_field=ArrayField(
+                base_field=models.DecimalField(max_digits=50, decimal_places=0)
+            ),
         )
 
 
@@ -865,3 +1044,69 @@ def literal(
         return formula_function_registry.get("date_interval")(literal("0 hours"))
 
     raise TypeError(f"Unknown literal type {type(arg)}")
+
+
+class JSONBSingleKeyArrayExpression(Expression):
+    template = """
+        (
+            SELECT ARRAY_AGG(items.{key_name})
+            FROM jsonb_to_recordset({field_name}) as items(
+            {key_name} {data_type})
+        )
+        """  # nosec B608
+    # fmt: on
+
+    def __init__(self, field_name: str, key_name: str, data_type: str, **kwargs):
+        super().__init__(**kwargs)
+        self.field_name = field_name
+        self.key_name = key_name
+        self.data_type = data_type
+
+    def as_sql(self, compiler, connection, template=None):
+        template = template or self.template
+        data = {
+            "field_name": f'"{self.field_name}"',
+            "key_name": f'"{self.key_name}"',
+            "data_type": self.data_type,
+        }
+
+        return template.format(**data), []
+
+
+class JSONBSingleInnerKeyArrayExpression(Expression):
+    template = """
+        (
+            SELECT ARRAY_AGG(items.{key_name}->>{inner_key_name}::{inner_data_type})
+            FROM jsonb_to_recordset({field_name}) as items(
+            {key_name} {data_type})
+        )
+        """  # nosec B608
+    # fmt: on
+
+    def __init__(
+        self,
+        field_name: str,
+        key_name: str,
+        data_type: str,
+        inner_key_name: str,
+        inner_data_type: str,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.field_name = field_name
+        self.key_name = key_name
+        self.data_type = data_type
+        self.inner_key_name = inner_key_name
+        self.inner_data_type = inner_data_type
+
+    def as_sql(self, compiler, connection, template=None):
+        template = template or self.template
+        data = {
+            "field_name": f'"{self.field_name}"',
+            "key_name": f'"{self.key_name}"',
+            "data_type": self.data_type,
+            "inner_key_name": f"'{self.inner_key_name}'",
+            "inner_data_type": self.inner_data_type,
+        }
+
+        return template.format(**data), []

@@ -40,7 +40,7 @@ export class RolePermissionManagerType extends PermissionManagerType {
     }
   }
 
-  hasPermission(permissions, operation, context) {
+  hasPermission(permissions, operation, context, workspaceId) {
     if (permissions[operation] === undefined) {
       return false
     }

@@ -2,6 +2,8 @@ import os
 import traceback
 from typing import Any, Callable, List, NamedTuple, Optional, Union
 
+from celery.schedules import crontab
+
 
 def setup_dev_e2e(*args, **kwargs):
     # noinspection PyBroadException
@@ -105,3 +107,18 @@ def set_setting_from_env_if_present(
 
 def str_to_bool(s: str) -> bool:
     return s.lower().strip() in ("y", "yes", "t", "true", "on", "1")
+
+
+def get_crontab_from_env(env_var_name: str, default_crontab: str) -> crontab:
+    """
+    Parses a crontab from an environment variable if present or instead uses the
+    default.
+
+    Celeries crontab constructor takes the arguments in a different order than the
+    actual crontab spec so we expand and re-order the arguments to match.
+    """
+
+    minute, hour, day_of_month, month_of_year, day_of_week = os.getenv(
+        env_var_name, default_crontab
+    ).split(" ")
+    return crontab(minute, hour, day_of_week, day_of_month, month_of_year)

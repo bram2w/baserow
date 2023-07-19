@@ -294,7 +294,7 @@ This call returns `true` if the operation is granted `false` otherwise.
 
 The frontend permissions are calculated with the permission object sent by the
 backend at login for each group the user has access to. Check the
-`.get_permission_object` method from each backend permission manager.
+`.get_permissions_object` method from each backend permission manager.
 
 The permission object looks like this:
 
@@ -341,7 +341,7 @@ order, if the permission is granted or not given the data from the `permissions`
 property.
 
 For instance the
-`BasicPermissionManagerType.hasPermission(permissions, operation, context)`
+`BasicPermissionManagerType.hasPermission(permissions, operation, context, workspaceId)`
 method will be called with the following object:
 
 ```json

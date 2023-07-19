@@ -19,7 +19,7 @@ export class DeviceType extends Registerable {
 }
 
 export class DesktopDeviceType extends DeviceType {
-  getType() {
+  static getType() {
     return 'desktop'
   }
 
@@ -41,7 +41,7 @@ export class DesktopDeviceType extends DeviceType {
 }
 
 export class TabletDeviceType extends DeviceType {
-  getType() {
+  static getType() {
     return 'tablet'
   }
 
@@ -63,7 +63,7 @@ export class TabletDeviceType extends DeviceType {
 }
 
 export class SmartphoneDeviceType extends DeviceType {
-  getType() {
+  static getType() {
     return 'smartphone'
   }
 

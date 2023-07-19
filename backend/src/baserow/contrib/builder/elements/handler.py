@@ -16,11 +16,14 @@ from .types import ElementForUpdate
 
 
 class ElementHandler:
-    def get_element(self, element_id: int, base_queryset=None) -> Element:
+    def get_element(
+        self, element_id: int, base_queryset: Optional[QuerySet] = None
+    ) -> Element:
         """
         Returns an element instance from the database.
 
         :param element_id: The ID of the element.
+        :param base_queryset: The base queryset to use to build the query.
         :raises ElementDoesNotExist: If the element can't be found.
         :return: The element instance.
         """
@@ -41,12 +44,13 @@ class ElementHandler:
         return element
 
     def get_element_for_update(
-        self, element_id: int, base_queryset=None
+        self, element_id: int, base_queryset: Optional[QuerySet] = None
     ) -> ElementForUpdate:
         """
         Returns an element instance from the database that can be safely updated.
 
         :param element_id: The ID of the element.
+        :param base_queryset: The base queryset to use to build the query.
         :raises ElementDoesNotExist: If the element can't be found.
         :return: The element instance.
         """
@@ -65,7 +69,7 @@ class ElementHandler:
         page: Page,
         base_queryset: Optional[QuerySet] = None,
         specific: bool = True,
-    ) -> Union[QuerySet[Page], Iterable[Page]]:
+    ) -> Union[QuerySet[Element], Iterable[Element]]:
         """
         Gets all the specific elements of a given page.
 
@@ -106,7 +110,7 @@ class ElementHandler:
         else:
             order = Element.get_last_order(page)
 
-        shared_allowed_fields = ["type"]
+        shared_allowed_fields = ["type", "style_padding_top", "style_padding_bottom"]
         allowed_values = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
@@ -135,18 +139,20 @@ class ElementHandler:
         to be set on the element first.
 
         :param element: The element that should be updated.
-        :param values: The values that should be set on the element.
+        :param kwargs: The values that should be set on the element.
         :return: The updated element.
         """
 
         element_type = element_type_registry.get_by_model(element)
 
-        shared_allowed_fields = []
+        shared_allowed_fields = ["style_padding_top", "style_padding_bottom"]
         allowed_updates = extract_allowed(
             kwargs, shared_allowed_fields + element_type.allowed_fields
         )
 
-        allowed_updates = element_type.prepare_value_for_db(allowed_updates)
+        allowed_updates = element_type.prepare_value_for_db(
+            allowed_updates, instance=element
+        )
 
         for key, value in allowed_updates.items():
             setattr(element, key, value)

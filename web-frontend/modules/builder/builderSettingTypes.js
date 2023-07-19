@@ -4,7 +4,7 @@ import ThemeSettings from '@baserow/modules/builder/components/settings/ThemeSet
 import DomainsSettings from '@baserow/modules/builder/components/settings/DomainsSettings'
 
 class BuilderSettingType extends Registerable {
-  getType() {
+  static getType() {
     return null
   }
 
@@ -22,7 +22,7 @@ class BuilderSettingType extends Registerable {
 }
 
 export class IntegrationsBuilderSettingsType extends BuilderSettingType {
-  getType() {
+  static getType() {
     return 'integrations'
   }
 
@@ -44,7 +44,7 @@ export class IntegrationsBuilderSettingsType extends BuilderSettingType {
 }
 
 export class ThemeBuilderSettingsType extends BuilderSettingType {
-  getType() {
+  static getType() {
     return 'theme'
   }
 
@@ -66,7 +66,7 @@ export class ThemeBuilderSettingsType extends BuilderSettingType {
 }
 
 export class DomainsBuilderSettingsType extends BuilderSettingType {
-  getType() {
+  static getType() {
     return 'domains'
   }
 

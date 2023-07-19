@@ -55,7 +55,7 @@ class ElementsView(APIView):
                 "provided Id.",
             )
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="list_builder_page_elements",
         description=(
             "Lists all the elements of the page related to the provided parameter if "
@@ -102,12 +102,13 @@ class ElementsView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="create_builder_page_element",
         description="Creates a new builder element",
         request=DiscriminatorCustomFieldsMappingSerializer(
             element_type_registry,
             CreateElementSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -159,12 +160,13 @@ class ElementView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="update_builder_page_element",
         description="Updates an existing builder element.",
         request=CustomFieldRegistryMappingSerializer(
             element_type_registry,
             UpdateElementSerializer,
+            request=True,
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
@@ -194,14 +196,15 @@ class ElementView(APIView):
         """
 
         element = ElementHandler().get_element_for_update(element_id)
-        type_name = type_from_data_or_registry(
+        element_type = type_from_data_or_registry(
             request.data, element_type_registry, element
         )
         data = validate_data_custom_fields(
-            type_name,
+            element_type.type,
             element_type_registry,
             request.data,
             base_serializer_class=UpdateElementSerializer,
+            partial=True,
         )
 
         element_updated = ElementService().update_element(request.user, element, **data)
@@ -221,7 +224,7 @@ class ElementView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="delete_builder_page_element",
         description="Deletes the element related by the given id.",
         responses={
@@ -264,7 +267,7 @@ class MoveElementView(APIView):
             ),
             CLIENT_SESSION_ID_SCHEMA_PARAMETER,
         ],
-        tags=["Builder page elements"],
+        tags=["Builder elements"],
         operation_id="move_builder_page_element",
         description=(
             "Moves the element in the page before another element or at the end of "

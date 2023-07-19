@@ -152,6 +152,11 @@ env_set=false
 build_deps=true
 build_dependencies=()
 e2e_tests=true
+
+if [[ -f ".local/pre_devsh_hook.sh" ]]; then
+  source ".local/pre_devsh_hook.sh"
+fi
+
 while true; do
 case "${1:-noneleft}" in
     dont_migrate)
@@ -373,6 +378,11 @@ if [ "$local" = true ] ; then
   OVERRIDE_FILE=(-f deploy/local_testing/docker-compose.local.yml)
 else
   OVERRIDE_FILE=(-f docker-compose.dev.yml)
+
+  # Detect and use gitignored dev specific docker-compose override file
+  if [[ -f ".local/docker-compose.dev.local.yml" ]]; then
+    OVERRIDE_FILE=(-f docker-compose.dev.yml -f .local/docker-compose.dev.local.yml)
+  fi
 fi
 
 if [ "$all_in_one" = true ] ; then
@@ -497,4 +507,8 @@ if [ "$dont_attach" != true ] && [ "$up" = true ] ; then
       fi
     fi
   fi
+fi
+
+if [[ -f ".local/post_devsh_hook.sh" ]]; then
+  source ".local/post_devsh_hook.sh"
 fi

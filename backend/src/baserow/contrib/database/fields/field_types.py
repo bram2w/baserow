@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from itertools import cycle
 from random import randint, randrange, sample
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Tuple, Union
 from zipfile import ZipFile
 
 from django.contrib.auth import get_user_model
@@ -16,7 +16,18 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
 from django.db import OperationalError, models
-from django.db.models import CharField, DateTimeField, F, Func, Q, QuerySet, Value
+from django.db.models import (
+    CharField,
+    DateTimeField,
+    Expression,
+    F,
+    Func,
+    OuterRef,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+)
 from django.db.models.functions import Coalesce
 from django.utils.timezone import make_aware
 
@@ -59,7 +70,6 @@ from baserow.contrib.database.formula import (
     BaserowFormulaBooleanType,
     BaserowFormulaCharType,
     BaserowFormulaDateType,
-    BaserowFormulaException,
     BaserowFormulaInvalidType,
     BaserowFormulaNumberType,
     BaserowFormulaSingleSelectType,
@@ -67,16 +77,19 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
-from baserow.contrib.database.formula.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.contrib.database.models import Table
-from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.core.fields import SyncedDateTimeField
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
+from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
+from baserow.formula import BaserowFormulaException
+from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
+from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
@@ -102,6 +115,7 @@ from .exceptions import (
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
+from .expressions import extract_jsonb_array_values_to_single_string
 from .field_filters import (
     AnnotatedQ,
     contains_filter,
@@ -773,6 +787,31 @@ class DateFieldType(FieldType):
             }
         )
 
+    def get_search_expression(
+        self,
+        field: Union[DateField, LastModifiedField, CreatedOnField],
+        queryset: QuerySet,
+    ) -> Expression:
+        """
+        Prepares a `DateField`, `LastModifiedField` or `CreatedOnField`
+        for search, by converting the value to its timezone (if the field's
+        `date_force_timezone` has been set, otherwise UTC) and then calling
+        `to_char` so that it's formatted properly.
+        """
+
+        return Func(
+            Func(
+                # FIXME: what if date_force_timezone is None(user timezone)?
+                Value(field.date_force_timezone or "UTC", output_field=CharField()),
+                F(field.db_column),
+                function="timezone",
+                output_field=DateTimeField(),
+            ),
+            Value(field.get_psql_format()),
+            function="to_char",
+            output_field=CharField(),
+        )
+
     def prepare_value_for_db(self, instance, value):
         """
         This method accepts a string, date object or datetime object. If the value is a
@@ -1021,7 +1060,7 @@ class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
     field_data_is_derived_from_attrs = True
 
     source_field_name = None
-    model_field_class = models.DateTimeField
+    model_field_class = SyncedDateTimeField
     model_field_kwargs = {}
     populate_from_field = None
 
@@ -1098,14 +1137,14 @@ class LastModifiedFieldType(CreatedOnLastModifiedBaseFieldType):
     model_class = LastModifiedField
     source_field_name = "updated_on"
     model_field_class = BaserowLastModifiedField
-    model_field_kwargs = {"auto_now": True}
+    model_field_kwargs = {"sync_with": "updated_on"}
 
 
 class CreatedOnFieldType(CreatedOnLastModifiedBaseFieldType):
     type = "created_on"
     model_class = CreatedOnField
     source_field_name = "created_on"
-    model_field_kwargs = {"auto_now_add": True}
+    model_field_kwargs = {"sync_with_add": "created_on"}
 
 
 class LinkRowFieldType(FieldType):
@@ -1181,6 +1220,36 @@ class LinkRowFieldType(FieldType):
     _can_order_by = False
     can_be_primary_field = False
     can_get_unique_values = False
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        remote_field = queryset.model._meta.get_field(field.db_column).remote_field
+        remote_model = remote_field.model
+
+        primary_field_object = next(
+            object
+            for object in remote_model._field_objects.values()
+            if object["field"].primary
+        )
+        primary_field = primary_field_object["field"]
+        primary_field_type = primary_field_object["type"]
+        qs = remote_model.objects.filter(
+            **{f"{remote_field.related_name}__id": OuterRef("pk")}
+        ).order_by()
+        # noinspection PyTypeChecker
+        return Subquery(
+            # This first values call forces django to group by the ID of the outer
+            # table we are updating rows in.
+            qs.values(f"{remote_field.related_name}__id")
+            .annotate(
+                value=StringAgg(
+                    primary_field_type.get_search_expression(
+                        primary_field, remote_model.objects
+                    ),
+                    " ",
+                )
+            )
+            .values("value")[:1]
+        )
 
     def enhance_queryset(self, queryset, field, name):
         """
@@ -1733,11 +1802,12 @@ class LinkRowFieldType(FieldType):
             user=user,
             table=field.link_row_table,
             type_name=self.type,
-            do_schema_change=False,
+            skip_django_schema_editor_add_field=False,
             name=related_field_name,
             link_row_table=field.table,
             link_row_related_field=field,
             link_row_relation_id=field.link_row_relation_id,
+            skip_search_updates=True,
         )
         field.save()
 
@@ -1815,11 +1885,12 @@ class LinkRowFieldType(FieldType):
                     table=to_field.link_row_table,
                     type_name=self.type,
                     name=related_field_name,
-                    do_schema_change=False,
+                    skip_django_schema_editor_add_field=False,
                     link_row_table=to_field.table,
                     link_row_related_field=to_field,
                     link_row_relation_id=to_field.link_row_relation_id,
                     has_related_field=True,
+                    skip_search_updates=True,
                 )
                 to_field.save()
             elif (
@@ -1827,17 +1898,19 @@ class LinkRowFieldType(FieldType):
                 and to_link_row_table_has_related_field
                 and from_field.link_row_table != to_field.link_row_table
             ):
-                # We are changing the related fields table so we need to invalidate
-                # its old model cache as this will not happen automatically.
-                invalidate_table_in_model_cache(from_field.link_row_table_id)
-
                 from_field.link_row_related_field.name = related_field_name
-                from_field.link_row_related_field.table = to_field.link_row_table
                 from_field.link_row_related_field.link_row_table = to_field.table
                 from_field.link_row_related_field.order = (
                     self.model_class.get_last_order(to_field.link_row_table)
                 )
-                from_field.link_row_related_field.save()
+                FieldHandler().move_field_between_tables(
+                    from_field.link_row_related_field, to_field.link_row_table
+                )
+                # We've changed the link_row_related_field on the from_field model
+                # instance, make sure we also update the to_field instance to have
+                # this updated instance so if it is used later it isn't stale and
+                # pointing at the wrong table.
+                to_field.link_row_related_field = from_field.link_row_related_field
 
     def after_update(
         self,
@@ -1869,11 +1942,12 @@ class LinkRowFieldType(FieldType):
                 user=user,
                 table=to_field.link_row_table,
                 type_name=self.type,
-                do_schema_change=False,
+                skip_django_schema_editor_add_field=False,
                 name=related_field_name,
                 link_row_table=to_field.table,
                 link_row_related_field=to_field,
                 link_row_relation_id=to_field.link_row_relation_id,
+                skip_search_updates=True,
             )
             to_field.save()
 
@@ -1934,6 +2008,7 @@ class LinkRowFieldType(FieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> Optional[Field]:
@@ -1966,7 +2041,11 @@ class LinkRowFieldType(FieldType):
             serialized_copy["link_row_relation_id"] = related_field.link_row_relation_id
 
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
 
         if related_field_found:
@@ -1976,11 +2055,6 @@ class LinkRowFieldType(FieldType):
             # set it right now.
             related_field.link_row_related_field_id = field.id
             related_field.save()
-            # By returning None, the field is ignored when creating the table schema
-            # and inserting the data, which is exactly what we want because the
-            # through table has already been created and will result in an error if
-            # we do it again.
-            return None
 
         return field
 
@@ -2084,6 +2158,46 @@ class LinkRowFieldType(FieldType):
         # ourself.
         return FieldDependencyHandler.get_via_dependants_of_link_field(field)
 
+    def row_of_dependency_updated(
+        self,
+        field: Field,
+        starting_row: "StartingRowType",
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: List["LinkRowField"],
+    ):
+        update_collector.add_field_which_has_changed(
+            field, via_path_to_starting_table, send_field_updated_signal=False
+        )
+        super().row_of_dependency_updated(
+            field,
+            starting_row,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
+        )
+
+    def field_dependency_updated(
+        self,
+        field: Field,
+        updated_field: Field,
+        updated_old_field: Field,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
+    ):
+        update_collector.add_field_which_has_changed(
+            field, via_path_to_starting_table, send_field_updated_signal=False
+        )
+        super().field_dependency_updated(
+            field,
+            updated_field,
+            updated_old_field,
+            update_collector,
+            field_cache,
+            via_path_to_starting_table,
+        )
+
 
 class EmailFieldType(CharFieldMatchingRegexFieldType):
     type = "email"
@@ -2119,6 +2233,19 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = True
     can_get_unique_values = False
+
+    def get_search_expression(self, field: FileField, queryset: QuerySet) -> Expression:
+        """
+        Prepares a `FileField`.
+        """
+
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            path_to_value_in_jsonb_list=[
+                Value("visible_name", output_field=CharField())
+            ],
+        )
 
     def _extract_file_names(self, value):
         # Validates the provided object and extract the names from it. We need the name
@@ -2464,13 +2591,20 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
             models.Prefetch(name, queryset=SelectOption.objects.using("default").all())
         )
 
-    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> int:
-        return getattr(row, field_name)
+    def get_value_for_filter(self, row: "GeneratedTableModel", field) -> int:
+        return getattr(row, field.db_column)
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
     ) -> int:
         return getattr(row, f"{field_name}_id")
+
+    def get_search_expression(
+        self, field: SingleSelectField, queryset: QuerySet
+    ) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__value")[:1]
+        )
 
     def prepare_value_for_db(self, instance, value):
         return self.prepare_value_for_db_in_bulk(
@@ -2731,8 +2865,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
             child=field_serializer, required=required, **kwargs
         )
 
-    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> str:
-        related_objects = getattr(row, field_name)
+    def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
+        related_objects = getattr(row, field.db_column)
         values = [related_object.value for related_object in related_objects.all()]
         return list_to_comma_separated_string(values)
 
@@ -2755,6 +2889,13 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def enhance_queryset(self, queryset, field, name):
         return queryset.prefetch_related(name)
+
+    def get_search_expression(self, field: MultipleSelectField, queryset) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(
+                aggregated=StringAgg(f"{field.db_column}__value", " ")
+            )[:1]
+        )
 
     def prepare_value_for_db(self, instance, value):
         return self.prepare_value_for_db_in_bulk(
@@ -3131,6 +3272,16 @@ class FormulaFieldType(ReadOnlyFieldType):
         OperationalError: _stack_error_mapper,
     }
 
+    def get_search_expression(
+        self, field: FormulaField, queryset: QuerySet
+    ) -> Expression:
+        return self.to_baserow_formula_type(field.specific).get_search_expression(
+            field, queryset
+        )
+
+    def is_searchable(self, field: FormulaField) -> bool:
+        return self.to_baserow_formula_type(field.specific).is_searchable(field)
+
     @staticmethod
     def compatible_with_formula_types(*compatible_formula_types: List[str]):
         def checker(field) -> bool:
@@ -3358,6 +3509,7 @@ class FormulaFieldType(ReadOnlyFieldType):
 
         if should_send_signals_at_end:
             update_collector.apply_updates_and_get_updated_fields(field_cache)
+            SearchHandler().entire_field_values_changed_or_created(field.table, [field])
             update_collector.send_force_refresh_signals_for_all_updated_tables()
 
     def row_of_dependency_updated(
@@ -3557,6 +3709,18 @@ class FormulaFieldType(ReadOnlyFieldType):
     def check_can_order_by(self, field):
         return self.to_baserow_formula_type(field.specific).can_order_by
 
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        return self.to_baserow_formula_type(field.specific).get_order(
+            field, field_name, order_direction
+        )
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field):
+        return self.to_baserow_formula_type(field.specific).get_value_for_filter(
+            row, field
+        )
+
     def should_backup_field_data_for_same_type_update(
         self, old_field: FormulaField, new_field_attrs: Dict[str, Any]
     ) -> bool:
@@ -3658,6 +3822,7 @@ class CountFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -3667,7 +3832,11 @@ class CountFieldType(FormulaFieldType):
         # the mapping.
         original_through_field_id = serialized_copy.pop("through_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id
@@ -3804,6 +3973,7 @@ class RollupFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -3814,7 +3984,11 @@ class RollupFieldType(FormulaFieldType):
         original_through_field_id = serialized_copy.pop("through_field_id")
         original_target_field_id = serialized_copy.pop("target_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id
@@ -4040,6 +4214,7 @@ class LookupFieldType(FormulaFieldType):
         self,
         table: "Table",
         serialized_values: Dict[str, Any],
+        import_export_config: ImportExportConfig,
         id_mapping: Dict[str, Any],
         deferred_fk_update_collector: DeferredFieldFkUpdater,
     ) -> "Field":
@@ -4050,7 +4225,11 @@ class LookupFieldType(FormulaFieldType):
         original_through_field_id = serialized_copy.pop("through_field_id")
         original_target_field_id = serialized_copy.pop("target_field_id")
         field = super().import_serialized(
-            table, serialized_copy, id_mapping, deferred_fk_update_collector
+            table,
+            serialized_copy,
+            import_export_config,
+            id_mapping,
+            deferred_fk_update_collector,
         )
         deferred_fk_update_collector.add_deferred_fk_to_update(
             field, "through_field_id", original_through_field_id
@@ -4078,6 +4257,15 @@ class MultipleCollaboratorsFieldType(FieldType):
         )
         return serializers.ListSerializer(
             child=field_serializer, required=required, **kwargs
+        )
+
+    def get_search_expression(
+        self, field: MultipleCollaboratorsField, queryset: QuerySet
+    ) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(
+                aggregated=StringAgg(f"{field.db_column}__first_name", " ")
+            )[:1]
         )
 
     def get_internal_value_from_db(
@@ -4332,7 +4520,7 @@ class MultipleCollaboratorsFieldType(FieldType):
 
         return OptionallyAnnotatedOrderBy(annotation=annotation, order=order)
 
-    def get_value_for_filter(self, row: "GeneratedTableModel", field_name: str) -> any:
-        related_objects = getattr(row, field_name)
+    def get_value_for_filter(self, row: "GeneratedTableModel", field) -> any:
+        related_objects = getattr(row, field.db_column)
         values = [related_object.first_name for related_object in related_objects.all()]
         return list_to_comma_separated_string(values)

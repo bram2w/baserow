@@ -6,7 +6,11 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
-from baserow.core.mixins import OrderableMixin, TrashableModelMixin
+from baserow.core.mixins import (
+    HierarchicalModelMixin,
+    OrderableMixin,
+    TrashableModelMixin,
+)
 
 
 def validate_domain(value: str):
@@ -25,7 +29,7 @@ def validate_domain(value: str):
         raise ValidationError("Invalid domain syntax")
 
 
-class Domain(TrashableModelMixin, OrderableMixin, models.Model):
+class Domain(HierarchicalModelMixin, TrashableModelMixin, OrderableMixin, models.Model):
     builder = models.ForeignKey(
         "builder.Builder",
         on_delete=CASCADE,
@@ -47,6 +51,9 @@ class Domain(TrashableModelMixin, OrderableMixin, models.Model):
         related_name="published_from",
         help_text="The published builder.",
     )
+
+    def get_parent(self):
+        return self.builder
 
     class Meta:
         ordering = ("order",)

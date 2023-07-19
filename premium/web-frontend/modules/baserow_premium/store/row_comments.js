@@ -22,6 +22,33 @@ function populateComment(comment, loading) {
   return comment
 }
 
+async function updateCommentCountInViews(app, rowComment, updateCountFunc) {
+  // A new comment has been forcibly created/deleted so we need to let all views know that
+  // the row comment count metadata should be changed atomically.
+  for (const viewType of Object.values(app.$registry.getAll('view'))) {
+    await viewType.rowMetadataUpdated(
+      { store: app },
+      rowComment.table_id,
+      rowComment.row_id,
+      'row_comment_count',
+      updateCountFunc,
+      'page/'
+    )
+  }
+}
+
+async function increaseCommentCountInViews(app, rowComment) {
+  await updateCommentCountInViews(app, rowComment, (count) =>
+    count ? count + 1 : 1
+  )
+}
+
+async function decreaseCommentCountInViews(app, rowComment) {
+  await updateCommentCountInViews(app, rowComment, (count) =>
+    count > 1 ? count - 1 : null
+  )
+}
+
 export const mutations = {
   /**
    * Adds a list of comments to the existing comments, ensuring that the end result of
@@ -46,6 +73,30 @@ export const mutations = {
       }
     })
     state.currentCount = state.comments.length
+  },
+  UPDATE_ROW_COMMENT(state, rowComment) {
+    const existingIndex = state.comments.findIndex(
+      (c) => c.id === rowComment.id
+    )
+    if (existingIndex >= 0) {
+      const existingComment = Object.assign(
+        {},
+        state.comments[existingIndex],
+        rowComment
+      )
+      existingComment.updated_on = moment(rowComment.updated_on).toISOString()
+      state.comments.splice(existingIndex, 1, existingComment)
+    }
+  },
+  SET_ROW_COMMENT_DELETED(state, { commentId, deleted, clearContent = true }) {
+    const existingIndex = state.comments.findIndex((c) => c.id === commentId)
+    if (existingIndex >= 0) {
+      const deletedComment = Object.assign({}, state.comments[existingIndex], {
+        trashed: deleted,
+        comment: clearContent ? '' : state.comments[existingIndex].comment,
+      })
+      state.comments.splice(existingIndex, 1, deletedComment)
+    }
   },
   REMOVE_ROW_COMMENT(state, id) {
     const existingIndex = state.comments.findIndex((c) => c.id === id)
@@ -79,10 +130,7 @@ export const actions = {
    * Fetches the initial row comments to display for a given table and row. Resets any
    * existing comments entirely.
    */
-  async fetchRowComments(
-    { dispatch, commit, getters, state },
-    { tableId, rowId }
-  ) {
+  async fetchRowComments({ commit }, { tableId, rowId }) {
     commit('SET_LOADING', true)
     commit('SET_LOADED', false)
     try {
@@ -103,10 +151,7 @@ export const actions = {
   /**
    * Fetches the next 10 comments from the server and adds them to the comments list.
    */
-  async fetchNextSetOfComments(
-    { dispatch, commit, getters, state },
-    { tableId, rowId }
-  ) {
+  async fetchNextSetOfComments({ commit, state }, { tableId, rowId }) {
     commit('SET_LOADING', true)
     try {
       // We have to use offset based paging here as new comments can be added by the
@@ -128,7 +173,8 @@ export const actions = {
    */
   async postComment(
     { commit, state, rootGetters, dispatch },
-    { tableId, rowId, comment }
+
+    { tableId, rowId, message }
   ) {
     const temporaryId = state.nextTemporaryCommentId
     commit('SET_NEXT_TEMPORARY_COMMENT_ID', temporaryId - 1)
@@ -138,11 +184,12 @@ export const actions = {
       const temporaryComment = {
         created_on: moment().toISOString(),
         updated_on: moment().toISOString(),
-        comment,
+        message,
         row_id: rowId,
         table_id: tableId,
         user_id: rootGetters['auth/getUserId'],
         first_name: rootGetters['auth/getName'],
+        isTemporary: true,
         id: temporaryId,
       }
       commit('ADD_ROW_COMMENTS', {
@@ -152,7 +199,7 @@ export const actions = {
       const { data } = await RowCommentService(this.$client).create(
         tableId,
         rowId,
-        comment
+        message
       )
       commit('REMOVE_ROW_COMMENT', temporaryId)
       dispatch('forceCreate', { rowComment: data })
@@ -162,8 +209,7 @@ export const actions = {
       throw e
     }
   },
-  async forceCreate(context, { rowComment }) {
-    const { commit, state } = context
+  async forceCreate({ commit, state }, { rowComment }) {
     if (
       state.loadedTableId === rowComment.table_id &&
       state.loadedRowId === rowComment.row_id
@@ -171,17 +217,68 @@ export const actions = {
       commit('ADD_ROW_COMMENTS', { comments: [rowComment], loading: false })
       commit('SET_TOTAL_COUNT', state.totalCount + 1)
     }
-    // A new comment has been forcibly created so we need to let all views know that
-    // the row comment count metadata should be incremented atomically.
-    for (const viewType of Object.values(this.$registry.getAll('view'))) {
-      await viewType.rowMetadataUpdated(
-        { store: this },
-        rowComment.table_id,
-        rowComment.row_id,
-        'row_comment_count',
-        (count) => (count ? count + 1 : 1),
-        'page/'
+    await increaseCommentCountInViews(this, rowComment)
+  },
+  /**
+   * Update a comment content.
+   */
+  async updateComment({ commit, getters }, { tableId, commentId, message }) {
+    const comment = getters.getCommentById(commentId)
+    const originalMessage = comment.message
+    const originalUpdatedOn = comment.updated_on
+    const originalEdited = comment.edited
+    commit('UPDATE_ROW_COMMENT', {
+      id: commentId,
+      message,
+      updated_on: moment().toISOString(),
+      edited: true,
+    })
+    try {
+      await RowCommentService(this.$client).update(tableId, commentId, message)
+    } catch (e) {
+      // Make sure we revert the comment if the update call failed.
+      commit('UPDATE_ROW_COMMENT', {
+        id: commentId,
+        message: originalMessage,
+        updated_on: originalUpdatedOn,
+        edited: originalEdited,
+      })
+      throw e
+    }
+  },
+  async forceUpdate({ commit, getters }, { rowComment }) {
+    const originalComment = getters.getCommentById(rowComment.id)
+    if (!originalComment) {
+      return
+    }
+    // update comment count in views if needed
+    if (originalComment.trashed !== rowComment.trashed) {
+      const updateCountInViews = rowComment.trashed
+        ? decreaseCommentCountInViews
+        : increaseCommentCountInViews
+      await updateCountInViews(this, rowComment)
+    }
+    commit('UPDATE_ROW_COMMENT', rowComment)
+  },
+  /**
+   * Delete a row comment.
+   */
+  async deleteComment({ commit }, { tableId, commentId }) {
+    commit('SET_ROW_COMMENT_DELETED', {
+      commentId,
+      deleted: true,
+      clearContent: false,
+    })
+    try {
+      const { data: rowComment } = await RowCommentService(this.$client).delete(
+        tableId,
+        commentId
       )
+      await decreaseCommentCountInViews(this, rowComment)
+      commit('UPDATE_ROW_COMMENT', rowComment)
+    } catch (e) {
+      commit('SET_ROW_COMMENT_DELETED', { commentId, deleted: false })
+      throw e
     }
   },
 }
@@ -201,6 +298,9 @@ export const getters = {
   },
   getLoaded(state) {
     return state.loaded
+  },
+  getCommentById: (state) => (commentId) => {
+    return state.comments.find((c) => c.id === commentId)
   },
 }
 

@@ -233,7 +233,7 @@ def test_perm_deleting_a_parent_with_a_trashed_child_also_cleans_up_the_child_en
     row = table_model.objects.create(**{f"field_{field.id}": "Test"})
 
     with freeze_time("2020-01-01 12:00"):
-        TrashHandler.trash(user, workspace, database, row, parent_id=table.id)
+        TrashHandler.trash(user, workspace, database, row)
         TrashHandler.trash(user, workspace, database, field)
         TrashHandler.trash(user, workspace, database, table)
         TrashHandler.trash(user, workspace, database, database)
@@ -267,7 +267,7 @@ def test_perm_deleting_a_table_with_a_trashed_row_also_cleans_up_the_row_entry(
 
     with freeze_time("2020-01-01 12:00"):
         TrashHandler.trash(user, workspace, database, database)
-        TrashHandler.trash(user, workspace, database, row, parent_id=table.id)
+        TrashHandler.trash(user, workspace, database, row)
         TrashHandler.trash(user, workspace, database, table)
 
     TrashHandler.empty(user, workspace.id, database.id)
@@ -384,12 +384,8 @@ def test_trashing_two_rows_in_different_tables_works_as_expected(
         },
     )
     with freeze_time("2020-01-01 12:00"):
-        TrashHandler.trash(
-            user, workspace, table_1.database, row_in_table_1, parent_id=table_1.id
-        )
-        TrashHandler.trash(
-            user, workspace, table_2.database, row_in_table_2, parent_id=table_2.id
-        )
+        TrashHandler.trash(user, workspace, table_1.database, row_in_table_1)
+        TrashHandler.trash(user, workspace, table_2.database, row_in_table_2)
 
     table_1_model = table_1.get_model()
     table_2_model = table_2.get_model()
@@ -431,9 +427,7 @@ def test_cannot_restore_a_child_before_the_parent(
             name_field.id: "Tesla",
         },
     )
-    TrashHandler.trash(
-        user, workspace, table_1.database, row_in_table_1, parent_id=table_1.id
-    )
+    TrashHandler.trash(user, workspace, table_1.database, row_in_table_1)
     TrashHandler.trash(user, workspace, table_1.database, table_1)
 
     with pytest.raises(CannotRestoreChildBeforeParent):
@@ -480,13 +474,9 @@ def test_cant_trash_same_row_twice(
     table, fields, rows = data_fixture.build_table(
         columns=[("text", "text")], rows=["first row", "second_row"], user=user
     )
-    TrashHandler.trash(
-        user, table.database.workspace, table.database, rows[0], parent_id=table.id
-    )
+    TrashHandler.trash(user, table.database.workspace, table.database, rows[0])
     with pytest.raises(CannotDeleteAlreadyDeletedItem):
-        TrashHandler.trash(
-            user, table.database.workspace, table.database, rows[0], parent_id=table.id
-        )
+        TrashHandler.trash(user, table.database.workspace, table.database, rows[0])
     assert (
         TrashEntry.objects.filter(
             trash_item_id=rows[0].id,

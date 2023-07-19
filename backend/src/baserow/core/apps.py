@@ -28,6 +28,12 @@ class CoreConfig(AppConfig):
         # GroupDeprecation
         trash_item_type_registry.register(GroupTrashableItemType())
 
+        from baserow.core.formula.registries import (
+            register_runtime_formula_function_types,
+        )
+
+        register_runtime_formula_function_types()
+
         from baserow.core.permission_manager import (
             BasicPermissionManagerType,
             CorePermissionManagerType,
@@ -74,6 +80,11 @@ class CoreConfig(AppConfig):
         subject_type_registry.register(UserSubjectType())
         subject_type_registry.register(AnonymousUserSubjectType())
 
+        from .notifications.operations import (
+            ClearNotificationsOperationType,
+            ListNotificationsOperationType,
+            MarkNotificationAsReadOperationType,
+        )
         from .operations import (
             CreateApplicationsWorkspaceOperationType,
             CreateInvitationsWorkspaceOperationType,
@@ -112,6 +123,9 @@ class CoreConfig(AppConfig):
             ReadWorkspaceTrashOperationType,
         )
 
+        operation_type_registry.register(ClearNotificationsOperationType())
+        operation_type_registry.register(ListNotificationsOperationType())
+        operation_type_registry.register(MarkNotificationAsReadOperationType())
         operation_type_registry.register(CreateApplicationsWorkspaceOperationType())
         operation_type_registry.register(CreateWorkspaceOperationType())
         operation_type_registry.register(CreateInvitationsWorkspaceOperationType())
@@ -238,10 +252,14 @@ class CoreConfig(AppConfig):
         job_type_registry.register(CreateSnapshotJobType())
         job_type_registry.register(RestoreSnapshotJobType())
 
+        from baserow.api.notifications.user_data_types import (
+            UnreadUserNotificationsCountPermissionsDataType,
+        )
         from baserow.api.user.registries import user_data_registry
         from baserow.api.user.user_data_types import GlobalPermissionsDataType
 
         user_data_registry.register(GlobalPermissionsDataType())
+        user_data_registry.register(UnreadUserNotificationsCountPermissionsDataType())
 
         from baserow.core.auth_provider.auth_provider_types import (
             PasswordAuthProviderType,
@@ -249,6 +267,24 @@ class CoreConfig(AppConfig):
         from baserow.core.registries import auth_provider_type_registry
 
         auth_provider_type_registry.register(PasswordAuthProviderType())
+
+        import baserow.core.notifications.receivers  # noqa: F401
+        from baserow.core.notification_types import (
+            WorkspaceInvitationAcceptedNotificationType,
+            WorkspaceInvitationCreatedNotificationType,
+            WorkspaceInvitationRejectedNotificationType,
+        )
+        from baserow.core.notifications.registries import notification_type_registry
+
+        notification_type_registry.register(
+            WorkspaceInvitationAcceptedNotificationType()
+        )
+        notification_type_registry.register(
+            WorkspaceInvitationCreatedNotificationType()
+        )
+        notification_type_registry.register(
+            WorkspaceInvitationRejectedNotificationType()
+        )
 
         self._setup_health_checks()
 
@@ -263,10 +299,34 @@ class CoreConfig(AppConfig):
     def _setup_health_checks(self):
         from health_check.plugins import plugin_dir
 
+        from baserow.core.integrations.object_scopes import IntegrationObjectScopeType
+        from baserow.core.registries import (
+            object_scope_type_registry,
+            operation_type_registry,
+        )
+
         from .health.custom_health_checks import (
             DebugModeHealthCheck,
             HerokuExternalFileStorageConfiguredHealthCheck,
         )
+
+        object_scope_type_registry.register(IntegrationObjectScopeType())
+
+        from baserow.core.integrations.operations import (
+            CreateIntegrationOperationType,
+            DeleteIntegrationOperationType,
+            ListIntegrationsApplicationOperationType,
+            OrderIntegrationsOperationType,
+            ReadIntegrationOperationType,
+            UpdateIntegrationOperationType,
+        )
+
+        operation_type_registry.register(CreateIntegrationOperationType())
+        operation_type_registry.register(UpdateIntegrationOperationType())
+        operation_type_registry.register(DeleteIntegrationOperationType())
+        operation_type_registry.register(ListIntegrationsApplicationOperationType())
+        operation_type_registry.register(ReadIntegrationOperationType())
+        operation_type_registry.register(OrderIntegrationsOperationType())
 
         plugin_dir.register(DebugModeHealthCheck)
         if getattr(settings, "HEROKU_ENABLED", False):

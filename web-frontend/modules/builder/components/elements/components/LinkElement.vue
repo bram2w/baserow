@@ -1,21 +1,15 @@
 <template>
   <div class="link-element" :class="classes">
-    <Button
-      v-if="element.variant === 'button'"
-      type="link"
-      v-bind="extraAttr"
-      :target="element.target"
-      :full-width="element.width === 'full'"
-      @click="onClick($event)"
-    >
-      {{ element.value || $t('linkElement.noValue') }}
-    </Button>
     <a
-      v-else
-      class="link-element__link"
+      :class="{
+        'link-element__link': element.variant !== 'button',
+        'link-element__button': element.variant === 'button',
+        'link-element__button--full-width':
+          element.variant === 'button' && element.width === 'full',
+      }"
       v-bind="extraAttr"
       :target="`_${element.target}`"
-      @click="onClick($event)"
+      @click="onClick"
     >
       {{ element.value || $t('linkElement.noValue') }}
     </a>
@@ -23,7 +17,7 @@
 </template>
 
 <script>
-import textElement from '@baserow/modules/builder/mixins/elements/textElement'
+import element from '@baserow/modules/builder/mixins/element'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 
 /**
@@ -40,22 +34,11 @@ import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 
 export default {
   name: 'LinkElement',
-  mixins: [textElement],
-  props: {
-    /**
-     * @type {LinkElement}
-     */
-    element: {
-      type: Object,
-      required: true,
-    },
-    builder: { type: Object, required: true },
-    mode: { type: String, required: true },
-  },
+  mixins: [element],
   computed: {
     classes() {
       return {
-        [`link-element--alignment-${this.element.alignment}`]: true,
+        [`element--alignment-${this.element.alignment}`]: true,
         'element--no-value': !this.element.value,
       }
     },
@@ -100,6 +83,11 @@ export default {
   },
   methods: {
     onClick(event) {
+      if (this.mode === 'editing') {
+        event.preventDefault()
+        return
+      }
+
       if (!this.url) {
         event.preventDefault()
       } else if (

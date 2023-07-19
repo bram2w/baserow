@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.contrib.builder.pages.models import Page
+from baserow.core.expression.field import ExpressionField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
@@ -9,12 +10,13 @@ from baserow.core.mixins import (
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
+from baserow.core.user_files.models import UserFile
 
 
-class ExpressionField(models.TextField):
-    """
-    An expression that can reference a data source, a formula or a plain value.
-    """
+class ALIGNMENTS(models.TextChoices):
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
 
 
 def get_default_element_content_type():
@@ -49,6 +51,9 @@ class Element(
         on_delete=models.SET(get_default_element_content_type),
     )
 
+    style_padding_top = models.PositiveIntegerField(default=10)
+    style_padding_bottom = models.PositiveIntegerField(default=10)
+
     class Meta:
         ordering = ("order", "id")
 
@@ -60,7 +65,7 @@ class Element(
         """
         Returns the last order for the given page.
 
-        :param Page: The page we want the order for.
+        :param page: The page we want the order for.
         :return: The last order.
         """
 
@@ -84,18 +89,7 @@ class Element(
         return cls.get_unique_orders_before_item(before, queryset)[0]
 
 
-class BaseTextElement(Element):
-    """
-    Base class for text elements.
-    """
-
-    value = ExpressionField(default="")
-
-    class Meta:
-        abstract = True
-
-
-class HeadingElement(BaseTextElement):
+class HeadingElement(Element):
     """
     A Heading element to display a title.
     """
@@ -107,18 +101,21 @@ class HeadingElement(BaseTextElement):
         H4 = 4
         H5 = 5
 
+    value = ExpressionField(default="")
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
 
 
-class ParagraphElement(BaseTextElement):
+class ParagraphElement(Element):
     """
     A simple paragraph.
     """
 
+    value = ExpressionField(default="")
 
-class LinkElement(BaseTextElement):
+
+class LinkElement(Element):
     """
     A simple link.
     """
@@ -135,15 +132,11 @@ class LinkElement(BaseTextElement):
         SELF = "self"
         BLANK = "blank"
 
-    class ALIGNMENTS(models.TextChoices):
-        LEFT = "left"
-        CENTER = "center"
-        RIGHT = "right"
-
     class WIDTHS(models.TextChoices):
         AUTO = "auto"
         FULL = "full"
 
+    value = ExpressionField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",
@@ -184,6 +177,41 @@ class LinkElement(BaseTextElement):
         choices=WIDTHS.choices,
         max_length=10,
         default=WIDTHS.AUTO,
+    )
+    alignment = models.CharField(
+        choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
+    )
+
+
+class ImageElement(Element):
+    """
+    A simple image element that can display an image either through a remote source
+    or via an uploaded file
+    """
+
+    class IMAGE_SOURCE_TYPES(models.TextChoices):
+        UPLOAD = "upload"
+        URL = "url"
+
+    image_source_type = models.CharField(
+        choices=IMAGE_SOURCE_TYPES.choices,
+        max_length=32,
+        default=IMAGE_SOURCE_TYPES.UPLOAD,
+    )
+    image_file = models.ForeignKey(
+        UserFile,
+        null=True,
+        on_delete=models.SET_NULL,
+        related_name="image_element_image_file",
+        help_text="An image file uploaded by the user to be used by the element",
+    )
+    image_url = models.URLField(
+        help_text="A link to the image file", blank=True, default="", max_length=1000
+    )
+    alt_text = models.TextField(
+        help_text="Text that is displayed when the image can't load",
+        default="",
+        blank=True,
     )
     alignment = models.CharField(
         choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT

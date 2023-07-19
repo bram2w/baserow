@@ -22,6 +22,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 
 export default {
   name: 'FormViewImageUpload',
@@ -37,8 +38,7 @@ export default {
     getFileUploadSettings() {
       return {
         check: (file) => {
-          const imageTypes = ['image/jpeg', 'image/jpg', 'image/png']
-          const isImage = imageTypes.includes(file.type)
+          const isImage = IMAGE_FILE_TYPES.includes(file.type)
           this.isImage = isImage
           return isImage
         },

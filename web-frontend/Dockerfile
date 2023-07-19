@@ -59,6 +59,8 @@ EXPOSE 3000
 
 FROM base as dev
 
+COPY --chown=$UID:$GID ./tests /baserow/tests/
+
 # Create symlinks for jest tests
 RUN ln -s /baserow/web-frontend/node_modules/ /baserow/premium/web-frontend/node_modules \
  && ln -s /baserow/web-frontend/node_modules/ /baserow/enterprise/web-frontend/node_modules
@@ -69,6 +71,7 @@ CMD ["nuxt-dev"]
 
 FROM base as local
 
-RUN yarn run build-local
+# Run the nuxt build and then remove all dev dependencies as we don't need them after.
+RUN yarn run build-local && rm -rf node_modules && yarn install --production && yarn cache clean
 CMD ["nuxt-local"]
 

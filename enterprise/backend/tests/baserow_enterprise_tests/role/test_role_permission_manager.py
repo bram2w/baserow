@@ -29,6 +29,11 @@ from baserow.contrib.database.table.operations import (
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.models import Application
+from baserow.core.notifications.operations import (
+    ClearNotificationsOperationType,
+    ListNotificationsOperationType,
+    MarkNotificationAsReadOperationType,
+)
 from baserow.core.operations import (
     CreateWorkspaceOperationType,
     DeleteApplicationOperationType,
@@ -1045,8 +1050,12 @@ def test_get_permissions_object_with_teams(
 
     perms = perm_manager.get_permissions_object(user, workspace=workspace_1)
 
-    assert all([not perm["default"] for perm in perms.values()])
-    assert all([not perm["exceptions"] for perm in perms.values()])
+    for operation_type in [
+        UpdateApplicationOperationType,
+        ReadDatabaseTableOperationType,
+    ]:
+        assert perms[operation_type.type]["default"] is False
+        assert perms[operation_type.type]["exceptions"] == []
 
     # The user role should take the precedence
     RoleAssignmentHandler().assign_role(user, workspace_1, role=role_builder)
@@ -1254,6 +1263,9 @@ def test_all_operations_are_in_at_least_one_default_role(data_fixture):
         CreateWorkspaceOperationType.type,
         ListWorkspacesOperationType.type,
         UpdateSettingsOperationType.type,
+        ClearNotificationsOperationType.type,
+        ListNotificationsOperationType.type,
+        MarkNotificationAsReadOperationType.type,
     ]
 
     all_ops_in_roles = set()
@@ -1381,8 +1393,8 @@ def test_check_permission_performance(data_fixture, enterprise_data_fixture, pro
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
-# pytest -k "test_get_permission_object_performance" -s --run-disabled-in-ci
-def test_get_permission_object_performance(
+# pytest -k "test_get_permissions_object_performance" -s --run-disabled-in-ci
+def test_get_permissions_object_performance(
     data_fixture, enterprise_data_fixture, profiler
 ):
     user = data_fixture.create_user()
@@ -1461,7 +1473,7 @@ def test_get_permission_object_performance(
         print(q)
     print(len(captured.captured_queries))
 
-    print("----------- get_permission_object perfs ---------------")
+    print("----------- get_permissions_object perfs ---------------")
     with profiler(html_report_name="enterprise_get_permissions_object"):
         for i in range(1000):
             permission_manager.get_permissions_object(user2, workspace=workspace)

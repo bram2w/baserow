@@ -68,6 +68,10 @@ export class ViewOwnershipType extends Registerable {
       name: this.getName(),
     }
   }
+
+  userCanTryCreate(table, workspaceId) {
+    return false
+  }
 }
 
 export class CollaborativeViewOwnershipType extends ViewOwnershipType {
@@ -86,5 +90,13 @@ export class CollaborativeViewOwnershipType extends ViewOwnershipType {
 
   isDeactivated(workspaceId) {
     return false
+  }
+
+  userCanTryCreate(table, workspaceId) {
+    return this.app.$hasPermission(
+      'database.table.create_view',
+      table,
+      workspaceId
+    )
   }
 }

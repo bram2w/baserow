@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "After field updates, deletions and creations Baserow now automatically vacuums the table in a background task to improve performance and reduce table disk size. This can be disabled by setting the new env var BASEROW_AUTO_VACUUM=false.",
+    "issue_number": 1706,
+    "bullet_points": [],
+    "created_at": "2023-07-08"
+}

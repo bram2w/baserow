@@ -16,6 +16,7 @@ from baserow.core.db import (
     recalculate_full_orders,
 )
 from baserow.core.exceptions import IdDoesNotExist
+from baserow.core.fields import SyncedDateTimeField
 from baserow.core.managers import NoTrashManager, TrashOnlyManager, make_trash_manager
 
 
@@ -329,8 +330,8 @@ class CreatedAndUpdatedOnMixin(models.Model):
     timestamps.
     """
 
-    created_on = models.DateTimeField(auto_now_add=True, blank=True, editable=False)
-    updated_on = models.DateTimeField(auto_now=True, blank=True, editable=False)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = SyncedDateTimeField(sync_with_add="created_on", auto_now=True)
 
     class Meta:
         abstract = True

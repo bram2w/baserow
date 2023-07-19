@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from baserow.api.sessions import (
+    _set_user_websocket_id,
     set_client_undo_redo_action_group_id,
     set_untrusted_client_session_id,
 )
@@ -39,6 +40,7 @@ class UserFixtures:
 
         session_id = kwargs.pop("session_id", "default-test-user-session-id")
         action_group = kwargs.pop("action_group", None)
+        web_socket_id = kwargs.pop("web_socket_id", None)
 
         profile_data["language"] = kwargs.pop("language", "en")
         profile_data["to_be_deleted"] = kwargs.pop("to_be_deleted", False)
@@ -54,6 +56,7 @@ class UserFixtures:
 
         set_untrusted_client_session_id(user, session_id)
         set_client_undo_redo_action_group_id(user, action_group)
+        _set_user_websocket_id(user, web_socket_id)
 
         # add it to a specific workspace if it is given
         if "workspace" in kwargs:

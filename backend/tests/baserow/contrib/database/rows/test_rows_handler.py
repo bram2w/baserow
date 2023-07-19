@@ -152,6 +152,7 @@ def test_create_row(send_mock, data_fixture):
     assert getattr(row_1, f"field_{price_field.id}") == Decimal("59999.99")
     assert not getattr(row_1, f"field_9999", None)
     assert row_1.order == Decimal("1.00000000000000000000")
+    assert row_1.needs_background_update
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["rows"][0].id == row_1.id
@@ -493,6 +494,8 @@ def test_update_row(send_mock, data_fixture):
             user=user, table=table, row_id=row.id, values={price_field.id: -10.99}
         )
 
+    row.needs_background_update = False
+    row.save(update_fields=("needs_background_update",))
     with patch(
         "baserow.contrib.database.rows.signals.before_rows_update.send"
     ) as before_send_mock:
@@ -511,6 +514,7 @@ def test_update_row(send_mock, data_fixture):
     assert getattr(row, f"field_{name_field.id}") == "Tesla"
     assert getattr(row, f"field_{speed_field.id}") == 240
     assert getattr(row, f"field_{price_field.id}") == Decimal("59999.99")
+    assert row.needs_background_update
 
     before_send_mock.assert_called_once()
     assert before_send_mock.call_args[1]["rows"][0].id == row.id

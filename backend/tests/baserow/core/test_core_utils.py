@@ -19,6 +19,7 @@ from baserow.core.utils import (
     extract_allowed,
     find_intermediate_order,
     find_unused_name,
+    get_nested_value_from_dict,
     grouper,
     random_string,
     remove_invalid_surrogate_characters,
@@ -461,3 +462,25 @@ def test_find_intermediate_with_equal_order():
         find_intermediate_order(
             Decimal("1.0100000000000000000"), Decimal("1.02000000000000000000"), 10
         )
+
+
+@pytest.fixture
+def nested_dict():
+    return {"a": {"b": {"c": 123}}, "list": [{"d": 456}, {"d": 789}]}
+
+
+@pytest.mark.parametrize(
+    "value_path, expected_result",
+    [
+        ("a.b.c", 123),
+        ("list.1.d", 789),
+        ("a.b.x", None),
+        ("list.5.d", None),
+        ("", None),
+        ("a.b", {"c": 123}),
+        ("list", [{"d": 456}, {"d": 789}]),
+    ],
+)
+def test_get_nested_value_from_dict(nested_dict, value_path, expected_result):
+    result = get_nested_value_from_dict(nested_dict, value_path)
+    assert result == expected_result

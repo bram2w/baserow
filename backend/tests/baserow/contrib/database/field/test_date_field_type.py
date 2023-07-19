@@ -14,6 +14,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DateField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.registries import ImportExportConfig
 
 
 @pytest.mark.django_db
@@ -197,9 +198,9 @@ def test_converting_date_field_value(data_fixture):
             f"field_{date_field_eu.id}": "22-7-2021",
             f"field_{date_field_us.id}": "7-22-2021",
             f"field_{date_field_iso.id}": "2021/7/22",
-            f"field_{date_field_eu_12.id}": "22-7-2021 12:45am",
-            f"field_{date_field_us_12.id}": "7-22-2021 12:45am",
-            f"field_{date_field_iso_12.id}": "2021/7/22 12:45am",
+            f"field_{date_field_eu_12.id}": "22-7-2021 12:45 am",
+            f"field_{date_field_us_12.id}": "7-22-2021 12:45 am",
+            f"field_{date_field_iso_12.id}": "2021/7/22 12:45 am",
             f"field_{date_field_eu_24.id}": "22-7-2021 7:45",
             f"field_{date_field_us_24.id}": "7-22-2021 7:45",
             f"field_{date_field_iso_24.id}": "2021/7/22 7:45",
@@ -429,9 +430,9 @@ def test_converting_date_field_value(data_fixture):
     assert getattr(row_0, f"field_{date_field_eu.id}") == "22/07/2021"
     assert getattr(row_0, f"field_{date_field_us.id}") == "07/22/2021"
     assert getattr(row_0, f"field_{date_field_iso.id}") == "2021-07-22"
-    assert getattr(row_0, f"field_{date_field_eu_12.id}") == "22/07/2021 12:45PM"
-    assert getattr(row_0, f"field_{date_field_us_12.id}") == "07/22/2021 12:45PM"
-    assert getattr(row_0, f"field_{date_field_iso_12.id}") == "2021-07-22 12:45PM"
+    assert getattr(row_0, f"field_{date_field_eu_12.id}") == "22/07/2021 12:45 PM"
+    assert getattr(row_0, f"field_{date_field_us_12.id}") == "07/22/2021 12:45 PM"
+    assert getattr(row_0, f"field_{date_field_iso_12.id}") == "2021-07-22 12:45 PM"
     assert getattr(row_0, f"field_{date_field_eu_24.id}") == "22/07/2021 12:45"
     assert getattr(row_0, f"field_{date_field_us_24.id}") == "07/22/2021 12:45"
     assert getattr(row_0, f"field_{date_field_iso_24.id}") == "2021-07-22 12:45"
@@ -542,7 +543,11 @@ def test_import_export_date_field(data_fixture):
     date_field_type = field_type_registry.get_by_model(date_field)
     number_serialized = date_field_type.export_serialized(date_field)
     number_field_imported = date_field_type.import_serialized(
-        date_field.table, number_serialized, {}, DeferredFieldFkUpdater()
+        date_field.table,
+        number_serialized,
+        ImportExportConfig(include_permission_data=True),
+        {},
+        DeferredFieldFkUpdater(),
     )
     assert date_field.date_format == number_field_imported.date_format
     assert date_field.date_include_time == number_field_imported.date_include_time

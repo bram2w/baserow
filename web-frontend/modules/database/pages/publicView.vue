@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div class="public-view__table">
       <Table
         :database="database"
@@ -16,7 +16,7 @@
 </template>
 
 <script>
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import Table from '@baserow/modules/database/components/table/Table'
 import ViewService from '@baserow/modules/database/services/view'
 import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/constants'
@@ -25,7 +25,7 @@ import { mapGetters } from 'vuex'
 import languageDetection from '@baserow/modules/core/mixins/languageDetection'
 
 export default {
-  components: { Table, Notifications },
+  components: { Table, Toasts },
   mixins: [languageDetection],
   async asyncData({ store, params, error, app, redirect, route }) {
     const slug = params.slug

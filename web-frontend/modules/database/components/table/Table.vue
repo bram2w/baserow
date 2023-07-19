@@ -325,17 +325,17 @@ export default {
           this.table,
           this.database.workspace.id
         ) ||
-        this.$hasPermission(
+        this.someViewHasPermission(
           'database.table.view.duplicate',
           this.table,
           this.database.workspace.id
         ) ||
-        this.$hasPermission(
+        this.someViewHasPermission(
           'database.table.view.update',
           this.table,
           this.database.workspace.id
         ) ||
-        this.$hasPermission(
+        this.someViewHasPermission(
           'database.table.view.delete',
           this.table,
           this.database.workspace.id
@@ -462,6 +462,11 @@ export default {
       this.$nextTick(() => {
         this.viewLoading = false
       })
+    },
+    someViewHasPermission(op) {
+      return this.views.some((v) =>
+        this.$hasPermission(op, v, this.database.workspace.id)
+      )
     },
   },
 }

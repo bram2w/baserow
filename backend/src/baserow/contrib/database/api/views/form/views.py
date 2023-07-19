@@ -30,6 +30,7 @@ from baserow.contrib.database.views.exceptions import (
 )
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import FormView
+from baserow.contrib.database.views.registries import view_ownership_type_registry
 from baserow.contrib.database.views.validators import (
     no_empty_form_values_when_required_validator,
 )
@@ -130,6 +131,9 @@ class SubmitFormViewView(APIView):
             view_model=FormView,
             authorization_token=get_public_view_authorization_token(request),
         )
+        view_ownership_type_registry.get(
+            form.ownership_type
+        ).before_form_view_submitted(form, request)
         model = form.table.get_model()
 
         options = form.active_field_options

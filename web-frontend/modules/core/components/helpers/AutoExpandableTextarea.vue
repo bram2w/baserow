@@ -137,6 +137,9 @@ export default {
       // calculate the number of lines
       return Math.ceil(taHeight / taLineHeight)
     },
+    focus() {
+      this.$refs.inputTextArea.focus()
+    },
   },
 }
 </script>

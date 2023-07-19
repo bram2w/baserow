@@ -32,7 +32,17 @@
     },
     "rowComment": {
         "you": "Jij",
-        "anonymous": "Anoniem"
+        "anonymous": "Anoniem",
+        "updating": "bijwerken",
+        "commentTrashed": "Deze opmerking is verwijderd.",
+        "errorUserNotCommentAuthor": "Alleen de auteur van de opmerking kan deze bijwerken of verwijderen.",
+        "creating": "maken",
+        "deleting": "verwijderen",
+        "created": "gemaakt",
+        "edited": "bewerkt",
+        "errorUserNotCommentAuthorTitle": "Kan niet bijwerken of verwijderen.",
+        "errorInvalidCommentMentionTitle": "Ongeldige vermelding",
+        "errorInvalidCommentMention": "De genoemde gebruiker bestaat niet."
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Een licentie registreren",
@@ -323,5 +333,15 @@
     },
     "calendarMonthDay": {
         "hiddenRowsCount": "0 | 1 meer... | {hiddenRowsCount} meer..."
+    },
+    "rowCommentContext": {
+        "edit": "Opmerking bewerken",
+        "delete": "Opmerking verwijderen"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} noemde je in rij {row} in {table}"
+    },
+    "trashType": {
+        "row_comment": "rij opmerking"
     }
 }

@@ -1944,12 +1944,13 @@ export class BaserowMax extends BaserowFunctionDefinition {
   }
 
   getSyntaxUsage() {
-    return ['max(numbers from a lookup() or field())']
+    return ['max(numbers/text/date from a lookup() or field())']
   }
 
   getExamples() {
     return [
       'max(lookup("link field", "number field"))',
+      'max(lookup("link field", "date field"))',
       'max(field("lookup field"))',
       'max(field("link field with text primary field"))',
     ]
@@ -1975,12 +1976,13 @@ export class BaserowMin extends BaserowFunctionDefinition {
   }
 
   getSyntaxUsage() {
-    return ['min(numbers from a lookup() or field())']
+    return ['min(numbers/test/dates from a lookup() or field())']
   }
 
   getExamples() {
     return [
       'min(lookup("link field", "number field"))',
+      'min(lookup("link field", "date field"))',
       'min(field("lookup field"))',
       'min(field("link field with text primary field"))',
     ]

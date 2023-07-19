@@ -32,7 +32,17 @@
     },
     "rowComment": {
         "you": "Tu",
-        "anonymous": "Anonimo"
+        "anonymous": "Anonimo",
+        "creating": "creando",
+        "created": "creato",
+        "edited": "modificato",
+        "commentTrashed": "Questo commento è stato cancellato.",
+        "errorUserNotCommentAuthorTitle": "Non è possibile modificare o cancellare il commento.",
+        "errorInvalidCommentMention": "L'utente taggato non esiste.",
+        "updating": "aggiornando",
+        "errorUserNotCommentAuthor": "Solo l'autore del commento può modificarlo o cancellarlo.",
+        "deleting": "cancellando",
+        "errorInvalidCommentMentionTitle": "Tag non valido"
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Registra una licenza",
@@ -164,7 +174,7 @@
     },
     "kanbanViewStack": {
         "uncategorized": "Senza categoria",
-        "tryAgain": "Riprova",
+        "tryAgain": "Prova di nuovo",
         "new": "Nuovo"
     },
     "dashboard": {
@@ -309,7 +319,7 @@
         "today": "Oggi"
     },
     "calendarMonthDayExpanded": {
-        "tryAgain": "Riprova"
+        "tryAgain": "prova di nuovo"
     },
     "calendarMonthDay": {
         "hiddenRowsCount": "0 | 1+... | {hiddenRowsCount}+..."
@@ -324,5 +334,15 @@
     "selectDateFieldModal": {
         "save": "Salva",
         "chooseDateField": "Scegli il campo data"
+    },
+    "rowCommentContext": {
+        "edit": "Modifica il commento",
+        "delete": "Cancella il commento"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} ti ha taggato nella riga {row} in {table}"
+    },
+    "trashType": {
+        "row_comment": "commento"
     }
 }

@@ -17,6 +17,7 @@ from baserow.core.jobs.models import Job
 from baserow.core.user_files.models import UserFile
 
 from .action.models import Action
+from .integrations.models import Integration
 from .mixins import (
     CreatedAndUpdatedOnMixin,
     GroupToWorkspaceCompatModelMixin,
@@ -26,6 +27,8 @@ from .mixins import (
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
 )
+from .notifications.models import Notification
+from .services.models import Service
 
 __all__ = [
     "Settings",
@@ -42,6 +45,9 @@ __all__ = [
     "Snapshot",
     "DuplicateApplicationJob",
     "InstallTemplateJob",
+    "Integration",
+    "Service",
+    "Notification",
 ]
 
 
@@ -194,6 +200,7 @@ class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOn
 
 
 class WorkspaceUser(
+    HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
     GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
@@ -219,6 +226,9 @@ class WorkspaceUser(
         help_text="The permissions that the user has within the workspace.",
     )
 
+    def get_parent(self):
+        return self.workspace
+
     class Meta:
         unique_together = [["user", "workspace"]]
         ordering = ("order",)
@@ -230,6 +240,7 @@ class WorkspaceUser(
 
 
 class WorkspaceInvitation(
+    HierarchicalModelMixin,
     ParentWorkspaceTrashableModelMixin,
     GroupToWorkspaceCompatModelMixin,
     CreatedAndUpdatedOnMixin,
@@ -263,6 +274,9 @@ class WorkspaceInvitation(
         help_text="An optional message that the invitor can provide. This will be "
         "visible to the receiver of the invitation.",
     )
+
+    def get_parent(self):
+        return self.workspace
 
     class Meta:
         ordering = ("id",)
@@ -353,6 +367,9 @@ class Template(GroupToWorkspaceCompatModelMixin, models.Model):
     class Meta:
         ordering = ("name",)
 
+    def __str__(self):
+        return self.name
+
 
 class UserLogEntry(models.Model):
     actor = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -384,6 +401,13 @@ class TrashEntry(GroupToWorkspaceCompatModelMixin, models.Model):
     parent_trash_item_id = models.PositiveIntegerField(null=True, blank=True)
     # The actual id of the item that is trashed
     trash_item_id = models.PositiveIntegerField()
+
+    trash_item_owner = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="private_trash_entries",
+    )
 
     # If the user who trashed something gets deleted we still wish to preserve this
     # trash record as it is independent of if the user exists or not.

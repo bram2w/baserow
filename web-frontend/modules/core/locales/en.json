@@ -30,7 +30,8 @@
         "admin": "Admin",
         "dashboard": "Dashboard",
         "trash": "Trash",
-        "settings": "Settings"
+        "settings": "Settings",
+        "notifications": "Notifications"
     },
     "accountForm": {
         "nameLabel": "Your name",
@@ -44,6 +45,17 @@
     },
     "settingsModal": {
         "title": "Settings"
+    },
+    "notificationPanel": {
+        "title": "Notifications",
+        "markAllAsRead": "Mark all as read",
+        "clearAll": "Clear all",
+        "noNotificationTitle": "You don't have any notifications",
+        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow."
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Are you sure you want to clear all notifications?",
+        "message": "All the notifications will be permanently deleted and you won't be able to see them again." 
     },
     "passwordSettings": {
         "title": "Change password",
@@ -194,46 +206,54 @@
         "clickOrDrop": "Click or drop your files here",
         "retry": "Retry"
     },
+    "uploadFileDropzone": {
+        "drop": "Drop here",
+        "clickOrDrop": "Click or drop your files here",
+        "errorTooManyFilesTitle": "Too many files",
+        "errorTooManyFilesMessage": "You can only upload a single file",
+        "errorWrongFileTypeTitle": "Wrong file type",
+        "errorWrongFileTypeMessage": "You can't upload a file of type {type}"
+    },
     "createApplicationContext": {
         "fromTemplate": "From template"
     },
     "applicationForm": {
         "nameLabel": "Name"
     },
-    "connectingNotification": {
+    "connectingToast": {
         "title": "Reconnecting",
         "content": "Reconnecting with server."
     },
-    "failedConnectingNotification": {
+    "failedConnectingToast": {
         "title": "Failed",
         "content": "Connection to the server has failed. Please refresh the page.",
         "action": "Refresh page"
     },
-    "AuthorizationErrorNotification": {
+    "authorizationErrorToast": {
         "title": "Authorization error",
         "content": "It looks like you do not have the permissions to see this resource.",
         "action": "Refresh page"
     },
-    "UserSessionExpiredNotification": {
+    "userSessionExpiredToast": {
         "title": "Session expired",
         "content": "You were logged out because your authentication token has expired. Please login again."
     },
-    "restoreNotification": {
+    "restoreToast": {
         "restore": "Restore deleted {type}"
     },
-    "copyingNotification": {
+    "copyingToast": {
         "title": "Copying...",
         "content": "Preparing your data"
     },
-    "pastingNotification": {
+    "PastingToast": {
         "title": "Pasting...",
         "content": "Preparing your data"
     },
-    "clearingNotification": {
+    "clearingToast": {
         "title": "Clearing...",
         "content": "Preparing your data"
     },
-    "undoRedoNotification": {
+    "undoRedoToast": {
         "undoingTitle": "Undoing...",
         "undoingText": "Undoing your action",
         "undoneTitle": "Undone",
@@ -248,7 +268,7 @@
         "skippingRedoDueToError": "Redo failed due to unknown error, skipping it.",
         "failed": "Failed"
     },
-    "permissionsUpdatedNotification": {
+    "permissionsUpdatedToast": {
         "title": "Permissions updated",
         "content": "This might affect what you have access to, please reload the page.",
         "action": "Reload"
@@ -269,7 +289,7 @@
         "redditTitle": "'Baserow - An open source no-code database",
         "noWorkspaceTitle": "No workspaces found",
         "noWorkspaceText": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you need to create a workspace.",
-        "noWorkspaceTextWithoutCreatePermission":  "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
+        "noWorkspaceTextWithoutCreatePermission": "You aren’t a member of any workspace. Applications like databases belong to a workspace, so in order to create them you will need to be invited to a workspace by an administrator first.",
         "createWorkspace": "Create workspace",
         "becomeGithubSponsor": "Become a GitHub sponsor",
         "starOnGitlab": "Star us on GitLab",
@@ -345,8 +365,8 @@
         "settingAllowNewAccountsDescription": "By default, any user visiting your Baserow domain can sign up for a new account.",
         "settingAllowSignupsViaWorkspaceInvitationsName": "Allow signups via workspace invitations",
         "settingAllowSignupsViaWorkspaceInvitationDescription": "Even if the creation of new accounts is disabled, this option permits directly invited users to still create an account.",
-        "settingAllowNonStaffCreateWorkspaceOperation":  "Allow everyone to create new workspaces",
-        "settingAllowNonStaffCreateWorkspaceOperationDescription":  "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
+        "settingAllowNonStaffCreateWorkspaceOperation": "Allow everyone to create new workspaces",
+        "settingAllowNonStaffCreateWorkspaceOperationDescription": "By default, everyone can create new workspaces. Disable this to only allow staff to create new workspaces.",
         "settingAllowNonStaffCreateWorkspaceOperationWarning": "New users will have a workspace automatically created for them where they are an Admin.",
         "settingTrackWorkspaceUsage": "Track workspace usage",
         "settingTrackWorkspaceUsageDescription": "Enables a nightly job that counts row and file usage per workspace, displayed on the premium workspace admin page.",
@@ -504,5 +524,39 @@
     },
     "highestPaidRoleField": {
         "billable": "Billable"
+    },
+    "integrationCreateEditModal": {
+        "createTitle": "New integration",
+        "editTitle": "Edit integration",
+        "warningTitle": "Warning"
+    },
+    "integrationEditForm": {
+        "name": "Integration name",
+        "namePlaceholder": "Enter integration name..."
+    },
+    "dropdown": {
+        "empty": "No items available"
+    },
+    "styleSidePanel": {
+        "paddingTop": "Padding top",
+        "paddingBottom": "Padding bottom"
+    },
+    "styleBoxForm": {
+        "paddingError": "The value must be an integer between 0 and 200."
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "No users found"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} has accepted your invitation to join {workspaceName}"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} has rejected your invitation to join {workspaceName}"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} has invited you to join {workspaceName}"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} is here! Check out what's new."
     }
 }

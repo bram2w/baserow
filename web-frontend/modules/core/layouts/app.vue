@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div :class="{ 'layout--collapsed': isCollapsed }" class="layout">
       <div class="layout__col-1">
         <Sidebar></Sidebar>
@@ -20,7 +20,7 @@
 <script>
 import { mapGetters } from 'vuex'
 
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
@@ -28,7 +28,7 @@ import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
 
 export default {
   components: {
-    Notifications,
+    Toasts,
     Sidebar,
   },
   mixins: [undoRedo],
@@ -108,6 +108,7 @@ export default {
           !document.activeElement.isContentEditable
         ) {
           event.shiftKey ? this.redo() : this.undo()
+          event.preventDefault()
         }
       }
     },

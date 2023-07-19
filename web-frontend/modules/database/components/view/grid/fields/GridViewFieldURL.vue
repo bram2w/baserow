@@ -8,9 +8,12 @@
     @contextmenu="stopContextIfEditing($event)"
   >
     <div v-show="!editing" class="grid-field-text">
-      <a :href="value" target="_blank" rel="nofollow noopener noreferrer">{{
-        value
-      }}</a>
+      <a
+        :href="getHref(value)"
+        target="_blank"
+        rel="nofollow noopener noreferrer"
+        >{{ value }}</a
+      >
     </div>
     <template v-if="editing">
       <input
@@ -38,6 +41,13 @@ export default {
         this.$refs.input.focus()
         this.$refs.input.selectionStart = this.$refs.input.selectionEnd = 100000
       })
+    },
+    getHref(value) {
+      const protocolRegex = /^[a-zA-Z]+:\/\//
+      if (!protocolRegex.test(value)) {
+        return `https://${value}`
+      }
+      return value
     },
   },
 }

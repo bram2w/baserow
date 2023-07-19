@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Notifications></Notifications>
+    <Toasts></Toasts>
     <div class="style-guide__wrapper">
       <div class="style-guide">
         <div class="margin-bottom-3">
@@ -25,101 +25,93 @@
           </p>
         </div>
         <div class="margin-bottom-3">
-          <div class="control">
-            <label class="control__label">Small text field</label>
-            <div class="control__elements">
-              <input type="text" class="input" />
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Small with error</label>
-            <div class="control__elements">
-              <input type="text" class="input input--error" />
-              <div class="error">Please do something different</div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Small text field</label>
-            <div class="control__elements">
-              <input
-                type="text"
-                class="input"
-                placeholder="Enter something here"
-              />
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Icon text field</label>
-            <div class="control__elements">
-              <div class="input__with-icon">
-                <input
-                  type="text"
-                  class="input"
-                  placeholder="Enter something here"
-                />
-                <i class="fas fa-clock"></i>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Icon text field left</label>
-            <div class="control__elements">
-              <div class="input__with-icon input__with-icon--left">
-                <input
-                  type="text"
-                  class="input"
-                  placeholder="Enter something here"
-                />
-                <i class="fas fa-search"></i>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Large text field</label>
-            <div class="control__elements">
-              <input
-                type="text"
-                class="input input--large"
-                placeholder="Enter something here"
-              />
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Large password field</label>
-            <div class="control__elements">
-              <input
-                type="password"
-                class="input input--large"
-                placeholder="Please enter your password"
-              />
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Large icon field</label>
-            <div class="control__elements">
-              <div class="input__with-icon">
-                <input
-                  type="password"
-                  class="input input--large"
-                  placeholder="Please enter your password"
-                />
-                <i class="fas fa-calculator"></i>
-              </div>
-            </div>
-          </div>
-          <div class="control">
-            <label class="control__label">Large icon field</label>
-            <div class="control__elements">
-              <div class="input__with-icon input__with-icon--left">
-                <input
-                  type="text"
-                  class="input input--large"
-                  placeholder="Enter something here"
-                />
-                <i class="fas fa-search"></i>
-              </div>
-            </div>
-          </div>
+          <FormInput
+            v-model="input"
+            label="Small text field"
+            value="This is the value"
+          />
+          <FormInput
+            v-model="input"
+            label="Small text field with error"
+            error="Please do something different"
+          />
+          <FormInput
+            v-model="input"
+            label="Small text field with placeholder"
+            placeholder="Enter something here"
+          />
+          <FormInput
+            v-model="input"
+            label="Small text field disabled"
+            placeholder="Enter something here"
+            disabled
+          />
+          <FormInput
+            v-model="input"
+            label="Small text field loading"
+            placeholder="Enter something here"
+            loading
+          />
+          <FormInput
+            v-model="input"
+            label="Icon text field"
+            placeholder="Enter something here"
+            icon-right="clock"
+          />
+          <FormInput
+            v-model="input"
+            label="Icon text field with error"
+            placeholder="Enter something here"
+            icon-right="clock"
+            error="This field is mandatory"
+          />
+          <FormInput
+            v-model="input"
+            label="Icon text field left"
+            placeholder="Enter something here"
+            icon-left="search"
+          />
+          <FormInput
+            v-model="input"
+            label="Icon text field right loading"
+            placeholder="Enter something here"
+            icon-right="search"
+            loading
+          />
+          <FormInput
+            v-model="input"
+            label="Icon text field left loading"
+            placeholder="Enter something here"
+            icon-left="search"
+            loading
+          />
+          <FormInput
+            v-model="input"
+            label="Large text field"
+            placeholder="Enter something here"
+            large
+          />
+          <FormInput
+            v-model="input"
+            label="Large password field"
+            placeholder="Enter something here"
+            type="password"
+            large
+          />
+          <FormInput
+            v-model="input"
+            label="Large icon field"
+            placeholder="Enter something here"
+            large
+            icon-right="clock"
+          />
+          <FormInput
+            v-model="input"
+            label="Large icon field left"
+            placeholder="Enter something here"
+            large
+            icon-left="search"
+          />
           <div class="control">
             <label class="control__label">Checkbox field</label>
             <div class="control__elements">
@@ -343,6 +335,44 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Dropdown with footer</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" show-search show-footer>
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="edit"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="database"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="times"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <template #footer>
+                    <a
+                      class="select__footer-button"
+                      @click="$refs.IntegrationCreateEditModal.show()"
+                    >
+                      <i class="fas fa-plus"></i>
+                      Add item
+                    </a>
+                  </template>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">
               Dropdown by link {{ dropdown }}
             </label>
@@ -397,13 +427,13 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert title="Notification message" icon="exclamation">
+          <Alert title="Toast message" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message">
+          <Alert title="Toast message">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
@@ -413,49 +443,44 @@
             sagittis quam sed, pellentesque orci. Aenean non consequat mi. Nunc
             laoreet ligula a nunc eleifend, nec accumsan felis euismod.
           </Alert>
-          <Alert title="Notification message" type="success" icon="exclamation">
+          <Alert title="Toast message" type="success" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" type="warning" icon="exclamation">
+          <Alert title="Toast message" type="warning" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" type="error" icon="exclamation">
+          <Alert title="Toast message" type="error" icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" simple icon="exclamation">
+          <Alert title="Toast message" simple icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
-          <Alert title="Notification message" simple>
+          <Alert title="Toast message" simple>
+            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
+            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
+            urna. Praesent.
+          </Alert>
+          <Alert title="Toast message" type="success" simple icon="exclamation">
             Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
             elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
             Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
             urna. Praesent.
           </Alert>
           <Alert
-            title="Notification message"
-            type="success"
-            simple
-            icon="exclamation"
-          >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
-          </Alert>
-          <Alert
-            title="Notification message"
+            title="Toast message"
             type="warning"
             simple
             shadow
@@ -467,7 +492,7 @@
             urna. Praesent.
           </Alert>
           <Alert
-            title="Notification message"
+            title="Toast message"
             type="error"
             simple
             shadow
@@ -479,34 +504,48 @@
             urna. Praesent.
           </Alert>
         </div>
-        <div class="margin-bottom-3 style-guide__buttons">
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
           <h3>Tiny size</h3>
           <Button size="tiny">button</Button>
           <Button size="tiny" disabled>button[disabled]</Button>
-          <Button size="tiny" color="primary">button.button-success</Button>
-          <Button size="tiny" color="success">button.button-success</Button>
-          <Button size="tiny" color="warning">button.button-warning</Button>
-          <Button size="tiny" color="error">button.button-error</Button>
+          <Button size="tiny" type="primary">button.button-success</Button>
+          <Button size="tiny" type="success">button.button-success</Button>
+          <Button size="tiny" type="warning">button.button-warning</Button>
+          <Button size="tiny" type="error">button.button-error</Button>
           <Button size="tiny" append-icon="lock-open">button</Button>
-          <Button size="tiny" prepend-icon="arrow-left">button</Button>
-          <Button size="tiny" color="ghost">button.button-ghost</Button>
+          <Button size="tiny" type="link" prepend-icon="arrow-left">
+            button
+          </Button>
+          <Button size="tiny" type="ghost">button.button-ghost</Button>
+          <Button size="tiny" type="link">button.button-link</Button>
           <Button size="tiny" icon="user-check"></Button>
-          <Button size="tiny" icon="user-check" color="ghost"></Button>
+          <Button size="tiny" icon="user-check" type="ghost"></Button>
+          <Button size="tiny" icon="user-check" type="link"></Button>
         </div>
-        <div class="margin-bottom-3 style-guide__buttons">
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
           <h3>Normal link</h3>
-          <Button type="link" href="#">a.button</Button>
-          <Button type="link" disabled href="#">a.button[disabled]</Button>
-          <Button type="link" color="success" href="#">
+          <Button tag="a" href="#">a.button</Button>
+          <Button tag="a" disabled href="#">a.button[disabled]</Button>
+          <Button tag="a" type="success" href="#">
             a.button.button-success
           </Button>
-          <Button type="link" color="warning">a.button.button-warning</Button>
-          <Button type="link" color="error">a.button.button-error</Button>
-          <Button type="link" append-icon="lock-open">a.button</Button>
-          <Button type="link" prepend-icon="arrow-left">a.button</Button>
-          <Button type="link" color="ghost">a.button.button-ghost</Button>
-          <Button type="link" icon="user-check"></Button>
-          <Button type="link" icon="user-check" color="ghost"></Button>
+          <Button tag="a" type="warning">a.button.button-warning</Button>
+          <Button tag="a" type="error">a.button.button-error</Button>
+          <Button tag="a" append-icon="lock-open">a.button</Button>
+          <Button tag="a" type="link" prepend-icon="arrow-left"
+            >a.button</Button
+          >
+          <Button tag="a" type="ghost">a.button.button-ghost</Button>
+          <Button tag="a" type="link">a.button.button-link</Button>
+          <Button tag="a" icon="user-check"></Button>
+          <Button tag="a" icon="user-check" type="ghost"></Button>
+          <Button tag="a" icon="user-check" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -515,29 +554,38 @@
           <h3>Normal button</h3>
           <Button>button.button</Button>
           <Button disabled>button[disabled]</Button>
-          <Button color="success">button.button-success</Button>
-          <Button color="warning">button.button-warning</Button>
-          <Button color="error">button.button-error</Button>
+          <Button type="success">button.button-success</Button>
+          <Button type="warning">button.button-warning</Button>
+          <Button type="error">button.button-error</Button>
           <Button append-icon="lock-open">button</Button>
-          <Button prepend-icon="arrow-left">button</Button>
-          <Button color="ghost">button.button-ghost</Button>
+          <Button type="link" prepend-icon="arrow-left">button</Button>
+          <Button type="ghost">button.button-ghost</Button>
+          <Button type="link">button.button-link</Button>
           <Button icon="user-check"></Button>
-          <Button icon="user-check" color="ghost"></Button>
-          <Button color="light">button.light</Button>
-          <Button color="light" active>button.light.active</Button>
+          <Button icon="user-check" type="ghost"></Button>
+          <Button type="light">button.light</Button>
+          <Button type="light" active>button.light.active</Button>
+          <Button type="light" icon="trash"></Button>
+          <Button type="link" icon="trash"></Button>
         </div>
-        <div class="margin-bottom-3 style-guide__buttons">
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
           <h3>Large size</h3>
           <Button size="large">button</Button>
           <Button size="large" disabled>button[disabled]</Button>
-          <Button size="large" color="success">button.button-success</Button>
-          <Button size="large" color="warning">button.button-warning</Button>
-          <Button size="large" color="error">button.button-error</Button>
+          <Button type="plain" size="large">button-plain</Button>
+          <Button size="large" type="success">button.button-success</Button>
+          <Button size="large" type="warning">button.button-warning</Button>
+          <Button size="large" type="error">button.button-error</Button>
           <Button size="large" append-icon="lock-open">button</Button>
           <Button size="large" prepend-icon="arrow-left">button</Button>
-          <Button size="large" color="ghost">button.button-ghost</Button>
+          <Button size="large" type="ghost">button.button-ghost</Button>
+          <Button size="large" type="link">button.button-link</Button>
           <Button size="large" icon="user-check"></Button>
-          <Button size="large" icon="user-check" color="ghost"></Button>
+          <Button size="large" icon="user-check" type="ghost"></Button>
+          <Button size="large" icon="user-check" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3"
@@ -546,13 +594,17 @@
           <h3>Loading</h3>
           <Button size="tiny" loading>Loading</Button>
           <Button loading>Loading</Button>
+          <Button append-icon="search" loading>Loading</Button>
+          <Button type="link" loading>Loading</Button>
           <Button size="large" loading>Loading</Button>
-          <Button size="large" color="ghost" loading>Loading</Button>
+          <Button size="large" type="ghost" loading>Loading</Button>
           <Button size="large" icon="user-check" loading></Button>
-          <Button color="light" loading>button.light.loading</Button>
-          <Button color="light" active loading>
+          <Button type="light" loading>button.light.loading</Button>
+          <Button type="link" loading>button.link.loading</Button>
+          <Button type="light" active loading>
             button.light.active.loading
           </Button>
+          <Button type="link" icon="trash" loading />
         </div>
         <div
           class="margin-bottom-3"
@@ -1095,47 +1147,47 @@
             </p>
           </Modal>
           <Button
-            color="success"
+            type="success"
             @click="
-              $store.dispatch('notification/success', {
-                title: 'Custom success notification',
+              $store.dispatch('toast/success', {
+                title: 'Custom success toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle success notification
+            toggle success toast
           </Button>
           <Button
-            color="error"
+            type="error"
             @click="
-              $store.dispatch('notification/error', {
-                title: 'Custom error notification',
+              $store.dispatch('toast/error', {
+                title: 'Custom error toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle error notification
+            toggle error toast
           </Button>
           <Button
-            color="warning"
+            type="warning"
             @click="
-              $store.dispatch('notification/warning', {
-                title: 'Custom warning notification',
+              $store.dispatch('toast/warning', {
+                title: 'Custom warning toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle warning notification
+            toggle warning toast
           </Button>
           <Button
             @click="
-              $store.dispatch('notification/info', {
-                title: 'Custom info notification',
+              $store.dispatch('toast/info', {
+                title: 'Custom info toast',
                 message: 'Mauris dignissim massa ac justo consequat porttitor.',
               })
             "
           >
-            toggle info notification
+            toggle info toast
           </Button>
         </div>
         <div class="margin-bottom-3">
@@ -1579,18 +1631,128 @@
             </div>
           </div>
         </div>
+        <div class="margin-bottom-3" style="background-color: #ffffff">
+          <h2>List component</h2>
+          <List
+            :items="[
+              { id: 1, name: 'test', image: image },
+              { id: 2, name: 'test2', image: image },
+              { id: 2, name: 'test3', image: image },
+              { id: 2, name: 'test4', image: image },
+            ]"
+            :attributes="['name']"
+          >
+            <template #left-side="{ item }">
+              <img :src="item.image" />
+            </template>
+            <template #right-side="{ item }">
+              <div>
+                <Button
+                  size="tiny"
+                  icon="edit"
+                  @click="alert('should edit item ' + item.name)"
+                />
+                <Button
+                  size="tiny"
+                  icon="trash"
+                  @click="alert('should delete item ' + item.name)"
+                />
+              </div>
+            </template>
+          </List>
+        </div>
+
+        <div class="margin-bottom-3">
+          <h2>Avatars</h2>
+          <div style="display: flex; gap: 10px; padding: 0.5em">
+            <Avatar size="tiny" icon="trash" />
+            <Avatar size="tiny" icon="trash" color="warning" />
+            <Avatar size="tiny" icon="trash" color="error" />
+            <Avatar size="tiny" icon="trash" color="ghost" />
+            <Avatar size="tiny" :image="image" color="ghost" />
+            <Avatar size="tiny" initials="BW" color="ghost" />
+            <Avatar size="tiny" icon="trash" :rounded="false" />
+            <Avatar size="tiny" :image="image" color="ghost" :rounded="false" />
+            <Avatar size="tiny" initials="BW" color="error" :rounded="false" />
+          </div>
+          <div style="display: flex; gap: 10px; padding: 0.5em">
+            <Avatar icon="trash" />
+            <Avatar :image="image" />
+            <Avatar initials="BW" />
+            <Avatar icon="trash" color="warning" />
+            <Avatar :image="image" color="warning" />
+            <Avatar initials="BW" color="warning" />
+            <Avatar icon="trash" color="error" />
+            <Avatar :image="image" color="error" />
+            <Avatar initials="BW" color="error" />
+          </div>
+          <div style="display: flex; gap: 10px; padding: 0.5em">
+            <Avatar icon="trash" color="ghost" />
+            <Avatar :image="image" color="ghost" />
+            <Avatar initials="BW" color="ghost" />
+            <Avatar icon="trash" :rounded="false" />
+            <Avatar :image="image" color="ghost" :rounded="false" />
+            <Avatar initials="BW" color="error" :rounded="false" />
+          </div>
+          <div style="display: flex; gap: 10px; padding: 0.5em">
+            <Avatar size="large" icon="trash" />
+            <Avatar size="large" icon="trash" color="warning" />
+            <Avatar size="large" icon="trash" color="error" />
+            <Avatar size="large" icon="trash" color="ghost" />
+            <Avatar size="large" :image="image" color="ghost" />
+            <Avatar size="large" initials="BW" color="ghost" />
+            <Avatar size="large" icon="trash" :rounded="false" />
+            <Avatar
+              size="large"
+              :image="image"
+              color="ghost"
+              :rounded="false"
+            />
+            <Avatar size="large" initials="BW" color="error" :rounded="false" />
+          </div>
+        </div>
+        <div class="margin-bottom-3">
+          <h2>Presentations</h2>
+          <Presentation
+            title="My baserow integration"
+            subtitle="Local baserow integration"
+          />
+          <Presentation
+            title="My baserow integration"
+            subtitle="Local baserow integration"
+            initials="LB"
+          />
+          <Presentation
+            title="My baserow integration"
+            subtitle="Local baserow integration"
+            icon="table"
+          />
+          <Presentation
+            :image="image"
+            title="My baserow integration"
+            subtitle="Local baserow integration"
+            avatar-color="ghost"
+          />
+          <Presentation
+            :image="image"
+            title="My baserow integration"
+            subtitle="Local baserow integration with a very long description"
+            avatar-color="ghost"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import Notifications from '@baserow/modules/core/components/notifications/Notifications'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
+import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 
 export default {
   components: {
-    Notifications,
+    Toasts,
     AutoExpandableTextarea,
   },
   data() {
@@ -1604,12 +1766,19 @@ export default {
       longDropdown: '0',
       date: '',
       formula: 'concat(field("Text"), field("Text"))',
+      image: BaserowIcon,
+      input: '',
     }
   },
   head() {
     return {
       title: 'Style guide',
     }
+  },
+  methods: {
+    alert(message) {
+      alert(message)
+    },
   },
 }
 </script>

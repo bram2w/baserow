@@ -41,6 +41,7 @@ services:
       - ./premium/backend/:/baserow/premium/backend
       - ./enterprise/backend/:/baserow/enterprise/backend
       - ./deploy/plugins/install_plugin.sh:/baserow/plugins/install_plugin.sh
+      - ./tests:/baserow/tests
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true
@@ -67,6 +68,7 @@ services:
       - /baserow/web-frontend/node_modules
       - ./premium/web-frontend/:/baserow/premium/web-frontend
       - ./enterprise/web-frontend/:/baserow/enterprise/web-frontend
+      - ./tests/:/baserow/tests
     # Open stdin and tty so when attaching key input works as expected.
     stdin_open: true
     tty: true

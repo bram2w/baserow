@@ -7,7 +7,6 @@ from opentelemetry import trace
 
 from baserow.contrib.database.fields.dependencies.types import FieldDependencies
 from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.formula import BaserowFormulaException
 from baserow.contrib.database.formula.ast.tree import (
     BaserowExpression,
     BaserowFieldReference,
@@ -24,7 +23,6 @@ from baserow.contrib.database.formula.migrations.migrations import (
 from baserow.contrib.database.formula.parser.ast_mapper import (
     raw_formula_to_untyped_expression,
 )
-from baserow.contrib.database.formula.parser.parser import get_parse_tree_for_formula
 from baserow.contrib.database.formula.parser.update_field_names import (
     update_field_names,
 )
@@ -42,6 +40,8 @@ from baserow.contrib.database.formula.types.visitors import (
     FunctionsUsedVisitor,
 )
 from baserow.core.telemetry.utils import baserow_trace_methods
+from baserow.formula import BaserowFormulaException
+from baserow.formula.parser.parser import get_parse_tree_for_formula
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import FormulaField
@@ -395,6 +395,7 @@ class FormulaHandler(metaclass=baserow_trace_methods(tracer)):
         field.save(field_cache=field_cache)
         recreate_formula_field_if_needed(field, old_field, force_recreate_column)
         ViewHandler().field_type_changed(field)
+
         return FormulaHandler.baserow_expression_to_update_django_expression(
             field.cached_typed_internal_expression,
             field_cache.get_model(field.table),
