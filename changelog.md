@@ -1,5 +1,14 @@
 # Changelog
 
+## Released 1.19.1
+
+### Bug fixes
+* Do not run periodic field updates for trashed tables. [#1855](https://gitlab.com/baserow/baserow/-/issues/1855)
+* Fix a link row field pointing a formula field using button link function breaking full text search for that table. [#1856](https://gitlab.com/baserow/baserow/-/issues/1856)
+* Ensure default web frontend images nuxt command launches production version of image. [#1862](https://gitlab.com/baserow/baserow/-/issues/1862)
+* fix web frontend not loading for ie and safari versions less than 16 4 [#1866](https://gitlab.com/baserow/baserow/-/issues/1866)
+
+
 ## Released 1.19.0
 
 ### New features
