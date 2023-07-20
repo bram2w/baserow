@@ -3465,7 +3465,12 @@ class FormulaFieldType(ReadOnlyFieldType):
             return False
 
     def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
-        return FormulaField.objects.filter(needs_periodic_update=True)
+        return FormulaField.objects.filter(
+            needs_periodic_update=True,
+            table__trashed=False,
+            table__database__trashed=False,
+            table__database__workspace__trashed=False,
+        )
 
     def run_periodic_update(
         self,
