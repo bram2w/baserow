@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix web frontend not loading for ie and safari versions less than 16 4",
+    "issue_number": 1866,
+    "bullet_points": [],
+    "created_at": "2023-07-20"
+}
