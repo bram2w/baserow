@@ -160,6 +160,11 @@ export class TablePage extends BaserowPage {
     }
 
     async waitForFirstCellNotBeBlank() {
+        await this.page.evaluate(() => {
+            return new Promise((resolve) => {
+                setTimeout(resolve, 1000); // Sleep for 1000 milliseconds (1 second)
+            });
+        });
         await expect(this.firstNonPrimaryCell.locator('*')).not.toHaveCount(0)
 
     }
