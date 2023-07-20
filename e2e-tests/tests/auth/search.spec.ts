@@ -15,7 +15,6 @@ import {
     updateField
 } from "../../fixtures/field";
 import {updateRows} from "../../fixtures/rows";
-import ro from "@faker-js/faker/locales/ro";
 
 let user = null;
 let sharedPageTestData: SharedTestData = null;
@@ -436,6 +435,7 @@ const fieldTypes = [
                     doesNotMatch('-', '-'),
                     // Email cases
                     matches('test@google.com', '.com', 'test', 'google'),
+                    matches('a.b', 'a', 'b', 'a/b'),
                     // Date cases
                     matches('10-20-2023', '10', '20', '2023', '10-20', '10-20-2023', '20-2023', '10/20/2023'),
                     doesNotMatch('10-20-2023', '23', '0', '3'),

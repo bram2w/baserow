@@ -27,7 +27,9 @@ def filter_distinct_workspace_ids_per_fields(
     """
 
     queryset = Workspace.objects.filter(
-        application__database__table__field__in=queryset
+        application__database__table__field__in=queryset,
+        application__trashed=False,
+        application__database__table__trashed=False,
     )
     if workspace_id is not None:
         queryset = queryset.filter(id=workspace_id)
@@ -72,7 +74,11 @@ def _run_periodic_field_type_update_per_workspace(
         workspace.refresh_now()
     add_baserow_trace_attrs(update_now=update_now, workspace_id=workspace.id)
 
-    for field in qs.filter(table__database__workspace_id=workspace.id):
+    for field in qs.filter(
+        table__database__workspace_id=workspace.id,
+        table__trashed=False,
+        table__database__trashed=False,
+    ):
         # noinspection PyBroadException
         try:
             _run_periodic_field_update(field, field_type_instance)

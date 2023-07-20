@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a link row field pointing a formula field using button link function breaking full text search for that table.",
+    "issue_number": 1856,
+    "bullet_points": [],
+    "created_at": "2023-07-19"
+}

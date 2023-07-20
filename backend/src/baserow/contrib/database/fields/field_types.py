@@ -802,14 +802,16 @@ class DateFieldType(FieldType):
         return Func(
             Func(
                 # FIXME: what if date_force_timezone is None(user timezone)?
-                Value(field.date_force_timezone or "UTC", output_field=CharField()),
+                Value(
+                    field.date_force_timezone or "UTC", output_field=models.TextField()
+                ),
                 F(field.db_column),
                 function="timezone",
                 output_field=DateTimeField(),
             ),
             Value(field.get_psql_format()),
             function="to_char",
-            output_field=CharField(),
+            output_field=models.TextField(),
         )
 
     def prepare_value_for_db(self, instance, value):
@@ -1246,6 +1248,7 @@ class LinkRowFieldType(FieldType):
                         primary_field, remote_model.objects
                     ),
                     " ",
+                    output_field=models.TextField(),
                 )
             )
             .values("value")[:1]
@@ -2243,7 +2246,7 @@ class FileFieldType(FieldType):
             field,
             queryset,
             path_to_value_in_jsonb_list=[
-                Value("visible_name", output_field=CharField())
+                Value("visible_name", output_field=models.TextField())
             ],
         )
 
@@ -3465,7 +3468,12 @@ class FormulaFieldType(ReadOnlyFieldType):
             return False
 
     def get_fields_needing_periodic_update(self) -> Optional[QuerySet]:
-        return FormulaField.objects.filter(needs_periodic_update=True)
+        return FormulaField.objects.filter(
+            needs_periodic_update=True,
+            table__trashed=False,
+            table__database__trashed=False,
+            table__database__workspace__trashed=False,
+        )
 
     def run_periodic_update(
         self,
