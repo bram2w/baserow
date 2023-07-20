@@ -8,6 +8,7 @@ from freezegun import freeze_time
 
 from baserow.contrib.database.fields.field_types import FormulaFieldType
 from baserow.contrib.database.fields.tasks import run_periodic_fields_updates
+from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db
@@ -276,3 +277,96 @@ def test_all_formula_that_needs_updates_are_periodically_updated(data_fixture):
         )
 
         assert FormulaFieldType().get_fields_needing_periodic_update().count() == 3
+
+
+@pytest.mark.django_db
+def test_run_periodic_field_type_doesnt_update_trashed_table(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+
+    with freeze_time(original_datetime):
+        field = data_fixture.create_formula_field(
+            table=table, formula="now()", date_include_time=True
+        )
+
+    table_model = table.get_model()
+    row = table_model.objects.create()
+
+    assert getattr(row, f"field_{field.id}") == original_datetime
+
+    TrashHandler.trash(user, workspace, database, table)
+
+    with freeze_time("2023-02-27 10:30"):
+        run_periodic_fields_updates(workspace_id=workspace.id)
+
+        row.refresh_from_db()
+        assert getattr(row, f"field_{field.id}") == original_datetime
+
+        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 0
+
+
+@pytest.mark.django_db
+def test_run_periodic_field_type_doesnt_update_trashed_database(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+
+    with freeze_time(original_datetime):
+        field = data_fixture.create_formula_field(
+            table=table, formula="now()", date_include_time=True
+        )
+
+    table_model = table.get_model()
+    row = table_model.objects.create()
+
+    assert getattr(row, f"field_{field.id}") == original_datetime
+
+    TrashHandler.trash(user, workspace, database, database)
+
+    with freeze_time("2023-02-27 10:30"):
+        run_periodic_fields_updates(workspace_id=workspace.id)
+
+        row.refresh_from_db()
+        assert getattr(row, f"field_{field.id}") == original_datetime
+
+        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 0
+
+
+@pytest.mark.django_db
+def test_run_periodic_field_type_doesnt_update_trashed_workspace(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+
+    original_datetime = datetime(2023, 2, 27, 10, 0, 0, tzinfo=pytz.UTC)
+
+    with freeze_time(original_datetime):
+        field = data_fixture.create_formula_field(
+            table=table, formula="now()", date_include_time=True
+        )
+
+    table_model = table.get_model()
+    row = table_model.objects.create()
+
+    assert getattr(row, f"field_{field.id}") == original_datetime
+
+    TrashHandler.trash(user, workspace, None, workspace)
+
+    with freeze_time("2023-02-27 10:30"):
+        run_periodic_fields_updates(workspace_id=workspace.id)
+
+        row.refresh_from_db()
+        assert getattr(row, f"field_{field.id}") == original_datetime
+
+        assert FormulaFieldType().get_fields_needing_periodic_update().count() == 0

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Do not run periodic field updates for trashed tables.",
+    "issue_number": 1855,
+    "bullet_points": [],
+    "created_at": "2023-07-19"
+}
