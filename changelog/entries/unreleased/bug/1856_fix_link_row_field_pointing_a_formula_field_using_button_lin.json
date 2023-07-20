@@ -1,7 +1,0 @@
-{
-    "type": "bug",
-    "message": "fix link row field pointing a formula field using button link function breaking full text",
-    "issue_number": 1856,
-    "bullet_points": [],
-    "created_at": "2023-07-19"
-}

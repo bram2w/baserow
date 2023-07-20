@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Ensure default web frontend images nuxt command launches production version of image.",
+    "issue_number": 1862,
+    "bullet_points": [],
+    "created_at": "2023-07-20"
+}
