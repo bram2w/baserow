@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, List, NamedTuple, Optional, Type
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector
-from django.db import DataError, ProgrammingError, connection
+from django.db import connection
 from django.db.models import Expression, Func, Q, QuerySet, TextField, Value
 from django.utils.encoding import force_str
 
@@ -109,9 +109,11 @@ class SearchHandler(
 
         return Func(
             expression,
-            Value(RE_REMOVE_NON_SEARCHABLE_PUNCTUATION_FROM_TSVECTOR_DATA.pattern),
+            Value(
+                RE_REMOVE_NON_SEARCHABLE_PUNCTUATION_FROM_TSVECTOR_DATA.pattern,
+            ),
             Value(" "),
-            Value("g", output_field=TextField()),
+            Value("g"),
             function="regexp_replace",
             output_field=TextField(),
         )
@@ -278,6 +280,9 @@ class SearchHandler(
 
         from baserow.contrib.database.fields.models import Field
 
+        if not cls.full_text_enabled():
+            raise PostgresFullTextSearchDisabledException()
+
         # Prepare a fresh model we can use to create the column.
         model = table.get_model(force_add_tsvectors=True)
 
@@ -411,7 +416,7 @@ class SearchHandler(
             if set_background_updated_false:
                 update_query[ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME] = Value(False)
             return qs.update(**update_query)
-        except (ProgrammingError, DataError) as e:
+        except Exception as e:
             logger.error(
                 "Failed to do full update search vector because of {e}. "
                 "Attempting to do per field updates one by one instead...",
@@ -437,7 +442,6 @@ class SearchHandler(
         searching happily after.
         """
 
-        from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
         from baserow.contrib.database.fields.handler import FieldHandler
 
         num_worked = 0
@@ -448,11 +452,14 @@ class SearchHandler(
                 cv = cls._get_field_with_vector_from_field(refetched_field, qs)
                 qs.update(**{cv.field_tsv_db_column: cv.search_vector})
                 num_worked += 1
-            except (ProgrammingError, DataError, FieldDoesNotExist) as another_e:
+            except Exception as another_e:
                 field = cv.field
                 logger.error(
                     "Failed to update search vector for field with id {field_id} / "
-                    "type {field_type} because of {e}, field.__str__ is: " + str(field),
+                    "type {field_type} because of {e}, field.__str__ is: "
+                    + str(field)
+                    + " and expression is "
+                    + str(cv.search_vector),
                     field_id=field.id,
                     field_type=str(type(field)),
                     e=str(another_e),
