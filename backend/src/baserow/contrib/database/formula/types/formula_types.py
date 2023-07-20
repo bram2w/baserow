@@ -495,7 +495,7 @@ class BaserowFormulaDateIntervalType(
         return True
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
-        return Cast(field.db_column, output_field=models.CharField())
+        return Cast(field.db_column, output_field=models.TextField())
 
 
 class BaserowFormulaDateType(BaserowFormulaValidType):
@@ -624,7 +624,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
                 ),
                 Value(get_date_time_format(self, "sql")),
                 function="to_char",
-                output_field=models.CharField(),
+                output_field=models.TextField(),
             )
 
         return extract_jsonb_array_values_to_single_string(
@@ -913,7 +913,7 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
     def get_human_readable_value(self, value, field_object) -> str:
         if value is None:
             return ""
-        return self.get_export_value(value, field_object, rich_value=False)
+        return self.get_export_value(value, field_object, rich_value=False) or ""
 
     def cast_to_text(
         self,
@@ -928,15 +928,15 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
         )
 
     def get_search_expression(self, field, queryset):
-        return Cast(F(field.db_column + "__value"), output_field=models.CharField())
+        return Cast(F(field.db_column + "__value"), output_field=models.TextField())
 
     def get_search_expression_in_array(self, field, queryset):
         return extract_jsonb_array_values_to_single_string(
             field,
             queryset,
             path_to_value_in_jsonb_list=[
-                Value("value", output_field=models.CharField()),
-                Value("value", output_field=models.CharField()),
+                Value("value", output_field=models.TextField()),
+                Value("value", output_field=models.TextField()),
             ],
         )
 
