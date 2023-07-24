@@ -12,6 +12,10 @@ def test_extract_share_id_from_url():
         == "shrxxxxxxxxxxxxxx"
     )
     assert (
+        extract_share_id_from_url("https://airtable.com/appxxxxxxxxxxxxxx")
+        == "appxxxxxxxxxxxxxx"
+    )
+    assert (
         extract_share_id_from_url("https://airtable.com/shrXxmp0WmqsTkFWTzv")
         == "shrXxmp0WmqsTkFWTzv"
     )

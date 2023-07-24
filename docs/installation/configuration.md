@@ -262,3 +262,10 @@ domain than your Baserow, you need to make sure CORS is configured correctly.
 | BASEROW\_PLUGIN\_URLS                          | A comma separated list of plugin urls to install on startup.                                                                             |                                                                               |
 | BASEROW\_DISABLE\_PLUGIN\_INSTALL\_ON\_STARTUP | When set to any non-empty values no automatic startup check and/or install of plugins will be run. Disables the above two env variables. |
 | BASEROW\_PLUGIN\_DIR                           | **INTERNAL** Sets the folder where the Baserow plugin scripts look for plugins.                                                          | In the all-in-one image `/baserow/data/plugins`, otherwise `/baserow/plugins` |
+
+### Posthog configuration
+
+| Name                       | Description                                                     | Defaults                                                                      |
+|----------------------------|-----------------------------------------------------------------|-------------------------------------------------------------------------------|
+| POSTHOG\_PROJECT\_API\_KEY | Set this to your Posthog project API key for product analytics. |                                                                               |
+| POSTHOG\_HOST              | Set this to your Posthog host for product analytics.            |                                                                               |

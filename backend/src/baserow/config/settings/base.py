@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
+import posthog
 from corsheaders.defaults import default_headers
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
@@ -1107,6 +1108,15 @@ USE_PG_FULLTEXT_SEARCH = str_to_bool(
 )
 PG_SEARCH_CONFIG = os.getenv("BASEROW_PG_SEARCH_CONFIG", "simple")
 AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(os.getenv("BASEROW_AUTO_VACUUM", "true"))
+
+POSTHOG_PROJECT_API_KEY = os.getenv("POSTHOG_PROJECT_API_KEY", "")
+POSTHOG_HOST = os.getenv("POSTHOG_HOST", "")
+POSTHOG_ENABLED = POSTHOG_PROJECT_API_KEY and POSTHOG_HOST
+if POSTHOG_ENABLED:
+    posthog.project_api_key = POSTHOG_PROJECT_API_KEY
+    posthog.host = POSTHOG_HOST
+else:
+    posthog.disabled = True
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

@@ -286,6 +286,9 @@ class CoreConfig(AppConfig):
             WorkspaceInvitationRejectedNotificationType()
         )
 
+        # Must import the Posthog signal, otherwise it won't work.
+        import baserow.core.posthog  # noqa: F403, F401
+
         self._setup_health_checks()
 
         # Clear the key after migration so we will trigger a new template sync.
