@@ -6,9 +6,11 @@ from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
 
 import posthog
+from loguru import logger
 
 from baserow.core.action.signals import ActionCommandType, action_done
 from baserow.core.models import Workspace
+from baserow.core.utils import exception_capturer
 
 
 def capture_event(
@@ -44,11 +46,18 @@ def capture_event(
         properties["workspace_id"] = workspace.id
         properties["workspace_name"] = workspace.name
 
-    posthog.capture(
-        distinct_id=user.id,
-        event=event,
-        properties=properties,
-    )
+    try:
+        posthog.capture(
+            distinct_id=user.id,
+            event=event,
+            properties=properties,
+        )
+    except Exception as e:
+        logger.error(
+            "Failed to log to Posthog because of {e}.",
+            e=str(e),
+        )
+        exception_capturer(e)
 
 
 @receiver(action_done)
