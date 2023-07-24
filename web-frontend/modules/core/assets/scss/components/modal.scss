@@ -77,6 +77,10 @@
     border-top-right-radius: 6px;
     border-bottom-right-radius: 6px;
   }
+
+  &.modal__box-sidebar--collapsed {
+    flex-basis: 48px;
+  }
 }
 
 .modal__box-content {
@@ -101,6 +105,11 @@
   &:hover {
     color: $color-neutral-800;
   }
+}
+
+.sidebar__collapse {
+  @extend .modal__close;
+  @include absolute(20px, 46px, auto, auto);
 }
 
 .modal__head {

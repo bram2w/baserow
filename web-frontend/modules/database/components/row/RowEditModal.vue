@@ -5,6 +5,7 @@
     :right-sidebar="!!optionalRightSideBar"
     :content-scrollable="!!optionalRightSideBar"
     :right-sidebar-scrollable="false"
+    :collapsible-right-sidebar="true"
     @hidden="$emit('hidden', { row })"
   >
     <template #content>
