@@ -92,7 +92,7 @@ constantly==15.1.0
     # via twisted
 cron-descriptor==1.2.35
     # via django-celery-beat
-cryptography==41.0.0
+cryptography==41.0.2
     # via
     #   autobahn
     #   azure-storage-blob
