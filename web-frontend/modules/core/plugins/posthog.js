@@ -12,6 +12,10 @@ export default function ({ app: { router, $env, store } }, inject) {
   posthog.init(projectApiKey, {
     api_host: host,
     capture_pageview: false,
+    capture_pageleave: false,
+    autocapture: {
+      css_selector_allowlist: ['[ph-autocapture]'],
+    },
   })
 
   inject('posthog', posthog)
