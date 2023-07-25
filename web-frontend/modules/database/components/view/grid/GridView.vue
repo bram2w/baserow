@@ -203,6 +203,12 @@
             {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
+        <li v-if="!readOnly">
+          <a @click="copyLinkToSelectedRow($event, selectedRow)">
+            <i class="context__menu-icon fas fa-fw fa-link"></i>
+            {{ $t('gridView.copyRowURL') }}
+          </a>
+        </li>
         <li>
           <a
             @click="
@@ -292,6 +298,7 @@ import { populateRow } from '@baserow/modules/database/store/view/grid'
 import { clone } from '@baserow/modules/core/utils/object'
 import copyPasteHelper from '@baserow/modules/database/mixins/copyPasteHelper'
 import GridViewRowsAddContext from '@baserow/modules/database/components/view/grid/fields/GridViewRowsAddContext'
+import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 
 export default {
   name: 'GridView',
@@ -471,6 +478,22 @@ export default {
     duplicateSelectedRow(event, selectedRow) {
       event.preventFieldCellUnselect = true
       this.addRowAfter(selectedRow, selectedRow)
+      this.$refs.rowContext.hide()
+    },
+    copyLinkToSelectedRow(event, selectedRow) {
+      const url =
+        this.$env.PUBLIC_WEB_FRONTEND_URL +
+        this.$router.resolve({
+          name: 'database-table-row',
+          params: { ...this.$route.params, rowId: selectedRow.id },
+        }).href
+      copyToClipboard(url)
+      this.$store.dispatch('toast/info', {
+        title: this.$i18n.t('gridView.copiedRowURL'),
+        message: this.$i18n.t('gridView.copiedRowURLMessage', {
+          id: selectedRow.id,
+        }),
+      })
       this.$refs.rowContext.hide()
     },
     addRowAboveSelectedRow(event, selectedRow) {
