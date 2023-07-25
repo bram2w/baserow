@@ -36,7 +36,7 @@ export default function ({ app: { router, $env, store } }, inject) {
       // Note: this might also be a good place to call posthog.register(...) in
       // order to update your properties on each page view
       posthog.capture('$pageview', {
-        $current_url: to.fullPath,
+        $current_url: `${window.location.origin}${to.fullPath}`,
       })
     })
   })
