@@ -214,6 +214,8 @@ services:
       BASEROW_DEPLOYMENT_ENV:
       BASEROW_OSS_ONLY:
       BASEROW_USE_PG_FULLTEXT_SEARCH:
+      POSTHOG_PROJECT_API_KEY:
+      POSTHOG_HOST:
     depends_on:
       - backend
     networks:

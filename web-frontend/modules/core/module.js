@@ -122,6 +122,14 @@ export default function CoreModule(options) {
           key: 'BASEROW_USE_PG_FULLTEXT_SEARCH',
           default: 'true',
         },
+        {
+          key: 'POSTHOG_PROJECT_API_KEY',
+          default: '',
+        },
+        {
+          key: 'POSTHOG_HOST',
+          default: '',
+        },
       ],
     },
   ])
@@ -202,6 +210,7 @@ export default function CoreModule(options) {
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/ensureRender.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/posthog.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.
