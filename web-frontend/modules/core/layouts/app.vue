@@ -111,6 +111,13 @@ export default {
           event.preventDefault()
         }
       }
+      if (
+        isOsSpecificModifierPressed(event) &&
+        event.key.toLowerCase() === 'f'
+      ) {
+        event.preventDefault()
+        this.$priorityBus.$emit('start-search')
+      }
     },
   },
 }

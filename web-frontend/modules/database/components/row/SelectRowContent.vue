@@ -157,6 +157,15 @@ export default {
     this.$nextTick(() => {
       this.focusSearch()
     })
+
+    this.$priorityBus.$on(
+      'start-search',
+      this.$priorityBus.level.HIGHEST,
+      this.focusSearch
+    )
+  },
+  beforeDestroy() {
+    this.$priorityBus.$off('start-search', this.focusSearch)
   },
   methods: {
     /**
