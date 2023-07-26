@@ -66,9 +66,12 @@ import {
   RuntimeGet,
 } from '@baserow/modules/core/runtimeFormulaTypes'
 
+import priorityBus from '@baserow/modules/core/plugins/priorityBus'
+
 export default (context, inject) => {
   const { store, isDev, app } = context
   inject('bus', new Vue())
+  inject('priorityBus', priorityBus)
 
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {

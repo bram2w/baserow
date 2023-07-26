@@ -53,9 +53,23 @@ export default {
       headerSearchTerm: '',
     }
   },
+  mounted() {
+    this.$priorityBus.$on(
+      'start-search',
+      this.$priorityBus.level.LOW,
+      this.searchStarted
+    )
+  },
+  beforeDestroy() {
+    this.$priorityBus.$off('start-search', this.searchStarted)
+  },
   methods: {
     searchChanged(newSearch) {
       this.headerSearchTerm = newSearch
+    },
+    searchStarted() {
+      this.$bus.$emit('close-modals')
+      this.$refs.contextLink.click()
     },
   },
 }
