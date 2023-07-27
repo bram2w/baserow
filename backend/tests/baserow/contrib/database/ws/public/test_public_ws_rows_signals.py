@@ -1808,7 +1808,7 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters_match(
+def test_batch_rows_created_public_views_receive_rows_created_only_when_filters_match(
     mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()

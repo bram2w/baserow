@@ -1222,6 +1222,7 @@ class LinkRowFieldType(FieldType):
     _can_order_by = False
     can_be_primary_field = False
     can_get_unique_values = False
+    is_many_to_many_field = True
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         remote_field = queryset.model._meta.get_field(field.db_column).remote_field
@@ -2854,6 +2855,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     type = "multiple_select"
     model_class = MultipleSelectField
     can_get_unique_values = False
+    is_many_to_many_field = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -4253,6 +4255,12 @@ class MultipleCollaboratorsFieldType(FieldType):
     model_class = MultipleCollaboratorsField
     can_get_unique_values = False
     can_be_in_form_view = False
+    allowed_fields = ["notify_user_when_added"]
+    serializer_field_names = ["notify_user_when_added"]
+    serializer_field_overrides = {
+        "notify_user_when_added": serializers.BooleanField(required=False)
+    }
+    is_many_to_many_field = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)

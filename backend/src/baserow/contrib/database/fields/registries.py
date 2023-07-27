@@ -122,6 +122,13 @@ class FieldType(
     inside of the import process.
     """
 
+    is_many_to_many_field = False
+    """
+    Set this to True if the underlying database field is a ManyToManyField. This
+    let the RowM2MChangeTracker to track changes to the field when creating/updating
+    values without having to query the database.
+    """
+
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the

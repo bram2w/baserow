@@ -1,8 +1,14 @@
+from unittest.mock import call, patch
+
 import pytest
 
+from baserow.api.notifications.serializers import NotificationRecipientSerializer
 from baserow.core.models import WorkspaceUser
 from baserow.core.notifications.exceptions import NotificationDoesNotExist
-from baserow.core.notifications.handler import NotificationHandler
+from baserow.core.notifications.handler import (
+    NotificationHandler,
+    UserNotificationsGrouper,
+)
 from baserow.core.notifications.models import Notification, NotificationRecipient
 
 
@@ -218,3 +224,92 @@ def test_all_users_can_see_and_clear_broadcast_notifications(data_fixture):
 
     Notification.objects.all().delete()
     assert NotificationRecipient.objects.count() == 0
+
+
+@pytest.mark.django_db
+@patch("baserow.core.notifications.tasks.send_queued_notifications_to_users.delay")
+def test_queued_notifications_are_not_visible_to_the_users(
+    mocked_send_queued_notifications_to_users, data_fixture
+):
+    user = data_fixture.create_user()
+    other_user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(members=[user, other_user])
+
+    notification_1 = Notification(workspace=workspace, type="test 1")
+    notification_2 = Notification(workspace=workspace, type="test 2")
+
+    user_notifications = NotificationHandler.list_notifications(
+        user, workspace=workspace
+    )
+    other_user_notifications = NotificationHandler.list_notifications(
+        other_user, workspace=workspace
+    )
+
+    assert Notification.objects.count() == 0
+    assert user_notifications.count() == 0
+    assert other_user_notifications.count() == 0
+
+    grouper = UserNotificationsGrouper()
+    grouper.add(notification_1, [user.id, other_user.id])
+    grouper.add(notification_2, [user.id])
+    grouper.create_all_notifications_and_trigger_task()
+
+    # counts are still 0 because notifications are marked as queued and the task
+    # has not been executed yet
+    assert Notification.objects.count() == 2
+    assert user_notifications.count() == 0
+    assert other_user_notifications.count() == 0
+
+    assert mocked_send_queued_notifications_to_users.called_once()
+
+    qs = NotificationRecipient.objects.filter(queued=True)
+    assert qs.filter(recipient=user).count() == 2
+    assert qs.filter(recipient=other_user).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.tasks.broadcast_to_users.apply")
+def test_queued_notifications_are_sent_grouped_by_user(
+    mocked_broadcast_to_users, data_fixture
+):
+    user = data_fixture.create_user()
+    other_user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(members=[user, other_user])
+
+    notification_1 = NotificationHandler.construct_notification(
+        notification_type="test 1", workspace=workspace
+    )
+    notification_2 = NotificationHandler.construct_notification(
+        notification_type="test 2", workspace=workspace
+    )
+
+    grouper = UserNotificationsGrouper()
+    grouper.add(notification_1, [user.id, other_user.id])
+    grouper.add(notification_2, [user.id])
+    grouper.create_all_notifications_and_trigger_task()
+
+    user_notifications = NotificationRecipient.objects.filter(recipient=user)
+    other_user_notifications = NotificationRecipient.objects.filter(
+        recipient=other_user
+    )
+
+    assert mocked_broadcast_to_users.call_count == 2
+    args = mocked_broadcast_to_users.call_args_list
+    assert args[0][0] == call(
+        [user.id],
+        {
+            "type": "notifications_created",
+            "notifications": NotificationRecipientSerializer(
+                user_notifications, many=True
+            ).data,
+        },
+    )
+    assert args[1][0] == call(
+        [other_user.id],
+        {
+            "type": "notifications_created",
+            "notifications": NotificationRecipientSerializer(
+                other_user_notifications, many=True
+            ).data,
+        },
+    )

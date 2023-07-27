@@ -2,7 +2,19 @@ import re
 from collections import defaultdict
 from copy import copy
 from decimal import Decimal
-from typing import Any, Dict, List, NewType, Optional, Set, Tuple, Type, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    NewType,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    cast,
+)
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -13,6 +25,7 @@ from django.utils.encoding import force_str
 
 from opentelemetry import metrics, trace
 
+from baserow.contrib.database.api.rows.serializers import serialize_rows_for_response
 from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
@@ -23,13 +36,13 @@ from baserow.contrib.database.fields.field_filters import (
     AnnotatedQ,
     FilterBuilder,
 )
-from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.operations import (
     CreateRowDatabaseTableOperationType,
     ImportRowsDatabaseTableOperationType,
 )
+from baserow.contrib.database.table.signals import table_updated
 from baserow.contrib.database.trash.models import TrashedRows
 from baserow.core.db import (
     get_highest_order_of_queryset,
@@ -61,6 +74,9 @@ from .signals import (
     rows_deleted,
     rows_updated,
 )
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.fields.models import Field
 
 tracer = trace.get_tracer(__name__)
 
@@ -118,6 +134,64 @@ def prepare_field_errors(field_errors):
     return {
         field: serialize_errors_recursive(errs) for field, errs in field_errors.items()
     }
+
+
+class RowM2MChangeTracker:
+    def __init__(self):
+        self._deleted_m2m_rels: Dict[
+            str, Dict["Field", Dict[GeneratedTableModel, Set[int]]]
+        ] = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
+        self._created_m2m_rels: Dict[
+            str, Dict["Field", Dict[GeneratedTableModel, Set[int]]]
+        ] = defaultdict(lambda: defaultdict(lambda: defaultdict(set)))
+
+    def track_m2m_update_for_field_and_row(
+        self,
+        field: "Field",
+        field_name: str,
+        row: GeneratedTableModel,
+        new_values: Iterable[int],
+    ):
+        field_type = field_type_registry.get_by_model(field)
+        if field_type.is_many_to_many_field:
+            # Uses the existing prefetch cache and so doesn't run queries.
+            m2m_rels_before_update = {r.id for r in getattr(row, field_name).all()}
+            set_of_new_values = set(new_values)
+            self._deleted_m2m_rels[field_type.type][field][row] = (
+                m2m_rels_before_update - set_of_new_values
+            )
+            self._created_m2m_rels[field_type.type][field][row] = (
+                set_of_new_values - m2m_rels_before_update
+            )
+
+    def track_m2m_created_for_new_row(
+        self, row: GeneratedTableModel, field: "Field", new_values: Iterable[int]
+    ):
+        field_type = field_type_registry.get_by_model(field)
+        if field_type.is_many_to_many_field:
+            self._created_m2m_rels[field_type.type][field][row] = set(new_values)
+
+    def get_deleted_m2m_rels_per_field_id_for_type(
+        self, field_type: str
+    ) -> Dict[int, Set[int]]:
+        return self._deleted_m2m_rels[field_type]
+
+    def get_created_m2m_rels_per_field_for_type(
+        self, field_type
+    ) -> Dict["Field", Dict[GeneratedTableModel, Set[int]]]:
+        return self._created_m2m_rels[field_type]
+
+    def get_deleted_link_row_rels_for_update_collector(
+        self,
+    ) -> Dict[int, Set[int]]:
+        from baserow.contrib.database.fields.field_types import LinkRowFieldType
+
+        return {
+            field.id: set().union(*list(deleted_rels_per_row.values()))
+            for field, deleted_rels_per_row in self._deleted_m2m_rels[
+                LinkRowFieldType.type
+            ].items()
+        }
 
 
 class RowHandler(metaclass=baserow_trace_methods(tracer)):
@@ -259,33 +333,33 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             values[field_name] = field_value
         return values
 
-    def extract_manytomany_values(self, values, model):
+    def extract_manytomany_values(
+        self, values: Dict[str, Any], model: "GeneratedTableModel"
+    ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
-        Extracts the ManyToMany values out of the values because they need to be
-        created and updated in a different way compared to a regular value.
+        Split the row values and the many_to_many values from the prepared
+        values because they need to be created and updated in a different way
+        compared to a regular value.
 
         :param values: The values where to extract the manytomany values from.
-        :type values: dict
-        :param model: The model containing the fields. The key, which is also the
-            field name, is used to check in the model if the value is a ManyToMany
-            value.
-        :type model: Model
-        :return: The values without the manytomany values and the manytomany values
-            in another dict.
-        :rtype: dict, dict
+        :param model: The model containing the fields. The key, which is also
+            the field name, is used to check in the model if the value is a
+            ManyToMany value.
+        :return: The row_values without the manytomany values and the manytomany
+            values in another dict.
         """
 
         manytomany_values = {}
+        row_values = {}
 
         for name, value in values.items():
             model_field = model._meta.get_field(name)
             if isinstance(model_field, ManyToManyField):
                 manytomany_values[name] = values[name]
+            else:
+                row_values[name] = value
 
-        for name in manytomany_values.keys():
-            del values[name]
-
-        return values, manytomany_values
+        return row_values, manytomany_values
 
     def get_unique_orders_before_row(
         self,
@@ -630,23 +704,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             context=table,
         )
 
-        instance = self.force_create_row(
-            table, values, model, before_row, user_field_names
+        return self.force_create_row(
+            user, table, values, model, before_row, user_field_names
         )
-
-        rows_created.send(
-            self,
-            rows=[instance],
-            before=before_row,
-            user=user,
-            table=table,
-            model=model,
-        )
-
-        return instance
 
     def force_create_row(
         self,
+        user: AbstractUser,
         table: Table,
         values: Optional[Dict[str, Any]] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
@@ -656,6 +720,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         """
         Creates a new row for a given table with the provided values.
 
+        :param user: The user of whose behalf the row is created. It might be None if
+            the row is created by an anonymous user (i.e. submitting a form).
         :param table: The table for which to create a row for.
         :param values: The values that must be set upon creating the row. The keys must
             be the field ids.
@@ -680,13 +746,20 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 model._field_objects, values
             )
 
-        values = self.prepare_values(model._field_objects, values)
-        values, manytomany_values = self.extract_manytomany_values(values, model)
-        values["order"] = self.get_unique_orders_before_row(before, model)[0]
-        instance = model.objects.create(**values)
+        prepared_values = self.prepare_values(model._field_objects, values)
+        row_values, manytomany_values = self.extract_manytomany_values(
+            prepared_values, model
+        )
+        row_values["order"] = self.get_unique_orders_before_row(before, model)[0]
+        instance = model.objects.create(**row_values)
         rows_created_counter.add(1)
 
+        m2m_change_tracker = RowM2MChangeTracker()
         for name, value in manytomany_values.items():
+            field_object = model.get_field_object(name)
+            m2m_change_tracker.track_m2m_created_for_new_row(
+                instance, field_object["field"], value
+            )
             getattr(instance, name).set(value)
 
         fields = []
@@ -731,6 +804,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         ViewHandler().field_value_updated(fields)
         SearchHandler.field_value_updated_or_created(table)
+
+        rows_created.send(
+            self,
+            rows=[instance],
+            before=before,
+            user=user,
+            table=table,
+            model=model,
+            send_realtime_update=True,
+            send_webhook_events=True,
+            rows_values_refreshed_from_db=False,
+            m2m_change_tracker=m2m_change_tracker,
+        )
 
         return instance
 
@@ -834,19 +920,22 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 updated_fields_by_name[field["name"]] = field["field"]
                 updated_fields.append(field["field"])
 
+        rows = [row]
         before_return = before_rows_update.send(
             self,
-            rows=[row],
+            rows=rows,
             user=user,
             table=table,
             model=model,
             updated_field_ids=updated_field_ids,
         )
 
-        values = self.prepare_values(model._field_objects, values)
-        values, manytomany_values = self.extract_manytomany_values(values, model)
-
-        for name, value in values.items():
+        before_rows_values = serialize_rows_for_response(rows, model)
+        prepared_values = self.prepare_values(model._field_objects, values)
+        row_values, manytomany_values = self.extract_manytomany_values(
+            prepared_values, model
+        )
+        for name, value in row_values.items():
             setattr(row, name, value)
 
         # This update can remove link row connections with other rows. We need to keep
@@ -854,16 +943,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # we used to link to. This is a dictionary where the key is the id link row
         # field in this table, and the value is a set of row ids that this row used to
         # link to via that link row field.
-        deleted_m2m_rels_per_link_field: Dict[int, Set[int]] = defaultdict(set)
+        m2m_change_tracker = RowM2MChangeTracker()
 
         for name, value in manytomany_values.items():
             field = updated_fields_by_name[name]
-            new_ids = set(value)
-            # Uses the existing prefetch cache and so doesn't run queries.
-            if isinstance(field, LinkRowField):
-                for existing in getattr(row, name).all():
-                    if existing.id not in new_ids:
-                        deleted_m2m_rels_per_link_field[field.id].add(existing.id)
+            m2m_change_tracker.track_m2m_update_for_field_and_row(
+                field, name, row, value
+            )
             getattr(row, name).set(value)
 
         row.save()
@@ -872,7 +958,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         update_collector = FieldUpdateCollector(
             table,
             starting_row_ids=[row.id],
-            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
+            deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
         for (
@@ -905,12 +991,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         rows_updated.send(
             self,
-            rows=[row],
+            rows=rows,
             user=user,
             table=table,
             model=model,
             before_return=before_return,
             updated_field_ids=updated_field_ids,
+            before_rows_values=before_rows_values,
+            m2m_change_tracker=m2m_change_tracker,
         )
 
         return row
@@ -922,7 +1010,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         rows_values: List[Dict[str, Any]],
         before_row: Optional[GeneratedTableModel] = None,
         model: Optional[Type[GeneratedTableModel]] = None,
-        send_signal: bool = True,
+        send_realtime_update: bool = True,
+        send_webhook_events: bool = True,
         generate_error_report: bool = False,
         skip_search_update: bool = False,
     ) -> List[GeneratedTableModel]:
@@ -962,7 +1051,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         report = {}
-        rows, errors = self.prepare_rows_in_bulk(
+        prepared_rows_values, errors = self.prepare_rows_in_bulk(
             model._field_objects,
             rows_values,
             generate_error_report=generate_error_report,
@@ -970,10 +1059,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         report.update({index: err for index, err in errors.items()})
 
         rows_relationships = []
-        for index, row in enumerate(rows, start=-len(rows)):
-            values, manytomany_values = self.extract_manytomany_values(row, model)
-            values["order"] = unique_orders[index]
-            instance = model(**values)
+        for index, row in enumerate(
+            prepared_rows_values, start=-len(prepared_rows_values)
+        ):
+            row_values, manytomany_values = self.extract_manytomany_values(row, model)
+            row_values["order"] = unique_orders[index]
+            instance = model(**row_values)
 
             relations = {
                 field_name: value
@@ -983,13 +1074,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             rows_relationships.append((instance, relations))
 
         inserted_rows = model.objects.bulk_create(
-            [row for (row, relations) in rows_relationships]
+            [row for (row, _) in rows_relationships]
         )
-        rows_created_counter.add(
-            len(rows_relationships),
-        )
+        rows_created_counter.add(len(rows_relationships))
 
         many_to_many = defaultdict(list)
+        m2m_change_tracker = RowM2MChangeTracker()
+
         for index, row in enumerate(inserted_rows):
             _, manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
@@ -1029,6 +1120,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                             }
                         )
                     )
+
+                field_object = model.get_field_object(field_name)
+                m2m_change_tracker.track_m2m_created_for_new_row(
+                    row, field_object["field"], value
+                )
 
         for field_name, values in many_to_many.items():
             through = getattr(model, field_name).through
@@ -1074,21 +1170,32 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if not skip_search_update:
             SearchHandler.field_value_updated_or_created(table)
 
-        if send_signal:
+        rows_to_return = inserted_rows
+        rows_values_refreshed_from_db = False
+        if send_realtime_update or send_webhook_events:
+            # Since the update collector can automatically update fields of
+            # newly created rows without refreshing their values, we pull the
+            # values again here to ensure we have the most recent updates.
             rows_to_return = list(
                 model.objects.all()
                 .enhance_by_fields()
                 .filter(id__in=[row.id for row in inserted_rows])
             )
+            rows_values_refreshed_from_db = True
 
-            rows_created.send(
-                self,
-                rows=rows_to_return,
-                before=before_row,
-                user=user,
-                table=table,
-                model=model,
-            )
+        rows_created.send(
+            self,
+            rows=rows_to_return,
+            before=before_row,
+            user=user,
+            table=table,
+            model=model,
+            rows_values_refreshed_from_db=rows_values_refreshed_from_db,
+            send_realtime_update=send_realtime_update,
+            send_webhook_events=send_webhook_events,
+            prepared_rows_values=prepared_rows_values,
+            m2m_change_tracker=m2m_change_tracker,
+        )
 
         if generate_error_report:
             return inserted_rows, report
@@ -1178,7 +1285,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 model=model,
                 rows_values=chunk,
                 generate_error_report=True,
-                send_signal=False,
+                send_realtime_update=False,
+                send_webhook_events=False,
                 # Don't trigger loads of search updates for every batch of rows we
                 # create but instead a single one for this entire table at the end.
                 skip_search_update=True,
@@ -1205,21 +1313,24 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         data: List[List[Any]],
         validate: bool = True,
         progress: Optional[Progress] = None,
-        send_signal: bool = True,
+        send_realtime_update: bool = True,
     ) -> Tuple[List[GeneratedTableModel], Dict[str, Dict[str, Any]]]:
         """
-        Creates new rows for a given table if the user
-        belongs to the related workspace. It also calls the rows_created if send_signal
-        is `True`. The data are validated before the creation if validate is True.
-        when a row fails to import, it doesn't stop the import. Instead an error report
-        is created with the raised error for each field of each failing rows.
+        Creates new rows for a given table if the user belongs to the related
+        workspace. It also calls the rows_created passing the
+        send_realtime_update parameter. The data are validated before the
+        creation if validate is True. when a row fails to import, it doesn't
+        stop the import. Instead an error report is created with the raised
+        error for each field of each failing rows.
 
         :param user: The user of whose behalf the rows are created.
         :param table: The table for which the rows should be created.
         :param data: List of rows values for rows that need to be created.
         :param validate: If True the data are validated before the import.
-        :param progress: Give a progress instance to track the progress of the import.
-        :param send_signal: If True a row_created signal is send.
+        :param progress: Give a progress instance to track the progress of the
+            import.
+        :param send_realtime_update: The parameter passed to the rows_created
+            signal indicating if a realtime update should be send.
 
         :return: The created row instances and the error report.
         """
@@ -1307,21 +1418,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 error,
             )
 
-        if send_signal:
-            rows_to_return = list(
-                model.objects.all()
-                .enhance_by_fields()
-                .filter(id__in=[row.id for row in created_rows])
-            )
-
-            rows_created.send(
-                self,
-                rows=rows_to_return,
-                before=None,
-                user=user,
-                table=table,
-                model=model,
-            )
+        if send_realtime_update:
+            # Just send a single table_updated here as realtime update instead
+            # of rows_created because we might import a lot of rows.
+            table_updated.send(self, table=table, user=user, force_table_refresh=True)
 
         return created_rows, error_report.to_dict()
 
@@ -1388,6 +1488,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 if field_id in row_values or field["name"] in row_values:
                     updated_field_ids.add(field_id)
 
+        before_rows_values = serialize_rows_for_response(rows_to_update, model)
+
         before_return = before_rows_update.send(
             self,
             rows=list(rows_to_update),
@@ -1406,12 +1508,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             )
             if table.needs_background_update_column_added:
                 setattr(obj, ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, True)
-            row_values = rows_by_id[obj.id]
-            values, manytomany_values = self.extract_manytomany_values(
-                row_values, model
+
+            prepared_values = rows_by_id[obj.id]
+
+            row_values, manytomany_values = self.extract_manytomany_values(
+                prepared_values, model
             )
 
-            for name, value in values.items():
+            for name, value in row_values.items():
                 setattr(obj, name, value)
 
             relations = {
@@ -1438,7 +1542,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # we used to link to. This is a dictionary where the key is the id link row
         # field in this table, and the value is a set of row ids that these rows used to
         # link to via that link row field.
-        deleted_m2m_rels_per_link_field: Dict[int, Set[int]] = defaultdict(set)
+        m2m_change_tracker = RowM2MChangeTracker()
 
         for index, row in enumerate(rows_to_update):
             manytomany_values = rows_relationships[index]
@@ -1479,22 +1583,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 # rows which previously were connected to an updated row, but no
                 # longer are.
                 field = field_name_to_field[field_name]
-                if isinstance(field, LinkRowField):
-                    # Uses the existing prefetch cache and so doesn't run queries.
-                    m2m_rels_before_update = {
-                        r.id for r in getattr(row, field_name).all()
-                    }
-                    deleted_m2m_rels_per_link_field[field.id].update(
-                        m2m_rels_before_update
-                    )
+                m2m_change_tracker.track_m2m_update_for_field_and_row(
+                    field, field_name, row, value
+                )
 
                 if len(value) == 0:
                     many_to_many[field_name].append(None)
                 else:
                     for i in value:
-                        # After we have discarded all connections the user has provided
-                        # we will be left with only the deleted connections as desired.
-                        deleted_m2m_rels_per_link_field[field.id].discard(i)
                         many_to_many[field_name].append(
                             getattr(model, field_name).through(
                                 **{
@@ -1532,14 +1628,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         if len(bulk_update_fields) > 0:
             model.objects.bulk_update(rows_to_update, bulk_update_fields)
-            rows_updated_counter.add(
-                len(rows_to_update),
-            )
+            rows_updated_counter.add(len(rows_to_update))
 
         update_collector = FieldUpdateCollector(
             table,
             starting_row_ids=row_ids,
-            deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
+            deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
         for (
@@ -1578,6 +1672,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model=model,
             before_return=before_return,
             updated_field_ids=updated_field_ids,
+            before_rows_values=before_rows_values,
+            m2m_change_tracker=m2m_change_tracker,
         )
 
         return rows_to_return
@@ -1657,6 +1753,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         before_return = before_rows_update.send(
             self, rows=[row], user=user, table=table, model=model, updated_field_ids=[]
         )
+        before_rows_values = serialize_rows_for_response([row], model)
 
         row.order = self.get_unique_orders_before_row(before_row, model)[0]
         row.save()
@@ -1701,6 +1798,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             model=model,
             before_return=before_return,
             updated_field_ids=[],
+            before_rows_values=before_rows_values,
+            prepared_rows_values=None,
         )
 
         return row

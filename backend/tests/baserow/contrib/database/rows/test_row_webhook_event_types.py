@@ -1,9 +1,9 @@
 import pytest
 
+from baserow.contrib.database.api.rows.serializers import serialize_rows_for_response
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.webhooks.registries import webhook_event_type_registry
-from baserow.contrib.database.ws.rows.signals import before_rows_update
 
 
 @pytest.mark.django_db()
@@ -88,16 +88,8 @@ def test_rows_updated_event_type(data_fixture):
     row = model.objects.create(**{f"field_{text_field.id}": "Old Test value"})
     getattr(row, f"field_{link_row_field.id}").add(i1.id)
 
-    before_return = {
-        before_rows_update: before_rows_update(
-            rows=[row],
-            model=model,
-            table=table,
-            sender=None,
-            user=None,
-            updated_field_ids=None,
-        )
-    }
+    before_return = {}
+    before_rows_values = serialize_rows_for_response([row], model)
 
     row = RowHandler().update_row_by_id(
         user=user,
@@ -120,6 +112,7 @@ def test_rows_updated_event_type(data_fixture):
         table=table,
         rows=[row],
         before_return=before_return,
+        before_rows_values=before_rows_values,
     )
     assert payload == {
         "table_id": table.id,
@@ -152,6 +145,7 @@ def test_rows_updated_event_type(data_fixture):
         table=table,
         rows=[row],
         before_return=before_return,
+        before_rows_values=before_rows_values,
     )
     assert payload == {
         "table_id": table.id,

@@ -565,8 +565,15 @@ def test_update_rows_created_on_and_last_modified(data_fixture):
 
 
 @pytest.mark.django_db
+@patch("baserow.ws.tasks.broadcast_to_users.delay")
+@patch("baserow.contrib.database.table.signals.table_updated.send")
 @patch("baserow.contrib.database.rows.signals.rows_created.send")
-def test_import_rows(send_mock, data_fixture):
+def test_import_rows(
+    mocked_rows_created,
+    mocked_table_updated,
+    mocked_broadcast_to_users,
+    data_fixture,
+):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
     name_field = data_fixture.create_text_field(
@@ -605,7 +612,7 @@ def test_import_rows(send_mock, data_fixture):
                 8999.99,
             ],
         ],
-        send_signal=False,
+        send_realtime_update=False,
     )
     assert len(rows) == 3
     assert report == {}
@@ -613,7 +620,11 @@ def test_import_rows(send_mock, data_fixture):
     model = table.get_model()
     assert model.objects.count() == 3
 
-    send_mock.assert_not_called()
+    mocked_rows_created.assert_called_once()
+    args = mocked_rows_created.call_args_list[0]
+    assert args[1]["send_realtime_update"] is False
+    mocked_broadcast_to_users.assert_not_called()
+    mocked_table_updated.assert_not_called()
 
     rows, report = handler.import_rows(
         user=user,
@@ -643,7 +654,13 @@ def test_import_rows(send_mock, data_fixture):
     model = table.get_model()
     assert model.objects.count() == 4
 
-    send_mock.assert_called_once()
+    # create_rows_by_batch put the send_realtime_update to False
+    # for the rows_created signal anyway, but this time the
+    # table_updated signal is called and broadcast_to_permitted_users
+    assert mocked_rows_created.call_count == 2
+    args = mocked_rows_created.call_args_list[1]
+    assert args[1]["send_realtime_update"] is False
+    mocked_table_updated.assert_called_once()
 
     rows, report = handler.import_rows(
         user=user,

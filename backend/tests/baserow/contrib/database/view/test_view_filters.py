@@ -791,6 +791,7 @@ def test_contains_word_filter_type(data_fixture):
             {"value": "DC", "color": "blue"},
         ],
     )
+
     option_a = data_fixture.create_select_option(
         field=single_select_field, value="AC", color="blue"
     )
@@ -5274,12 +5275,8 @@ def test_multiple_collaborators_empty_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
     row_handler = RowHandler()
     model = table.get_model()
@@ -5336,12 +5333,8 @@ def test_multiple_collaborators_not_empty_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
     row_handler = RowHandler()
     model = table.get_model()
@@ -5399,12 +5392,8 @@ def test_multiple_collaborators_has_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
 
     row_handler = RowHandler()
@@ -5526,12 +5515,8 @@ def test_multiple_collaborators_has_not_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multiple Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple Collaborators"
     )
 
     row_handler = RowHandler()

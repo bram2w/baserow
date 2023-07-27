@@ -331,10 +331,15 @@ export class RealTimeHandler {
     })
 
     // notifications
-
     this.registerEvent('notifications_created', ({ store }, data) => {
       store.dispatch('notification/forceCreateInBulk', {
         notifications: data.notifications,
+      })
+    })
+
+    this.registerEvent('notifications_fetch_required', ({ store }, data) => {
+      store.dispatch('notification/forceRefetch', {
+        notificationsAdded: data.notifications_added,
       })
     })
 

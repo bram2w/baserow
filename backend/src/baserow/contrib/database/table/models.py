@@ -528,10 +528,13 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         ]
 
     @classmethod
-    def get_field_object_or_none(cls, field_name: str, include_trash: bool = False):
+    def get_field_object(cls, field_name: str, include_trash: bool = False):
         field_objects = cls.get_field_objects(include_trash)
 
-        return next(filter(lambda f: f["name"] == field_name, field_objects), None)
+        try:
+            return next(filter(lambda f: f["name"] == field_name, field_objects))
+        except StopIteration:
+            raise ValueError(f"Field {field_name} not found.")
 
     @classmethod
     def get_field_objects(cls, include_trash: bool = False):
@@ -541,6 +544,12 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
                 field_objects, cls._trashed_field_objects.values()
             )
         return field_objects
+
+    @classmethod
+    def get_field_objects_by_type(cls, field_type: str, include_trash: bool = False):
+        field_objects = cls.get_field_objects(include_trash)
+
+        return filter(lambda f: f["type"].type == field_type, field_objects)
 
     @classmethod
     def get_fields_missing_search_index(cls) -> List[Field]:
@@ -624,11 +633,12 @@ def patch_meta_get_field(_meta):
         try:
             return original_get_field(field_name, *args, **kwargs)
         except DjangoFieldDoesNotExist as exc:
-            field_object = self.model.get_field_object_or_none(
-                field_name, include_trash=True
-            )
+            try:
+                field_object = self.model.get_field_object(
+                    field_name, include_trash=True
+                )
 
-            if field_object is None:
+            except ValueError:
                 raise exc
 
             field_type = field_object["type"]

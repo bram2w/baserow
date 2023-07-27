@@ -1,72 +1,42 @@
-import { VueRenderer } from '@tiptap/vue-2'
+import Vue from 'vue'
 
-// items is already used in our dropdown, so remap it to collaborators and hide the search bar
-const remapPropsForDropdown = (props) => {
-  const { items, ...rest } = props
-  return {
-    ...rest,
-    collaborators: items,
-    showSearch: false,
-    addEmptyItem: false,
+function updateComponentProps(component, props) {
+  for (const key of ['command', 'query']) {
+    Vue.set(component, key, props[key])
   }
 }
 
-export default ({ VueComponent, context }) => ({
-  items: ({ query }) => {
-    const { $store } = context
-    const workspace = $store.getters['workspace/getSelected']
-    return workspace.users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(query.toLowerCase()) &&
-        user.to_be_deleted === false
-    )
-  },
-
+export default ({ component }) => ({
   render: () => {
-    let component
-
     return {
       onStart: (props) => {
-        const { $el, $i18n, $nextTick } = context
-        component = new VueRenderer(VueComponent, {
-          parent: this,
-          propsData: remapPropsForDropdown(props),
-          $i18n,
-          $nextTick,
-        })
-
         if (!props.clientRect) {
           return
         }
 
-        $el.appendChild(component.element)
-        component.ref.show()
+        updateComponentProps(component, props)
+        component.show()
       },
 
       onUpdate(props) {
-        component.updateProps(remapPropsForDropdown(props))
+        updateComponentProps(component, props)
       },
 
       onKeyDown(props) {
         if (props.event.key === 'Escape') {
-          if (component.ref?.open) {
+          if (component.open) {
             props.event.preventDefault()
             props.event.stopPropagation()
-            component.ref?.hide()
+            component.hide()
           }
           return true
         }
 
-        return component.ref?.onKeyDown(remapPropsForDropdown(props))
+        return component.onKeyDown({ event: props.event })
       },
 
       onExit() {
-        const { $el } = context
-        component.ref?.hide()
-        component.destroy()
-        try {
-          $el.removeChild(component.ref.$el)
-        } catch (e) {} // hot-reload might make this fail
+        component.hide()
       },
     }
   },

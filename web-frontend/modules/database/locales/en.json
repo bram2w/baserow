@@ -767,5 +767,11 @@
     "fileField": {
         "errorEmptyFileNameTitle": "Invalid file name",
         "errorEmptyFileNameMessage": "You can't set an empty name for a file."
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Notify user when added"
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{sender} assigned you to {fieldName} in row {rowId} in {tableName}"
     }
 }

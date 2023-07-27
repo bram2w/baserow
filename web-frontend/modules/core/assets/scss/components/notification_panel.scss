@@ -163,3 +163,31 @@
   white-space: normal;
   color: $color-neutral-500;
 }
+
+.notification-panel__refresh-hint {
+  height: 52px;
+  padding: 16px;
+  border-bottom: 1px solid #d9dbde;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $color-neutral-50;
+
+  & + .infinite-scroll {
+    top: 105px;
+  }
+}
+
+.notification-panel__refresh-hint-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: $color-primary-500;
+  display: inline-block;
+  margin-right: 12px;
+  margin-left: 8px;
+}
+
+.notification-panel__refresh-hint-text {
+  font-weight: 600;
+}
