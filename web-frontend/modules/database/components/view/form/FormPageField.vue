@@ -6,7 +6,7 @@
           {{ field.name }}
         </div>
         <!-- prettier-ignore -->
-        <div class="form-view__field-description whitespace-pre-wrap">{{ field.description }}</div>
+        <div v-if="field.description" class="form-view__field-description whitespace-pre-wrap">{{ field.description }}</div>
         <component
           :is="getFieldComponent()"
           :key="field.field.id"
