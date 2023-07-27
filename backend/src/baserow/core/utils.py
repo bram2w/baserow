@@ -17,6 +17,7 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 from django.db import transaction
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
+from django.db.transaction import get_connection
 
 from baserow.contrib.database.db.schema import optional_atomic
 
@@ -846,3 +847,9 @@ def exception_capturer(e):
         capture_exception(e)
     except ImportError:
         pass
+
+
+def transaction_on_commit_if_not_already(func):
+    funcs = set(func for _, func in get_connection().run_on_commit or [])
+    if func not in funcs:
+        transaction.on_commit(func)

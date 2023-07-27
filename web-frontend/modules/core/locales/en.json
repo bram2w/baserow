@@ -51,7 +51,9 @@
         "markAllAsRead": "Mark all as read",
         "clearAll": "Clear all",
         "noNotificationTitle": "You don't have any notifications",
-        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow."
+        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow.",
+        "newNotificationsAvailable": "New notifications available",
+        "refresh": "Refresh"
     },
     "clearAllNotificationsConfirmModal": {
         "title": "Are you sure you want to clear all notifications?",

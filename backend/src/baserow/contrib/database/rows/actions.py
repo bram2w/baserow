@@ -16,7 +16,6 @@ from baserow.contrib.database.rows.handler import (
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
-from baserow.contrib.database.table.signals import table_updated
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -229,12 +228,8 @@ class ImportRowsActionType(UndoableActionType):
         """
 
         created_rows, error_report = RowHandler().import_rows(
-            user, table, data, progress=progress, send_signal=False
+            user, table, data, progress=progress
         )
-
-        # Use table signal here instead of row signal because we can import a
-        # big amount of data.
-        table_updated.send(cls, table=table, user=user, force_table_refresh=True)
 
         workspace = table.database.workspace
         params = cls.Params(

@@ -1,9 +1,15 @@
 <template>
-  <EditorContent :editor="editor" />
+  <div>
+    <RichTextEditorMentionsList
+      ref="mentionsList"
+      :show-search="false"
+      :add-empty-item="false"
+    />
+    <EditorContent :editor="editor" />
+  </div>
 </template>
 
 <script>
-import Vue from 'vue'
 import _ from 'lodash'
 import { mapGetters } from 'vuex'
 import { Editor, EditorContent } from '@tiptap/vue-2'
@@ -16,10 +22,8 @@ import { Text } from '@tiptap/extension-text'
 import { Extension, mergeAttributes } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
-import suggestion from '@baserow/modules/core/editor/suggestion'
 import RichTextEditorMentionsList from '@baserow/modules/core/components/editor/RichTextEditorMentionsList'
-import preventParentScroll from '@baserow/modules/core/directives/preventParentScroll'
-import autoOverflowScroll from '@baserow/modules/core/directives/autoOverflowScroll'
+import suggestion from '@baserow/modules/core/editor/suggestion'
 
 // Please, note that we need to remap Enter to Shift-Enter for every extension
 // relying on it in order to emit an event when the user presses Enter.
@@ -62,6 +66,7 @@ const EnterKeyExtension = Extension.create({
 export default {
   components: {
     EditorContent,
+    RichTextEditorMentionsList,
   },
   props: {
     value: {
@@ -110,10 +115,6 @@ export default {
   mounted() {
     const loggedUserId = this.loggedUserId
     const originalRenderHTML = Mention.config.renderHTML
-    // The imported vue doesn't seem to have these directives used by the
-    // RichTextEditorMentionsList below, we need to manually register them.
-    Vue.directive('preventParentScroll', preventParentScroll)
-    Vue.directive('autoOverflowScroll', autoOverflowScroll)
     const isUserInWorkspace =
       this.$store.getters['workspace/isUserIdMemberOfSelectedWorkspace']
     const mentionsExt = Mention.extend({
@@ -131,8 +132,7 @@ export default {
       },
     }).configure({
       suggestion: suggestion({
-        VueComponent: Vue.extend(RichTextEditorMentionsList),
-        context: this,
+        component: this.$refs.mentionsList,
       }),
     })
     const enterKeyExt = EnterKeyExtension.configure({ vueComponent: this })

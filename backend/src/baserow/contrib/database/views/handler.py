@@ -30,7 +30,6 @@ from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
@@ -2431,7 +2430,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         return view
 
-    def submit_form_view(self, form, values, model=None, enabled_field_options=None):
+    def submit_form_view(
+        self, user, form, values, model=None, enabled_field_options=None
+    ):
         """
         Handles when a form is submitted. It will validate the data by checking if
         the required fields are provided and not empty and it will create a new row
@@ -2477,13 +2478,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ValidationError(field_errors)
 
         allowed_values = extract_allowed(values, allowed_field_names)
-        instance = RowHandler().force_create_row(table, allowed_values, model)
-
-        rows_created.send(
-            self, rows=[instance], before=None, user=None, table=table, model=model
-        )
-
-        return instance
+        return RowHandler().force_create_row(user, table, allowed_values, model)
 
     def get_public_views_row_checker(
         self,

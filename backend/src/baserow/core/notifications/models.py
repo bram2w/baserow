@@ -86,6 +86,15 @@ class NotificationRecipient(models.Model):
             "Cleared notifications will not be visible by the user anymore."
         ),
     )
+    queued = models.BooleanField(
+        default=False,
+        help_text=(
+            "If True, then the notification has been queued for sending. "
+            "Queued notifications cannot be seen by the user yet. "
+            "Once the notification has been sent, this field will be "
+            "set to False and the user will be able to fetch it via API."
+        ),
+    )
     # The following fields are copies of the notification fields needed to
     # speed up queries.
     created_on = models.DateTimeField(
@@ -110,7 +119,14 @@ class NotificationRecipient(models.Model):
         indexes = [
             models.Index(fields=["-created_on"]),
             models.Index(
-                fields=["broadcast", "cleared", "read", "recipient_id", "workspace_id"],
+                fields=[
+                    "broadcast",
+                    "cleared",
+                    "read",
+                    "queued",
+                    "recipient_id",
+                    "workspace_id",
+                ],
                 name="unread_notif_count_idx",
                 condition=models.Q(cleared=False, read=False),
                 include=["notification_id"],

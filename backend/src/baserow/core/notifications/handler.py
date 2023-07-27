@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.db.models import Count, OuterRef, Q, QuerySet, Subquery
@@ -7,8 +7,9 @@ from django.db.models.functions import Coalesce
 from opentelemetry import trace
 
 from baserow.core.models import Workspace
+from baserow.core.notifications.tasks import send_queued_notifications_to_users
 from baserow.core.telemetry.utils import baserow_trace
-from baserow.core.utils import grouper
+from baserow.core.utils import grouper, transaction_on_commit_if_not_already
 
 from .exceptions import NotificationDoesNotExist
 from .models import Notification, NotificationRecipient
@@ -81,7 +82,7 @@ class NotificationHandler:
         if workspace:
             workspace_filter |= Q(workspace_id=workspace.id)
 
-        direct = Q(broadcast=False, recipient=user) & workspace_filter
+        direct = Q(broadcast=False, recipient=user, queued=False) & workspace_filter
         uncleared_broadcast = Q(broadcast=True, recipient=user, cleared=False)
         unread_broadcast = cls._get_unread_broadcast_q(user)
 
@@ -124,7 +125,10 @@ class NotificationHandler:
         if workspace:
             workspace_q |= Q(workspace_id=workspace.id)
 
-        unread_direct = Q(broadcast=False, recipient=user, read=False) & workspace_q
+        unread_direct = (
+            Q(broadcast=False, recipient=user, read=False, cleared=False, queued=False)
+            & workspace_q
+        )
         unread_broadcast = cls._get_unread_broadcast_q(user)
 
         return NotificationRecipient.objects.filter(
@@ -152,6 +156,7 @@ class NotificationHandler:
             broadcast=False,
             read=False,
             cleared=False,
+            queued=False,
         )
 
         subquery = Subquery(
@@ -209,12 +214,9 @@ class NotificationHandler:
         for missing_entries_chunk in grouper(batch_size, missing_broadcasts_entries):
             NotificationRecipient.objects.bulk_create(
                 [
-                    NotificationRecipient(
+                    cls.construct_notification_recipient(
                         recipient_id=user.id,
-                        notification_id=empty_entry.notification_id,
-                        created_on=empty_entry.created_on,
-                        broadcast=empty_entry.broadcast,
-                        workspace_id=empty_entry.workspace_id,
+                        notification=empty_entry,
                         read=read,
                         cleared=cleared,
                         **kwargs,
@@ -230,14 +232,16 @@ class NotificationHandler:
         cls,
         user: AbstractUser,
         workspace: Workspace,
-        send_signal: bool = True,
     ):
         """
-        Clears all the notifications for the given user and workspace.
+        Clears all the notifications for the given user and workspace. Broadcast
+        notifications are cleared setting the cleared flag to True for the
+        recipient. Direct notifications are cleared deleting the
+        NotificationRecipient entries. If a direct notification ends up without
+        recipients, it will be deleted as well.
 
         :param user: The user to clear the notifications for.
         :param workspace: The workspace to clear the notifications for.
-        :param send_signal: Whether to send the signal or not.
         """
 
         cls._create_missing_entries_for_broadcast_notifications_with_defaults(
@@ -255,6 +259,7 @@ class NotificationHandler:
             recipient=user,
             broadcast=False,
             cleared=False,
+            queued=False,
         )
 
         Notification.objects.annotate(recipient_count=Count("recipients")).filter(
@@ -267,8 +272,7 @@ class NotificationHandler:
         # delete the ones that still have other recipients
         uncleared_direct.delete()
 
-        if send_signal:
-            all_notifications_cleared.send(sender=cls, user=user, workspace=workspace)
+        all_notifications_cleared.send(sender=cls, user=user, workspace=workspace)
 
     @classmethod
     @baserow_trace(tracer)
@@ -277,7 +281,6 @@ class NotificationHandler:
         user: AbstractUser,
         notification: Notification,
         read: bool = True,
-        send_signal: bool = True,
         include_user_in_signal: bool = False,
     ) -> NotificationRecipient:
         """
@@ -286,8 +289,6 @@ class NotificationHandler:
 
         :param user: The user to mark the notifications as read for.
         :param notification: The notification to mark as read.
-        :param send_signal: If True, then the notification_marked_as_read signal
-            is sent.
         :param read: If True, the notification will be marked as read, otherwise
             it will be marked as unread.
         :param include_user_in_signal: Since the notification can be
@@ -307,20 +308,19 @@ class NotificationHandler:
             },
         )
 
-        if send_signal:
-            # If the notification is marked as read by the system, then we
-            # want to send the signal to the current websocket as well
-            ignore_web_socket_id = getattr(user, "web_socket_id", None)
-            if include_user_in_signal:
-                ignore_web_socket_id = None
+        # If the notification is marked as read by the system, then we
+        # want to send the signal to the current websocket as well
+        ignore_web_socket_id = getattr(user, "web_socket_id", None)
+        if include_user_in_signal:
+            ignore_web_socket_id = None
 
-            notification_marked_as_read.send(
-                sender=cls,
-                notification=notification,
-                notification_recipient=notification_recipient,
-                user=user,
-                ignore_web_socket_id=ignore_web_socket_id,
-            )
+        notification_marked_as_read.send(
+            sender=cls,
+            notification=notification,
+            notification_recipient=notification_recipient,
+            user=user,
+            ignore_web_socket_id=ignore_web_socket_id,
+        )
 
         return notification_recipient
 
@@ -330,15 +330,12 @@ class NotificationHandler:
         cls,
         user: AbstractUser,
         workspace: Workspace,
-        send_signal: bool = True,
     ):
         """
         Marks all the notifications as read for the given workspace and user.
 
         :param user: The user to mark the notifications as read for.
         :param workspace: The workspace to filter the notifications by.
-        :param send_signal: If True, then the all_notifications_marked_as_read
-            signal is sent.
         """
 
         cls._create_missing_entries_for_broadcast_notifications_with_defaults(
@@ -350,12 +347,12 @@ class NotificationHandler:
             recipient=user,
             read=False,
             cleared=False,
+            queued=False,
         ).update(read=True)
 
-        if send_signal:
-            all_notifications_marked_as_read.send(
-                sender=cls, user=user, workspace=workspace
-            )
+        all_notifications_marked_as_read.send(
+            sender=cls, user=user, workspace=workspace
+        )
 
     @classmethod
     @baserow_trace(tracer)
@@ -378,6 +375,55 @@ class NotificationHandler:
             sender=sender,
             data=data or {},
             workspace=workspace,
+            **kwargs,
+        )
+
+    @classmethod
+    @baserow_trace(tracer)
+    def construct_notification_recipient(
+        cls,
+        notification: Union[Notification, NotificationRecipient],
+        recipient: Optional[AbstractUser] = None,
+        read=False,
+        cleared=False,
+        queued=False,
+        **kwargs,
+    ) -> Notification:
+        """
+        Create the notification recpient with the provided data, copying
+        necessary data from the provided notification.
+
+        :param notification: The notification to reference and to copy data
+            from.
+        :param recipient: The user that the notification is for.
+        :param read: If True, the notification will be marked as read.
+        :param cleared: If True, the notification will be marked as cleared.
+        :param queued: If True, the notification will be marked as queued.
+        :param kwargs: Any additional data to be stored in the notification
+            recipient.
+        :return: The constructed notification recipient instance. Be aware that
+            this instance is not saved yet.
+        """
+
+        # if another notification recipient is provided, then we can just copy the data
+        if isinstance(notification, NotificationRecipient):
+            kwargs["notification_id"] = notification.notification_id
+        elif isinstance(notification, Notification):
+            kwargs["notification"] = notification
+        else:
+            raise TypeError(
+                "notification must be a Notification or NotificationRecipient "
+                f"instance, not {type(notification)}"
+            )
+
+        return NotificationRecipient(
+            recipient=recipient,
+            created_on=notification.created_on,
+            broadcast=notification.broadcast,
+            workspace_id=notification.workspace_id,
+            read=read,
+            cleared=cleared,
+            queued=queued,
             **kwargs,
         )
 
@@ -416,8 +462,7 @@ class NotificationHandler:
         notification_type: str,
         sender=None,
         data=None,
-        send_signal: bool = True,
-        **kwargs
+        **kwargs,
     ) -> Notification:
         """
         Create the notification with the provided data.
@@ -427,7 +472,6 @@ class NotificationHandler:
         :param data: The data that will be stored in the notification.
         :param workspace: The workspace that the notification is linked to.
         :param save: If True the notification will be saved in the database.
-        :param send_signal: If True the notification_created signal will be sent.
         :return: The created notification instance.
         """
 
@@ -442,21 +486,17 @@ class NotificationHandler:
 
         # With recipient=None we create a placeholder recipient that will be
         # used to send the notification to all users.
-        notification_recipient = NotificationRecipient.objects.create(
-            recipient=None,
-            notification=notification,
-            created_on=notification.created_on,
-            broadcast=notification.broadcast,
-            workspace_id=notification.workspace_id,
+        notification_recipient = cls.construct_notification_recipient(
+            notification=notification, recipient=None
         )
+        notification_recipient.save()
 
-        if send_signal:
-            notification_created.send(
-                sender=cls,
-                notification=notification,
-                notification_recipients=[notification_recipient],
-                user=sender,
-            )
+        notification_created.send(
+            sender=cls,
+            notification=notification,
+            notification_recipients=[notification_recipient],
+            user=sender,
+        )
 
         return notification
 
@@ -469,8 +509,7 @@ class NotificationHandler:
         sender: Optional[AbstractUser] = None,
         data: Optional[Dict[str, Any]] = None,
         workspace: Optional[Workspace] = None,
-        send_signal: bool = True,
-        **kwargs
+        **kwargs,
     ) -> List[NotificationRecipient]:
         """
         Creates a notification for each user in the given list with the provided data.
@@ -479,7 +518,6 @@ class NotificationHandler:
         :param recipients: The users that will receive the notification.
         :param data: The data that will be stored in the notification.
         :param workspace: The workspace that the notification is linked to.
-        :param send_signal: If True the notification_created signal will be sent.
         :param kwargs: Any additional kwargs that will be passed to the
             Notification constructor.
         :return: A list of the created notification recipients instances.
@@ -496,22 +534,74 @@ class NotificationHandler:
 
         notification_recipients = NotificationRecipient.objects.bulk_create(
             [
-                NotificationRecipient(
-                    recipient=recipient,
-                    notification=notification,
-                    broadcast=notification.broadcast,
-                    workspace_id=notification.workspace_id,
-                    created_on=notification.created_on,
+                cls.construct_notification_recipient(
+                    recipient=recipient, notification=notification
                 )
                 for recipient in recipients
             ]
         )
 
-        if send_signal:
-            notification_created.send(
-                sender=cls,
-                user=sender,
-                notification=notification,
-                notification_recipients=notification_recipients,
-            )
+        notification_created.send(
+            sender=cls,
+            user=sender,
+            notification=notification,
+            notification_recipients=notification_recipients,
+        )
         return notification_recipients
+
+
+class UserNotificationsGrouper:
+    """
+    A utility class that aggregates notifications per user, enabling a single
+    message delivery containing all the user's relevant notifications, rather
+    than sending each notification individually.
+    """
+
+    def __init__(self):
+        self.notifications: List[Notification] = []
+        self.recipients_ids: List[List[int]] = []
+
+    def has_notifications_to_send(self):
+        return len(self.notifications) > 0
+
+    def add(self, notification: Notification, recipient_ids: List[int]):
+        self.recipients_ids.append(recipient_ids)
+        self.notifications.append(notification)
+
+    def create_all_notifications_and_trigger_task(self, batch_size=2500):
+        created_instances = Notification.objects.bulk_create(
+            self.notifications, batch_size=batch_size
+        )
+
+        notification_recipients = []
+        for i, notification in enumerate(created_instances):
+            notification_recipients.extend(
+                [
+                    NotificationHandler.construct_notification_recipient(
+                        notification=notification,
+                        recipient_id=recipient_id,
+                        queued=True,
+                    )
+                    for recipient_id in self.recipients_ids[i]
+                ]
+            )
+
+        NotificationRecipient.objects.bulk_create(
+            notification_recipients, batch_size=batch_size, ignore_conflicts=True
+        )
+        transaction_on_commit_if_not_already(send_queued_notifications_to_users.delay)
+
+    def user_grouper(self):
+        while True:
+            notification, recipients = yield
+            self.add(notification, recipients)
+
+    def __enter__(self):
+        self.user_grouper = self.user_grouper()
+        next(self.user_grouper)
+        return self.user_grouper
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.user_grouper.close()
+        if exc_type is None:
+            self.create_all_notifications_and_trigger_task()

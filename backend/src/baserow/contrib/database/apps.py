@@ -701,6 +701,14 @@ class DatabaseConfig(AppConfig):
 
         subject_type_registry.register(TokenSubjectType())
 
+        # notification_types
+        from baserow.contrib.database.fields.notification_types import (
+            CollaboratorAddedToRowNotificationType,
+        )
+        from baserow.core.notifications.registries import notification_type_registry
+
+        notification_type_registry.register(CollaboratorAddedToRowNotificationType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.search.signals  # noqa: F403, F401

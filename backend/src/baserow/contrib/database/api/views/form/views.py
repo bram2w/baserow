@@ -152,7 +152,7 @@ class SubmitFormViewView(APIView):
         )
         data = validate_data(validation_serializer, request.data)
 
-        instance = handler.submit_form_view(form, data, model, options)
+        instance = handler.submit_form_view(request.user, form, data, model, options)
         form.row_id = instance.id
         return Response(FormViewSubmittedSerializer(form).data)
 

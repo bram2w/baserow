@@ -122,6 +122,31 @@ export const mutations = {
     Vue.set(state.perWorkspaceUnreadCount, workspaceId, count)
     state.anyOtherWorkspaceWithUnread = anyUnreadInOtherWorkspaces(state)
   },
+  SET_UNREAD_COUNT(state, { userCount, currentWorkspaceUnreadCount }) {
+    state.userUnreadCount = userCount
+    Vue.set(
+      state.perWorkspaceUnreadCount,
+      state.currentWorkspaceId,
+      currentWorkspaceUnreadCount
+    )
+  },
+  UPDATE_UNREAD_COUNTS(state, { notificationsAdded }) {
+    for (const addedCount of notificationsAdded) {
+      const workspaceId = addedCount.workspace_id
+      const count = addedCount.count
+      if (workspaceId === null) {
+        state.userUnreadCount = (state.userUnreadCount || 0) + addedCount.count
+      } else {
+        const currentCount = state.perWorkspaceUnreadCount[workspaceId] || 0
+        Vue.set(
+          state.perWorkspaceUnreadCount,
+          workspaceId,
+          currentCount + count
+        )
+      }
+    }
+    state.anyOtherWorkspaceWithUnread = anyUnreadInOtherWorkspaces(state)
+  },
 }
 
 export const actions = {
@@ -170,27 +195,27 @@ export const actions = {
     const prevWorkspaceCount =
       state.perWorkspaceUnreadCount[state.currentWorkspaceId]
     commit('SET', { notifications: [] })
-    commit('SET_WORKSPACE_UNREAD_COUNT', {
-      workspaceId: state.currentWorkspaceId,
-      count: 0,
+    commit('SET_UNREAD_COUNT', {
+      userCount: 0,
+      currentWorkspaceUnreadCount: 0,
     })
-    commit('SET_USER_UNREAD_COUNT', 0)
     try {
       await notificationService(this.$client).clearAll(state.currentWorkspaceId)
     } catch (error) {
       commit('SET', { notifications, totalCount })
-      commit('SET_WORKSPACE_UNREAD_COUNT', {
-        workspaceId: state.currentWorkspaceId,
-        count: prevWorkspaceCount,
+      commit('SET_UNREAD_COUNT', {
+        userCount: prevUserCount,
+        currentWorkspaceUnreadCount: prevWorkspaceCount,
       })
-      commit('SET_USER_UNREAD_COUNT', prevUserCount)
       throw error
     }
   },
-  forceClearAll({ commit, state }) {
+  forceClearAll({ commit }) {
     commit('SET', { notifications: [] })
-    commit('SET_WORKSPACE_UNREAD_COUNT', state.currentWorkspaceId)
-    commit('SET_USER_UNREAD_COUNT', 0)
+    commit('SET_UNREAD_COUNT', {
+      userCount: 0,
+      currentWorkspaceUnreadCount: 0,
+    })
   },
   async markAsRead({ commit, state }, { notification }) {
     commit('SET_NOTIFICATIONS_READ', {
@@ -215,6 +240,10 @@ export const actions = {
       notificationIds: [notification.id],
       value: true,
     })
+  },
+  forceRefetch({ commit, state }, { notificationsAdded }) {
+    commit('UPDATE_UNREAD_COUNTS', { notificationsAdded })
+    commit('SET_LOADED', false)
   },
   async markAllAsRead({ commit, state }) {
     const notificationIds = state.items
@@ -267,19 +296,13 @@ export const actions = {
       },
       {}
     )
-
-    for (const [workspaceId, count] of Object.entries(
-      unreadCountPerWorkspace
-    )) {
-      if (workspaceId !== 'null') {
-        commit('INCREMENT_WORKSPACE_UNREAD_COUNT', {
-          workspaceId: parseInt(workspaceId),
-          count,
-        })
-      } else {
-        commit('SET_USER_UNREAD_COUNT', state.userUnreadCount + count)
-      }
-    }
+    const notificationsAdded = Object.entries(unreadCountPerWorkspace).map(
+      ([workspaceId, count]) => ({
+        workspace_id: workspaceId !== 'null' ? parseInt(workspaceId) : null,
+        count,
+      })
+    )
+    commit('UPDATE_UNREAD_COUNTS', { notificationsAdded })
 
     const visibleNotifications = notifications.filter(
       (n) => !n.workspace?.id || n.workspace?.id === state.currentWorkspaceId

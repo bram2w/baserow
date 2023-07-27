@@ -3,7 +3,6 @@ from django.shortcuts import reverse
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_204_NO_CONTENT, HTTP_400_BAD_REQUEST
 
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.test_utils.helpers import is_dict_subset
 
@@ -22,6 +21,7 @@ def test_multiple_collaborators_field_type_create(api_client, data_fixture):
         {
             "name": "Collaborator 1",
             "type": "multiple_collaborators",
+            "notify_user_when_added": False,
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -29,7 +29,6 @@ def test_multiple_collaborators_field_type_create(api_client, data_fixture):
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    field_1_id = response_json["id"]
     assert response_json["name"] == "Collaborator 1"
     assert response_json["type"] == "multiple_collaborators"
 
@@ -48,12 +47,8 @@ def test_multiple_collaborators_field_type_update(api_client, data_fixture):
         user=user, name="Placeholder", workspace=workspace
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     response = api_client.patch(
@@ -77,12 +72,8 @@ def test_multiple_collaborators_field_type_delete(api_client, data_fixture):
     )
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     response = api_client.delete(
@@ -108,12 +99,8 @@ def test_multiple_collaborators_field_type_insert_row_validation(
     user2 = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     # not a list
@@ -184,12 +171,8 @@ def test_multiple_collaborators_field_type_insert_row(api_client, data_fixture):
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     # empty list
@@ -243,12 +226,8 @@ def test_multiple_collaborators_field_type_update_row_validation(
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(
@@ -330,12 +309,8 @@ def test_multiple_collaborators_field_type_update_row(api_client, data_fixture):
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(
@@ -386,12 +361,8 @@ def test_multiple_collaborators_field_type_delete_row(api_client, data_fixture):
     )
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(
@@ -423,12 +394,8 @@ def test_multiple_collaborators_field_type_batch_insert_rows_validation(
     user2 = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     # not a list
@@ -519,12 +486,8 @@ def test_multiple_collaborators_field_type_batch_insert_rows(api_client, data_fi
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
 
     # empty list
@@ -598,12 +561,8 @@ def test_multiple_collaborators_field_type_batch_update_rows_validation(
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(
@@ -713,12 +672,8 @@ def test_multiple_collaborators_field_type_batch_update_rows(api_client, data_fi
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(
@@ -801,12 +756,8 @@ def test_multiple_collaborators_field_type_batch_delete_rows(api_client, data_fi
     )
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field_handler = FieldHandler()
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     row_handler = RowHandler()
     row = row_handler.create_row(

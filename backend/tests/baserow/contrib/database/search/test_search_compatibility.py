@@ -91,7 +91,11 @@ def test_search_compatibility_between_current_and_postgres(
                 ("Datetime", "date", {}),
                 ("Single select", "single_select", {}),
                 ("Multiple select", "multiple_select", {}),
-                ("Multiple collaborators", "multiple_collaborators", {}),
+                (
+                    "Multiple collaborators",
+                    "multiple_collaborators",
+                    {"notify_user_when_added": False},
+                ),
             ],
         )
 

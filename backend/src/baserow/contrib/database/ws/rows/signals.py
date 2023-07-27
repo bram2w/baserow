@@ -14,7 +14,20 @@ from baserow.ws.registries import page_registry
 
 
 @receiver(row_signals.rows_created)
-def rows_created(sender, rows, before, user, table, model, **kwargs):
+def rows_created(
+    sender,
+    rows,
+    before,
+    user,
+    table,
+    model,
+    send_realtime_update=True,
+    send_webhook_events=True,
+    **kwargs
+):
+    if not send_realtime_update:
+        return
+
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
@@ -34,23 +47,24 @@ def rows_created(sender, rows, before, user, table, model, **kwargs):
     )
 
 
-@receiver(row_signals.before_rows_update)
-def before_rows_update(sender, rows, user, table, model, updated_field_ids, **kwargs):
-    return get_row_serializer_class(model, RowSerializer, is_response=True)(
-        rows, many=True
-    ).data
-
-
 @receiver(row_signals.rows_updated)
 def rows_updated(
-    sender, rows, user, table, model, before_return, updated_field_ids, **kwargs
+    sender,
+    rows,
+    user,
+    table,
+    model,
+    before_return,
+    updated_field_ids,
+    before_rows_values,
+    **kwargs
 ):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
         lambda: table_page_type.broadcast(
             RealtimeRowMessages.rows_updated(
                 table_id=table.id,
-                serialized_rows_before_update=dict(before_return)[before_rows_update],
+                serialized_rows_before_update=before_rows_values,
                 serialized_rows=get_row_serializer_class(
                     model, RowSerializer, is_response=True
                 )(rows, many=True).data,

@@ -23,6 +23,15 @@ class RowSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}, "order": {"read_only": True}}
 
 
+def serialize_rows_for_response(rows, model, user_field_names=False, many=True):
+    return get_row_serializer_class(
+        model,
+        RowSerializer,
+        is_response=True,
+        user_field_names=user_field_names,
+    )(rows, many=many).data
+
+
 def get_row_serializer_class(
     model,
     base_class=None,

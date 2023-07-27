@@ -41,43 +41,46 @@ export default {
   name: 'RichTextEditorMentionsList',
   components: { FieldCollaboratorDropdownItem },
   mixins: [inMemoryPaginatedDropdown],
-  props: {
-    collaborators: {
-      type: Array,
-      required: true,
-    },
-    command: {
-      type: Function,
-      required: true,
-    },
+  data() {
+    return {
+      collaborators: [],
+      query: '',
+      command: () => {},
+    }
   },
   computed: {
     isNotFound() {
       return this.results.length === 0
     },
     notFoundErrorMessage() {
-      // Must use $options for it to work in the saas, something to do with how this
-      // is manually rendered...
-      return this.$options.$i18n.t('richTextEditorMentionsList.notFound')
+      return this.$i18n.t('richTextEditorMentionsList.notFound')
     },
   },
   watch: {
-    collaborators() {
-      this.search()
-      this.hoverFirstItem()
+    query(newVal, oldVal) {
+      if (newVal !== oldVal) {
+        this.fetch(1, this.query).then(() => {
+          this.hoverFirstItem()
+        })
+      }
     },
   },
   mounted() {
-    this.hoverFirstItem()
+    this.$nextTick(() => {
+      this.hoverFirstItem()
+    })
   },
   methods: {
     hoverFirstItem() {
-      this.$nextTick(() => {
-        this.hover = this.collaborators[0]?.user_id
-      })
+      this.hover = this.collaborators[0]?.user_id
     },
-    filterItems() {
-      // No need to filter items because `suggestion` filters them already.
+    filterItems(query) {
+      const workspace = this.$store.getters['workspace/getSelected']
+      this.collaborators = workspace.users.filter(
+        (user) =>
+          user.name.toLowerCase().includes(query.toLowerCase()) &&
+          user.to_be_deleted === false
+      )
       return this.collaborators
     },
     onKeyDown({ event }) {

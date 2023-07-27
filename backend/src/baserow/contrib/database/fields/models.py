@@ -654,6 +654,14 @@ class LookupField(FormulaField):
 class MultipleCollaboratorsField(Field):
     THROUGH_DATABASE_TABLE_PREFIX = MULTIPLE_COLLABORATOR_THROUGH_TABLE_PREFIX
 
+    notify_user_when_added = models.BooleanField(
+        default=True,
+        help_text=(
+            "Indicates if the user should be notified when they are added as a "
+            "collaborator."
+        ),
+    )
+
     @property
     def through_table_name(self):
         """

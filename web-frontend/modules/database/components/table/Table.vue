@@ -448,6 +448,7 @@ export default {
       }
       if (
         Object.prototype.hasOwnProperty.call(this.$refs, 'view') &&
+        // TODO crash here can't convert undefined to object
         Object.prototype.hasOwnProperty.call(this.$refs.view, 'refresh')
       ) {
         await this.$refs.view.refresh()

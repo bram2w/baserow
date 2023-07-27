@@ -269,6 +269,7 @@ class CoreConfig(AppConfig):
         auth_provider_type_registry.register(PasswordAuthProviderType())
 
         import baserow.core.notifications.receivers  # noqa: F401
+        import baserow.core.notifications.tasks  # noqa: F401
         from baserow.core.notification_types import (
             WorkspaceInvitationAcceptedNotificationType,
             WorkspaceInvitationCreatedNotificationType,

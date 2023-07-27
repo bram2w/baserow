@@ -607,6 +607,7 @@ build-all-in-one-image:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
       - $BUILD_ALL_IN_ONE == "true"
+      - $CI_COMMIT_MESSAGE =~ /\[build-all]/
   variables:
     IMAGE_NAME: $ALLINONE_IMAGE_NAME
     DOCKERFILE_PATH: $ALLINONE_DOCKERFILE_PATH
@@ -625,7 +626,7 @@ build-cloudron-image:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME && $CLOUDRON_IMAGE_NAME != "disable"
       - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME && $CLOUDRON_IMAGE_NAME != "disable"
       # This rule and variable allows us to force build cloudron images on branches.
-      - $BUILD_ALL_IN_ONE == "true" && $CLOUDRON_IMAGE_NAME != "disable"
+      - ($BUILD_ALL_IN_ONE == "true" || $CI_COMMIT_MESSAGE =~ /\[build-all]/ ) && $CLOUDRON_IMAGE_NAME != "disable"
   variables:
     IMAGE_NAME: $CLOUDRON_IMAGE_NAME
     DOCKERFILE_PATH: $CLOUDRON_DOCKERFILE_PATH
@@ -643,7 +644,7 @@ build-heroku-image:
     - job: build-all-in-one-image
   only:
     variables:
-      - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && $BUILD_ALL_IN_ONE == "true" && $HEROKU_IMAGE_NAME != "disable"
+      - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && ( $BUILD_ALL_IN_ONE == "true" || $CI_COMMIT_MESSAGE =~ /\[build-all]/ ) && $HEROKU_IMAGE_NAME != "disable"
   variables:
     IMAGE_NAME: $HEROKU_IMAGE_NAME
     DOCKERFILE_PATH: $HEROKU_DOCKERFILE_PATH

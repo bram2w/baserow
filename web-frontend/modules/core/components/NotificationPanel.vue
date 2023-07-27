@@ -31,6 +31,18 @@
       </div>
     </div>
     <div v-else class="notification-panel__body">
+      <div v-if="needRefresh" class="notification-panel__refresh-hint">
+        <div class="notification-panel__refresh-hint-text">
+          <span class="notification-panel__refresh-hint-icon"></span>
+          {{ $t('notificationPanel.newNotificationsAvailable') }}
+        </div>
+        <a
+          class="notification-panel__refresh-hint-action button button--ghost"
+          @click.prevent="initialLoad"
+        >
+          {{ $t('notificationPanel.refresh') }}
+        </a>
+      </div>
       <InfiniteScroll
         ref="infiniteScroll"
         :current-count="currentCount"
@@ -112,6 +124,7 @@ export default {
   data() {
     return {
       open: false,
+      needRefresh: false,
     }
   },
   computed: {
@@ -125,8 +138,26 @@ export default {
       totalCount: 'notification/getTotalCount',
     }),
   },
+  watch: {
+    loaded(newVal, oldVal) {
+      // On receiving many notifications, only the unread count is sent via web
+      // sockets. The store's 'loaded' state resets to false due to sync
+      // discrepancies. If the panel is closed, new notifications load on next
+      // open. If open, to preserve scroll position, a refresh hint displays
+      // instead of reloading.
+
+      if (this.open && oldVal && !newVal) {
+        if (this.totalCount === 0) {
+          this.initialLoad()
+        } else {
+          this.needRefresh = true
+        }
+      }
+    },
+  },
   methods: {
     async initialLoad() {
+      this.needRefresh = false
       try {
         await this.$store.dispatch('notification/fetchAll', {
           workspaceId: this.workspaceId,

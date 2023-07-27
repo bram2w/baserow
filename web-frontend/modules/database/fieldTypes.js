@@ -17,6 +17,7 @@ import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTe
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
 import FieldLinkRowSubForm from '@baserow/modules/database/components/field/FieldLinkRowSubForm'
 import FieldSelectOptionsSubForm from '@baserow/modules/database/components/field/FieldSelectOptionsSubForm'
+import FieldCollaboratorSubForm from '@baserow/modules/database/components/field/FieldCollaboratorSubForm'
 
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText'
 import GridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLongText'
@@ -2869,7 +2870,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
   }
 
   getFormComponent() {
-    return null
+    return FieldCollaboratorSubForm
   }
 
   getGridViewFieldComponent() {
