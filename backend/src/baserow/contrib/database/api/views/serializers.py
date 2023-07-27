@@ -341,26 +341,27 @@ class CreateViewSerializer(serializers.ModelSerializer):
 
 
 class UpdateViewSerializer(serializers.ModelSerializer):
-    def _make_password(self, plain_password: str):
-        """
-        An empty string disables password protection.
-        A non-empty string will be encrypted and used to check user authorization.
+    MAX_PUBLIC_VIEW_PASSWORD_LENGTH = 256
+    MIN_PUBLIC_VIEW_PASSWORD_LENGTH = 8
 
-        :param plain_password: The password to encrypt.
-        :return: The encrypted password or "" if disabled.
-        """
+    public_view_password = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        min_length=MIN_PUBLIC_VIEW_PASSWORD_LENGTH,
+        max_length=MAX_PUBLIC_VIEW_PASSWORD_LENGTH,
+        help_text="The new password or an empty string to remove any previous "
+        "password from the view and make it publicly accessible again.",
+    )
 
-        return View.make_password(plain_password) if plain_password else ""
-
-    def to_internal_value(self, data):
-        plain_password = data.get("public_view_password")
-        if plain_password is not None:
-            data = {
-                **data,
-                "public_view_password": self._make_password(plain_password),
-            }
-
-        return super().to_internal_value(data)
+    def to_representation(self, data):
+        representation = super().to_representation(data)
+        public_view_password = representation.pop("public_view_password", None)
+        if public_view_password is not None:
+            # Pass a differently named attribute down to the handler, so it knows
+            # the difference between the user setting a new raw password and/or
+            # someone directly changing the literal hashed and salted password value.
+            representation["raw_public_view_password"] = public_view_password
+        return representation
 
     class Meta:
         ref_name = "view_update"

@@ -658,7 +658,10 @@ def test_can_undo_redo_update_form_view(data_fixture):
         "submit_action_redirect_url": "https://localhost/original",
     }
 
-    form_view = ViewHandler().update_view(user, form_view, **original_form_data)
+    form_view_with_changes = ViewHandler().update_view(
+        user, form_view, **original_form_data
+    )
+    form_view = form_view_with_changes.updated_view_instance
 
     assert form_view.name == original_form_data["name"]
     assert form_view.public == original_form_data["public"]
@@ -760,9 +763,10 @@ def test_can_undo_redo_update_gallery_view(data_fixture):
         "card_cover_image_field": file_field_1,
     }
 
-    gallery_view = ViewHandler().update_view(
+    gallery_view_with_changes = ViewHandler().update_view(
         user, gallery_view, **original_gallery_data
     )
+    gallery_view = gallery_view_with_changes.updated_view_instance
 
     assert gallery_view.name == original_gallery_data["name"]
     assert gallery_view.filter_type == original_gallery_data["filter_type"]

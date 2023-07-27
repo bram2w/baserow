@@ -114,7 +114,7 @@ class KanbanViewType(ViewType):
                     "view's table."
                 )
 
-        return values
+        return super().prepare_values(values, table, user)
 
     def export_serialized(
         self,
@@ -325,7 +325,7 @@ class CalendarViewType(ViewType):
                     "view's table."
                 )
 
-        return values
+        return super().prepare_values(values, table, user)
 
     def export_serialized(
         self,

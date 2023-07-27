@@ -528,6 +528,17 @@ class ViewType(
         :return: The updates values.
         """
 
+        from baserow.contrib.database.views.models import View
+
+        raw_public_view_password = values.get("raw_public_view_password", None)
+        if raw_public_view_password is not None:
+            if raw_public_view_password:
+                values["public_view_password"] = View.make_password(
+                    raw_public_view_password
+                )
+            else:
+                values["public_view_password"] = ""  # nosec b105
+
         return values
 
     def view_created(self, view: "View"):

@@ -777,6 +777,78 @@ def test_anon_user_cant_get_info_about_a_public_password_protected_view(
 
 
 @pytest.mark.django_db
+def test_public_view_password_validation(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    grid_view = data_fixture.create_grid_view(user=user, public=True)
+
+    # set password for the current view with 8 characters
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "12345678"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # set password for the current view with 256 characters
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "1" * 256},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # remove password for the current view
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": ""},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # attempt setting password with less than 8 characters
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "1234567"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["public_view_password"] == [
+        {"code": "min_length", "error": "Ensure this field has at least 8 characters."}
+    ]
+    # attempt setting password more than 256 characters
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "1" * 256},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # attempt setting password with more than 256 characters
+    response = api_client.patch(
+        reverse("api:database:views:item", kwargs={"view_id": grid_view.id}),
+        {"public_view_password": "1" * 257},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["public_view_password"] == [
+        {
+            "code": "max_length",
+            "error": "Ensure this field has no more than 256 characters.",
+        }
+    ]
+
+
+@pytest.mark.django_db
 def test_user_with_invalid_token_cant_get_info_about_a_public_password_protected_view(
     api_client, data_fixture
 ):

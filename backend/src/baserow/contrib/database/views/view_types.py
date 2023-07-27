@@ -360,7 +360,7 @@ class GalleryViewType(ViewType):
                     "view's table."
                 )
 
-        return values
+        return super().prepare_values(values, table, user)
 
     def export_serialized(
         self,
