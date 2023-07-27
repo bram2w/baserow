@@ -1,3 +1,4 @@
+import dataclasses
 import re
 import traceback
 from collections import defaultdict, namedtuple
@@ -63,7 +64,10 @@ from baserow.contrib.database.views.operations import (
     UpdateViewSlugOperationType,
     UpdateViewSortOperationType,
 )
-from baserow.contrib.database.views.registries import view_ownership_type_registry
+from baserow.contrib.database.views.registries import (
+    ViewType,
+    view_ownership_type_registry,
+)
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.telemetry.utils import baserow_trace_methods
@@ -139,6 +143,13 @@ tracer = trace.get_tracer(__name__)
 PerViewTableIndexUpdate = namedtuple(
     "PerViewTableIndexUpdate", "all_indexes added removed"
 )
+
+
+@dataclasses.dataclass
+class UpdatedViewWithChangedAttributes:
+    updated_view_instance: View
+    original_view_attributes: Dict[str, Any]
+    new_view_attributes: Dict[str, Any]
 
 
 class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
@@ -746,7 +757,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
     def update_view(
         self, user: AbstractUser, view: View, **data: Dict[str, Any]
-    ) -> View:
+    ) -> UpdatedViewWithChangedAttributes:
         """
         Updates an existing view instance.
 
@@ -777,6 +788,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "show_logo",
         ] + view_type.allowed_fields
 
+        changed_allowed_keys = extract_allowed(view_values, allowed_fields).keys()
+        original_view_values = self._get_prepared_values_for_data(
+            view_type, view, changed_allowed_keys
+        )
+
         previous_public_value = view.public
         view = set_allowed_attrs(view_values, allowed_fields, view)
         if previous_public_value != view.public:
@@ -788,12 +804,20 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
         view.save()
 
+        new_view_values = self._get_prepared_values_for_data(
+            view_type, view, changed_allowed_keys
+        )
+
         if "filters_disabled" in view_values:
             view_type.after_filter_update(view)
 
         view_updated.send(self, view=view, user=user)
 
-        return view
+        return UpdatedViewWithChangedAttributes(
+            updated_view_instance=view,
+            original_view_attributes=original_view_values,
+            new_view_attributes=new_view_values,
+        )
 
     def order_views(self, user: AbstractUser, table: Table, order: List[int]):
         """
@@ -2683,6 +2707,15 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         return queryset, field_ids, publicly_visible_field_options
+
+    def _get_prepared_values_for_data(
+        self, view_type: ViewType, view: View, changed_allowed_keys: Iterable[str]
+    ) -> Dict[str, Any]:
+        return {
+            key: value
+            for key, value in view_type.export_prepared_values(view).items()
+            if key in changed_allowed_keys
+        }
 
 
 @dataclass

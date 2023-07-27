@@ -203,7 +203,8 @@ def test_update_grid_view(send_mock, data_fixture):
     with pytest.raises(ValueError):
         handler.update_view(user=user, view=object(), name="Test 1")
 
-    view = handler.update_view(user=user, view=grid, name="Test 1")
+    view_with_changes = handler.update_view(user=user, view=grid, name="Test 1")
+    view = view_with_changes.updated_view_instance
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == view.id
@@ -351,7 +352,7 @@ def test_update_form_view(send_mock, data_fixture):
     user_file_2 = data_fixture.create_user_file()
 
     handler = ViewHandler()
-    view = handler.update_view(
+    view_with_changes = handler.update_view(
         user=user,
         view=form,
         slug="Test slug",
@@ -364,6 +365,7 @@ def test_update_form_view(send_mock, data_fixture):
         submit_action="REDIRECT",
         submit_action_redirect_url="https://localhost",
     )
+    view = view_with_changes.updated_view_instance
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == view.id
