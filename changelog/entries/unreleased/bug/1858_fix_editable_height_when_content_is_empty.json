@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix editable height when content is empty",
+    "issue_number": 1858,
+    "bullet_points": [],
+    "created_at": "2023-07-20"
+}
