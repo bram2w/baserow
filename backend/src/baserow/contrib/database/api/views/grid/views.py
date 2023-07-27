@@ -275,6 +275,7 @@ class GridViewView(APIView):
             view,
             search=query_params.get("search"),
             search_mode=query_params.get("search_mode"),
+            model=model,
         )
 
         if "count" in request.GET:

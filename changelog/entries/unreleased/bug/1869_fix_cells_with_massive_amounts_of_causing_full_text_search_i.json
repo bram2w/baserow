@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix cells with massive amounts of causing full text search index updates to fail",
+    "issue_number": 1869,
+    "bullet_points": [],
+    "created_at": "2023-07-24"
+}

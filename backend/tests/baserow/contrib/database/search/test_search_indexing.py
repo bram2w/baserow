@@ -1,3 +1,5 @@
+import random
+import string
 from io import BytesIO
 
 from django.core.files.storage import FileSystemStorage
@@ -566,3 +568,39 @@ def test_linkrowfield_get_search_expression_to_formula_button(
     assert qs.get().id == table_b_linking_to_jeff_and_clive.id
 
     assert not model.objects.all().pg_search("steve").exists()
+
+
+def make_big_string(n: int) -> str:
+    return bytes(
+        random.choices(
+            string.ascii_uppercase.encode("ascii") + (" " * 30).encode("ascii"), k=n
+        )
+    ).decode("ascii")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_massive_textfield_get_search_expression(
+    data_fixture, enable_singleton_testing
+):
+    with transaction.atomic():
+        user = data_fixture.create_user()
+        database = data_fixture.create_database_application(user=user)
+        table = TableHandler().create_table_and_fields(
+            user=user,
+            database=database,
+            name=data_fixture.fake.name(),
+            fields=[
+                ("Name", "text", {}),
+            ],
+        )
+        field = table.field_set.get(name="Name")
+        row = RowHandler().create_row(
+            user=user,
+            table=table,
+            values={f"field_{field.id}": "Jeff" + make_big_string(1048575 * 10)},
+        )
+    model = table.get_model()
+    qs = model.objects.all().pg_search("Jeff")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
