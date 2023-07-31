@@ -1,3 +1,4 @@
+import abc
 from typing import Dict, Optional
 
 from rest_framework import serializers
@@ -9,6 +10,7 @@ from baserow.contrib.builder.elements.models import (
     ALIGNMENTS,
     HeadingElement,
     ImageElement,
+    InputTextElement,
     LinkElement,
     ParagraphElement,
 )
@@ -343,3 +345,53 @@ class ImageElementType(ElementType):
         if super().request_serializer_field_overrides is not None:
             overrides.update(super().request_serializer_field_overrides)
         return overrides
+
+
+class InputElementType(ElementType, abc.ABC):
+    pass
+
+
+class InputTextElementType(InputElementType):
+    type = "input_text"
+    model_class = InputTextElement
+    allowed_fields = ["default_value", "required", "placeholder"]
+    serializer_field_names = ["default_value", "required", "placeholder"]
+
+    class SerializedDict(ElementDict):
+        required: bool
+        placeholder: str
+        default_value: Expression
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.expression.serializers import ExpressionSerializer
+
+        overrides = {
+            "default_value": ExpressionSerializer(
+                help_text=InputTextElement._meta.get_field("default_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "required": serializers.BooleanField(
+                help_text=InputTextElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+            "placeholder": serializers.CharField(
+                default="",
+                allow_blank=True,
+                required=False,
+                help_text=InputTextElement._meta.get_field("placeholder").help_text,
+                max_length=InputTextElement._meta.get_field("placeholder").max_length,
+            ),
+        }
+
+        return overrides
+
+    def get_sample_params(self):
+        return {
+            "required": False,
+            "placeholder": "",
+            "default_value": "Corporis perspiciatis",
+        }

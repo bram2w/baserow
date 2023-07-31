@@ -61,7 +61,9 @@
         "link": "Link",
         "linkDescription": "A link to page/URL",
         "image": "Image",
-        "imageDescription": "Display image"
+        "imageDescription": "Display image",
+        "inputText": "Text input",
+        "inputTextDescription": "A text input field"
     },
     "addElementButton": {
         "label": "Element"
@@ -121,6 +123,13 @@
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
         "uploadFileButton": "Upload file"
+    },
+    "inputTextElementForm": {
+        "valueTitle": "Default value",
+        "valuePlaceholder": "Enter a default value (optional)",
+        "placeholderTitle": "Placeholder",
+        "placeholderPlaceholder": "Enter a placeholder (optional)",
+        "requiredTitle": "Required"
     },
     "domainSettings": {
         "titleOverview": "Domains",

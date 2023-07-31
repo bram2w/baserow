@@ -7,6 +7,8 @@ import HeadingElementForm from '@baserow/modules/builder/components/elements/com
 import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/LinkElementForm'
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/ImageElementForm'
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
+import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
+import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/InputTextElementForm.vue'
 
 import { compile } from 'path-to-regexp'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
@@ -238,5 +240,31 @@ export class ImageElementType extends ElementType {
 
   get formComponent() {
     return ImageElementForm
+  }
+}
+
+export class InputTextElementType extends ElementType {
+  getType() {
+    return 'input_text'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.inputText')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.inputTextDescription')
+  }
+
+  get iconClass() {
+    return 'keyboard'
+  }
+
+  get component() {
+    return InputTextElement
+  }
+
+  get formComponent() {
+    return InputTextElementForm
   }
 }
