@@ -33,6 +33,8 @@ Baserow by following one the guides below:
   install Baserow using Render a Heroku alternative.
 * [Install on Ubuntu](installation/install-on-ubuntu.md): Instructions on how to install
   Docker and use it to install Baserow on a fresh ubuntu install.
+* [Third party hosting providers](installation/third-party-hosting-providers.md): A list
+  of hosting/deployment providers that allow to easily self-host Baserow.
 * [Install with Traefik](installation/install-with-traefik.md): How to configure Baserow
   when using Traefik.
 * [Install with K8S](installation/install-with-k8s.md): An example performant 
