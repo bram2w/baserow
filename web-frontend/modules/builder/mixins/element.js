@@ -17,4 +17,9 @@ export default {
       default: '',
     },
   },
+  computed: {
+    isEditable() {
+      return this.mode === 'editing'
+    },
+  },
 }

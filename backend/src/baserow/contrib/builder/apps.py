@@ -133,6 +133,7 @@ class BuilderConfig(AppConfig):
         from .elements.element_types import (
             HeadingElementType,
             ImageElementType,
+            InputTextElementType,
             LinkElementType,
             ParagraphElementType,
         )
@@ -142,6 +143,7 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(ParagraphElementType())
         element_type_registry.register(LinkElementType())
         element_type_registry.register(ImageElementType())
+        element_type_registry.register(InputTextElementType())
 
         from .domains.trash_types import DomainTrashableItemType
 

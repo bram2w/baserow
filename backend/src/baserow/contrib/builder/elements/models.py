@@ -216,3 +216,32 @@ class ImageElement(Element):
     alignment = models.CharField(
         choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
     )
+
+
+class InputElement(Element):
+    """
+    The base input element, which can be extended to
+    support an element for each supported type.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class InputTextElement(InputElement):
+    """
+    An input element of text type.
+    """
+
+    default_value = ExpressionField(
+        default="", help_text="This text input's default value."
+    )
+    required = models.BooleanField(
+        default=False, help_text="Whether this text input is a required field."
+    )
+    placeholder = models.CharField(
+        blank=True,
+        default="",
+        max_length=225,
+        help_text="The placeholder text which should be applied to the element.",
+    )
