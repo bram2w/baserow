@@ -583,6 +583,7 @@ class UpdateRowActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update row"), _("Row (%(row_id)s) updated"), TABLE_ACTION_CONTEXT
     )
+    privacy_sensitive_params = ["row_values", "original_row_values"]
 
     @dataclasses.dataclass
     class Params:
@@ -685,6 +686,7 @@ class UpdateRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update rows"), _("Rows (%(row_ids)s) updated"), TABLE_ACTION_CONTEXT
     )
+    privacy_sensitive_params = ["row_values", "original_rows_values"]
 
     @dataclasses.dataclass
     class Params:

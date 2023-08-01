@@ -153,8 +153,8 @@ class ActionType(
     metaclass=baserow_trace_methods(tracer, only=["do", "undo", "redo"], abc=True),
 ):
     type: str = NotImplemented
-
     description: ActionTypeDescription = ActionTypeDescription()
+    privacy_sensitive_params = []
 
     @dataclasses.dataclass
     class Params:

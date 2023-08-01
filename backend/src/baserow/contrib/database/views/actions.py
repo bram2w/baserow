@@ -770,6 +770,7 @@ class RotateViewSlugActionType(UndoableActionType):
         _("View changed public slug URL"),
         VIEW_ACTION_CONTEXT,
     )
+    privacy_sensitive_params = ["slug", "original_slug"]
 
     @dataclasses.dataclass
     class Params:
@@ -839,6 +840,7 @@ class UpdateViewActionType(UndoableActionType):
         _('View "%(view_name)s" (%(view_id)s) updated'),
         TABLE_ACTION_CONTEXT,
     )
+    privacy_sensitive_params = ["data", "original_data"]
 
     @dataclasses.dataclass
     class Params:
