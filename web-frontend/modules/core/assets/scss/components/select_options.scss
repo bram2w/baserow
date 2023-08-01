@@ -43,3 +43,9 @@
   background-size: 4px 4px;
   background-repeat: repeat;
 }
+
+.select-options--scrollable {
+  max-height: 25vh;
+  overflow-y: scroll;
+  margin-bottom: 12px;
+}

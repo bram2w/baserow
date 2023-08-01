@@ -533,8 +533,8 @@ class UniqueRowValueFieldView(APIView):
         limit = query_params.get("limit")
         split_comma_separated = query_params.get("split_comma_separated")
 
-        if not limit or limit > settings.UNIQUE_ROW_VALUES_SIZE_LIMIT:
-            limit = settings.UNIQUE_ROW_VALUES_SIZE_LIMIT
+        if not limit or limit > settings.BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
+            limit = settings.BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT
 
         values = FieldHandler().get_unique_row_values(
             field, limit, split_comma_separated=split_comma_separated
