@@ -1,6 +1,10 @@
 <template>
   <div>
-    <div class="select-options">
+    <div
+      ref="options"
+      v-auto-overflow-scroll
+      class="select-options select-options--scrollable"
+    >
       <div
         v-for="(item, index) in value"
         :key="item.id"
@@ -21,6 +25,7 @@
           <i class="fas fa-caret-down"></i>
         </a>
         <input
+          ref="inputs"
           v-model="item.value"
           class="input select-options__value"
           :class="{ 'input--error': $v.value.$each[index].value.$error }"
@@ -85,6 +90,12 @@ export default {
       })
       this.$emit('input', this.value)
       this.lastSeenId -= 1
+      this.$nextTick(() => {
+        this.$refs.options.scrollTop = this.$refs.options.scrollHeight
+        const lastIndex = this.$refs.inputs.length - 1
+        const bottomInput = this.$refs.inputs[lastIndex]
+        bottomInput.focus()
+      })
     },
     openColor(index) {
       this.colorContextSelected = index

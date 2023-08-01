@@ -793,7 +793,9 @@ BATCH_ROWS_SIZE_LIMIT = int(
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
 
 # How many unique row values can be requested at once.
-UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
+BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT = int(
+    os.getenv("BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT", 100)
+)
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None
@@ -875,6 +877,7 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
 MAX_FIELD_LIMIT = int(os.getenv("BASEROW_MAX_FIELD_LIMIT", 600))
+
 INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
     os.getenv(
         "BASEROW_INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT", MAX_FIELD_LIMIT

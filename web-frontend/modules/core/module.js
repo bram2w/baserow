@@ -130,6 +130,10 @@ export default function CoreModule(options) {
           key: 'POSTHOG_HOST',
           default: '',
         },
+        {
+          key: 'BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT',
+          default: 100,
+        },
       ],
     },
   ])
