@@ -26,6 +26,7 @@ class ImportDatabaseFromAirtableActionType(ActionType):
         ),
         WORKSPACE_ACTION_CONTEXT,
     )
+    privacy_sensitive_params = ["airtable_share_id"]
 
     @dataclasses.dataclass
     class Params:

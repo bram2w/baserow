@@ -36,7 +36,6 @@ def capture_event(
     if not settings.POSTHOG_ENABLED:
         return
 
-    properties = deepcopy(properties)
     properties["user_email"] = user.email
 
     if session is not None:
@@ -75,6 +74,12 @@ def capture_event_action_done(
     # Only capture do commands for now because the undo might make it more difficult
     # to do analytics on the data.
     if action_command_type == ActionCommandType.DO:
+        # We don't want to capture privacy sensitive information, and will therefore
+        # remove those from the properties if they exist.
+        properties = deepcopy(action_params)
+        for param in action_type.privacy_sensitive_params:
+            properties.pop(param, None)
+
         capture_event(
-            user, action_type.type, action_params, workspace=workspace, session=session
+            user, action_type.type, properties, workspace=workspace, session=session
         )
