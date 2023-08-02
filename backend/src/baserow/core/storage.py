@@ -1,11 +1,11 @@
-from django.core.files.storage import FileSystemStorage
+from django.core.files.storage import default_storage
 
 
-class OverwriteFileSystemStorage(FileSystemStorage):
-    def _save(self, name, content):
-        if self.exists(name):
-            self.delete(name)
-        return super()._save(name, content)
+class OverwritingStorageHandler:
+    def __init__(self, storage):
+        self.storage = storage if storage else default_storage
 
-    def get_available_name(self, name, *args, **kwargs):
-        return name
+    def save(self, name, content):
+        if self.storage.exists(name):
+            self.storage.delete(name)
+        self.storage.save(name, content)

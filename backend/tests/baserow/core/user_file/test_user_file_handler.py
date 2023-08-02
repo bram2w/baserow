@@ -199,6 +199,18 @@ def test_upload_user_file(data_fixture, tmpdir):
     assert thumbnail.height == 15
     settings.USER_THUMBNAILS = old_thumbnail_settings
 
+    # uploading the same image won't generate another thumbnail
+    image = Image.new("RGB", (1400, 1000), color="red")
+    image_bytes = BytesIO()
+    image.save(image_bytes, format="PNG")
+    assert (
+        handler.upload_user_file(user, "red3.png", image_bytes, storage=storage).id
+        == user_file.id
+    )
+
+    assert len(storage.listdir(tmpdir / "thumbnails/tiny")[1]) == 4
+    assert len(storage.listdir(tmpdir / "user_files")[1]) == 7
+
     assert UserFile.objects.all().count() == 7
 
     image = Image.new("RGB", (1, 1), color="red")
