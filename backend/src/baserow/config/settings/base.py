@@ -613,8 +613,7 @@ class AttrDict(dict):
         globals()[key] = value
 
 
-# The storage must always overwrite existing files.
-DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 AWS_STORAGE_ENABLED = os.getenv("AWS_ACCESS_KEY_ID", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
@@ -633,6 +632,7 @@ if sum(ALL_STORAGE_ENABLED_VARS) > 1:
 
 if AWS_STORAGE_ENABLED:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_S3_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -651,7 +651,6 @@ if AWS_STORAGE_ENABLED:
             Setting("AWS_QUERYSTRING_AUTH", parser=str_to_bool),
             Setting("AWS_S3_MAX_MEMORY_SIZE", parser=int),
             Setting("AWS_QUERYSTRING_EXPIRE", parser=int),
-            Setting("AWS_S3_FILE_OVERWRITE", parser=str_to_bool, default=True),
             "AWS_S3_URL_PROTOCOL",
             "AWS_S3_REGION_NAME",
             "AWS_S3_ENDPOINT_URL",
@@ -682,6 +681,7 @@ if GOOGLE_STORAGE_ENABLED:
     # details on what these env variables do
 
     DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    GS_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -691,7 +691,6 @@ if GOOGLE_STORAGE_ENABLED:
             "GZIP_CONTENT_TYPES",
             Setting("GS_DEFAULT_ACL", default="publicRead"),
             Setting("GS_QUERYSTRING_AUTH", parser=str_to_bool),
-            Setting("GS_FILE_OVERWRITE", parser=str_to_bool),
             Setting("GS_MAX_MEMORY_SIZE", parser=int),
             Setting("GS_BLOB_CHUNK_SIZE", parser=int),
             Setting("GS_OBJECT_PARAMETERS", parser=json.loads),
@@ -708,6 +707,7 @@ if GOOGLE_STORAGE_ENABLED:
 
 if AZURE_STORAGE_ENABLED:
     DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+    AZURE_OVERWRITE_FILES = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -723,7 +723,6 @@ if AZURE_STORAGE_ENABLED:
             Setting("AZURE_UPLOAD_MAX_CONN", parser=int),
             Setting("AZURE_CONNECTION_TIMEOUT_SECS", parser=int),
             Setting("AZURE_URL_EXPIRATION_SECS", parser=int),
-            Setting("AZURE_OVERWRITE_FILES", parser=str_to_bool),
             "AZURE_LOCATION",
             "AZURE_ENDPOINT_SUFFIX",
             "AZURE_CUSTOM_DOMAIN",

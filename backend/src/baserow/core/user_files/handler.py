@@ -15,6 +15,7 @@ from advocate.exceptions import UnacceptableAddressException
 from PIL import Image, ImageOps
 from requests.exceptions import RequestException
 
+from baserow.core.storage import OverwritingStorageHandler
 from baserow.core.utils import random_string, sha256_hash, stream_size, truncate_middle
 
 from .exceptions import (
@@ -162,7 +163,9 @@ class UserFileHandler:
             thumbnail.save(thumbnail_stream, image.format)
             thumbnail_stream.seek(0)
             thumbnail_path = self.user_file_thumbnail_path(user_file, name)
-            storage.save(thumbnail_path, thumbnail_stream)
+
+            handler = OverwritingStorageHandler(storage)
+            handler.save(thumbnail_path, thumbnail_stream)
 
             del thumbnail
             del thumbnail_stream
@@ -254,7 +257,8 @@ class UserFileHandler:
 
         # Save the file to the storage.
         full_path = self.user_file_path(user_file)
-        storage.save(full_path, stream)
+        handler = OverwritingStorageHandler(storage)
+        handler.save(full_path, stream)
 
         # Close the stream because we don't need it anymore.
         stream.close()
