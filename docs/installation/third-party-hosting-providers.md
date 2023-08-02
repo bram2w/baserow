@@ -23,7 +23,7 @@ Click to deploy: [https://clovyr.app/apps/baserow](https://clovyr.app/apps/baser
 
 ## Unfurl Cloud
 
-[Unfurl](https://www.unfurl.cloud/)
+[Unfurl Cloud](https://www.unfurl.cloud/) is a free, open-source platform that deploys to your own cloud-provider accounts and automatically tracks your configuration in git.
 
 Click to deploy: [https://unfurl.cloud/onecommons/blueprints/baserow/](https://unfurl.cloud/onecommons/blueprints/baserow/)
 
