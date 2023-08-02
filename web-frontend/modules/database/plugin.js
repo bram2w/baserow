@@ -115,6 +115,8 @@ import {
   BaserowDatetimeFormatTz,
   BaserowDay,
   BaserowDivide,
+  BaserowEncodeUri,
+  BaserowEncodeUriComponent,
   BaserowEqual,
   BaserowField,
   BaserowSearch,
@@ -447,6 +449,11 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowSearch(context))
   app.$registry.register('formula_function', new BaserowLength(context))
   app.$registry.register('formula_function', new BaserowReverse(context))
+  app.$registry.register('formula_function', new BaserowEncodeUri(context))
+  app.$registry.register(
+    'formula_function',
+    new BaserowEncodeUriComponent(context)
+  )
   // Number functions
   app.$registry.register('formula_function', new BaserowMultiply(context))
   app.$registry.register('formula_function', new BaserowDivide(context))

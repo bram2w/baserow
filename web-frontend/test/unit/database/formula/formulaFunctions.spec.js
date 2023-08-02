@@ -41,6 +41,8 @@ describe('Formula Functions Test', () => {
       'regex_replace',
       'multiply',
       'divide',
+      'encode_uri',
+      'encode_uri_component',
       'tonumber',
       'greatest',
       'least',

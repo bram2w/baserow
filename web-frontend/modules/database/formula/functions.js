@@ -371,6 +371,54 @@ export class BaserowDatetimeFormatTz extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowEncodeUri extends BaserowFunctionDefinition {
+  static getType() {
+    return 'encode_uri'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.encodeUriDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['encode_uri(text)']
+  }
+
+  getExamples() {
+    return [
+      "encode_uri('http://example.com/wiki/Señor') = 'http://example.com/wiki/Se%c3%b1or'",
+    ]
+  }
+
+  getFormulaType() {
+    return 'text'
+  }
+}
+
+export class BaserowEncodeUriComponent extends BaserowFunctionDefinition {
+  static getType() {
+    return 'encode_uri_component'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.encodeUriComponentDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['encode_uri_component(text)']
+  }
+
+  getExamples() {
+    return ["encode_uri_component('Hello World') = 'Hello%20World'"]
+  }
+
+  getFormulaType() {
+    return 'text'
+  }
+}
+
 export class BaserowToNumber extends BaserowFunctionDefinition {
   static getType() {
     return 'tonumber'
