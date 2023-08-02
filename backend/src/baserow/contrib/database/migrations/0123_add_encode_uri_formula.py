@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0120_tsvector_updater"),
+        ("database", "0122_alter_multiplecollaboratorsfield_notify_user_when_added"),
     ]
 
     operations = [

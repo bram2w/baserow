@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0121_add_encode_uri_formula"),
+        ("database", "0123_add_encode_uri_formula"),
     ]
 
     operations = [
