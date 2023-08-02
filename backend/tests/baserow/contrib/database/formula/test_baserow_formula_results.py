@@ -353,6 +353,11 @@ VALID_FORMULA_TESTS = [
     ("get_link_url(link('https://www.google.com'))", "https://www.google.com"),
     ("get_link_label(button('1', 'l'))", "l"),
     ("get_link_url(button('a' + 'b', 'l' + 'a'))", "ab"),
+    (
+        "encode_uri('http://example.com/wiki/Señor')",
+        "http://example.com/wiki/Se%c3%b1or",
+    ),
+    ("encode_uri_component('Hello World')", "Hello%20World"),
 ]
 
 

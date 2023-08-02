@@ -410,7 +410,9 @@
         "whenNanDescription": "Returns the first argument if it's not 'NaN'. Returns the second argument if the first argument is 'NaN'",
         "absDescription": "Returns the absolute value for the argument number provided.",
         "ceilDescription": "Returns the smallest integer that is greater than or equal the argument number provided.",
-        "floorDescription": "Returns the largest integer that is less than or equal the argument number provided."
+        "floorDescription": "Returns the largest integer that is less than or equal the argument number provided.",
+        "encodeUriDescription": "Returns a encoded URI string from the argument provided.",
+        "encodeUriComponentDescription": "Returns a encoded URI string component from the argument provided."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"
