@@ -58,6 +58,10 @@ export default {
      * Hide the modal.
      */
     hide(emit = true) {
+      if (!this.open) {
+        return
+      }
+
       // This is a temporary fix. What happens is the modal is opened by a context menu
       // item and the user closes the modal, the element is first deleted and then the
       // click outside event of the context is fired. It then checks if the click was

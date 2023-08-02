@@ -7,6 +7,7 @@
     <div class="templates__search">
       <div class="input__with-icon input__with-icon--left">
         <input
+          ref="searchInput"
           v-model="search"
           type="text"
           class="input"
@@ -63,6 +64,21 @@ export default {
     selectedTemplate: {
       required: true,
       validator: (prop) => typeof prop === 'object' || prop === null,
+    },
+  },
+  mounted() {
+    this.$priorityBus.$on(
+      'start-search',
+      this.$priorityBus.level.HIGH,
+      this.searchStarted
+    )
+  },
+  beforeDestroy() {
+    this.$priorityBus.$off('start-search', this.searchStarted)
+  },
+  methods: {
+    searchStarted() {
+      this.$refs.searchInput.focus()
     },
   },
 }
