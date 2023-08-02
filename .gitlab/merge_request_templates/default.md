@@ -21,3 +21,4 @@
   are updated for changes to endpoints accessed via api tokens
 - [ ] The UI/UX has been updated
   following [UI Style Guide](https://baserow.io/style-guide)
+- [ ] Security impact of change has been considered
