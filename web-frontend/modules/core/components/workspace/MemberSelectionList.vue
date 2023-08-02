@@ -2,6 +2,7 @@
   <div class="select-members-list">
     <div>
       <input
+        ref="searchInput"
         v-model="activeSearchTerm"
         type="text"
         class="input input--large"
@@ -76,6 +77,16 @@ export default {
       this.search(newValue)
     },
   },
+  mounted() {
+    this.$priorityBus.$on(
+      'start-search',
+      this.$priorityBus.level.HIGH,
+      this.searchStarted
+    )
+  },
+  beforeDestroy() {
+    this.$priorityBus.$off('start-search', this.searchStarted)
+  },
   methods: {
     toggleSelectAll() {
       // If all filtered members are selected...
@@ -91,6 +102,9 @@ export default {
         )
         this.membersSelected = this.membersSelected.concat(membersToAdd)
       }
+    },
+    searchStarted() {
+      this.$refs.searchInput.focus()
     },
     search(value) {
       if (value === null || value === '' || this.members.length === 0) {

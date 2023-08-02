@@ -5,6 +5,7 @@
       :class="{ 'input__with-icon--loading': loading }"
     >
       <input
+        ref="searchInput"
         v-model="headerSearchTerm"
         type="text"
         :placeholder="$t('crudTableSearch.search')"
@@ -44,7 +45,21 @@ export default {
       searchDebounce: null,
     }
   },
+  mounted() {
+    this.$priorityBus.$on(
+      'start-search',
+      this.$priorityBus.level.LOW,
+      this.searchStarted
+    )
+  },
+  beforeDestroy() {
+    this.$priorityBus.$off('start-search', this.searchStarted)
+  },
   methods: {
+    searchStarted() {
+      this.$bus.$emit('close-modals')
+      this.$refs.searchInput.focus()
+    },
     doSearch(query, immediate) {
       const search = () => {
         this.$emit('search-changed', query)
