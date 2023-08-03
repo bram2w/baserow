@@ -33,7 +33,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         """
         Subscribes the connection to a page abstraction. Based on the provided the page
         type we can figure out to which page the connection wants to subscribe to. This
-        is for example used when the users visits a page that he might want to
+        is for example used when the users visits a page that they might want to
         receive real time updates for.
 
         :param content: The provided payload by the user. This should contain the page
@@ -78,7 +78,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
     async def discard_current_page(self, send_confirmation=True):
         """
-        If the user has subscribed to another page then he will be unsubscribed from
+        If the user has subscribed to another page then they will be unsubscribed from
         the last page.
         """
 

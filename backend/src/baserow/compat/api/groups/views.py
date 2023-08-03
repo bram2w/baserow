@@ -194,9 +194,9 @@ class GroupLeaveCompatView(WorkspaceLeaveView):
         description=(
             f"{DEPRECATION_PREFIXES['leave_group']} Makes the authenticated user leave "
             "the group related to the provided `group_id` if the user is in that "
-            "group. If the user is the last admin in the group, he will not be able to "
+            "group. If the user is the last admin in the group, they will not be able to "
             "leave it. There must always be one admin in the group, otherwise it will "
-            "be left without control. If that is the case, he must either delete the "
+            "be left without control. If that is the case, they must either delete the "
             "group or give another member admin permissions first."
         ),
         request=None,

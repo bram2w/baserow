@@ -156,7 +156,7 @@ class AdminDashboardHandler:
     def get_active_user_count_per_day(self, delta, now=None):
         """
         Returns the active user count for each day in the provided range. Someone is
-        classified as an active user if he has signed in during the provided date
+        classified as an active user if they have signed in during the provided date
         range. The range is calculated based by subtracting the delta from the row
         until now. (now - delta until now).
 

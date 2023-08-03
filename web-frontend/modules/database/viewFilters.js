@@ -63,7 +63,7 @@ export class ViewFilterType extends Registerable {
   /**
    * Should return a component that is responsible for the filter's value. For example
    * for the equal filter a text field will be added where the user can enter whatever
-   * he wants to filter on.
+   * they want to filter on.
    */
   getInputComponent() {
     return null

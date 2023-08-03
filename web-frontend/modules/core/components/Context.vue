@@ -131,7 +131,7 @@ export default {
           this.open &&
           // If the prop allows it to be closed by clicking outside.
           this.hideOnClickOutside &&
-          // If the click was not on the opener because he can trigger the toggle
+          // If the click was not on the opener because they can trigger the toggle
           // method.
           !isElement(this.opener, target) &&
           // If the click was not inside one of the context children of this context

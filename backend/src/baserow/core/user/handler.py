@@ -409,7 +409,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         This action sends an email to the user to explain the process.
 
         :param user: The user to flag as `to_be_deleted`.
-        :raises UserIsLastAdmin: When the user cannot be deleted as he is the last
+        :raises UserIsLastAdmin: When the user cannot be deleted as they are the last
             admin.
         """
 

@@ -200,7 +200,7 @@ export const actions = {
   },
   /**
    * When selecting the table we will have to fetch all the views and fields that
-   * belong to the table we want to select. While the user is waiting he will see a
+   * belong to the table we want to select. While the user is waiting they will see a
    * loading icon in the related database and after that the table is selected.
    */
   async select({ commit, dispatch, getters }, { database, table }) {

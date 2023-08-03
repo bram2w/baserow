@@ -2,8 +2,8 @@ import { Registerable } from '@baserow/modules/core/registry'
 
 /**
  * An admin type is visible in the sidebar under the admin menu item. All
- * registered admin types are visible in the sidebar to admins and he clicks
- * on one he is redirected to the route related to the admin type.
+ * registered admin types are visible in the sidebar to admins and they clicks
+ * on one they are redirected to the route related to the admin type.
  */
 export class AdminType extends Registerable {
   /**

@@ -22,8 +22,8 @@ class TablePageType(PageType):
 
     def can_add(self, user, web_socket_id, table_id, **kwargs):
         """
-        The user should only have access to this page if the table exists and if he
-        has access to the table.
+        The user should only have access to this page if the table exists and if they
+        have access to the table.
         """
 
         if not table_id:

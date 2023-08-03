@@ -9,7 +9,7 @@ class PermissionException(Exception):
 
 class IsNotAdminError(PermissionException):
     """
-    Raised when the user tries to perform an action that is not allowed because he
+    Raised when the user tries to perform an action that is not allowed because they
     does not have admin permissions.
     """
 
@@ -79,8 +79,8 @@ class WorkspaceUserAlreadyExists(Exception):
 class WorkspaceUserIsLastAdmin(Exception):
     """
     Raised when the last admin of the workspace tries to leave it. This will leave the
-    workspace in a state where no one has control over it. He either needs to delete the
-    workspace or make someone else admin.
+    workspace in a state where no one has control over it. They either need to delete
+    the workspace or make someone else admin.
     """
 
 

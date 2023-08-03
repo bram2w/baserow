@@ -44,7 +44,7 @@ class RuntimeFormulaFunction(abc.ABC, Instance):
     @property
     def num_args(self):
         """
-        Should define the number of arguments expected byt he execute function.
+        Should define the number of arguments expected when they execute function.
 
         :return: The number of arguments that are expected
         """

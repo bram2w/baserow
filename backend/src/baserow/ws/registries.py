@@ -5,7 +5,7 @@ from baserow.ws.tasks import broadcast_to_channel_group
 class PageType(Instance):
     """
     The page registry holds the pages where the users can subscribe/add himself to.
-    When added he will receive real time updates related to that page.
+    When added they will receive real time updates related to that page.
 
     A user can subscribe by sending a message to the server containing the type as
     page name and the additional parameters. Example:
