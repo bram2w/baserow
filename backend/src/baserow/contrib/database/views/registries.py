@@ -69,7 +69,7 @@ class ViewType(
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
     will have his own model that must extend the View model, this is needed so that the
-    user can set custom settings per view instance he has created.
+    user can set custom settings per view instance they have created.
 
     The added API urls will be available under the namespace 'api:database:views'.
     So if a url with name 'example' is returned by the method it will available under

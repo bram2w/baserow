@@ -225,9 +225,9 @@ class WorkspaceLeaveView(APIView):
         description=(
             "Makes the authenticated user leave the workspace related to the provided "
             "`workspace_id` if the user is in that workspace. If the user is the last admin "
-            "in the workspace, he will not be able to leave it. There must always be one "
+            "in the workspace, they will not be able to leave it. There must always be one "
             "admin in the workspace, otherwise it will be left without control. If that "
-            "is the case, he must either delete the workspace or give another member admin "
+            "is the case, they must either delete the workspace or give another member admin "
             "permissions first."
         ),
         request=None,

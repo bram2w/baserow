@@ -199,7 +199,7 @@ export default {
         if (
           // Check if the context menu is still open
           this.open &&
-          // If the click was not on the opener because he can trigger the toggle
+          // If the click was not on the opener because they can trigger the toggle
           // method.
           !isElement(this.opener, target)
         ) {

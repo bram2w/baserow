@@ -213,7 +213,7 @@ class ApplicationType(
     This abstract class represents a custom application that can be added to the
     application registry. It must be extended so customisation can be done. Each
     application will have his own model that must extend the Application model, this is
-    needed so that the user can set custom settings per application instance he has
+    needed so that the user can set custom settings per application instance they have
     created.
 
     The added API urls will be available under the namespace 'api'. So if a url

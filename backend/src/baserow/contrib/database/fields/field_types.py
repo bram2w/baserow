@@ -2788,7 +2788,7 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         self, field, field_name, order_direction
     ) -> OptionallyAnnotatedOrderBy:
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the select option value and not in the id which is
         stored in the table. This method generates a Case expression which maps the id
         to the correct position.
@@ -3165,7 +3165,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_order(self, field, field_name, order_direction):
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the select option value and not in the id which is
         stored in the table. This method generates a Case expression which maps the id
         to the correct position.
@@ -4518,7 +4518,7 @@ class MultipleCollaboratorsFieldType(FieldType):
 
     def get_order(self, field, field_name, order_direction):
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the user's name and not in the id which is
         stored in the table. This method generates a Case expression which maps
         the id to the correct position.
