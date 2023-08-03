@@ -67,6 +67,16 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('element_updated', ({ store }, { element }) => {
+    const selectedPage = store.getters['page/getSelected']
+    if (selectedPage.id === element.page_id) {
+      store.dispatch('element/forceUpdate', {
+        element,
+        values: element,
+      })
+    }
+  })
+
   realtime.registerEvent('element_moved', ({ store }, data) => {
     const selectedPage = store.getters['page/getSelected']
     if (selectedPage.id === data.page_id) {
