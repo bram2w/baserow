@@ -1,5 +1,9 @@
 <template>
-  <Context @shown="fetchRolesAndPermissions">
+  <Context
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+    @shown="fetchRolesAndPermissions"
+  >
     <div
       v-if="workspace._.additionalLoading"
       class="loading margin-left-2 margin-top-2 margin-right-2 margin-bottom-2"

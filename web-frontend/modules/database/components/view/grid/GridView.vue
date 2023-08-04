@@ -131,7 +131,11 @@
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewRowDragging>
-    <Context ref="rowContext">
+    <Context
+      ref="rowContext"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
+    >
       <ul v-show="isMultiSelectActive" class="context__menu">
         <li>
           <a @click=";[copySelection(), $refs.rowContext.hide()]">

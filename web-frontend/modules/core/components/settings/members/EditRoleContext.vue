@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <template v-if="Object.keys(subject).length > 0">
       <div class="context__menu-title">
         <div class="edit-role-context__header">

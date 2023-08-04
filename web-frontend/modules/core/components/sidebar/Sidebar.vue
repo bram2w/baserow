@@ -32,7 +32,11 @@
           <div class="sidebar__user-email">{{ email }}</div>
         </div>
       </a>
-      <Context ref="userContext">
+      <Context
+        ref="userContext"
+        :overflow-scroll="true"
+        :max-height-if-outside-viewport="true"
+      >
         <div class="context__menu-title">{{ name }}</div>
         <ul class="context__menu">
           <li>

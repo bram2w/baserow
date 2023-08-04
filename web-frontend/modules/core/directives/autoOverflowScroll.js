@@ -12,9 +12,31 @@ import ResizeObserver from 'resize-observer-polyfill'
  * element depends on the width of the children. In that case `overflow: auto;`
  * might not work as the scrollbar width is not added to the total width of the
  * element. `overflow: scroll` does add the scrollbar width.
+ *
+ * Optionally, the directive accepts a boolean value to enable or disable it. By
+ * default the value is `true`, so then it's enabled.
  */
 export default {
-  bind(el) {
+  bind(el, binding) {
+    const value = binding.value === undefined ? true : binding.value
+    if (!value) {
+      binding.def.removeListeners(el)
+    } else if (value) {
+      binding.def.addListeners(el)
+    }
+  },
+  unbind(el, binding) {
+    binding.def.removeListeners(el)
+  },
+  update(el, binding) {
+    const value = binding.value === undefined ? true : binding.value
+    if (el.autoOverflowScrollHeightObserverBinded && !value) {
+      binding.def.removeListeners(el)
+    } else if (!el.autoOverflowScrollHeightObserverBinded && value) {
+      binding.def.addListeners(el)
+    }
+  },
+  addListeners(el) {
     el.autoOverflowScrollHeightObserverFunction = () => {
       if (el.scrollHeight <= el.clientHeight) {
         el.classList.add('prevent-scroll')
@@ -26,8 +48,10 @@ export default {
       el.autoOverflowScrollHeightObserverFunction
     )
     el.autoOverflowScrollHeightObserver.observe(el)
+    el.autoOverflowScrollHeightObserverBinded = true
   },
-  unbind(el) {
-    el.autoOverflowScrollHeightObserver.unobserve(el)
+  removeListeners(el) {
+    el.autoOverflowScrollHeightObserver?.unobserve(el)
+    el.autoOverflowScrollHeightObserverBinded = false
   },
 }

@@ -30,7 +30,11 @@
       >
         <i class="fas fa-ellipsis-v"></i>
       </a>
-      <Context ref="context">
+      <Context
+        ref="context"
+        :overflow-scroll="true"
+        :max-height-if-outside-viewport="true"
+      >
         <div class="context__menu-title">
           {{ application.name }} ({{ application.id }})
         </div>
