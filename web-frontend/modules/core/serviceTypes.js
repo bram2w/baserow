@@ -19,6 +19,10 @@ export class ServiceType extends Registerable {
     return null
   }
 
+  isValid(service) {
+    return true
+  }
+
   getOrder() {
     return 0
   }

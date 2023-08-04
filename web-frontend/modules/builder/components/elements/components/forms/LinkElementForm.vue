@@ -1,18 +1,13 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormElement class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.text') }}
-      </label>
-      <div class="control__elements">
-        <input
-          v-model="values.value"
-          type="text"
-          class="input"
-          :placeholder="$t('linkElementForm.textPlaceholder')"
-        />
-      </div>
-    </FormElement>
+    <FormulaInputGroup
+      v-model="values.value"
+      :label="$t('linkElementForm.text')"
+      :placeholder="$t('linkElementForm.textPlaceholder')"
+      :error="
+        !$v.values.value.validFormula ? $t('elementForms.invalidFormula') : ''
+      "
+    />
     <FormElement class="control">
       <label class="control__label">
         {{ $t('linkElementForm.navigateTo') }}
@@ -29,14 +24,14 @@
             <span v-else>{{ $t('linkElementForm.navigateToCustom') }}</span>
           </template>
           <DropdownItem
-            v-for="page in pages"
-            :key="page.id"
-            :value="page.id"
-            :name="page.name"
+            v-for="pageItem in pages"
+            :key="pageItem.id"
+            :value="pageItem.id"
+            :name="pageItem.name"
           >
-            {{ page.name }}
+            {{ pageItem.name }}
             <span class="link-element-form__navigate-option-page-path">
-              {{ page.path }}
+              {{ pageItem.path }}
             </span>
           </DropdownItem>
           <DropdownItem
@@ -47,22 +42,20 @@
       </div>
     </FormElement>
     <FormElement v-if="navigateTo === 'custom'" class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.url') }}
-      </label>
-      <div class="control__elements">
-        <input
-          v-model="values.navigate_to_url"
-          type="text"
-          class="input"
-          :placeholder="$t('linkElementForm.urlPlaceholder')"
-        />
-      </div>
+      <FormulaInputGroup
+        v-model="values.navigate_to_url"
+        :page="page"
+        :label="$t('linkElementForm.url')"
+        :placeholder="$t('linkElementForm.urlPlaceholder')"
+        :error="
+          !$v.values.navigate_to_url.validFormula
+            ? $t('elementForms.invalidFormula')
+            : ''
+        "
+        @blur="$v.values.navigate_to_url.$touch()"
+      />
     </FormElement>
-    <FormElement
-      v-if="destinationPage"
-      class="control link-element-form__params"
-    >
+    <FormElement v-if="destinationPage" class="control">
       <template v-if="parametersInError">
         <Alert type="error" minimal>
           <div class="link-element-form__params-error">
@@ -79,33 +72,27 @@
           </div>
         </Alert>
       </template>
-      <div v-else class="control__elements link-element-form__params">
-        <template v-for="(param, index) in values.page_parameters">
-          <!-- eslint-disable-next-line vue/require-v-for-key -->
-          <label>{{ param.name }}</label>
-          <!-- eslint-disable-next-line vue/require-v-for-key -->
-          <div class="control__elements">
-            <input
-              v-model="param.value"
-              :class="{
-                'input--error': $v.values.page_parameters.$each[index].$error,
-              }"
-              type="text"
-              class="input"
-              :placeholder="$t('linkElementForm.paramPlaceholder')"
-              @blur="$v.values.page_parameters.$each[index].$touch()"
-            />
-            <div
-              v-if="
-                $v.values.page_parameters.$each[index].$dirty &&
-                $v.values.page_parameters.$each[index].$error
-              "
-              class="error"
-            >
-              {{ $t('linkElementForm.pageParameterTypeError') }}
-            </div>
-          </div>
-        </template>
+      <div v-else>
+        <div
+          v-for="(param, index) in values.page_parameters"
+          :key="param.name"
+          class="link-element-form__param"
+        >
+          <FormulaInputGroup
+            v-model="param.value"
+            :page="page"
+            :label="param.name"
+            horizontal
+            :placeholder="$t('linkElementForm.paramPlaceholder')"
+            :error="
+              $v.values.page_parameters.$each[index].$dirty &&
+              $v.values.page_parameters.$each[index].$error
+                ? $t('elementForms.invalidFormula')
+                : ''
+            "
+            @blur="$v.values.page_parameters.$each[index].$touch()"
+          />
+        </div>
       </div>
     </FormElement>
     <FormElement class="control">
@@ -158,12 +145,17 @@ import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import AlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/settings/AlignmentSelector'
 import { ALIGNMENTS } from '@baserow/modules/builder/enums'
+import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
+import { isValidFormula } from '@baserow/formula'
 
 export default {
   name: 'LinkElementForm',
-  components: { AlignmentSelector },
+  components: { AlignmentSelector, FormulaInputGroup },
   mixins: [form],
-  props: { builder: { type: Object, required: true } },
+  props: {
+    builder: { type: Object, required: true },
+    page: { type: Object, required: true },
+  },
   data() {
     let navigateTo = ''
     if (this.defaultValues.navigation_type === 'page') {
@@ -241,11 +233,6 @@ export default {
         (pathParam) => pathParam.name === parameterName
       )?.type
     },
-    emitChange(newValues) {
-      if (this.isFormValid()) {
-        form.methods.emitChange.bind(this)(newValues)
-      }
-    },
     updatePageParameters() {
       this.values.page_parameters = (
         this.destinationPage?.path_params || []
@@ -256,19 +243,18 @@ export default {
       this.parametersInError = false
       this.$v.values.page_parameters.$touch()
     },
-    validatePageParameterType(pageParameter) {
-      return LinkElementType.validatePathParamType(
-        pageParameter.value,
-        this.getPageParameterType(pageParameter.name)
-      )
+    validatePageParameter(pageParameter) {
+      return isValidFormula(pageParameter.value)
     },
   },
   validations() {
     return {
       values: {
+        value: { validFormula: isValidFormula },
         page_parameters: {
-          $each: { $validator: this.validatePageParameterType },
+          $each: { $validator: this.validatePageParameter },
         },
+        navigate_to_url: { validFormula: isValidFormula },
       },
     }
   },

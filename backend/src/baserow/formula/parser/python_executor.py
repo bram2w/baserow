@@ -1,7 +1,4 @@
-from abc import ABC, abstractmethod
-from typing import Any, Dict
-
-from _decimal import Decimal
+from decimal import Decimal
 
 from baserow.formula import BaserowFormula, BaserowFormulaVisitor
 from baserow.formula.parser.exceptions import (
@@ -10,24 +7,17 @@ from baserow.formula.parser.exceptions import (
     FormulaFunctionTypeDoesNotExist,
     UnknownOperator,
 )
-
-
-class FunctionCollection(ABC):
-    @abstractmethod
-    def get(self, name: str):
-        """
-        Needs to return a function given the name of the function
-        :param name: The name of the function
-        :return: The function itself
-        """
-
-        pass
+from baserow.formula.types import FormulaContext, FormulaFunction, FunctionCollection
 
 
 class BaserowPythonExecutor(BaserowFormulaVisitor):
-    def __init__(self, functions: FunctionCollection, context: Dict[str, Any] = None):
-        self.functions = functions
+    def __init__(
+        self,
+        functions: FunctionCollection,
+        context: FormulaContext,
+    ):
         self.context = context
+        self.functions = functions
 
     def visitRoot(self, ctx: BaserowFormula.RootContext):
         return ctx.expr().accept(self)
@@ -69,7 +59,7 @@ class BaserowPythonExecutor(BaserowFormulaVisitor):
 
         return formula_function_type.execute(self.context, args_parsed)
 
-    def _get_formula_function_type(self, function_name):
+    def _get_formula_function_type(self, function_name: str) -> FormulaFunction:
         try:
             return self.functions.get(function_name)
         except FormulaFunctionTypeDoesNotExist:

@@ -5,6 +5,17 @@
     display: flex;
     justify-content: right;
   }
+
+  &.control--horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    & .control__elements {
+      flex-basis: 70%;
+      margin-top: 0;
+    }
+  }
 }
 
 .control__description {
@@ -31,6 +42,12 @@
     & + :not(.control__description) {
       margin-top: 4px;
     }
+  }
+
+  .control--horizontal & {
+    flex-basis: 30%;
+    font-weight: 500;
+    margin: 0;
   }
 }
 

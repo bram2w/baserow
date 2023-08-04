@@ -18,6 +18,7 @@
         :element="props.element"
         :builder="props.builder"
         :mode="props.mode"
+        :page="props.page"
         class="element"
       />
     </div>
@@ -33,6 +34,10 @@ export default {
       required: true,
     },
     builder: {
+      type: Object,
+      required: true,
+    },
+    page: {
       type: Object,
       required: true,
     },

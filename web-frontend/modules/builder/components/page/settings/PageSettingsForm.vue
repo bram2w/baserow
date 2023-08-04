@@ -207,7 +207,6 @@ export default {
           pathParam.type = paramType
         }
       })
-      // this.values.path_params[paramTypeName].param_type = paramType
     },
     isNameUnique(name) {
       return !this.pageNames.includes(name) || name === this.page?.name

@@ -1,4 +1,5 @@
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 
 const state = {
   // The dataSources currently loaded
@@ -9,6 +10,7 @@ const updateContext = {
   updateTimeout: null,
   promiseResolve: null,
   lastUpdatedValues: null,
+  valuesToUpdate: {},
 }
 
 const mutations = {
@@ -23,10 +25,20 @@ const mutations = {
     }
   },
   UPDATE_ITEM(state, { dataSource: dataSourceToUpdate, values }) {
-    state.dataSources.forEach((dataSource) => {
-      if (dataSource.id === dataSourceToUpdate.id) {
-        Object.assign(dataSource, values)
-      }
+    const index = state.dataSources.findIndex(
+      (dataSource) => dataSource.id === dataSourceToUpdate.id
+    )
+    state.dataSources.splice(index, 1, {
+      ...state.dataSources[index],
+      ...values,
+    })
+  },
+  FULL_UPDATE_ITEM(state, { dataSource: dataSourceToUpdate, values }) {
+    const index = state.dataSources.findIndex(
+      (dataSource) => dataSource.id === dataSourceToUpdate.id
+    )
+    state.dataSources.splice(index, 1, {
+      ...values,
     })
   },
   DELETE_ITEM(state, { dataSourceId }) {
@@ -105,36 +117,39 @@ const actions = {
     }
   },
 
-  async debouncedUpdate({ dispatch, getters }, { dataSourceId, values }) {
+  debouncedUpdate({ dispatch, getters, commit }, { dataSourceId, values }) {
     const dataSourcesOfPage = getters.getDataSources
     const dataSource = dataSourcesOfPage.find(
       (dataSource) => dataSource.id === dataSourceId
     )
     const oldValues = {}
-    const newValues = {}
     Object.keys(values).forEach((name) => {
       if (Object.prototype.hasOwnProperty.call(dataSource, name)) {
         oldValues[name] = dataSource[name]
-        newValues[name] = values[name]
+        // Accumulate the changed values to send all the ongoing changes with the
+        // final request
+        updateContext.valuesToUpdate[name] = values[name]
       }
     })
-
-    await dispatch('forceUpdate', { dataSource, values: newValues })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
         try {
-          await DataSourceService(this.$client).update(dataSource.id, values)
+          const { data } = await DataSourceService(this.$client).update(
+            dataSource.id,
+            updateContext.valuesToUpdate
+          )
+          await commit('FULL_UPDATE_ITEM', { dataSource, values: data })
           resolve()
         } catch (error) {
           // Revert to old values on error
-
           await dispatch('forceUpdate', {
             dataSource,
             values: updateContext.lastUpdatedValues,
           })
           reject(error)
         }
+        updateContext.valuesToUpdate = {}
         updateContext.lastUpdatedValues = null
       }
 
@@ -177,12 +192,26 @@ const actions = {
     }
   },
   async fetch({ dispatch, commit }, { page }) {
-    commit('CLEAR_ITEMS')
-
+    dispatch('dataSourceContent/clearDataSourceContents', null, { root: true })
     const { data: dataSources } = await DataSourceService(
       this.$client
     ).fetchAll(page.id)
 
+    commit('CLEAR_ITEMS')
+    await Promise.all(
+      dataSources.map((dataSource) => dispatch('forceCreate', { dataSource }))
+    )
+
+    return dataSources
+  },
+  async fetchPublished({ dispatch, commit }, { page }) {
+    dispatch('dataSourceContent/clearDataSourceContents', null, { root: true })
+
+    const { data: dataSources } = await PublishedBuilderService(
+      this.$client
+    ).fetchDataSources(page.id)
+
+    commit('CLEAR_ITEMS')
     await Promise.all(
       dataSources.map((dataSource) => dispatch('forceCreate', { dataSource }))
     )

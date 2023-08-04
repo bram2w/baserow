@@ -1,10 +1,11 @@
 from decimal import Decimal
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
+    DataSourceImproperlyConfigured,
     DataSourceNotInSamePage,
 )
 from baserow.contrib.builder.data_sources.models import DataSource
@@ -327,3 +328,154 @@ def test_move_data_source_trigger_order_recalculed(
     DataSourceService().move_data_source(user, data_source3, before=data_source2)
 
     assert data_source_orders_recalculated_mock.called_with(page=page, user=user)
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="2"
+    )
+
+    formula_context = MagicMock()
+    formula_context.cache = {}
+
+    result = DataSourceService().dispatch_data_source(
+        user, data_source, formula_context
+    )
+
+    assert result == {
+        "id": rows[1].id,
+        "order": "1.00000000000000000000",
+        "Name": "Audi",
+        "My Color": "Orange",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_page_data_sources(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="2"
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="3"
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="b"
+    )
+
+    formula_context = MagicMock()
+    formula_context.cache = {}
+
+    result = DataSourceService().dispatch_page_data_sources(user, page, formula_context)
+
+    assert result[data_source.id] == {
+        "id": rows[1].id,
+        "order": "1.00000000000000000000",
+        "Name": "Audi",
+        "My Color": "Orange",
+    }
+
+    assert result[data_source2.id] == {
+        "id": rows[2].id,
+        "order": "1.00000000000000000000",
+        "Name": "Volkswagen",
+        "My Color": "White",
+    }
+
+    assert isinstance(result[data_source3.id], Exception)
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_permission_denied(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="1"
+    )
+
+    formula_context = MagicMock()
+    formula_context.cache = {}
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        DataSourceService().dispatch_data_source(user, data_source, formula_context)
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_improperly_configured(data_fixture):
+    user = data_fixture.create_user()
+
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=None,
+    )
+
+    # Without type
+    data_source = data_fixture.create_builder_data_source(
+        user=user, page=page, integration=integration
+    )
+
+    formula_context = MagicMock()
+    formula_context.cache = {}
+
+    with pytest.raises(DataSourceImproperlyConfigured):
+        DataSourceService().dispatch_data_source(user, data_source, formula_context)

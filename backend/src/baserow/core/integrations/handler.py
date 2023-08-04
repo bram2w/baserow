@@ -6,7 +6,10 @@ from baserow.core.db import specific_iterator
 from baserow.core.exceptions import ApplicationOperationNotSupported
 from baserow.core.integrations.exceptions import IntegrationDoesNotExist
 from baserow.core.integrations.models import Integration
-from baserow.core.integrations.registries import IntegrationType
+from baserow.core.integrations.registries import (
+    IntegrationType,
+    integration_type_registry,
+)
 from baserow.core.models import Application
 from baserow.core.registries import application_type_registry
 from baserow.core.utils import extract_allowed
@@ -67,14 +70,14 @@ class IntegrationHandler:
 
     def get_integrations(
         self,
-        application: Application,
+        application: Optional[Application] = None,
         base_queryset: Optional[QuerySet] = None,
         specific: bool = True,
     ) -> Union[QuerySet[Integration], Iterable[Integration]]:
         """
         Gets all the specific integrations of a given application.
 
-        :param application: The application that holds the integrations.
+        :param application: The application that holds the integrations if provided.
         :param base_queryset: The base queryset to use to build the query.
         :param specific: Whether to return the generic integrations or the specific
             instances.
@@ -85,11 +88,20 @@ class IntegrationHandler:
             base_queryset if base_queryset is not None else Integration.objects.all()
         )
 
-        queryset = queryset.filter(application=application)
+        if application:
+            queryset = queryset.filter(application=application)
 
         if specific:
+            # Enhance the queryset for the given integration type for better perf
+            def per_content_type_queryset_hook(model, queryset):
+                integration_type = integration_type_registry.get_by_model(model)
+                return integration_type.enhance_queryset(queryset)
+
             queryset = queryset.select_related("content_type")
-            return specific_iterator(queryset)
+
+            return specific_iterator(
+                queryset, per_content_type_queryset_hook=per_content_type_queryset_hook
+            )
         else:
             return queryset
 

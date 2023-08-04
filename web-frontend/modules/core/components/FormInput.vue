@@ -1,5 +1,11 @@
 <template>
-  <FormElement :error="hasError" class="control">
+  <FormElement
+    :error="hasError"
+    class="control"
+    :class="{
+      'control--horizontal': horizontal,
+    }"
+  >
     <label
       v-if="label"
       class="control__label"
@@ -99,6 +105,11 @@ export default {
       default: false,
     },
     large: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    horizontal: {
       type: Boolean,
       required: false,
       default: false,

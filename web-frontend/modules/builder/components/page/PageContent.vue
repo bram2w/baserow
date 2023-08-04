@@ -5,6 +5,7 @@
       :key="element.id"
       :element="element"
       :builder="builder"
+      :page="page"
       :mode="mode"
     />
   </div>

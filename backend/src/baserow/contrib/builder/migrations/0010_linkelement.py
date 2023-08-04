@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "value",
-                    baserow.contrib.builder.elements.models.ExpressionField(default=""),
+                    baserow.contrib.builder.elements.models.FormulaField(default=""),
                 ),
                 (
                     "navigation_type",
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "navigate_to_url",
-                    baserow.contrib.builder.elements.models.ExpressionField(
+                    baserow.contrib.builder.elements.models.FormulaField(
                         default="",
                         help_text="If no page is selected, this indicate the destination of the link.",
                     ),

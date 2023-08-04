@@ -29,7 +29,12 @@
         </div>
       </template>
 
-      <Button type="link" prepend-icon="plus" @click="createDataSource()">
+      <Button
+        type="link"
+        prepend-icon="plus"
+        :loading="creationInProgress"
+        @click="createDataSource()"
+      >
         {{ $t('dataSourceContext.addDataSource') }}
       </Button>
     </template>
@@ -56,7 +61,7 @@ export default {
     },
   },
   data() {
-    return { state: null }
+    return { state: null, creationInProgress: false }
   },
   computed: {
     ...mapGetters({
@@ -67,7 +72,6 @@ export default {
   methods: {
     ...mapActions({
       actionFetchIntegrations: 'integration/fetch',
-      actionFetchDataSources: 'dataSource/fetch',
       actionCreateDataSource: 'dataSource/create',
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
@@ -75,7 +79,6 @@ export default {
     async shown() {
       this.state = 'loading'
       try {
-        await this.actionFetchDataSources({ page: this.page })
         await this.actionFetchIntegrations({ applicationId: this.builder.id })
       } catch (error) {
         notifyIf(error)
@@ -83,6 +86,7 @@ export default {
       this.state = 'loaded'
     },
     async createDataSource() {
+      this.creationInProgress = true
       try {
         await this.actionCreateDataSource({
           pageId: this.page.id,
@@ -91,20 +95,26 @@ export default {
       } catch (error) {
         notifyIf(error)
       }
+      this.creationInProgress = false
     },
     async updateDataSource(dataSource, newValues) {
-      const hasDifference = Object.entries(newValues).some(
-        ([key, value]) => !_.isEqual(value, dataSource[key])
+      const differences = Object.fromEntries(
+        Object.entries(newValues).filter(
+          ([key, value]) => !_.isEqual(value, dataSource[key])
+        )
       )
 
-      if (hasDifference) {
+      if (Object.keys(differences).length > 0) {
         try {
           await this.actionUpdateDataSource({
             dataSourceId: dataSource.id,
-            values: clone(newValues),
+            values: clone(differences),
           })
+          if (differences.type) {
+            this.$refs[`dataSourceForm_${dataSource.id}`][0].reset()
+          }
         } catch (error) {
-          // Restore the previous saved values from the store
+          // Restore the previously saved values from the store
           this.$refs[`dataSourceForm_${dataSource.id}`][0].reset()
           notifyIf(error)
         }

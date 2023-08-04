@@ -2,9 +2,9 @@
   <component
     :is="`h${element.level}`"
     class="heading-element"
-    :class="{ 'element--no-value': !element.value }"
+    :class="{ 'element--no-value': !resolvedValue }"
   >
-    {{ element.value || $t('headingElement.noValue') }}
+    {{ resolvedValue || $t('headingElement.noValue') }}
   </component>
 </template>
 
@@ -23,6 +23,15 @@ export default {
     element: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    resolvedValue() {
+      try {
+        return this.resolveFormula(this.element.value)
+      } catch (e) {
+        return ''
+      }
     },
   },
 }

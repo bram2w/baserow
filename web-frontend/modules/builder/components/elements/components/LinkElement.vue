@@ -11,7 +11,7 @@
       :target="`_${element.target}`"
       @click="onClick"
     >
-      {{ element.value || $t('linkElement.noValue') }}
+      {{ resolvedValue || $t('linkElement.noValue') }}
     </a>
   </div>
 </template>
@@ -35,11 +35,27 @@ import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 export default {
   name: 'LinkElement',
   mixins: [element],
+  props: {
+    /**
+     * @type {LinkElement}
+     */
+    element: {
+      type: Object,
+      required: true,
+    },
+  },
   computed: {
+    resolvedValue() {
+      try {
+        return this.resolveFormula(this.element.value)
+      } catch {
+        return ''
+      }
+    },
     classes() {
       return {
         [`element--alignment-${this.element.alignment}`]: true,
-        'element--no-value': !this.element.value,
+        'element--no-value': !this.resolvedValue,
       }
     },
     extraAttr() {
@@ -54,7 +70,11 @@ export default {
     },
     originalUrl() {
       try {
-        return LinkElementType.getUrlFromElement(this.element, this.builder)
+        return LinkElementType.getUrlFromElement(
+          this.element,
+          this.builder,
+          this.resolveFormula
+        )
       } catch (e) {
         return ''
       }

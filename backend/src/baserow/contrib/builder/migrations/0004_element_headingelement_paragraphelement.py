@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "value",
-                    baserow.contrib.builder.elements.models.ExpressionField(default=""),
+                    baserow.contrib.builder.elements.models.FormulaField(default=""),
                 ),
                 (
                     "level",
@@ -114,7 +114,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "value",
-                    baserow.contrib.builder.elements.models.ExpressionField(default=""),
+                    baserow.contrib.builder.elements.models.FormulaField(default=""),
                 ),
             ],
             options={

@@ -1,11 +1,13 @@
 <template>
   <div class="page-preview__wrapper" @click.self="selectElement(null)">
-    <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
+    <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
+    <div ref="preview" class="page-preview" :style="{ maxWidth }">
       <div ref="previewScaled" class="page-preview__scaled">
         <ElementPreview
           v-for="(element, index) in elements"
           :key="element.id"
           :element="element"
+          :page="page"
           :active="element.id === elementSelectedId"
           :is-first-element="index === 0"
           :is-last-element="index === elements.length - 1"
@@ -17,13 +19,13 @@
           @duplicate="duplicateElement(element, index)"
         />
       </div>
+      <AddElementModal
+        ref="addElementModal"
+        :adding-element-type="addingElementType"
+        :page="page"
+        @add="addElement"
+      />
     </div>
-    <AddElementModal
-      ref="addElementModal"
-      :adding-element-type="addingElementType"
-      :page="page"
-      @add="addElement"
-    />
   </div>
 </template>
 
@@ -32,11 +34,12 @@ import { mapGetters, mapActions } from 'vuex'
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal'
+import PreviewNavigationBar from '@baserow/modules/builder/components/page/PreviewNavigationBar'
 import { PLACEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'PagePreview',
-  components: { AddElementModal, ElementPreview },
+  components: { AddElementModal, ElementPreview, PreviewNavigationBar },
   data() {
     return {
       // This value is set when the insertion of a new element is in progress to
@@ -56,10 +59,8 @@ export default {
       page: 'page/getSelected',
       deviceTypeSelected: 'page/getDeviceTypeSelected',
       elementSelected: 'element/getSelected',
+      elements: 'element/getElements',
     }),
-    elements() {
-      return this.$store.getters['element/getElements']
-    },
     elementSelectedId() {
       return this.elementSelected?.id
     },

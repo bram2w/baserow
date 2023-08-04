@@ -4,10 +4,7 @@ from django.db.models import QuerySet
 
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.elements.models import Element
-from baserow.contrib.builder.elements.registries import (
-    ElementType,
-    element_type_registry,
-)
+from baserow.contrib.builder.elements.registries import ElementType
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
 from baserow.core.utils import extract_allowed
@@ -143,14 +140,12 @@ class ElementHandler:
         :return: The updated element.
         """
 
-        element_type = element_type_registry.get_by_model(element)
-
         shared_allowed_fields = ["style_padding_top", "style_padding_bottom"]
         allowed_updates = extract_allowed(
-            kwargs, shared_allowed_fields + element_type.allowed_fields
+            kwargs, shared_allowed_fields + element.get_type().allowed_fields
         )
 
-        allowed_updates = element_type.prepare_value_for_db(
+        allowed_updates = element.get_type().prepare_value_for_db(
             allowed_updates, instance=element
         )
 

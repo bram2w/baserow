@@ -44,7 +44,9 @@ class PageHandler:
             base_queryset = Page.objects
 
         try:
-            return base_queryset.get(id=page_id)
+            return base_queryset.select_related("builder", "builder__workspace").get(
+                id=page_id
+            )
         except Page.DoesNotExist:
             raise PageDoesNotExist()
 

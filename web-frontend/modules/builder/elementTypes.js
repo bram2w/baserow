@@ -10,8 +10,9 @@ import ImageElement from '@baserow/modules/builder/components/elements/component
 import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
 import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/InputTextElementForm.vue'
 
-import { compile } from 'path-to-regexp'
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
+import { compile } from 'path-to-regexp'
+import _ from 'lodash'
 
 export class ElementType extends Registerable {
   get name() {
@@ -137,19 +138,7 @@ export class LinkElementType extends ElementType {
   }
 
   isInError({ element, builder }) {
-    try {
-      LinkElementType.getUrlFromElement(element, builder)
-    } catch (e) {
-      // Error in path resolution
-      return true
-    }
-
     return LinkElementType.arePathParametersInError(element, builder)
-  }
-
-  static validatePathParamType(value, type) {
-    const validationFunction = PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[type]
-    return validationFunction !== undefined && validationFunction(value)
   }
 
   static arePathParametersInError(element, builder) {
@@ -165,31 +154,21 @@ export class LinkElementType extends ElementType {
         const destinationPageParams = destinationPage.path_params || []
         const pageParams = element.page_parameters || []
 
-        if (destinationPageParams.length !== pageParams.length) {
+        const destinationPageParamNames = destinationPageParams.map(
+          ({ name }) => name
+        )
+        const pageParamNames = pageParams.map(({ name }) => name)
+
+        if (!_.isEqual(destinationPageParamNames, pageParamNames)) {
           return true
         }
-
-        for (let i = 0; i < destinationPageParams.length; i++) {
-          const destinationParam = destinationPageParams[i]
-          const pageParam = pageParams[i]
-
-          if (
-            destinationParam.name !== pageParam.name ||
-            !LinkElementType.validatePathParamType(
-              pageParam.value,
-              destinationParam.type
-            )
-          ) {
-            return true
-          }
-        }
       }
-    }
+    } //
 
     return false
   }
 
-  static getUrlFromElement(element, builder) {
+  static getUrlFromElement(element, builder, resolveFormula) {
     if (element.navigation_type === 'page') {
       if (!isNaN(element.navigate_to_page_id)) {
         const page = builder.pages.find(
@@ -201,17 +180,23 @@ export class LinkElementType extends ElementType {
           return ''
         }
 
+        const paramTypeMap = Object.fromEntries(
+          page.path_params.map(({ name, type }) => [name, type])
+        )
+
         const toPath = compile(page.path, { encode: encodeURIComponent })
         const pageParams = Object.fromEntries(
-          element.page_parameters.map(({ name, value }) => [name, value])
+          element.page_parameters.map(({ name, value }) => [
+            name,
+            PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS[paramTypeMap[name]](
+              resolveFormula(value)
+            ),
+          ])
         )
         return toPath(pageParams)
       }
-    } else if (!element.navigate_to_url.startsWith('http')) {
-      // add the https protocol if missing
-      return `https://${element.navigate_to_url}`
     } else {
-      return element.navigate_to_url
+      return resolveFormula(element.navigate_to_url)
     }
     return ''
   }

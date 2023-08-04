@@ -133,11 +133,6 @@ export default {
     },
   },
   methods: {
-    emitChange(newValues) {
-      if (this.isFormValid()) {
-        form.methods.emitChange.bind(this)(newValues)
-      }
-    },
     openFileUploadModal() {
       this.$refs.userFilesModal.show(UploadFileUserFileUploadType.getType())
     },

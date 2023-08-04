@@ -3,7 +3,7 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-import baserow.core.expression.field
+import baserow.core.formula.field
 
 
 class Migration(migrations.Migration):
@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "default_value",
-                    baserow.core.expression.field.ExpressionField(
+                    baserow.core.formula.field.FormulaField(
                         default="", help_text="This text input's default value."
                     ),
                 ),

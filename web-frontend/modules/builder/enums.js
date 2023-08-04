@@ -1,3 +1,8 @@
+import {
+  ensureInteger,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
+
 export const DIRECTIONS = {
   UP: 'up',
   DOWN: 'down',
@@ -10,8 +15,8 @@ export const PLACEMENTS = {
   AFTER: 'after',
 }
 export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
-  numeric: (value) => !isNaN(value),
-  text: () => true, // Everything starts as text
+  numeric: ensureInteger,
+  text: ensureString,
 }
 
 export const IMAGE_SOURCE_TYPES = {

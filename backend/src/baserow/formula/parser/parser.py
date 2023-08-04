@@ -31,7 +31,7 @@ def get_token_stream_for_formula(formula: str) -> BufferedTokenStream:
 def get_parse_tree_for_formula(formula: str):
     """
     WARNING: This function is directly used by migration code. Please ensure
-    backwards compatability .
+    backwards compatibility .
     """
 
     lexer = BaserowFormulaLexer(InputStream(formula))

@@ -29,6 +29,27 @@ class ServiceSerializer(serializers.ModelSerializer):
         }
 
 
+class PublicServiceSerializer(serializers.ModelSerializer):
+    """
+    Basic service serializer mostly for public returned values.
+    Don't add sensitive data here.
+    """
+
+    type = serializers.SerializerMethodField(help_text="The type of the service.")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_type(self, instance):
+        return service_type_registry.get_by_model(instance.specific_class).type
+
+    class Meta:
+        model = Service
+        fields = ("id", "type")
+        extra_kwargs = {
+            "id": {"read_only": True},
+            "type": {"read_only": True},
+        }
+
+
 class CreateServiceSerializer(serializers.ModelSerializer):
     """
     This serializer allow to set the type of a service and the service id before which

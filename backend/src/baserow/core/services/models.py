@@ -2,7 +2,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.core.integrations.models import Integration
-from baserow.core.mixins import PolymorphicContentTypeMixin, TrashableModelMixin
+from baserow.core.mixins import (
+    PolymorphicContentTypeMixin,
+    TrashableModelMixin,
+    WithRegistry,
+)
 
 
 def get_default_service_service():
@@ -11,6 +15,7 @@ def get_default_service_service():
 
 class Service(
     PolymorphicContentTypeMixin,
+    WithRegistry,
     TrashableModelMixin,
     models.Model,
 ):
@@ -40,3 +45,9 @@ class Service(
 
     class Meta:
         ordering = ("id",)
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import service_type_registry
+
+        return service_type_registry

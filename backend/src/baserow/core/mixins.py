@@ -18,6 +18,7 @@ from baserow.core.db import (
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.managers import NoTrashManager, TrashOnlyManager, make_trash_manager
+from baserow.core.registry import Instance, ModelRegistryMixin
 
 
 class OrderableMixin:
@@ -322,6 +323,22 @@ class PolymorphicContentTypeMixin:
         # properties so that they wont return the values of the old type.
         del self.specific
         del self.specific_class
+
+
+class WithRegistry:
+    """
+    Add shortcuts to models related to a registry.
+    """
+
+    @staticmethod
+    @abc.abstractmethod
+    def get_type_registry() -> ModelRegistryMixin:
+        """Must return the registry related to this model class."""
+
+    def get_type(self) -> Instance:
+        """Returns the type for this model instance"""
+
+        return self.get_type_registry().get_by_model(self)
 
 
 class CreatedAndUpdatedOnMixin(models.Model):
