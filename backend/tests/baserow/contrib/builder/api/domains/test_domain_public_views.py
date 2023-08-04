@@ -174,9 +174,10 @@ def test_publish_builder(mock_run_async_job, api_client, data_fixture):
 
 @pytest.mark.django_db
 def test_get_elements_of_public_builder(api_client, data_fixture):
-    user, token = data_fixture.create_user_and_token()
+    user = data_fixture.create_user()
     builder_from = data_fixture.create_builder_application(user=user)
-    page = data_fixture.create_builder_page(user=user)
+    builder_to = data_fixture.create_builder_application(user=user, workspace=None)
+    page = data_fixture.create_builder_page(builder=builder_to, user=user)
     element1 = data_fixture.create_builder_heading_element(page=page)
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_paragraph_element(page=page)
@@ -194,10 +195,86 @@ def test_get_elements_of_public_builder(api_client, data_fixture):
     response = api_client.get(
         url,
         format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     response_json = response.json()
 
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 3
+
+
+@pytest.mark.django_db
+def test_get_elements_of_public_builder_permission_denied(api_client, data_fixture):
+    user = data_fixture.create_user()
+    builder_from = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder_from, user=user)
+    element1 = data_fixture.create_builder_heading_element(page=page)
+
+    url = reverse(
+        "api:builder:domains:list_elements",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_get_data_source_of_public_builder(api_client, data_fixture):
+    user = data_fixture.create_user()
+    builder_from = data_fixture.create_builder_application(user=user)
+    builder_to = data_fixture.create_builder_application(user=user, workspace=None)
+    page = data_fixture.create_builder_page(builder=builder_to, user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+
+    domain = data_fixture.create_builder_domain(
+        domain_name="test.getbaserow.io",
+        published_to=page.builder,
+        builder=builder_from,
+    )
+
+    url = reverse(
+        "api:builder:domains:list_data_sources",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+
+    response_json = response.json()
+
+    assert response.status_code == HTTP_200_OK
+    assert len(response_json) == 3
+
+
+@pytest.mark.django_db
+def test_get_data_source_of_public_builder_permission_denied(api_client, data_fixture):
+    user = data_fixture.create_user()
+    builder_from = data_fixture.create_builder_application(user=user)
+    page = data_fixture.create_builder_page(builder=builder_from, user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+
+    url = reverse(
+        "api:builder:domains:list_data_sources",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED

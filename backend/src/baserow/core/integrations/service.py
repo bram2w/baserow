@@ -25,8 +25,6 @@ from baserow.core.integrations.signals import (
 from baserow.core.integrations.types import IntegrationForUpdate
 from baserow.core.models import Application
 
-from .registries import integration_type_registry
-
 
 class IntegrationService:
     def __init__(self):
@@ -80,7 +78,7 @@ class IntegrationService:
         )
 
         return self.handler.get_integrations(
-            application, base_queryset=user_integrations
+            application=application, base_queryset=user_integrations
         )
 
     def create_integration(
@@ -157,12 +155,10 @@ class IntegrationService:
             context=integration,
         )
 
-        integration_type = integration_type_registry.get_by_model(integration)
-
-        prepared_values = integration_type.prepare_values(kwargs, user)
+        prepared_values = integration.get_type().prepare_values(kwargs, user)
 
         integration = self.handler.update_integration(
-            integration_type, integration, **prepared_values
+            integration.get_type(), integration, **prepared_values
         )
 
         integration_updated.send(self, integration=integration, user=user)

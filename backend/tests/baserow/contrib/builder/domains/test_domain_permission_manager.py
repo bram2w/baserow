@@ -2,6 +2,9 @@ from django.contrib.auth.models import AnonymousUser
 
 import pytest
 
+from baserow.contrib.builder.data_sources.operations import (
+    ListDataSourcesPageOperationType,
+)
 from baserow.contrib.builder.domains.permission_manager import (
     AllowPublicBuilderManagerType,
 )
@@ -34,6 +37,8 @@ def test_allow_public_builder_manager_type(data_fixture):
         for type, scope in [
             (ListElementsPageOperationType.type, public_page),
             (ListElementsPageOperationType.type, non_public_page),
+            (ListDataSourcesPageOperationType.type, public_page),
+            (ListDataSourcesPageOperationType.type, non_public_page),
             (UpdatePageOperationType.type, public_page),
             (ReadApplicationOperationType.type, builder_to.application_ptr),
             (ReadApplicationOperationType.type, builder.application_ptr),
@@ -46,11 +51,17 @@ def test_allow_public_builder_manager_type(data_fixture):
     list_result = [result.get(c, None) for c in checks]
 
     assert list_result == [
+        # Authenticated
+        True,
+        None,
         True,
         None,
         None,
         True,
         None,
+        None,
+        # Anonymous
+        True,
         None,
         True,
         None,

@@ -9,6 +9,7 @@ export default {
   computed: {
     ...mapGetters({
       element: 'element/getSelected',
+      page: 'page/getSelected',
     }),
 
     elementType() {
@@ -28,16 +29,21 @@ export default {
     }),
     async onChange(newValues) {
       const oldValues = this.element
+
+      if (!this.$refs.panelForm.isFormValid()) {
+        return
+      }
+
       if (!_.isEqual(newValues, oldValues)) {
         try {
           await this.actionDebouncedUpdateSelectedElement({
             // Here we clone the values to prevent
-            // "modification oustide of the store" error
+            // "modification outside of the store" error
             values: clone(newValues),
           })
         } catch (error) {
           // Restore the previous saved values from the store
-          this.$refs.elementForm.reset()
+          this.$refs.panelForm.reset()
           notifyIf(error)
         }
       }

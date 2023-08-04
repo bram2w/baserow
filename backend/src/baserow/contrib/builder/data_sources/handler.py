@@ -1,11 +1,14 @@
-from typing import Iterable, Optional, Union
+from typing import Any, Iterable, Optional, Union
 
 from django.db.models import QuerySet
 
-from baserow.contrib.builder.data_sources.exceptions import DataSourceDoesNotExist
+from baserow.contrib.builder.data_sources.exceptions import (
+    DataSourceDoesNotExist,
+    DataSourceImproperlyConfigured,
+)
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.db import specific_iterator
+from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType
@@ -77,13 +80,20 @@ class DataSourceHandler:
 
         :param page: The page that holds the data_sources.
         :param base_queryset: The base queryset to use to build the query.
+        :param specific: If True, return the specific version of the service related
+          to the integration
         :return: The data_sources of that page.
         """
 
         data_source_queryset = (
-            (base_queryset if base_queryset is not None else DataSource.objects.all())
-            .filter(page=page)
-            .select_related("service")
+            base_queryset if base_queryset is not None else DataSource.objects.all()
+        )
+
+        data_source_queryset = data_source_queryset.filter(page=page).select_related(
+            "service",
+            "page",
+            "page__builder",
+            "page__builder__workspace",
         )
 
         if specific:
@@ -99,10 +109,11 @@ class DataSourceHandler:
                 if data_source.service_id is not None
             ]
 
-            # Use specific iterator to get specific instance of services
             specific_services_map = {
                 s.id: s
-                for s in specific_iterator(Service.objects.filter(id__in=service_ids))
+                for s in ServiceHandler().get_services(
+                    base_queryset=Service.objects.filter(id__in=service_ids)
+                )
             }
 
             # Distribute specific services to their data_source
@@ -224,6 +235,64 @@ class DataSourceHandler:
         """
 
         data_source.delete()
+
+    def dispatch_data_sources(
+        self, data_sources, runtime_formula_context: RuntimeFormulaContext
+    ):
+        """
+        Dispatch the service related to the data_sources.
+
+        :param data_sources: The data sources to be dispatched.
+        :param runtime_formula_context: The context used to resolve formulas.
+        :return: The result of dispatching the data source mapped by data source ID.
+            If an Exception occurred during the dispatch the exception is return as
+            result for this data source.
+        """
+
+        data_sources_dispatch = {}
+        for data_source in data_sources:
+            # Add the initial call to the call stack
+            runtime_formula_context.add_call(data_source.id)
+            try:
+                data_sources_dispatch[data_source.id] = self.dispatch_data_source(
+                    data_source, runtime_formula_context
+                )
+            except Exception as e:
+                data_sources_dispatch[data_source.id] = e
+            # Reset the stack as we are starting a new dispatch
+            runtime_formula_context.reset_call_stack()
+
+        return data_sources_dispatch
+
+    def dispatch_data_source(
+        self, data_source: DataSource, runtime_formula_context: RuntimeFormulaContext
+    ) -> Any:
+        """
+        Dispatch the service related to the data_source.
+
+        :param data_source: The data source to be dispatched.
+        :param runtime_formula_context: The context used to resolve formulas.
+        :raises DataSourceImproperlyConfigured: If the data source is
+          not properly configured.
+        :return: The result of dispatching the data source.
+        """
+
+        if not data_source.service_id:
+            raise DataSourceImproperlyConfigured("The service type is missing.")
+
+        if data_source.id not in runtime_formula_context.cache.setdefault(
+            "data_source_contents", {}
+        ):
+            service_dispatch = self.service_handler.dispatch_service(
+                data_source.service.specific, runtime_formula_context
+            )
+            # Cache the dispatch in the formula cache if we have formulas that need
+            # it later
+            runtime_formula_context.cache["data_source_contents"][
+                data_source.id
+            ] = service_dispatch
+
+        return runtime_formula_context.cache["data_source_contents"][data_source.id]
 
     def move_data_source(
         self, data_source: DataSourceForUpdate, before: Optional[DataSource] = None

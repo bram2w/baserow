@@ -5,6 +5,10 @@ from loguru import logger
 from baserow.core.utils import exception_capturer
 
 
+class RuntimeFormulaRecursion(Exception):
+    """Raised when the formula context detects a recursion."""
+
+
 def formula_exception_handler(e):
     """
     Attempts to send formula errors to sentry in non debug mode and logs errors. In

@@ -75,7 +75,7 @@ def test_get_integrations(data_fixture):
     integration2 = data_fixture.create_local_baserow_integration(application=builder)
     integration3 = data_fixture.create_local_baserow_integration(application=builder)
 
-    integrations = IntegrationHandler().get_integrations(builder)
+    integrations = IntegrationHandler().get_integrations(application=builder)
 
     assert [e.id for e in integrations] == [
         integration1.id,

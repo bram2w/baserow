@@ -1,4 +1,4 @@
-import PublishedDomainService from '@baserow/modules/builder/services/publishedDomain'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 
 const state = {
   // The public builder loaded
@@ -18,7 +18,7 @@ const actions = {
   async fetchById({ commit }, { builderId }) {
     commit('CLEAR_ITEM')
 
-    const { data } = await PublishedDomainService(this.$client).fetchById(
+    const { data } = await PublishedBuilderService(this.$client).fetchById(
       builderId
     )
     commit('SET_ITEM', { builder: data })
@@ -27,7 +27,7 @@ const actions = {
   async fetchByDomain({ commit }, { domain }) {
     commit('CLEAR_ITEM')
 
-    const { data } = await PublishedDomainService(this.$client).fetchByDomain(
+    const { data } = await PublishedBuilderService(this.$client).fetchByDomain(
       domain
     )
     commit('SET_ITEM', { builder: data })

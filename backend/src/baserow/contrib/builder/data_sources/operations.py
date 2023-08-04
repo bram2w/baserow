@@ -32,3 +32,7 @@ class UpdateDataSourceOperationType(BuilderDataSourceOperationType):
 
 class ReadDataSourceOperationType(BuilderDataSourceOperationType):
     type = "builder.page.data_source.read"
+
+
+class DispatchDataSourceOperationType(BuilderDataSourceOperationType):
+    type = "builder.page.data_source.dispatch"

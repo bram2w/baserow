@@ -26,26 +26,10 @@
             "context": {}
         },
         {
-            "formula": "get('a.b')",
+            "formula": "get('a')",
             "result": "test",
             "context": {
-                "a": {
-                    "b": "test"
-                }
-            }
-        },
-        {
-            "formula": "get('a.1.b')",
-            "result": "test",
-            "context": {
-                "a": [
-                    {
-                        "b": "not me"
-                    },
-                    {
-                        "b": "test"
-                    }
-                ]
+                "a": "test"
             }
         },
         {

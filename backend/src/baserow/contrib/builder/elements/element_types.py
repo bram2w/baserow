@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -15,11 +15,10 @@ from baserow.contrib.builder.elements.models import (
     ParagraphElement,
 )
 from baserow.contrib.builder.elements.registries import ElementType
-from baserow.contrib.builder.elements.types import Expression
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
-from baserow.core.user_files.models import UserFile
+from baserow.core.formula.types import BaserowFormula
 
 
 class HeadingElementType(ElementType):
@@ -33,15 +32,15 @@ class HeadingElementType(ElementType):
     allowed_fields = ["value", "level"]
 
     class SerializedDict(ElementDict):
-        value: Expression
+        value: BaserowFormula
         level: int
 
     @property
     def serializer_field_overrides(self):
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "value": ExpressionSerializer(
+            "value": FormulaSerializerField(
                 help_text="The value of the element. Must be an expression.",
                 required=False,
                 allow_blank=True,
@@ -75,7 +74,7 @@ class ParagraphElementType(ElementType):
     allowed_fields = ["value"]
 
     class SerializedDict(ElementDict):
-        value: Expression
+        value: BaserowFormula
 
     def get_sample_params(self):
         return {
@@ -88,11 +87,11 @@ class ParagraphElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
-            "value": ExpressionSerializer(
-                help_text="The value of the element. Must be an expression.",
+            "value": FormulaSerializerField(
+                help_text="The value of the element. Must be a formula.",
                 required=False,
                 allow_blank=True,
                 default="",
@@ -123,6 +122,7 @@ class LinkElementType(ElementType):
         "value",
         "navigation_type",
         "navigate_to_page_id",
+        "navigate_to_page",
         "navigate_to_url",
         "page_parameters",
         "variant",
@@ -132,9 +132,15 @@ class LinkElementType(ElementType):
     ]
 
     class SerializedDict(ElementDict):
-        value: Expression
-        destination: Expression
-        open_new_tab: bool
+        value: BaserowFormula
+        navigation_type: str
+        navigate_to_page_id: Page
+        page_parameters: List
+        navigate_to_url: BaserowFormula
+        variant: str
+        target: str
+        width: str
+        alignment: str
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -149,10 +155,10 @@ class LinkElementType(ElementType):
         from baserow.contrib.builder.api.elements.serializers import (
             PageParameterValueSerializer,
         )
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "value": ExpressionSerializer(
+            "value": FormulaSerializerField(
                 help_text="The value of the element. Must be an expression.",
                 required=False,
                 allow_blank=True,
@@ -169,7 +175,7 @@ class LinkElementType(ElementType):
                 help_text=LinkElement._meta.get_field("navigate_to_page").help_text,
                 required=False,
             ),
-            "navigate_to_url": ExpressionSerializer(
+            "navigate_to_url": FormulaSerializerField(
                 help_text=LinkElement._meta.get_field("navigate_to_url").help_text,
                 default="",
                 allow_blank=True,
@@ -208,7 +214,7 @@ class LinkElementType(ElementType):
             "value": "test",
             "navigation_type": "custom",
             "navigate_to_page_id": None,
-            "navigate_to_url": "http://example.com",
+            "navigate_to_url": '"http://example.com"',
             "page_parameters": [],
             "variant": "link",
             "target": "blank",
@@ -249,26 +255,11 @@ class LinkElementType(ElementType):
 
         for page_parameter in path_params:
             page_parameter_name = page_parameter["name"]
-            page_parameter_value = page_parameter["value"]
             page_parameter_type = parameter_types.get(page_parameter_name, None)
 
             if page_parameter_type is None:
                 raise ValidationError(
                     f"Page path parameter {page_parameter} does not exist."
-                )
-
-            # We don't need to type check empty values since they can be used as
-            # defaults for page parameters.
-            if page_parameter_value is None or page_parameter_value == "":
-                continue
-
-            try:
-                LinkElementType.PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP[page_parameter_type](
-                    page_parameter_value
-                )
-            except (ValueError, TypeError):
-                raise ValidationError(
-                    f"'{page_parameter_value}' is not of type {page_parameter_type}"
                 )
 
 
@@ -304,14 +295,15 @@ class ImageElementType(ElementType):
 
     class SerializedDict(ElementDict):
         image_source_type: str
-        image_file: UserFile
+        image_file_id: int
         image_url: str
         alt_text: str
+        alignment: str
 
     def get_sample_params(self):
         return {
             "image_source_type": ImageElement.IMAGE_SOURCE_TYPES.UPLOAD,
-            "image_file": None,
+            "image_file_id": None,
             "image_url": "https://test.com/image.png",
             "alt_text": "some alt text",
             "alignment": ALIGNMENTS.LEFT,
@@ -360,14 +352,14 @@ class InputTextElementType(InputElementType):
     class SerializedDict(ElementDict):
         required: bool
         placeholder: str
-        default_value: Expression
+        default_value: BaserowFormula
 
     @property
     def serializer_field_overrides(self):
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "default_value": ExpressionSerializer(
+            "default_value": FormulaSerializerField(
                 help_text=InputTextElement._meta.get_field("default_value").help_text,
                 required=False,
                 allow_blank=True,

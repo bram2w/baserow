@@ -30,16 +30,11 @@ def test_get_page_page_does_not_exist(data_fixture):
 def test_get_page_base_queryset(data_fixture, django_assert_num_queries):
     page = data_fixture.create_builder_page()
 
-    # Without selecting related
-    page = PageHandler().get_page(page.id)
-    with django_assert_num_queries(2):
-        workspace = page.builder.workspace
-
     # With selecting related
-    base_queryset = Page.objects.select_related("builder", "builder__workspace")
-    page = PageHandler().get_page(page.id, base_queryset=base_queryset)
-    with django_assert_num_queries(0):
-        workspace = page.builder.workspace
+    base_queryset = Page.objects.exclude(id=page.id)
+
+    with pytest.raises(PageDoesNotExist):
+        PageHandler().get_page(page.id, base_queryset=base_queryset)
 
 
 @pytest.mark.django_db

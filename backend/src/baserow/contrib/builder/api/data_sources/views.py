@@ -4,7 +4,7 @@ from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -17,11 +17,14 @@ from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_sc
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
     DiscriminatorCustomFieldsMappingSerializer,
+    apply_exception_mapping,
     validate_data,
     validate_data_custom_fields,
 )
 from baserow.contrib.builder.api.data_sources.errors import (
+    ERROR_DATA_DOES_NOT_EXIST,
     ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+    ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
     ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
 )
 from baserow.contrib.builder.api.data_sources.serializers import (
@@ -32,14 +35,20 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     UpdateDataSourceSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.data_providers.registries import (
+    builder_data_provider_type_registry,
+)
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
+    DataSourceImproperlyConfigured,
     DataSourceNotInSamePage,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
+from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import service_type_registry
 
 
@@ -320,6 +329,136 @@ class DataSourceView(APIView):
         DataSourceService().delete_data_source(request.user, data_source)
 
         return Response(status=204)
+
+
+class DispatchDataSourceView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="data_source_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the data_source you want to call the dispatch "
+                "for",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_source",
+        description=(
+            "Dispatches the service of the related data_source and returns "
+            "the result."
+        ),
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_DOES_NOT_EXIST",
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, data_source_id: int):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+
+        runtime_formula_context = RuntimeFormulaContext(
+            builder_data_provider_type_registry,
+            request=request,
+            page=data_source.page,
+        )
+
+        response = DataSourceService().dispatch_data_source(
+            request.user, data_source, runtime_formula_context
+        )
+
+        return Response(response)
+
+
+class DispatchDataSourcesView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder data sources"],
+        operation_id="dispatch_builder_page_data_sources",
+        description="Dispatches the service of the related page data_sources",
+        responses={
+            404: get_error_schema(
+                [
+                    "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+                    "ERROR_IN_DISPATCH_CONTEXT",
+                    "ERROR_DATA_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, page_id: int):
+        """
+        Call the given data_source related service dispatch method.
+        """
+
+        page = PageHandler().get_page(page_id)
+
+        runtime_formula_context = RuntimeFormulaContext(
+            builder_data_provider_type_registry,
+            request=request,
+            page=page,
+        )
+
+        service_contents = DataSourceService().dispatch_page_data_sources(
+            request.user, page, runtime_formula_context
+        )
+
+        responses = {}
+
+        for service_id, content in service_contents.items():
+            if isinstance(content, Exception):
+                _, error, detail = apply_exception_mapping(
+                    {
+                        DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+                        DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
+                        DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+                    },
+                    content,
+                )
+                responses[service_id] = {"_error": error, "detail": detail}
+            else:
+                responses[service_id] = content
+
+        return Response(responses)
 
 
 class MoveDataSourceView(APIView):

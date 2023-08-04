@@ -1,5 +1,9 @@
 class DataSourceDoesNotExist(Exception):
-    """Raised when trying to get an data_source that doesn't exist."""
+    """Raised when trying to get a data_source that doesn't exist."""
+
+
+class DataSourceImproperlyConfigured(Exception):
+    """Raised when trying to dispatch a data_source that is not fully configured."""
 
 
 class DataSourceNotInSamePage(Exception):

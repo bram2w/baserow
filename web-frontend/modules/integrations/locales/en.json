@@ -10,16 +10,21 @@
     },
     "localBaserowForm": {
         "user": "User",
-        "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow group."
+        "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
     },
     "localBaserowGetRowForm": {
         "tableFieldLabel": "Table",
         "tableFieldPlaceHolder": "Select a table",
         "rowFieldLabel": "Row ID",
+        "invalidFormula": "The formula is invalid",
         "rowFieldPlaceHolder": "Select a row ID"
     },
     "localBaserowListRowsForm": {
         "tableFieldLabel": "Table",
         "tableFieldPlaceHolder": "Select a table"
+    },
+    "dataProviderType": {
+        "dataSource": "Data source",
+        "pageParameter": "Parameter"
     }
 }

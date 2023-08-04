@@ -199,6 +199,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         result = {}
         undetermined_checks = set(checks)
+
         for permission_manager_name in settings.PERMISSION_MANAGERS:
             if not undetermined_checks:
                 break

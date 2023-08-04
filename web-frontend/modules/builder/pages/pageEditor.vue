@@ -17,12 +17,16 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import PageHeader from '@baserow/modules/builder/components/page/header/PageHeader'
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 
 export default {
   name: 'PageEditor',
   components: { PagePreview, PageHeader, PageSidePanels },
   provide() {
-    return { builder: this.builder }
+    return {
+      builder: this.builder,
+      mode: 'editing',
+    }
   },
   /**
    * When the user leaves to another page we want to unselect the selected page. This
@@ -33,20 +37,38 @@ export default {
     next()
   },
   layout: 'app',
-  async asyncData({ store, params, error }) {
+  async asyncData({ store, params, error, $registry, ...rest }) {
     const builderId = parseInt(params.builderId)
     const pageId = parseInt(params.pageId)
 
     const data = { panelWidth: 360 }
 
     try {
+      await store.dispatch('element/clearAll')
       const { builder, page } = await store.dispatch('page/selectById', {
         builderId,
         pageId,
       })
-      await store.dispatch('workspace/selectById', builder.workspace.id)
       data.builder = builder
       data.page = page
+
+      await store.dispatch('workspace/selectById', builder.workspace.id)
+
+      await store.dispatch('dataSource/fetch', {
+        page,
+      })
+
+      const runtimeFormulaContext = new RuntimeFormulaContext(
+        $registry.getAll('builderDataProvider'),
+        {
+          builder,
+          page,
+          mode: 'editing',
+        }
+      )
+
+      // Initialize all data provider contents
+      await runtimeFormulaContext.initAll()
 
       await store.dispatch('element/fetch', { page })
     } catch (e) {

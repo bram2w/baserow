@@ -11,8 +11,13 @@ export default (client) => {
     fetchById(builderId) {
       return client.get(`builder/domains/published/by_id/${builderId}/`)
     },
-    fetchPublicBuilderElements(page) {
-      return client.get(`builder/domains/published/page/${page.id}/`)
+    fetchElements(page) {
+      return client.get(`builder/domains/published/page/${page.id}/elements/`)
+    },
+    fetchDataSources(pageId) {
+      return client.get(
+        `builder/domains/published/page/${pageId}/data_sources/`
+      )
     },
   }
 }

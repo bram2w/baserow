@@ -16,6 +16,7 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 /**
  * @typedef Paragraph
@@ -37,8 +38,15 @@ export default {
     },
   },
   computed: {
+    resolvedValue() {
+      try {
+        return ensureString(this.resolveFormula(this.element.value))
+      } catch {
+        return ''
+      }
+    },
     paragraphs() {
-      return this.element.value
+      return this.resolvedValue
         .split('\n')
         .map((line) => line.trim())
         .filter((line) => line)

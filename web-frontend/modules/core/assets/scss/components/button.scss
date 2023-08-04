@@ -109,9 +109,13 @@
   &:focus,
   &:active,
   &.button--loading {
-    color: $color-neutral-900;
     box-shadow: none;
     background: none;
+  }
+
+  &:hover,
+  &:focus {
+    color: $color-neutral-900;
   }
 
   &.button--loading {

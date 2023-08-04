@@ -1,13 +1,20 @@
 <template>
-  <PublicPage :page="page" :path="path" :params="params" />
+  <PageContent
+    :page="page"
+    :path="path"
+    :params="params"
+    :elements="elements"
+  />
 </template>
 
 <script>
-import PublicPage from '@baserow/modules/builder/components/page/PublicPage'
+import PageContent from '@baserow/modules/builder/components/page/PageContent'
 import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+import { mapGetters } from 'vuex'
 
 export default {
-  components: { PublicPage },
+  components: { PageContent },
   provide() {
     return { builder: this.builder, mode: this.mode }
   },
@@ -21,6 +28,7 @@ export default {
         if (builderId) {
           // We have the builderId in the params so this is a preview
           // Must fetch the builder instance by this Id.
+
           await context.store.dispatch('publicBuilder/fetchById', {
             builderId,
           })
@@ -64,6 +72,27 @@ export default {
 
     const [page, path, params] = found
 
+    await context.store.dispatch('element/clearAll')
+
+    await context.store.dispatch('dataSource/fetchPublished', {
+      page,
+    })
+
+    const runtimeFormulaContext = new RuntimeFormulaContext(
+      context.$registry.getAll('builderDataProvider'),
+      {
+        builder,
+        page,
+        pageParamsValue: params,
+        mode,
+      }
+    )
+
+    // Initialize all data provider contents
+    await runtimeFormulaContext.initAll()
+
+    await context.store.dispatch('element/fetchPublished', { page })
+
     return {
       builder,
       page,
@@ -80,6 +109,11 @@ export default {
         class: 'public-page',
       },
     }
+  },
+  computed: {
+    ...mapGetters({
+      elements: 'element/getElements',
+    }),
   },
 }
 </script>

@@ -12,6 +12,7 @@ from baserow_premium.row_comments.operations import (
 from baserow.contrib.builder.data_sources.operations import (
     CreateDataSourceOperationType,
     DeleteDataSourceOperationType,
+    DispatchDataSourceOperationType,
     ListDataSourcesPageOperationType,
     OrderDataSourcesPageOperationType,
     ReadDataSourceOperationType,
@@ -370,6 +371,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         OrderDataSourcesPageOperationType,
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
+        DispatchDataSourceOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

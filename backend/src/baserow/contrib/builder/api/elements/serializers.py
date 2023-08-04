@@ -6,7 +6,7 @@ from rest_framework import serializers
 
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
-from baserow.core.expression.serializers import ExpressionSerializer
+from baserow.core.formula.serializers import FormulaSerializerField
 
 
 class ElementSerializer(serializers.ModelSerializer):
@@ -79,4 +79,4 @@ class MoveElementSerializer(serializers.Serializer):
 
 class PageParameterValueSerializer(serializers.Serializer):
     name = serializers.CharField()
-    value = ExpressionSerializer(allow_blank=True)
+    value = FormulaSerializerField(allow_blank=True)

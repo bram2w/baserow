@@ -1,9 +1,8 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import _ from 'lodash'
 import {
   NumberBaserowRuntimeFormulaArgumentType,
   TextBaserowRuntimeFormulaArgumentType,
-} from '@baserow/formula/parser/argumentTypes'
+} from '@baserow/modules/core/runtimeFormulaArgumentTypes'
 import {
   InvalidFormulaArgumentType,
   InvalidNumberOfArguments,
@@ -122,7 +121,7 @@ export class RuntimeGet extends RuntimeFormulaFunction {
   }
 
   execute(context, args) {
-    return _.get(context, args[0])
+    return context[args[0]]
   }
 }
 

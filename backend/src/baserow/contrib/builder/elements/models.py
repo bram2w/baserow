@@ -2,13 +2,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.expression.field import ExpressionField
+from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
     HierarchicalModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.user_files.models import UserFile
 
@@ -29,6 +30,7 @@ class Element(
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
     PolymorphicContentTypeMixin,
+    WithRegistry,
     models.Model,
 ):
     """
@@ -56,6 +58,12 @@ class Element(
 
     class Meta:
         ordering = ("order", "id")
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import element_type_registry
+
+        return element_type_registry
 
     def get_parent(self):
         return self.page
@@ -101,7 +109,7 @@ class HeadingElement(Element):
         H4 = 4
         H5 = 5
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
@@ -112,7 +120,7 @@ class ParagraphElement(Element):
     A simple paragraph.
     """
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
 
 
 class LinkElement(Element):
@@ -136,7 +144,7 @@ class LinkElement(Element):
         AUTO = "auto"
         FULL = "full"
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",
@@ -152,7 +160,7 @@ class LinkElement(Element):
             "navigate_to_url property instead.",
         ),
     )
-    navigate_to_url = ExpressionField(
+    navigate_to_url = FormulaField(
         default="",
         help_text="If no page is selected, this indicate the destination of the link.",
     )
@@ -233,7 +241,7 @@ class InputTextElement(InputElement):
     An input element of text type.
     """
 
-    default_value = ExpressionField(
+    default_value = FormulaField(
         default="", help_text="This text input's default value."
     )
     required = models.BooleanField(

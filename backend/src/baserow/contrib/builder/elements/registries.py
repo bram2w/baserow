@@ -43,6 +43,20 @@ class ElementType(
 
         return values
 
+    def get_property_for_serialization(self, element: Element, prop_name: str):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "type":
+            return self.type
+
+        if prop_name == "order":
+            return str(element.order)
+
+        return getattr(element, prop_name)
+
     def export_serialized(
         self,
         element: Element,
@@ -55,15 +69,13 @@ class ElementType(
         :return: The exported element as serialized dict.
         """
 
-        other_properties = {key: getattr(element, key) for key in self.allowed_fields}
+        property_names = self.SerializedDict.__annotations__.keys()
 
         serialized = self.SerializedDict(
-            id=element.id,
-            type=self.type,
-            order=element.order,
-            style_padding_top=element.style_padding_top,
-            style_padding_bottom=element.style_padding_bottom,
-            **other_properties
+            **{
+                key: self.get_property_for_serialization(element, key)
+                for key in property_names
+            }
         )
 
         return serialized

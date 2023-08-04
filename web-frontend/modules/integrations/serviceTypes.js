@@ -19,6 +19,14 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     )
   }
 
+  isValid(service) {
+    return (
+      super.isValid(service) &&
+      Boolean(service.table_id) &&
+      Boolean(service.row_id)
+    )
+  }
+
   get formComponent() {
     return LocalBaserowGetRowForm
   }
@@ -46,6 +54,10 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
 
   get formComponent() {
     return LocalBaserowListRowsForm
+  }
+
+  isValid(service) {
+    return super.isValid(service) && Boolean(service.table_id)
   }
 
   getOrder() {

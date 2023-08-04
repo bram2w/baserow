@@ -150,13 +150,13 @@ def test_update_data_source(api_client, data_fixture):
     table = data_fixture.create_database_table(user=user)
     response = api_client.patch(
         url,
-        {"table_id": table.id, "row_id": "test", "name": "name test"},
+        {"table_id": table.id, "row_id": '"test"', "name": "name test"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
     assert response.json()["table_id"] == table.id
-    assert response.json()["row_id"] == "test"
+    assert response.json()["row_id"] == '"test"'
     assert response.json()["name"] == "name test"
 
 
@@ -424,3 +424,330 @@ def test_delete_data_source_data_source_not_exist(api_client, data_fixture):
 
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_DATA_SOURCE_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="2"
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "id": 2,
+        "order": "1.00000000000000000000",
+        "Name": "Audi",
+        "My Color": "Orange",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_permission_denied(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="2"
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_using_formula(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+        row_id='get("page_parameter.id")',
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source.id}
+    )
+
+    response = api_client.post(
+        url,
+        {"page_parameter": {"id": 2}, "data_source": {"page_id": page.id}},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "id": 2,
+        "order": "1.00000000000000000000",
+        "Name": "Audi",
+        "My Color": "Orange",
+    }
+
+
+@pytest.mark.django_db
+def test_dispatch_data_source_improperly_configured(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "2"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source0 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+        row_id="1",
+        name="Working",
+    )
+
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        row_id='get("page_parameter.id")',
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        table=table,
+        integration=None,
+        row_id='get("page_parameter.id")',
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+        row_id='get("page_parameter.id")',
+    )
+    data_source4 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        table=table,
+        row_id='get("data_source.Working.My Color")',
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source1.id}
+    )
+
+    # The given dispatch query context is wrong
+    response = api_client.post(
+        url,
+        {
+            "page_parameter": {"id": 2},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"
+    assert (
+        response.json()["detail"] == "The data_source configuration is incorrect: "
+        "The table property is missing."
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source2.id}
+    )
+
+    # The given dispatch query context is wrong
+    response = api_client.post(
+        url,
+        {
+            "page_parameter": {"id": 2},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"
+    assert (
+        response.json()["detail"] == "The data_source configuration is incorrect: "
+        "The integration property is missing."
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source3.id}
+    )
+
+    # The given dispatch query context is wrong
+    response = api_client.post(
+        url,
+        {
+            "page_parameter": {"id": "test"},
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED"
+    assert (
+        response.json()["detail"] == "The data_source configuration is incorrect: "
+        "The result of the `row_id` formula must be an integer or "
+        "convertible to an integer."
+    )
+
+    url = reverse(
+        "api:builder:data_source:dispatch", kwargs={"data_source_id": data_source4.id}
+    )
+
+
+@pytest.mark.django_db
+def test_dispatch_data_sources(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["2Cv", "Green"],
+            ["Tesla", "Dark"],
+        ],
+    )
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="2"
+    )
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="3"
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="4"
+    )
+    data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, page=page, integration=integration, table=table, row_id="bad"
+    )
+    data_source4 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user, integration=integration, table=table, row_id="4"
+    )
+
+    url = reverse("api:builder:data_source:dispatch-all", kwargs={"page_id": page.id})
+
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        str(data_source.id): {
+            "My Color": "Orange",
+            "Name": "Audi",
+            "id": rows[1].id,
+            "order": "1.00000000000000000000",
+        },
+        str(data_source1.id): {
+            "My Color": "Green",
+            "Name": "2Cv",
+            "id": rows[2].id,
+            "order": "1.00000000000000000000",
+        },
+        str(data_source2.id): {
+            "My Color": "Dark",
+            "Name": "Tesla",
+            "id": rows[3].id,
+            "order": "1.00000000000000000000",
+        },
+        str(data_source3.id): {
+            "_error": "ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED",
+            "detail": "The data_source configuration is incorrect: "
+            "The `row_id` formula can't be resolved: "
+            "Invalid syntax at line 1, col 3: mismatched input "
+            "'the end of the formula' expecting '('",
+        },
+    }

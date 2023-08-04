@@ -1,8 +1,9 @@
 from abc import ABC
-from typing import Any, Dict, TypeVar
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.core.models import Application
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
     CustomFieldsRegistryMixin,
@@ -14,7 +15,7 @@ from baserow.core.registry import (
 )
 
 from .models import Integration
-from .types import IntegrationSubClass
+from .types import IntegrationDictSubClass, IntegrationSubClass
 
 
 class IntegrationType(
@@ -24,6 +25,7 @@ class IntegrationType(
     Instance,
     ABC,
 ):
+    SerializedDict: Type[IntegrationDictSubClass]
 
     """
     An integration type define a specific integration with a given external service.
@@ -53,6 +55,57 @@ class IntegrationType(
         """
 
         return values
+
+    def get_property_for_serialization(self, integration: Integration, prop_name: str):
+        if prop_name == "type":
+            return self.type
+
+        if prop_name == "order":
+            return str(integration.order)
+
+        return getattr(integration, prop_name)
+
+    def export_serialized(
+        self,
+        integration: Integration,
+    ) -> IntegrationDictSubClass:
+        """Exports an integration in a format compatible with import serialized."""
+
+        property_names = self.SerializedDict.__annotations__.keys()
+
+        serialized = self.SerializedDict(
+            **{
+                key: self.get_property_for_serialization(integration, key)
+                for key in property_names
+            }
+        )
+
+        return serialized
+
+    def import_serialized(
+        self,
+        application: Application,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict,
+        cache: Optional[Dict] = None,
+    ) -> IntegrationSubClass:
+        """Imports a previously exported instance."""
+
+        if "integrations" not in id_mapping:
+            id_mapping["integrations"] = {}
+
+        serialized_copy = serialized_values.copy()
+
+        # Remove extra keys
+        original_integration_id = serialized_copy.pop("id")
+        serialized_copy.pop("type")
+
+        integration = self.model_class(application=application, **serialized_copy)
+        integration.save()
+
+        id_mapping["integrations"][original_integration_id] = integration
+
+        return integration
 
 
 IntegrationTypeSubClass = TypeVar("IntegrationTypeSubClass", bound=IntegrationType)

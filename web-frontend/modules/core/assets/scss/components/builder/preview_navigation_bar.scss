@@ -1,0 +1,36 @@
+.preview-navigation-bar {
+  background-color: $white;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  padding: 6px 10px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: solid 1px $color-neutral-200;
+}
+
+.preview-navigation-bar__address-bar {
+  border-radius: 2px;
+  padding: 3px 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 25px;
+}
+
+.preview-navigation-bar__address-bar-parameter {
+  background-color: $color-neutral-100;
+  width: 40px;
+  border-radius: 3px;
+  border: none;
+  padding: 0 5px;
+
+  &.preview-navigation-bar__address-bar-parameter--text {
+    width: 110px;
+  }
+}
+
+.preview-navigation-bar__address-bar-path {
+  color: $color-neutral-500;
+  font-size: 12px;
+}

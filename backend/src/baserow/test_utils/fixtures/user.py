@@ -27,7 +27,7 @@ class UserFixtures:
         profile_data = {}
 
         if "email" not in kwargs:
-            kwargs["email"] = self.fake.email()
+            kwargs["email"] = self.fake.unique.email()
 
         if "username" not in kwargs:
             kwargs["username"] = kwargs["email"]
