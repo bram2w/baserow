@@ -1,5 +1,10 @@
 <template>
-  <Context ref="context" @shown="fetchRolesAndPermissions">
+  <Context
+    ref="context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+    @shown="fetchRolesAndPermissions"
+  >
     <div class="context__menu-title">
       {{ workspace.name }} ({{ workspace.id }})
     </div>

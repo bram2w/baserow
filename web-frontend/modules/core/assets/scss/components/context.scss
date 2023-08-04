@@ -26,6 +26,12 @@
       @include absolute(50%, auto, auto, 50%);
     }
   }
+
+  &.context--overflow-scroll {
+    // This must be added for the v-auto-overflow-scroll to work. It will be overwritten
+    // if the scrollable part has a lower height.
+    overflow-y: scroll;
+  }
 }
 
 .context--loading {

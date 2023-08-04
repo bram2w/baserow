@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Optionally automatically add a scrollbar to the context menu if it is outside of the viewport.",
+    "issue_number": 1659,
+    "bullet_points": [],
+    "created_at": "2023-07-31"
+}

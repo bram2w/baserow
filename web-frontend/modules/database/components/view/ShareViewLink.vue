@@ -11,7 +11,11 @@
         {{ $t('shareViewLink.shareView', { viewTypeSharingLinkName }) }}
       </span>
     </a>
-    <Context ref="context">
+    <Context
+      ref="context"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
+    >
       <a
         v-if="!view.public"
         class="view-sharing__create-link"

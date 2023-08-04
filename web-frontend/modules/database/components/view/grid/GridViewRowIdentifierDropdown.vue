@@ -8,7 +8,11 @@
       <i class="fas fa-list-ol"></i>
     </a>
 
-    <Context ref="context">
+    <Context
+      ref="context"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
+    >
       <ul v-auto-overflow-scroll class="select__items">
         <li
           v-for="option in options"
