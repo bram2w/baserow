@@ -92,7 +92,7 @@ export default {
   },
   computed: {
     maxSnapshots() {
-      return parseInt(this.$env.BASEROW_MAX_SNAPSHOTS_PER_GROUP)
+      return parseInt(this.$config.BASEROW_MAX_SNAPSHOTS_PER_GROUP)
     },
     snapshotModalAlertComponents() {
       return Object.values(this.$registry.getAll('plugin'))

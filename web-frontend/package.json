@@ -56,7 +56,6 @@
     "node-sass": "8.0.0",
     "normalize-scss": "^7.0.1",
     "nuxt": "2.16.3",
-    "nuxt-env": "^0.1.0",
     "papaparse": "5.4.1",
     "path-to-regexp": "^1.8.0",
     "posthog-js": "^1.73.1",

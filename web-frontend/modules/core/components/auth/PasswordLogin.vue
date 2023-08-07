@@ -117,8 +117,8 @@ export default {
     }
   },
   async mounted() {
-    if (!this.$env.BASEROW_DISABLE_PUBLIC_URL_CHECK) {
-      const publicBackendUrl = new URL(this.$env.PUBLIC_BACKEND_URL)
+    if (!this.$config.BASEROW_DISABLE_PUBLIC_URL_CHECK) {
+      const publicBackendUrl = new URL(this.$config.PUBLIC_BACKEND_URL)
       if (publicBackendUrl.host !== window.location.host) {
         // If the host of the browser location does not match the PUBLIC_BACKEND_URL
         // then we are probably mis-configured.

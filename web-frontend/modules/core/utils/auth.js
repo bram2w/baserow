@@ -3,9 +3,13 @@ import jwtDecode from 'jwt-decode'
 
 const cookieTokenName = 'jwt_token'
 
-export const setToken = ({ $cookies, $env }, token, key = cookieTokenName) => {
+export const setToken = (
+  { $config, $cookies },
+  token,
+  key = cookieTokenName
+) => {
   if (process.SERVER_BUILD) return
-  const secure = isSecureURL($env.PUBLIC_WEB_FRONTEND_URL)
+  const secure = isSecureURL($config.PUBLIC_WEB_FRONTEND_URL)
   $cookies.set(key, token, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,

@@ -137,7 +137,7 @@ export default {
   computed: {
     shareUrl() {
       return (
-        this.$env.PUBLIC_WEB_FRONTEND_URL +
+        this.$config.PUBLIC_WEB_FRONTEND_URL +
         this.$router.resolve({
           name: this.viewType.getPublicRoute(),
           params: { slug: this.view.slug },

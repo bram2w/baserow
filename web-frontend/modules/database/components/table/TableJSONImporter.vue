@@ -126,13 +126,13 @@ export default {
       const file = event.target.files[0]
 
       const maxSize =
-        parseInt(this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB, 10) * 1024 * 1024
+        parseInt(this.$config.BASEROW_MAX_IMPORT_FILE_SIZE_MB, 10) * 1024 * 1024
 
       if (file.size > maxSize) {
         this.filename = ''
         this.handleImporterError(
           this.$t('tableJSONImporter.limitFileSize', {
-            limit: this.$env.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
+            limit: this.$config.BASEROW_MAX_IMPORT_FILE_SIZE_MB,
           })
         )
       } else {
@@ -182,7 +182,7 @@ export default {
         return
       }
 
-      const limit = this.$env.INITIAL_TABLE_DATA_LIMIT
+      const limit = this.$config.INITIAL_TABLE_DATA_LIMIT
       if (limit !== null && json.length > limit - 1) {
         this.handleImporterError(
           this.$t('tableJSONImporter.limitError', {
