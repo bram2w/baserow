@@ -581,7 +581,7 @@ export const actions = {
           limit: requestLimit,
           signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
-          searchMode: getDefaultSearchModeFromEnv(this.$env),
+          searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -742,7 +742,7 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
-      searchMode: getDefaultSearchModeFromEnv(this.$env),
+      searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -790,7 +790,7 @@ export const actions = {
       .fetchCount({
         gridId,
         search: getters.getServerSearchTerm,
-        searchMode: getDefaultSearchModeFromEnv(this.$env),
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
         signal: lastRefreshRequestController.signal,
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
@@ -816,7 +816,7 @@ export const actions = {
             includeFieldOptions,
             signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
-            searchMode: getDefaultSearchModeFromEnv(this.$env),
+            searchMode: getDefaultSearchModeFromEnv(this.$config),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -1016,7 +1016,7 @@ export const actions = {
       ).fetchFieldAggregations({
         gridId: view.id,
         search,
-        searchMode: getDefaultSearchModeFromEnv(this.$env),
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
         signal: lastAggregationRequest.controller.signal,
       })
 
@@ -1286,7 +1286,7 @@ export const actions = {
       offset: startIndex,
       limit,
       search: getters.getServerSearchTerm,
-      searchMode: getDefaultSearchModeFromEnv(this.$env),
+      searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -2218,7 +2218,7 @@ export const actions = {
         getters.isHidingRowsNotMatchingSearch,
         fields,
         this.$registry,
-        getDefaultSearchModeFromEnv(this.$env),
+        getDefaultSearchModeFromEnv(this.$config),
         overrides
       )
 

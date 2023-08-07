@@ -1,9 +1,9 @@
 import posthog from 'posthog-js'
 import Vue from 'vue'
 
-export default function ({ app: { router, $env, store } }, inject) {
-  const projectApiKey = $env.POSTHOG_PROJECT_API_KEY
-  const host = $env.POSTHOG_HOST
+export default function ({ app: { router, $config, store } }, inject) {
+  const projectApiKey = $config.POSTHOG_PROJECT_API_KEY
+  const host = $config.POSTHOG_HOST
 
   if (!process.client || (!projectApiKey && !host)) {
     return

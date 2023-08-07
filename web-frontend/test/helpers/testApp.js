@@ -29,7 +29,7 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
   app.$client = app.client
   store.$registry = app.$registry
   store.$client = app.client
-  store.$env = app.$env
+  store.$config = app.$config
   store.app = app
   app.$store = store
   // Nuxt seems to allow both access patterns to get at the store?
@@ -103,8 +103,9 @@ export class TestApp {
           return cookieStorage[name]
         },
       },
-      $env: {
+      $config: {
         PUBLIC_WEB_FRONTEND_URL: 'https://localhost/',
+        PRIVATE: 'http://backend:8000',
         BASEROW_USE_PG_FULLTEXT_SEARCH: 'true',
       },
       i18n: {

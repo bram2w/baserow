@@ -81,7 +81,7 @@ export default {
           }
           this.nextPollTimeout = Math.min(
             this.nextPollTimeout * 1.5,
-            this.$env.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS
+            this.$config.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS
           )
           this.pollTimeoutId = setTimeout(
             this.getLatestJobInfo,

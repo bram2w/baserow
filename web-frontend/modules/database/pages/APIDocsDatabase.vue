@@ -387,14 +387,14 @@ export default {
       return mapping
     },
     getListURL(table, addUserFieldParam, batch = false) {
-      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${
+      return `${this.$config.PUBLIC_BACKEND_URL}/api/database/rows/table/${
         table.id
       }/${batch ? 'batch/' : ''}${
         addUserFieldParam ? this.userFieldNamesParam : ''
       }`
     },
     getDeleteListURL(table) {
-      return `${this.$env.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/batch-delete/`
+      return `${this.$config.PUBLIC_BACKEND_URL}/api/database/rows/table/${table.id}/batch-delete/`
     },
     /**
      * Generates the 'upload file' file example.
@@ -414,7 +414,7 @@ export default {
      * Generates the 'upload file' URI.
      */
     getUploadFileListUrl() {
-      return this.$env.PUBLIC_BACKEND_URL + '/api/user-files/upload-file/'
+      return this.$config.PUBLIC_BACKEND_URL + '/api/user-files/upload-file/'
     },
     /**
      * Generates the 'upload file' request example.
@@ -428,7 +428,7 @@ export default {
      * Generates the 'upload file via URL' URI.
      */
     getUploadFileViaUrlListUrl() {
-      return this.$env.PUBLIC_BACKEND_URL + '/api/user-files/upload-via-url/'
+      return this.$config.PUBLIC_BACKEND_URL + '/api/user-files/upload-via-url/'
     },
     getItemURL(table, addUserFieldParam) {
       return (

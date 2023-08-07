@@ -51,7 +51,7 @@ export class RealTimeHandler {
 
     // The web socket url is the same as the PUBLIC_BACKEND_URL apart from the
     // protocol.
-    const rawUrl = this.context.app.$env.PUBLIC_BACKEND_URL
+    const rawUrl = this.context.app.$config.PUBLIC_BACKEND_URL
     const url = new URL(rawUrl)
     url.protocol = isSecureURL(rawUrl) ? 'wss:' : 'ws:'
     url.pathname = '/ws/core/'

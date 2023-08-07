@@ -469,8 +469,8 @@ const prepareRequestHeaders = (store) => (config) => {
 const createAxiosInstance = (app) => {
   const url =
     (process.client
-      ? app.$env.PUBLIC_BACKEND_URL
-      : app.$env.PRIVATE_BACKEND_URL) + '/api'
+      ? app.$config.PUBLIC_BACKEND_URL
+      : app.$config.PRIVATE_BACKEND_URL) + '/api'
   return axios.create({
     baseURL: url,
     withCredentials: false,

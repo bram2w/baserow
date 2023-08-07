@@ -159,7 +159,7 @@ export default {
       this.loading = false
     },
     getDomainUrl(domain) {
-      const url = new URL(this.$env.PUBLIC_WEB_FRONTEND_URL)
+      const url = new URL(this.$config.PUBLIC_WEB_FRONTEND_URL)
       return `${url.protocol}//${domain.domain_name}${
         url.port ? `:${url.port}` : ''
       }`

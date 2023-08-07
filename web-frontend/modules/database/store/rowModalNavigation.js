@@ -71,7 +71,7 @@ export const actions = {
         viewId,
         rowId: state.row.id,
         search: activeSearchTerm,
-        searchMode: getDefaultSearchModeFromEnv(this.$env),
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
       })
       if (row) {
         commit('SET_ROW', row)
