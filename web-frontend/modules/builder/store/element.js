@@ -1,5 +1,7 @@
 import ElementService from '@baserow/modules/builder/services/element'
 import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import { calculateTempOrder } from '@baserow/modules/core/utils/order'
+import BigNumber from 'bignumber.js'
 
 const state = {
   // The elements of the currently selected page
@@ -34,6 +36,9 @@ const mutations = {
         Object.assign(element, values)
       }
     })
+    if (state.selected?.id === elementToUpdate.id) {
+      Object.assign(state.selected, values)
+    }
   },
   DELETE_ITEM(state, { elementId }) {
     const index = state.elements.findIndex(
@@ -70,20 +75,28 @@ const actions = {
     }
     commit('DELETE_ITEM', { elementId })
   },
-  forceMove({ commit, getters }, { elementId, beforeElementId }) {
-    const currentOrder = getters.getElements.map((element) => element.id)
-    const oldIndex = currentOrder.findIndex((id) => id === elementId)
-    const index = beforeElementId
-      ? currentOrder.findIndex((id) => id === beforeElementId)
-      : getters.getElements.length
+  forceMove(
+    { commit, getters },
+    { elementId, beforeElementId, parentElementId, placeInContainer }
+  ) {
+    const beforeElement = getters.getElementById(beforeElementId)
+    const afterOrder = beforeElement?.order || null
+    const beforeOrder =
+      getters.getPreviousElement(
+        beforeElement,
+        parentElementId,
+        placeInContainer
+      )?.order || null
+    const tempOrder = calculateTempOrder(beforeOrder, afterOrder)
 
-    // If the element is before the beforeElement we must decrease the target index by
-    // one to compensate the removed element.
-    if (oldIndex < index) {
-      commit('MOVE_ITEM', { index: index - 1, oldIndex })
-    } else {
-      commit('MOVE_ITEM', { index, oldIndex })
-    }
+    commit('UPDATE_ITEM', {
+      element: getters.getElementById(elementId),
+      values: {
+        order: tempOrder,
+        parent_element_id: parentElementId,
+        place_in_container: placeInContainer,
+      },
+    })
   },
   select({ commit }, { element }) {
     updateContext.lastUpdatedValues = null
@@ -91,7 +104,13 @@ const actions = {
   },
   async create(
     { dispatch },
-    { pageId, elementType, beforeId = null, configuration = null }
+    {
+      pageId,
+      elementType,
+      beforeId = null,
+      configuration = null,
+      forceCreate = true,
+    }
   ) {
     const { data: element } = await ElementService(this.$client).create(
       pageId,
@@ -100,7 +119,12 @@ const actions = {
       configuration
     )
 
-    await dispatch('forceCreate', { element, beforeId })
+    if (forceCreate) {
+      await dispatch('forceCreate', { element, beforeId })
+      await dispatch('select', { element })
+    }
+
+    return element
   },
   async update({ dispatch }, { element, values }) {
     const elementType = this.$registry.get('element', element.type)
@@ -215,37 +239,159 @@ const actions = {
 
     return elements
   },
-  async move({ dispatch }, { elementId, beforeElementId }) {
+  async fetchPublic({ dispatch, commit }, { page }) {
+    commit('CLEAR_ITEMS')
+
+    const { data: elements } = await PublicBuilderService(
+      this.$client
+    ).fetchPublicBuilderElements(page)
+
+    await Promise.all(
+      elements.map((element) => dispatch('forceCreate', { element }))
+    )
+
+    return elements
+  },
+  async move(
+    { dispatch, getters },
+    {
+      elementId,
+      beforeElementId,
+      parentElementId = null,
+      placeInContainer = null,
+    }
+  ) {
+    const element = getters.getElementById(elementId)
+
     await dispatch('forceMove', {
       elementId,
       beforeElementId,
+      parentElementId,
+      placeInContainer,
     })
 
     try {
-      await ElementService(this.$client).move(elementId, beforeElementId)
+      const { data: elementUpdated } = await ElementService(this.$client).move(
+        elementId,
+        beforeElementId,
+        parentElementId,
+        placeInContainer
+      )
+
+      dispatch('forceUpdate', {
+        element: elementUpdated,
+        values: { ...elementUpdated },
+      })
     } catch (error) {
-      await dispatch('forceMove', {
-        elementId: beforeElementId,
-        beforeElementId: elementId,
+      await dispatch('forceUpdate', {
+        element,
+        values: element,
       })
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { elementId, pageId }) {
+  async duplicate(
+    { getters, dispatch },
+    { elementId, pageId, configuration = {} }
+  ) {
+    // TODO this duplication only works with one layer of children
     const element = getters.getElements.find((e) => e.id === elementId)
-    await dispatch('create', {
+    const children = getters.getChildren(element)
+    const parentCreated = await dispatch('create', {
       pageId,
       beforeId: element.id,
       elementType: element.type,
-      configuration: element,
+      configuration: { ...element, ...configuration },
+      forceCreate: false,
     })
+
+    const childrenCreated = await Promise.all(
+      children.map((child) =>
+        dispatch('create', {
+          pageId,
+          elementType: child.type,
+          configuration: {
+            ...child,
+            parent_element_id: parentCreated.id,
+          },
+          forceCreate: false,
+        })
+      )
+    )
+
+    await Promise.all(
+      childrenCreated.map((child) =>
+        dispatch('forceCreate', {
+          element: child,
+        })
+      )
+    )
+
+    // We insert the parent element at the end such that the children already exist
+    // in the frontend and won't just pop in one after the other
+    await dispatch('forceCreate', {
+      element: parentCreated,
+      beforeId: element.id,
+    })
+
+    return [parentCreated, ...childrenCreated]
   },
 }
 
 const getters = {
-  getElements: (state) => {
-    return state.elements
+  getElementById: (state, getters) => (id) => {
+    return getters.getElements.find((e) => e.id === id)
   },
+  getElements: (state) => {
+    return state.elements.map((element) => ({
+      ...element,
+      order: new BigNumber(element.order),
+    }))
+  },
+  getElementsOrdered: (state, getters) => {
+    return [...getters.getElements].sort((a, b) => {
+      if (a.parent_element_id !== b.parent_element_id) {
+        return a.parent_element_id > b.parent_element_id ? 1 : -1
+      }
+      if (a.place_in_container !== b.place_in_container) {
+        return a.place_in_container > b.place_in_container ? 1 : -1
+      }
+      return a.order.gt(b.order) ? 1 : -1
+    })
+  },
+  getRootElements: (state, getters) => {
+    return getters.getElementsOrdered.filter(
+      (e) => e.parent_element_id === null
+    )
+  },
+  getChildren: (state, getters) => (element) => {
+    return getters.getElementsOrdered.filter(
+      (e) => e.parent_element_id === element.id
+    )
+  },
+  getSiblings: (state, getters) => (element) => {
+    return getters.getElementsOrdered.filter(
+      (e) => e.parent_element_id === element.parent_element_id
+    )
+  },
+  getElementsInPlace: (state, getters) => (parentId, placeInContainer) => {
+    return getters.getElementsOrdered.filter(
+      (e) =>
+        e.parent_element_id === parentId &&
+        e.place_in_container === placeInContainer
+    )
+  },
+  getPreviousElement:
+    (state, getters) => (before, parentId, placeInContainer) => {
+      const elementsInPlace = getters.getElementsInPlace(
+        parentId,
+        placeInContainer
+      )
+      return before
+        ? elementsInPlace.reverse().find((e) => e.order.lt(before.order)) ||
+            null
+        : elementsInPlace.at(-1)
+    },
   getSelected(state) {
     return state.selected
   },

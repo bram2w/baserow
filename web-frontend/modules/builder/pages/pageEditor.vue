@@ -23,10 +23,7 @@ export default {
   name: 'PageEditor',
   components: { PagePreview, PageHeader, PageSidePanels },
   provide() {
-    return {
-      builder: this.builder,
-      mode: 'editing',
-    }
+    return { builder: this.builder, page: this.page, mode: 'editing' }
   },
   /**
    * When the user leaves to another page we want to unselect the selected page. This

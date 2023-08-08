@@ -63,7 +63,9 @@
         "image": "Image",
         "imageDescription": "Display image",
         "inputText": "Text input",
-        "inputTextDescription": "A text input field"
+        "inputTextDescription": "A text input field",
+        "column": "Columns",
+        "columnDescription": "Columns container"
     },
     "addElementButton": {
         "label": "Element"
@@ -74,7 +76,9 @@
     },
     "elementMenu": {
         "moveUp": "Move up",
-        "moveDown": "Move down"
+        "moveDown": "Move down",
+        "moveLeft": "Move left",
+        "moveRight": "Move right"
     },
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
@@ -132,6 +136,12 @@
         "placeholderPlaceholder": "Enter a placeholder (optional)",
         "requiredTitle": "Required"
     },
+    "columnElementForm": {
+        "columnAmountTitle": "Layout",
+        "columnAmountName": "no columns | 1 column | {columnAmount} columns",
+        "columnGapTitle": "Space between columns",
+        "columnGapPlaceholder": "Enter space between columns..."
+    },
     "domainSettings": {
         "titleOverview": "Domains",
         "titleAddDomain": "Add domain",
@@ -181,11 +191,17 @@
         "paramsInErrorButton": "Update parameters",
         "pageParameterTypeError": "Invalid type"
     },
-    "alignmentSelector": {
-        "alignment": "Alignment",
+    "horizontalAlignmentSelector": {
+        "alignment": "Horizontal alignment",
         "alignmentLeft": "Link",
         "alignmentCenter": "Center",
         "alignmentRight": "Right"
+    },
+    "verticalAlignmentSelector": {
+        "alignment": "Vertical alignment",
+        "alignmentTop": "Top",
+        "alignmentCenter": "Middle",
+        "alignmentBottom": "Bottom"
     },
     "pageSettingsTypes": {
         "pageName": "Page"
@@ -232,7 +248,7 @@
         "noDataSourceTitle": "You have not yet added a data",
         "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
     },
-    "styleForm": {
+    "defaultStyleForm": {
         "boxTop": "Padding top",
         "boxBottom": "Padding bottom"
     },

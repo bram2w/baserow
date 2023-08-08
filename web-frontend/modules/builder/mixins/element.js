@@ -2,29 +2,17 @@ import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/formula'
 
 export default {
+  inject: ['builder', 'page', 'mode'],
   props: {
     element: {
       type: Object,
       required: true,
     },
-    page: {
-      type: Object,
-      required: true,
-    },
-    builder: {
-      type: Object,
-      required: true,
-    },
-    mode: {
-      // editing = being editing by the page editor
-      // preview = previewing the application
-      // public = publicly published application
-      type: String,
-      required: false,
-      default: '',
-    },
   },
   computed: {
+    elementType() {
+      return this.$registry.get('element', this.element.type)
+    },
     isEditable() {
       return this.mode === 'editing'
     },

@@ -1,11 +1,11 @@
 <template>
   <div>
     <label class="control__label">
-      {{ $t('alignmentSelector.alignment') }}
+      {{ $t('horizontalAlignmentSelector.alignment') }}
     </label>
     <div class="control__elements">
       <RadioButton
-        v-for="alignment in alignments"
+        v-for="alignment in alignmentValues"
         :key="alignment.value"
         v-model="selected"
         :value="alignment.value"
@@ -18,15 +18,20 @@
 </template>
 
 <script>
-import { ALIGNMENTS } from '@baserow/modules/builder/enums'
+import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 
 export default {
-  name: 'AlignmentSelector',
+  name: 'HorizontalAlignmentsSelector',
   props: {
     value: {
       type: String,
       required: false,
-      default: ALIGNMENTS.LEFT.value,
+      default: null,
+    },
+    alignments: {
+      type: Object,
+      required: false,
+      default: () => HORIZONTAL_ALIGNMENTS,
     },
   },
   data() {
@@ -35,8 +40,8 @@ export default {
     }
   },
   computed: {
-    alignments() {
-      return Object.values(ALIGNMENTS)
+    alignmentValues() {
+      return Object.values(this.alignments)
     },
   },
   watch: {

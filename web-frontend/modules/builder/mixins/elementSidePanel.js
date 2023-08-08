@@ -19,6 +19,12 @@ export default {
       return null
     },
 
+    parentElement() {
+      return this.$store.getters['element/getElementById'](
+        this.element?.parent_element_id
+      )
+    },
+
     defaultValues() {
       return this.element
     },

@@ -13,7 +13,9 @@ from baserow.contrib.builder.api.serializers import BuilderSerializer
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
+from baserow.contrib.builder.elements.types import ElementDictSubClass
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
@@ -261,6 +263,9 @@ class BuilderApplicationType(ApplicationType):
         if "builder_pages" not in id_mapping:
             id_mapping["builder_pages"] = {}
 
+        if "builder_page_elements" not in id_mapping:
+            id_mapping["builder_page_elements"] = {}
+
         if "workspace_id" not in id_mapping and builder.workspace is not None:
             id_mapping["workspace_id"] = builder.workspace.id
 
@@ -286,12 +291,11 @@ class BuilderApplicationType(ApplicationType):
         # Then we create all the element instances.
         for serialized_page in serialized_pages:
             for serialized_element in serialized_page["elements"]:
-                element_type = element_type_registry.get(serialized_element["type"])
-                element_instance = element_type.import_serialized(
-                    serialized_page["_object"], serialized_element, id_mapping
+                self.import_element(
+                    serialized_element,
+                    serialized_page,
+                    id_mapping,
                 )
-
-                serialized_page["_element_objects"].append(element_instance)
 
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
@@ -329,6 +333,67 @@ class BuilderApplicationType(ApplicationType):
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         return imported_pages
+
+    def import_element(
+        self,
+        serialized_element: ElementDictSubClass,
+        serialized_page: Dict,
+        id_mapping: Dict,
+    ) -> Element:
+        """
+        This is a recursive function that will create all the parent elements of
+        an element before it creates the element itself.
+
+        This is important since an element depends on its parent which in turn depends
+        on its parent, therefore we need to make sure to create elements in an order
+        where we go from "top to bottom" in the hierarchy.
+
+        :param serialized_element: The element we are trying to create
+        :param serialized_page: The page we are creating the elements in
+        :param id_mapping: The mapping of old ids to new ids
+        :return: The created element
+        """
+
+        serialized_elements = serialized_page["elements"]
+        page = serialized_page["_object"]
+
+        instance_id = id_mapping["builder_page_elements"].get(
+            serialized_element["id"], None
+        )
+
+        # The element has already been created, and we just need to return it
+        if instance_id is not None:
+            for element in serialized_page["_element_objects"]:
+                if element.id == instance_id:
+                    return element
+
+        # The element has not been created and it has a parent that potentially has
+        # to be created first
+        parent_element_id = serialized_element["parent_element_id"]
+        if (
+            parent_element_id is not None
+            and parent_element_id not in id_mapping["builder_page_elements"]
+        ):
+            for element in serialized_elements:
+                if element["id"] == parent_element_id:
+                    self.import_element(element, serialized_page, id_mapping)
+
+        # The element either has no parents or they were all created already
+        serialized_element["parent_element_id"] = id_mapping[
+            "builder_page_elements"
+        ].get(serialized_element["parent_element_id"], None)
+        element_type = element_type_registry.get(serialized_element["type"])
+        element_imported = element_type.import_serialized(
+            page, serialized_element, id_mapping
+        )
+
+        id_mapping["builder_page_elements"][
+            serialized_element["id"]
+        ] = element_imported.id
+
+        serialized_page["_element_objects"].append(element_imported)
+
+        return element_imported
 
     def import_serialized(
         self,

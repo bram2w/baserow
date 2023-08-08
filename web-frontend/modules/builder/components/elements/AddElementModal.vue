@@ -14,7 +14,7 @@
         :element-type="elementType"
         :loading="addingElementType === elementType.getType()"
         :disabled="isCardDisabled(elementType)"
-        @click="$emit('add', elementType)"
+        @click="addElement(elementType)"
       />
     </div>
   </Modal>
@@ -24,6 +24,8 @@
 import modal from '@baserow/modules/core/mixins/modal'
 import AddElementCard from '@baserow/modules/builder/components/elements/AddElementCard'
 import { isSubstringOfStrings } from '@baserow/modules/core/utils/string'
+import { notifyIf } from '@baserow/modules/core/utils/error'
+import { mapActions } from 'vuex'
 
 export default {
   name: 'AddElementModal',
@@ -34,8 +36,8 @@ export default {
       type: Object,
       required: true,
     },
-    addingElementType: {
-      type: String,
+    elementTypesAllowed: {
+      type: Array,
       required: false,
       default: null,
     },
@@ -43,12 +45,18 @@ export default {
   data() {
     return {
       search: '',
+      placeInContainer: null,
+      beforeId: null,
+      parentElementId: null,
+      addingElementType: null,
     }
   },
   computed: {
     elementTypes() {
-      const allElementTypes = Object.values(this.$registry.getAll('element'))
-      return allElementTypes.filter((elementType) =>
+      const elementTypesAll =
+        this.elementTypesAllowed ||
+        Object.values(this.$registry.getAll('element'))
+      return elementTypesAll.filter((elementType) =>
         isSubstringOfStrings(
           [elementType.name, elementType.description],
           this.search
@@ -62,6 +70,40 @@ export default {
         this.addingElementType !== null &&
         elementType.getType() !== this.addingElementType
       )
+    },
+    ...mapActions({
+      actionCreateElement: 'element/create',
+    }),
+
+    show({ placeInContainer, beforeId, parentElementId } = {}, ...args) {
+      this.placeInContainer = placeInContainer
+      this.beforeId = beforeId
+      this.parentElementId = parentElementId
+      modal.methods.show.bind(this)(...args)
+    },
+    async addElement(elementType) {
+      this.addingElementType = elementType.getType()
+      const configuration = this.parentElementId
+        ? {
+            parent_element_id: this.parentElementId,
+            place_in_container: this.placeInContainer,
+          }
+        : null
+
+      try {
+        await this.actionCreateElement({
+          pageId: this.page.id,
+          elementType: elementType.getType(),
+          beforeId: this.beforeId,
+          configuration,
+        })
+
+        this.$emit('element-added')
+        this.hide()
+      } catch (error) {
+        notifyIf(error)
+      }
+      this.addingElementType = null
     },
   },
 }

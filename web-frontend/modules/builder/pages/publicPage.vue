@@ -16,7 +16,7 @@ import { mapGetters } from 'vuex'
 export default {
   components: { PageContent },
   provide() {
-    return { builder: this.builder, mode: this.mode }
+    return { builder: this.builder, page: this.page, mode: this.mode }
   },
   async asyncData(context) {
     let builder = context.store.getters['publicBuilder/getBuilder']
@@ -112,7 +112,7 @@ export default {
   },
   computed: {
     ...mapGetters({
-      elements: 'element/getElements',
+      elements: 'element/getRootElements',
     }),
   },
 }

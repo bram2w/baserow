@@ -306,12 +306,20 @@ class MoveElementView(APIView):
         element = ElementHandler().get_element_for_update(element_id)
 
         before_id = data.get("before_id", None)
+        parent_element_id = data.get("parent_element_id", element.parent_element_id)
+        place_in_container = data.get("place_in_container", element.place_in_container)
 
         before = None
-        if before_id:
+        if before_id is not None:
             before = ElementHandler().get_element(before_id)
 
-        moved_element = ElementService().move_element(request.user, element, before)
+        parent_element = None
+        if parent_element_id is not None:
+            parent_element = ElementHandler().get_element(parent_element_id)
+
+        moved_element = ElementService().move_element(
+            request.user, element, parent_element, place_in_container, before
+        )
 
         serializer = element_type_registry.get_serializer(
             moved_element, ElementSerializer

@@ -2,7 +2,14 @@ from decimal import Decimal
 
 import pytest
 
-from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
+from baserow.contrib.builder.elements.element_types import (
+    ColumnElementType,
+    ParagraphElementType,
+)
+from baserow.contrib.builder.elements.exceptions import (
+    ElementDoesNotExist,
+    ElementNotInSamePage,
+)
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     Element,
@@ -104,7 +111,9 @@ def test_move_element_end_of_page(data_fixture):
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_heading_element(page=page)
 
-    element_moved = ElementHandler().move_element(element1)
+    element_moved = ElementHandler().move_element(
+        element1, element1.parent_element, element1.place_in_container
+    )
 
     assert Element.objects.filter(page=page).last().id == element_moved.id
 
@@ -116,7 +125,9 @@ def test_move_element_before(data_fixture):
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_heading_element(page=page)
 
-    ElementHandler().move_element(element3, before=element2)
+    ElementHandler().move_element(
+        element3, element3.parent_element, element3.place_in_container, before=element2
+    )
 
     assert [e.id for e in Element.objects.filter(page=page).all()] == [
         element1.id,
@@ -137,7 +148,67 @@ def test_move_element_before_fails(data_fixture):
     element3 = data_fixture.create_builder_heading_element(page=page, order="3.0000")
 
     with pytest.raises(CannotCalculateIntermediateOrder):
-        ElementHandler().move_element(element3, before=element2)
+        ElementHandler().move_element(
+            element3,
+            element3.parent_element,
+            element3.place_in_container,
+            before=element2,
+        )
+
+
+@pytest.mark.django_db
+def test_creating_element_in_container_starts_its_own_order_sequence(data_fixture):
+    page = data_fixture.create_builder_page()
+    container = ElementHandler().create_element(ColumnElementType(), page=page)
+    root_element = ElementHandler().create_element(ParagraphElementType(), page=page)
+    element_inside_container_one = ElementHandler().create_element(
+        ParagraphElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_two = ElementHandler().create_element(
+        ParagraphElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+
+    # Irrespective of the order the elements were created, we need to assert that a new
+    # order has started inside the container
+    assert container.order < root_element.order
+    assert element_inside_container_one.order < element_inside_container_two.order
+    assert element_inside_container_one.order < root_element.order
+
+
+@pytest.mark.django_db
+def test_moving_elements_inside_container(data_fixture):
+    page = data_fixture.create_builder_page()
+    container = ElementHandler().create_element(ColumnElementType(), page=page)
+    root_element = ElementHandler().create_element(ParagraphElementType(), page=page)
+    element_inside_container_one = ElementHandler().create_element(
+        ParagraphElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+    element_inside_container_two = ElementHandler().create_element(
+        ParagraphElementType(),
+        page=page,
+        parent_element_id=container.id,
+        place_in_container="1",
+    )
+
+    ElementHandler().move_element(
+        element_inside_container_two,
+        element_inside_container_two.parent_element,
+        element_inside_container_two.place_in_container,
+        before=element_inside_container_one,
+    )
+
+    assert element_inside_container_two.order < element_inside_container_one.order
+    assert element_inside_container_two.order < root_element.order
+    assert element_inside_container_one.order < root_element.order
 
 
 @pytest.mark.django_db
@@ -211,3 +282,83 @@ def test_recalculate_full_orders(data_fixture):
 
     assert elements[1].id == elementB.id
     assert elements[1].order == Decimal("2.00300000000000000000")
+
+
+@pytest.mark.django_db
+def test_order_elements(data_fixture):
+    page = data_fixture.create_builder_page()
+    element_one = data_fixture.create_builder_heading_element(
+        order="1.00000000000000000000", page=page
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        order="2.00000000000000000000", page=page
+    )
+
+    ElementHandler().order_elements(page, [element_two.id, element_one.id])
+
+    element_one.refresh_from_db()
+    element_two.refresh_from_db()
+
+    assert element_one.order > element_two.order
+
+
+@pytest.mark.django_db
+def test_order_elements_not_in_page(data_fixture):
+    page = data_fixture.create_builder_page()
+    element_one = data_fixture.create_builder_heading_element(
+        order="1.00000000000000000000", page=page
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        order="2.00000000000000000000"
+    )
+
+    with pytest.raises(ElementNotInSamePage):
+        ElementHandler().order_elements(page, [element_two.id, element_one.id])
+
+
+@pytest.mark.django_db
+def test_before_places_in_container_removed(data_fixture):
+    column_element = data_fixture.create_builder_column_element(column_amount=3)
+
+    element_one = data_fixture.create_builder_heading_element(
+        parent_element=column_element, place_in_container="2"
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        parent_element=column_element, place_in_container="1"
+    )
+
+    result = ElementHandler().before_places_in_container_removed(
+        column_element, ["1", "2"]
+    )
+    result_specific = [element.specific for element in result]
+
+    element_one.refresh_from_db()
+    element_two.refresh_from_db()
+
+    assert element_one.place_in_container == "0"
+    assert element_two.place_in_container == "0"
+    assert element_one.order > element_two.order
+    assert result_specific == [element_two, element_one]
+
+
+@pytest.mark.django_db
+def test_before_places_in_container_removed_no_change(data_fixture):
+    column_element = data_fixture.create_builder_column_element(column_amount=3)
+
+    element_one = data_fixture.create_builder_heading_element(
+        parent_element=column_element, place_in_container="0"
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        parent_element=column_element, place_in_container="0"
+    )
+
+    result = ElementHandler().before_places_in_container_removed(
+        column_element, ["1", "2"]
+    )
+
+    element_one.refresh_from_db()
+    element_two.refresh_from_db()
+
+    assert element_one.place_in_container == "0"
+    assert element_two.place_in_container == "0"
+    assert result == []

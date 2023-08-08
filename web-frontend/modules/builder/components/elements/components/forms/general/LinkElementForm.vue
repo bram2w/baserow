@@ -109,7 +109,7 @@
       </div>
     </FormElement>
     <FormElement class="control">
-      <AlignmentSelector v-model="values.alignment" />
+      <HorizontalAlignmentSelector v-model="values.alignment" />
     </FormElement>
     <FormElement class="control">
       <label class="control__label">
@@ -143,14 +143,14 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
-import AlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/settings/AlignmentSelector'
-import { ALIGNMENTS } from '@baserow/modules/builder/enums'
+import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
+import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
 import { isValidFormula } from '@baserow/formula'
 
 export default {
   name: 'LinkElementForm',
-  components: { AlignmentSelector, FormulaInputGroup },
+  components: { HorizontalAlignmentSelector, FormulaInputGroup },
   mixins: [form],
   props: {
     builder: { type: Object, required: true },
@@ -168,7 +168,7 @@ export default {
     return {
       values: {
         value: '',
-        alignment: ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
         variant: 'link',
         navigation_type: 'page',
         navigate_to_page_id: null,

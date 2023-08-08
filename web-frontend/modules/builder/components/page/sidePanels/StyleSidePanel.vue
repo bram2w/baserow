@@ -1,19 +1,19 @@
 <template>
-  <StyleForm
-    :key="element.id"
+  <component
+    :is="elementType.styleFormComponent"
     ref="panelForm"
-    :default-values="element"
+    :key="element.id"
+    :element="element"
+    :parent-element="parentElement"
+    :default-values="defaultValues"
     @values-changed="onChange($event)"
-  />
+  ></component>
 </template>
 
 <script>
 import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
-import StyleForm from '@baserow/modules/builder/components/page/sidePanels/StyleForm.vue'
-
 export default {
   name: 'StyleSidePanel',
-  components: { StyleForm },
   mixins: [elementSidePanel],
 }
 </script>

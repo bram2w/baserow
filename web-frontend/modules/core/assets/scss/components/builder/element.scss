@@ -6,14 +6,26 @@
   opacity: 0.3;
 }
 
-.element--alignment-left {
+.element--alignment-vertical-top {
+  align-items: start;
+}
+
+.element--alignment-vertical-center {
+  align-items: center;
+}
+
+.element--alignment-vertical-bottom {
+  align-items: end;
+}
+
+.element--alignment-horizontal-left {
   justify-content: start;
 }
 
-.element--alignment-center {
+.element--alignment-horizontal-center {
   justify-content: center;
 }
 
-.element--alignment-right {
+.element--alignment-horizontal-right {
   justify-content: end;
 }

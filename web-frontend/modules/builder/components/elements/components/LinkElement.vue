@@ -54,7 +54,7 @@ export default {
     },
     classes() {
       return {
-        [`element--alignment-${this.element.alignment}`]: true,
+        [`element--alignment-horizontal-${this.element.alignment}`]: true,
         'element--no-value': !this.resolvedValue,
       }
     },

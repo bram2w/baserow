@@ -95,6 +95,14 @@
     background-color: $color-neutral-100;
   }
 
+  &--selected {
+    background-color: $color-primary-100;
+  }
+
+  &--indented {
+    margin-left: 20px;
+  }
+
   &.select__item--loading::before {
     content: ' ';
 
