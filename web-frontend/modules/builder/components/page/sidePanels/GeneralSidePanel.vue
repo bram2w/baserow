@@ -1,6 +1,6 @@
 <template>
   <component
-    :is="elementType.formComponent"
+    :is="elementType.generalFormComponent"
     :key="element.id"
     ref="panelForm"
     class="element-form"

@@ -83,6 +83,8 @@ export const registerRealtimeEvents = (realtime) => {
       store.dispatch('element/forceMove', {
         elementId: data.element_id,
         beforeElementId: data.before_id,
+        parentElementId: data.parent_element_id,
+        placeInContainer: data.place_in_container,
       })
     }
   })
@@ -98,4 +100,16 @@ export const registerRealtimeEvents = (realtime) => {
       }
     }
   )
+
+  realtime.registerEvent('elements_moved', ({ store, app }, { elements }) => {
+    elements.forEach((element) => {
+      store.dispatch('element/forceUpdate', {
+        element,
+        values: {
+          order: element.order,
+          place_in_container: element.place_in_container,
+        },
+      })
+    })
+  })
 }

@@ -41,6 +41,20 @@ class ElementType(
         :return:
         """
 
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        parent_element_id = values.get(
+            "parent_element_id", getattr(instance, "parent_element_id", None)
+        )
+        place_in_container = values.get("place_in_container", None)
+
+        if parent_element_id is not None and place_in_container is not None:
+            parent_element = ElementHandler().get_element(parent_element_id)
+            parent_element_type = element_type_registry.get_by_model(parent_element)
+            parent_element_type.validate_place_in_container(
+                place_in_container, parent_element
+            )
+
         return values
 
     def get_property_for_serialization(self, element: Element, prop_name: str):

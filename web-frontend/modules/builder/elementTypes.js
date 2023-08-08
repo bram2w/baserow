@@ -2,17 +2,20 @@ import { Registerable } from '@baserow/modules/core/registry'
 import ParagraphElement from '@baserow/modules/builder/components/elements/components/ParagraphElement'
 import HeadingElement from '@baserow/modules/builder/components/elements/components/HeadingElement'
 import LinkElement from '@baserow/modules/builder/components/elements/components/LinkElement'
-import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/ParagraphElementForm'
-import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/HeadingElementForm'
-import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/LinkElementForm'
-import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/ImageElementForm'
+import ParagraphElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ParagraphElementForm'
+import HeadingElementForm from '@baserow/modules/builder/components/elements/components/forms/general/HeadingElementForm'
+import LinkElementForm from '@baserow/modules/builder/components/elements/components/forms/general/LinkElementForm'
+import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ImageElementForm'
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
 import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
 import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/InputTextElementForm.vue'
 
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
-import { compile } from 'path-to-regexp'
+import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
+import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
+import DefaultStyleForm from '@baserow/modules/builder/components/elements/components/forms/style/DefaultStyleForm'
+import { compile } from 'path-to-regexp'
 
 export class ElementType extends Registerable {
   get name() {
@@ -35,8 +38,20 @@ export class ElementType extends Registerable {
     return this.component
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return null
+  }
+
+  get styleFormComponent() {
+    return DefaultStyleForm
+  }
+
+  get stylesAll() {
+    return ['style_padding_top', 'style_padding_bottom']
+  }
+
+  get styles() {
+    return this.stylesAll
   }
 
   /**
@@ -57,6 +72,73 @@ export class ElementType extends Registerable {
    */
   prepareValuesForRequest(values) {
     return values
+  }
+}
+
+export class ContainerElementType extends ElementType {
+  get elementTypesAll() {
+    return Object.values(this.app.$registry.getAll('element'))
+  }
+
+  /**
+   * Returns an array of element types that are not allowed as children of this element.
+   *
+   * @returns {Array}
+   */
+  get childElementTypesForbidden() {
+    return []
+  }
+
+  get childElementTypes() {
+    return _.difference(this.elementTypesAll, this.childElementTypesForbidden)
+  }
+
+  /**
+   * Returns an array of style types that are not allowed as children of this element.
+   * @returns {Array}
+   */
+  get childStylesForbidden() {
+    return []
+  }
+
+  get defaultPlaceInContainer() {
+    throw new Error('Not implemented')
+  }
+}
+
+export class ColumnElementType extends ContainerElementType {
+  getType() {
+    return 'column'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.column')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.columnDescription')
+  }
+
+  get iconClass() {
+    return 'columns'
+  }
+
+  get component() {
+    return ColumnElement
+  }
+
+  get generalFormComponent() {
+    return ColumnElementForm
+  }
+
+  get childElementTypesForbidden() {
+    return this.elementTypesAll.filter(
+      (elementType) => elementType instanceof ContainerElementType
+    )
+  }
+
+  get defaultPlaceInContainer() {
+    return '0'
   }
 }
 
@@ -81,7 +163,7 @@ export class HeadingElementType extends ElementType {
     return HeadingElement
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return HeadingElementForm
   }
 }
@@ -107,7 +189,7 @@ export class ParagraphElementType extends ElementType {
     return ParagraphElement
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return ParagraphElementForm
   }
 }
@@ -133,7 +215,7 @@ export class LinkElementType extends ElementType {
     return LinkElement
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return LinkElementForm
   }
 
@@ -223,7 +305,7 @@ export class ImageElementType extends ElementType {
     return ImageElement
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return ImageElementForm
   }
 }

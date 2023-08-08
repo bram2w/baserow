@@ -379,3 +379,38 @@ def test_link_element_path_parameter_wrong_type(api_client, data_fixture):
         response.json()["detail"]["page_parameters"][0]["value"][0]["error"]
         == "The formula is invalid: Invalid syntax at line 1, col 3: missing '(' at ' '"
     )
+
+
+@pytest.mark.django_db
+def test_can_move_element_inside_container(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    container_element = data_fixture.create_builder_column_element(page=page)
+    element_one = data_fixture.create_builder_heading_element(
+        page=page, parent_element=container_element, place_in_container="0"
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        page=page, parent_element=container_element, place_in_container="0"
+    )
+
+    assert element_two.parent_element is container_element
+    assert element_two.place_in_container == "0"
+
+    url = reverse("api:builder:element:move", kwargs={"element_id": element_two.id})
+    response = api_client.patch(
+        url,
+        {
+            "before_id": element_one.id,
+            "parent_element_id": None,
+            "place_in_container": None,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 200
+
+    element_two.refresh_from_db()
+
+    assert element_two.parent_element is None
+    assert element_two.place_in_container is None

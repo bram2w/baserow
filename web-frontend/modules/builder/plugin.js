@@ -26,6 +26,7 @@ import {
   ParagraphElementType,
   LinkElementType,
   InputTextElementType,
+  ColumnElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -121,6 +122,7 @@ export default (context) => {
   app.$registry.register('element', new LinkElementType(context))
   app.$registry.register('element', new ImageElementType(context))
   app.$registry.register('element', new InputTextElementType(context))
+  app.$registry.register('element', new ColumnElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

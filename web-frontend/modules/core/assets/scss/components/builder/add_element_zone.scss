@@ -1,0 +1,25 @@
+.add-element-zone__icon {
+  border: solid 1px $color-neutral-300;
+  border-radius: 100%;
+  padding: 8px;
+}
+
+.add-element-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 70px;
+  border: dashed 2px $color-neutral-300;
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    color: $color-primary-500;
+    border-color: $color-primary-500;
+
+    .add-element-zone__icon {
+      border-color: $color-primary-500;
+    }
+  }
+}

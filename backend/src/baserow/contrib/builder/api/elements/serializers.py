@@ -27,6 +27,8 @@ class ElementSerializer(serializers.ModelSerializer):
             "page_id",
             "type",
             "order",
+            "parent_element_id",
+            "place_in_container",
             "style_padding_top",
             "style_padding_bottom",
         )
@@ -54,16 +56,33 @@ class CreateElementSerializer(serializers.ModelSerializer):
         help_text="If provided, creates the element before the element with the "
         "given id.",
     )
+    parent_element_id = serializers.IntegerField(
+        allow_null=True,
+        required=False,
+        help_text="If provided, creates the element as a child of the element with "
+        "the given id.",
+    )
 
     class Meta:
         model = Element
-        fields = ("before_id", "type", "style_padding_top", "style_padding_bottom")
+        fields = (
+            "order",
+            "before_id",
+            "type",
+            "parent_element_id",
+            "place_in_container",
+            "style_padding_top",
+            "style_padding_bottom",
+        )
 
 
 class UpdateElementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Element
-        fields = ("style_padding_top", "style_padding_bottom")
+        fields = (
+            "style_padding_top",
+            "style_padding_bottom",
+        )
 
 
 class MoveElementSerializer(serializers.Serializer):
@@ -74,6 +93,19 @@ class MoveElementSerializer(serializers.Serializer):
             "If provided, the element is moved before the element with this Id. "
             "Otherwise the element is placed at the end of the page."
         ),
+    )
+    parent_element_id = serializers.IntegerField(
+        allow_null=True,
+        required=False,
+        default=None,
+        help_text="If provided, the element is moved as a child of the element with "
+        "the given id.",
+    )
+    place_in_container = serializers.CharField(
+        required=False,
+        allow_null=True,
+        default=None,
+        help_text="The place in the container.",
     )
 
 

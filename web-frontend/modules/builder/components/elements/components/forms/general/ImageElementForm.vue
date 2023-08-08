@@ -94,7 +94,7 @@
       </div>
     </FormElement>
     <FormElement class="control">
-      <AlignmentSelector v-model="values.alignment" />
+      <HorizontalAlignmentSelector v-model="values.alignment" />
     </FormElement>
   </form>
 </template>
@@ -102,16 +102,19 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 import { isValidAbsoluteURL } from '@baserow/modules/core/utils/string'
-import { ALIGNMENTS, IMAGE_SOURCE_TYPES } from '@baserow/modules/builder/enums'
+import {
+  HORIZONTAL_ALIGNMENTS,
+  IMAGE_SOURCE_TYPES,
+} from '@baserow/modules/builder/enums'
 import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
-import AlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/settings/AlignmentSelector'
+import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import { maxLength } from 'vuelidate/lib/validators'
 
 export default {
   name: 'ImageElementForm',
-  components: { AlignmentSelector, UserFilesModal },
+  components: { HorizontalAlignmentSelector, UserFilesModal },
   mixins: [form],
   data() {
     return {
@@ -120,7 +123,7 @@ export default {
         image_file: null,
         image_url: '',
         alt_text: '',
-        alignment: ALIGNMENTS.LEFT.value,
+        alignment: HORIZONTAL_ALIGNMENTS.LEFT.value,
       },
     }
   },

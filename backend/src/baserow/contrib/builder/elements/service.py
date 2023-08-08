@@ -82,6 +82,7 @@ class ElementService:
         element_type: ElementType,
         page: Page,
         before: Optional[Element] = None,
+        order: Optional[int] = None,
         **kwargs,
     ) -> Element:
         """
@@ -91,6 +92,7 @@ class ElementService:
         :param element_type: The type of the element.
         :param page: The page the element exists in.
         :param before: If set, the new element is inserted before this element.
+        :param order: If set, the new element is inserted at this order ignoring before.
         :param kwargs: Additional attributes of the element.
         :return: The created element.
         """
@@ -108,7 +110,7 @@ class ElementService:
 
         try:
             new_element = self.handler.create_element(
-                element_type, page, before=before, **kwargs
+                element_type, page, before=before, order=order, **kwargs
             )
         except CannotCalculateIntermediateOrder:
             self.recalculate_full_orders(user, page)
@@ -183,6 +185,8 @@ class ElementService:
         self,
         user: AbstractUser,
         element: ElementForUpdate,
+        parent_element: Optional[Element],
+        place_in_container: str,
         before: Optional[Element] = None,
     ) -> Element:
         """
@@ -191,6 +195,8 @@ class ElementService:
 
         :param user: The user who move the element.
         :param element: The element we want to move.
+        :param parent_element: The new parent element of the element.
+        :param place_in_container: The new place in container of the element.
         :param before: The element before which we want to move the given element.
         :return: The element with an updated order.
         """
@@ -207,15 +213,24 @@ class ElementService:
             raise ElementNotInSamePage()
 
         try:
-            element = self.handler.move_element(element, before=before)
+            element = self.handler.move_element(
+                element, parent_element, place_in_container, before=before
+            )
         except CannotCalculateIntermediateOrder:
             # If it's failing, we need to recalculate all orders then move again.
             self.recalculate_full_orders(user, element.page)
             # Refresh the before element as the order might have changed.
             before.refresh_from_db()
-            element = self.handler.move_element(element, before=before)
+            element = self.handler.move_element(
+                element, parent_element, place_in_container, before=before
+            )
 
-        element_moved.send(self, element=element, before=before, user=user)
+        element_moved.send(
+            self,
+            element=element,
+            before=before,
+            user=user,
+        )
 
         return element
 

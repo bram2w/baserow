@@ -35,11 +35,11 @@
     width: 100%;
   }
 
-  .element--alignment-center & {
+  .element--alignment-horizontal-center & {
     text-align: center;
   }
 
-  .element--alignment-right & {
+  .element--alignment-horizontal-right & {
     text-align: right;
   }
 }

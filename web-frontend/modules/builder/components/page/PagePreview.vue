@@ -1,30 +1,24 @@
 <template>
-  <div class="page-preview__wrapper" @click.self="selectElement(null)">
+  <div
+    class="page-preview__wrapper"
+    @click.self="actionSelectElement({ element: null })"
+  >
     <PreviewNavigationBar :page="page" :style="{ maxWidth }" />
-    <div ref="preview" class="page-preview" :style="{ maxWidth }">
+    <div ref="preview" class="page-preview" :style="{ 'max-width': maxWidth }">
       <div ref="previewScaled" class="page-preview__scaled">
         <ElementPreview
           v-for="(element, index) in elements"
           :key="element.id"
+          is-root-element
           :element="element"
-          :page="page"
-          :active="element.id === elementSelectedId"
           :is-first-element="index === 0"
           :is-last-element="index === elements.length - 1"
+          :placements="[PLACEMENTS.BEFORE, PLACEMENTS.AFTER]"
+          :placements-disabled="getPlacementsDisabled(index)"
           :is-copying="copyingElementIndex === index"
-          @selected="selectElement(element)"
-          @delete="deleteElement(element)"
           @move="moveElement(element, index, $event)"
-          @insert="showAddElementModal(element, index, $event)"
-          @duplicate="duplicateElement(element, index)"
         />
       </div>
-      <AddElementModal
-        ref="addElementModal"
-        :adding-element-type="addingElementType"
-        :page="page"
-        @add="addElement"
-      />
     </div>
   </div>
 </template>
@@ -33,20 +27,14 @@
 import { mapGetters, mapActions } from 'vuex'
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import AddElementModal from '@baserow/modules/builder/components/elements/AddElementModal'
 import PreviewNavigationBar from '@baserow/modules/builder/components/page/PreviewNavigationBar'
 import { PLACEMENTS } from '@baserow/modules/builder/enums'
 
 export default {
   name: 'PagePreview',
-  components: { AddElementModal, ElementPreview, PreviewNavigationBar },
+  components: { ElementPreview, PreviewNavigationBar },
   data() {
     return {
-      // This value is set when the insertion of a new element is in progress to
-      // indicate where the element should be inserted
-      beforeId: null,
-      addingElementType: null,
-
       // The element that is currently being copied
       copyingElementIndex: null,
 
@@ -55,15 +43,13 @@ export default {
     }
   },
   computed: {
+    PLACEMENTS: () => PLACEMENTS,
     ...mapGetters({
       page: 'page/getSelected',
       deviceTypeSelected: 'page/getDeviceTypeSelected',
+      elements: 'element/getRootElements',
       elementSelected: 'element/getSelected',
-      elements: 'element/getElements',
     }),
-    elementSelectedId() {
-      return this.elementSelected?.id
-    },
     deviceType() {
       return this.deviceTypeSelected
         ? this.$registry.get('device', this.deviceTypeSelected)
@@ -94,11 +80,9 @@ export default {
   },
   methods: {
     ...mapActions({
-      actionCreateElement: 'element/create',
-      actionDuplicateElement: 'element/duplicate',
       actionMoveElement: 'element/move',
-      actionDeleteElement: 'element/delete',
       actionSelectElement: 'element/select',
+      actionUpdateElement: 'element/update',
     }),
     onWindowResized() {
       this.$nextTick(() => {
@@ -127,16 +111,7 @@ export default {
       previewScaled.style.width = `${currentWidth / scale}px`
       previewScaled.style.height = `${currentHeight / scale}px`
     },
-    async deleteElement(element) {
-      try {
-        await this.actionDeleteElement({
-          elementId: element.id,
-        })
-      } catch (error) {
-        notifyIf(error)
-      }
-    },
-    moveElement(element, index, placement) {
+    async moveElement(element, index, placement) {
       const elementToMoveId = element.id
 
       // BeforeElementId remains null if we are moving the element at the end of the
@@ -150,7 +125,7 @@ export default {
       }
 
       try {
-        this.actionMoveElement({
+        await this.actionMoveElement({
           pageId: this.page.id,
           elementId: elementToMoveId,
           beforeElementId,
@@ -159,42 +134,18 @@ export default {
         notifyIf(error)
       }
     },
-    showAddElementModal(element, index, placement) {
-      this.beforeId =
-        placement === PLACEMENTS.BEFORE
-          ? element.id
-          : this.elements[index + 1]?.id
-      this.$refs.addElementModal.show()
-    },
-    async addElement(elementType) {
-      this.addingElementType = elementType.getType()
-      try {
-        await this.actionCreateElement({
-          pageId: this.page.id,
-          elementType: elementType.getType(),
-          beforeId: this.beforeId,
-        })
-        this.$refs.addElementModal.hide()
-      } catch (error) {
-        notifyIf(error)
+    getPlacementsDisabled(index) {
+      const placementsDisabled = []
+
+      if (index === 0) {
+        placementsDisabled.push(PLACEMENTS.BEFORE)
       }
-      this.addingElementType = null
-    },
-    async duplicateElement(element, index) {
-      this.copyingElementIndex = index
-      try {
-        await this.actionDuplicateElement({
-          pageId: this.page.id,
-          elementId: element.id,
-        })
-        this.$refs.addElementModal.hide()
-      } catch (error) {
-        notifyIf(error)
+
+      if (index === this.elements.length - 1) {
+        placementsDisabled.push(PLACEMENTS.AFTER)
       }
-      this.copyingElementIndex = null
-    },
-    selectElement(element) {
-      this.actionSelectElement({ element })
+
+      return placementsDisabled
     },
   },
 }

@@ -1,7 +1,13 @@
 import pytest
 
 from baserow.contrib.builder.application_types import BuilderApplicationType
-from baserow.contrib.builder.elements.models import HeadingElement, ParagraphElement
+from baserow.contrib.builder.elements.models import (
+    ColumnElement,
+    Element,
+    HeadingElement,
+    ParagraphElement,
+)
+from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
@@ -34,6 +40,12 @@ def test_builder_application_export(data_fixture):
     )
     element2 = data_fixture.create_builder_paragraph_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)
+    element_container = data_fixture.create_builder_column_element(
+        page=page1, column_amount=3, column_gap=50
+    )
+    element_inside_container = data_fixture.create_builder_paragraph_element(
+        page=page1, parent_element=element_container, place_in_container="0"
+    )
 
     integration = data_fixture.create_local_baserow_integration(
         application=builder, authorized_user=user, name="test"
@@ -80,6 +92,8 @@ def test_builder_application_export(data_fixture):
                         "id": element1.id,
                         "type": "heading",
                         "order": str(element1.order),
+                        "parent_element_id": None,
+                        "place_in_container": None,
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
                         "value": element1.value,
@@ -89,9 +103,33 @@ def test_builder_application_export(data_fixture):
                         "id": element2.id,
                         "type": "paragraph",
                         "order": str(element2.order),
+                        "parent_element_id": None,
+                        "place_in_container": None,
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
                         "value": element2.value,
+                    },
+                    {
+                        "id": element_container.id,
+                        "type": "column",
+                        "parent_element_id": None,
+                        "place_in_container": None,
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
+                        "order": str(element_container.order),
+                        "column_amount": 3,
+                        "column_gap": 50,
+                        "alignment": "top",
+                    },
+                    {
+                        "id": element_inside_container.id,
+                        "type": "paragraph",
+                        "parent_element_id": element_container.id,
+                        "place_in_container": "0",
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
+                        "order": str(element_inside_container.order),
+                        "value": element_inside_container.value,
                     },
                 ],
             },
@@ -131,6 +169,8 @@ def test_builder_application_export(data_fixture):
                         "id": element3.id,
                         "type": "heading",
                         "order": str(element3.order),
+                        "parent_element_id": None,
+                        "place_in_container": None,
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
                         "value": element3.value,
@@ -167,6 +207,8 @@ IMPORT_REFERENCE = {
                 {
                     "id": 998,
                     "type": "heading",
+                    "parent_element_id": None,
+                    "place_in_container": None,
                     "order": 1,
                     "value": "foo",
                     "level": 2,
@@ -174,8 +216,32 @@ IMPORT_REFERENCE = {
                 {
                     "id": 999,
                     "type": "paragraph",
+                    "parent_element_id": None,
+                    "place_in_container": None,
                     "order": 2,
                     "value": "",
+                },
+                {
+                    "id": 500,
+                    "type": "column",
+                    "parent_element_id": None,
+                    "place_in_container": None,
+                    "style_padding_top": 10,
+                    "style_padding_bottom": 10,
+                    "order": 3,
+                    "column_amount": 3,
+                    "column_gap": 50,
+                    "alignment": "top",
+                },
+                {
+                    "id": 501,
+                    "type": "paragraph",
+                    "parent_element_id": 500,
+                    "place_in_container": "0",
+                    "style_padding_top": 10,
+                    "style_padding_bottom": 10,
+                    "order": 1,
+                    "value": "test",
                 },
             ],
             "data_sources": [
@@ -208,6 +274,8 @@ IMPORT_REFERENCE = {
                 {
                     "id": 997,
                     "type": "heading",
+                    "parent_element_id": None,
+                    "place_in_container": None,
                     "order": 1,
                     "value": "",
                     "level": 1,
@@ -275,7 +343,7 @@ def test_builder_application_import(data_fixture):
 
     [page1, page2] = builder.page_set.all()
 
-    assert page1.element_set.count() == 2
+    assert page1.element_set.count() == 4
     assert page2.element_set.count() == 1
 
     assert page1.datasource_set.count() == 2
@@ -285,13 +353,21 @@ def test_builder_application_import(data_fixture):
     assert first_data_source.name == "source 2"
     assert first_data_source.service.integration.id == first_integration.id
 
-    [element1, element2] = specific_iterator(page1.element_set.all())
+    [
+        element1,
+        element_inside_container,
+        element2,
+        container_element,
+    ] = specific_iterator(page1.element_set.all())
 
     assert isinstance(element1, HeadingElement)
     assert isinstance(element2, ParagraphElement)
+    assert isinstance(container_element, ColumnElement)
 
     assert element1.order == 1
     assert element1.level == 2
+
+    assert element_inside_container.parent_element.specific == container_element
 
 
 @pytest.mark.django_db
@@ -305,3 +381,81 @@ def test_delete_builder_application_with_published_builder(data_fixture):
     TrashHandler.permanently_delete(builder)
 
     assert Builder.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_import_element(data_fixture):
+    element = data_fixture.create_builder_paragraph_element(value="test")
+    element_type = element_type_registry.get_by_model(element)
+    element_serialized = element_type.export_serialized(element)
+    serialized_page = {
+        "_object": element.page,
+        "_element_objects": [],
+        "elements": [element_serialized],
+    }
+
+    element_imported = BuilderApplicationType().import_element(
+        element_serialized,
+        serialized_page,
+        {"builder_page_elements": {}},
+    )
+
+    assert element_imported.id != element.id
+    assert element_imported.specific.value == element.value
+
+
+@pytest.mark.django_db
+def test_import_element_has_to_import_parent_first(data_fixture):
+    page = data_fixture.create_builder_page()
+    parent = data_fixture.create_builder_column_element(page=page, column_amount=15)
+    element = data_fixture.create_builder_paragraph_element(
+        page=page, parent_element=parent
+    )
+    parent_serialized = element_type_registry.get_by_model(parent).export_serialized(
+        parent
+    )
+    element_serialized = element_type_registry.get_by_model(element).export_serialized(
+        element
+    )
+    serialized_page = {
+        "_object": page,
+        "_element_objects": [],
+        "elements": [parent_serialized, element_serialized],
+    }
+
+    element_imported = BuilderApplicationType().import_element(
+        element_serialized,
+        serialized_page,
+        {"builder_page_elements": {}},
+    )
+
+    assert element_imported.id != element.id
+    assert element_imported.specific.value == element.value
+
+    parent_imported = Element.objects.get(id=element_imported.parent_element_id)
+
+    assert parent_imported.id != parent.id
+    assert parent_imported.specific.column_amount == parent.column_amount
+
+
+@pytest.mark.django_db
+def test_import_element_has_to_instance_already_created(data_fixture):
+    element = data_fixture.create_builder_paragraph_element()
+    element_imported = data_fixture.create_builder_paragraph_element()
+    element_serialized = element_type_registry.get_by_model(element).export_serialized(
+        element
+    )
+    serialized_page = {
+        "_object": element_imported.page,
+        "_element_objects": [element_imported],
+        "elements": [element_serialized],
+    }
+
+    element_returned = BuilderApplicationType().import_element(
+        element_serialized,
+        serialized_page,
+        {"builder_page_elements": {element.id: element_imported.id}},
+    )
+
+    assert element_returned is element_imported
+    assert Element.objects.count() == 2
