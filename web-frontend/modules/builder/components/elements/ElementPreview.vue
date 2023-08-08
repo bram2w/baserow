@@ -16,7 +16,7 @@
       v-if="isSelected"
       :placements="placements"
       :placements-disabled="placementsDisabled"
-      :is-copying="isCopying"
+      :is-duplicating="isDuplicating"
       @delete="deleteElement"
       @move="$emit('move', $event)"
       @duplicate="duplicateElement"
@@ -95,7 +95,7 @@ export default {
   },
   data() {
     return {
-      isCopying: false,
+      isDuplicating: false,
     }
   },
   computed: {
@@ -159,20 +159,13 @@ export default {
         : this.nextElement?.id || null
     },
     async duplicateElement() {
-      this.isCopying = true
+      this.isDuplicating = true
       try {
-        await this.actionDuplicateElement({
-          pageId: this.page.id,
-          elementId: this.element.id,
-          configuration: {
-            parent_element_id: this.element.parent_element_id,
-            place_in_container: this.element.place_in_container,
-          },
-        })
+        await this.actionDuplicateElement({ elementId: this.element.id })
       } catch (error) {
         notifyIf(error)
       }
-      this.isCopying = false
+      this.isDuplicating = false
     },
     async deleteElement() {
       try {

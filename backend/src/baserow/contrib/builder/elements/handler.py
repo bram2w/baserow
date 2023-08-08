@@ -20,6 +20,20 @@ from .types import ElementForUpdate
 
 
 class ElementHandler:
+    allowed_fields_create = [
+        "parent_element_id",
+        "place_in_container",
+        "style_padding_top",
+        "style_padding_bottom",
+    ]
+
+    allowed_fields_update = [
+        "parent_element_id",
+        "place_in_container",
+        "style_padding_top",
+        "style_padding_bottom",
+    ]
+
     def get_element(
         self, element_id: int, base_queryset: Optional[QuerySet] = None
     ) -> Element:
@@ -99,7 +113,6 @@ class ElementHandler:
         element_type: ElementType,
         page: Page,
         before: Optional[Element] = None,
-        order: Optional[int] = None,
         **kwargs
     ) -> Element:
         """
@@ -107,7 +120,6 @@ class ElementHandler:
 
         :param element_type: The type of the element.
         :param page: The page the element exists in.
-        :param order: If set, the new element is inserted at this order ignoring before.
         :param before: If provided and no order is provided, will place the new element
             before the given element.
         :param kwargs: Additional attributes of the element.
@@ -120,25 +132,15 @@ class ElementHandler:
         parent_element_id = kwargs.get("parent_element_id", None)
         place_in_container = kwargs.get("place_in_container", None)
 
-        if order is None:
-            if before:
-                order = Element.get_unique_order_before_element(
-                    before, parent_element_id, place_in_container
-                )
-            else:
-                order = Element.get_last_order(
-                    page, parent_element_id, place_in_container
-                )
+        if before:
+            order = Element.get_unique_order_before_element(
+                before, parent_element_id, place_in_container
+            )
+        else:
+            order = Element.get_last_order(page, parent_element_id, place_in_container)
 
-        shared_allowed_fields = [
-            "type",
-            "parent_element_id",
-            "place_in_container",
-            "style_padding_top",
-            "style_padding_bottom",
-        ]
         allowed_values = extract_allowed(
-            kwargs, shared_allowed_fields + element_type.allowed_fields
+            kwargs, self.allowed_fields_create + element_type.allowed_fields
         )
 
         allowed_values = element_type.prepare_value_for_db(allowed_values)
@@ -169,14 +171,8 @@ class ElementHandler:
         :return: The updated element.
         """
 
-        shared_allowed_fields = [
-            "parent_element_id",
-            "place_in_container",
-            "style_padding_top",
-            "style_padding_bottom",
-        ]
         allowed_updates = extract_allowed(
-            kwargs, shared_allowed_fields + element.get_type().allowed_fields
+            kwargs, self.allowed_fields_update + element.get_type().allowed_fields
         )
 
         allowed_updates = element.get_type().prepare_value_for_db(
@@ -319,3 +315,59 @@ class ElementHandler:
         """
 
         Element.recalculate_full_orders(queryset=Element.objects.filter(page=page))
+
+    def duplicate_element(self, element: Element) -> List[Element]:
+        """
+        Duplicate an element in a recursive fashion. If the element has any children
+        they will also be imported using the same method and so will their children
+        and so on.
+
+        :param element: The element that should be duplicated
+        :return: All the elements that were created in the process
+        """
+
+        return self._duplicate_element_recursive(element)
+
+    def _duplicate_element_recursive(
+        self, element: Element, elements_duplicated=None, overwrites=None
+    ) -> List[Element]:
+        """
+        Duplicates an element and all of its children.
+
+        This method is separate from `duplicate_element` since it has additional params
+        only required for the recursive calls.
+
+        :param element: The element being duplicated
+        :param elements_duplicated: The elements that have already been duplicated
+        :param overwrites: Any overwrites of the attributes of an element
+        :return: A list of duplicated elements
+        """
+
+        if elements_duplicated is None:
+            elements_duplicated = []
+
+        if overwrites is None:
+            overwrites = {}
+
+        element_type = element_type_registry.get_by_model(element)
+
+        other_properties = {
+            key: getattr(element, key)
+            for key in self.allowed_fields_create + element_type.allowed_fields
+        }
+        other_properties = {**other_properties, **overwrites}
+
+        element_duplicated = self.create_element(
+            element_type, element.page, before=element, **other_properties
+        )
+
+        elements_duplicated.append(element_duplicated)
+
+        for child in element.children.all():
+            elements_duplicated = self._duplicate_element_recursive(
+                child.specific,
+                elements_duplicated,
+                overwrites={"parent_element_id": element_duplicated.id},
+            )
+
+        return elements_duplicated

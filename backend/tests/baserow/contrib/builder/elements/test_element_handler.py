@@ -362,3 +362,82 @@ def test_before_places_in_container_removed_no_change(data_fixture):
     assert element_one.place_in_container == "0"
     assert element_two.place_in_container == "0"
     assert result == []
+
+
+@pytest.mark.django_db
+def test_duplicate_element_single_element(data_fixture):
+    element = data_fixture.create_builder_paragraph_element(value="test")
+
+    [element_duplicated] = ElementHandler().duplicate_element(element)
+
+    assert element.id != element_duplicated.id
+    assert element.value == element_duplicated.value
+    assert element.page_id == element_duplicated.page_id
+
+
+@pytest.mark.django_db
+def test_duplicate_element_multiple_elements(data_fixture):
+    container_element = data_fixture.create_builder_column_element(column_amount=12)
+    child = data_fixture.create_builder_paragraph_element(
+        value="test", parent_element=container_element, page=container_element.page
+    )
+    child_two = data_fixture.create_builder_paragraph_element(
+        value="test2", parent_element=container_element, page=container_element.page
+    )
+
+    [
+        container_element_duplicated,
+        child_duplicated,
+        child_two_duplicated,
+    ] = ElementHandler().duplicate_element(container_element)
+
+    assert container_element.id != container_element_duplicated.id
+    assert container_element.column_amount == container_element_duplicated.column_amount
+    assert container_element.page_id == container_element_duplicated.page_id
+
+    assert child.id != child_duplicated.id
+    assert child.value == child_duplicated.value
+    assert child.page_id == child_duplicated.page_id
+
+    assert child_two.id != child_two_duplicated.id
+    assert child_two.value == child_two_duplicated.value
+    assert child_two.page_id == child_two_duplicated.page_id
+
+    assert child_duplicated.parent_element_id == container_element_duplicated.id
+    assert child_two_duplicated.parent_element_id == container_element_duplicated.id
+
+
+@pytest.mark.django_db
+def test_duplicate_element_deeply_nested(data_fixture):
+    container_element = data_fixture.create_builder_column_element(column_amount=12)
+    child_first_level = data_fixture.create_builder_column_element(
+        parent_element=container_element, page=container_element.page
+    )
+    child_second_level = data_fixture.create_builder_column_element(
+        parent_element=child_first_level, page=container_element.page
+    )
+
+    [
+        container_element_duplicated,
+        child_first_level_duplicated,
+        child_second_level_duplicated,
+    ] = ElementHandler().duplicate_element(container_element)
+
+    assert container_element.id != container_element_duplicated.id
+    assert container_element.column_amount == container_element_duplicated.column_amount
+    assert container_element.page_id == container_element_duplicated.page_id
+
+    assert child_first_level.id != child_first_level_duplicated.id
+    assert child_first_level.page_id == child_first_level_duplicated.page_id
+
+    assert child_second_level.id != child_second_level_duplicated.id
+    assert child_second_level.page_id == child_second_level_duplicated.page_id
+
+    assert (
+        child_first_level_duplicated.parent_element_id
+        == container_element_duplicated.id
+    )
+    assert (
+        child_second_level_duplicated.parent_element_id
+        == child_first_level_duplicated.id
+    )
