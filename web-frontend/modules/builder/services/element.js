@@ -28,5 +28,8 @@ export default (client) => {
         place_in_container: placeInContainer,
       })
     },
+    duplicate(elementId) {
+      return client.post(`builder/element/${elementId}/duplicate/`)
+    },
   }
 }

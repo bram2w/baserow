@@ -19,6 +19,7 @@ from baserow.contrib.builder.elements.signals import (
     element_moved,
     element_orders_recalculated,
     element_updated,
+    elements_created,
 )
 from baserow.contrib.builder.elements.types import ElementForUpdate
 from baserow.contrib.builder.pages.models import Page
@@ -243,3 +244,29 @@ class ElementService:
         self.handler.recalculate_full_orders(page)
 
         element_orders_recalculated.send(self, page=page)
+
+    def duplicate_element(self, user: AbstractUser, element: Element) -> List[Element]:
+        """
+        Duplicate an element in a recursive fashion. If the element has any children
+        they will also be imported using the same method and so will their children
+        and so on.
+
+        :param user: The user that duplicates the element.
+        :param element: The element that should be duplicated
+        :return: All the elements that were created in the process
+        """
+
+        page = element.page
+
+        CoreHandler().check_permissions(
+            user,
+            CreateElementOperationType.type,
+            workspace=page.builder.workspace,
+            context=page,
+        )
+
+        elements_duplicated = self.handler.duplicate_element(element)
+
+        elements_created.send(self, elements=elements_duplicated, user=user, page=page)
+
+        return elements_duplicated

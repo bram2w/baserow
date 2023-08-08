@@ -41,6 +41,30 @@ def element_created(
     )
 
 
+@receiver(element_signals.elements_created)
+def elements_created(
+    sender, elements: List[Element], page: Page, user: AbstractUser, **kwargs
+):
+    transaction.on_commit(
+        lambda: broadcast_to_permitted_users.delay(
+            page.builder.workspace_id,
+            ListElementsPageOperationType.type,
+            BuilderElementObjectScopeType.type,
+            page.id,
+            {
+                "type": "elements_created",
+                "elements": [
+                    element_type_registry.get_serializer(
+                        element, ElementSerializer
+                    ).data
+                    for element in elements
+                ],
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
 @receiver(element_signals.element_updated)
 def element_updated(sender, element: Element, user: AbstractUser, **kwargs):
     transaction.on_commit(

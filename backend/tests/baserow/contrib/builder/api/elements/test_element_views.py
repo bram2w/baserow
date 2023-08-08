@@ -414,3 +414,31 @@ def test_can_move_element_inside_container(api_client, data_fixture):
 
     assert element_two.parent_element is None
     assert element_two.place_in_container is None
+
+
+@pytest.mark.django_db
+def test_duplicate_element(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    element = data_fixture.create_builder_heading_element(user=user, value="test")
+
+    url = reverse("api:builder:element:duplicate", kwargs={"element_id": element.id})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[0]["id"] != element.id
+    assert response_json[0]["value"] == element.value
+
+
+@pytest.mark.django_db
+def test_duplicate_element_does_not_exist(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    url = reverse("api:builder:element:duplicate", kwargs={"element_id": 0})
+    response = api_client.post(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"

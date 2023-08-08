@@ -23,12 +23,7 @@ const mutations = {
     state.elements = elements
   },
   ADD_ITEM(state, { element, beforeId = null }) {
-    if (beforeId === null) {
-      state.elements.push(element)
-    } else {
-      const insertionIndex = state.elements.findIndex((e) => e.id === beforeId)
-      state.elements.splice(insertionIndex, 0, element)
-    }
+    state.elements.push(element)
   },
   UPDATE_ITEM(state, { element: elementToUpdate, values }) {
     state.elements.forEach((element) => {
@@ -63,8 +58,8 @@ const actions = {
   clearAll({ commit }) {
     commit('CLEAR_ITEMS')
   },
-  forceCreate({ commit }, { element, beforeId = null }) {
-    commit('ADD_ITEM', { element, beforeId })
+  forceCreate({ commit }, { element }) {
+    commit('ADD_ITEM', { element })
   },
   forceUpdate({ commit }, { element, values }) {
     commit('UPDATE_ITEM', { element, values })
@@ -120,7 +115,7 @@ const actions = {
     )
 
     if (forceCreate) {
-      await dispatch('forceCreate', { element, beforeId })
+      await dispatch('forceCreate', { element })
       await dispatch('select', { element })
     }
 
@@ -204,10 +199,6 @@ const actions = {
       (element) => element.id === elementId
     )
     const elementToDelete = elementsOfPage[elementIndex]
-    const beforeId =
-      elementIndex !== elementsOfPage.length - 1
-        ? elementsOfPage[elementIndex + 1].id
-        : null
 
     await dispatch('forceDelete', { elementId })
 
@@ -216,7 +207,6 @@ const actions = {
     } catch (error) {
       await dispatch('forceCreate', {
         element: elementToDelete,
-        beforeId,
       })
       throw error
     }
@@ -290,51 +280,16 @@ const actions = {
       throw error
     }
   },
-  async duplicate(
-    { getters, dispatch },
-    { elementId, pageId, configuration = {} }
-  ) {
-    // TODO this duplication only works with one layer of children
-    const element = getters.getElements.find((e) => e.id === elementId)
-    const children = getters.getChildren(element)
-    const parentCreated = await dispatch('create', {
-      pageId,
-      beforeId: element.id,
-      elementType: element.type,
-      configuration: { ...element, ...configuration },
-      forceCreate: false,
-    })
-
-    const childrenCreated = await Promise.all(
-      children.map((child) =>
-        dispatch('create', {
-          pageId,
-          elementType: child.type,
-          configuration: {
-            ...child,
-            parent_element_id: parentCreated.id,
-          },
-          forceCreate: false,
-        })
-      )
-    )
+  async duplicate({ getters, dispatch }, { elementId }) {
+    const { data: elementsCreated } = await ElementService(
+      this.$client
+    ).duplicate(elementId)
 
     await Promise.all(
-      childrenCreated.map((child) =>
-        dispatch('forceCreate', {
-          element: child,
-        })
-      )
+      elementsCreated.map((element) => dispatch('forceCreate', { element }))
     )
 
-    // We insert the parent element at the end such that the children already exist
-    // in the frontend and won't just pop in one after the other
-    await dispatch('forceCreate', {
-      element: parentCreated,
-      beforeId: element.id,
-    })
-
-    return [parentCreated, ...childrenCreated]
+    return elementsCreated
   },
 }
 

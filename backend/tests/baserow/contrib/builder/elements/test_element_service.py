@@ -332,3 +332,27 @@ def test_move_element_trigger_order_recalculed(
     )
 
     assert element_orders_recalculated_mock.called_with(page=page, user=user)
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.builder.elements.service.elements_created")
+def test_duplicate_element(elements_created_mock, data_fixture):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_heading_element(user=user)
+
+    elements_duplicated = ElementService().duplicate_element(user, element)
+
+    assert elements_created_mock.called_with(
+        elements=elements_duplicated, user=user, page=element.page
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_duplicate_element_permission_denied(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_heading_element(user=user)
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        ElementService().duplicate_element(user, element)
