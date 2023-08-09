@@ -10,7 +10,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import (
     CannotShareViewTypeError,
@@ -2132,20 +2132,24 @@ def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture, search
     field = data_fixture.create_number_field(table=grid_view.table)
 
     model = grid_view.table.get_model()
-    model.objects.create(**{f"field_{field.id}": 1})
-    model.objects.create(**{f"field_{field.id}": 2})
-    model.objects.create(**{f"field_{field.id}": 3})
+    model.objects.create(**{f"field_{field.id}": 4})
+    model.objects.create(**{f"field_{field.id}": 5})
+    model.objects.create(**{f"field_{field.id}": 6})
+
+    SearchHandler.update_tsvector_columns(
+        field.table, update_tsvectors_for_changed_rows_only=False
+    )
 
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
-        grid_view, search="2", search_mode=search_mode
+        grid_view, search="5", search_mode=search_mode
     )
 
     assert queryset.count() == 1
-    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [Decimal(5)]
 
 
 @pytest.mark.django_db
