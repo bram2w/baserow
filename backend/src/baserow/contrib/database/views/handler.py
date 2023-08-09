@@ -889,7 +889,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ownership_type=ownership_type
         )
         queryset = CoreHandler().filter_queryset(
-            user, ListViewsOperationType.type, queryset, table.database.workspace
+            user,
+            ListViewsOperationType.type,
+            queryset,
+            table.database.workspace,
+            context=table,
         )
 
         order = queryset.values_list("id", flat=True)
