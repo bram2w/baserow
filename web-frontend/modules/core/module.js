@@ -89,6 +89,8 @@ export default function CoreModule(options) {
     POSTHOG_HOST: process.env.POSTHOG_HOST ?? '',
     BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
       process.env.BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT ?? 100,
+    BASEROW_ROW_PAGE_SIZE_LIMIT:
+      parseInt(process.env.BASEROW_ROW_PAGE_SIZE_LIMIT) ?? 200,
   }
 
   const locales = [

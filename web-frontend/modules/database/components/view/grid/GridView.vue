@@ -479,6 +479,85 @@ export default {
     )
   },
   methods: {
+    /**
+     * Method to scroll viewport to a DOM element
+     * Scroll direction can be limited to only one axis (both, vertical, horizontal)
+     */
+    scrollToCellElement(element, scrollDirection = 'both', field) {
+      const verticalContainer = this.$refs.right.$refs.body
+      const horizontalContainer = this.$refs.right.$el
+      const verticalContainerRect = verticalContainer.getBoundingClientRect()
+      const horizontalContainerRect =
+        horizontalContainer.getBoundingClientRect()
+      const elementRect = element.getBoundingClientRect()
+      const elementTop = elementRect.top - verticalContainerRect.top
+      const elementBottom = elementRect.bottom - verticalContainerRect.top
+      const elementLeft = elementRect.left - horizontalContainerRect.left
+      const elementRight = elementRect.right - horizontalContainerRect.left
+      this.scrollToElementRect(
+        { elementTop, elementBottom, elementLeft, elementRight },
+        scrollDirection,
+        field
+      )
+    },
+    /**
+     * Method to scroll viewport to a DOM element defined by its rectangle
+     * Scroll direction can be limited to only one axis (both, vertical, horizontal)
+     */
+    scrollToElementRect(
+      { elementTop, elementBottom, elementLeft, elementRight },
+      scrollDirection = 'both',
+      field
+    ) {
+      const verticalContainer = this.$refs.right.$refs.body
+      const horizontalContainer = this.$refs.right.$el
+      const verticalContainerHeight = verticalContainer.clientHeight
+      const horizontalContainerWidth = horizontalContainer.clientWidth
+
+      if (scrollDirection !== 'horizontal') {
+        if (elementTop < 0) {
+          // If the field isn't visible in the viewport we need to scroll up in order
+          // to show it.
+          this.verticalScroll(elementTop + verticalContainer.scrollTop - 20)
+          this.$refs.scrollbars.updateVertical()
+        } else if (elementBottom > verticalContainerHeight) {
+          // If the field isn't visible in the viewport we need to scroll down in order
+          // to show it.
+          this.verticalScroll(
+            elementBottom +
+              verticalContainer.scrollTop -
+              verticalContainer.clientHeight +
+              20
+          )
+          this.$refs.scrollbars.updateVertical()
+        }
+      }
+
+      if (scrollDirection !== 'vertical') {
+        const fieldPrimary = field.primary
+        if (elementLeft < 0 && (!this.canFitInTwoColumns || !fieldPrimary)) {
+          // If the field isn't visible in the viewport we need to scroll left in order
+          // to show it.
+          this.horizontalScroll(
+            elementLeft + horizontalContainer.scrollLeft - 20
+          )
+          this.$refs.scrollbars.updateHorizontal()
+        } else if (
+          elementRight > horizontalContainerWidth &&
+          (!this.canFitInTwoColumns || !fieldPrimary)
+        ) {
+          // If the field isn't visible in the viewport we need to scroll right in order
+          // to show it.
+          this.horizontalScroll(
+            elementRight +
+              horizontalContainer.scrollLeft -
+              horizontalContainer.clientWidth +
+              20
+          )
+          this.$refs.scrollbars.updateHorizontal()
+        }
+      }
+    },
     duplicateSelectedRow(event, selectedRow) {
       event.preventFieldCellUnselect = true
       this.addRowAfter(selectedRow, selectedRow)
@@ -807,58 +886,7 @@ export default {
      */
     selectedCell({ component, row, field }) {
       const element = component.$el
-      const verticalContainer = this.$refs.right.$refs.body
-      const horizontalContainer = this.$refs.right.$el
-
-      const verticalContainerRect = verticalContainer.getBoundingClientRect()
-      const verticalContainerHeight = verticalContainer.clientHeight
-
-      const horizontalContainerRect =
-        horizontalContainer.getBoundingClientRect()
-      const horizontalContainerWidth = horizontalContainer.clientWidth
-
-      const elementRect = element.getBoundingClientRect()
-      const elementTop = elementRect.top - verticalContainerRect.top
-      const elementBottom = elementRect.bottom - verticalContainerRect.top
-      const elementLeft = elementRect.left - horizontalContainerRect.left
-      const elementRight = elementRect.right - horizontalContainerRect.left
-
-      if (elementTop < 0) {
-        // If the field isn't visible in the viewport we need to scroll up in order
-        // to show it.
-        this.verticalScroll(elementTop + verticalContainer.scrollTop - 20)
-        this.$refs.scrollbars.updateVertical()
-      } else if (elementBottom > verticalContainerHeight) {
-        // If the field isn't visible in the viewport we need to scroll down in order
-        // to show it.
-        this.verticalScroll(
-          elementBottom +
-            verticalContainer.scrollTop -
-            verticalContainer.clientHeight +
-            20
-        )
-        this.$refs.scrollbars.updateVertical()
-      }
-
-      if (elementLeft < 0 && (!this.canFitInTwoColumns || !field.primary)) {
-        // If the field isn't visible in the viewport we need to scroll left in order
-        // to show it.
-        this.horizontalScroll(elementLeft + horizontalContainer.scrollLeft - 20)
-        this.$refs.scrollbars.updateHorizontal()
-      } else if (
-        elementRight > horizontalContainerWidth &&
-        (!this.canFitInTwoColumns || !field.primary)
-      ) {
-        // If the field isn't visible in the viewport we need to scroll right in order
-        // to show it.
-        this.horizontalScroll(
-          elementRight +
-            horizontalContainer.scrollLeft -
-            horizontalContainer.clientWidth +
-            20
-        )
-        this.$refs.scrollbars.updateHorizontal()
-      }
+      this.scrollToCellElement(element, 'both', field)
 
       this.$store.dispatch(this.storePrefix + 'view/grid/addRowSelectedBy', {
         row,
@@ -1037,21 +1065,95 @@ export default {
         )
       }
     },
-    keyDownEvent(event) {
+    async keyDownEvent(event) {
+      const arrowKeys = ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown']
+      const arrowShiftKeysMapping = {
+        ArrowLeft: 'previous',
+        ArrowRight: 'next',
+        ArrowUp: 'above',
+        ArrowDown: 'below',
+      }
+      const { key, shiftKey } = event
+      if (arrowKeys.includes(key) && shiftKey) {
+        event.preventDefault()
+
+        const { position, fieldIndex, rowIndex } = await this.$store.dispatch(
+          this.storePrefix + 'view/grid/multiSelectShiftChange',
+          {
+            direction: arrowShiftKeysMapping[key],
+          }
+        )
+
+        let scrollDirection = 'both'
+        if (position === 'head' && key === 'ArrowLeft') {
+          scrollDirection = 'horizontal'
+        }
+        if (position === 'head' && key === 'ArrowUp') {
+          scrollDirection = 'vertical'
+        }
+        if (position === 'tail' && key === 'ArrowRight') {
+          scrollDirection = 'horizontal'
+        }
+        if (position === 'tail' && key === 'ArrowDown') {
+          scrollDirection = 'vertical'
+        }
+
+        const fieldId =
+          this.$store.getters[this.storePrefix + 'view/grid/getFieldIdByIndex'](
+            fieldIndex
+          )
+        if (fieldId === -1) {
+          return
+        }
+        const field = this.$store.getters['field/get'](fieldId)
+        const verticalContainer = this.$refs.right.$refs.body
+        const horizontalContainer = this.$refs.right.$el
+        const visibleFieldOptions =
+          this.$store.getters[
+            this.storePrefix + 'view/grid/getOrderedVisibleFieldOptions'
+          ]
+        let elementRight = -horizontalContainer.scrollLeft
+        for (let i = 0; i < visibleFieldOptions.length; i++) {
+          const fieldOption = visibleFieldOptions[i]
+          if (i === 0) {
+            if (fieldOption[0] === fieldId) {
+              elementRight = 0
+              break
+            }
+            continue
+          }
+          elementRight += this.getFieldWidth(fieldOption[0])
+          if (fieldOption[0] === fieldId) {
+            break
+          }
+        }
+        const rowHeight =
+          this.$store.getters[this.storePrefix + 'view/grid/getRowHeight']
+        const elementLeft = elementRight - this.getFieldWidth(fieldId)
+        const elementBottom =
+          -verticalContainer.scrollTop + rowHeight + rowIndex * rowHeight
+        const elementTop = elementBottom - rowHeight
+        this.scrollToElementRect(
+          { elementTop, elementBottom, elementLeft, elementRight },
+          scrollDirection,
+          field
+        )
+
+        return
+      }
+
       if (
         this.$store.getters[this.storePrefix + 'view/grid/isMultiSelectActive']
       ) {
-        // Check if arrow key was pressed.
-        if (
-          ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(
-            event.key
-          )
-        ) {
-          // Cancels multi-select if it's currently active.
+        if (arrowKeys.includes(key) && !shiftKey) {
           this.$store.dispatch(
-            this.storePrefix + 'view/grid/clearAndDisableMultiSelect'
+            this.storePrefix + 'view/grid/setSelectedCellCancelledMultiSelect',
+            {
+              direction: arrowShiftKeysMapping[key],
+            }
           )
         }
+
         if (event.key === 'Backspace' || event.key === 'Delete') {
           this.clearValuesFromMultipleCellSelection()
         }

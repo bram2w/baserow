@@ -849,4 +849,159 @@ describe('Grid view store', () => {
       },
     })
   })
+
+  test('getNumberOfVisibleFields', () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(store.getters['grid/getNumberOfVisibleFields']).toBe(3)
+  })
+
+  test('getOrderedFieldOptions', () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(
+      JSON.parse(JSON.stringify(store.getters['grid/getOrderedFieldOptions']))
+    ).toEqual([
+      [1, { hidden: false, order: 0 }],
+      [2, { hidden: true, order: 1 }],
+      [4, { hidden: false, order: 2 }],
+      [3, { hidden: false, order: 3 }],
+    ])
+  })
+
+  test('getOrderedVisibleFieldOptions', () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(
+      JSON.parse(
+        JSON.stringify(store.getters['grid/getOrderedVisibleFieldOptions'])
+      )
+    ).toEqual([
+      [1, { hidden: false, order: 0 }],
+      [4, { hidden: false, order: 2 }],
+      [3, { hidden: false, order: 3 }],
+    ])
+  })
+
+  test('getRowIdByIndex', () => {
+    const state = Object.assign(gridStore.state(), {
+      bufferStartIndex: 9,
+      bufferLimit: 10,
+
+      rows: [
+        {
+          id: 10,
+          field_1: '10',
+          field_2: 10,
+          field_3: true,
+          field_4: 'abc',
+          order: '10.00',
+          _: {},
+        },
+        {
+          id: 11,
+          field_1: '11',
+          field_2: 11,
+          field_3: true,
+          field_4: 'def',
+          order: '11.00',
+          _: {},
+        },
+      ],
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(store.getters['grid/getRowIdByIndex'](10)).toBe(11)
+  })
+
+  test('getFieldIdByIndex', () => {
+    const state = Object.assign(gridStore.state(), {
+      fieldOptions: {
+        1: {
+          order: 0,
+          hidden: false,
+        },
+        2: {
+          order: 1,
+          hidden: true,
+        },
+        3: {
+          order: 3,
+          hidden: false,
+        },
+        4: {
+          order: 2,
+          hidden: false,
+        },
+      },
+    })
+    gridStore.state = () => state
+    store.registerModule('grid', gridStore)
+
+    expect(store.getters['grid/getFieldIdByIndex'](2)).toBe(3)
+  })
 })
