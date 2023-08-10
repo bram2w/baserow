@@ -1,0 +1,40 @@
+.color-picker-context {
+  padding: 20px;
+}
+
+.color-picker-context__color {
+  display: flex;
+  margin-top: 20px;
+  width: 288px;
+}
+
+.color-picker-context__color-type {
+  flex-basis: 70px;
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.color-picker-context__color-hex {
+  flex-basis: 85px;
+  margin-left: 16px;
+}
+
+.color-picker-context__color-rgb {
+  display: flex;
+  gap: 5px;
+  flex-basis: 150px;
+  margin-left: 11px;
+
+  input {
+    width: 38px;
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+}
+
+.color-picker-context__color-opacity {
+  flex-basis: 64px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  margin-left: auto;
+}
