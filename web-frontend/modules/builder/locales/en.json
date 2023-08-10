@@ -51,7 +51,8 @@
         "lastPublished": "Last published:"
     },
     "elementsContext": {
-        "searchPlaceholder": "Search elements"
+        "searchPlaceholder": "Search elements",
+        "noElements": "No elements found"
     },
     "elementType": {
         "heading": "Heading",

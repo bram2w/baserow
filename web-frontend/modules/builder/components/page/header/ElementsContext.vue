@@ -15,6 +15,9 @@
         :elements="elementsMatchingSearchTerm"
         @select="selectElement($event)"
       />
+      <div v-else class="context__description">
+        {{ $t('elementsContext.noElements') }}
+      </div>
       <div class="select__footer">
         <div class="select__footer-create">
           <AddElementButton
