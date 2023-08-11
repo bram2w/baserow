@@ -60,9 +60,11 @@
     <![endif]-->
   <!--[if !mso]><!-->
   <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,600" rel="stylesheet" type="text/css">
+  <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Montserrat:700" rel="stylesheet" type="text/css">
   <style type="text/css">
     @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,600);
+    @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
     @import url(https://fonts.googleapis.com/css?family=Montserrat:700);
   </style>
   <!--<![endif]-->
@@ -143,19 +145,48 @@
                   <tbody>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Montserrat;font-size:22px;font-weight:700;line-height:1;text-align:left;color:#062E47;">{% trans "Invitation" %}</div>
+                        <div style="font-family:Montserrat;font-size:22px;font-weight:700;line-height:1;text-align:left;color:#062E47;">{% blocktrans trimmed count counter=new_notifications_count %} You have {{ counter }} new notification {% plural %} You have {{ counter }} new notifications {% endblocktrans %}</div>
                       </td>
                     </tr>
                     <tr>
-                      <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Open Sans;font-size:13px;line-height:170%;text-align:left;color:#062E47;">{% blocktrans trimmed with invitation.invited_by.first_name as first_name and invitation.workspace.name as workspace_name %} <strong>{{ first_name }}</strong> has invited you to collaborate on <strong>{{ workspace_name }}</strong>. {% endblocktrans %}</div>
+                      <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                        <p style="border-top:dashed 1px lightgrey;font-size:1px;margin:0px auto;width:100%;">
+                        </p>
+                        <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:dashed 1px lightgrey;font-size:1px;margin:0px auto;width:550px;" role="presentation" width="550px" ><tr><td style="height:0;line-height:0;"> &nbsp;
+</td></tr></table><![endif]-->
                       </td>
                     </tr>
-                    <!-- htmlmin:ignore -->{% if invitation.message %}
+                    <!-- htmlmin:ignore -->{% for notification in notifications %}
                     <!-- htmlmin:ignore -->
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Open Sans;font-size:13px;line-height:170%;text-align:left;color:#062E47;">"{{ invitation.message }}"</div>
+                        <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{{ notification.title }}</div>
+                      </td>
+                    </tr>
+                    <!-- htmlmin:ignore -->{% if notification.description %}
+                    <!-- htmlmin:ignore -->
+                    <tr>
+                      <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                        <div style="font-family:Open Sans;font-size:12px;line-height:1;text-align:left;color:#646b75;">{{ notification.description|linebreaksbr }}</div>
+                      </td>
+                    </tr>
+                    <!-- htmlmin:ignore -->{% endif %}
+                    <!-- htmlmin:ignore -->
+                    <tr>
+                      <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                        <p style="border-top:dashed 1px lightgrey;font-size:1px;margin:0px auto;width:100%;">
+                        </p>
+                        <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:dashed 1px lightgrey;font-size:1px;margin:0px auto;width:550px;" role="presentation" width="550px" ><tr><td style="height:0;line-height:0;"> &nbsp;
+</td></tr></table><![endif]-->
+                      </td>
+                    </tr>
+                    <!-- htmlmin:ignore -->{% endfor %}
+                    <!-- htmlmin:ignore -->
+                    <!-- htmlmin:ignore -->{% if unlisted_notifications_count %}
+                    <!-- htmlmin:ignore -->
+                    <tr>
+                      <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                        <div style="font-family:Open Sans;font-size:12px;line-height:1;text-align:left;color:#646b75;">{% blocktrans trimmed count counter=unlisted_notifications_count %} Plus {{ counter }} more notification. {% plural %} Plus {{ counter }} more notifications. {% endblocktrans %}</div>
                       </td>
                     </tr>
                     <!-- htmlmin:ignore -->{% endif %}
@@ -166,7 +197,7 @@
                           <tbody>
                             <tr>
                               <td align="center" bgcolor="#198DD6" role="presentation" style="border:none;border-radius:4px;cursor:auto;mso-padding-alt:12px 30px;background:#198DD6;" valign="middle">
-                                <a href="{{ public_accept_url }}" style="display:inline-block;background:#198DD6;color:#ffffff;font-family:Open Sans;font-size:15px;font-weight:600;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:12px 30px;mso-padding-alt:0px;border-radius:4px;" target="_blank"> {% trans "Accept invitation" %} </a>
+                                <a href="{{ public_web_frontend_url }}" style="display:inline-block;background:#198DD6;color:#ffffff;font-family:Open Sans;font-size:15px;font-weight:600;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:12px 30px;mso-padding-alt:0px;border-radius:4px;" target="_blank"> {% trans "View in Baserow" %} </a>
                               </td>
                             </tr>
                           </tbody>
@@ -175,7 +206,7 @@
                     </tr>
                     <tr>
                       <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:Open Sans;font-size:12px;line-height:1;text-align:left;color:#828A95;">{{ public_accept_url }}</div>
+                        <div style="font-family:Open Sans;font-size:12px;line-height:1;text-align:left;color:#828A95;">{{ public_web_frontend_url }}</div>
                       </td>
                     </tr>
                     <tr>

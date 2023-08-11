@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 
 from baserow.contrib.database.fields.field_types import MultipleCollaboratorsFieldType
 from baserow.contrib.database.rows.handler import RowM2MChangeTracker
@@ -12,7 +13,10 @@ from baserow.core.notifications.handler import (
     NotificationHandler,
     UserNotificationsGrouper,
 )
-from baserow.core.notifications.registries import NotificationType
+from baserow.core.notifications.registries import (
+    EmailNotificationTypeMixin,
+    NotificationType,
+)
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
@@ -30,8 +34,25 @@ class CollaboratorAddedToRowNotificationData:
     row_id: int
 
 
-class CollaboratorAddedToRowNotificationType(NotificationType):
+class CollaboratorAddedToRowNotificationType(
+    EmailNotificationTypeMixin, NotificationType
+):
     type = "collaborator_added_to_row"
+
+    @classmethod
+    def get_notification_title_for_email(cls, notification, context):
+        return _(
+            "%(sender)s assigned you to %(field_name)s in row %(row_id)s in %(table_name)s."
+        ) % {
+            "sender": notification.sender.first_name,
+            "field_name": notification.data["field_name"],
+            "row_id": notification.data["row_id"],
+            "table_name": notification.data["table_name"],
+        }
+
+    @classmethod
+    def get_notification_description_for_email(cls, notification, context):
+        return None
 
     @classmethod
     def construct_notification(

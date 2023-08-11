@@ -238,6 +238,20 @@ def test_user_account(data_fixture, api_client):
 
     response = api_client.patch(
         reverse("api:user:account"),
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["non_field_errors"][0]["code"] == "invalid"
+    assert response_json["detail"]["non_field_errors"][0]["error"] == (
+        "At least one of the fields first_name, language, email_notification_frequency must be provided."
+    )
+
+    response = api_client.patch(
+        reverse("api:user:account"),
         {
             "language": "invalid",
         },
@@ -252,6 +266,39 @@ def test_user_account(data_fixture, api_client):
         "Only the following language keys are "
         f"valid: {','.join([l[0] for l in settings.LANGUAGES])}"
     )
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "email_notification_frequency": "invalid",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 400
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["email_notification_frequency"][0]["code"]
+        == "invalid_choice"
+    )
+    assert response_json["detail"]["email_notification_frequency"][0]["error"] == (
+        '"invalid" is not a valid choice.'
+    )
+
+    response = api_client.patch(
+        reverse("api:user:account"),
+        {
+            "email_notification_frequency": "daily",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == 200
+    assert response_json["first_name"] == "NewOriginalName"
+    assert response_json["language"] == "fr"
+    assert response_json["email_notification_frequency"] == "daily"
 
 
 @pytest.mark.django_db

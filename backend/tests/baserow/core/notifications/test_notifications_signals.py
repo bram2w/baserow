@@ -12,8 +12,8 @@ def test_notification_created_signal_called(mock_notification_created, data_fixt
     sender = data_fixture.create_user()
     recipient = data_fixture.create_user()
 
-    notification_recipients = NotificationHandler.create_notification_for_users(
-        notification_type="test",
+    notification = data_fixture.create_workspace_notification_for_users(
+        notification_type="direct",
         recipients=[recipient],
         data={"test": True},
         sender=sender,
@@ -23,8 +23,8 @@ def test_notification_created_signal_called(mock_notification_created, data_fixt
 
     assert args == call(
         sender=NotificationHandler,
-        notification=notification_recipients[0].notification,
-        notification_recipients=notification_recipients,
+        notification=notification,
+        notification_recipients=list(notification.notificationrecipient_set.all()),
         user=sender,
     )
 
@@ -34,7 +34,7 @@ def test_notification_created_signal_called(mock_notification_created, data_fixt
 def test_notification_broadcast_created_signal_called(
     mock_notification_created, data_fixture
 ):
-    notification = NotificationHandler.create_broadcast_notification(
+    notification = data_fixture.create_broadcast_notification(
         notification_type="broadcast", data={"test": True}
     )
     mock_notification_created.assert_called_once()
@@ -62,7 +62,7 @@ def test_notification_marked_as_read_signal_called(
     recipient = data_fixture.create_user(
         workspace=workspace, web_socket_id="web_socket_id"
     )
-    notification = data_fixture.create_workspace_notification(
+    notification = data_fixture.create_workspace_notification_for_users(
         recipients=[recipient], workspace=workspace, sender=sender
     )
     notification_recipient = NotificationHandler.mark_notification_as_read(

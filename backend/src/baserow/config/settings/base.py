@@ -862,6 +862,58 @@ if os.getenv("EMAIL_SMTP", ""):
 else:
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Enable email notifications globally. If disabled, tasks will reset the
+# email_scheduled field without sending any emails.
+EMAIL_NOTIFICATIONS_ENABLED = str_to_bool(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_ENABLED", "true")
+)
+# The maximum amount of email notifications that can be sent per task. This
+# equals the amount of users that will receive an email, since all the
+# notifications for a user are sent in one email. If you want to limit the
+# number of emails sent per minute, look at MAX_EMAILS_PER_MINUTE.
+EMAIL_NOTIFICATIONS_LIMIT_PER_TASK = {
+    "instant": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_INSTANT", 50)),
+    "daily": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_DAILY", 1000)),
+    "weekly": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_WEEKLY", 5000)),
+}
+# The crontab used to schedule the instant email notifications task.
+EMAIL_NOTIFICATIONS_INSTANT_CRONTAB = get_crontab_from_env(
+    "BASEROW_EMAIL_NOTIFICATIONS_INSTANT_CRONTAB", default_crontab="* * * * *"
+)
+# The hour of the day (between 0 and 23) when the daily and weekly email
+# notifications task is scheduled, according to the user timezone. Every hour a
+# task is scheduled and only the users in the correct timezone will receive an
+# email.
+EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY = int(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY", 0)
+)
+# The day of the week when the weekly email notifications task is scheduled,
+# according to the user timezone (0: Monday, ..., 6: Sunday).
+EMAIL_NOTIFICATIONS_WEEKLY_DAY_OF_WEEK = int(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_WEEKLY_DAY_OF_WEEK", 0)
+)
+# 0 seconds means that the task will not be retried if the limit of users being
+# notified is reached. Provide a positive number to enable retries after this many
+# seconds.
+EMAIL_NOTIFICATIONS_AUTO_RETRY_IF_LIMIT_REACHED_AFTER = (
+    int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_AUTO_RETRY_IF_LIMIT_REACHED_AFTER", 0))
+    or None
+)
+
+# The maximum number of notifications that are going to be listed in a single email.
+# All the additional notifications are going to be included in a single "and x more"
+MAX_NOTIFICATIONS_LISTED_PER_EMAIL = int(
+    os.getenv("BASEROW_MAX_NOTIFICATIONS_LISTED_PER_EMAIL", 10)
+)
+
+# Look into `CeleryEmailBackend` for more information about these settings.
+CELERY_EMAIL_CHUNK_SIZE = int(os.getenv("CELERY_EMAIL_CHUNK_SIZE", 10))
+# Use a multiple of CELERY_EMAIL_CHUNK_SIZE to have a sensible rate limit.
+MAX_EMAILS_PER_MINUTE = int(os.getenv("BASEROW_MAX_EMAILS_PER_MINUTE", 50))
+CELERY_EMAIL_TASK_CONFIG = {
+    "rate_limit": f"{int(MAX_EMAILS_PER_MINUTE / CELERY_EMAIL_CHUNK_SIZE)}/m",
+}
+
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 160]}

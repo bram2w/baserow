@@ -1,9 +1,14 @@
 from dataclasses import asdict, dataclass
 
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
 
 from baserow.core.notifications.handler import NotificationHandler
-from baserow.core.notifications.registries import NotificationType
+from baserow.core.notifications.registries import (
+    EmailNotificationTypeMixin,
+    NotificationType,
+)
+from baserow.core.prosemirror.utils import prosemirror_doc_to_plain_text
 
 from .signals import row_comment_created, row_comment_updated
 
@@ -31,7 +36,7 @@ class RowCommentMentionNotificationData:
         )
 
 
-class RowCommentMentionNotificationType(NotificationType):
+class RowCommentMentionNotificationType(EmailNotificationTypeMixin, NotificationType):
     type = "row_comment_mention"
 
     @classmethod
@@ -47,13 +52,25 @@ class RowCommentMentionNotificationType(NotificationType):
         notification_data = RowCommentMentionNotificationData.from_row_comment(
             row_comment
         )
-        NotificationHandler.create_notification_for_users(
+        NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=mentions,
             data=asdict(notification_data),
             sender=row_comment.user,
             workspace=row_comment.table.database.workspace,
         )
+
+    @classmethod
+    def get_notification_title_for_email(cls, notification, context):
+        return _("%(user)s mentioned you in row %(row_id)s in %(table_name)s.") % {
+            "user": notification.sender.first_name,
+            "row_id": notification.data["row_id"],
+            "table_name": notification.data["table_name"],
+        }
+
+    @classmethod
+    def get_notification_description_for_email(cls, notification, context):
+        return prosemirror_doc_to_plain_text(notification.data["message"])
 
 
 @receiver(row_comment_created)

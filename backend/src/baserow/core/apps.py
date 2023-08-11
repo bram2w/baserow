@@ -276,6 +276,7 @@ class CoreConfig(AppConfig):
         import baserow.core.notifications.receivers  # noqa: F401
         import baserow.core.notifications.tasks  # noqa: F401
         from baserow.core.notification_types import (
+            BaserowVersionUpgradeNotificationType,
             WorkspaceInvitationAcceptedNotificationType,
             WorkspaceInvitationCreatedNotificationType,
             WorkspaceInvitationRejectedNotificationType,
@@ -291,6 +292,7 @@ class CoreConfig(AppConfig):
         notification_type_registry.register(
             WorkspaceInvitationRejectedNotificationType()
         )
+        notification_type_registry.register(BaserowVersionUpgradeNotificationType())
 
         # Must import the Posthog signal, otherwise it won't work.
         import baserow.core.posthog  # noqa: F403, F401

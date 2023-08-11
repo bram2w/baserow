@@ -1,10 +1,17 @@
 from dataclasses import asdict, dataclass
 
 from django.dispatch import receiver
+from django.utils.translation import gettext as _
+
+from loguru import logger
 
 from baserow.core.notifications.exceptions import NotificationDoesNotExist
 from baserow.core.notifications.handler import NotificationHandler
-from baserow.core.notifications.registries import NotificationType
+from baserow.core.notifications.registries import (
+    CliNotificationTypeMixin,
+    EmailNotificationTypeMixin,
+    NotificationType,
+)
 
 from .signals import (
     workspace_invitation_accepted,
@@ -40,7 +47,7 @@ class WorkspaceInvitationCreatedNotificationType(NotificationType):
 
     @classmethod
     def create_invitation_created_notification(cls, invitation, invited_user):
-        NotificationHandler.create_notification_for_users(
+        NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=[invited_user],
             sender=invitation.invited_by,
@@ -62,12 +69,14 @@ def handle_workspace_invitation_created(
         )
 
 
-class WorkspaceInvitationAcceptedNotificationType(NotificationType):
+class WorkspaceInvitationAcceptedNotificationType(
+    EmailNotificationTypeMixin, NotificationType
+):
     type = "workspace_invitation_accepted"
 
     @classmethod
     def create_invitation_accepted_notification(cls, user, invitation):
-        NotificationHandler.create_notification_for_users(
+        NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=[invitation.invited_by],
             sender=user,
@@ -78,6 +87,19 @@ class WorkspaceInvitationAcceptedNotificationType(NotificationType):
             ),
             workspace=invitation.workspace,
         )
+
+    @classmethod
+    def get_notification_title_for_email(cls, notification, context):
+        return _(
+            "%(user)s accepted your invitation to collaborate to %(workspace_name)s."
+        ) % {
+            "user": notification.sender.first_name,
+            "workspace_name": notification.data["invited_to_workspace_name"],
+        }
+
+    @classmethod
+    def get_notification_description_for_email(cls, notification, context):
+        return None
 
 
 @receiver(workspace_invitation_accepted)
@@ -88,12 +110,14 @@ def handle_workspace_invitation_accepted(sender, invitation, user, **kwargs):
     )
 
 
-class WorkspaceInvitationRejectedNotificationType(NotificationType):
+class WorkspaceInvitationRejectedNotificationType(
+    EmailNotificationTypeMixin, NotificationType
+):
     type = "workspace_invitation_rejected"
 
     @classmethod
     def create_invitation_rejected_notification(cls, user, invitation):
-        NotificationHandler.create_notification_for_users(
+        NotificationHandler.create_direct_notification_for_users(
             notification_type=cls.type,
             recipients=[invitation.invited_by],
             sender=user,
@@ -105,6 +129,19 @@ class WorkspaceInvitationRejectedNotificationType(NotificationType):
             workspace=invitation.workspace,
         )
 
+    @classmethod
+    def get_notification_title_for_email(cls, notification, context):
+        return _(
+            "%(user)s rejected your invitation to collaborate to %(workspace_name)s."
+        ) % {
+            "user": notification.sender.first_name,
+            "workspace_name": notification.data["invited_to_workspace_name"],
+        }
+
+    @classmethod
+    def get_notification_description_for_email(cls, notification, context):
+        return None
+
 
 @receiver(workspace_invitation_rejected)
 def handle_workspace_invitation_rejected(sender, invitation, user, **kwargs):
@@ -114,7 +151,7 @@ def handle_workspace_invitation_rejected(sender, invitation, user, **kwargs):
     )
 
 
-class BaserowVersionUpgradeNotificationType(NotificationType):
+class BaserowVersionUpgradeNotificationType(CliNotificationTypeMixin, NotificationType):
     type = "baserow_version_upgrade"
 
     @classmethod
@@ -126,3 +163,28 @@ class BaserowVersionUpgradeNotificationType(NotificationType):
             sender=None,
             data={"version": version, "release_notes_url": release_notes_url},
         )
+
+    @classmethod
+    def prompt_for_args_in_cli_and_create_notification(cls):
+        version = input("Enter the version number (i.e. 1.19): ")
+        if not version:
+            print("Version is required.")
+            return
+
+        release_notes_url = input(
+            "Enter the release notes URL (i.e. https://baserow.io/blog/1-19-release-of-baserow): "
+        )
+
+        confirm = input(
+            "Are you sure you want to create a notification with these data?\n\n"
+            f"Version: {version}\n"
+            f"Release notes URL: {release_notes_url}\n\n"
+            "Enter 'y' to confirm: "
+        )
+        if confirm.lower() == "y":
+            cls.create_version_upgrade_broadcast_notification(
+                version, release_notes_url
+            )
+            logger.info(
+                f"Broadcast notification {cls.type} successfully created via CLI."
+            )
