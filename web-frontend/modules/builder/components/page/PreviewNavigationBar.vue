@@ -13,6 +13,7 @@
           :value="pageParameters[pathPart.value]"
           @input="
             actionSetParameter({
+              page,
               name: pathPart.value,
               value: $event.target.value,
             })
@@ -32,7 +33,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapActions } from 'vuex'
 import { splitPath } from '@baserow/modules/builder/utils/path'
 
 export default {
@@ -43,9 +44,9 @@ export default {
     },
   },
   computed: {
-    ...mapGetters({
-      pageParameters: 'pageParameter/getParameters',
-    }),
+    pageParameters() {
+      return this.$store.getters['pageParameter/getParameters'](this.page)
+    },
     splitPath() {
       return splitPath(this.page.path).map((pathPart, index) => ({
         ...pathPart,

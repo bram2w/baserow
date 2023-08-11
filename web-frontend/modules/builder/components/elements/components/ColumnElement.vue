@@ -145,7 +145,6 @@ export default {
   methods: {
     ...mapActions({
       actionMoveElement: 'element/move',
-      actionUpdateElement: 'element/update',
     }),
     showAddElementModal(columnIndex) {
       this.$refs.addElementModal.show({
@@ -201,6 +200,7 @@ export default {
 
       try {
         await this.actionMoveElement({
+          page: this.page,
           elementId: elementToMoveId,
           beforeElementId,
           parentElementId: this.element.id,
@@ -220,6 +220,7 @@ export default {
       if (newPlaceInContainer >= 0) {
         try {
           await this.actionMoveElement({
+            page: this.page,
             elementId: element.id,
             beforeElementId: null,
             parentElementId: this.element.id,

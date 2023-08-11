@@ -49,7 +49,7 @@ def elements_created(
         lambda: broadcast_to_permitted_users.delay(
             page.builder.workspace_id,
             ListElementsPageOperationType.type,
-            BuilderElementObjectScopeType.type,
+            BuilderPageObjectScopeType.type,
             page.id,
             {
                 "type": "elements_created",

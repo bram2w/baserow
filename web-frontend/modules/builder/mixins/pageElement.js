@@ -1,6 +1,7 @@
 import _ from 'lodash'
 
 export default {
+  inject: ['page'],
   props: {
     element: {
       type: Object,
@@ -20,10 +21,11 @@ export default {
       return elementType[componentName]
     },
     children() {
-      return this.$store.getters['element/getChildren'](this.element)
+      return this.$store.getters['element/getChildren'](this.page, this.element)
     },
     allowedStyles() {
       const parentElement = this.$store.getters['element/getElementById'](
+        this.page,
         this.element.parent_element_id
       )
 

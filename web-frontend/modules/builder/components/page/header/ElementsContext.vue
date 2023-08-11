@@ -50,6 +50,7 @@ export default {
   name: 'ElementsContext',
   components: { AddElementModal, AddElementButton, ElementsList },
   mixins: [context],
+  inject: ['page'],
   data() {
     return {
       search: null,
@@ -58,10 +59,11 @@ export default {
   },
   computed: {
     ...mapGetters({
-      page: 'page/getSelected',
-      elements: 'element/getRootElements',
       elementSelected: 'element/getSelected',
     }),
+    elements() {
+      return this.$store.getters['element/getRootElements'](this.page)
+    },
     elementsMatchingSearchTerm() {
       if (
         this.search === '' ||

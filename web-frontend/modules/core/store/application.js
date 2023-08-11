@@ -19,7 +19,7 @@ export const state = () => ({
   loading: false,
   loaded: false,
   items: [],
-  selected: {},
+  selected: null,
 })
 
 export const mutations = {
@@ -296,10 +296,13 @@ export const getters = {
     return state.loaded
   },
   isSelected: (state) => (application) => {
-    return state.selected.id === application.id
+    return state.selected?.id === application.id
   },
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
+  },
+  getSelected: (state) => {
+    return state.selected
   },
   getAll(state) {
     return state.items

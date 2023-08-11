@@ -19,6 +19,7 @@ import ElementsListItem from '@baserow/modules/builder/components/elements/Eleme
 export default {
   name: 'ElementsList',
   components: { ElementsListItem },
+  inject: ['page'],
   props: {
     elements: {
       type: Array,
@@ -51,7 +52,7 @@ export default {
   },
   methods: {
     getChildren(element) {
-      return this.$store.getters['element/getChildren'](element)
+      return this.$store.getters['element/getChildren'](this.page, element)
     },
   },
 }

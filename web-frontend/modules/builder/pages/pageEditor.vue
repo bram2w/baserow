@@ -34,26 +34,25 @@ export default {
     next()
   },
   layout: 'app',
-  async asyncData({ store, params, error, $registry, ...rest }) {
+  async asyncData({ store, params, error, $registry }) {
     const builderId = parseInt(params.builderId)
     const pageId = parseInt(params.pageId)
 
     const data = { panelWidth: 360 }
 
     try {
-      await store.dispatch('element/clearAll')
-      const { builder, page } = await store.dispatch('page/selectById', {
-        builderId,
-        pageId,
-      })
-      data.builder = builder
-      data.page = page
+      const builder = await store.dispatch('application/selectById', builderId)
+
+      const page = store.getters['page/getById'](builder, pageId)
 
       await store.dispatch('workspace/selectById', builder.workspace.id)
 
-      await store.dispatch('dataSource/fetch', {
-        page,
-      })
+      await Promise.all([
+        store.dispatch('dataSource/fetch', {
+          page,
+        }),
+        store.dispatch('element/fetch', { page }),
+      ])
 
       const runtimeFormulaContext = new RuntimeFormulaContext(
         $registry.getAll('builderDataProvider'),
@@ -67,7 +66,14 @@ export default {
       // Initialize all data provider contents
       await runtimeFormulaContext.initAll()
 
-      await store.dispatch('element/fetch', { page })
+      // And finally select the page to display it
+      await store.dispatch('page/selectById', {
+        builder,
+        pageId,
+      })
+
+      data.builder = builder
+      data.page = page
     } catch (e) {
       // In case of a network error we want to fail hard.
       if (e.response === undefined && !(e instanceof StoreItemLookupError)) {
@@ -78,6 +84,56 @@ export default {
     }
 
     return data
+  },
+  computed: {
+    dataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](this.page)
+    },
+    runtimeFormulaContext() {
+      return new RuntimeFormulaContext(
+        this.$registry.getAll('builderDataProvider'),
+        {
+          builder: this.builder,
+          page: this.page,
+          mode: 'editing',
+        }
+      )
+    },
+    backendContext() {
+      return this.runtimeFormulaContext.getAllBackendContext()
+    },
+  },
+  watch: {
+    dataSources: {
+      deep: true,
+      /**
+       * Update data source content on data source configuration changes
+       */
+      handler() {
+        this.$store.dispatch(
+          'dataSourceContent/debouncedFetchPageDataSourceContent',
+          {
+            page: this.page,
+            data: this.backendContext,
+          }
+        )
+      },
+    },
+    backendContext: {
+      deep: true,
+      /**
+       * Update data source content on backend context changes
+       */
+      handler(newBackendContext) {
+        this.$store.dispatch(
+          'dataSourceContent/debouncedFetchPageDataSourceContent',
+          {
+            page: this.page,
+            data: newBackendContext,
+          }
+        )
+      },
+    },
   },
 }
 </script>

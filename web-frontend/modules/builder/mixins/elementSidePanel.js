@@ -5,11 +5,10 @@ import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
-  inject: ['builder'],
+  inject: ['builder', 'page'],
   computed: {
     ...mapGetters({
       element: 'element/getSelected',
-      page: 'page/getSelected',
     }),
 
     elementType() {
@@ -21,6 +20,7 @@ export default {
 
     parentElement() {
       return this.$store.getters['element/getElementById'](
+        this.page,
         this.element?.parent_element_id
       )
     },
@@ -43,6 +43,7 @@ export default {
       if (!_.isEqual(newValues, oldValues)) {
         try {
           await this.actionDebouncedUpdateSelectedElement({
+            page: this.page,
             // Here we clone the values to prevent
             // "modification outside of the store" error
             values: clone(newValues),

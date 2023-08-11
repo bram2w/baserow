@@ -33,6 +33,7 @@ import { PLACEMENTS } from '@baserow/modules/builder/enums'
 export default {
   name: 'PagePreview',
   components: { ElementPreview, PreviewNavigationBar },
+  inject: ['page'],
   data() {
     return {
       // The element that is currently being copied
@@ -45,11 +46,12 @@ export default {
   computed: {
     PLACEMENTS: () => PLACEMENTS,
     ...mapGetters({
-      page: 'page/getSelected',
       deviceTypeSelected: 'page/getDeviceTypeSelected',
-      elements: 'element/getRootElements',
       elementSelected: 'element/getSelected',
     }),
+    elements() {
+      return this.$store.getters['element/getRootElements'](this.page)
+    },
     deviceType() {
       return this.deviceTypeSelected
         ? this.$registry.get('device', this.deviceTypeSelected)
@@ -82,7 +84,6 @@ export default {
     ...mapActions({
       actionMoveElement: 'element/move',
       actionSelectElement: 'element/select',
-      actionUpdateElement: 'element/update',
     }),
     onWindowResized() {
       this.$nextTick(() => {
@@ -126,7 +127,7 @@ export default {
 
       try {
         await this.actionMoveElement({
-          pageId: this.page.id,
+          page: this.page,
           elementId: elementToMoveId,
           beforeElementId,
         })

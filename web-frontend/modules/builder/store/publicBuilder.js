@@ -1,44 +1,28 @@
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 
-const state = {
-  // The public builder loaded
-  builder: null,
-}
+const state = {}
 
-const mutations = {
-  SET_ITEM(state, { builder }) {
-    state.builder = builder
-  },
-  CLEAR_ITEM(state) {
-    state.builder = null
-  },
-}
+const mutations = {}
 
 const actions = {
-  async fetchById({ commit }, { builderId }) {
-    commit('CLEAR_ITEM')
-
+  async fetchById({ dispatch }, { builderId }) {
     const { data } = await PublishedBuilderService(this.$client).fetchById(
       builderId
     )
-    commit('SET_ITEM', { builder: data })
+
+    return await dispatch('application/forceCreate', data, { root: true })
   },
 
-  async fetchByDomain({ commit }, { domain }) {
-    commit('CLEAR_ITEM')
-
+  async fetchByDomain({ dispatch }, { domain }) {
     const { data } = await PublishedBuilderService(this.$client).fetchByDomain(
       domain
     )
-    commit('SET_ITEM', { builder: data })
+
+    return await dispatch('application/forceCreate', data, { root: true })
   },
 }
 
-const getters = {
-  getBuilder: (state) => {
-    return state.builder
-  },
-}
+const getters = {}
 
 export default {
   namespaced: true,

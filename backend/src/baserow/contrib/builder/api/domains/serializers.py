@@ -94,9 +94,11 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
         "an array of pages that are in the builder."
     )
 
+    type = serializers.SerializerMethodField(help_text="The type of the object.")
+
     class Meta:
         model = Builder
-        fields = ("id", "name", "pages")
+        fields = ("id", "name", "pages", "type")
 
     @extend_schema_field(PublicPageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:
@@ -110,6 +112,10 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
         pages = instance.page_set.all()
 
         return PublicPageSerializer(pages, many=True).data
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_type(self, instance: Builder) -> str:
+        return "builder"
 
 
 class PublicDataSourceSerializer(PublicServiceSerializer):
