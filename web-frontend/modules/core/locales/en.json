@@ -553,5 +553,15 @@
     },
     "versionUpgradeNotification": {
         "title": "{version} is here! Check out what's new."
+    },
+    "emailNotifications": {
+        "title": "Email notifications",
+        "label": "Mentions, comments and other notifications",
+        "description": "Configure the frequency in which emails are sent to your inbox.",
+        "instant": "Instant",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "never": "Never",
+        "submitButton": "Update frequency"
     }
 }

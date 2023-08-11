@@ -10,6 +10,7 @@ import {
 import {
   AccountSettingsType,
   PasswordSettingsType,
+  EmailNotificationsSettingsType,
   DeleteAccountSettingsType,
 } from '@baserow/modules/core/settingsTypes'
 import {
@@ -100,6 +101,7 @@ export default (context, inject) => {
   registry.registerNamespace('notification')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
+  registry.register('settings', new EmailNotificationsSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
   registry.register('permissionManager', new CorePermissionManagerType(context))
   registry.register(

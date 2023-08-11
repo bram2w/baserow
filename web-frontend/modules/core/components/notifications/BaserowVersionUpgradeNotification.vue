@@ -1,7 +1,7 @@
 <template>
   <a
     class="notification-panel__notification-link"
-    :href="notification.release_notes_url"
+    :href="notification.data.release_notes_url"
     target="_blank"
     rel="noopener noreferrer"
     @click="markAsReadAndHandleClick"
@@ -9,7 +9,7 @@
     <div class="notification-panel__notification-content-title">
       <i18n path="versionUpgradeNotification.title" tag="span">
         <template #version>
-          <strong>{{ `Baserow v${notification.data.version}` }}</strong>
+          <strong>{{ `Baserow ${notification.data.version}` }}</strong>
         </template>
       </i18n>
     </div>

@@ -166,9 +166,9 @@ export default {
         notifyIf(e, 'application')
       }
     },
-    async show(target) {
+    show(target) {
       if (!this.loaded) {
-        await this.initialLoad()
+        this.initialLoad()
       }
       this.open = true
       const opener = target

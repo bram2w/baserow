@@ -525,7 +525,7 @@ export const getters = {
     return state.selected
   },
   isUserIdMemberOfSelectedWorkspace: (state) => (userId) => {
-    return state.userIdsInSelected.has(userId)
+    return state.userIdsInSelected.has(parseInt(userId))
   },
   getAllUsers(state) {
     const users = {}

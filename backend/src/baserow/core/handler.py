@@ -1029,7 +1029,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         try:
-            invited_user = User.objects.get(email=invitation.email)
+            invited_user = User.objects.select_related("profile").get(
+                email=invitation.email
+            )
         except User.DoesNotExist:
             invited_user = None
 

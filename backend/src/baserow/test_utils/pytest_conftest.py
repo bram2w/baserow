@@ -121,6 +121,15 @@ def mutable_permission_manager_registry():
     permission_manager_type_registry.registry = before
 
 
+@pytest.fixture
+def mutable_notification_type_registry():
+    from baserow.core.notifications.registries import notification_type_registry
+
+    before = notification_type_registry.registry.copy()
+    yield notification_type_registry
+    notification_type_registry.registry = before
+
+
 @pytest.fixture()
 def patch_filefield_storage(tmpdir):
     """

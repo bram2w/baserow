@@ -1,5 +1,6 @@
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
+from django.db.models import Q
 from django.shortcuts import reverse
 
 import pytest
@@ -10,6 +11,7 @@ from baserow.contrib.database.fields.notification_types import (
     CollaboratorAddedToRowNotificationType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.core.notifications.handler import NotificationHandler
 from baserow.test_utils.helpers import AnyInt
 
 
@@ -400,3 +402,73 @@ def test_notifications_are_not_created_if_the_field_parameter_is_false(
     }
 
     assert mocked_broadcast_to_users.call_count == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.notifications.handler.get_mail_connection")
+def test_email_notifications_are_created_correctly(
+    mock_get_mail_connection,
+    data_fixture,
+    api_client,
+):
+    mock_connection = MagicMock()
+    mock_get_mail_connection.return_value = mock_connection
+
+    user_1, token_1 = data_fixture.create_user_and_token(
+        email="test1@test.nl", first_name="User 1"
+    )
+    user_2 = data_fixture.create_user(email="test2@test.nl", first_name="User 2")
+    workspace = data_fixture.create_workspace(members=[user_1, user_2])
+    database = data_fixture.create_database_application(
+        user=user_1, workspace=workspace, name="Placeholder"
+    )
+    table = data_fixture.create_database_table(name="Example", database=database)
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user_1, table=table, name="Collaborator 1", notify_user_when_added=True
+    )
+    row = RowHandler().create_row(
+        user=user_1, table=table, values={collaborator_field.id: []}
+    )
+
+    with freeze_time("2023-07-06 12:00"):
+        response = api_client.patch(
+            reverse(
+                "api:database:rows:item",
+                kwargs={"table_id": table.id, "row_id": row.id},
+            ),
+            {f"field_{collaborator_field.id}": [{"id": user_2.id}]},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token_1}",
+        )
+        assert response.status_code == HTTP_200_OK
+
+    # Force to send the notifications
+    res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        Q(pk=user_2.pk)
+    )
+    assert res.users_with_notifications == [user_2]
+    assert len(res.users_with_notifications[0].unsent_email_notifications) == 1
+    assert res.users_with_notifications[0].total_unsent_count == 1
+    assert res.remaining_users_to_notify_count == 0
+
+    mock_get_mail_connection.assert_called_once_with(fail_silently=False)
+    summary_emails = mock_connection.send_messages.call_args[0][0]
+    assert len(summary_emails) == 1
+    user_2_summary_email = summary_emails[0]
+    assert user_2_summary_email.to == [user_2.email]
+    assert user_2_summary_email.get_subject() == "You have 1 new notification - Baserow"
+
+    expected_context = {
+        "notifications": [
+            {
+                "title": f"User 1 assigned you to Collaborator 1 in row {row.id} in Example.",
+                "description": None,
+            }
+        ],
+        "new_notifications_count": 1,
+        "unlisted_notifications_count": 0,
+    }
+    user_2_summary_email_context = user_2_summary_email.get_context()
+
+    for k, v in expected_context.items():
+        assert user_2_summary_email_context[k] == v

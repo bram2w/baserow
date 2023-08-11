@@ -25,7 +25,7 @@ from baserow.api.workspaces.invitations.serializers import (
 from baserow.core.action.registries import action_type_registry
 from baserow.core.auth_provider.exceptions import AuthProviderDisabled
 from baserow.core.auth_provider.handler import PasswordProviderHandler
-from baserow.core.models import Template
+from baserow.core.models import Template, UserProfile
 from baserow.core.user.actions import SignInUserActionType
 from baserow.core.user.exceptions import DeactivatedUserException
 from baserow.core.user.utils import (
@@ -65,6 +65,13 @@ class UserSerializer(serializers.ModelSerializer):
         help_text="An ISO 639 language code (with optional variant) "
         "selected by the user. Ex: en-GB.",
     )
+    email_notification_frequency = serializers.ChoiceField(
+        source="profile.email_notification_frequency",
+        required=False,
+        choices=UserProfile.EmailNotificationFrequencyOptions,
+        help_text="The maximum frequency at which the user wants to "
+        "receive email notifications.",
+    )
 
     class Meta:
         model = User
@@ -75,6 +82,7 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
             "id",
             "language",
+            "email_notification_frequency",
         )
         extra_kwargs = {
             "password": {"write_only": True},
@@ -145,7 +153,7 @@ class AccountSerializer(serializers.Serializer):
     This serializer must be kept in sync with `UserSerializer`.
     """
 
-    first_name = serializers.CharField(min_length=2, max_length=150)
+    first_name = serializers.CharField(min_length=2, max_length=150, required=False)
     language = serializers.CharField(
         source="profile.language",
         required=False,
@@ -155,6 +163,25 @@ class AccountSerializer(serializers.Serializer):
         help_text="An ISO 639 language code (with optional variant) "
         "selected by the user. Ex: en-GB.",
     )
+    email_notification_frequency = serializers.ChoiceField(
+        source="profile.email_notification_frequency",
+        required=False,
+        choices=UserProfile.EmailNotificationFrequencyOptions,
+        help_text="The maximum frequency at which the user wants to "
+        "receive email notifications.",
+    )
+
+    def validate(self, data):
+        profile_fields = ["language", "email_notification_frequency"]
+        profile_data = data.get("profile", {})
+        if "first_name" not in data and not any(
+            f in profile_data for f in profile_fields
+        ):
+            raise serializers.ValidationError(
+                "At least one of the fields first_name, %s must be provided."
+                % ", ".join(profile_fields)
+            )
+        return data
 
 
 class SendResetPasswordEmailBodyValidationSerializer(serializers.Serializer):

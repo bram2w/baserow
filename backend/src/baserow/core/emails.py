@@ -1,4 +1,5 @@
 import re
+from typing import List
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -6,6 +7,11 @@ from django.db import transaction
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.utils.translation import gettext as _
+
+from loguru import logger
+
+from baserow.core.notifications.models import Notification
+from baserow.core.notifications.registries import notification_type_registry
 
 
 class BaseEmailMessage(EmailMultiAlternatives):
@@ -104,5 +110,66 @@ class WorkspaceInvitationEmail(BaseEmailMessage):
         context = super().get_context()
         context.update(
             invitation=self.invitation, public_accept_url=self.public_accept_url
+        )
+        return context
+
+
+class NotificationsSummaryEmail(BaseEmailMessage):
+    template_name = "baserow/core/notifications_summary.html"
+
+    def __init__(
+        self,
+        to: List[str],
+        notifications: List[Notification],
+        new_notifications_count: int,
+        *args,
+        **kwargs,
+    ):
+        self.notifications = notifications
+        self.new_notifications_count = new_notifications_count
+        super().__init__(to, *args, **kwargs)
+
+    def get_subject(self):
+        count = self.new_notifications_count
+
+        if count == 1:
+            return _("You have 1 new notification - Baserow")
+
+        return _("You have %(count)d new notifications - Baserow") % {"count": count}
+
+    def get_context(self):
+        context = super().get_context()
+        rendered_notifications = []
+        for notification in self.notifications:
+            notification_type = notification_type_registry.get(notification.type)
+            if not notification_type.include_in_notifications_email:
+                logger.error(
+                    f"Notification type {notification_type.type} cannot be included "
+                    f"in the notifications email but it was included in the query. This "
+                    f"shouldn't happen."
+                )
+                continue
+
+            email_title = notification_type.get_notification_title_for_email(
+                notification, context
+            )
+            email_description = (
+                notification_type.get_notification_description_for_email(
+                    notification, context
+                )
+            )
+            rendered_notifications.append(
+                {
+                    "title": email_title,
+                    "description": email_description,
+                }
+            )
+        unlisted_notifications_count = self.new_notifications_count - len(
+            rendered_notifications
+        )
+        context.update(
+            notifications=rendered_notifications,
+            new_notifications_count=self.new_notifications_count,
+            unlisted_notifications_count=unlisted_notifications_count,
         )
         return context
