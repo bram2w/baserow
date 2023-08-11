@@ -92,7 +92,7 @@ export default {
 
       try {
         await this.actionCreateElement({
-          pageId: this.page.id,
+          page: this.page,
           elementType: elementType.getType(),
           beforeId: this.beforeId,
           configuration,

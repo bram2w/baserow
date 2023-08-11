@@ -11,6 +11,7 @@
           :ref="`dataSourceForm_${dataSource.id}`"
           :key="dataSource.id"
           :builder="builder"
+          :page="page"
           :default-values="dataSource"
           :integrations="integrations"
           @delete="deleteDataSource(dataSource)"
@@ -61,13 +62,15 @@ export default {
     },
   },
   data() {
-    return { state: null, creationInProgress: false }
+    return { state: null, creationInProgress: false, onGoingUpdate: {} }
   },
   computed: {
     ...mapGetters({
       integrations: 'integration/getIntegrations',
-      dataSources: 'dataSource/getDataSources',
     }),
+    dataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](this.page)
+    },
   },
   methods: {
     ...mapActions({
@@ -89,7 +92,7 @@ export default {
       this.creationInProgress = true
       try {
         await this.actionCreateDataSource({
-          pageId: this.page.id,
+          page: this.page,
           values: {},
         })
       } catch (error) {
@@ -107,6 +110,7 @@ export default {
       if (Object.keys(differences).length > 0) {
         try {
           await this.actionUpdateDataSource({
+            page: this.page,
             dataSourceId: dataSource.id,
             values: clone(differences),
           })
@@ -122,7 +126,10 @@ export default {
     },
     async deleteDataSource(dataSource) {
       try {
-        await this.actionDeleteDataSource({ dataSourceId: dataSource.id })
+        await this.actionDeleteDataSource({
+          page: this.page,
+          dataSourceId: dataSource.id,
+        })
       } catch (error) {
         notifyIf(error)
       }

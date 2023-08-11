@@ -112,6 +112,7 @@ export default {
     },
     parentElement() {
       return this.$store.getters['element/getElementById'](
+        this.page,
         this.element.parent_element_id
       )
     },
@@ -121,7 +122,7 @@ export default {
         : null
     },
     siblingElements() {
-      return this.$store.getters['element/getSiblings'](this.element)
+      return this.$store.getters['element/getSiblings'](this.page, this.element)
     },
     samePlaceInContainerElements() {
       return this.siblingElements.filter(
@@ -161,7 +162,10 @@ export default {
     async duplicateElement() {
       this.isDuplicating = true
       try {
-        await this.actionDuplicateElement({ elementId: this.element.id })
+        await this.actionDuplicateElement({
+          page: this.page,
+          elementId: this.element.id,
+        })
       } catch (error) {
         notifyIf(error)
       }
@@ -169,7 +173,10 @@ export default {
     },
     async deleteElement() {
       try {
-        await this.actionDeleteElement({ elementId: this.element.id })
+        await this.actionDeleteElement({
+          page: this.page,
+          elementId: this.element.id,
+        })
       } catch (error) {
         notifyIf(error)
       }

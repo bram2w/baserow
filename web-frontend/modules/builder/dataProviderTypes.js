@@ -1,6 +1,5 @@
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
-import { clone } from '@baserow/modules/core/utils/object'
 import _ from 'lodash'
 
 export class DataSourceDataProviderType extends DataProviderType {
@@ -22,7 +21,9 @@ export class DataSourceDataProviderType extends DataProviderType {
   }
 
   async init(runtimeFormulaContext) {
-    const dataSources = this.app.store.getters['dataSource/getDataSources']
+    const dataSources = this.app.store.getters['dataSource/getPageDataSources'](
+      runtimeFormulaContext.applicationContext.page
+    )
 
     await this.app.store.dispatch(
       'dataSourceContent/fetchPageDataSourceContent',
@@ -36,7 +37,9 @@ export class DataSourceDataProviderType extends DataProviderType {
 
   getDataChunk(runtimeFormulaContext, [dataSourceName, ...rest]) {
     // Get the data sources for the current page.
-    const dataSources = this.app.store.getters['dataSource/getDataSources']
+    const dataSources = this.app.store.getters['dataSource/getPageDataSources'](
+      runtimeFormulaContext.applicationContext.page
+    )
 
     const dataSource = dataSources.find(({ name }) => name === dataSourceName)
 
@@ -44,14 +47,9 @@ export class DataSourceDataProviderType extends DataProviderType {
       return null
     }
 
-    // Update the dataSource content if needed
-    this.app.store.dispatch('dataSourceContent/smartFetchDataSourceContent', {
-      dataSource,
-      data: runtimeFormulaContext.getAllBackendContext(),
-    })
-
-    const dataSourceContents =
-      this.app.store.getters['dataSourceContent/getDataSourceContents']
+    const dataSourceContents = this.app.store.getters[
+      'dataSourceContent/getDataSourceContents'
+    ](runtimeFormulaContext.applicationContext.page)
 
     if (!dataSourceContents[dataSource.id]) {
       return null
@@ -79,6 +77,7 @@ export class PageParameterDataProviderType extends DataProviderType {
       await Promise.all(
         page.path_params.map(({ name, type }) =>
           this.app.store.dispatch('pageParameter/setParameter', {
+            page,
             name,
             value: type === 'numeric' ? 1 : 'test',
           })
@@ -89,6 +88,7 @@ export class PageParameterDataProviderType extends DataProviderType {
       await Promise.all(
         Object.entries(pageParamsValue).map(([name, value]) =>
           this.app.store.dispatch('pageParameter/setParameter', {
+            page,
             name,
             value,
           })
@@ -103,7 +103,9 @@ export class PageParameterDataProviderType extends DataProviderType {
     }
 
     const [prop] = path
-    const parameters = this.app.store.getters['pageParameter/getParameters']
+    const parameters = this.app.store.getters['pageParameter/getParameters'](
+      runtimeFormulaContext.applicationContext.page
+    )
 
     if (parameters[prop] === undefined) {
       return null
@@ -112,7 +114,9 @@ export class PageParameterDataProviderType extends DataProviderType {
     return parameters[prop]
   }
 
-  getBackendContext() {
-    return clone(this.app.store.getters['pageParameter/getParameters'])
+  getBackendContext(runtimeFormulaContext) {
+    return this.app.store.getters['pageParameter/getParameters'](
+      runtimeFormulaContext.applicationContext.page
+    )
   }
 }
