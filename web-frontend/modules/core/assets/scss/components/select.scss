@@ -2,9 +2,12 @@
   @extend .context;
 
   max-width: 360px;
+  display: flex;
+  flex-direction: column;
 }
 
 .select__search {
+  flex: 0 0;
   position: relative;
   border-bottom: 1px solid $color-neutral-200;
 }
@@ -32,6 +35,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  min-height: 0;
   max-height: (4 * 36px) + 20px; // we show max 4 items
   // note that the value is `scroll` and not `auto` because it depends on the
   // v-auto-overflow-scroll directive.
@@ -44,6 +48,17 @@
     height: 10px;
     width: 100%;
   }
+
+  // This class can be set if the max-height is managed by a container element.
+  &.select__items--no-max-height {
+    max-height: none;
+  }
+
+  .select__items--group {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .select__items--empty {
@@ -51,11 +66,6 @@
   white-space: normal;
   text-align: center;
   color: $color-neutral-500;
-}
-
-.select__items--expanded {
-  max-height: 100%;
-  overflow-y: auto;
 }
 
 .select__items-loading {
@@ -69,6 +79,16 @@
 
     @include loading(14px);
     @include absolute(50%, auto, 0, 50%);
+  }
+}
+
+.select__item-label {
+  color: $color-neutral-600;
+  margin: 0 0 10px 10px;
+  font-size: 14px;
+
+  &:not(:first-of-type) {
+    margin-top: 10px;
   }
 }
 
@@ -209,6 +229,7 @@
 }
 
 .select__footer {
+  flex: 0 0;
   border-top: 1px solid $color-neutral-200;
 }
 
