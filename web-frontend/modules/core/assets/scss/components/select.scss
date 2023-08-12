@@ -54,7 +54,7 @@
     max-height: none;
   }
 
-  .select__items--group {
+  ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -84,11 +84,11 @@
 
 .select__item-label {
   color: $color-neutral-600;
-  margin: 0 0 10px 10px;
+  margin: 10px 0 10px 10px;
   font-size: 14px;
 
-  &:not(:first-of-type) {
-    margin-top: 10px;
+  li:first-child & {
+    margin-top: 0;
   }
 }
 

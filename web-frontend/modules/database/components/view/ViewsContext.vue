@@ -22,15 +22,18 @@
       v-auto-overflow-scroll
       class="select__items select__items--no-max-height"
     >
-      <template v-for="type in activeViewOwnershipTypes">
-        <li
+      <li
+        v-for="type in activeViewOwnershipTypes"
+        :key="type.getType() + 'group'"
+      >
+        <div
           v-if="viewsByOwnership(views, type.getType()).length > 0"
           :key="type.getType()"
           class="select__item-label"
         >
           {{ type.getName() }}
-        </li>
-        <ul :key="type.getType() + 'group'" class="select__items--group">
+        </div>
+        <ul>
           <ViewsContextItem
             v-for="view in viewsByOwnership(views, type.getType())"
             :ref="'view-' + view.id"
@@ -54,7 +57,7 @@
             @selected="selectedView"
           ></ViewsContextItem>
         </ul>
-      </template>
+      </li>
     </ul>
     <div v-if="!isLoading && views.length == 0" class="context__description">
       {{ $t('viewsContext.noViews') }}
