@@ -1,5 +1,9 @@
 <template>
-  <Context ref="workspacesContext" class="select">
+  <Context
+    ref="workspacesContext"
+    class="select"
+    :max-height-if-outside-viewport="true"
+  >
     <div class="select__search">
       <i class="select__search-icon fas fa-search"></i>
       <input
@@ -15,7 +19,7 @@
     <ul
       v-if="!isLoading && isLoaded && workspaces.length > 0"
       v-auto-overflow-scroll
-      class="select__items"
+      class="select__items select__items--no-max-height"
     >
       <WorkspacesContextItem
         v-for="workspace in searchAndSort(workspaces)"

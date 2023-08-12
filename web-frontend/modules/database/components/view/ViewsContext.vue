@@ -1,5 +1,10 @@
 <template>
-  <Context ref="viewsContext" class="select views-context" @shown="shown">
+  <Context
+    ref="viewsContext"
+    class="select"
+    :max-height-if-outside-viewport="true"
+    @shown="shown"
+  >
     <div class="select__search">
       <i class="select__search-icon fas fa-search"></i>
       <input
@@ -12,21 +17,20 @@
     <div v-if="isLoading" class="context--loading">
       <div class="loading"></div>
     </div>
-    <div class="views-context__select_items">
-      <div v-for="type in activeViewOwnershipTypes" :key="type.getType()">
-        <div
+    <ul
+      ref="dropdown"
+      v-auto-overflow-scroll
+      class="select__items select__items--no-max-height"
+    >
+      <template v-for="type in activeViewOwnershipTypes">
+        <li
           v-if="viewsByOwnership(views, type.getType()).length > 0"
-          class="section-header"
+          :key="type.getType()"
+          class="select__item-label"
         >
           {{ type.getName() }}
-        </div>
-        <ul
-          v-if="
-            !isLoading && viewsByOwnership(views, type.getType()).length > 0
-          "
-          ref="dropdown"
-          class="select__items select__items--expanded"
-        >
+        </li>
+        <ul :key="type.getType() + 'group'" class="select__items--group">
           <ViewsContextItem
             v-for="view in viewsByOwnership(views, type.getType())"
             :ref="'view-' + view.id"
@@ -50,8 +54,8 @@
             @selected="selectedView"
           ></ViewsContextItem>
         </ul>
-      </div>
-    </div>
+      </template>
+    </ul>
     <div v-if="!isLoading && views.length == 0" class="context__description">
       {{ $t('viewsContext.noViews') }}
     </div>
