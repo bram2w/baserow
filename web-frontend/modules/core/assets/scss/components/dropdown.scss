@@ -66,6 +66,11 @@
 
   @include absolute(0, 0, auto, 0);
 
+  &.dropdown__items--fixed {
+    position: fixed;
+    right: auto;
+  }
+
   .select__item:hover {
     background-color: transparent;
   }
