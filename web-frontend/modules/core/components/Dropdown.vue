@@ -32,7 +32,11 @@
       </template>
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
-    <div class="dropdown__items" :class="{ hidden: !open }">
+    <div
+      ref="itemsContainer"
+      class="dropdown__items"
+      :class="[{ hidden: !open }, itemsContainerAdditionalClass]"
+    >
       <div v-if="showSearch" class="select__search">
         <i class="select__search-icon fas fa-search"></i>
         <input
@@ -72,5 +76,10 @@ import dropdown from '@baserow/modules/core/mixins/dropdown'
 export default {
   name: 'Dropdown',
   mixins: [dropdown],
+  data() {
+    return {
+      itemsContainerAdditionalClass: '',
+    }
+  },
 }
 </script>

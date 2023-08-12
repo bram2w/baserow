@@ -117,8 +117,11 @@ export default {
       return this.$children.filter((child) => child.isDropdownItem === true)
     },
     focusout(event) {
-      // Hide only if we loose focus in favor of another element.
-      if (event.relatedTarget) {
+      // Hide only if we loose focus in favor of another element which is not a
+      // child of this one. This will make sure the `show` and `hide` will not be
+      // called multiple times when the search of being focussed on immediately
+      // after opening.
+      if (event.relatedTarget && !isElement(this.$el, event.relatedTarget)) {
         this.hide()
       }
     },
@@ -245,6 +248,10 @@ export default {
      * contains a partial copy of this code.
      */
     hide() {
+      if (this.disabled || !this.open) {
+        return
+      }
+
       this.open = false
       this.$emit('hide')
 
