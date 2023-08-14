@@ -1084,6 +1084,10 @@ export default {
           }
         )
 
+        if (position === null) {
+          return
+        }
+
         let scrollDirection = 'both'
         if (position === 'head' && key === 'ArrowLeft') {
           scrollDirection = 'horizontal'
