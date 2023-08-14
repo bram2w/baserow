@@ -143,7 +143,16 @@
             {{ $t('gridView.copyCells') }}
           </a>
         </li>
-        <li>
+        <li
+          v-if="
+            !readOnly &&
+            $hasPermission(
+              'database.table.delete_row',
+              table,
+              database.workspace.id
+            )
+          "
+        >
           <a
             :class="{ 'context__menu-item--loading': deletingRow }"
             @click.stop="deleteRowsFromMultipleCellSelection()"
