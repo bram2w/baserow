@@ -60,9 +60,8 @@ from baserow.core.mixins import (
 from baserow.core.telemetry.utils import baserow_trace
 from baserow.core.utils import split_comma_separated_string
 
-deconstruct_filter_key_regex = re.compile(
-    r"filter__field_([0-9]+|created_on|updated_on)__([a-zA-Z0-9_]*)$"
-)
+extract_filter_sections_regex = re.compile(r"filter__(.+)__(.+)$")
+field_id_regex = re.compile(r"field_(\d+)$")
 
 tracer = trace.get_tracer(__name__)
 
@@ -359,7 +358,11 @@ class TableModelQuerySet(models.QuerySet):
         return self.annotate(**annotations).order_by(*order_by)
 
     def filter_by_fields_object(
-        self, filter_object, filter_type=FILTER_TYPE_AND, only_filter_by_field_ids=None
+        self,
+        filter_object,
+        filter_type=FILTER_TYPE_AND,
+        only_filter_by_field_ids=None,
+        user_field_names=False,
     ):
         """
         Filters the query by the provided filters in the filter_object. The following
@@ -387,6 +390,9 @@ class TableModelQuerySet(models.QuerySet):
             filtered by. Other fields not in the iterable will be ignored and not be
             filtered.
         :type only_filter_by_field_ids: Optional[Iterable[int]]
+        :param user_field_names: If True, use field names in the filter object
+            instead of ids
+        :type user_field_names: bool
         :raises ValueError: Raised when the provided filer_type isn't AND or OR.
         :raises FilterFieldNotFound: Raised when the provided field isn't found in
             the model.
@@ -402,23 +408,37 @@ class TableModelQuerySet(models.QuerySet):
 
         filter_builder = FilterBuilder(filter_type=filter_type)
 
-        for key, values in filter_object.items():
-            matches = deconstruct_filter_key_regex.match(key)
+        user_field_name_to_id_mapping = (
+            {v["field"].name: k for k, v in self.model._field_objects.items()}
+            if user_field_names
+            else {}
+        )
 
-            if not matches:
+        fixed_field_instance_mapping = {
+            "field_created_on": CreatedOnField(),
+            "field_updated_on": LastModifiedField(),
+        }
+
+        for key, values in filter_object.items():
+            filter_sections = extract_filter_sections_regex.match(key)
+            if not filter_sections:
                 continue
 
-            fixed_field_instance_mapping = {
-                "created_on": CreatedOnField(),
-                "updated_on": LastModifiedField(),
-            }
+            field_name_or_id, view_filter_name = filter_sections.groups()
 
-            if matches[1] in fixed_field_instance_mapping.keys():
-                field_name = matches[1]
-                field_instance = fixed_field_instance_mapping.get(field_name)
+            if user_field_names and field_name_or_id in user_field_name_to_id_mapping:
+                field_id = user_field_name_to_id_mapping[field_name_or_id]
+            elif field_name_or_id in fixed_field_instance_mapping.keys():
+                field_instance = fixed_field_instance_mapping[field_name_or_id]
+                field_name = field_name_or_id.replace("field_", "")
             else:
-                field_id = int(matches[1])
+                field_id_match = field_id_regex.match(field_name_or_id)
+                if field_id_match:
+                    field_id = int(field_id_match.group(1))
+                else:
+                    continue
 
+            if field_name_or_id not in fixed_field_instance_mapping.keys():
                 if field_id not in self.model._field_objects or (
                     only_filter_by_field_ids is not None
                     and field_id not in only_filter_by_field_ids
@@ -433,10 +453,11 @@ class TableModelQuerySet(models.QuerySet):
                 field_type = field_object["type"].type
 
             model_field = self.model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(matches[2])
+            view_filter_type = view_filter_type_registry.get(view_filter_name)
+
             if not view_filter_type.field_is_compatible(field_instance):
                 raise ViewFilterTypeNotAllowedForField(
-                    matches[2],
+                    view_filter_name,
                     field_type,
                 )
 
