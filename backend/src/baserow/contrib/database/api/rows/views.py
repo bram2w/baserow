@@ -364,7 +364,9 @@ class RowsView(APIView):
             else FILTER_TYPE_AND
         )
         filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
-        queryset = queryset.filter_by_fields_object(filter_object, filter_type)
+        queryset = queryset.filter_by_fields_object(
+            filter_object, filter_type, user_field_names=user_field_names
+        )
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)

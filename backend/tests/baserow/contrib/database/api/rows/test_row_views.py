@@ -398,6 +398,103 @@ def test_list_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_user_field_names(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_text_field(name="field_123456", table=table)
+    field_3 = data_fixture.create_text_field(name="field_üńîćødë", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(
+        name="Product 1", field123456="1st product", order=Decimal("1")
+    )
+    row_2 = model.objects.create(
+        name="Product 2", field123456="2nd product", order=Decimal("2")
+    )
+    row_3 = model.objects.create(
+        name="Product 3", field123456="3rd product", order=Decimal("3")
+    )
+    row_4 = model.objects.create(
+        name="Product 4", fieldüńîćødë="Unicode product", order=Decimal("4")
+    )
+
+    # Test with field names
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_1.name}__equal=Product 1",
+        f"filter__{field_1.name}__equal=Product 2",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 2
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == row_1.id
+    assert response_json["results"][1]["id"] == row_2.id
+
+    # Test with field_id and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__field_{field_1.id}__equal=Product 1",
+        f"filter__field_{field_1.id}__equal=Product 2",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 2
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == row_1.id
+    assert response_json["results"][1]["id"] == row_2.id
+
+    # Test with field name "field_123456" and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_2.name}__equal=3rd product",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
+
+    # Test with field name "field_üńîćødë" and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_3.name}__equal=Unicode product",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_4.id
+
+
+@pytest.mark.django_db
 def test_list_rows_sort_query_overrides_existing_sort(data_fixture, api_client):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
