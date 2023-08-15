@@ -1313,7 +1313,11 @@ export const actions = {
       getters.getMultiSelectStartRowIndex === -1 ||
       getters.getMultiSelectStartFieldIndex === -1
     ) {
-      return
+      return {
+        position: null,
+        rowIndex: -1,
+        fieldIndex: -1,
+      }
     }
 
     if (!getters.isMultiSelectActive) {
