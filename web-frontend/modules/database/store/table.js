@@ -7,11 +7,13 @@ import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedo
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export function populateTable(table) {
-  table._ = {
-    disabled: false,
-    selected: false,
+  return {
+    ...table,
+    _: {
+      disabled: false,
+      selected: false,
+    },
   }
-  return table
 }
 
 export const state = () => ({
@@ -23,8 +25,7 @@ export const state = () => ({
 
 export const mutations = {
   ADD_ITEM(state, { database, table }) {
-    populateTable(table)
-    database.tables.push(table)
+    database.tables.push(populateTable(table))
   },
   UPDATE_ITEM(state, { table, values }) {
     Object.assign(table, table, values)
@@ -118,7 +119,8 @@ export const actions = {
     }
   },
   /**
-   * Forcefully create an item in the store without making a call to the server.
+   * Forcefully create or update an item in the store without making a call to
+   * the server.
    */
   forceUpsert({ commit }, { database, data }) {
     const table = database.tables.find((item) => item.id === data.id)
@@ -127,6 +129,7 @@ export const actions = {
     } else {
       commit('UPDATE_ITEM', { database, table, values: data })
     }
+    return database.tables.find((item) => item.id === data.id)
   },
   /**
    * Update an existing table of the provided database with the provided tables.
