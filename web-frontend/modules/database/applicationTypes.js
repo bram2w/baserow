@@ -83,9 +83,11 @@ export class DatabaseApplicationType extends ApplicationType {
   }
 
   populate(application) {
-    const values = super.populate(application)
-    values.tables.forEach((object, index, tables) => populateTable(object))
-    return values
+    const tables = application.tables.map((table) => populateTable(table))
+    return {
+      ...super.populate(application),
+      tables,
+    }
   }
 
   /**

@@ -7,12 +7,15 @@ import { generateHash } from '@baserow/modules/core/utils/hashing'
 export function populateApplication(application, registry) {
   const type = registry.get('application', application.type)
 
-  application._ = {
-    type: type.serialize(),
-    loading: false,
-    selected: false,
+  const app = {
+    ...application,
+    _: {
+      type: type.serialize(),
+      loading: false,
+      selected: false,
+    },
   }
-  return type.populate(application)
+  return type.populate(app)
 }
 
 export const state = () => ({
@@ -115,13 +118,13 @@ export const actions = {
     }
   },
   forceSetAll({ commit }, { applications }) {
-    applications.forEach((part, index) => {
-      populateApplication(applications[index], this.$registry)
-    })
-    commit('SET_ITEMS', applications)
+    const apps = applications.map((application) =>
+      populateApplication(application, this.$registry)
+    )
+    commit('SET_ITEMS', apps)
     commit('SET_LOADING', false)
     commit('SET_LOADED', true)
-    return { applications }
+    return { applications: apps }
   },
   /**
    * Clears all the currently selected applications, this could be called when
@@ -174,14 +177,14 @@ export const actions = {
    * Forcefully create an item in the store without making a call to the server.
    */
   forceCreate({ commit, state, getters }, data) {
-    populateApplication(data, this.$registry)
-    const index = state.items.findIndex((item) => item.id === data.id)
+    const app = populateApplication(data, this.$registry)
+    const index = state.items.findIndex((item) => item.id === app.id)
     if (index === -1) {
-      commit('ADD_ITEM', data)
+      commit('ADD_ITEM', app)
     } else {
-      commit('UPDATE_ITEM', { id: data.id, values: data })
+      commit('UPDATE_ITEM', { id: app.id, values: app })
     }
-    return getters.get(data.id)
+    return getters.get(app.id)
   },
   /**
    * Updates the values of an existing application.
