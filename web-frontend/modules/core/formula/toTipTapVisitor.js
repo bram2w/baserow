@@ -1,40 +1,39 @@
 import BaserowFormulaVisitor from '@baserow/formula/parser/generated/BaserowFormulaVisitor'
 import { UnknownOperatorError } from '@baserow/formula/parser/errors'
+import _ from 'lodash'
 
-export class FunctionCollection {
-  get(name) {
-    throw new Error('needs to be implemented')
-  }
-
-  getAll() {
-    throw new Error('needs to be implemented')
-  }
-}
-
-export default class JavascriptExecutor extends BaserowFormulaVisitor {
-  constructor(functions, context = {}) {
+export class ToTipTapVisitor extends BaserowFormulaVisitor {
+  constructor(functions) {
     super()
     this.functions = functions
-    this.context = context
   }
 
   visitRoot(ctx) {
-    return ctx.expr().accept(this)
+    const result = ctx.expr().accept(this)
+    return _.isArray(result) ? result : [result]
   }
 
   visitStringLiteral(ctx) {
-    return this.processString(ctx)
+    switch (ctx.getText()) {
+      case "'\n'":
+        return { type: 'hardBreak' }
+      default:
+        return { type: 'text', text: this.processString(ctx) }
+    }
   }
 
   visitDecimalLiteral(ctx) {
+    // TODO
     return parseFloat(ctx.getText())
   }
 
   visitBooleanLiteral(ctx) {
+    // TODO
     return ctx.TRUE() !== null
   }
 
   visitBrackets(ctx) {
+    // TODO
     return ctx.expr().accept(this)
   }
 
@@ -65,14 +64,11 @@ export default class JavascriptExecutor extends BaserowFormulaVisitor {
 
     const formulaFunctionType = this.functions.get(functionName)
 
-    formulaFunctionType.validateArgs(args)
-
-    const argsParsed = formulaFunctionType.parseArgs(args)
-
-    return formulaFunctionType.execute(this.context, argsParsed)
+    return formulaFunctionType.toNode(args)
   }
 
   visitBinaryOp(ctx) {
+    // TODO
     let op
 
     if (ctx.PLUS()) {
@@ -103,22 +99,27 @@ export default class JavascriptExecutor extends BaserowFormulaVisitor {
   }
 
   visitFuncName(ctx) {
+    // TODO
     return ctx.getText()
   }
 
   visitIdentifier(ctx) {
+    // TODO
     return ctx.getText()
   }
 
   visitIntegerLiteral(ctx) {
+    // TODO
     return parseInt(ctx.getText())
   }
 
   visitLeftWhitespaceOrComments(ctx) {
+    // TODO
     return ctx.expr().accept(this)
   }
 
   visitRightWhitespaceOrComments(ctx) {
+    // TODO
     return ctx.expr().accept(this)
   }
 }

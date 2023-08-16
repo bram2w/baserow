@@ -5,7 +5,10 @@
       <div :style="{ width: `calc(100% - ${panelWidth}px)` }">
         <PagePreview />
       </div>
-      <div class="page-editor__side-panel">
+      <div
+        class="page-editor__side-panel"
+        :style="{ width: `${panelWidth}px` }"
+      >
         <PageSidePanels />
       </div>
     </div>
