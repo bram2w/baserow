@@ -8,8 +8,6 @@ from django.db.models.functions import Cast
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from baserow.api.user_files.serializers import UserFileField, UserFileSerializer
-from baserow.contrib.builder.api.validators import image_file_validation
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     ColumnElement,
@@ -467,6 +465,8 @@ class ImageElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileSerializer
+
         overrides = {
             "image_file": UserFileSerializer(required=False),
         }
@@ -476,6 +476,9 @@ class ImageElementType(ElementType):
 
     @property
     def request_serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.validators import image_file_validation
+
         overrides = {
             "image_file": UserFileField(
                 allow_null=True,

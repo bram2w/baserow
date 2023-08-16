@@ -39,3 +39,4 @@ class BuilderDict(TypedDict):
     type: str
     pages: List[PageDict]
     integrations: List[IntegrationDictSubClass]
+    theme: object

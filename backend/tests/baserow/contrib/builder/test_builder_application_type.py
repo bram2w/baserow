@@ -188,6 +188,16 @@ def test_builder_application_export(data_fixture):
                 "type": "local_baserow",
             },
         ],
+        "theme": {
+            "heading_1_color": "#000000ff",
+            "heading_1_font_size": 24,
+            "heading_2_color": "#000000ff",
+            "heading_2_font_size": 20,
+            "heading_3_color": "#000000ff",
+            "heading_3_font_size": 16,
+            "primary_color": "#000000ff",
+            "secondary_color": "#000000ff",
+        },
         "id": builder.id,
         "name": builder.name,
         "order": builder.order,
@@ -317,6 +327,16 @@ IMPORT_REFERENCE = {
             "type": "local_baserow",
         },
     ],
+    "theme": {
+        "heading_1_color": "#f00000ff",
+        "heading_1_font_size": 25,
+        "heading_2_color": "#f00000ff",
+        "heading_2_font_size": 21,
+        "heading_3_color": "#f00000ff",
+        "heading_3_font_size": 17,
+        "primary_color": "#f00000ff",
+        "secondary_color": "#f00000ff",
+    },
     "id": 999,
     "name": "Holly Sherman",
     "order": 0,
@@ -352,6 +372,16 @@ def test_builder_application_import(data_fixture):
     first_data_source = page2.datasource_set.first()
     assert first_data_source.name == "source 2"
     assert first_data_source.service.integration.id == first_integration.id
+
+    theme_config_block = builder.mainthemeconfigblock
+    assert theme_config_block.heading_1_color == "#f00000ff"
+    assert theme_config_block.heading_1_font_size == 25
+    assert theme_config_block.heading_2_color == "#f00000ff"
+    assert theme_config_block.heading_2_font_size == 21
+    assert theme_config_block.heading_3_color == "#f00000ff"
+    assert theme_config_block.heading_3_font_size == 17
+    assert theme_config_block.primary_color == "#f00000ff"
+    assert theme_config_block.secondary_color == "#f00000ff"
 
     [
         element1,

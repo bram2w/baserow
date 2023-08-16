@@ -1,15 +1,17 @@
 from django.apps import AppConfig
 
-from baserow.core.registries import object_scope_type_registry, operation_type_registry
-from baserow.core.trash.registries import trash_item_type_registry
-from baserow.core.usage.registries import workspace_storage_usage_item_registry
-
 
 class BuilderConfig(AppConfig):
     name = "baserow.contrib.builder"
 
     def ready(self):
-        from baserow.core.registries import application_type_registry
+        from baserow.core.registries import (
+            application_type_registry,
+            object_scope_type_registry,
+            operation_type_registry,
+        )
+        from baserow.core.trash.registries import trash_item_type_registry
+        from baserow.core.usage.registries import workspace_storage_usage_item_registry
 
         from .application_types import BuilderApplicationType
 
@@ -164,6 +166,11 @@ class BuilderConfig(AppConfig):
 
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
+
+        from .theme.registries import theme_config_block_registry
+        from .theme.theme_config_block_types import MainThemeConfigBlockType
+
+        theme_config_block_registry.register(MainThemeConfigBlockType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

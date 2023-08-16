@@ -9,7 +9,6 @@ from django.urls import include, path
 from django.utils import translation
 from django.utils.translation import gettext as _
 
-from baserow.contrib.builder.api.serializers import BuilderSerializer
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -19,6 +18,7 @@ from baserow.contrib.builder.elements.types import ElementDictSubClass
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
+from baserow.contrib.builder.theme.registries import theme_config_block_registry
 from baserow.contrib.builder.types import BuilderDict, DataSourceDict, PageDict
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.db import specific_iterator
@@ -33,8 +33,16 @@ from baserow.core.utils import ChildProgressBuilder
 class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
-    instance_serializer_class = BuilderSerializer
     supports_integrations = True
+
+    # This lazy loads the serializer, which is needed because the `BuilderSerializer`
+    # needs to decorate the `get_theme` with the `extend_schema_field` using a
+    # generated serializer that needs the registry to be populated.
+    @property
+    def instance_serializer_class(self):
+        from baserow.contrib.builder.api.serializers import BuilderSerializer
+
+        return BuilderSerializer
 
     def get_api_urls(self):
         from .api import urls as api_urls
@@ -156,12 +164,25 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_pages = self.export_pages_serialized(pages, files_zip, storage)
 
+        # Even though there can be multiple theme config blocks, we still want to
+        # export that as a flat object.
+        serialized_theme = {}
+        for theme_config_block_type in theme_config_block_registry.get_all():
+            related_name = theme_config_block_type.related_name_in_builder_model
+            theme_config_block = getattr(builder, related_name)
+            serialized_theme.update(
+                **theme_config_block_type.export_serialized(theme_config_block)
+            )
+
         serialized = super().export_serialized(
             builder, import_export_config, files_zip, storage
         )
 
         return BuilderDict(
-            pages=serialized_pages, integrations=serialized_integrations, **serialized
+            pages=serialized_pages,
+            integrations=serialized_integrations,
+            theme=serialized_theme,
+            **serialized
         )
 
     def import_integrations_serialized(
@@ -413,6 +434,7 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_pages = serialized_values.pop("pages")
         serialized_integrations = serialized_values.pop("integrations")
+        serialized_theme = serialized_values.pop("theme")
         builder_progress, integration_progress, page_progress = 5, 15, 80
         progress = ChildProgressBuilder.build(
             progress_builder, child_total=builder_progress + page_progress
@@ -456,7 +478,18 @@ class BuilderApplicationType(ApplicationType):
                 progress.create_child_builder(represents_progress=page_progress),
             )
 
+        # Exported value is a flat object, each individual theme config block type
+        # can extract the correct values from it.
+        for theme_config_block_type in theme_config_block_registry.get_all():
+            related_name = theme_config_block_type.related_name_in_builder_model
+            theme_config_block = theme_config_block_type.import_serialized(
+                builder, serialized_theme, id_mapping
+            )
+            setattr(builder, related_name, theme_config_block)
+
         return builder
 
     def enhance_queryset(self, queryset):
-        return queryset.prefetch_related("page_set")
+        queryset = queryset.prefetch_related("page_set")
+        queryset = theme_config_block_registry.enhance_list_builder_queryset(queryset)
+        return queryset
