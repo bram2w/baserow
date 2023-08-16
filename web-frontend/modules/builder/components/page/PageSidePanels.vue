@@ -6,7 +6,11 @@
         :key="pageSidePanelType.label"
         :title="pageSidePanelType.label"
       >
-        <component :is="pageSidePanelType.component" v-if="element" />
+        <component
+          :is="pageSidePanelType.component"
+          v-if="element"
+          class="side-panels__panel"
+        />
         <EmptySidePanelState v-else />
       </Tab>
     </Tabs>

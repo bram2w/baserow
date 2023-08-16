@@ -57,7 +57,7 @@
     },
     "clearAllNotificationsConfirmModal": {
         "title": "Are you sure you want to clear all notifications?",
-        "message": "All the notifications will be permanently deleted and you won't be able to see them again." 
+        "message": "All the notifications will be permanently deleted and you won't be able to see them again."
     },
     "passwordSettings": {
         "title": "Change password",
@@ -563,5 +563,8 @@
         "weekly": "Weekly",
         "never": "Never",
         "submitButton": "Update frequency"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "The formula is invalid."
     }
 }

@@ -97,7 +97,7 @@ export default (context, inject) => {
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
-  registry.registerNamespace('runtime_formula_type')
+  registry.registerNamespace('runtimeFormulaFunction')
   registry.registerNamespace('notification')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
