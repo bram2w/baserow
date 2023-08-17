@@ -40,10 +40,7 @@ from baserow.contrib.database.api.rows.errors import (
     ERROR_ROW_DOES_NOT_EXIST,
     ERROR_ROW_IDS_NOT_UNIQUE,
 )
-from baserow.contrib.database.api.rows.serializers import (
-    GetRowAdjacentSerializer,
-    example_pagination_row_serializer_class,
-)
+from baserow.contrib.database.api.rows.serializers import GetRowAdjacentSerializer
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
 from baserow.contrib.database.api.tokens.authentications import TokenAuthentication
 from baserow.contrib.database.api.tokens.errors import ERROR_NO_PERMISSION_TO_TABLE
@@ -101,6 +98,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.trash.exceptions import CannotDeleteAlreadyDeletedItem
 
 from ..constants import SEARCH_MODE_API_PARAM
+from .example_serializers import example_pagination_row_serializer_class
 from .schemas import row_names_response_schema
 from .serializers import (
     BatchCreateRowsQueryParamsSerializer,

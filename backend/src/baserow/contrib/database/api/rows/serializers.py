@@ -8,7 +8,6 @@ from loguru import logger
 from rest_framework import serializers
 
 from baserow.api.search.serializers import SearchQueryParamSerializer
-from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.registries import row_metadata_registry
@@ -332,11 +331,6 @@ def remap_serialized_row_to_user_field_names(
             new_name = field_object["field"].name
             new_row[new_name] = new_row.pop(name)
     return new_row
-
-
-example_pagination_row_serializer_class = get_example_pagination_serializer_class(
-    get_example_row_serializer_class(example_type="get", user_field_names=True)
-)
 
 
 class MoveRowQueryParamsSerializer(serializers.Serializer):
