@@ -51,6 +51,25 @@ class ThemeConfigBlockType(
         theme_config_block.save()
         return theme_config_block
 
+    def update_properties(
+        self, builder, **kwargs: dict
+    ) -> Type[ThemeConfigBlockSubClass]:
+        """
+        Updates the allowed theme properties for the provided builder object.
+
+        :param builder: The builder of which the theme properties must be updated.
+        :param kwargs: The properties that must be updated.
+        :return: The updated instance.
+        """
+
+        instance = getattr(builder, self.related_name_in_builder_model)
+        allowed_values = extract_allowed(kwargs, self.allowed_fields)
+        for key, value in allowed_values.items():
+            setattr(instance, key, value)
+        instance.save()
+        setattr(builder, self.related_name_in_builder_model, instance)
+        return instance
+
 
 ThemeConfigBlockTypeSubClass = TypeVar(
     "ThemeConfigBlockTypeSubClass", bound=ThemeConfigBlockType

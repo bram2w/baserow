@@ -167,6 +167,10 @@ class BuilderConfig(AppConfig):
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
 
+        from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
+
+        operation_type_registry.register(UpdateThemeOperationType())
+
         from .theme.registries import theme_config_block_registry
         from .theme.theme_config_block_types import MainThemeConfigBlockType
 
