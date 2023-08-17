@@ -1,4 +1,5 @@
 from baserow.contrib.builder.models import Builder
+from baserow.contrib.builder.theme.registries import theme_config_block_registry
 from baserow.core.handler import CoreHandler
 
 
@@ -11,10 +12,18 @@ class BuilderHandler:
         :return: The builder model instance
         """
 
+        theme_config_block_related_names = [
+            config_block.related_name_in_builder_model
+            for config_block in theme_config_block_registry.get_all()
+        ]
+
         return (
             CoreHandler()
             .get_application(
-                builder_id, base_queryset=Builder.objects.select_related("workspace")
+                builder_id,
+                base_queryset=Builder.objects.select_related(
+                    "workspace", *theme_config_block_related_names
+                ),
             )
             .specific
         )

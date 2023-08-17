@@ -7,10 +7,10 @@ from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.builder.api.pages.serializers import PageSerializer
 from baserow.contrib.builder.api.theme.serializers import (
     CombinedThemeConfigBlocksSerializer,
+    serialize_builder_theme,
 )
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.operations import ListPagesBuilderOperationType
-from baserow.contrib.builder.theme.registries import theme_config_block_registry
 from baserow.core.handler import CoreHandler
 
 
@@ -60,14 +60,4 @@ class BuilderSerializer(ApplicationSerializer):
 
     @extend_schema_field(CombinedThemeConfigBlocksSerializer())
     def get_theme(self, instance):
-        theme = {}
-
-        for theme_config_block in theme_config_block_registry.get_all():
-            serializer_class = theme_config_block.get_serializer_class()
-            serializer = serializer_class(
-                getattr(instance, theme_config_block.related_name_in_builder_model),
-                source=theme_config_block.related_name_in_builder_model,
-            )
-            theme.update(**serializer.data)
-
-        return theme
+        return serialize_builder_theme(instance)

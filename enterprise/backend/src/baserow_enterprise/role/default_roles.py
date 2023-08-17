@@ -47,6 +47,7 @@ from baserow.contrib.builder.pages.operations import (
     ReadPageOperationType,
     UpdatePageOperationType,
 )
+from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -295,6 +296,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         CreatePageOperationType,
         DeletePageOperationType,
         UpdatePageOperationType,
+        UpdateThemeOperationType,
         DuplicatePageOperationType,
         CreateTableDatabaseTableOperationType,
         UpdateDatabaseTableOperationType,

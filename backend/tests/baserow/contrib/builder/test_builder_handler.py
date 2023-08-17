@@ -14,3 +14,16 @@ def test_get_builder(data_fixture):
 def test_get_builder_does_not_exist(data_fixture):
     with pytest.raises(ApplicationDoesNotExist):
         BuilderHandler().get_builder(9999)
+
+
+@pytest.mark.django_db(transaction=True)
+def test_get_builder_select_related_theme_config(
+    data_fixture, django_assert_num_queries
+):
+    builder = data_fixture.create_builder_application()
+    builder.mainthemeconfigblock
+
+    builder = BuilderHandler().get_builder(builder.id)
+
+    with django_assert_num_queries(0):
+        builder.mainthemeconfigblock.id

@@ -510,6 +510,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Builder domains"},
         {"name": "Builder public"},
         {"name": "Builder data sources"},
+        {"name": "Builder theme"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
