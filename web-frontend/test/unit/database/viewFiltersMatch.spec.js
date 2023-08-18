@@ -26,6 +26,7 @@ import {
   DateEqualsCurrentWeekViewFilterType,
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
+  IsEvenAndWholeViewFilterType,
 } from '@baserow/modules/database/viewFilters'
 
 const dateBeforeCases = [
@@ -1015,6 +1016,34 @@ const dateDaysAfterInvalidCases = [
   },
 ]
 
+// When this filter is applied, it should return even AND whole numbers:
+const numberIsEvenAndWholeCases = [
+  {
+    rowValue: 2,
+    expected: true,
+  },
+  {
+    rowValue: 2.2,
+    expected: false,
+  },
+  {
+    rowValue: 3.0,
+    expected: false,
+  },
+  {
+    rowValue: 3.3,
+    expected: false,
+  },
+  {
+    rowValue: 4.0,
+    expected: true,
+  },
+  {
+    rowValue: null,
+    expected: false,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -1221,6 +1250,16 @@ describe('All Tests', () => {
         values.rowValue,
         values.filterValue
       )
+      expect(result).toBe(values.expected)
+    }
+  )
+
+  test.each(numberIsEvenAndWholeCases)(
+    'IsEvenAndWholeViewFilterType',
+    (values) => {
+      const result = new IsEvenAndWholeViewFilterType({
+        app: testApp,
+      }).matches(values.rowValue, values.filterValue, {})
       expect(result).toBe(values.expected)
     }
   )
