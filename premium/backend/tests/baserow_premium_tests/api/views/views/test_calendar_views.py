@@ -24,7 +24,11 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
-from baserow.test_utils.helpers import is_dict_subset, setup_interesting_test_table
+from baserow.test_utils.helpers import (
+    AnyInt,
+    is_dict_subset,
+    setup_interesting_test_table,
+)
 
 
 def get_list_url(calendar_view_id: int) -> str:
@@ -1164,3 +1168,102 @@ def test_list_public_rows_limit_offset(api_client, premium_data_fixture):
             "2023-01-10T16:00:00Z",
             "2023-01-10T17:00:00Z",
         ]
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+@override_settings(DEBUG=True)
+def test_search_calendar_rows(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+
+    date_field = premium_data_fixture.create_date_field(table=table, name="date")
+    description_field = premium_data_fixture.create_text_field(
+        table=table, name="description"
+    )
+
+    calendar = premium_data_fixture.create_calendar_view(
+        table=table, date_field=date_field
+    )
+
+    rows_data = [
+        ["2023-01-01", "Meeting with team"],
+        ["2023-01-02", "Lunch with client"],
+        ["2023-01-02", "Meeting with client"],
+        ["2023-01-02", "Meeting with employees"],
+        ["2023-01-12", "Team building activity"],
+    ]
+    premium_data_fixture.create_rows_in_table(
+        table=table, rows=rows_data, fields=[date_field, description_field]
+    )
+
+    url = get_list_url(calendar.id) + "&search=client"
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    expected_data = {
+        "2023-01-02": {
+            "count": 2,
+            "results": [
+                {
+                    "id": AnyInt(),
+                    "order": "1.00000000000000000000",
+                    description_field.db_column: "Lunch with client",
+                    date_field.db_column: "2023-01-02",
+                },
+                {
+                    "id": AnyInt(),
+                    "order": "1.00000000000000000000",
+                    description_field.db_column: "Meeting with client",
+                    date_field.db_column: "2023-01-02",
+                },
+            ],
+        }
+    }
+
+    results_for_searched_day = response_json["rows"].get("2023-01-02", {})
+    assert results_for_searched_day == expected_data["2023-01-02"]
+
+
+@pytest.mark.django_db
+@pytest.mark.view_calendar
+@override_settings(DEBUG=True)
+def test_search_calendar_with_empty_term(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True
+    )
+    table = premium_data_fixture.create_database_table(user=user)
+
+    date_field = premium_data_fixture.create_date_field(table=table, name="date")
+    description_field = premium_data_fixture.create_text_field(
+        table=table, name="description"
+    )
+
+    calendar = premium_data_fixture.create_calendar_view(
+        table=table, date_field=date_field
+    )
+
+    rows_data = [
+        ["2023-01-01", "Meeting with team"],
+        ["2023-01-02", "Lunch with client"],
+        ["2023-01-02", "Meeting with client"],
+        ["2023-01-02", "Meeting with employees"],
+        ["2023-01-12", "Team building activity"],
+    ]
+    premium_data_fixture.create_rows_in_table(
+        table=table, rows=rows_data, fields=[date_field, description_field]
+    )
+
+    url = get_list_url(calendar.id) + "&search="
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token}")
+
+    assert response.status_code == HTTP_200_OK
+
+    total_results = sum(
+        [date_data["count"] for date_data in response.json()["rows"].values()]
+    )
+
+    assert total_results == 5
