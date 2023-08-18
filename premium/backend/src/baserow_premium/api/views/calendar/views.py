@@ -23,6 +23,7 @@ from baserow.api.decorators import (
 )
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.contrib.database.api.constants import SEARCH_MODE_API_PARAM
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
@@ -101,6 +102,15 @@ class CalendarViewView(APIView):
                 default="UTC",
                 required=False,
             ),
+            OpenApiParameter(
+                name="search",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="If provided only rows with data that matches the search "
+                "query are going to be returned.",
+                required=False,
+            ),
+            SEARCH_MODE_API_PARAM,
         ],
         tags=["Database table calendar view"],
         operation_id="list_database_table_calendar_view_rows",
@@ -172,6 +182,8 @@ class CalendarViewView(APIView):
             limit=query_params.get("limit"),
             offset=query_params.get("offset"),
             model=model,
+            search=query_params.get("search"),
+            search_mode=query_params.get("search_mode"),
         )
 
         serializer_class = get_row_serializer_class(

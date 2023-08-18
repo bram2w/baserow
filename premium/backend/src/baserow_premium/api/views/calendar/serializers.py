@@ -7,6 +7,7 @@ from rest_framework import serializers
 from baserow.contrib.database.api.rows.serializers import (
     get_example_row_serializer_class,
 )
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
 
 
 class CalendarViewFieldOptionsSerializer(serializers.ModelSerializer):
@@ -21,6 +22,12 @@ class ListCalendarRowsQueryParamsSerializer(serializers.Serializer):
     offset = serializers.IntegerField(default=0, min_value=0)
     limit = serializers.IntegerField(default=40, min_value=1, max_value=100)
     user_timezone = serializers.ChoiceField(choices=all_timezones, required=False)
+    search = serializers.CharField(required=False, allow_blank=True, default=None)
+    search_mode = serializers.ChoiceField(
+        required=False,
+        default=None,
+        choices=ALL_SEARCH_MODES,
+    )
 
     def validate(self, data):
         from_timestamp = data["from_timestamp"]
