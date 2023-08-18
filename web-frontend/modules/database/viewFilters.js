@@ -1327,6 +1327,30 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 }
 
+export class IsEvenAndWholeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'is_even_and_whole'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isEvenAndWhole')
+  }
+
+  getExample() {
+    return 'true'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    rowValue = parseFloat(rowValue)
+    return rowValue % 2 === 0 && Number.isInteger(rowValue)
+  }
+}
+
 export class SingleSelectEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'single_select_equal'

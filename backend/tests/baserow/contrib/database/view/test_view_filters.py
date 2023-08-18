@@ -1650,6 +1650,71 @@ def test_lower_than_filter_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_is_even_and_whole_number_filter_type(data_fixture):
+    """
+    Tests 'is_even_and_whole' number filter type.
+
+    Tests rows of:
+    - whole even/odd numbers
+    - fraction even/odd numbers
+    - 'None' as a number value
+    """
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    decimal_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=2,
+        number_negative=False,
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    first_even_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 2,
+        }
+    )
+    even_fraction_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 2.2,
+        }
+    )
+    odd_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 3.0,
+        }
+    )
+    odd_fraction_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 3.3,
+        }
+    )
+    second_even_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 4.00,
+        }
+    )
+    null_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": None,
+        }
+    )
+
+    # Test with this filter being applied, this should return even AND whole
+    # numbers:
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=decimal_field, type="is_even_and_whole", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert first_even_whole_number_row.id in ids
+    assert second_even_whole_number_row.id in ids
+
+
+@pytest.mark.django_db
 def test_date_equal_filter_type_with_timezone(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)

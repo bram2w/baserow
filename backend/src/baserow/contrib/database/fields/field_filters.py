@@ -3,6 +3,7 @@ from typing import Any, Dict, Union
 
 from django.db.models import BooleanField, Q
 from django.db.models.expressions import F, Value
+from django.db.models.functions import Mod
 
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
     FileNameContainsExpr,
@@ -141,4 +142,13 @@ def filename_contains_filter(field_name, value, _, field) -> OptionallyAnnotated
     return AnnotatedQ(
         annotation={f"{field_name}_matches_visible_names": annotation_query},
         q={f"{field_name}_matches_visible_names": True},
+    )
+
+
+def is_even_and_whole_number_filter(
+    field_name, value, _, field
+) -> OptionallyAnnotatedQ:
+    return AnnotatedQ(
+        annotation={f"{field_name}_is_even_and_whole": Mod(F(f"{field_name}"), 2)},
+        q={f"{field_name}_is_even_and_whole": 0},
     )

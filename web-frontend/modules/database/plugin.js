@@ -39,6 +39,7 @@ import {
   LengthIsLowerThanViewFilterType,
   HigherThanViewFilterType,
   LowerThanViewFilterType,
+  IsEvenAndWholeViewFilterType,
   SingleSelectEqualViewFilterType,
   SingleSelectNotEqualViewFilterType,
   BooleanViewFilterType,
@@ -362,6 +363,10 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new HigherThanViewFilterType(context))
   app.$registry.register('viewFilter', new LowerThanViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new IsEvenAndWholeViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new SingleSelectEqualViewFilterType(context)

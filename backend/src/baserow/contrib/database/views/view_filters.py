@@ -5,7 +5,8 @@ from math import ceil, floor
 from typing import Any, Dict, Optional, Tuple, Union
 
 from django.db.models import DateField, DateTimeField, IntegerField, Q
-from django.db.models.functions import Extract, Length, TruncDate
+from django.db.models.expressions import F
+from django.db.models.functions import Extract, Length, Mod, TruncDate
 
 import pytz
 from dateutil import parser
@@ -282,6 +283,29 @@ class HigherThanViewFilterType(ViewFilterType):
             return Q(**{f"{field_name}__gt": value})
         except Exception:
             return self.default_filter_on_exception()
+
+
+class IsEvenAndWholeViewFilterType(ViewFilterType):
+    """
+    The is even and whole filter checks if the field value is an even number
+    AND if it's a whole number.
+    It only works if a numeric number is provided. It is at compatible with
+    models.DecimalField.
+    """
+
+    type = "is_even_and_whole"
+    compatible_field_types = [
+        NumberFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            BaserowFormulaNumberType.type,
+        ),
+    ]
+
+    def get_filter(self, field_name, value, model_field, field):
+        return AnnotatedQ(
+            annotation={f"{field_name}_is_even_and_whole": Mod(F(f"{field_name}"), 2)},
+            q={f"{field_name}_is_even_and_whole": 0},
+        )
 
 
 class LowerThanViewFilterType(ViewFilterType):
