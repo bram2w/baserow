@@ -95,7 +95,7 @@
   display: flex;
   align-items: center;
   font-weight: 600;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   padding: 0 10px;
   border-radius: 3px;
   white-space: nowrap;
@@ -155,7 +155,7 @@
 }
 
 .header__filter-icon {
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:not(:last-child) {
     margin-right: 4px;
@@ -176,7 +176,7 @@
 }
 
 .header__search-icon {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-right: 4px;
 }
 

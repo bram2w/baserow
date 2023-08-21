@@ -33,7 +33,7 @@
 .api-token__key-visible,
 .api-token__key-copy {
   position: relative;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   user-select: none;
   border-radius: 3px;
 
@@ -76,7 +76,7 @@
   padding: 0 6px;
   margin-left: 6px;
   border-radius: 3px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;

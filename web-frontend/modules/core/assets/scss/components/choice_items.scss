@@ -49,7 +49,7 @@
 
   &:not(.disabled):not(.active):hover {
     background-color: $color-neutral-100;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 
   &.disabled {
@@ -61,7 +61,7 @@
   }
 
   &.active {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-primary-100;
 
     &::after {

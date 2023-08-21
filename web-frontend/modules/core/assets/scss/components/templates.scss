@@ -15,7 +15,7 @@
   flex: 0 0 40px;
   height: 40px;
   font-size: 15px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   border: solid 4px $color-primary-500;
   border-radius: 100%;
   margin-right: 24px;
@@ -23,7 +23,7 @@
 
 .templates__header-title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
 
   small {
     font-size: 16px;
@@ -74,7 +74,7 @@
   padding: 0 20px 0 40px;
   line-height: 33px;
   font-size: 14px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -95,7 +95,7 @@
 
     .templates__category--open & {
       content: fa-content($fa-var-caret-down);
-      color: $color-primary-900;
+      color: $color-neutral-900;
     }
   }
 }
@@ -122,7 +122,7 @@
   line-height: 33px;
   font-size: 13px;
   padding: 0 20px 0 28px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     background-color: $color-neutral-200;

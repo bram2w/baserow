@@ -24,7 +24,7 @@
   @extend %ellipsis;
 
   max-width: 200px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -42,7 +42,7 @@
 }
 
 .field-link-row__remove {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-left: 5px;
   font-size: 11px;
   padding: 0 2px;

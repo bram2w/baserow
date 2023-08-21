@@ -48,7 +48,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   padding: 10px;
   border-radius: 4px;
   margin-left: 4px;
@@ -70,6 +70,6 @@
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }

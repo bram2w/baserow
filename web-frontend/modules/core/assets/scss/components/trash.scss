@@ -16,7 +16,7 @@
   padding: 0 16px 0 32px;
   line-height: 33px;
   font-size: 14px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   border-left: solid 3px transparent;
 
   &:hover {
@@ -40,7 +40,7 @@
     @include absolute(50%, auto, auto, 10px);
 
     content: fa-content($fa-var-caret-right);
-    color: $color-primary-900;
+    color: $color-neutral-900;
     font-size: 14px;
     line-height: 12px;
     margin-top: -6px;
@@ -74,7 +74,7 @@
   line-height: 33px;
   font-size: 13px;
   padding: 0 20px 0 28px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   border-left: solid 3px transparent;
 
   &:hover {

@@ -12,7 +12,7 @@
 }
 
 .filters__none-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -52,7 +52,7 @@
 }
 
 .filters__remove {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
 
   &:hover {
@@ -115,7 +115,7 @@
 
   display: block;
   position: relative;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
   height: 30px;
   border: solid 1px $color-neutral-400;
@@ -129,7 +129,7 @@
   }
 
   &.filters__value-link-row--disabled {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-neutral-50;
 
     &:hover {
@@ -150,7 +150,7 @@
 }
 
 .filters__value-link-row-choose {
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -167,6 +167,6 @@
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }

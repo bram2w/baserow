@@ -12,7 +12,7 @@
 }
 
 .sortings__none-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -48,7 +48,7 @@
 .sortings__remove {
   flex: 0 0 32px;
   width: 32px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
   text-align: center;
 
@@ -100,7 +100,7 @@
   }
 
   > div {
-    font-weight: 700;
+    font-weight: 600;
 
     &:not(:last-child) {
       margin-right: 8px;
@@ -132,7 +132,7 @@
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }
 
@@ -141,6 +141,6 @@
   overflow: auto;
 
   .context__menu-icon {
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }

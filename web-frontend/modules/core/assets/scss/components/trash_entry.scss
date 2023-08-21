@@ -23,7 +23,7 @@
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
 
   @include center-text(36px, 13px);
@@ -42,7 +42,7 @@
   @extend %ellipsis;
 
   font-size: 13px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-bottom: 6px;
   max-width: 100%;
 }
