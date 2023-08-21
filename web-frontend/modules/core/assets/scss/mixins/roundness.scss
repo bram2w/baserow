@@ -1,0 +1,10 @@
+$radius-none: 0;
+$radius-4: 4px;
+$radius-6: 6px;
+$radius-12: 12px;
+$radius-16: 16px;
+$radius-24: 24px;
+
+@mixin rounded($radius: $radius-4) {
+  border-radius: $radius;
+}
