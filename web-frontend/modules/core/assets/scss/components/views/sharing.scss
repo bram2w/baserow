@@ -4,7 +4,7 @@
   font-size: 14px;
   font-weight: 600;
   padding: 0 20px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   border-radius: 6px;
 
   &:hover {
@@ -37,7 +37,7 @@
 
 .view-sharing__shared-link-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
@@ -65,7 +65,7 @@
   width: 32px;
   margin-left: 8px;
   line-height: 32px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   font-size: 12px;
   text-align: center;
   border-radius: 3px;
@@ -90,7 +90,7 @@
   }
 
   &.view-sharing__shared-link-action--disabled {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: transparent;
 
     &:hover {
@@ -132,7 +132,7 @@ p.box__description {
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 
   i {

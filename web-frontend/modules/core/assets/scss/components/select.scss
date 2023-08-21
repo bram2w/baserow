@@ -161,7 +161,7 @@
 
 .select__item-link {
   display: block;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -276,7 +276,7 @@
   position: relative;
   flex: 0 0 calc(50% - 10px);
   width: calc(50% - 10px);
-  color: $color-primary-900;
+  color: $color-neutral-900;
   border-radius: 3px;
   padding: 0 32px 0 10px;
   margin-bottom: 4px;

@@ -15,7 +15,7 @@
   margin-right: 16px;
   background-color: $color-primary-500;
   color: $white;
-  font-weight: 700;
+  font-weight: 600;
 
   @include center-text(32px, 13px);
 }
@@ -50,7 +50,7 @@
   line-height: 42px;
   padding: 0 20px 0 50px;
   border-left: solid 4px transparent;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   user-select: none;
 
   &:hover {

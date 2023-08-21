@@ -7,7 +7,7 @@
   @include alert-style(
     $color-primary-100,
     $color-primary-300,
-    $color-primary-900,
+    $color-neutral-900,
     $color-primary-700,
     $color-primary-400
   );
@@ -41,7 +41,7 @@
 
 .alert__title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 

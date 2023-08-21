@@ -27,8 +27,8 @@
 
 .control__label {
   display: block;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   margin-bottom: 8px;
 
   & + :not(.control__description) {
@@ -37,7 +37,7 @@
 
   &.control__label--small {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
 
     & + :not(.control__description) {
       margin-top: 4px;
@@ -63,7 +63,7 @@
 }
 
 .control__context {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-left: 6px;
 
   &:hover {
@@ -100,7 +100,7 @@
   }
 
   &[disabled] {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-neutral-50;
 
     &:active,

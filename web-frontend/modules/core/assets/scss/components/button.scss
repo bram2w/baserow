@@ -8,7 +8,7 @@
   color: #fff;
   border: 1px solid transparent;
   text-align: center;
-  font-weight: 700;
+  font-weight: 600;
   border-radius: 3px;
   transition: padding 0.05s ease-in-out;
   vertical-align: middle;
@@ -47,7 +47,7 @@
 }
 
 .button--ghost {
-  @include button-style($white, $color-neutral-100, $color-primary-900);
+  @include button-style($white, $color-neutral-100, $color-neutral-900);
 
   &.button--loading::after {
     border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
@@ -185,5 +185,4 @@
   @include button-size(15px, 44px, 28px);
 
   width: 100%;
-  font-weight: 400;
 }

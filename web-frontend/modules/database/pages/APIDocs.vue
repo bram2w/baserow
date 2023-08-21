@@ -2,7 +2,7 @@
   <div>
     <h1 class="box__title">{{ $t('apiDocsComponent.title') }}</h1>
     <template v-if="isAuthenticated">
-      <i18n path="apiDocs.intro" tag="p">
+      <i18n path="apiDocsComponent.intro" tag="p">
         <template #settingsLink>
           <a @click.prevent="$refs.settingsModal.show('tokens')">{{
             $t('apiDocsComponent.settings')

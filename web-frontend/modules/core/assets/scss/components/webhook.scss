@@ -178,7 +178,7 @@
 .webhook__code {
   margin: 0;
   line-height: 21px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   font-size: 13px;
   font-family: monospace;
 
@@ -239,7 +239,7 @@
   margin-left: 16px;
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     text-decoration: none;
   }
 }
@@ -288,7 +288,7 @@
 
 .webhook__test-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 24px;
 }
 
