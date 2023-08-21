@@ -33,14 +33,14 @@ def test_fetch_publicly_shared_base():
     with open(path, "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file,
             headers={"Set-Cookie": "brw=test;"},
         )
 
         request_id, init_data, cookies = AirtableHandler.fetch_publicly_shared_base(
-            "shrXxmp0WmqsTkFWTzv"
+            "appZkaH3aWX3ZjT3b"
         )
         assert request_id == "req8wbZoh7Be65osz"
         assert init_data["pageLoadId"] == "pglUrFAGTNpbxUymM"
@@ -58,13 +58,13 @@ def test_fetch_table():
     with open(path, "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file,
             headers={"Set-Cookie": "brw=test;"},
         )
         request_id, init_data, cookies = AirtableHandler.fetch_publicly_shared_base(
-            "shrXxmp0WmqsTkFWTzv"
+            "appZkaH3aWX3ZjT3b"
         )
 
     cookies = {
@@ -170,13 +170,13 @@ def test_to_baserow_database_export():
     with open(path, "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file.read(),
             headers={"Set-Cookie": "brw=test;"},
         )
         request_id, init_data, cookies = AirtableHandler.fetch_publicly_shared_base(
-            "shrXxmp0WmqsTkFWTzv"
+            "appZkaH3aWX3ZjT3b"
         )
 
     schema, tables = AirtableHandler.extract_schema([user_table_json, data_table_json])
@@ -300,13 +300,13 @@ def test_to_baserow_database_export_without_primary_value():
     with open(path, "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file.read(),
             headers={"Set-Cookie": "brw=test;"},
         )
         request_id, init_data, cookies = AirtableHandler.fetch_publicly_shared_base(
-            "shrXxmp0WmqsTkFWTzv"
+            "appZkaH3aWX3ZjT3b"
         )
 
     schema, tables = AirtableHandler.extract_schema(deepcopy([user_table_json]))
@@ -368,7 +368,7 @@ def test_import_from_airtable_to_workspace(
     with open(os.path.join(base_path, "airtable_base.html"), "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file.read(),
             headers={"Set-Cookie": "brw=test;"},
@@ -394,7 +394,7 @@ def test_import_from_airtable_to_workspace(
 
     database = AirtableHandler.import_from_airtable_to_workspace(
         workspace,
-        "shrXxmp0WmqsTkFWTzv",
+        "appZkaH3aWX3ZjT3b",
         storage=storage,
         progress_builder=progress.create_child_builder(represents_progress=1000),
     )
@@ -443,7 +443,7 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
     with open(os.path.join(base_path, "airtable_view.html"), "rb") as file:
         responses.add(
             responses.GET,
-            "https://airtable.com/shrXxmp0WmqsTkFWTzv",
+            "https://airtable.com/appZkaH3aWX3ZjT3b",
             status=200,
             body=file.read(),
             headers={"Set-Cookie": "brw=test;"},
@@ -451,7 +451,7 @@ def test_import_unsupported_publicly_shared_view(data_fixture, tmpdir):
 
     with pytest.raises(AirtableShareIsNotABase):
         AirtableHandler.import_from_airtable_to_workspace(
-            workspace, "shrXxmp0WmqsTkFWTzv", storage=storage
+            workspace, "appZkaH3aWX3ZjT3b", storage=storage
         )
 
 
