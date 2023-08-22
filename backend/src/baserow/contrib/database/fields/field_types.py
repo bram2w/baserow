@@ -3035,7 +3035,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value if rich_value else ""
+            return [] if rich_value else ""
 
         result = [item.value for item in value.all()]
 
