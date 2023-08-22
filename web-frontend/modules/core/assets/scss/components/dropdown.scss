@@ -67,8 +67,13 @@
   @include absolute(0, 0, auto, 0);
 
   &.dropdown__items--fixed {
+    flex-direction: column;
     position: fixed;
     right: auto;
+
+    &:not(.hidden) {
+      display: flex;
+    }
   }
 
   .select__item:hover {

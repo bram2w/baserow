@@ -9,7 +9,12 @@
       {{ name }}
       <i class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
-    <Context ref="pickerContext" class="picker__context">
+    <Context
+      ref="pickerContext"
+      class="picker__context"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
+    >
       <slot :hide-picker="hide" />
     </Context>
   </div>

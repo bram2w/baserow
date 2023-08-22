@@ -19,6 +19,8 @@
       ref="context"
       class="filters"
       :class="{ 'context--loading-overlay': view._.loading }"
+      :overflow-scroll="true"
+      :max-height-if-outside-viewport="true"
     >
       <ViewFilterForm
         :fields="fields"

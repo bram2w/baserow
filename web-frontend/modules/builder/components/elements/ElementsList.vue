@@ -1,5 +1,5 @@
 <template>
-  <ul v-auto-overflow-scroll class="select__items">
+  <ul v-auto-overflow-scroll class="select__items select__items--no-max-height">
     <li
       v-for="{ element, indented } in elementsAndChildren"
       :key="element.id"

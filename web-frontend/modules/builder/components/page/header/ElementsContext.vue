@@ -1,33 +1,34 @@
 <template>
-  <Context>
-    <div class="select elements-context">
-      <div class="select__search">
-        <i class="select__search-icon fas fa-search"></i>
-        <input
-          v-model="search"
-          type="text"
-          class="select__search-input"
-          :placeholder="$t('elementsContext.searchPlaceholder')"
-        />
-      </div>
-      <ElementsList
-        v-if="elementsMatchingSearchTerm.length"
-        :elements="elementsMatchingSearchTerm"
-        :element-selected="elementSelected"
-        @select="selectElement($event)"
+  <Context
+    class="select elements-context"
+    :max-height-if-outside-viewport="true"
+  >
+    <div class="select__search">
+      <i class="select__search-icon fas fa-search"></i>
+      <input
+        v-model="search"
+        type="text"
+        class="select__search-input"
+        :placeholder="$t('elementsContext.searchPlaceholder')"
       />
-      <div v-else class="context__description">
-        {{ $t('elementsContext.noElements') }}
-      </div>
-      <div class="select__footer">
-        <div class="select__footer-create">
-          <AddElementButton
-            :class="{
-              'margin-top-1': elementsMatchingSearchTerm.length === 0,
-            }"
-            @click="$refs.addElementModal.show()"
-          />
-        </div>
+    </div>
+    <ElementsList
+      v-if="elementsMatchingSearchTerm.length"
+      :elements="elementsMatchingSearchTerm"
+      :element-selected="elementSelected"
+      @select="selectElement($event)"
+    />
+    <div v-else class="context__description">
+      {{ $t('elementsContext.noElements') }}
+    </div>
+    <div class="select__footer">
+      <div class="select__footer-create">
+        <AddElementButton
+          :class="{
+            'margin-top-1': elementsMatchingSearchTerm.length === 0,
+          }"
+          @click="$refs.addElementModal.show()"
+        />
       </div>
     </div>
     <AddElementModal

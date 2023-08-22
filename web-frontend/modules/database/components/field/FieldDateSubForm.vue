@@ -5,7 +5,7 @@
         $t('fieldDateSubForm.dateFormatLabel')
       }}</label>
       <div class="control__elements">
-        <Dropdown
+        <FixedItemsDropdown
           v-model="values.date_format"
           :class="{ 'dropdown--error': $v.values.date_format.$error }"
           @hide="$v.values.date_format.$touch()"
@@ -22,7 +22,7 @@
             :name="$t('fieldDateSubForm.dateFormatISO') + ' (2020-02-20)'"
             value="ISO"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
       </div>
     </div>
     <div class="control">
@@ -35,7 +35,7 @@
             $t('fieldDateSubForm.timeFormatLabel')
           }}</label>
           <div class="control__elements">
-            <Dropdown
+            <FixedItemsDropdown
               v-model="values.date_time_format"
               @hide="$v.values.date_time_format.$touch()"
             >
@@ -47,7 +47,7 @@
                 :name="$t('fieldDateSubForm.12Hour') + ' (11:00 PM)'"
                 value="12"
               ></DropdownItem>
-            </Dropdown>
+            </FixedItemsDropdown>
           </div>
         </div>
         <Checkbox
@@ -110,10 +110,12 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown.vue'
 
 export default {
   name: 'FieldDateSubForm',
   components: {
+    FixedItemsDropdown,
     PaginatedDropdown,
   },
   mixins: [form, fieldSubForm],

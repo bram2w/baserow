@@ -20,7 +20,7 @@
           $t('fieldRollupSubForm.label')
         }}</label>
         <div class="control__elements">
-          <Dropdown
+          <FixedItemsDropdown
             v-model="values.rollup_function"
             :class="{ 'dropdown--error': $v.values.rollup_function.$error }"
             @hide="$v.values.rollup_function.$touch()"
@@ -32,7 +32,7 @@
               :value="f.getType()"
               :description="f.getDescription()"
             ></DropdownItem>
-          </Dropdown>
+          </FixedItemsDropdown>
         </div>
       </div>
       <FormulaTypeSubForms
@@ -57,10 +57,12 @@ import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import FormulaTypeSubForms from '@baserow/modules/database/components/formula/FormulaTypeSubForms'
 import FieldSelectThroughFieldSubForm from '@baserow/modules/database/components/field/FieldSelectThroughFieldSubForm'
 import FieldSelectTargetFieldSubForm from '@baserow/modules/database/components/field/FieldSelectTargetFieldSubForm'
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'FieldRollupSubForm',
   components: {
+    FixedItemsDropdown,
     FieldSelectThroughFieldSubForm,
     FieldSelectTargetFieldSubForm,
     FormulaTypeSubForms,

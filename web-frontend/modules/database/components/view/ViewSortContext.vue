@@ -1,5 +1,10 @@
 <template>
-  <Context ref="context" class="sortings">
+  <Context
+    ref="context"
+    class="sortings"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+  >
     <div>
       <div v-if="view.sortings.length === 0" class="sortings__none">
         <div class="sortings__none-title">
@@ -34,7 +39,7 @@
           }}</template>
         </div>
         <div class="sortings__field">
-          <Dropdown
+          <FixedItemsDropdown
             :value="sort.field"
             :disabled="disableSort"
             class="dropdown--floating dropdown--tiny"
@@ -47,7 +52,7 @@
               :value="field.id"
               :disabled="sort.field !== field.id && !isFieldAvailable(field)"
             ></DropdownItem>
-          </Dropdown>
+          </FixedItemsDropdown>
         </div>
         <div
           class="sortings__order"
@@ -126,7 +131,12 @@
           <i class="fas fa-plus"></i>
           {{ $t('viewSortContext.addSort') }}
         </a>
-        <Context ref="addContext" class="sortings__add-context">
+        <Context
+          ref="addContext"
+          class="sortings__add-context"
+          :overflow-scroll="true"
+          :max-height-if-outside-viewport="true"
+        >
           <ul ref="items" class="context__menu">
             <li
               v-for="field in fields"
@@ -151,9 +161,11 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import context from '@baserow/modules/core/mixins/context'
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'ViewSortContext',
+  components: { FixedItemsDropdown },
   mixins: [context],
   props: {
     fields: {
