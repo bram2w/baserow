@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix prefill link to table fields display no longer working correctly.",
+    "issue_number": 1913,
+    "bullet_points": [],
+    "created_at": "2023-08-21"
+}
