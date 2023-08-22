@@ -10,10 +10,10 @@
   padding: 0 5px;
   margin-bottom: 5px;
   background-color: $color-primary-100;
-  border-radius: 3px;
   display: flex;
 
   @include fixed-height(22px, 13px);
+  @include rounded($radius-4);
 
   &:not(:last-child) {
     margin-right: 5px;

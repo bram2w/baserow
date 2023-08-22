@@ -26,9 +26,10 @@
   width: 140px;
   height: 12px;
   margin-top: -6px;
-  border-radius: 6px;
   background-color: $color-neutral-100;
   overflow: hidden;
+
+  @include rounded($radius-6);
 
   &::before {
     content: '';
@@ -97,10 +98,10 @@
   font-weight: 600;
   color: $color-neutral-900;
   padding: 0 10px;
-  border-radius: 3px;
   white-space: nowrap;
 
   @include fixed-height(32px, 13px);
+  @include rounded($radius-4);
 
   &:hover {
     text-decoration: none;

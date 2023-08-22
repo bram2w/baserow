@@ -12,9 +12,9 @@
   line-height: 28px;
   text-align: center;
   color: $color-neutral-900;
-  border-radius: 3px;
   font-size: 14px;
   margin-right: 12px;
+  @include rounded($radius-4);
 }
 
 .select-options__value {

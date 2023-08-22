@@ -3,10 +3,10 @@
   appearance: none;
   display: block;
   border: 1px solid #9fa4ab;
-  border-radius: 3px;
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
+  @include rounded($radius-6);
 
   &:active,
   &:focus {

@@ -18,7 +18,7 @@
   position: relative;
   background-color: $white;
   box-shadow: 0 1px 3px 0 rgba($black, 0.16);
-  border-radius: 3px;
+  @include rounded($radius-4);
 
   &--loading {
     overflow: hidden;

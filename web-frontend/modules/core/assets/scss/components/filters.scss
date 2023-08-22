@@ -32,9 +32,9 @@
   // 142px = 20 + 72 + 10 * 4 (gaps)
   grid-template-columns: 20px 72px calc(50% - 132px) 22% 28%;
   padding: 6px 0;
-  border-radius: 3px;
   margin-left: 5px;
   column-gap: 10px;
+  @include rounded($radius-4);
 
   &:not(:last-child) {
     margin-bottom: 6px;
@@ -106,8 +106,8 @@
 
 .filters__value-rating {
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   padding: 6px 12px;
+  @include rounded($radius-4);
 }
 
 .filters__value-link-row {
@@ -119,9 +119,9 @@
   line-height: 30px;
   height: 30px;
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   padding: 0 10px;
   background-color: $white;
+  @include rounded($radius-4);
 
   &:hover {
     text-decoration: none;

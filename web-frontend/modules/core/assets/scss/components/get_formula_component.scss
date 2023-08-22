@@ -4,9 +4,9 @@
   background-color: $color-neutral-100;
   font-size: 12px;
   margin: 1px 0;
-  border-radius: 3px;
   user-select: all;
   line-height: 18px;
+  @include rounded($radius-4);
 }
 
 .get-formula-component__caret {

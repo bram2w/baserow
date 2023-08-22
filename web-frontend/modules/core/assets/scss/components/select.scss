@@ -100,8 +100,8 @@
   position: relative;
   margin: 0 8px 4px 8px;
   padding: 0 32px 0 10px;
-  border-radius: 3px;
   user-select: none;
+  @include rounded($radius-4);
 
   &.select__item--has-notification {
     padding-right: 48px;
@@ -277,12 +277,12 @@
   flex: 0 0 calc(50% - 10px);
   width: calc(50% - 10px);
   color: $color-neutral-900;
-  border-radius: 3px;
   padding: 0 32px 0 10px;
   margin-bottom: 4px;
   min-width: 0;
   line-height: 26px;
   font-size: 13px;
+  @include rounded($radius-4);
 
   &:only-child {
     width: 100%;

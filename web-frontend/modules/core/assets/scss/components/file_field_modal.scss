@@ -30,11 +30,11 @@
 }
 
 .file-field-modal__close {
-  border-radius: 3px;
   color: $white;
 
   @include center-text(32px, 20px);
   @include absolute(17px, 17px, auto, auto);
+  @include rounded($radius-4);
 
   &:hover {
     background-color: $color-neutral-700;
@@ -122,9 +122,9 @@
 
 .file-field-modal__nav-link {
   display: block;
-  border-radius: 3px;
   border: solid 3px transparent;
   overflow: hidden;
+  @include rounded($radius-4);
 
   &.active {
     border-color: $white;
@@ -134,7 +134,7 @@
 .file-field-modal__nav-image {
   display: block;
   height: 48px;
-  border-radius: 3px;
+  @include rounded($radius-4);
 
   .file-field-modal__nav-link.active & {
     border-radius: 0;
@@ -143,10 +143,10 @@
 
 .file-field-modal__nav-icon {
   background-color: $color-neutral-600;
-  border-radius: 3px;
   color: $white;
 
   @include center-text(48px, 22px);
+  @include rounded($radius-4);
 
   .file-field-modal__nav-link.active & {
     border-radius: 0;
@@ -165,7 +165,7 @@
 .file-field-modal__action {
   position: relative;
   color: $white;
-  border-radius: 3px;
+  @include rounded($radius-4);
 
   @include center-text(32px, 14px);
 

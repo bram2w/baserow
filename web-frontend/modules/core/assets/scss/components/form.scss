@@ -77,10 +77,10 @@
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
-  border-radius: 3px;
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
+  @include rounded($radius-4);
 
   &:active,
   &:focus {
@@ -189,13 +189,13 @@
     font-family: $font-awesome-font-family;
     font-weight: $font-awesome-font-weight;
     border: 1px solid $color-neutral-400;
-    border-radius: 3px;
     width: 18px;
     height: 18px;
     line-height: 18px;
     text-align: center;
     background-color: $white;
     color: $color-success-600;
+    @include rounded($radius-4);
   }
 
   &.active::before {
@@ -306,11 +306,11 @@
 
   &::before {
     content: '';
-    border-radius: 12px;
     width: 22px;
     height: 12px;
     background-color: $color-neutral-200;
 
+    @include rounded($radius-12);
     @include absolute(9px, auto, auto, 0);
   }
 

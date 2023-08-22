@@ -7,11 +7,11 @@
   z-index: $z-index-context;
   white-space: nowrap;
   background-color: $white;
-  border-radius: 6px;
   border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
   display: flex;
   flex-direction: column;
+  @include rounded($radius-6);
 }
 
 .notification-panel__head {

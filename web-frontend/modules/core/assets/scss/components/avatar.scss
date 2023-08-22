@@ -9,6 +9,7 @@
   border: 1px solid transparent;
 
   @include center-text(36px, 15px);
+  @include rounded($radius-6);
 }
 
 .avatar--size-large {
@@ -24,7 +25,7 @@
 }
 
 .avatar--rounded {
-  border-radius: 50%;
+  @include rounded($radius-24);
 }
 
 .avatar__image {

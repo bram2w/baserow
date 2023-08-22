@@ -18,11 +18,11 @@
   width: 100%;
   height: 108px;
   border: dashed 2px $color-neutral-300;
-  border-radius: 6px;
   user-select: none;
   color: $color-neutral-500;
   margin-bottom: 30px;
   cursor: pointer;
+  @include rounded($radius-6);
 
   &:hover,
   &.upload-files__dropzone--dragging {
@@ -83,11 +83,11 @@
 
 .upload-files__icon {
   border: solid 1px $color-neutral-300;
-  border-radius: 3px;
   color: $color-neutral-600;
   overflow: hidden;
 
   @include center-text(48px, 22px);
+  @include rounded($radius-4);
 
   img {
     display: block;
@@ -125,8 +125,9 @@
   overflow: hidden;
   width: 100%;
   height: 10px;
-  border-radius: 3px;
   background-color: $color-neutral-100;
+
+  @include rounded($radius-4);
 }
 
 .upload-files__progress-bar {

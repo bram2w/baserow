@@ -20,10 +20,10 @@
 %scrollbar {
   background-color: $color-neutral-900;
   opacity: 0.6;
-  border-radius: 3px;
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
+  @include rounded($radius-4);
 }
 
 .scrollbars__vertical {

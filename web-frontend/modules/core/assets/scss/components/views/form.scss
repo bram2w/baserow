@@ -56,9 +56,9 @@
   position: relative;
   display: flex;
   border: solid 1px $color-neutral-300;
-  border-radius: 3px;
   background-color: $white;
   padding: 0 30px 0 12px;
+  @include rounded($radius-4);
 
   &::after {
     @extend .fas;
@@ -156,9 +156,9 @@
   border: 2px dashed $color-neutral-300;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 12px;
   color: $color-neutral-600;
   overflow: hidden;
+  @include rounded($radius-12);
 
   &:hover {
     text-decoration: none;
@@ -316,10 +316,10 @@
   margin-top: 30px;
   padding: 30px;
   border: solid 1px $color-neutral-200;
-  border-radius: 6px;
   font-size: 16px;
   color: $color-neutral-600;
   line-height: 160%;
+  @include rounded($radius-6);
 }
 
 .form-view__fields {
@@ -332,7 +332,7 @@
 
 .form-view__field {
   position: relative;
-  border-radius: 12px;
+  @include rounded($radius-12);
 
   &.form-view__field--editable {
     border: 1px solid transparent;

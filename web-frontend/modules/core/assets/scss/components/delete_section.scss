@@ -1,22 +1,22 @@
 .delete-section {
   position: relative;
   border: solid 1px $color-neutral-200;
-  border-radius: 3px;
   padding: 31px 16px 16px 16px;
   margin-bottom: 30px;
+  @include rounded($radius-4);
 }
 
 .delete-section__label {
   display: flex;
   align-items: center;
   border: 1px solid $color-error-300;
-  border-radius: 3px;
   background-color: $color-error-100;
   color: $color-error-900;
   line-height: 28px;
   padding: 0 10px;
 
   @include absolute(-14px, auto, auto, 12px);
+  @include rounded($radius-4);
 }
 
 .delete-section__label-icon {

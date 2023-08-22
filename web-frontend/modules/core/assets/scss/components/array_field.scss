@@ -3,8 +3,8 @@
   margin: 5px 0;
   padding: 0 5px;
   background-color: $color-neutral-100;
-  border-radius: 3px;
   display: flex;
+  @include rounded($radius-4);
 
   &:not(:last-child) {
     margin-right: 8px;
@@ -24,8 +24,8 @@
   margin: 5px 0;
   padding: 0 5px;
   background-color: $color-neutral-100;
-  border-radius: 3px;
   display: flex;
+  @include rounded($radius-4);
 
   &:not(:last-child) {
     margin-right: 8px;
@@ -53,10 +53,10 @@
 
 .array-field__checkbox {
   margin: auto;
-  border-radius: 3px;
   color: $color-success-600;
 
   @include center-text(18px, 11px);
+  @include rounded($radius-4);
 
   &--false {
     color: $color-error-600;

@@ -3,18 +3,18 @@
   z-index: $z-index-context;
   white-space: nowrap;
   background-color: $white;
-  border-radius: 6px;
   border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+  @include rounded($radius-6);
 
   &.context--loading-overlay {
     &::before {
       content: '';
-      border-radius: 6px;
       background-color: rgba(0, 0, 0, 0.16);
       z-index: 2;
 
       @include absolute(0, 0, 0, 0);
+      @include rounded($radius-6);
     }
 
     &::after {
@@ -65,12 +65,13 @@
   a {
     position: relative;
     display: block;
-    border-radius: 3px;
     color: $color-neutral-900;
     padding: 0 10px;
     user-select: none;
     line-height: 32px;
     font-size: 14px;
+
+    @include rounded($radius-4);
 
     &.disabled {
       cursor: not-allowed;

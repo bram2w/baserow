@@ -16,11 +16,11 @@
   background-color: $black;
   line-height: 28px;
   padding: 0 12px;
-  border-radius: 3px;
   border: none;
   white-space: nowrap;
   text-align: left;
   text-decoration: none;
+  @include rounded($radius-4);
 
   &:hover {
     background-color: lighten($black, 10%);

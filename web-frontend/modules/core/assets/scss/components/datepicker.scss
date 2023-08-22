@@ -6,10 +6,10 @@
 }
 
 .vdp-datepicker.datepicker .vdp-datepicker__calendar {
-  border-radius: 6px;
   border-color: $color-neutral-200;
   width: 278px;
   padding: 10px;
+  @include rounded($radius-6);
 
   .prev,
   .next {
@@ -49,7 +49,7 @@
   .next:not(.disabled):hover,
   .up:not(.disabled):hover {
     background-color: $color-neutral-100;
-    border-radius: 3px;
+    @include rounded($radius-4);
   }
 
   .cell.day,
@@ -71,7 +71,7 @@
   .cell:not(.blank):not(.disabled).day,
   .cell:not(.blank):not(.disabled).month,
   .cell:not(.blank):not(.disabled).year {
-    border-radius: 3px;
+    @include rounded($radius-4);
 
     &:hover {
       border-color: transparent;

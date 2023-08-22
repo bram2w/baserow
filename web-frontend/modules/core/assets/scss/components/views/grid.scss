@@ -336,8 +336,8 @@
   @include center-text(18px, 11px);
 
   color: $color-neutral-400;
-  border-radius: 3px;
   visibility: hidden;
+  @include rounded($radius-4);
 
   .grid-view__row--hover &,
   .grid-view__row--selected & {
@@ -458,9 +458,9 @@
 
     background-color: $color-success-500;
     color: $white;
-    border-radius: 3px;
     padding: 0 3px;
     transform: translateX(50%);
+    @include rounded($radius-4);
 
     .icon {
       font-size: 9px;

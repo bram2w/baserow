@@ -19,13 +19,13 @@
   @include fixed-height(28px, 12px);
 
   flex: 0 1 auto;
-  border-radius: 15px;
   padding: 0 10px;
   margin-right: 5px;
   margin-top: 11px;
   margin-bottom: 10px;
   background-color: $color-neutral-100;
   box-sizing: border-box;
+  @include rounded($radius-16);
 }
 
 // An empty no width item always at the start of the .expand-overflow-list__container will
@@ -47,13 +47,13 @@
   @include fixed-height(28px, 12px);
 
   padding: 0 10px;
-  border-radius: 15px;
   border: 1px solid $color-neutral-200;
   color: $color-neutral-900;
   box-sizing: border-box;
   margin-top: 10px;
   margin-bottom: 9px;
   user-select: none;
+  @include rounded($radius-16);
 
   &:hover {
     text-decoration: none;
@@ -63,8 +63,8 @@
 
 .expand-on-overflow-hidden-context__dropdown-item {
   @include fixed-height(28px, 12px);
+  @include rounded($radius-16);
 
-  border-radius: 15px;
   margin: 5px 10px;
   background-color: $color-neutral-100;
   box-sizing: border-box;
