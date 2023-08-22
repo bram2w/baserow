@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <KanbanViewOptionForm ref="form" @submitted="submit">
       <div class="context__form-actions">
         <button

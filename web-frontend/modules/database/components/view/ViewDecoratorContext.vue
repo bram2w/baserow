@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <ViewDecoratorList
       v-if="activeDecorations.length === 0"
       :database="database"

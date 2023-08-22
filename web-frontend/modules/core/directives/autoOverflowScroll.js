@@ -14,7 +14,7 @@ import ResizeObserver from 'resize-observer-polyfill'
  * element. `overflow: scroll` does add the scrollbar width.
  *
  * Optionally, the directive accepts a boolean value to enable or disable it. By
- * default the value is `true`, so then it's enabled.
+ * default, the value is `true`, so then it's enabled.
  */
 export default {
   bind(el, binding) {

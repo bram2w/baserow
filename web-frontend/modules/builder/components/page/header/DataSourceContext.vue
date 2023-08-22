@@ -2,6 +2,8 @@
   <Context
     class="data-source-context"
     :class="{ 'context--loading-overlay': state === 'loading' }"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
     @shown="shown"
   >
     <template v-if="state === 'loaded'">

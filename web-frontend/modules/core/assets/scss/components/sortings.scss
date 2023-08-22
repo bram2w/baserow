@@ -136,11 +136,6 @@
   }
 }
 
-.sortings__add-context {
-  max-height: 32 * 4 + 20px;
-  overflow: auto;
-
-  .context__menu-icon {
-    color: $color-neutral-900;
-  }
+.sortings__add-context .context__menu-icon {
+  color: $color-neutral-900;
 }

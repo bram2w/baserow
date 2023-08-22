@@ -3,7 +3,6 @@
 
   display: flex;
   flex-direction: column;
-  position: relative;
   width: 510px;
   border: solid 1px $color-neutral-300;
 }
@@ -55,6 +54,7 @@
 .formula-field__body {
   display: flex;
   max-height: 302px;
+  min-height: 0;
 }
 
 .formula-field__items {

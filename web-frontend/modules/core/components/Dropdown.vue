@@ -53,7 +53,7 @@
         v-show="hasDropdownItem"
         ref="items"
         v-auto-overflow-scroll
-        class="select__items"
+        :class="['select__items', selectItemsAdditionalClass]"
         tabindex=""
       >
         <slot></slot>
@@ -79,6 +79,7 @@ export default {
   data() {
     return {
       itemsContainerAdditionalClass: '',
+      selectItemsAdditionalClass: '',
     }
   },
 }

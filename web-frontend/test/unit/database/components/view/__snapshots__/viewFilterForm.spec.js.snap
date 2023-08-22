@@ -116,7 +116,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -240,7 +240,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -517,7 +517,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -620,7 +620,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -744,7 +744,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -976,7 +976,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -1083,7 +1083,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
            
           <div
             class="dropdown__items dropdown__items--fixed"
-            style="top: 0px; left: 0px;"
+            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
           >
             <div
               class="select__search"
@@ -1101,7 +1101,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             </div>
              
             <ul
-              class="select__items prevent-scroll"
+              class="select__items select__items--no-max-height prevent-scroll"
               tabindex=""
             >
               <li
@@ -1333,7 +1333,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -1440,7 +1440,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
            
           <div
             class="dropdown__items hidden dropdown__items--fixed"
-            style="top: 0px; left: 0px;"
+            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
           >
             <div
               class="select__search"
@@ -1458,7 +1458,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             </div>
              
             <ul
-              class="select__items prevent-scroll"
+              class="select__items select__items--no-max-height prevent-scroll"
               tabindex=""
             >
               <li

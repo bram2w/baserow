@@ -2,6 +2,8 @@
   <Context
     ref="context"
     class="field-form-context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
     @shown="$emit('shown', $event)"
   >
     <FieldForm
