@@ -29,7 +29,7 @@
   background-color: $color-neutral-100;
   overflow: hidden;
 
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &::before {
     content: '';
@@ -101,7 +101,7 @@
   white-space: nowrap;
 
   @include fixed-height(32px, 13px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

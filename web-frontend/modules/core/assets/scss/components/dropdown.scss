@@ -14,7 +14,7 @@
   color: $color-neutral-900;
 
   @include fixed-height(36px, 13px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -64,7 +64,7 @@
   z-index: 1;
 
   @include absolute(0, 0, auto, 0);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &.dropdown__items--fixed {
     flex-direction: column;

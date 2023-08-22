@@ -101,7 +101,7 @@
   margin: 0 8px 4px 8px;
   padding: 0 32px 0 10px;
   user-select: none;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &.select__item--has-notification {
     padding-right: 48px;
@@ -282,7 +282,7 @@
   min-width: 0;
   line-height: 26px;
   font-size: 13px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:only-child {
     width: 100%;

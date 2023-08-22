@@ -12,7 +12,7 @@
   border: solid 1px $color-neutral-400;
   overflow: hidden;
   background-color: $white;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   > * {
     @include fixed-height(24px, 12px);

@@ -11,7 +11,7 @@
   margin-top: -16px;
 
   @include absolute(50%, auto, auto, 50%);
-  @include rounded($radius-16);
+  @include rounded($rounded-2xl);
 
   &.copied--show {
     display: block;

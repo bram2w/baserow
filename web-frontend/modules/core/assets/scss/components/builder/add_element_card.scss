@@ -4,7 +4,7 @@
   width: 133px;
   height: 60px;
   cursor: pointer;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &:hover {
     background-color: $color-neutral-100;

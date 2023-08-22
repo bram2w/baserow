@@ -23,7 +23,7 @@
   pointer-events: auto;
   cursor: pointer;
   user-select: none;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .scrollbars__vertical {

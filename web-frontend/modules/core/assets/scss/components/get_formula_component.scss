@@ -6,7 +6,7 @@
   margin: 1px 0;
   user-select: all;
   line-height: 18px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .get-formula-component__caret {

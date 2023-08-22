@@ -20,7 +20,7 @@
   white-space: nowrap;
   text-align: left;
   text-decoration: none;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     background-color: lighten($black, 10%);

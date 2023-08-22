@@ -17,7 +17,7 @@
 
 %card-file__border {
   border: solid 1px $color-neutral-300;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .card-file__item {

@@ -11,14 +11,14 @@
   width: 100%;
   background-color: $color-neutral-100;
   margin-right: 30px;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .modal-progress__loading-bar-inner {
   background-color: $color-success-300;
   height: 100%;
   transition-timing-function: linear;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .modal-progress__status-text {

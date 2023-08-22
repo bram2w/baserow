@@ -34,7 +34,7 @@
 
   @include center-text(32px, 20px);
   @include absolute(17px, 17px, auto, auto);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     background-color: $color-neutral-700;
@@ -124,7 +124,7 @@
   display: block;
   border: solid 3px transparent;
   overflow: hidden;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &.active {
     border-color: $white;
@@ -134,7 +134,7 @@
 .file-field-modal__nav-image {
   display: block;
   height: 48px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   .file-field-modal__nav-link.active & {
     border-radius: 0;
@@ -146,7 +146,7 @@
   color: $white;
 
   @include center-text(48px, 22px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   .file-field-modal__nav-link.active & {
     border-radius: 0;
@@ -165,7 +165,7 @@
 .file-field-modal__action {
   position: relative;
   color: $white;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   @include center-text(32px, 14px);
 

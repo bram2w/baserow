@@ -2,7 +2,7 @@
   background-color: $white;
   box-shadow: 0 3px 10px 0 rgba($black, 0.16);
   padding: 32px 40px;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .box__head {

@@ -34,7 +34,7 @@
     text-align: center;
     color: $color-neutral-900;
     white-space: nowrap;
-    @include rounded($radius-4);
+    @include rounded($rounded);
 
     &:hover {
       background-color: $color-neutral-100;

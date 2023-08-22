@@ -47,7 +47,7 @@
   padding: 4px 6px;
   background-color: $color-success-500;
   color: $white;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .api-docs__parameter-description {

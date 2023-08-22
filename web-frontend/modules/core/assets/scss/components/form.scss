@@ -80,7 +80,7 @@
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:active,
   &:focus {
@@ -195,7 +195,7 @@
     text-align: center;
     background-color: $white;
     color: $color-success-600;
-    @include rounded($radius-4);
+    @include rounded($rounded);
   }
 
   &.active::before {
@@ -310,7 +310,7 @@
     height: 12px;
     background-color: $color-neutral-200;
 
-    @include rounded($radius-12);
+    @include rounded($rounded-xl);
     @include absolute(9px, auto, auto, 0);
   }
 

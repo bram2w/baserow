@@ -13,7 +13,7 @@
   display: flex;
 
   @include fixed-height(22px, 13px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 5px;

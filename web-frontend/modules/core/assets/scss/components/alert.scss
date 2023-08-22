@@ -2,7 +2,7 @@
   border: 1px solid;
   margin: 30px 0;
   padding: 20px;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   @include alert-style(
     $color-primary-100,

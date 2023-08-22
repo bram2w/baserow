@@ -34,7 +34,7 @@
 
     content: '';
     z-index: -1;
-    @include rounded($radius-4);
+    @include rounded($rounded);
   }
 
   &:hover {
@@ -58,7 +58,7 @@
   color: $white;
   font-size: 14px;
   margin-right: 12px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .select-application__name {

@@ -50,7 +50,7 @@
   flex-wrap: nowrap;
   width: 26px;
   border: solid 1px $color-neutral-400;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .page-builder__preview-menu-item-description {
@@ -63,7 +63,7 @@
   line-height: 20px;
   padding: 0 4px;
   white-space: nowrap;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .page-builder__preview-menu-item {

@@ -5,7 +5,7 @@
   z-index: 2;
 
   @include absolute(5px, 5px, auto, auto);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .element-preview__insert {
@@ -89,7 +89,7 @@
   line-height: 20px;
   padding: 0 4px;
   white-space: nowrap;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .element-preview__menu-item {

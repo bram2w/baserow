@@ -1,7 +1,7 @@
 .decorator-item {
   display: flex;
   width: 100%;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .decorator-item__image {

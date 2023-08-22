@@ -34,7 +34,7 @@
   padding: 6px 0;
   margin-left: 5px;
   column-gap: 10px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-bottom: 6px;
@@ -107,7 +107,7 @@
 .filters__value-rating {
   border: solid 1px $color-neutral-400;
   padding: 6px 12px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .filters__value-link-row {
@@ -121,7 +121,7 @@
   border: solid 1px $color-neutral-400;
   padding: 0 10px;
   background-color: $white;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

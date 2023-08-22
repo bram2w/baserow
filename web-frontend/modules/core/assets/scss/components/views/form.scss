@@ -58,7 +58,7 @@
   border: solid 1px $color-neutral-300;
   background-color: $white;
   padding: 0 30px 0 12px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &::after {
     @extend .fas;
@@ -158,7 +158,7 @@
   font-weight: 600;
   color: $color-neutral-600;
   overflow: hidden;
-  @include rounded($radius-12);
+  @include rounded($rounded-xl);
 
   &:hover {
     text-decoration: none;
@@ -319,7 +319,7 @@
   font-size: 16px;
   color: $color-neutral-600;
   line-height: 160%;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .form-view__fields {
@@ -332,7 +332,7 @@
 
 .form-view__field {
   position: relative;
-  @include rounded($radius-12);
+  @include rounded($rounded-xl);
 
   &.form-view__field--editable {
     border: 1px solid transparent;

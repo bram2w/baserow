@@ -6,7 +6,7 @@
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &:active,
   &:focus {

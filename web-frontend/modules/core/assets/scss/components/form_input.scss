@@ -2,7 +2,7 @@
   display: block;
   border: 1px solid $color-neutral-400;
   position: relative;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:active,
   &:focus {
@@ -53,7 +53,7 @@
   background: none;
   padding: 8px 12px;
   background-color: $white;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   .form-input--large & {
     padding: 12px 12px;

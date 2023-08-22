@@ -25,7 +25,7 @@
   margin-bottom: 10px;
   background-color: $color-neutral-100;
   box-sizing: border-box;
-  @include rounded($radius-16);
+  @include rounded($rounded-2xl);
 }
 
 // An empty no width item always at the start of the .expand-overflow-list__container will
@@ -53,7 +53,7 @@
   margin-top: 10px;
   margin-bottom: 9px;
   user-select: none;
-  @include rounded($radius-16);
+  @include rounded($rounded-2xl);
 
   &:hover {
     text-decoration: none;
@@ -63,7 +63,7 @@
 
 .expand-on-overflow-hidden-context__dropdown-item {
   @include fixed-height(28px, 12px);
-  @include rounded($radius-16);
+  @include rounded($rounded-2xl);
 
   margin: 5px 10px;
   background-color: $color-neutral-100;

@@ -24,7 +24,7 @@
   overflow: hidden;
 
   @include center-text(48px, 22px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -78,7 +78,7 @@
   color: $color-neutral-400;
 
   @include center-text(24px, 13px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 8px;

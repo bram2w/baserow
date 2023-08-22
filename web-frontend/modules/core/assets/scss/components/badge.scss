@@ -5,7 +5,7 @@
   width: fit-content;
 
   @include fixed-height(14px, 11px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .badge--primary {

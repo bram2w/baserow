@@ -22,7 +22,7 @@
   color: $color-neutral-500;
   margin-bottom: 30px;
   cursor: pointer;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &:hover,
   &.upload-files__dropzone--dragging {
@@ -87,7 +87,7 @@
   overflow: hidden;
 
   @include center-text(48px, 22px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   img {
     display: block;
@@ -127,7 +127,7 @@
   height: 10px;
   background-color: $color-neutral-100;
 
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .upload-files__progress-bar {

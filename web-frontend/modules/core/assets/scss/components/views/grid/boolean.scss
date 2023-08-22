@@ -9,7 +9,7 @@
   cursor: pointer;
 
   @include center-text(18px, 11px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;

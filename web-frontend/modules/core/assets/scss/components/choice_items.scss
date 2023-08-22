@@ -41,7 +41,7 @@
   line-height: 44px;
   font-size: 14px;
   color: $color-neutral-600;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

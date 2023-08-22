@@ -5,7 +5,7 @@
   background-color: $white;
   border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &.context--loading-overlay {
     &::before {
@@ -14,7 +14,7 @@
       z-index: 2;
 
       @include absolute(0, 0, 0, 0);
-      @include rounded($radius-6);
+      @include rounded($rounded-md);
     }
 
     &::after {
@@ -71,7 +71,7 @@
     line-height: 32px;
     font-size: 14px;
 
-    @include rounded($radius-4);
+    @include rounded($rounded);
 
     &.disabled {
       cursor: not-allowed;

@@ -44,5 +44,5 @@
   white-space: nowrap;
 
   @include fixed-height(26px, 12px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }

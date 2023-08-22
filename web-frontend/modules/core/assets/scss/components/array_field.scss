@@ -4,7 +4,7 @@
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: flex;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 8px;
@@ -25,7 +25,7 @@
   padding: 0 5px;
   background-color: $color-neutral-100;
   display: flex;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 8px;
@@ -56,7 +56,7 @@
   color: $color-success-600;
 
   @include center-text(18px, 11px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &--false {
     color: $color-error-600;

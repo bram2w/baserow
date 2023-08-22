@@ -14,7 +14,7 @@
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   &:hover,
   &:focus {

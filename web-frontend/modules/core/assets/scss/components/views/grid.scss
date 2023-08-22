@@ -337,7 +337,7 @@
 
   color: $color-neutral-400;
   visibility: hidden;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   .grid-view__row--hover &,
   .grid-view__row--selected & {
@@ -460,7 +460,7 @@
     color: $white;
     padding: 0 3px;
     transform: translateX(50%);
-    @include rounded($radius-4);
+    @include rounded($rounded);
 
     .icon {
       font-size: 9px;

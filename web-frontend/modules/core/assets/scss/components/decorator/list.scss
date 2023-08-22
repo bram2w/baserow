@@ -5,7 +5,7 @@
 .decorator-list__item {
   cursor: pointer;
   padding: 12px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-bottom: 6px;

@@ -2,7 +2,7 @@
   border: 1px solid $color-neutral-200;
   background-color: $color-neutral-100;
   padding: 20px;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   .expandable-card--expanded & {
     border-radius: 6px 6px 0 0;

@@ -23,7 +23,7 @@
   width: 40px;
   border: none;
   padding: 0 5px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &.preview-navigation-bar__address-bar-parameter--text {
     width: 110px;

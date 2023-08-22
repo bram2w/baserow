@@ -14,7 +14,7 @@
   color: $color-neutral-900;
   font-size: 14px;
   margin-right: 12px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .select-options__value {

@@ -3,7 +3,7 @@
   border: solid 1px $color-neutral-200;
   padding: 31px 16px 16px 16px;
   margin-bottom: 30px;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .delete-section__label {
@@ -16,7 +16,7 @@
   padding: 0 10px;
 
   @include absolute(-14px, auto, auto, 12px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .delete-section__label-icon {

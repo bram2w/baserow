@@ -2,7 +2,7 @@
   border: solid 1px $color-neutral-200;
   overflow: hidden;
   margin: 20px 0;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .api-token__key {
@@ -23,7 +23,7 @@
   padding: 0 6px;
 
   @include fixed-height(26px, 10px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .api-token__key-visible {
@@ -37,7 +37,7 @@
   user-select: none;
 
   @include center-text(26px, 11px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -76,7 +76,7 @@
   padding: 0 6px;
   margin-left: 6px;
   color: $color-neutral-900;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

@@ -2,7 +2,7 @@
   border: solid 1px $color-neutral-200;
   margin-top: 20px;
   overflow: hidden;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 }
 
 .webhook__list {

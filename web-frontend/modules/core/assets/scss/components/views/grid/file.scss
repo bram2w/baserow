@@ -38,7 +38,7 @@
 
 %grid-field-file__border {
   border: solid 1px $color-neutral-300;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   .grid-field-file__cell.active & {
     border-color: $color-neutral-500;
@@ -99,7 +99,7 @@
 .grid-field-file__item-add {
   color: $color-neutral-900;
   background-color: $color-primary-100;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   .grid-view__column--matches-search & {
     background-color: $color-primary-200;

@@ -9,7 +9,7 @@
   border-color: $color-neutral-200;
   width: 278px;
   padding: 10px;
-  @include rounded($radius-6);
+  @include rounded($rounded-md);
 
   .prev,
   .next {
@@ -49,7 +49,7 @@
   .next:not(.disabled):hover,
   .up:not(.disabled):hover {
     background-color: $color-neutral-100;
-    @include rounded($radius-4);
+    @include rounded($rounded);
   }
 
   .cell.day,
@@ -71,7 +71,7 @@
   .cell:not(.blank):not(.disabled).day,
   .cell:not(.blank):not(.disabled).month,
   .cell:not(.blank):not(.disabled).year {
-    @include rounded($radius-4);
+    @include rounded($rounded);
 
     &:hover {
       border-color: transparent;

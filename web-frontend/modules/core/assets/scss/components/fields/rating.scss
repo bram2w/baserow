@@ -13,7 +13,7 @@
   color: $color-neutral-900;
   font-size: 14px;
   display: block;
-  @include rounded($radius-4);
+  @include rounded($rounded);
 }
 
 .field-rating {

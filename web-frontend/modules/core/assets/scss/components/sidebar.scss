@@ -155,7 +155,7 @@
   color: $color-neutral-700;
 
   @include center-text(20px, 12px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     display: inline-block;
@@ -217,7 +217,7 @@
 
       @include absolute(6px, auto, auto, 36px);
       @include center-text(auto, 11px, 21px);
-      @include rounded($radius-4);
+      @include rounded($rounded);
     }
 
     &:hover .sidebar__item-name {

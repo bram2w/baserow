@@ -47,7 +47,7 @@
   user-select: none;
 
   @include fixed-height(32px, 13px);
-  @include rounded($radius-4);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
