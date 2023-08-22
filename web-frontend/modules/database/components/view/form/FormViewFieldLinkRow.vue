@@ -3,6 +3,7 @@
     <PaginatedDropdown
       :fetch-page="fetchPage"
       :value="dropdownValue"
+      :initial-display-name="initialDisplayName"
       :class="{ 'dropdown--error': touched && !valid }"
       :fetch-on-open="lazyLoad"
       :disabled="readOnly"
@@ -44,7 +45,10 @@ export default {
   },
   computed: {
     dropdownValue() {
-      return this.value.length === 0 ? null : this.value[0]
+      return this.value.length === 0 ? null : this.value[0].id
+    },
+    initialDisplayName() {
+      return this.value.length === 0 ? null : this.value[0].value
     },
   },
   methods: {
