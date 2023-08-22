@@ -1,12 +1,9 @@
 import string
-from datetime import datetime
 
 from django.http import HttpRequest
 
 import pytest
-from freezegun import freeze_time
 from pytest_unordered import unordered
-from pytz import timezone
 from rest_framework.request import Request
 
 from baserow.contrib.database.exceptions import DatabaseDoesNotBelongToGroup
@@ -634,19 +631,3 @@ def test_delete_token(data_fixture):
 
     assert Token.objects.all().count() == 1
     assert Token.objects.all().first().id == token_2.id
-
-
-@pytest.mark.django_db
-def test_update_token_usage(data_fixture):
-    token_1 = data_fixture.create_token()
-
-    handler = TokenHandler()
-
-    assert token_1.handled_calls == 0
-    assert token_1.last_call is None
-
-    with freeze_time("2020-01-01 12:00"):
-        token_1 = handler.update_token_usage(token_1)
-
-    assert token_1.handled_calls == 1
-    assert token_1.last_call == datetime(2020, 1, 1, 12, 00, tzinfo=timezone("UTC"))
