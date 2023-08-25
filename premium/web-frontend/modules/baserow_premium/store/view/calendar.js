@@ -7,6 +7,7 @@ import CalendarService from '@baserow_premium/services/views/calendar'
 import {
   getRowSortFunction,
   matchSearchFilters,
+  calculateSingleRowSearchMatches,
 } from '@baserow/modules/database/utils/view'
 import RowService from '@baserow/modules/database/services/row'
 import {
@@ -14,9 +15,17 @@ import {
   getUserTimeZone,
 } from '@baserow/modules/core/utils/date'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
+import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
 export function populateRow(row) {
-  row._ = {}
+  row._ = {
+    // Whether the row should be displayed based on the current activeSearchTerm term.
+    matchSearch: true,
+    // Contains the specific field ids which match the activeSearchTerm term.
+    // Could be empty even when matchSearch is true when there is no
+    // activeSearchTerm term applied.
+    fieldSearchMatches: [],
+  }
   return row
 }
 
@@ -50,6 +59,12 @@ export const state = () => ({
   // current month surrounding it.
   // It is an instance of moment.
   selectedDate: null,
+  // A user provided optional search term which can be used to filter down rows.
+  activeSearchTerm: '',
+  // If true then the activeSearchTerm will be sent to the server to filter rows
+  // entirely out. When false no server filter will be applied and rows which do not
+  // have any matching cells will still be displayed.
+  hideRowsNotMatchingSearch: true,
 })
 
 export const mutations = {
@@ -59,9 +74,18 @@ export const mutations = {
     state.dateFieldId = null
     state.fieldOptions = {}
     state.dateStacks = {}
+    state.activeSearchTerm = ''
+    state.hideRowsNotMatchingSearch = true
+  },
+  SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
+    state.activeSearchTerm = activeSearchTerm.trim()
+    state.hideRowsNotMatchingSearch = hideRowsNotMatchingSearch
   },
   SET_LOADING_ROWS(state, loading) {
     state.loadingRows = loading
+  },
+  SET_ROW_SEARCH_MATCHES(state, { row, matchSearch }) {
+    row._.matchSearch = matchSearch
   },
   SET_LAST_CALENDAR_ID(state, calendarId) {
     state.lastCalendarId = calendarId
@@ -256,6 +280,8 @@ export const actions = {
         fromTimestamp,
         toTimestamp,
         userTimeZone: getUserTimeZone(),
+        search: getters.getServerSearchTerm,
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       })
@@ -305,6 +331,8 @@ export const actions = {
       fromTimestamp,
       toTimestamp,
       userTimeZone: getUserTimeZone(),
+      search: getters.getServerSearchTerm,
+      searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
     })
@@ -314,6 +342,7 @@ export const actions = {
       populateRow(row)
     })
     commit('ADD_ROWS_TO_STACK', { date, count: newCount, rows: newRows })
+    dispatch('updateSearch', { fields })
   },
   /**
    * Updates the field options of a given field in the store. So no API request to
@@ -465,13 +494,14 @@ export const actions = {
   ) {
     const row = clone(values)
     populateRow(row)
-
     const matchesFilters = await dispatch('rowMatchesFilters', {
       view,
       row,
       fields,
     })
-    if (!matchesFilters) {
+    dispatch('updateSearchMatchesForRow', { row, fields })
+
+    if (!matchesFilters || !row._.matchSearch) {
       return
     }
 
@@ -511,13 +541,14 @@ export const actions = {
   ) {
     row = clone(row)
     populateRow(row)
+    dispatch('updateSearchMatchesForRow', { row, fields })
 
     const matchesFilters = await dispatch('rowMatchesFilters', {
       view,
       row,
       fields,
     })
-    if (!matchesFilters) {
+    if (!matchesFilters || !row._.matchSearch) {
       return
     }
 
@@ -562,6 +593,8 @@ export const actions = {
       row: oldRow,
       fields,
     })
+    dispatch('updateSearchMatchesForRow', { row: oldRow, fields })
+
     const oldValue = oldRow[fieldName]
     const timezone = getters.getTimeZone(fields)
     const oldStackId = moment.tz(oldValue, timezone).format('YYYY-MM-DD')
@@ -571,7 +604,8 @@ export const actions = {
     if (oldStack) {
       const oldStackResults = clone(oldStack.results)
       oldExistingIndex = oldStackResults.findIndex((r) => r.id === oldRow.id)
-      oldExists = oldExistingIndex > -1 && oldRowMatchesFilters
+      oldExists =
+        oldExistingIndex > -1 && oldRowMatchesFilters && oldRow._.matchSearch
     }
 
     // Second, we need to figure out if the row should be visible in the new stack.
@@ -581,6 +615,8 @@ export const actions = {
       row: newRow,
       fields,
     })
+    dispatch('updateSearchMatchesForRow', { row: newRow, fields })
+
     const newValue = newRow[fieldName]
     const newStackId = moment.tz(newValue, timezone).format('YYYY-MM-DD')
     const newStack = getters.getDateStack(newStackId)
@@ -604,7 +640,8 @@ export const actions = {
       const newIsLast = newIndex === newStackResults.length - 1
       newExists =
         (!newIsLast || newStackResults.length === newStackCount) &&
-        newRowMatchesFilters
+        newRowMatchesFilters &&
+        newRow._.matchSearch
     }
 
     commit('UPDATE_ROW', { row, values })
@@ -682,6 +719,7 @@ export const actions = {
         oldValues[fieldToCallName] = currentFieldValue
       }
     })
+    dispatch('updateSearchMatchesForRow', { row, fields })
 
     await dispatch('updatedExistingRow', {
       view,
@@ -747,9 +785,56 @@ export const actions = {
       }
     }
   },
+  updateSearch(
+    { commit, dispatch, getters, state },
+    {
+      fields,
+      activeSearchTerm = state.activeSearchTerm,
+      hideRowsNotMatchingSearch = state.hideRowsNotMatchingSearch,
+      refreshMatchesOnClient = true,
+    }
+  ) {
+    commit('SET_SEARCH', { activeSearchTerm, hideRowsNotMatchingSearch })
+    if (refreshMatchesOnClient) {
+      getters.getAllRows.forEach((row) =>
+        dispatch('updateSearchMatchesForRow', {
+          row,
+          fields,
+          forced: true,
+        })
+      )
+    }
+  },
+  updateSearchMatchesForRow(
+    { commit, getters, rootGetters },
+    { row, fields = null, overrides, forced = false }
+  ) {
+    // Avoid computing search on table loading
+    if (getters.getActiveSearchTerm || forced) {
+      const rowSearchMatches = calculateSingleRowSearchMatches(
+        row,
+        getters.getActiveSearchTerm,
+        getters.isHidingRowsNotMatchingSearch,
+        fields,
+        this.$registry,
+        getDefaultSearchModeFromEnv(this.$config),
+        overrides
+      )
+      commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+    }
+  },
 }
 
 export const getters = {
+  getServerSearchTerm(state) {
+    return state.activeSearchTerm
+  },
+  getActiveSearchTerm(state) {
+    return state.activeSearchTerm
+  },
+  isHidingRowsNotMatchingSearch(state) {
+    return state.hideRowsNotMatchingSearch
+  },
   getLoadingRows(state) {
     return state.loadingRows
   },
