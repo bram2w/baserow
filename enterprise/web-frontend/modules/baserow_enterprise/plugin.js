@@ -12,7 +12,6 @@ import {
   GitLabAuthProviderType,
   OpenIdConnectAuthProviderType,
 } from '@baserow_enterprise/authProviderTypes'
-
 import { TeamsWorkspaceSettingsPageType } from '@baserow_enterprise/workspaceSettingsPageTypes'
 import { EnterpriseMembersPagePluginType } from '@baserow_enterprise/membersPagePluginTypes'
 import en from '@baserow_enterprise/locales/en.json'
@@ -25,7 +24,6 @@ import {
   EnterpriseWithoutSupportLicenseType,
   EnterpriseLicenseType,
 } from '@baserow_enterprise/licenseTypes'
-
 import { EnterprisePlugin } from '@baserow_enterprise/plugins'
 
 export default (context) => {

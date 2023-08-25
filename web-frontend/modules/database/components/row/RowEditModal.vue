@@ -1,9 +1,9 @@
 <template>
   <Modal
     ref="modal"
-    :full-height="!!optionalRightSideBar"
-    :right-sidebar="!!optionalRightSideBar"
-    :content-scrollable="!!optionalRightSideBar"
+    :full-height="hasRightSidebar"
+    :right-sidebar="hasRightSidebar"
+    :content-scrollable="hasRightSidebar"
     :right-sidebar-scrollable="false"
     :collapsible-right-sidebar="true"
     @hidden="$emit('hidden', { row })"
@@ -92,13 +92,12 @@
         ></CreateFieldContext>
       </div>
     </template>
-    <template v-if="!!optionalRightSideBar" #sidebar>
-      <component
-        :is="optionalRightSideBar"
+    <template #sidebar>
+      <RowEditModalSidebar
         :row="row"
         :table="table"
         :database="database"
-      ></component>
+      ></RowEditModalSidebar>
     </template>
   </Modal>
 </template>
@@ -109,6 +108,7 @@ import modal from '@baserow/modules/core/mixins/modal'
 import CreateFieldContext from '@baserow/modules/database/components/field/CreateFieldContext'
 import RowEditModalFieldsList from './RowEditModalFieldsList.vue'
 import RowEditModalHiddenFieldsSection from './RowEditModalHiddenFieldsSection.vue'
+import RowEditModalSidebar from './RowEditModalSidebar.vue'
 import { getPrimaryOrFirstField } from '@baserow/modules/database/utils/field'
 
 export default {
@@ -117,6 +117,7 @@ export default {
     CreateFieldContext,
     RowEditModalFieldsList,
     RowEditModalHiddenFieldsSection,
+    RowEditModalSidebar,
   },
   mixins: [modal],
   props: {
@@ -165,11 +166,6 @@ export default {
     ...mapGetters({
       navigationLoading: 'rowModalNavigation/getLoading',
     }),
-    optionalRightSideBar() {
-      return this.$registry
-        .get('application', 'database')
-        .getRowEditModalRightSidebarComponent(this.database, this.table)
-    },
     modalRow() {
       return this.$store.getters['rowModal/get'](this._uid)
     },
@@ -208,6 +204,15 @@ export default {
       } else {
         return null
       }
+    },
+    hasRightSidebar() {
+      const allSidebarTypes = this.$registry.getOrderedList('rowModalSidebar')
+      const activeSidebarTypes = allSidebarTypes.filter(
+        (type) =>
+          type.isDeactivated(this.database, this.table) === false &&
+          type.getComponent()
+      )
+      return activeSidebarTypes.length > 0
     },
   },
   watch: {

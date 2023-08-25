@@ -773,5 +773,9 @@
     },
     "collaboratorAddedToRowNotification": {
         "title": "{sender} assigned you to {fieldName} in row {rowId} in {tableName}"
+    },
+    "rowHistorySidebar": {
+        "name": "History",
+        "empty": "No changes yet. You'll be able to track any changes to this row here."
     }
 }

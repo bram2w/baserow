@@ -103,6 +103,7 @@ import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
 import publicStore from '@baserow/modules/database/store/view/public'
 import rowModalNavigationStore from '@baserow/modules/database/store/rowModalNavigation'
+import rowHistoryStore from '@baserow/modules/database/store/rowHistory'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -229,6 +230,7 @@ import { FormViewFormModeType } from '@baserow/modules/database/formViewModeType
 import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
 import { CollaboratorAddedToRowNotificationType } from '@baserow/modules/database/notificationTypes'
+import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -258,6 +260,7 @@ export default (context) => {
   store.registerModule('field', fieldStore)
   store.registerModule('rowModal', rowModal)
   store.registerModule('rowModalNavigation', rowModalNavigationStore)
+  store.registerModule('rowHistory', rowHistoryStore)
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
@@ -644,6 +647,11 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new CollaboratorAddedToRowNotificationType(context)
+  )
+
+  app.$registry.register(
+    'rowModalSidebar',
+    new HistoryRowModalSidebarType(context)
   )
 
   registerRealtimeEvents(app.$realtime)
