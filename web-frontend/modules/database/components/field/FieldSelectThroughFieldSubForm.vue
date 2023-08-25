@@ -77,7 +77,16 @@ export default {
       return this.$store.getters['application/getAll'].reduce(
         (tables, application) => {
           if (application.type === databaseType) {
-            return tables.concat(application.tables || [])
+            const tablesWithCreateFieldAccess = (
+              application.tables || []
+            ).filter((table) =>
+              this.$hasPermission(
+                'database.table.create_field',
+                table,
+                this.database.workspace.id
+              )
+            )
+            return tables.concat(tablesWithCreateFieldAccess)
           }
           return tables
         },

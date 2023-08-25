@@ -34,6 +34,10 @@ allowing use of that language in Baserow easily.
 from baserow.contrib.database.formula.ast.tree import BaserowExpression
 from baserow.contrib.database.formula.handler import FormulaHandler
 from baserow.contrib.database.formula.operations import TypeFormulaOperationType
+from baserow.contrib.database.formula.types.exceptions import (
+    InvalidFormulaType,
+    get_invalid_field_and_table_formula_error,
+)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaInvalidType,
     BaserowFormulaType,
@@ -71,4 +75,6 @@ __all__ = [
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
     literal,
     TypeFormulaOperationType,
+    InvalidFormulaType,
+    get_invalid_field_and_table_formula_error,
 ]

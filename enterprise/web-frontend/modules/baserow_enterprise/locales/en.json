@@ -238,8 +238,7 @@
             "members": "members",
             "teams": "teams"
         },
-        "helpTooltip": "Member role assignments override team role assignments.",
-        "roleSelectorBuilderDataWarningTooltip": "They will be able to create formula and lookup fields exposing any fields in any linked tables."
+        "helpTooltip": "Member role assignments override team role assignments."
     },
     "membersRoleField": {
         "noAccessHelpText": "This user requires explicit access to resources.",

@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
@@ -1516,6 +1517,21 @@ class FieldType(
         """Indicates whether the field can be used to represent date or datetime."""
 
         return False
+
+    def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
+        self, user: AbstractUser, changed_field: Field, forbidden_field: Field
+    ) -> Exception:
+        """
+        Called when the field has been created or changed in a way that resulted in
+        it depending on another field in a way that was forbidden for the user
+        who triggered the change.
+
+        :param user: The user.
+        :param changed_field: The changed field.
+        :param forbidden_field: The forbidden field.
+        """
+
+        return PermissionError(user)
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

@@ -84,7 +84,7 @@ export default {
       return (
         this.linkedToTable &&
         this.$hasPermission(
-          'database.table.list_fields',
+          'database.table.create_field',
           this.linkedToTable,
           this.database.workspace.id
         )
@@ -114,6 +114,13 @@ export default {
             return this.$registry
               .get('field', f.type)
               .canBeReferencedByFormulaField()
+          })
+          .filter((f) => {
+            return this.$hasPermission(
+              'database.table.field.update',
+              f,
+              this.database.workspace.id
+            )
           })
           .map((f) => {
             const fieldType = this.$registry.get('field', f.type)

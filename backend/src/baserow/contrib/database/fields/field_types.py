@@ -3739,6 +3739,20 @@ class FormulaFieldType(ReadOnlyFieldType):
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
 
+    def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
+        self, user: AbstractUser, changed_field: Field, forbidden_field: Field
+    ) -> Exception:
+        from baserow.contrib.database.formula import (
+            InvalidFormulaType,
+            get_invalid_field_and_table_formula_error,
+        )
+
+        return InvalidFormulaType(
+            get_invalid_field_and_table_formula_error(
+                forbidden_field.name, forbidden_field.table.name
+            )
+        )
+
 
 class CountFieldType(FormulaFieldType):
     type = "count"
