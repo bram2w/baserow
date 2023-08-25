@@ -73,7 +73,7 @@
               :initial-display-name="defaultValues.date_force_timezone"
               :fetch-on-open="true"
               :debounce-time="100"
-              @input="(timezone) => (values.date_force_timezone = timezone.id)"
+              @input="(timezone) => (values.date_force_timezone = timezone)"
             ></PaginatedDropdown>
           </div>
         </div>
