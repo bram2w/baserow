@@ -9,7 +9,7 @@ import pytest
 from freezegun import freeze_time
 
 from baserow.contrib.database.export.handler import ExportHandler
-from baserow.core.actions import CreateWorkspaceActionType
+from baserow.core.actions import CreateApplicationActionType, CreateWorkspaceActionType
 from baserow.core.jobs.constants import JOB_FINISHED
 from baserow.core.jobs.handler import JobHandler
 from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
@@ -220,3 +220,52 @@ def test_audit_log_export_filters_work_correctly(
         datetime.strptime("2023-01-01 12:00:08", "%Y-%m-%d %H:%M:%S")
     )
     assert job_type.get_filtered_queryset(job).count() == 0
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_audit_log_export_workspace_csv_correctly(
+    storage_mock, enterprise_data_fixture, synced_roles
+):
+    user, _ = enterprise_data_fixture.create_enterprise_admin_user_and_token()
+    workspace = enterprise_data_fixture.create_workspace(user=user)
+
+    with freeze_time("2023-01-01 12:00:00"):
+        app_1 = CreateApplicationActionType.do(user, workspace, "database", "App 1")
+
+    with freeze_time("2023-01-01 12:00:10"):
+        app_2 = CreateApplicationActionType.do(user, workspace, "database", "App 2")
+
+    csv_settings = {
+        "csv_column_separator": ",",
+        "csv_first_row_header": True,
+        "export_charset": "utf-8",
+        "filter_workspace_id": workspace.id,
+        "exclude_columns": "workspace_id,workspace_name",
+    }
+
+    stub_file = BytesIO()
+    storage_mock.open.return_value = stub_file
+    close = stub_file.close
+    stub_file.close = lambda: None
+
+    csv_export_job = JobHandler().create_and_start_job(
+        user, AuditLogExportJobType.type, **csv_settings, sync=True
+    )
+    csv_export_job.refresh_from_db()
+    assert csv_export_job.state == JOB_FINISHED
+
+    data = stub_file.getvalue().decode(csv_settings["export_charset"])
+    bom = "\ufeff"
+
+    assert data == (
+        bom
+        + "User Email,User ID,Action Type,Description,Timestamp,IP Address\r\n"
+        + f'{user.email},{user.id},Create application,"""{app_2.name}"" ({app_2.id}) database created '
+        + f'in group ""{workspace.name}"" ({workspace.id}).",2023-01-01 12:00:10+00:00,\r\n'
+        + f'{user.email},{user.id},Create application,"""{app_1.name}"" ({app_1.id}) database created '
+        + f'in group ""{workspace.name}"" ({workspace.id}).",2023-01-01 12:00:00+00:00,\r\n'
+    )
+
+    close()

@@ -448,8 +448,8 @@ export default {
     },
     sidebarWorkspaceComponents() {
       return Object.values(this.$registry.getAll('plugin'))
-        .map((plugin) =>
-          plugin.getSidebarWorkspaceComponent(this.selectedWorkspace)
+        .flatMap((plugin) =>
+          plugin.getSidebarWorkspaceComponents(this.selectedWorkspace)
         )
         .filter((component) => component !== null)
     },

@@ -2,36 +2,44 @@ import baseService from '@baserow/modules/core/crudTable/baseService'
 import jobService from '@baserow/modules/core/services/job'
 
 export default (client) => {
-  return Object.assign(baseService(client, '/admin/audit-log/'), {
-    fetchUsers(page, search) {
-      const usersUrl = '/admin/audit-log/users/'
+  return Object.assign(baseService(client, `/audit-log/`), {
+    fetchUsers(page, search, workspaceId = null) {
+      const usersUrl = `/audit-log/users/`
       const userPaginatedService = baseService(client, usersUrl)
-      return userPaginatedService.fetch(usersUrl, page, search, [], [])
+      const filters = {}
+      if (workspaceId) {
+        filters.workspace_id = workspaceId
+      }
+      return userPaginatedService.fetch(usersUrl, page, search, [], filters)
     },
     fetchWorkspaces(page, search) {
-      const workspacesUrl = '/admin/audit-log/workspaces/'
+      const workspacesUrl = `/audit-log/workspaces/`
       const workspacePaginatedService = baseService(client, workspacesUrl)
       return workspacePaginatedService.fetch(
         workspacesUrl,
         page,
         search,
         [],
-        []
+        {}
       )
     },
-    fetchActionTypes(page, search) {
-      const actionTypesUrl = '/admin/audit-log/action-types/'
+    fetchActionTypes(page, search, workspaceId = null) {
+      const actionTypesUrl = `/audit-log/action-types/`
       const actionTypePaginatedService = baseService(client, actionTypesUrl)
+      const filters = {}
+      if (workspaceId) {
+        filters.workspace_id = workspaceId
+      }
       return actionTypePaginatedService.fetch(
         actionTypesUrl,
         page,
         search,
         [],
-        []
+        filters
       )
     },
     startExportCsvJob(data) {
-      return client.post('/admin/audit-log/export/', data)
+      return client.post(`/audit-log/export/`, data)
     },
     getExportJobInfo(jobId) {
       return jobService(client).get(jobId)

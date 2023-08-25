@@ -23,10 +23,9 @@ from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
 
 
-class AdminListingView(
+class APIListingView(
     APIView, SearchableViewMixin, SortableViewMixin, FilterableViewMixin
 ):
-    permission_classes = (IsAdminUser,)
     serializer_class = None
     search_fields: List[str] = ["id"]
     filters_field_mapping: Dict[str, str] = {}
@@ -72,32 +71,37 @@ class AdminListingView(
 
     @staticmethod
     def get_extend_schema_parameters(
-        name, serializer_class, search_fields, sort_field_mapping
+        name, serializer_class, search_fields, sort_field_mapping, extra_parameters=None
     ):
         """
         Returns the schema properties that can be used in in the @extend_schema
         decorator.
         """
 
-        fields = sort_field_mapping.keys()
-        all_fields = ", ".join(fields)
-        field_name_1 = "field_1"
-        field_name_2 = "field_2"
-        for i, field in enumerate(fields):
-            if i == 0:
-                field_name_1 = field
-            if i == 1:
-                field_name_2 = field
-
-        return {
-            "parameters": [
+        parameters = []
+        if search_fields:
+            parameters.append(
                 OpenApiParameter(
                     name="search",
                     location=OpenApiParameter.QUERY,
                     type=OpenApiTypes.STR,
-                    description=f"If provided only {name} that match the query will "
-                    f"be returned.",
-                ),
+                    description=f"If provided only {name} with {' or '.join(search_fields)} "
+                    "that match the query will be returned.",
+                )
+            )
+
+        if sort_field_mapping:
+            fields = sort_field_mapping.keys()
+            all_fields = ", ".join(fields)
+            field_name_1 = "field_1"
+            field_name_2 = "field_2"
+            for i, field in enumerate(fields):
+                if i == 0:
+                    field_name_1 = field
+                if i == 1:
+                    field_name_2 = field
+
+            parameters.append(
                 OpenApiParameter(
                     name="sorts",
                     location=OpenApiParameter.QUERY,
@@ -105,13 +109,18 @@ class AdminListingView(
                     description=f"A comma separated string of attributes to sort by, "
                     f"each attribute must be prefixed with `+` for a descending "
                     f"sort or a `-` for an ascending sort. The accepted attribute "
-                    f"names are: {all_fields}. For example `sorts=-{field_name_1},"
+                    f"names are: `{all_fields}`. For example `sorts=-{field_name_1},"
                     f"-{field_name_2}` will sort the {name} first by descending "
                     f"{field_name_1} and then ascending {field_name_2}. A sort"
                     f"parameter with multiple instances of the same sort attribute "
                     f"will respond with the ERROR_INVALID_SORT_ATTRIBUTE "
                     f"error.",
                 ),
+            )
+
+        return {
+            "parameters": [
+                *parameters,
                 OpenApiParameter(
                     name="page",
                     location=OpenApiParameter.QUERY,
@@ -125,6 +134,7 @@ class AdminListingView(
                     description=f"Defines how many {name} should be returned per "
                     f"page.",
                 ),
+                *(extra_parameters or []),
             ],
             "responses": {
                 200: serializer_class(many=True),
@@ -139,3 +149,7 @@ class AdminListingView(
                 401: None,
             },
         }
+
+
+class AdminListingView(APIListingView):
+    permission_classes = (IsAdminUser,)

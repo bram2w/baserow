@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from .admin import urls as admin_urls
+from .audit_log import urls as audit_log_urls
 from .role import urls as role_urls
 from .sso import urls as sso_urls
 from .teams import urls as teams_urls
@@ -12,4 +13,5 @@ urlpatterns = [
     path("role/", include(role_urls, namespace="role")),
     path("admin/", include(admin_urls, namespace="admin")),
     path("sso/", include(sso_urls, namespace="sso")),
+    path("audit-log/", include(audit_log_urls, namespace="audit_log")),
 ]

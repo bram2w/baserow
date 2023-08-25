@@ -39,6 +39,7 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('view/unselect')
     this.$store.dispatch('table/unselect')
+    this.$store.dispatch('application/unselect')
     next()
   },
   async beforeRouteUpdate(to, from, next) {
