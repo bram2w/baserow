@@ -1627,3 +1627,44 @@ def test_deleting_only_one_side_of_a_link_row_field_update_deleted_side_dependen
     assert lookup.formula_type == "invalid"
     # ensure no entry in the trash is created for the update
     assert TrashEntry.objects.count() == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_two_linked_tables_both_publically_shared_can_have_related_linked_field_removed(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    table_a = data_fixture.create_database_table(user=user)
+    table_b = data_fixture.create_database_table(user=user, database=table_a.database)
+    public_grid_view_a = data_fixture.create_grid_view(
+        user,
+        table=table_a,
+        public=True,
+    )
+    public_grid_view_b = data_fixture.create_grid_view(
+        user,
+        table=table_b,
+        public=True,
+    )
+
+    field_handler = FieldHandler()
+
+    field = data_fixture.create_text_field(
+        table=table_b, order=1, primary=True, name="Name"
+    )
+
+    link_a_and_b = field_handler.create_field(
+        user,
+        table_a,
+        "link_row",
+        name="A<->B",
+        link_row_table=table_b,
+        has_related_field=True,
+    )
+
+    field_handler.update_field(
+        user,
+        link_a_and_b,
+        has_related_field=False,
+    )

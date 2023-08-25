@@ -1677,12 +1677,12 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
         table, model, only_include_views_which_want_realtime_events=True
     )
     assert checker.get_public_views_where_row_is_visible(row) == [
-        public_view1.view_ptr,
-        public_view3.view_ptr,
+        public_view1.view_ptr.specific,
+        public_view3.view_ptr.specific,
     ]
     assert checker.get_public_views_where_row_is_visible(row2) == [
-        public_view2.view_ptr,
-        public_view3.view_ptr,
+        public_view2.view_ptr.specific,
+        public_view3.view_ptr.specific,
     ]
 
 
@@ -1756,15 +1756,15 @@ def test_get_public_views_which_include_rows(data_fixture):
 
     assert checker.get_public_views_where_rows_are_visible([row, row2]) == [
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view1.id),
+            view=ViewHandler().get_view_as_user(user, public_view1.id).specific,
             allowed_row_ids={1},
         ),
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view2.id),
+            view=ViewHandler().get_view_as_user(user, public_view2.id).specific,
             allowed_row_ids={2},
         ),
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view3.id),
+            view=ViewHandler().get_view_as_user(user, public_view3.id).specific,
             allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
         ),
     ]
@@ -1810,7 +1810,7 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1818,7 +1818,7 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
     # be changing unfiltered_field it knows it can cache the results
     with django_assert_num_queries(0):
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            public_grid_view.view_ptr.specific
         ]
         assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1859,13 +1859,14 @@ def test_public_view_row_checker_includes_public_views_with_no_filters_with_no_q
         updated_field_ids=[unfiltered_field.id],
     )
 
+    view_ptr_specific = public_grid_view.view_ptr.specific
     # It should precalculate that this view is always visible.
     with django_assert_num_queries(0):
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
         assert row_checker.get_public_views_where_row_is_visible(other_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
 
 
@@ -1909,7 +1910,7 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1921,7 +1922,7 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
     visible_row.save()
 
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == []
 
@@ -1944,7 +1945,8 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
     )
     model = table.get_model()
-    with django_assert_num_queries(2):
+    num_queries = 6
+    with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
             table,
@@ -1965,7 +1967,7 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
     )
 
     # Adding another view shouldn't result in more queries
-    with django_assert_num_queries(2):
+    with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
             table,
@@ -2013,11 +2015,12 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
         updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
 
+    view_ptr_specific = public_grid_view.view_ptr.specific
     with django_assert_num_queries(1):
         # Only should run a single exists query to check if the row is in the single
         # public view
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
     with django_assert_num_queries(1):
         # Only should run a single exists query to check if the row is in the single
@@ -2040,11 +2043,12 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
         only_include_views_which_want_realtime_events=True,
         updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
+    specific_another_view = another_public_grid_view.view_ptr.specific
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr,
-            another_public_grid_view.view_ptr,
+            view_ptr_specific,
+            specific_another_view,
         ]
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view

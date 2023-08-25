@@ -2761,7 +2761,14 @@ class CachingPublicViewRowChecker:
         self._always_visible_views = []
         self._view_row_check_cache = defaultdict(dict)
         handler = ViewHandler()
-        for view in self._public_views:
+        for view in specific_iterator(
+            self._public_views,
+            per_content_type_queryset_hook=(
+                lambda model, queryset: view_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
+        ):
             if only_include_views_which_want_realtime_events:
                 view_type = view_type_registry.get_by_model(view.specific_class)
                 if not view_type.when_shared_publicly_requires_realtime_events:
