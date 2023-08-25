@@ -65,7 +65,8 @@ export default {
       )
     },
     updateValue(selectedId) {
-      this.$emit('update', [selectedId], this.value)
+      const selection = selectedId === null ? [] : [selectedId]
+      this.$emit('update', selection, this.value)
     },
   },
 }
