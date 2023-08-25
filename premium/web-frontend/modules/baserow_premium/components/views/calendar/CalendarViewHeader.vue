@@ -58,6 +58,15 @@
         <span>{{ timezone(fields) }}</span>
       </div>
     </li>
+    <li class="header__filter-item header__filter-item--right">
+      <ViewSearch
+        :view="view"
+        :fields="fields"
+        :store-prefix="storePrefix"
+        :always-hide-rows-not-matching-search="true"
+        @refresh="$emit('refresh', $event)"
+      ></ViewSearch>
+    </li>
   </ul>
 </template>
 
@@ -67,12 +76,14 @@ import { mapState, mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import SelectDateFieldModal from '@baserow_premium/components/views/calendar/SelectDateFieldModal'
 import ViewFieldsContext from '@baserow/modules/database/components/view/ViewFieldsContext'
+import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 
 export default {
   name: 'CalendarViewHeader',
   components: {
     ViewFieldsContext,
     SelectDateFieldModal,
+    ViewSearch,
   },
   props: {
     storePrefix: {
