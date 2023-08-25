@@ -1566,7 +1566,12 @@ export class BooleanViewFilterType extends ViewFilterType {
     filterValue = trueString.includes(
       filterValue.toString().toLowerCase().trim()
     )
-    rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
+
+    if (rowValue === null) {
+      rowValue = false
+    } else {
+      rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
+    }
     return filterValue ? rowValue : !rowValue
   }
 }
