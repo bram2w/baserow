@@ -1427,3 +1427,68 @@ def test_new_select_options_are_used_when_duplicating_multiple_select_field(
         assert getattr(row, f"field_{field.pk}") != getattr(
             row, f"field_{dup_field.pk}"
         )
+
+
+@pytest.mark.django_db
+def test_duplicating_link_row_field_properly_resets_pk_sequence_of_new_table(
+    data_fixture,
+):
+    workspace = data_fixture.create_workspace()
+    creator = data_fixture.create_user(workspace=workspace)
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=creator)
+
+    table_a_primary = table_a.field_set.get(primary=True).specific
+    table_a_text_field = FieldHandler().create_field(
+        creator, table_a, "text", name="text"
+    )
+    table_a_row_1 = RowHandler().create_row(
+        user=creator,
+        table=table_a,
+        values={
+            f"{link_field.db_column}": [],
+            f"{table_a_text_field.db_column}": "1",
+        },
+    )
+    table_a_row_2 = RowHandler().create_row(
+        user=creator,
+        table=table_a,
+        values={
+            f"{link_field.db_column}": [],
+            f"{table_a_text_field.db_column}": "0",
+        },
+    )
+    table_b_row_1 = RowHandler().create_row(
+        user=creator,
+        table=table_b,
+        values={f"field_{link_field.link_row_related_field_id}": [table_a_row_1.id]},
+    )
+    table_b_row_2 = RowHandler().create_row(
+        user=creator,
+        table=table_b,
+        values={
+            f"field_{link_field.link_row_related_field_id}": [
+                table_a_row_1.id,
+                table_a_row_2.id,
+            ]
+        },
+    )
+
+    dupe_field, _ = FieldHandler().duplicate_field(
+        creator, link_field, duplicate_data=True
+    )
+
+    new_row = RowHandler().create_row(
+        user=creator,
+        table=table_a,
+        values={
+            f"field_{dupe_field.id}": [
+                table_b_row_1.id,
+                table_b_row_2.id,
+            ]
+        },
+    )
+    linked_vals = set(
+        getattr(new_row, dupe_field.db_column).all().values_list("id", flat=True)
+    )
+    assert table_b_row_1.id in linked_vals
+    assert table_b_row_2.id in linked_vals

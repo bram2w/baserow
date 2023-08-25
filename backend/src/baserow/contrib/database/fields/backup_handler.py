@@ -58,8 +58,8 @@ class FieldDataBackupHandler:
         )
 
         if isinstance(original_model_field, ManyToManyField):
-            through = original_model_field.remote_field.through
-            m2m_table_to_duplicate = through._meta.db_table
+            original_through = original_model_field.remote_field.through
+            m2m_table_to_duplicate = original_through._meta.db_table
             new_m2m_table_name = (
                 duplicated_model_field.remote_field.through._meta.db_table
             )
@@ -68,7 +68,7 @@ class FieldDataBackupHandler:
                 target_table=new_m2m_table_name,
                 m2m_model_field=original_model_field,
                 m2m_target_model_field=duplicated_model_field,
-                through_model=through,
+                through_model=duplicated_model_field.remote_field.through,
                 mapping_values=mapping_values,
             )
         else:
