@@ -64,8 +64,11 @@ def _get_views_where_field_visible_and_hidden_fields_in_view(
     """
 
     views_where_field_was_visible = []
+    views_with_prefetched_fields = View.objects.filter(
+        public=True, table_id=field.table_id
+    ).prefetch_related("table__field_set")
     for view in specific_iterator(
-        field.table.view_set.filter(public=True).prefetch_related("table__field_set"),
+        views_with_prefetched_fields,
         per_content_type_queryset_hook=(
             lambda model, queryset: view_type_registry.get_by_model(
                 model
