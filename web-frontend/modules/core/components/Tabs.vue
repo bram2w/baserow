@@ -7,7 +7,13 @@
       'tabs--large': large,
     }"
   >
-    <ul class="tabs__header">
+    <ul
+      v-if="!collapseOneTab || tabs.length > 1"
+      class="tabs__header"
+      :class="{
+        'tabs__header--full-width': fullWidthHeader,
+      }"
+    >
       <li
         v-for="(tab, index) in tabs"
         :key="tab.title"
@@ -16,6 +22,7 @@
         :class="{
           'tabs__item--active': isActive(index),
           'tabs__item--disabled': tab.disabled,
+          'tabs__item--full-width': fullWidthHeader,
         }"
         @click="tab.disabled ? null : selectTab(index)"
       >
@@ -58,6 +65,16 @@ export default {
       default: false,
     },
     large: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    fullWidthHeader: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    collapseOneTab: {
       type: Boolean,
       required: false,
       default: false,

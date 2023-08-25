@@ -12,18 +12,6 @@ export class DatabaseApplicationType extends ApplicationType {
   }
 
   /**
-   * By default there is no right sidebar in the row edit modal. Override this method
-   * and provide a Sidebar component class if you wish there to be one. This component
-   * will be provided two props row and table.
-   *
-   * @return The component to use as the row edit modal's right sidebar or null to not
-   *    use one.
-   */
-  getRowEditModalRightSidebarComponent(database, table) {
-    return null
-  }
-
-  /**
    * @return The component to use as the button the user clicks to expand and view the
    *    row edit modal for a particular row. Takes a single row prop and should emit a
    *    'edit-modal' event when clicked with the row as the event.

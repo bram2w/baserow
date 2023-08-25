@@ -27,6 +27,11 @@
     gap: 24px;
     padding: 0 0 0 40px;
   }
+
+  &.tabs__header--full-width {
+    gap: 0;
+    padding: 0;
+  }
 }
 
 .tabs__item {
@@ -49,6 +54,11 @@
     background-color: $color-primary-600;
 
     @include absolute(auto, 0, -1px, 0);
+  }
+
+  &.tabs__item--full-width {
+    width: 100%;
+    text-align: center;
   }
 }
 
