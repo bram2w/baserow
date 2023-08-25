@@ -1,6 +1,6 @@
 from django.urls import re_path
 
-from baserow_enterprise.api.audit_log.views import (
+from .views import (
     AsyncAuditLogExportView,
     AuditLogActionTypeFilterView,
     AuditLogUserFilterView,
@@ -17,5 +17,9 @@ urlpatterns = [
     re_path(
         r"action-types/$", AuditLogActionTypeFilterView.as_view(), name="action_types"
     ),
-    re_path(r"export/$", AsyncAuditLogExportView.as_view(), name="export"),
+    re_path(
+        r"export/$",
+        AsyncAuditLogExportView.as_view(),
+        name="async_export",
+    ),
 ]

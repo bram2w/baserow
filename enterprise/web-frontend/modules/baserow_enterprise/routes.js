@@ -19,6 +19,11 @@ export const routes = [
   {
     name: 'admin-audit-log',
     path: '/admin/audit-log',
-    component: path.resolve(__dirname, 'pages/admin/auditLog.vue'),
+    component: path.resolve(__dirname, 'pages/auditLog.vue'),
+  },
+  {
+    name: 'workspace-audit-log',
+    path: '/workspace/:workspaceId/audit-log',
+    component: path.resolve(__dirname, 'pages/auditLog.vue'),
   },
 ]

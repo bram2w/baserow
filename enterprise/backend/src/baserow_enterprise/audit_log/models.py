@@ -32,10 +32,10 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
         REDO = ActionCommandType.UNDO.name, _("REDONE")
 
     user_id = models.PositiveIntegerField(null=True)
-    user_email = models.CharField(max_length=150, null=True, blank=True)
+    user_email = models.EmailField(null=True, blank=True)
 
     workspace_id = models.PositiveIntegerField(null=True)
-    workspace_name = models.CharField(max_length=160, null=True, blank=True)
+    workspace_name = models.CharField(max_length=165, null=True, blank=True)
 
     action_uuid = models.CharField(max_length=36, null=True)
     action_type = models.TextField()
@@ -50,8 +50,8 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
     # we don't want break the audit log in case an action is removed or changed.
     # Storing the original description and type in the database we'll always be
     # able to fallback to them and show the original string in case. NOTE: if
-    # the _('$original_description') has been removed from the codebase, the
-    # entry won't be translated anymore.
+    # also the _('$original_description') has been removed from the codebase,
+    # the entry won't be translated anymore.
     original_action_short_descr = models.TextField(null=True, blank=True)
     original_action_long_descr = models.TextField(null=True, blank=True)
     original_action_context_descr = models.TextField(null=True, blank=True)
@@ -146,4 +146,9 @@ class AuditLogExportJob(Job):
     exported_file_name = models.TextField(
         null=True,
         help_text="The CSV file containing the filtered audit log entries.",
+    )
+    exclude_columns = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="A comma separated list of column names to exclude from the export.",
     )

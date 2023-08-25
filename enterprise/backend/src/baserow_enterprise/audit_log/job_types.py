@@ -30,6 +30,61 @@ from baserow_enterprise.features import AUDIT_LOG
 
 from .models import AuditLogEntry, AuditLogExportJob
 
+AUDIT_LOG_CSV_COLUMN_NAMES = OrderedDict(
+    {
+        "user_email": {
+            "field": "user_email",
+            "descr": _("User Email"),
+        },
+        "user_id": {
+            "field": "user_id",
+            "descr": _("User ID"),
+        },
+        "workspace_name": {
+            "field": "workspace_name",
+            "descr": _("Group Name"),
+        },
+        "workspace_id": {
+            "field": "workspace_id",
+            "descr": _("Group ID"),
+        },
+        "type": {
+            "field": "type",
+            "descr": _("Action Type"),
+        },
+        "description": {
+            "field": "description",
+            "descr": _("Description"),
+        },
+        "timestamp": {
+            "field": "action_timestamp",
+            "descr": _("Timestamp"),
+        },
+        "ip_address": {
+            "field": "ip_address",
+            "descr": _("IP Address"),
+        },
+    }
+)
+
+
+class CommaSeparatedCsvColumnsField(serializers.CharField):
+    def validate_values(self, value):
+        items = value.split(",")
+
+        if len(set(items)) != len(items):
+            raise serializers.ValidationError("Duplicate items are not allowed.")
+
+        if len(items) > 0:
+            for item in items:
+                if item not in AUDIT_LOG_CSV_COLUMN_NAMES.keys():
+                    raise serializers.ValidationError(f"{item} is not a valid choice.")
+
+        if len(items) == len(self.child.choices):
+            raise serializers.ValidationError("At least one column must be included.")
+
+        return value
+
 
 class AuditLogExportJobType(JobType):
     type = "audit_log_export"
@@ -46,24 +101,16 @@ class AuditLogExportJobType(JobType):
         "filter_action_type",
         "filter_from_timestamp",
         "filter_to_timestamp",
+        "exclude_columns",
     ]
 
     serializer_field_names = [
-        "csv_column_separator",
-        "csv_first_row_header",
-        "export_charset",
-        "filter_user_id",
-        "filter_workspace_id",
-        "filter_action_type",
-        "filter_from_timestamp",
-        "filter_to_timestamp",
+        *request_serializer_field_names,
         "created_on",
         "exported_file_name",
         "url",
     ]
-    serializer_field_overrides = {
-        # Map to the python encoding aliases at the same time by using a
-        # DisplayChoiceField
+    base_serializer_field_overrides = {
         "export_charset": DisplayChoiceField(
             choices=SUPPORTED_EXPORT_CHARSETS,
             default="utf-8",
@@ -106,9 +153,31 @@ class AuditLogExportJobType(JobType):
             required=False,
             help_text="Optional: The end date to filter the audit log by.",
         ),
+        "exclude_columns": CommaSeparatedCsvColumnsField(
+            required=False,
+            help_text=(
+                "Optional: A comma separated list of column names to exclude from the export. "
+                f"Available options are `{', '.join(AUDIT_LOG_CSV_COLUMN_NAMES.keys())}`."
+            ),
+        ),
+    }
+    request_serializer_field_overrides = {
+        **base_serializer_field_overrides,
+    }
+    serializer_field_overrides = {
+        # Map to the python encoding aliases at the same time by using a
+        # DisplayChoiceField
+        **base_serializer_field_overrides,
         "created_on": serializers.DateTimeField(
             read_only=True,
             help_text="The date and time when the export job was created.",
+        ),
+        "exported_file_name": serializers.CharField(
+            read_only=True,
+            help_text="The name of the file that was created by the export job.",
+        ),
+        "url": serializers.SerializerMethodField(
+            help_text="The URL to download the exported file.",
         ),
     }
 
@@ -135,18 +204,12 @@ class AuditLogExportJobType(JobType):
         if job.export_charset == "utf-8":
             file.write(b"\xef\xbb\xbf")
 
-        field_header_mapping = OrderedDict(
-            {
-                "user_email": _("User Email"),
-                "user_id": _("User ID"),
-                "workspace_name": _("Group Name"),  # GroupDeprecation
-                "workspace_id": _("Group ID"),
-                "type": _("Action Type"),
-                "description": _("Description"),
-                "action_timestamp": _("Timestamp"),
-                "ip_address": _("IP Address"),
-            }
-        )
+        exclude_columns = job.exclude_columns.split(",") if job.exclude_columns else []
+        field_header_mapping = {
+            k: v["descr"]
+            for (k, v) in AUDIT_LOG_CSV_COLUMN_NAMES.items()
+            if k not in exclude_columns
+        }
 
         writer = csv.writer(
             file,
@@ -158,7 +221,11 @@ class AuditLogExportJobType(JobType):
         if job.csv_first_row_header:
             writer.writerow(field_header_mapping.values())
 
-        fields = field_header_mapping.keys()
+        fields = [
+            v["field"]
+            for (k, v) in AUDIT_LOG_CSV_COLUMN_NAMES.items()
+            if k not in exclude_columns
+        ]
         paginator = Paginator(queryset.all(), 2000)
         export_progress = ChildProgressBuilder.build(
             progress.create_child_builder(represents_progress=progress.total),

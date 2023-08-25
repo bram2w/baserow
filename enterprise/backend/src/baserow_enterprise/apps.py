@@ -10,6 +10,9 @@ class BaserowEnterpriseConfig(AppConfig):
     def ready(self):
         from baserow.core.jobs.registries import job_type_registry
         from baserow_enterprise.audit_log.job_types import AuditLogExportJobType
+        from baserow_enterprise.audit_log.operations import (
+            ListWorkspaceAuditLogEntriesOperationType,
+        )
 
         job_type_registry.register(AuditLogExportJobType())
 
@@ -101,6 +104,7 @@ class BaserowEnterpriseConfig(AppConfig):
         operation_type_registry.register(UpdateRoleApplicationOperationType())
         operation_type_registry.register(ReadRoleTableOperationType())
         operation_type_registry.register(UpdateRoleTableOperationType())
+        operation_type_registry.register(ListWorkspaceAuditLogEntriesOperationType())
 
         from baserow.core.registries import subject_type_registry
 

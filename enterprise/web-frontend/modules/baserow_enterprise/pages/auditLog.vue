@@ -3,6 +3,7 @@
     <AuditLogExportModal
       ref="exportModal"
       :filters="filters"
+      :workspace-id="workspaceId"
     ></AuditLogExportModal>
     <CrudTable
       :columns="columns"
@@ -13,7 +14,11 @@
       row-id-key="id"
     >
       <template #title>
-        {{ $t('auditLog.title') }}
+        {{
+          workspaceId
+            ? $t('auditLog.workspaceTitle', { workspaceName })
+            : $t('auditLog.adminTitle')
+        }}
       </template>
       <template #header-right-side>
         <button
@@ -24,7 +29,10 @@
         </button>
       </template>
       <template #header-filters>
-        <div class="audit-log__filters">
+        <div
+          class="audit-log__filters"
+          :class="{ 'audit-log__filters--workspace': workspaceId }"
+        >
           <FilterWrapper :name="$t('auditLog.filterUserTitle')">
             <PaginatedDropdown
               ref="userFilter"
@@ -35,7 +43,10 @@
               @input="filterUser"
             ></PaginatedDropdown>
           </FilterWrapper>
-          <FilterWrapper :name="$t('auditLog.filterWorkspaceTitle')">
+          <FilterWrapper
+            v-if="!workspaceId"
+            :name="$t('auditLog.filterWorkspaceTitle')"
+          >
             <PaginatedDropdown
               ref="workspaceFilter"
               :value="filters.workspace_id"
@@ -88,7 +99,7 @@ import _ from 'lodash'
 import moment from '@baserow/modules/core/moment'
 import CrudTable from '@baserow/modules/core/components/crudTable/CrudTable'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
-import AuditLogAdminService from '@baserow_enterprise/services/auditLogAdmin'
+import AuditLogService from '@baserow_enterprise/services/auditLog'
 import DateFilter from '@baserow_enterprise/components/crudTable/filters/DateFilter'
 import FilterWrapper from '@baserow_enterprise/components/crudTable/filters/FilterWrapper'
 import SimpleField from '@baserow/modules/core/components/crudTable/fields/SimpleField'
@@ -96,9 +107,10 @@ import LocalDateField from '@baserow/modules/core/components/crudTable/fields/Lo
 import CrudTableColumn from '@baserow/modules/core/crudTable/crudTableColumn'
 import LongTextField from '@baserow_enterprise/components/crudTable/fields/LongTextField'
 import AuditLogExportModal from '@baserow_enterprise/components/admin/modals/AuditLogExportModal'
+import EnterpriseFeatures from '@baserow_enterprise/features'
 
 export default {
-  name: 'AuditLogAdminTable',
+  name: 'AuditLog',
   components: {
     AuditLogExportModal,
     CrudTable,
@@ -107,9 +119,40 @@ export default {
     FilterWrapper,
   },
   layout: 'app',
-  middleware: 'staff',
+  middleware: 'authenticated',
+  asyncData({ app, error, route, store }) {
+    if (!app.$hasFeature(EnterpriseFeatures.AUDIT_LOG)) {
+      return error({
+        statusCode: 401,
+        message: 'Available in the advanced/enterprise version',
+      })
+    }
+
+    const workspaceId = route.params.workspaceId
+      ? parseInt(route.params.workspaceId)
+      : null
+    if (workspaceId) {
+      if (
+        !app.$hasPermission(
+          'workspace.list_audit_log_entries',
+          store.getters['workspace/get'](workspaceId),
+          workspaceId
+        )
+      ) {
+        return error({ statusCode: 404, message: 'Page not found' })
+      }
+    } else if (!store.getters['auth/isStaff']) {
+      return error({ statusCode: 403, message: 'Forbidden.' })
+    }
+
+    return { workspaceId }
+  },
   data() {
-    this.columns = [
+    const filters = {}
+    const params = this.$route.params
+    const workspaceId = params.workspaceId ? parseInt(params.workspaceId) : null
+
+    const columns = [
       new CrudTableColumn(
         'user',
         () => this.$t('auditLog.user'),
@@ -120,70 +163,108 @@ export default {
         {},
         '15'
       ),
-      new CrudTableColumn(
-        'workspace',
-        () => this.$t('auditLog.workspace'),
-        SimpleField,
-        true,
-        false,
-        false,
-        {},
-        '15'
-      ),
-      new CrudTableColumn(
-        'type',
-        () => this.$t('auditLog.actionType'),
-        SimpleField,
-        true,
-        false,
-        false,
-        {},
-        '10'
-      ),
-      new CrudTableColumn(
-        'description',
-        () => this.$t('auditLog.description'),
-        LongTextField,
-        false,
-        false,
-        false,
-        {},
-        '40'
-      ),
-      new CrudTableColumn(
-        'timestamp',
-        () => this.$t('auditLog.timestamp'),
-        LocalDateField,
-        true,
-        false,
-        false,
-        { dateTimeFormat: 'L LTS' },
-        '10'
-      ),
-      new CrudTableColumn(
-        'ip_address',
-        () => this.$t('auditLog.ip_address'),
-        SimpleField,
-        true,
-        false,
-        false,
-        {},
-        '10'
-      ),
     ]
-    this.service = AuditLogAdminService(this.$client)
+
+    if (!workspaceId) {
+      columns.push(
+        new CrudTableColumn(
+          'workspace',
+          () => this.$t('auditLog.workspace'),
+          SimpleField,
+          true,
+          false,
+          false,
+          {},
+          '15'
+        )
+      )
+    } else {
+      filters.workspace_id = workspaceId
+    }
+
+    columns.push(
+      ...[
+        new CrudTableColumn(
+          'type',
+          () => this.$t('auditLog.actionType'),
+          SimpleField,
+          true,
+          false,
+          false,
+          {},
+          '10'
+        ),
+        new CrudTableColumn(
+          'description',
+          () => this.$t('auditLog.description'),
+          LongTextField,
+          false,
+          false,
+          false,
+          {},
+          '40'
+        ),
+        new CrudTableColumn(
+          'timestamp',
+          () => this.$t('auditLog.timestamp'),
+          LocalDateField,
+          true,
+          false,
+          false,
+          { dateTimeFormat: 'L LTS' },
+          '10'
+        ),
+        new CrudTableColumn(
+          'ip_address',
+          () => this.$t('auditLog.ip_address'),
+          SimpleField,
+          true,
+          false,
+          false,
+          {},
+          '10'
+        ),
+      ]
+    )
+
+    this.columns = columns
+    this.service = AuditLogService(this.$client)
+
     return {
-      filters: {},
+      filters,
       dateTimeFormat: 'YYYY-MM-DDTHH:mm:ss.SSSZ',
     }
   },
   computed: {
+    workspaceName() {
+      const selectedWorkspace = this.$store.getters['workspace/get'](
+        this.workspaceId
+      )
+      return selectedWorkspace ? selectedWorkspace.name : ''
+    },
     disableDates() {
       const minimumDate = moment('2023-01-01', 'YYYY-MM-DD')
       const maximumDate = moment().add(1, 'day').endOf('day')
       return {
         to: minimumDate.toDate(),
         from: maximumDate.toDate(),
+      }
+    },
+    selectedWorkspaceId() {
+      try {
+        return this.$store.getters['workspace/selectedId']
+      } catch (e) {
+        return null
+      }
+    },
+  },
+  watch: {
+    selectedWorkspaceId(newValue, oldValue) {
+      if (newValue !== oldValue && this.workspaceId) {
+        this.$router.push({
+          name: newValue ? 'workspace-audit-log' : 'dashboard',
+          params: { workspaceId: newValue },
+        })
       }
     },
   },
@@ -196,7 +277,7 @@ export default {
         'fromTimestampFilter',
         'toTimestampFilter',
       ]) {
-        this.$refs[filterRef].clear()
+        this.$refs[filterRef]?.clear()
       }
       this.filters = {}
     },
@@ -215,7 +296,7 @@ export default {
       this.setFilter('user_id', userId)
     },
     fetchUsers(page, search) {
-      return this.service.fetchUsers(page, search)
+      return this.service.fetchUsers(page, search, this.workspaceId)
     },
     filterWorkspace(workspaceId) {
       this.setFilter('workspace_id', workspaceId)
@@ -224,7 +305,7 @@ export default {
       return this.service.fetchWorkspaces(page, search)
     },
     fetchActionTypes(page, search) {
-      return this.service.fetchActionTypes(page, search)
+      return this.service.fetchActionTypes(page, search, this.workspaceId)
     },
     filterActionType(actionTypeId) {
       this.setFilter('action_type', actionTypeId)

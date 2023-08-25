@@ -13,6 +13,11 @@
   }
 }
 
+.audit-log__filters--workspace {
+  max-width: 1024px;
+  grid-template-columns: 3fr 3fr minmax(15%, 120px) minmax(15%, 120px) max-content;
+}
+
 .audit-log__exported-list {
   margin-top: 30px;
   border-top: 1px solid $color-neutral-200;

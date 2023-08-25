@@ -28,15 +28,23 @@ from baserow_enterprise.audit_log.models import AuditLogEntry
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize("url_name", ["users", "workspaces", "action_types", "list"])
+@pytest.mark.parametrize(
+    "method,url_name",
+    [
+        ("get", "users"),
+        ("get", "action_types"),
+        ("get", "list"),
+        ("post", "async_export"),
+    ],
+)
 @override_settings(DEBUG=True)
-def test_admins_can_not_access_audit_log_endpoints_without_an_enterprise_license(
-    api_client, enterprise_data_fixture, url_name
+def test_admins_cannot_access_audit_log_endpoints_without_an_enterprise_license(
+    api_client, enterprise_data_fixture, method, url_name
 ):
-    user, token = enterprise_data_fixture.create_user_and_token(is_staff=True)
+    _, token = enterprise_data_fixture.create_user_and_token(is_staff=True)
 
-    response = api_client.get(
-        reverse(f"api:enterprise:admin:audit_log:{url_name}"),
+    response = getattr(api_client, method)(
+        reverse(f"api:enterprise:audit_log:{url_name}"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -46,15 +54,15 @@ def test_admins_can_not_access_audit_log_endpoints_without_an_enterprise_license
 @pytest.mark.django_db
 @pytest.mark.parametrize("url_name", ["users", "workspaces", "action_types", "list"])
 @override_settings(DEBUG=True)
-def test_non_admins_can_not_access_audit_log_endpoints(
+def test_non_admins_cannot_access_audit_log_endpoints(
     api_client, enterprise_data_fixture, url_name
 ):
     enterprise_data_fixture.enable_enterprise()
 
-    user, token = enterprise_data_fixture.create_user_and_token()
+    _, token = enterprise_data_fixture.create_user_and_token()
 
     response = api_client.get(
-        reverse(f"api:enterprise:admin:audit_log:{url_name}"),
+        reverse(f"api:enterprise:audit_log:{url_name}"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -63,30 +71,13 @@ def test_non_admins_can_not_access_audit_log_endpoints(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_admins_can_not_export_audit_log_to_csv_without_an_enterprise_license(
-    api_client, enterprise_data_fixture
-):
-    user, token = enterprise_data_fixture.create_user_and_token(is_staff=True)
-
-    response = api_client.post(
-        reverse(f"api:enterprise:admin:audit_log:export"),
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
-
-
-@pytest.mark.django_db
-@override_settings(DEBUG=True)
-def test_non_admins_can_not_export_audit_log_to_csv(
-    api_client, enterprise_data_fixture
-):
+def test_non_admins_cannot_export_audit_log_to_csv(api_client, enterprise_data_fixture):
     enterprise_data_fixture.enable_enterprise()
 
     user, token = enterprise_data_fixture.create_user_and_token()
 
     response = api_client.post(
-        reverse(f"api:enterprise:admin:audit_log:export"),
+        reverse("api:enterprise:audit_log:async_export"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -108,7 +99,7 @@ def test_audit_log_user_filter_returns_users_correctly(
 
     # no search query should return all users
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:users"),
+        reverse("api:enterprise:audit_log:users"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -125,7 +116,7 @@ def test_audit_log_user_filter_returns_users_correctly(
 
     # searching by email should return only the correct user
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:users") + "?search=admin",
+        reverse("api:enterprise:audit_log:users") + "?search=admin",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -156,7 +147,7 @@ def test_audit_log_workspace_filter_returns_workspaces_correctly(
 
     # no search query should return all workspaces
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:workspaces"),
+        reverse("api:enterprise:audit_log:workspaces"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -173,7 +164,7 @@ def test_audit_log_workspace_filter_returns_workspaces_correctly(
 
     # searching by name should return only the correct workspace
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:workspaces") + "?search=1",
+        reverse("api:enterprise:audit_log:workspaces") + "?search=1",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -200,7 +191,7 @@ def test_audit_log_action_type_filter_returns_action_types_correctly(
 
     # no search query should return all the available action types``
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:action_types"),
+        reverse("api:enterprise:audit_log:action_types"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -220,7 +211,7 @@ def test_audit_log_action_type_filter_returns_action_types_correctly(
 
     # searching by name should return only the correct action_type
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:action_types")
+        reverse("api:enterprise:audit_log:action_types")
         + f"?search=create+application",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
@@ -246,7 +237,7 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
 
     with patch("django.utils.translation.override") as mock_override:
         api_client.get(
-            reverse("api:enterprise:admin:audit_log:action_types"),
+            reverse("api:enterprise:audit_log:action_types"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
@@ -254,10 +245,7 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
 
     # the search works in the user language
     response = api_client.get(
-        (
-            reverse("api:enterprise:admin:audit_log:action_types")
-            + f"?search=crea+progetto"
-        ),
+        (reverse("api:enterprise:audit_log:action_types") + f"?search=crea+progetto"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -272,7 +260,7 @@ def test_audit_log_action_types_are_translated_in_the_admin_language(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_audit_log_entries_are_not_created_without_a_license(
+def test_audit_log_entries_are_created_even_without_a_license(
     api_client, enterprise_data_fixture
 ):
     user = enterprise_data_fixture.create_user()
@@ -283,7 +271,7 @@ def test_audit_log_entries_are_not_created_without_a_license(
     with freeze_time("2023-01-01 12:00:01"):
         CreateWorkspaceActionType.do(user, "workspace 2")
 
-    assert AuditLogEntry.objects.count() == 0
+    assert AuditLogEntry.objects.count() == 2
 
 
 @pytest.mark.django_db
@@ -319,7 +307,7 @@ def test_audit_log_entries_are_created_from_actions_and_returned_in_order(
     }
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list"),
+        reverse("api:enterprise:audit_log:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -366,14 +354,14 @@ def test_audit_log_entries_are_translated_in_the_user_language(
 
     with patch("django.utils.translation.override") as mock_override:
         api_client.get(
-            reverse("api:enterprise:admin:audit_log:list"),
+            reverse("api:enterprise:audit_log:list"),
             format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
         )
         mock_override.assert_called_once_with("it")
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list"),
+        reverse("api:enterprise:audit_log:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -450,7 +438,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
 
     # by user_id
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list") + "?user_id=" + str(user.id),
+        reverse("api:enterprise:audit_log:list") + "?user_id=" + str(user.id),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -464,7 +452,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
 
     # by workspace_id
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list")
+        reverse("api:enterprise:audit_log:list")
         + "?workspace_id="
         + str(workspace_1.id),
         format="json",
@@ -480,7 +468,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
 
     # by action_type
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list") + "?action_type=create_group",
+        reverse("api:enterprise:audit_log:list") + "?action_type=create_group",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -493,8 +481,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
     }
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list")
-        + "?action_type=create_application",
+        reverse("api:enterprise:audit_log:list") + "?action_type=create_application",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -508,7 +495,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
 
     # from timestamp
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list")
+        reverse("api:enterprise:audit_log:list")
         + "?from_timestamp=2023-01-01T12:00:01Z",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
@@ -523,8 +510,7 @@ def test_audit_log_entries_can_be_filtered(api_client, enterprise_data_fixture):
 
     # to timestamp
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list")
-        + "?to_timestamp=2023-01-01T12:00:00Z",
+        reverse("api:enterprise:audit_log:list") + "?to_timestamp=2023-01-01T12:00:00Z",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -549,7 +535,7 @@ def test_audit_log_entries_return_400_for_invalid_values(
 
     # an invalid value in the query params should return a 400
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list") + "?user_id=wrong_type",
+        reverse("api:enterprise:audit_log:list") + "?user_id=wrong_type",
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
     )
@@ -576,7 +562,7 @@ def test_audit_log_can_export_to_csv_all_entries(
         execute=True
     ):
         response = api_client.post(
-            reverse("api:enterprise:admin:audit_log:export"),
+            reverse("api:enterprise:audit_log:async_export"),
             data=csv_settings,
             format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
@@ -631,6 +617,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
         "csv_column_separator": "|",
         "csv_first_row_header": False,
         "export_charset": "utf-8",
+        "exclude_columns": "ip_address",
     }
     filters = {
         "filter_user_id": admin_user.id,
@@ -642,7 +629,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
 
     # if the action type is invalid, it should return a 400
     response = api_client.post(
-        reverse("api:enterprise:admin:audit_log:export"),
+        reverse("api:enterprise:audit_log:async_export"),
         data={**csv_settings, "filter_action_type": "wrong_type"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {admin_token}",
@@ -653,7 +640,7 @@ def test_audit_log_can_export_to_csv_filtered_entries(
         execute=True
     ):
         response = api_client.post(
-            reverse("api:enterprise:admin:audit_log:export"),
+            reverse("api:enterprise:audit_log:async_export"),
             data={**csv_settings, **filters},
             format="json",
             HTTP_AUTHORIZATION=f"JWT {admin_token}",
@@ -731,7 +718,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
     action_type_registry.unregister(TemporaryActionType.type)
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list"),
+        reverse("api:enterprise:audit_log:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -775,7 +762,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
     action_type_registry.register(TemporaryActionTypeV2())
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list"),
+        reverse("api:enterprise:audit_log:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -805,7 +792,7 @@ def test_log_entries_still_work_correctly_if_the_action_type_is_removed(
     assert AuditLogEntry.objects.count() == 2
 
     response = api_client.get(
-        reverse("api:enterprise:admin:audit_log:list"),
+        reverse("api:enterprise:audit_log:list"),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

@@ -8,7 +8,7 @@
         "sidebarTooltip": "Your account has access to the enterprise features globally",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Available in enterprise version",
+        "deactivated": "Available in the advanced/enterprise version",
         "licenseDescription": "Viewers are free with Baserow Enterprise. If a user has any other role, in any workspace then they will use a paid seat automatically.",
         "overflowWarning": "You have too many non-viewer users and have used up all of your paid seats. Change users to become viewers on each workspaces members page."
     },
@@ -61,7 +61,8 @@
         "Authentication": "Authentication"
     },
     "auditLog": {
-        "title": "Audit log",
+        "adminTitle": "Audit log",
+        "workspaceTitle": "Audit log - {workspaceName}",
         "filterUserTitle": "User",
         "filterWorkspaceTitle": "Workspace",
         "filterActionTypeTitle": "Event Type",
@@ -84,7 +85,8 @@
     },
     "auditLogExportModal": {
         "title": "Export to CSV",
-        "exportFilename": "Audit Log Export - {date}",
+        "exportFilename": "Admin Audit Log Export - {date}",
+        "exportWorkspaceFilename": " Workspace ({workspaceId}) Audit Log Export - {date}",
         "cancelledTitle": "Export failed",
         "cancelledDescription": "Something went wrong while exporting the audit log. Please try again."
     },
@@ -274,5 +276,9 @@
     },
     "snapshotModalWarning": {
         "message": "Please be aware that a snapshot will include any permissions set on the application and its tables."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Audit log",
+        "deactivated": "Available in the advanced/enterprise version"
     }
 }
