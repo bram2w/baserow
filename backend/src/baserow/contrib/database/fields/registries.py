@@ -1533,6 +1533,27 @@ class FieldType(
 
         return PermissionError(user)
 
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        """
+        Returns a dictionary of metadata that should be stored in the row history
+        table for this field type. This is necessary for fields that have a
+        non-trivial value representation to be able to reconstruct the value from
+        the history table.
+
+        :param field: The field instance that the value belongs to.
+        :param new_value: The new value of the field.
+        :param old_value: The old value of the field.
+        :return: A dictionary of metadata that should be stored in the row history
+            table for this field type.
+        """
+
+        return {
+            "id": field.id,
+            "type": self.type,
+        }
+
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):
     """

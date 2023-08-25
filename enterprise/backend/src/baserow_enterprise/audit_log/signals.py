@@ -21,6 +21,7 @@ def log_action(
     action_params: Dict[str, Any],
     action_timestamp: datetime,
     action_command_type: ActionCommandType,
+    action_uuid: str,
     workspace: Optional[Workspace] = None,
     **kwargs
 ):
@@ -31,6 +32,7 @@ def log_action(
             action_params,
             action_timestamp,
             action_command_type,
+            action_uuid=action_uuid,
             workspace=workspace,
             **kwargs
         )

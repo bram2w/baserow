@@ -37,6 +37,7 @@ class AuditLogEntry(CreatedAndUpdatedOnMixin, models.Model):
     workspace_id = models.PositiveIntegerField(null=True)
     workspace_name = models.CharField(max_length=160, null=True, blank=True)
 
+    action_uuid = models.CharField(max_length=36, null=True)
     action_type = models.TextField()
     action_timestamp = models.DateTimeField()
     action_params = models.JSONField(

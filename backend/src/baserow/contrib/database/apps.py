@@ -555,6 +555,7 @@ class DatabaseConfig(AppConfig):
             DeleteDatabaseRowOperationType,
             MoveRowDatabaseRowOperationType,
             ReadAdjacentRowDatabaseRowOperationType,
+            ReadDatabaseRowHistoryOperationType,
             ReadDatabaseRowOperationType,
             RestoreDatabaseRowOperationType,
             UpdateDatabaseRowOperationType,
@@ -672,6 +673,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(TypeFormulaOperationType())
         operation_type_registry.register(ListRowNamesDatabaseTableOperationType())
         operation_type_registry.register(ReadAdjacentRowDatabaseRowOperationType())
+        operation_type_registry.register(ReadDatabaseRowHistoryOperationType())
         operation_type_registry.register(ReadAggregationsViewOperationType())
         operation_type_registry.register(ListAggregationsViewOperationType())
         operation_type_registry.register(ExportTableOperationType())
@@ -720,6 +722,7 @@ class DatabaseConfig(AppConfig):
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
+        import baserow.contrib.database.rows.history  # noqa: F401
         import baserow.contrib.database.search.tasks  # noqa: F401
         import baserow.contrib.database.views.tasks  # noqa: F401
 

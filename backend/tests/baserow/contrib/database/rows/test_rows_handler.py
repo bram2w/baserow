@@ -531,6 +531,91 @@ def test_update_row(send_mock, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test", order=1
+    )
+    speed_field = data_fixture.create_number_field(
+        table=table, name="Max speed", order=2
+    )
+    price_field = data_fixture.create_number_field(
+        table=table,
+        name="Price",
+        number_decimal_places=2,
+        number_negative=False,
+        order=3,
+    )
+    handler = RowHandler()
+
+    rows = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[{}, {}],
+    )
+
+    result = handler.update_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                "id": rows[0].id,
+                f"field_{name_field.id}": "Tesla",
+                f"field_{speed_field.id}": 240,
+                f"field_{price_field.id}": 59999.99,
+            },
+            {
+                "id": rows[1].id,
+                f"field_{name_field.id}": "Giulietta",
+            },
+        ],
+    )
+
+    assert len(result.updated_rows) == 2
+    assert result.original_rows_values_by_id == {
+        rows[0].id: {
+            "id": rows[0].id,
+            f"field_{name_field.id}": "Test",  # Original default value
+            f"field_{speed_field.id}": None,
+            f"field_{price_field.id}": None,
+        },
+        rows[1].id: {
+            "id": rows[1].id,
+            f"field_{name_field.id}": "Test",  # Original default value
+            f"field_{speed_field.id}": None,
+            f"field_{price_field.id}": None,
+        },
+    }
+    assert result.updated_row_fields_metadata_by_row_id == {
+        rows[0].id: {
+            "id": rows[0].id,
+            f"field_{name_field.id}": {
+                "id": name_field.id,
+                "type": "text",
+            },
+            f"field_{speed_field.id}": {
+                "id": speed_field.id,
+                "type": "number",
+                "number_decimal_places": 0,
+            },
+            f"field_{price_field.id}": {
+                "id": price_field.id,
+                "type": "number",
+                "number_decimal_places": 2,
+            },
+        },
+        rows[1].id: {
+            "id": rows[1].id,
+            f"field_{name_field.id}": {
+                "id": name_field.id,
+                "type": "text",
+            },
+        },
+    }
+
+
+@pytest.mark.django_db
 def test_create_rows_created_on_and_last_modified(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -554,12 +639,12 @@ def test_update_rows_created_on_and_last_modified(data_fixture):
         row = table.get_model().objects.create()
 
     with freeze_time("2020-01-02 12:00"):
-        rows = handler.update_rows(
-            user=user,
-            table=table,
-            rows=[{"id": row.id, f"field_" f"{field.id}": "Test"}],
+        result = handler.update_rows(
+            user,
+            table,
+            [{"id": row.id, f"field_" f"{field.id}": "Test"}],
         )
-        row = rows[0]
+        row = result.updated_rows[0]
         assert row.created_on == datetime(2020, 1, 1, 12, 0, tzinfo=UTC)
         assert row.updated_on == datetime(2020, 1, 2, 12, 0, tzinfo=UTC)
 

@@ -29,3 +29,7 @@ class DeleteDatabaseRowOperationType(DatabaseRowOperationType):
 
 class RestoreDatabaseRowOperationType(DatabaseRowOperationType):
     type = "database.table.restore_row"
+
+
+class ReadDatabaseRowHistoryOperationType(DatabaseRowOperationType):
+    type = "database.table.read_row_history"
