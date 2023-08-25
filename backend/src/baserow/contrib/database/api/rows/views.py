@@ -6,6 +6,7 @@ from django.db import transaction
 
 from drf_spectacular.openapi import OpenApiParameter, OpenApiTypes
 from drf_spectacular.utils import extend_schema
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -28,6 +29,7 @@ from baserow.api.schemas import (
     CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
     get_error_schema,
 )
+from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.trash.errors import ERROR_CANNOT_DELETE_ALREADY_DELETED_ITEM
 from baserow.api.utils import validate_data
 from baserow.contrib.database.api.fields.errors import (
@@ -66,13 +68,14 @@ from baserow.contrib.database.rows.actions import (
     DeleteRowActionType,
     DeleteRowsActionType,
     MoveRowActionType,
-    UpdateRowActionType,
     UpdateRowsActionType,
 )
 from baserow.contrib.database.rows.exceptions import RowDoesNotExist, RowIdsNotUnique
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.history import RowHistoryHandler
 from baserow.contrib.database.rows.operations import (
     ReadAdjacentRowDatabaseRowOperationType,
+    ReadDatabaseRowHistoryOperationType,
 )
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
@@ -106,6 +109,7 @@ from .serializers import (
     CreateRowQueryParamsSerializer,
     ListRowsQueryParamsSerializer,
     MoveRowQueryParamsSerializer,
+    RowHistorySerializer,
     RowSerializer,
     get_batch_row_serializer_class,
     get_example_batch_rows_serializer_class,
@@ -793,17 +797,13 @@ class RowView(APIView):
             field_names_to_include=field_names,
             user_field_names=user_field_names,
         )
-        data = validate_data(validation_serializer, request.data)
+        data = validate_data(validation_serializer, request.data, return_validated=True)
 
         try:
-            row = action_type_registry.get_by_type(UpdateRowActionType).do(
-                request.user,
-                table,
-                row_id,
-                data,
-                model=model,
-                user_field_names=user_field_names,
-            )
+            data["id"] = int(row_id)
+            row = action_type_registry.get_by_type(UpdateRowsActionType).do(
+                request.user, table, [data], model
+            )[0]
         except ValidationError as exc:
             raise RequestBodyValidationException(detail=exc.message) from exc
 
@@ -1418,3 +1418,87 @@ class RowAdjacentView(APIView):
         serializer = serializer_class(adjacent_row)
 
         return Response(serializer.data)
+
+
+class RowHistoryView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the table to fetch the row change history from.",
+            ),
+            OpenApiParameter(
+                name="row_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the row to fetch the change history from.",
+            ),
+            OpenApiParameter(
+                name="limit",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="The maximum number of row change history entries to return.",
+            ),
+            OpenApiParameter(
+                name="offset",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.INT,
+                description="The offset of the row change history entries to return.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="get_database_table_row_history",
+        description=(
+            "Fetches the row change history of a given row_id in the table with the "
+            "given table_id. The row change history is paginated and can be limited "
+            "with the limit and offset query parameters."
+        ),
+        responses={
+            200: get_example_pagination_serializer_class(RowHistorySerializer),
+            204: None,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(
+                [
+                    "ERROR_TABLE_DOES_NOT_EXIST",
+                    "ERROR_ROW_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+        }
+    )
+    def get(self, request: Request, table_id: int, row_id: int) -> Response:
+        paginator = LimitOffsetPagination()
+        paginator.max_limit = settings.ROW_PAGE_SIZE_LIMIT
+        paginator.default_limit = settings.ROW_PAGE_SIZE_LIMIT
+
+        table = TableHandler().get_table(table_id)
+        CoreHandler().check_permissions(
+            request.user,
+            ReadDatabaseRowHistoryOperationType.type,
+            workspace=table.database.workspace,
+            context=table,
+        )
+
+        table_model = table.get_model()
+
+        try:
+            table_model.objects.only("id").get(pk=row_id)
+        except table_model.DoesNotExist:
+            raise RowDoesNotExist(row_id)
+
+        row_history = RowHistoryHandler.list_row_history(table_id, row_id)
+        page = paginator.paginate_queryset(row_history, request, self)
+
+        return paginator.get_paginated_response(
+            RowHistorySerializer(page, many=True).data
+        )

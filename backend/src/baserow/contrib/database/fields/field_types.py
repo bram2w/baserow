@@ -517,6 +517,20 @@ class NumberFieldType(FieldType):
             old_field.number_negative and not new_number_negative
         )
 
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        """
+        Serializes the metadata for the row history.
+        """
+
+        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+
+        return {
+            **base,
+            "number_decimal_places": field.number_decimal_places,
+        }
+
 
 class RatingFieldType(FieldType):
     type = "rating"

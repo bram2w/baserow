@@ -1,6 +1,6 @@
 import re
 from collections import defaultdict
-from copy import copy
+from copy import copy, deepcopy
 from decimal import Decimal
 from typing import (
     TYPE_CHECKING,
@@ -8,6 +8,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    NamedTuple,
     NewType,
     Optional,
     Set,
@@ -134,6 +135,17 @@ def prepare_field_errors(field_errors):
     return {
         field: serialize_errors_recursive(errs) for field, errs in field_errors.items()
     }
+
+
+FieldsMetadata = NewType("FieldsMetadata", Dict[str, Any])
+RowValues = NewType("RowValues", Dict[str, Any])
+RowId = NewType("RowId", int)
+
+
+class UpdatedRowsWithOldValuesAndMetadata(NamedTuple):
+    updated_rows: List[GeneratedTableModelForUpdate]
+    original_rows_values_by_id: Dict[RowId, RowValues]
+    updated_row_fields_metadata_by_row_id: Dict[RowId, FieldsMetadata]
 
 
 class RowM2MChangeTracker:
@@ -264,7 +276,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         prepared_rows = []
         failing_rows = {}
         for index, row in enumerate(rows):
-            new_values = row
+            new_values = deepcopy(row)
             row_errors = {}
             for field_id, field in fields.items():
                 field_name = field["name"]
@@ -312,18 +324,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     def get_internal_values_for_fields(
         self,
         row: GeneratedTableModel,
-        fields_keys: List[str],
+        updated_field_ids: Set[int],
     ) -> Dict[str, Any]:
         """
         Gets the current values of the row before the update.
 
         :param row: The row instance.
-        :param fields_keys: The fields keys that need to be exported.
+        :param updated_field_ids: The fields ids that need to be exported.
         :return: The current values of the row before the update.
         """
 
         values = {}
-        for field_id in self.extract_field_ids_from_keys(fields_keys):
+        for field_id in updated_field_ids:
             field = row._field_objects[field_id]
             field_type = field["type"]
             if field_type.read_only:
@@ -1425,68 +1437,150 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return created_rows, error_report.to_dict()
 
+    def _get_fields_metadata_for_row_history(
+        self,
+        model: GeneratedTableModel,
+        updated_field_ids: Set[int],
+        new_row_values: Dict[str, Any],
+        original_row_values: Dict[str, Any],
+    ) -> FieldsMetadata:
+        """
+        Serializes the metadata for the fields that have changed for a given
+        row. This method is useful for row_history to be able
+        to reconstruct the row fields values as they were before.
+        """
+
+        fields_metadata: FieldsMetadata = {"id": original_row_values["id"]}
+        new_row_values_keys = set(new_row_values.keys())
+        for field_id in updated_field_ids:
+            field_name = f"field_{field_id}"
+            field_object = model.get_field_object(field_name)
+            field_type = field_object["type"]
+            if field_name not in new_row_values_keys:
+                continue
+            field_metadata = field_type.serialize_metadata_for_row_history(
+                field_object["field"],
+                new_row_values[field_name],
+                original_row_values.get(field_name, None),
+            )
+            fields_metadata[field_name] = field_metadata
+        return fields_metadata
+
+    def _get_values_and_fields_metadata_for_rows(
+        self,
+        model: GeneratedTableModel,
+        rows_to_update: List[GeneratedTableModelForUpdate],
+        updated_field_ids: Set[int],
+        new_rows_values_by_id: Dict[int, Dict[str, Any]],
+    ) -> Tuple[Dict[RowId, RowValues], Dict[RowId, FieldsMetadata]]:
+        """
+        Return the list of original values for each row in rows_to_update and
+        each field whose id is present in the updated_field_ids list. For each
+        row, a dictionary containing the metadata of the modified fields is also
+        returned, allowing the modified value to be reconstructed later.
+
+        :param model: The model of the table.
+        :param updated_field_ids: The ids of the fields that have changed.
+        :param rows_to_update: The rows that will be updated with
+            new_rows_values.
+        :param new_rows_values: The new values for the rows that have been
+            updated.
+        :return: A tuple containing the row values and the fields metadata for
+            the fields provided as updated_field_ids.
+        """
+
+        rows_values_by_id: Dict[RowId, RowValues] = {}
+        fields_metadata_by_row_id: Dict[RowId, FieldsMetadata] = {}
+        for row in rows_to_update:
+            values = self.get_internal_values_for_fields(row, updated_field_ids)
+            values["id"] = row.id
+
+            updated_row_fields_metadata = self._get_fields_metadata_for_row_history(
+                model, updated_field_ids, new_rows_values_by_id[row.id], values
+            )
+
+            rows_values_by_id[row.id] = values
+            fields_metadata_by_row_id[row.id] = updated_row_fields_metadata
+
+        return rows_values_by_id, fields_metadata_by_row_id
+
     def update_rows(
         self,
         user: AbstractUser,
         table: Table,
-        rows: List[Dict[str, Any]],
+        rows_values: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
         rows_to_update: Optional[RowsForUpdate] = None,
-    ) -> List[GeneratedTableModelForUpdate]:
+    ) -> UpdatedRowsWithOldValuesAndMetadata:
         """
-        Updates field values in batch based on provided rows with the new values.
+        Updates field values in batch based on provided rows with the new
+        values.
 
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the row must be updated.
-        :param rows: The list of rows with new values that should be set.
+        :param rows_values: The list of rows with new values that should be set.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :param rows_to_update: If the rows to update have already been generated
             it can be provided so that it does not have to be generated for a
             second time.
-        :raises RowIdsNotUnique: When trying to update the same row multiple times.
+        :raises RowIdsNotUnique: When trying to update the same row multiple
+            times.
         :raises RowDoesNotExist: When any of the rows don't exist.
-        :return: The updated row instances.
+        :return: An UpdatedRow named tuple containing the updated rows
+            instances, the original row values and the updated fields metadata.
         """
 
-        workspace = table.database.workspace
         CoreHandler().check_permissions(
             user,
             UpdateDatabaseRowOperationType.type,
-            workspace=workspace,
+            workspace=table.database.workspace,
             context=table,
         )
 
         if model is None:
             model = table.get_model()
 
-        rows, _ = self.prepare_rows_in_bulk(model._field_objects, rows)
-        row_ids = [row["id"] for row in rows]
+        prepared_rows_values, _ = self.prepare_rows_in_bulk(
+            model._field_objects, rows_values
+        )
+        row_ids = [r["id"] for r in prepared_rows_values]
 
         non_unique_ids = get_non_unique_values(row_ids)
         if len(non_unique_ids) > 0:
             raise RowIdsNotUnique(non_unique_ids)
 
-        rows_by_id = {}
-        for row in rows:
-            row_id = row.pop("id")
-            rows_by_id[row_id] = row
+        prepared_rows_values_by_id = {}
+        for prepared_row_values in prepared_rows_values:
+            row_id = prepared_row_values.pop("id")
+            prepared_rows_values_by_id[row_id] = prepared_row_values
 
         if rows_to_update is None:
             rows_to_update = self.get_rows_for_update(model, row_ids)
 
-        if len(rows_to_update) != len(rows):
+        if len(rows_to_update) != len(prepared_rows_values):
             db_rows_ids = [db_row.id for db_row in rows_to_update]
             raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
 
         updated_field_ids = set()
         field_name_to_field = dict()
         for obj in rows_to_update:
-            row_values = rows_by_id[obj.id]
+            row_values = prepared_rows_values_by_id[obj.id]
             for field_id, field in model._field_objects.items():
                 field_name_to_field[field["name"]] = field["field"]
                 if field_id in row_values or field["name"] in row_values:
                     updated_field_ids.add(field_id)
+
+        rows_values_by_id = {rv["id"]: rv for rv in rows_values}
+        (
+            original_row_values_by_id,
+            row_fields_metadata_by_row_id,
+        ) = self._get_values_and_fields_metadata_for_rows(
+            model,
+            rows_to_update,
+            updated_field_ids,
+            rows_values_by_id,
+        )
 
         before_rows_values = serialize_rows_for_response(rows_to_update, model)
 
@@ -1509,8 +1603,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             if table.needs_background_update_column_added:
                 setattr(obj, ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, True)
 
-            prepared_values = rows_by_id[obj.id]
-
+            prepared_values = prepared_rows_values_by_id[obj.id]
             row_values, manytomany_values = self.extract_manytomany_values(
                 prepared_values, model
             )
@@ -1661,12 +1754,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         ViewHandler().field_value_updated(updated_fields)
         SearchHandler.field_value_updated_or_created(table)
 
-        rows_to_return = list(
+        updated_rows_to_return = list(
             model.objects.all().enhance_by_fields().filter(id__in=row_ids)
         )
         rows_updated.send(
             self,
-            rows=rows_to_return,
+            rows=updated_rows_to_return,
             user=user,
             table=table,
             model=model,
@@ -1676,13 +1769,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             m2m_change_tracker=m2m_change_tracker,
         )
 
-        return rows_to_return
+        return UpdatedRowsWithOldValuesAndMetadata(
+            updated_rows_to_return,
+            original_row_values_by_id,
+            row_fields_metadata_by_row_id,
+        )
 
     def get_rows_for_update(
         self, model: GeneratedTableModel, row_ids: List[int]
     ) -> RowsForUpdate:
         """
-        Get the rows to update.
+        Get the rows to update. This method doesn't guarantee that the rows
+        exist or are returned in the same order as the row_ids (as the default
+        table ordering is by [order, id]).
         """
 
         return cast(

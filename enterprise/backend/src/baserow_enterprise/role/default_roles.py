@@ -72,6 +72,7 @@ from baserow.contrib.database.rows.operations import (
     DeleteDatabaseRowOperationType,
     MoveRowDatabaseRowOperationType,
     ReadAdjacentRowDatabaseRowOperationType,
+    ReadDatabaseRowHistoryOperationType,
     ReadDatabaseRowOperationType,
     RestoreDatabaseRowOperationType,
     UpdateDatabaseRowOperationType,
@@ -273,6 +274,7 @@ default_roles[COMMENTER_ROLE_UID].extend(
         ReadRowCommentsOperationType,
         RestoreRowCommentOperationType,
         UpdateRowCommentsOperationType,
+        ReadDatabaseRowHistoryOperationType,
     ]
 )
 default_roles[EDITOR_ROLE_UID].extend(
