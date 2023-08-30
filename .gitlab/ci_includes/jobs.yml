@@ -111,7 +111,7 @@
       docker context create multi-context
       docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
       
-      if [[ -n "$BUILD_ARM" ]]; then
+      if [[ -n "$BUILD_ARM" || "$CI_COMMIT_BRANCH" == "$BUILD_ARM_ON_BRANCH" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
         echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null
@@ -304,7 +304,7 @@
       docker context create multi-context
       docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
       
-      if [[ -n "$BUILD_ARM" ]]; then
+      if [[ -n "$BUILD_ARM" || "$CI_COMMIT_BRANCH" == "$BUILD_ARM_ON_BRANCH" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
         echo "${ARM_BUILDER_SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add - > /dev/null

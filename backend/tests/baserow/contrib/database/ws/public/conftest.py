@@ -125,7 +125,10 @@ def public_realtime_view_tester(request, data_fixture):
     if request.param == "grid":
         return GridViewPublicWebsocketTester(data_fixture)
     elif request.param == "gallery":
-        return GalleryViewPublicWebsocketTester(data_fixture)
+        if request.node.get_closest_marker("once_per_day_in_ci"):
+            return GalleryViewPublicWebsocketTester(data_fixture)
+        else:
+            pytest.skip("Skipping tests without the once_per_day_in_ci marker.")
     else:
         raise Exception(
             "You must implement ViewTester and add a clause in this text "
