@@ -629,20 +629,22 @@ class DefaultAppsProxy:
     A proxy class to the default apps registry.
     This class is needed to make our dynamic models available in the
     options then the relation tree is built.
+
+    This permits to django to find the reverse relation in the _relation_tree.
+    Look into django.db.models.options.py - _populate_directed_relation_graph
+    for more information.
     """
 
-    def __init__(self):
-        self._extra_models = []
-
-    def add_models(self, *dynamic_models):
-        """
-        Adds a model to the default apps registry.
-        """
-
-        self._extra_models.extend(dynamic_models)
+    def __init__(self, baserow_m2m_models):
+        self.baserow_m2m_models = baserow_m2m_models
 
     def get_models(self, *args, **kwargs):
-        return apps.get_models(*args, **kwargs) + self._extra_models
+        # Called by django and must contain ALL the models that have been generated
+        # and connected together as django will loop over every model in this list
+        # and set cached properties on each. These cached django properties are then
+        # used to when looking up fields, so they must include every connected model
+        # that could be involved in queries and not just a sub-set of them.
+        return apps.get_models(*args, **kwargs) + list(self.baserow_m2m_models.values())
 
     def __getattr__(self, attr):
         return getattr(apps, attr)
@@ -801,11 +803,12 @@ class Table(
         ]
 
         app_label = "database_table"
+        baserow_m2m_models = manytomany_models or {}
         meta = type(
             "Meta",
             (),
             {
-                "apps": DefaultAppsProxy(),
+                "apps": DefaultAppsProxy(baserow_m2m_models),
                 "managed": managed,
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
@@ -836,7 +839,7 @@ class Table(
             "_generated_table_model": True,
             "baserow_table": self,
             "baserow_table_id": self.id,
-            "baserow_m2m_models": manytomany_models or {},
+            "baserow_m2m_models": baserow_m2m_models,
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),

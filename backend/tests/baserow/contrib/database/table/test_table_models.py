@@ -18,6 +18,7 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import (
     ALL_SEARCH_MODES,
@@ -1102,3 +1103,30 @@ def assert_no_duplicate_values(dictionary):
     duplicates = {value: keys for value, keys in value_to_keys.items() if len(keys) > 1}
 
     assert not duplicates, f"Duplicate values found: {duplicates}"
+
+
+@pytest.mark.django_db
+def test_can_still_move_rows_in_table_with_lookup_of_lookup(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, table_a_to_b_link_field = data_fixture.create_two_linked_tables(
+        user=user
+    )
+    table_c, _, table_c_to_b_link_field = data_fixture.create_two_linked_tables(
+        user=user, table_b=table_b
+    )
+
+    table_b_to_c_link_field = table_c_to_b_link_field.link_row_related_field
+
+    FieldHandler().update_field(user, table_a_to_b_link_field, has_related_field=False)
+    lookup_of_linked_field = FieldHandler().create_field(
+        user,
+        table=table_a,
+        type_name="formula",
+        name="lookup_of_link_field",
+        formula=f"lookup('{table_a_to_b_link_field.name}', "
+        f"'{table_b_to_c_link_field.name}')",
+    )
+    assert lookup_of_linked_field.error is None
+    table_a_row_1 = RowHandler().create_row(user, table_a, {})
+    table_a_row_2 = RowHandler().create_row(user, table_a, {})
+    RowHandler().move_row(user, table_a, table_a_row_2, table_a_row_1)
