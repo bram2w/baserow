@@ -9,6 +9,7 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchQuery, SearchVectorField
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
+from django.db.models import Field as DjangoModelFieldClass
 from django.db.models import JSONField, Q, QuerySet, Value
 
 from loguru import logger
@@ -840,13 +841,6 @@ class Table(
             # helpers.
             "objects": TableModelManager(),
             "objects_and_trash": TableModelTrashAndObjectsManager(),
-            # Indicates which position the row has.
-            "order": models.DecimalField(
-                max_digits=40,
-                decimal_places=20,
-                editable=False,
-                default=1,
-            ),
             "__str__": __str__,
         }
 
@@ -879,6 +873,36 @@ class Table(
 
             if use_cache:
                 set_cached_model_field_attrs(self, field_attrs)
+        else:
+            # We found cached model fields, they will have a cached creation_counter
+            # attribute each used to compare model fields to do django
+            # fundamental internal operations like generating SQL to select from this
+            # table. Any new model fields added to this table will use a global
+            # static counter on the Model class itself. To prevent any possibility
+            # of collisions between the model fields that just came out of the cache
+            # and these new model fields we are about to init below, we increase
+            # this global creation_counter to prevent any possible collision and
+            # horrible bugs.
+            max_creation_counter_from_cache = DjangoModelFieldClass.creation_counter
+            for f in field_attrs.values():
+                if isinstance(f, DjangoModelFieldClass) and not f.auto_created:
+                    max_creation_counter_from_cache = max(
+                        max_creation_counter_from_cache,
+                        getattr(f, "creation_counter", max_creation_counter_from_cache),
+                    )
+            DjangoModelFieldClass.creation_counter = max_creation_counter_from_cache + 1
+
+        # We have to add the order field after reading the potentially cached values
+        # as those cached model fields will have a cached creation_counter and we need
+        # to ensure any other model fields added to this same model are __init__ed
+        # after we've fixed the global DjangoModelFieldClass.creation_counter
+        # above.
+        field_attrs["order"] = models.DecimalField(
+            max_digits=40,
+            decimal_places=20,
+            editable=False,
+            default=1,
+        )
 
         self._add_search_tsvector_fields_to_model(
             field_attrs, indexes, force_add_tsvectors
