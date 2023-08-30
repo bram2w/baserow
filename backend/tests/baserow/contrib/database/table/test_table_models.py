@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from django.conf import settings
 from django.core.cache import caches
 from django.db import connection, models
+from django.db.models import Field
 from django.test.utils import override_settings
 from django.utils.timezone import make_aware, utc
 
@@ -17,6 +18,7 @@ from baserow.contrib.database.fields.exceptions import (
     OrderByFieldNotFound,
     OrderByFieldNotPossible,
 )
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import (
     ALL_SEARCH_MODES,
     SearchHandler,
@@ -1020,3 +1022,83 @@ def test_cachalot_cache_only_count_query_correctly(data_fixture):
     assert invalidation_timestamp > cache.get("count")[0]
 
     assert_cachalot_cache_queryset_count_of(2)
+
+
+@pytest.mark.django_db
+def test_model_coming_out_of_cache_queries_correctly(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    original_counter = Field.creation_counter
+    try:
+        Field.creation_counter = 0
+        table = data_fixture.create_database_table(name="Cars", user=user)
+        single_select_1 = data_fixture.create_single_select_field(
+            table=table, name=f"Color 1"
+        )
+        single_select_2 = data_fixture.create_single_select_field(
+            table=table, name=f"Color 1"
+        )
+
+        with django_assert_num_queries(3):
+            original_model = table.get_model()
+
+        RowHandler().create_row(user=user, table=table, values={})
+
+        field_name_to_creation_counter_from_first_model_which_is_now_cached = {
+            f.name: f.creation_counter
+            for f in original_model._meta.get_fields()
+            if not f.auto_created
+        }
+        Field.creation_counter = (
+            field_name_to_creation_counter_from_first_model_which_is_now_cached[
+                single_select_1.db_column
+            ]
+        )
+
+        with django_assert_num_queries(1):
+            model = table.get_model()
+
+        field_name_to_creation_counter_for_cached_model = {
+            f.name: f.creation_counter
+            for f in model._meta.get_fields()
+            if not f.auto_created
+        }
+        # The bug is caused when two model fields on a model have the same
+        # field.creation_counter as if you look at how django implements it's
+        # django.db.models.fields.Field.__eq__ method, it uses only this
+        # creation_counter when comparing fields.
+        assert_no_duplicate_values(field_name_to_creation_counter_for_cached_model)
+
+        for row in model.objects.all():
+            # One affect of this bug is that if you use this model with colliding
+            # field.creation_counter values, when you access a value from a row
+            # returned by it, Django will issue a second query per cell to get it as it
+            # assumes
+            # you deferred that field!!
+            with django_assert_num_queries(0):
+                assert getattr(row, single_select_1.db_column) is None
+                assert getattr(row, single_select_2.db_column) is None
+                assert row.order is not None
+                assert row.id is not None
+
+        # You can see what triggers this by literally looking at the SQL django
+        # runs to select those rows, it doesn't include the two single selects!!!
+        compiled_query_that_should_have_all_fields = str(model.objects.all().query)
+        assert single_select_1.db_column in compiled_query_that_should_have_all_fields
+        assert single_select_2.db_column in compiled_query_that_should_have_all_fields
+    finally:
+        Field.creation_counter = original_counter
+
+
+def assert_no_duplicate_values(dictionary):
+    value_to_keys = {}
+    for key, value in dictionary.items():
+        if value in value_to_keys:
+            value_to_keys[value].append(key)
+        else:
+            value_to_keys[value] = [key]
+
+    duplicates = {value: keys for value, keys in value_to_keys.items() if len(keys) > 1}
+
+    assert not duplicates, f"Duplicate values found: {duplicates}"
