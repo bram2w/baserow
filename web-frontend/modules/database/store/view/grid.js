@@ -404,7 +404,7 @@ export const mutations = {
     const currentValue = row._.metadata[rowMetadataType]
     Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
-  FINALIZE_ROWS_IN_BUFFER(state, { oldRows, newRows }) {
+  FINALIZE_ROWS_IN_BUFFER(state, { oldRows, newRows, fields }) {
     const stateRowsCopy = { ...state.rows }
 
     for (let i = 0; i < oldRows.length; i++) {
@@ -421,7 +421,9 @@ export const mutations = {
       stateRowsCopy[index].order = new BigNumber(newRow.order)
       stateRowsCopy[index]._.loading = false
       Object.keys(newRow).forEach((key) => {
-        stateRowsCopy[index][key] = newRow[key]
+        if (fields.includes(key)) {
+          stateRowsCopy[index][key] = newRow[key]
+        }
       })
     }
 
@@ -1687,9 +1689,13 @@ export const actions = {
         before !== null ? before.id : null
       )
 
+      const fieldsToFinalize = fields
+        .filter((field) => field.read_only)
+        .map((field) => `field_${field.id}`)
       commit('FINALIZE_ROWS_IN_BUFFER', {
         oldRows: rowsPopulated,
         newRows: data.items,
+        fields: fieldsToFinalize,
       })
 
       for (let i = 0; i < data.items.length; i += 1) {
