@@ -599,6 +599,7 @@ def test_can_export_csv_without_header(storage_mock, data_fixture):
 
 
 @pytest.mark.django_db
+@pytest.mark.once_per_day_in_ci
 @patch("baserow.contrib.database.export.handler.default_storage")
 def test_can_export_csv_with_different_charsets(storage_mock, data_fixture):
     for _, charset in SUPPORTED_EXPORT_CHARSETS:

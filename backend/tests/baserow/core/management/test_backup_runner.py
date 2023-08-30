@@ -15,6 +15,7 @@ from baserow.core.trash.handler import TrashHandler
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.once_per_day_in_ci
 def test_can_backup_and_restore_baserow_reverting_changes(data_fixture, environ):
     runner = BaserowBackupRunner(
         host=connection.settings_dict["HOST"],

@@ -202,6 +202,7 @@ def test_workspace_audit_log_can_export_to_csv_filtered_entries(
     enterprise_data_fixture,
     synced_roles,
     django_capture_on_commit_callbacks,
+    stubbed_storage,
 ):
     enterprise_data_fixture.enable_enterprise()
 
