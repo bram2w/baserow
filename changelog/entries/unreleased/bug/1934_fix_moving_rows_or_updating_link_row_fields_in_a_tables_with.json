@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix moving rows or updating link row fields in a tables with a lookup of a link row field",
+    "issue_number": 1934,
+    "bullet_points": [],
+    "created_at": "2023-08-28"
+}

@@ -1624,6 +1624,7 @@ class LinkRowFieldType(FieldType):
                 related_model = instance.link_row_table.get_model(
                     manytomany_models=model.baserow_m2m_models
                 )
+                model.baserow_m2m_models[instance.link_row_table_id] = related_model
 
         instance._related_model = related_model
         related_name = f"reversed_field_{instance.id}"
@@ -1657,12 +1658,6 @@ class LinkRowFieldType(FieldType):
 
         model_field = model._meta.get_field(field_name)
         through_model = model_field.remote_field.through
-
-        # this permits to django to find the reverse relation in the _relation_tree.
-        # Look into django.db.models.options.py - _populate_directed_relation_graph
-        # for more information.
-        model._meta.apps.add_models(model, related_model)
-        related_model._meta.apps.add_models(model, related_model)
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
