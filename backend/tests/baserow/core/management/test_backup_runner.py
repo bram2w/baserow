@@ -113,6 +113,7 @@ def test_backup_baserow_dumps_database_in_batches(
                     "-Fd",
                     "--jobs=1",
                     "-w",
+                    "--exclude-table=database_multiplecollaborators_*",
                     "--exclude-table=database_multipleselect_*",
                     "--exclude-table=database_table_*",
                     "--exclude-table=database_relation_*",
@@ -146,7 +147,12 @@ def test_can_change_num_jobs_and_insert_extra_args_for_baserow_backup(
 ):
     mock_pyscopg2_call_to_return(
         mock_connect,
-        [("public.database_table_1",), ("public.database_relation_1",)],
+        [
+            ("public.database_table_1",),
+            ("public.database_relation_1",),
+            ("public.database_multipleselect_65",),
+            ("public.database_multiplecollaborators_64",),
+        ],
     )
 
     mock_tempdir_to_be(fs, mock_tempfile, "/fake_tmp_dir")
@@ -188,6 +194,7 @@ def test_can_change_num_jobs_and_insert_extra_args_for_baserow_backup(
                     "-Fd",
                     f"--jobs={num_jobs}",
                     "-w",
+                    "--exclude-table=database_multiplecollaborators_*",
                     "--exclude-table=database_multipleselect_*",
                     "--exclude-table=database_table_*",
                     "--exclude-table=database_relation_*",
@@ -207,6 +214,8 @@ def test_can_change_num_jobs_and_insert_extra_args_for_baserow_backup(
                     "-w",
                     "--table=public.database_table_1",
                     "--table=public.database_relation_1",
+                    "--table=public.database_multipleselect_65",
+                    "--table=public.database_multiplecollaborators_64",
                     "--file=/fake_tmp_dir/user_tables_batch_0/",
                     extra_arg,
                 ],
@@ -582,6 +591,7 @@ def a_pg_dump_for_everything_else():
             "-Fd",
             "--jobs=1",
             "-w",
+            "--exclude-table=database_multiplecollaborators_*",
             "--exclude-table=database_multipleselect_*",
             "--exclude-table=database_table_*",
             "--exclude-table=database_relation_*",
