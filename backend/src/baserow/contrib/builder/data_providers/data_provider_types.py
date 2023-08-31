@@ -45,7 +45,7 @@ class DataSourceDataProviderType(DataProviderType):
 
     type = "data_source"
 
-    def get_data_source_by_name(self, runtime_formula_context, data_source_name):
+    def get_data_source_by_id(self, runtime_formula_context, data_source_id: int):
         """
         Helper to get data source from a name from the cache or populate the cache
         if not populated.
@@ -59,11 +59,11 @@ class DataSourceDataProviderType(DataProviderType):
             )
 
         for data_source in runtime_formula_context.cache["data_sources"]:
-            if data_source.name == data_source_name:
+            if data_source.id == data_source_id:
                 return data_source
 
         raise DataSourceImproperlyConfigured(
-            f"Data source with name {data_source_name} doesn't exist"
+            f"Data source with id {data_source_id} doesn't exist"
         )
 
     def get_data_chunk(
@@ -71,10 +71,10 @@ class DataSourceDataProviderType(DataProviderType):
     ):
         """Load a data chunk from a datasource of the page in context."""
 
-        data_source_name, *rest = path
+        data_source_id, *rest = path
 
-        data_source = self.get_data_source_by_name(
-            runtime_formula_context, data_source_name
+        data_source = self.get_data_source_by_id(
+            runtime_formula_context, int(data_source_id)
         )
 
         # Declare the call and check for recursion

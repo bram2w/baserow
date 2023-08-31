@@ -10,6 +10,7 @@
       <div v-if="dataSources.length > 0">
         <DataSourceForm
           v-for="dataSource in dataSources"
+          :id="dataSource.id"
           :ref="`dataSourceForm_${dataSource.id}`"
           :key="dataSource.id"
           :builder="builder"
