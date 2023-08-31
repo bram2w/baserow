@@ -19,6 +19,7 @@ ENV DOCKER_USER=${DOCKER_USER:-baserow_docker_user}
 ENV DATA_DIR=/baserow/data
 ENV BASEROW_PLUGIN_DIR=$DATA_DIR/plugins
 ENV POSTGRES_VERSION=11
+ENV NODE_MAJOR=18
 ENV POSTGRES_LOCATION=/etc/postgresql/11/main
 ENV BASEROW_IMAGE_TYPE="all-in-one"
 
@@ -36,6 +37,10 @@ RUN apt-get update && \
     # Postgresql repository has to be added manually to get pre-13 versions.
     echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list && \
     curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add - \
+    && \
+    mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
     && \
     # Install the correct version of postgresql and the remaining packages
     apt-get update && \
@@ -57,14 +62,12 @@ RUN apt-get update && \
     git \
     xmlsec1 \
     procps \
-    && \
-    # ========================
-    # Install Node and Yarn
-    # ========================
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install --no-install-recommends -y nodejs && \
+    nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* &&  \
+    # ========================
+    # Install Yarn
+    # ========================
     npm install --global yarn@1.22.19 && \
     # ========================
     # Install Caddy
