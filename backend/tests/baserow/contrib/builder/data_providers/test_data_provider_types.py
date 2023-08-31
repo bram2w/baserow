@@ -50,6 +50,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -59,7 +60,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="2",
         name="Item",
     )
@@ -101,6 +102,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -110,7 +112,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="get('page_parameter.id')",
         name="Item",
     )
@@ -156,6 +158,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     table2, fields2, rows2 = data_fixture.build_table(
         user=user,
         columns=[
@@ -168,6 +171,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
             ["3"],
         ],
     )
+    view2 = data_fixture.create_grid_view(user, table=table2)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -177,7 +181,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="get('data_source.Id source.Id')",
         name="Item",
     )
@@ -185,7 +189,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         user=user,
         page=page,
         integration=integration,
-        table=table2,
+        view=view2,
         row_id="get('page_parameter.id')",
         name="Id source",
     )
@@ -231,6 +235,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     table2, fields2, rows2 = data_fixture.build_table(
         user=user,
         columns=[
@@ -243,6 +248,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
             ["3"],
         ],
     )
+    view2 = data_fixture.create_grid_view(user, table=table2)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -252,7 +258,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="get('data_source.Blop.Id')",
         name="Item",
     )
@@ -296,6 +302,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     table2, fields2, rows2 = data_fixture.build_table(
         user=user,
         columns=[
@@ -308,6 +315,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
             ["3"],
         ],
     )
+    view2 = data_fixture.create_grid_view(user, table=table2)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -317,7 +325,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="get('data_source.Item.Id')",
         name="Item",
     )
@@ -361,6 +369,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
             ["Volkswagen", "Green"],
         ],
     )
+    view = data_fixture.create_grid_view(user, table=table)
     table2, fields2, rows2 = data_fixture.build_table(
         user=user,
         columns=[
@@ -373,6 +382,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
             ["3"],
         ],
     )
+    view2 = data_fixture.create_grid_view(user, table=table2)
     builder = data_fixture.create_builder_application(user=user)
     integration = data_fixture.create_local_baserow_integration(
         user=user, application=builder
@@ -382,7 +392,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         user=user,
         page=page,
         integration=integration,
-        table=table,
+        view=view,
         row_id="get('data_source.Id source.Id')",
         name="Item",
     )
@@ -390,7 +400,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         user=user,
         page=page,
         integration=integration,
-        table=table2,
+        view=view2,
         row_id="get('data_source.Item.Id')",
         name="Id source",
     )

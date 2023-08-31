@@ -67,15 +67,13 @@ def test_get_services(data_fixture):
 @pytest.mark.django_db
 def test_update_service(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service()
-    table = data_fixture.create_database_table()
+    view = data_fixture.create_grid_view()
 
     service_type = service_type_registry.get("local_baserow_get_row")
 
-    service_updated = ServiceHandler().update_service(
-        service_type, service, table=table
-    )
+    service_updated = ServiceHandler().update_service(service_type, service, view=view)
 
-    assert service_updated.table.id == table.id
+    assert service_updated.view.id == view.id
 
 
 @pytest.mark.django_db

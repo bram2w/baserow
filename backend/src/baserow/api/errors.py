@@ -1,4 +1,8 @@
-from rest_framework.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST,
+    HTTP_401_UNAUTHORIZED,
+    HTTP_404_NOT_FOUND,
+)
 
 ERROR_GROUP_DOES_NOT_EXIST = (
     "ERROR_GROUP_DOES_NOT_EXIST",
@@ -28,6 +32,11 @@ ERROR_INVALID_SORT_ATTRIBUTE = (
     "ERROR_INVALID_SORT_ATTRIBUTE",
     HTTP_400_BAD_REQUEST,
     "Invalid attribute name provided to sort by.",
+)
+ERROR_PERMISSION_DENIED = (
+    "PERMISSION_DENIED",
+    HTTP_401_UNAUTHORIZED,
+    "You don't have the required permission to execute this operation.",
 )
 ERROR_MAX_LOCKS_PER_TRANSACTION_EXCEEDED = (
     "MAX_LOCKS_PER_TRANSACTION_EXCEEDED",

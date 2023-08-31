@@ -1,6 +1,6 @@
 from typing import NewType, TypedDict, TypeVar
 
-from .models import Integration
+from baserow.core.integrations.models import Integration
 
 
 class IntegrationDict(TypedDict):

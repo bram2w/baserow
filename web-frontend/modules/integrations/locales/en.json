@@ -13,15 +13,15 @@
         "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
     },
     "localBaserowGetRowForm": {
-        "tableFieldLabel": "Table",
-        "tableFieldPlaceHolder": "Select a table",
+        "viewFieldLabel": "View",
+        "viewFieldPlaceHolder": "Select a view",
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
         "rowFieldPlaceHolder": "Select a row ID"
     },
     "localBaserowListRowsForm": {
-        "tableFieldLabel": "Table",
-        "tableFieldPlaceHolder": "Select a table"
+        "viewFieldLabel": "View",
+        "viewFieldPlaceHolder": "Select a view"
     },
     "dataProviderType": {
         "dataSource": "Data source",

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, List, Type, TypeVar, Union
 
 from django.contrib.auth.models import AbstractUser
 
@@ -158,7 +158,51 @@ class ServiceType(
         return queryset
 
 
-ServiceTypeSubClass = TypeVar("ServiceTypeSubClass", bound=ServiceType)
+class ListServiceType(ServiceType, ABC):
+    """
+    A service type for services which list results.
+    """
+
+    # The maximum number of records this service is able to return.
+    # By default, the maximum is `None`, which is unlimited.
+    max_result_limit = None
+
+    # The default number of records this service will return, unless
+    # instructed otherwise by a user.
+    default_result_limit = max_result_limit
+
+    def get_dispatch_list_filters(self, service: Service) -> List[Any]:
+        """
+        Responsible for optionally defining how services should be filtered in
+        their list collections.
+
+        Child classes must call this method in their `dispatch` method if the
+        service has a filterable list collection.
+
+        :param service: The service which may need filtering.
+        :return: An iterable set of filters applicable to this service.
+        """
+
+        return []
+
+    def get_dispatch_list_sorts(self, service: Service) -> List[Any]:
+        """
+        Responsible for optionally defining how services should be sorted in
+        their list collections.
+
+        Child classes must call this method in their `dispatch` method if the
+        service has a sortable list collection.
+
+        :param service: The service in this integration which may need sorting.
+        :return: An iterable set of sorts applicable to this service.
+        """
+
+        return []
+
+
+ServiceTypeSubClass = TypeVar(
+    "ServiceTypeSubClass", bound=Union[ServiceType, ListServiceType]
+)
 
 
 class ServiceTypeRegistry(

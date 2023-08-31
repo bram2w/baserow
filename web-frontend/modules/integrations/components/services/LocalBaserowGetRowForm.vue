@@ -3,11 +3,11 @@
     <div class="row">
       <div class="col col-6">
         <FormInput
-          v-model="values.table_id"
+          v-model="values.view_id"
           type="number"
           small-label
-          :label="$t('localBaserowGetRowForm.tableFieldLabel')"
-          :placeholder="$t('localBaserowGetRowForm.tableFieldPlaceHolder')"
+          :label="$t('localBaserowGetRowForm.viewFieldLabel')"
+          :placeholder="$t('localBaserowGetRowForm.viewFieldPlaceHolder')"
           :from-value="(value) => (value ? value : '')"
           :to-value="(value) => (value ? value : null)"
         />
@@ -45,9 +45,9 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['table_id', 'row_id'],
+      allowedValues: ['view_id', 'row_id'],
       values: {
-        table_id: null,
+        view_id: null,
         row_id: '',
       },
     }
