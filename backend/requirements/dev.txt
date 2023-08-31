@@ -37,7 +37,7 @@ black==23.3.0
     # via -r dev.in
 build==0.8.0
     # via pip-tools
-certifi==2022.12.7
+certifi==2023.7.22
     # via
     #   -c base.txt
     #   requests
