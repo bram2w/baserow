@@ -80,7 +80,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )
         == "Orange"
     )
@@ -134,7 +134,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )
         == "Orange"
     )
@@ -177,14 +177,6 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         user=user, application=builder
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
-    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user,
-        page=page,
-        integration=integration,
-        view=view,
-        row_id="get('data_source.Id source.Id')",
-        name="Item",
-    )
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
         user=user,
         page=page,
@@ -192,6 +184,14 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         view=view2,
         row_id="get('page_parameter.id')",
         name="Id source",
+    )
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        row_id=f"get('data_source.{data_source2.id}.Id')",
+        name="Item",
     )
 
     data_source_provider = DataSourceDataProviderType()
@@ -211,7 +211,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )
         == "Orange"
     )
@@ -259,7 +259,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
         page=page,
         integration=integration,
         view=view,
-        row_id="get('data_source.Blop.Id')",
+        row_id="get('data_source.99999.Id')",
         name="Item",
     )
 
@@ -280,7 +280,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )
 
 
@@ -326,9 +326,12 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         page=page,
         integration=integration,
         view=view,
-        row_id="get('data_source.Item.Id')",
+        row_id="",
         name="Item",
     )
+
+    data_source.row_id = f"get('data_source.{data_source.id}.Id')"
+    data_source.save()
 
     data_source_provider = DataSourceDataProviderType()
 
@@ -347,7 +350,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )
 
 
@@ -393,7 +396,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         page=page,
         integration=integration,
         view=view,
-        row_id="get('data_source.Id source.Id')",
+        row_id="",
         name="Item",
     )
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
@@ -401,9 +404,12 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         page=page,
         integration=integration,
         view=view2,
-        row_id="get('data_source.Item.Id')",
+        row_id=f"get('data_source.{data_source.id}.Id')",
         name="Id source",
     )
+
+    data_source.row_id = f"get('data_source.{data_source2.id}.Id')"
+    data_source.save()
 
     data_source_provider = DataSourceDataProviderType()
 
@@ -422,5 +428,5 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, ["Item", "My Color"]
+            runtime_formula_context, [data_source.id, "My Color"]
         )

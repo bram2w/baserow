@@ -35,28 +35,13 @@ export class DataSourceDataProviderType extends DataProviderType {
     )
   }
 
-  getDataChunk(runtimeFormulaContext, [dataSourceName, ...rest]) {
-    // Get the data sources for the current page.
-    const dataSources = this.app.store.getters['dataSource/getPageDataSources'](
-      runtimeFormulaContext.applicationContext.page
-    )
-
-    const dataSource = dataSources.find(({ name }) => name === dataSourceName)
-
-    if (!dataSource) {
-      return null
-    }
-
+  getDataChunk(runtimeFormulaContext, [dataSourceId, ...rest]) {
     const dataSourceContents = this.app.store.getters[
       'dataSourceContent/getDataSourceContents'
     ](runtimeFormulaContext.applicationContext.page)
 
-    if (!dataSourceContents[dataSource.id]) {
-      return null
-    }
-
-    // Returns the content from the store for reactivity
-    return _.get(dataSourceContents[dataSource.id], rest.join('.'))
+    const content = dataSourceContents[dataSourceId]
+    return content ? _.get(content, rest.join('.')) : null
   }
 }
 
