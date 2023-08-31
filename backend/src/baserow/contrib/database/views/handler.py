@@ -14,7 +14,8 @@ from django.core.cache import cache
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import connection
 from django.db import models as django_models
-from django.db.models import Count, Q, expressions
+from django.db.models import Count, Q
+from django.db.models.expressions import F, OrderBy
 from django.db.models.query import QuerySet
 
 import jwt
@@ -182,7 +183,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return f"i{table_id}:"
 
     @classmethod
-    def _get_index_hash(cls, index_fields: List[expressions.OrderBy]) -> Optional[str]:
+    def _get_index_hash(cls, index_fields: List[OrderBy]) -> Optional[str]:
         """
         Returns a key for the provided view based on the fields used for sorting.
         View sharing the same key will have the same index name, so that the
@@ -199,9 +200,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return shake_128(index_key.encode("utf-8")).hexdigest(10)
 
     @classmethod
-    def get_index_name(
-        cls, table_id: int, index_fields: List[expressions.OrderBy]
-    ) -> str:
+    def get_index_name(cls, table_id: int, index_fields: List[OrderBy]) -> str:
         """
         Returns the name of the index for the provided view.
 
@@ -1149,7 +1148,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
-    def _get_filter_builder(
+    def get_filter_builder(
         self, view: View, model: GeneratedTableModel
     ) -> FilterBuilder:
         """
@@ -1199,7 +1198,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.filters_disabled:
             return queryset
 
-        filter_builder = self._get_filter_builder(view, model)
+        filter_builder = self.get_filter_builder(view, model)
         return filter_builder.apply_to_queryset(queryset)
 
     def list_filters(self, user: AbstractUser, view_id: int) -> QuerySet[ViewFilter]:
@@ -1426,6 +1425,58 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
+    def extract_view_sorts(
+        self,
+        view: View,
+        model: GeneratedTableModel,
+        queryset: Optional[QuerySet] = None,
+        restrict_to_field_ids: Optional[Iterable[int]] = None,
+    ) -> Tuple[List[OrderBy], Optional[QuerySet]]:
+        """
+        Responsible for generating a list of OrderBy objects which a queryset
+        can use to `order_by` with.
+
+        :param view: The view where to fetch the sorting from.
+        :param model: The table's generated table model.
+        :param queryset: The queryset where the sorting need to be applied to.
+        :param restrict_to_field_ids: Only field ids in this iterable will have their
+            view sorts applied in the resulting queryset.
+        :return: A tuple containing a list of zero or more OrderBy expressions,
+            and optionally a queryset if one was passed to us.
+        """
+
+        order_by = []
+        qs = view.viewsort_set
+        if restrict_to_field_ids is not None:
+            qs = qs.filter(field_id__in=restrict_to_field_ids)
+        for view_sort in qs.all():
+            # If the to be sort field is not present in the `_field_objects` we
+            # cannot filter so we raise a ValueError.
+            if view_sort.field_id not in model._field_objects:
+                raise ValueError(
+                    f"The table model does not contain field {view_sort.field_id}."
+                )
+
+            field = model._field_objects[view_sort.field_id]["field"]
+            field_name = model._field_objects[view_sort.field_id]["name"]
+            field_type = model._field_objects[view_sort.field_id]["type"]
+
+            field_annotated_order_by = field_type.get_order(
+                field, field_name, view_sort.order
+            )
+            field_annotation = field_annotated_order_by.annotation
+            field_order_by = field_annotated_order_by.order
+
+            if queryset and field_annotation is not None:
+                queryset = queryset.annotate(**field_annotation)
+
+            order_by.append(field_order_by)
+
+        order_by.append(F("order").asc(nulls_first=True))
+        order_by.append(F("id").asc(nulls_first=True))
+
+        return order_by, queryset
+
     def apply_sorting(
         self,
         view: View,
@@ -1468,36 +1519,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.trashed:
             raise ViewSortDoesNotExist(f"The view {view.id} is trashed.")
 
-        order_by = []
+        order_by, queryset = self.extract_view_sorts(
+            view, model, queryset, restrict_to_field_ids
+        )
 
-        qs = view.viewsort_set
-        if restrict_to_field_ids is not None:
-            qs = qs.filter(field_id__in=restrict_to_field_ids)
-        for view_sort in qs.all():
-            # If the to be sort field is not present in the `_field_objects` we
-            # cannot filter so we raise a ValueError.
-            if view_sort.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field {view_sort.field_id}."
-                )
-
-            field = model._field_objects[view_sort.field_id]["field"]
-            field_name = model._field_objects[view_sort.field_id]["name"]
-            field_type = model._field_objects[view_sort.field_id]["type"]
-
-            field_annoteted_order_by = field_type.get_order(
-                field, field_name, view_sort.order
-            )
-            field_annotation = field_annoteted_order_by.annotation
-            field_order_by = field_annoteted_order_by.order
-
-            if field_annotation is not None:
-                queryset = queryset.annotate(**field_annotation)
-
-            order_by.append(field_order_by)
-
-        order_by.append("order")
-        order_by.append("id")
         queryset = queryset.order_by(*order_by)
 
         return queryset

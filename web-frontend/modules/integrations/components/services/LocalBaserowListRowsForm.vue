@@ -1,11 +1,11 @@
 <template>
   <form @submit.prevent>
     <FormInput
-      v-model="values.table_id"
+      v-model="values.view_id"
       type="number"
       small-label
-      :label="$t('localBaserowListRowsForm.tableFieldLabel')"
-      :placeholder="$t('localBaserowListRowsForm.tableFieldPlaceHolder')"
+      :label="$t('localBaserowListRowsForm.viewFieldLabel')"
+      :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
     />
   </form>
 </template>
@@ -23,9 +23,9 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['table_id'],
+      allowedValues: ['view_id'],
       values: {
-        table_id: null,
+        view_id: null,
       },
     }
   },

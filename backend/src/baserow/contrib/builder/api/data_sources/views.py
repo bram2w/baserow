@@ -13,6 +13,7 @@ from baserow.api.decorators import (
     validate_body,
     validate_body_custom_fields,
 )
+from baserow.api.errors import ERROR_PERMISSION_DENIED
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
@@ -47,6 +48,7 @@ from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.core.exceptions import PermissionException
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import service_type_registry
@@ -451,6 +453,7 @@ class DispatchDataSourcesView(APIView):
                         DataSourceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
                         ServiceImproperlyConfigured: ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
                         DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+                        PermissionException: ERROR_PERMISSION_DENIED,
                     },
                     content,
                 )

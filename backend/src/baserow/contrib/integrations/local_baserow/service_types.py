@@ -1,7 +1,8 @@
-from typing import Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.db.models.expressions import OrderBy
 
 from rest_framework import serializers
 
@@ -10,8 +11,8 @@ from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
 )
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
-from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
 )
@@ -25,13 +26,16 @@ from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.models import Service
-from baserow.core.services.registries import ServiceType
+from baserow.core.services.registries import ListServiceType, ServiceType
 from baserow.core.services.types import ServiceDict
 from baserow.formula import resolve_formula
 
+if TYPE_CHECKING:
+    from baserow.contrib.database.fields.field_filters import FilterBuilder
+    from baserow.contrib.database.table.models import GeneratedTableModel
 
-class LocalBaserowListRowsUserServiceType(ServiceType):
+
+class LocalBaserowListRowsUserServiceType(ListServiceType):
     """
     This service gives access to a list of rows from the same Baserow instance as the
     one hosting the application.
@@ -40,36 +44,83 @@ class LocalBaserowListRowsUserServiceType(ServiceType):
     integration_type = LocalBaserowIntegrationType.type
     type = "local_baserow_list_rows"
     model_class = LocalBaserowListRows
+    max_result_limit = 200
 
     class SerializedDict(ServiceDict):
-        table_id: int
+        view_id: int
 
-    serializer_field_names = ["table_id"]
-    allowed_fields = ["table"]
+    serializer_field_names = ["view_id"]
+    allowed_fields = ["view"]
 
     serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
+        "view_id": serializers.IntegerField(
             required=False,
             allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
+            help_text="The id of the Baserow view we want the data for.",
         ),
     }
 
     def enhance_queryset(self, queryset):
-        return queryset.select_related("table")
+        return queryset.select_related("view__table").prefetch_related(
+            "view__viewfilter_set", "view__viewsort_set"
+        )
+
+    def get_dispatch_list_filters(
+        self,
+        service: LocalBaserowListRows,
+        model: Optional[Type["GeneratedTableModel"]] = None,
+    ) -> "FilterBuilder":
+        """
+        Responsible for defining how the `LocalBaserowListRows` service should be
+        filtered. All the integration's services point to a Baserow `View`, which
+        can have zero or more `ViewFilter` records related to it. We'll use the
+        `FilterBuilder` to return a set of filters we can apply to the base queryset.
+
+        :param service: The `LocalBaserow` service we're dispatching.
+        :param model: The `service.view.table`'s `GeneratedTableModel`.
+        :return: A `FilterBuilder` applicable to the service's view.
+        """
+
+        view = service.view
+        if model is None:
+            model = view.table.get_model()
+        return ViewHandler().get_filter_builder(view, model)
+
+    def get_dispatch_list_sorts(
+        self,
+        service: LocalBaserowListRows,
+        model: Optional[Type["GeneratedTableModel"]] = None,
+    ) -> List[OrderBy]:
+        """
+        Responsible for defining how `LocalBaserowIntegration` services should be
+        sorted. All the integration's services point to a Baserow `View`, which
+        can have zero or more `ViewSort` records related to it. We'll use the
+        `ViewHandler.extract_view_sorts` method to return a set of `OrderBy` and
+         field name string which we can apply to the base queryset.
+
+        :param service: The `LocalBaserow` service we're dispatching.
+        :param model: The `service.view.table`'s `GeneratedTableModel`.
+        :return: A list of `OrderBy` expressions.
+        """
+
+        view = service.view
+        if model is None:
+            model = view.table.get_model()
+        service_sorts, _ = ViewHandler().extract_view_sorts(view, model)
+        return service_sorts
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-        """Load the table instance instead of the ID."""
+        """Load the View instance instead of the ID."""
 
-        if "table_id" in values:
-            table_id = values.pop("table_id")
-            if table_id is not None:
-                table = TableHandler().get_table(table_id)
-                values["table"] = table
+        if "view_id" in values:
+            view_id = values.pop("view_id")
+            if view_id is not None:
+                view = ViewHandler().get_view(view_id)
+                values["view"] = view
             else:
-                values["table"] = None
+                values["view"] = None
 
         return super().prepare_values(values, user)
 
@@ -77,16 +128,18 @@ class LocalBaserowListRowsUserServiceType(ServiceType):
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
     ):
         """
-        Get the table Id from the mapping if it exists.
+        Get the view Id from the mapping if it exists.
         """
 
-        if prop_name == "table_id" and "database_tables" in id_mapping:
+        if prop_name == "view_id" and "database_tables" in id_mapping:
             return id_mapping["database_tables"].get(value, None)
 
         return value
 
     def dispatch(
-        self, service: Service, runtime_formula_context: RuntimeFormulaContext
+        self,
+        service: LocalBaserowListRows,
+        runtime_formula_context: RuntimeFormulaContext,
     ):
         """
         Returns a list of rows from the table stored in the service instance.
@@ -99,9 +152,9 @@ class LocalBaserowListRowsUserServiceType(ServiceType):
 
         integration = service.integration.specific
 
-        table = service.table
-        if table is None:
-            raise ServiceImproperlyConfigured("The Table property is missing.")
+        if service.view is None:
+            raise ServiceImproperlyConfigured("The View property is missing.")
+        table = service.view.table
 
         CoreHandler().check_permissions(
             integration.authorized_user,
@@ -111,7 +164,15 @@ class LocalBaserowListRowsUserServiceType(ServiceType):
         )
 
         model = table.get_model()
-        rows = model.objects.all()[:200]
+        queryset = model.objects.all().enhance_by_fields()
+
+        filter_builder = self.get_dispatch_list_filters(service, model)
+        queryset = filter_builder.apply_to_queryset(queryset)
+
+        service_sorts = self.get_dispatch_list_sorts(service, model)
+        queryset = queryset.order_by(*service_sorts)
+
+        rows = queryset[: self.default_result_limit]
 
         serializer = get_row_serializer_class(
             model,
@@ -135,17 +196,17 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
     model_class = LocalBaserowGetRow
 
     class SerializedDict(ServiceDict):
-        table_id: int
+        view_id: int
         row_id: str
 
-    serializer_field_names = ["table_id", "row_id"]
-    allowed_fields = ["table", "row_id"]
+    serializer_field_names = ["view_id", "row_id"]
+    allowed_fields = ["view", "row_id"]
 
     serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
+        "view_id": serializers.IntegerField(
             required=False,
             allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
+            help_text="The id of the Baserow view we want the data for.",
         ),
         "row_id": FormulaSerializerField(
             required=False,
@@ -156,21 +217,21 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
-            "table", "table__database", "table__database__workspace"
+            "view", "view__table__database", "view__table__database__workspace"
         )
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
-        """Load the table instance instead of the ID."""
+        """Load the view instance instead of the ID."""
 
-        if "table_id" in values:
-            table_id = values.pop("table_id")
-            if table_id is not None:
-                table = TableHandler().get_table(table_id)
-                values["table"] = table
+        if "view_id" in values:
+            view_id = values.pop("view_id")
+            if view_id is not None:
+                view = ViewHandler().get_view(view_id)
+                values["view"] = view
             else:
-                values["table"] = None
+                values["view"] = None
 
         return super().prepare_values(values, user)
 
@@ -178,16 +239,18 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
     ):
         """
-        Get the table Id from the mapping if it exists.
+        Get the view Id from the mapping if it exists.
         """
 
-        if prop_name == "table_id" and "database_tables" in id_mapping:
+        if prop_name == "view_id" and "database_tables" in id_mapping:
             return id_mapping["database_tables"].get(value, None)
 
         return value
 
     def dispatch(
-        self, service: Service, runtime_formula_context: RuntimeFormulaContext
+        self,
+        service: LocalBaserowGetRow,
+        runtime_formula_context: RuntimeFormulaContext,
     ):
         """
         Returns the row targeted by the `row_id` formula from the table stored in the
@@ -203,9 +266,9 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
 
         integration = service.integration.specific
 
-        table = service.table
-        if table is None:
-            raise ServiceImproperlyConfigured("The table property is missing.")
+        if service.view is None:
+            raise ServiceImproperlyConfigured("The view property is missing.")
+        table = service.view.table
 
         try:
             row_id = ensure_integer(
