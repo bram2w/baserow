@@ -1,3 +1,5 @@
+import os
+
 from django.core.exceptions import ValidationError
 from django.test.utils import override_settings
 
@@ -721,3 +723,34 @@ def test_field_types_with_get_value_for_filter_have_get_order():
                 field_type.__class__.get_order.__code__
                 is not FieldType.get_order.__code__
             )
+
+
+@pytest.mark.django_db
+def test_text_field_type_get_order(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    model = table.get_model()
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    with open(
+        dir_path + "/../../../../../../tests/all_chars.txt", mode="r", encoding="utf-8"
+    ) as f:
+        all_chars = f.read()
+    with open(
+        dir_path + "/../../../../../../tests/sorted_chars.txt",
+        mode="r",
+        encoding="utf-8",
+    ) as f:
+        sorted_chars = f.read()
+
+    model.objects.bulk_create(
+        [model(**{f"field_{field.id}": char}) for char in all_chars]
+    )
+
+    queryset = model.objects.all().order_by_fields_string(f"field_{field.id}")
+    result = ""
+    for char in queryset:
+        result += getattr(char, f"field_{field.id}")
+
+    assert result == sorted_chars

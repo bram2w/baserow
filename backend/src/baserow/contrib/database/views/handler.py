@@ -27,6 +27,7 @@ from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
+from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -183,34 +184,47 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return f"i{table_id}:"
 
     @classmethod
-    def _get_index_hash(cls, index_fields: List[OrderBy]) -> Optional[str]:
+    def _get_index_hash(
+        cls, field_order_bys: List[OptionallyAnnotatedOrderBy]
+    ) -> Optional[str]:
         """
-        Returns a key for the provided view based on the fields used for sorting.
+        Returns a key used for sorting a view.
         View sharing the same key will have the same index name, so that the
         index can be reused.
 
-        :param view: The view to get the index key for.
+        :param field_order_bys: List of order bys that form the sort on a view.
         :return: The index hash key calculated from the fields used for sorting.
         """
 
+        def concat_attrs(field_order_by):
+            collation = (
+                f":{field_order_by.collation}" if field_order_by.collation else ""
+            )
+            return f"{field_order_by.field_expression}{collation}:{field_order_by.order.descending}"
+
         index_key = "-".join(
-            map(lambda vs: f"{vs.expression.name}:{vs.descending}", index_fields)
+            map(
+                concat_attrs,
+                field_order_bys,
+            )
         )
         # limit to 20 characters, considering the limit of 30 for the index name
         return shake_128(index_key.encode("utf-8")).hexdigest(10)
 
     @classmethod
-    def get_index_name(cls, table_id: int, index_fields: List[OrderBy]) -> str:
+    def get_index_name(
+        cls, table_id: int, field_order_bys: List[OptionallyAnnotatedOrderBy]
+    ) -> str:
         """
-        Returns the name of the index for the provided view.
+        Returns the name of the index for a view based on provided field sortings.
 
         :param table_id: The id of the table.
-        :param index_fields: The view sorts to get the index name for.
+        :param field_order_bys: List of order bys that form the sort on a view.
         :return: The index name.
         """
 
         index_name_prefix = cls._get_index_name_prefix(table_id)
-        index_hash = cls._get_index_hash(index_fields)
+        index_hash = cls._get_index_hash(field_order_bys)
         return f"{index_name_prefix}{index_hash}"
 
     @classmethod
@@ -257,7 +271,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         if model is None:
             model = view.table.get_model()
 
-        index_fields = []
+        field_order_bys = []
 
         for view_sort in view.viewsort_set.all():
             field_object = model._field_objects[view_sort.field_id]
@@ -270,12 +284,14 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
             if not annotated_order_by.can_be_indexed:
                 return None
 
-            index_fields.append(annotated_order_by.order)
+            field_order_bys.append(annotated_order_by)
+
+        index_fields = [order_by.order for order_by in field_order_bys]
 
         if not index_fields:
             return None
 
-        index_name = cls.get_index_name(view.table_id, index_fields)
+        index_name = cls.get_index_name(view.table_id, field_order_bys)
         return django_models.Index(
             *index_fields,
             "order",

@@ -49,6 +49,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
+from baserow.contrib.database.views.signals import view_loaded
 from baserow.contrib.database.views.view_ownership_types import (
     CollaborativeViewOwnershipType,
 )
@@ -3061,3 +3062,87 @@ def test_loading_a_view_checks_for_db_index_without_additional_queries(
         ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
         # the task should not be called again
         assert mocked_view_index_update_task.call_count == 1
+
+
+@override_settings(
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@pytest.mark.django_db(transaction=True)
+def test_update_index_replaces_index_with_diff_collation(
+    settings, data_fixture, enable_singleton_testing
+):
+    with patch("baserow.core.db.get_collation_name", new=lambda: None):
+        user = data_fixture.create_user()
+        table = data_fixture.create_database_table(user=user)
+        text_field = data_fixture.create_text_field(user=user, table=table)
+        handler = ViewHandler()
+        grid_view = handler.create_view(
+            user=user,
+            table=table,
+            type_name="grid",
+            name="Test grid",
+            ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+        )
+        table_model = table.get_model()
+        view_sort_1 = handler.create_sort(
+            user=user, view=grid_view, field=text_field, order="ASC"
+        )
+        index_1 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is True
+        grid_view.refresh_from_db()
+
+    with patch(
+        "baserow.core.db.get_collation_name", new=lambda: settings.EXPECTED_COLLATION
+    ):
+        # different collation settings should overwrite the index
+        ViewIndexingHandler.update_index(grid_view, table_model)
+
+        index_2 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert index_1.name != index_2.name
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is False
+        assert ViewIndexingHandler.does_index_exist(index_2.name) is True
+
+
+@override_settings(
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@pytest.mark.django_db(transaction=True)
+def test_view_loaded_replaces_index_with_diff_collation(
+    settings, data_fixture, enable_singleton_testing
+):
+    with patch("baserow.core.db.get_collation_name", new=lambda: None):
+        user = data_fixture.create_user()
+        table = data_fixture.create_database_table(user=user)
+        text_field = data_fixture.create_text_field(user=user, table=table)
+        handler = ViewHandler()
+        grid_view = handler.create_view(
+            user=user,
+            table=table,
+            type_name="grid",
+            name="Test grid",
+            ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+        )
+        table_model = table.get_model()
+        view_sort_1 = handler.create_sort(
+            user=user, view=grid_view, field=text_field, order="ASC"
+        )
+        index_1 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is True
+        grid_view.refresh_from_db()
+
+    with patch(
+        "baserow.core.db.get_collation_name", new=lambda: settings.EXPECTED_COLLATION
+    ):
+        # different collation settings should overwrite the index
+        view_loaded.send(
+            sender=None,
+            table=table,
+            view=grid_view,
+            table_model=table_model,
+            user=user,
+        )
+
+        index_2 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert index_1.name != index_2.name
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is False
+        assert ViewIndexingHandler.does_index_exist(index_2.name) is True
