@@ -19,7 +19,7 @@
 
   position: relative;
   margin: 4px 0;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &.active {
     background-color: $color-primary-100;
@@ -42,7 +42,7 @@
   @extend %tree__size;
 
   padding: 0 6px;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &.tree__action--disabled {
     opacity: 0.6;

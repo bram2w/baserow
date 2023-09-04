@@ -1,8 +1,8 @@
 .api-token {
   border: solid 1px $color-neutral-200;
-  border-radius: 6px;
   overflow: hidden;
   margin: 20px 0;
+  @include rounded($rounded-md);
 }
 
 .api-token__key {
@@ -21,9 +21,9 @@
   margin-right: 10px;
   background-color: $color-neutral-100;
   padding: 0 6px;
-  border-radius: 3px;
 
   @include fixed-height(26px, 10px);
+  @include rounded($rounded);
 }
 
 .api-token__key-visible {
@@ -35,9 +35,9 @@
   position: relative;
   color: $color-neutral-900;
   user-select: none;
-  border-radius: 3px;
 
   @include center-text(26px, 11px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -75,8 +75,8 @@
   font-size: 14px;
   padding: 0 6px;
   margin-left: 6px;
-  border-radius: 3px;
   color: $color-neutral-900;
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

@@ -26,9 +26,10 @@
   width: 140px;
   height: 12px;
   margin-top: -6px;
-  border-radius: 6px;
   background-color: $color-neutral-100;
   overflow: hidden;
+
+  @include rounded($rounded-md);
 
   &::before {
     content: '';
@@ -94,13 +95,13 @@
 .header__filter-link {
   display: flex;
   align-items: center;
-  font-weight: 600;
+  font-weight: 500;
   color: $color-neutral-900;
   padding: 0 10px;
-  border-radius: 3px;
   white-space: nowrap;
 
   @include fixed-height(32px, 13px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;

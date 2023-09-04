@@ -66,9 +66,9 @@
   li {
     font-size: 12px;
     background-color: $color-primary-100;
-    border-radius: 3px;
     padding: 4px;
     margin-top: 6px;
+    @include rounded($rounded);
 
     &:not(:last-child) {
       margin-right: 6px;

@@ -30,6 +30,13 @@ $base-font-family: $text-font-stack !default;
 $font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
 $font-awesome-font-weight: 900 !default;
 
+$radius-none: 0 !default;
+$rounded: 4px !default;
+$rounded-md: 6px !default;
+$rounded-xl: 12px !default;
+$rounded-2xl: 16px !default;
+$rounded-3xl: 24px !default;
+
 // API docs variables
 $api-docs-nav-width: 220px !default;
 $api-docs-header-height: 52px !default;

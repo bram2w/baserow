@@ -1,0 +1,3 @@
+@mixin rounded($radius: $rounded) {
+  border-radius: $radius;
+}

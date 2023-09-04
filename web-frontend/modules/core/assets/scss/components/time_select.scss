@@ -30,11 +30,11 @@
 
   a {
     display: block;
-    border-radius: 3px;
     line-height: 28px;
     text-align: center;
     color: $color-neutral-900;
     white-space: nowrap;
+    @include rounded($rounded);
 
     &:hover {
       background-color: $color-neutral-100;

@@ -1,8 +1,8 @@
 .form-input {
   display: block;
   border: 1px solid $color-neutral-400;
-  border-radius: 3px;
   position: relative;
+  @include rounded($rounded);
 
   &:active,
   &:focus {
@@ -47,13 +47,13 @@
 .form-input__input {
   appearance: none;
   border: none;
-  border-radius: 3px;
   width: 100%;
   outline: none;
   line-height: 100%;
   background: none;
   padding: 8px 12px;
   background-color: $white;
+  @include rounded($rounded-md);
 
   .form-input--large & {
     padding: 12px 12px;

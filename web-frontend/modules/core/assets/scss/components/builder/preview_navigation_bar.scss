@@ -21,9 +21,9 @@
 .preview-navigation-bar__address-bar-parameter {
   background-color: $color-neutral-100;
   width: 40px;
-  border-radius: 3px;
   border: none;
   padding: 0 5px;
+  @include rounded($rounded);
 
   &.preview-navigation-bar__address-bar-parameter--text {
     width: 110px;

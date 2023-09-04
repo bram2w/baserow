@@ -49,9 +49,10 @@
   padding: 10px 16px;
   gap: 8px;
   border: 1px solid $color-neutral-900;
-  border-radius: 4px;
   background-color: white;
   margin-bottom: 20px;
+
+  @include rounded($rounded);
 }
 
 .auth-provider-buttons__button:hover {

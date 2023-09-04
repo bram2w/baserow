@@ -10,9 +10,9 @@
 .paginator__group {
   display: flex;
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   overflow: hidden;
   background-color: $white;
+  @include rounded($rounded);
 
   > * {
     @include fixed-height(24px, 12px);

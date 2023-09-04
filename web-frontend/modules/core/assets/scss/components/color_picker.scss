@@ -8,10 +8,11 @@
   width: 208px;
   height: 208px;
   overflow: hidden;
-  border-radius: 6px;
   border: 1px solid $color-neutral-200;
   background-image: linear-gradient(to top, #000, transparent),
     linear-gradient(to right, #fff, transparent);
+
+  @include rounded($rounded-md);
 }
 
 .color-picker__thumb {
@@ -41,8 +42,9 @@
   flex: 18px 0 0;
   margin-left: 22px;
   overflow: hidden;
-  border-radius: 6px;
   border: 1px solid $color-neutral-200;
+
+  @include rounded($rounded-md);
 
   &.color-picker__slider--hue {
     background-image: linear-gradient(

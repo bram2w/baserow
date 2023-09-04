@@ -15,7 +15,7 @@
   position: relative;
   height: 28px;
   width: 28px;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &:not(.active):hover {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.08);

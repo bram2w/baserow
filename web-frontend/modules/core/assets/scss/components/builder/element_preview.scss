@@ -2,10 +2,10 @@
   display: flex;
   flex-wrap: nowrap;
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   z-index: 2;
 
   @include absolute(5px, 5px, auto, auto);
+  @include rounded($rounded);
 }
 
 .element-preview__insert {
@@ -88,8 +88,8 @@
   color: $white;
   line-height: 20px;
   padding: 0 4px;
-  border-radius: 3px;
   white-space: nowrap;
+  @include rounded($rounded);
 }
 
 .element-preview__menu-item {

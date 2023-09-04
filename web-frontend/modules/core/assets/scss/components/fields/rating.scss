@@ -11,9 +11,9 @@
   padding: 10px;
   text-align: center;
   color: $color-neutral-900;
-  border-radius: 3px;
   font-size: 14px;
   display: block;
+  @include rounded($rounded);
 }
 
 .field-rating {

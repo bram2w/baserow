@@ -1,10 +1,10 @@
 .add-element-card {
   border: solid $color-neutral-300 1px;
-  border-radius: 5px;
   padding: 10px 15px 10px 15px;
   width: 133px;
   height: 60px;
   cursor: pointer;
+  @include rounded($rounded-md);
 
   &:hover {
     background-color: $color-neutral-100;

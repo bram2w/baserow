@@ -9,12 +9,12 @@
   border: 1px solid transparent;
   text-align: center;
   font-weight: 600;
-  border-radius: 3px;
   transition: padding 0.05s ease-in-out;
   vertical-align: middle;
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);
+  @include rounded($rounded-md);
 
   &:hover,
   &:focus {

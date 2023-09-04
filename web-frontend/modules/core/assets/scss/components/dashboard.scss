@@ -163,8 +163,8 @@
 
       content: '';
       background-color: $color-neutral-100;
-      border-radius: 3px;
       z-index: -1;
+      @include rounded($rounded);
     }
   }
 }
@@ -174,10 +174,10 @@
 
   flex: 0 0 32px;
   background-color: $color-primary-500;
-  border-radius: 3px;
   color: $white;
   font-size: 14px;
   margin-right: 12px;
+  @include rounded($rounded);
 
   &.dashboard__group-item-icon--add {
     background-color: $color-success-500;

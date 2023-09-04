@@ -1,9 +1,9 @@
 .field-boolean__checkbox {
   border: 1px solid $color-neutral-200;
-  border-radius: 3px;
   color: $color-success-600;
 
   @include center-text(18px, 11px);
+  @include rounded($rounded);
 
   &:not(.field-boolean__checkbox--disabled) {
     cursor: pointer;

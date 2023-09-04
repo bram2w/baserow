@@ -17,7 +17,7 @@
   margin: 40px auto;
   max-width: 660px;
   background-color: $white;
-  border-radius: 6px;
+  @include rounded($rounded-md);
 
   &.modal__box--with-sidebar {
     display: flex;

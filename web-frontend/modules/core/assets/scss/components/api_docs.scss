@@ -44,10 +44,10 @@
   padding: 0 10px;
   font-weight: 600;
   color: $color-neutral-900;
-  border-radius: 3px;
   user-select: none;
 
   @include fixed-height(32px, 13px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
