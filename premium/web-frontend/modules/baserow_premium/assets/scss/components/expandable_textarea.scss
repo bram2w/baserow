@@ -5,10 +5,11 @@
   align-items: center;
   width: 100%;
   border: 1px solid #9fa4ab;
-  border-radius: 3px;
   padding: 8px 0 8px 12px;
   outline: none;
   background-color: white;
+
+  @include rounded($rounded);
 }
 
 .auto-expandable-textarea {

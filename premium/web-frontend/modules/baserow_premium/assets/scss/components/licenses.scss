@@ -18,9 +18,10 @@
   position: relative;
   margin-bottom: 20px;
   padding: 16px 10% 16px 20px;
-  border-radius: 3px;
   color: $color-primary-900;
   flex: 0 0 100%;
+
+  @include rounded($rounded);
 
   &::before {
     display: none;
@@ -98,8 +99,9 @@
 .licenses__instance-id {
   padding: 0 6px;
   background-color: $color-neutral-100;
-  border-radius: 3px;
   color: $color-primary-900;
+
+  @include rounded($rounded);
 }
 
 .licenses__instance-id-copy {

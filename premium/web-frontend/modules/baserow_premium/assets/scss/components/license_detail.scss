@@ -10,7 +10,8 @@
   font-size: 12px;
   line-height: 23px;
   padding: 0 10px;
-  border-radius: 3px;
+
+  @include rounded($rounded);
 
   &.license-plan--inline {
     display: inline-block;

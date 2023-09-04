@@ -80,7 +80,8 @@
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
-  @include rounded($rounded);
+
+  @include rounded($rounded-md);
 
   &:active,
   &:focus {
