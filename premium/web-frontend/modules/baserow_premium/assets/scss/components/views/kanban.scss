@@ -167,7 +167,8 @@
 
   &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging):hover {
     cursor: pointer;
-    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+
+    @include add-elevation($elevation-medium);
   }
 }
 

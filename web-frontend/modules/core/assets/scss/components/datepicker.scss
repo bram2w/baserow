@@ -6,9 +6,10 @@
 }
 
 .vdp-datepicker.datepicker .vdp-datepicker__calendar {
-  border-color: $color-neutral-200;
+  border: none;
   width: 278px;
   padding: 10px;
+
   @include rounded($rounded-md);
 
   .prev,

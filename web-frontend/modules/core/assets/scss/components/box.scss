@@ -1,7 +1,8 @@
 .box {
   background-color: $white;
-  box-shadow: 0 3px 10px 0 rgba($black, 0.16);
   padding: 32px 40px;
+
+  @include add-elevation($elevation-medium);
   @include rounded($rounded-md);
 }
 
