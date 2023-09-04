@@ -4,7 +4,8 @@
   white-space: nowrap;
   background-color: $white;
   border: 1px solid $color-neutral-200;
-  box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+
+  @include add-elevation($elevation-medium);
   @include rounded($rounded-md);
 
   &.context--loading-overlay {
