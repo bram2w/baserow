@@ -1,9 +1,11 @@
 from typing import Dict, Optional
 
-from baserow.formula.parser.exceptions import MaximumFormulaSizeError
-from baserow.formula.parser.generated.BaserowFormula import BaserowFormula
-from baserow.formula.parser.generated.BaserowFormulaVisitor import BaserowFormulaVisitor
-from baserow.formula.parser.parser import (
+from baserow.core.formula.parser.exceptions import MaximumFormulaSizeError
+from baserow.core.formula.parser.generated.BaserowFormula import BaserowFormula
+from baserow.core.formula.parser.generated.BaserowFormulaVisitor import (
+    BaserowFormulaVisitor,
+)
+from baserow.core.formula.parser.parser import (
     convert_string_literal_token_to_string,
     convert_string_to_string_literal_token,
     get_parse_tree_for_formula,

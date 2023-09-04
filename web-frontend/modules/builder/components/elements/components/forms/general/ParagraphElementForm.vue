@@ -15,7 +15,7 @@
 import form from '@baserow/modules/core/mixins/form'
 
 import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
-import { isValidFormula } from '@baserow/formula'
+import { isValidFormula } from '@baserow/modules/core/formula'
 
 export default {
   name: 'ParagraphElementForm',

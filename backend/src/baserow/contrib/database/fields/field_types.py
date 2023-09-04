@@ -80,14 +80,14 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.fields import SyncedDateTimeField
+from baserow.core.formula import BaserowFormulaException
+from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
-from baserow.formula import BaserowFormulaException
-from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
 from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY

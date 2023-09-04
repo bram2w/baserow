@@ -1,5 +1,5 @@
-import parseBaserowFormula from '@baserow/formula/parser/parser'
-import JavascriptExecutor from '@baserow/formula/parser/javascriptExecutor'
+import parseBaserowFormula from '@baserow/modules/core/formula/parser/parser'
+import JavascriptExecutor from '@baserow/modules/core/formula/parser/javascriptExecutor'
 import {
   VALID_FORMULA_TESTS,
   INVALID_FORMULA_TESTS,

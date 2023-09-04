@@ -1,5 +1,5 @@
-import parseBaserowFormula from '@baserow/formula/parser/parser'
-import JavascriptExecutor from '@baserow/formula/parser/javascriptExecutor'
+import parseBaserowFormula from '@baserow/modules/core/formula/parser/parser'
+import JavascriptExecutor from '@baserow/modules/core/formula/parser/javascriptExecutor'
 
 /**
  * Resolves a formula in the context of the given context.

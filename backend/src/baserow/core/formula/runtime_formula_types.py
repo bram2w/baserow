@@ -3,7 +3,7 @@ from baserow.core.formula.argument_types import (
     TextBaserowRuntimeFormulaArgumentType,
 )
 from baserow.core.formula.registries import RuntimeFormulaFunction
-from baserow.formula.types import FormulaArgs, FormulaContext
+from baserow.core.formula.types import FormulaArgs, FormulaContext
 
 
 class RuntimeConcat(RuntimeFormulaFunction):

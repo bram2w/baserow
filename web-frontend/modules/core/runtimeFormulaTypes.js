@@ -6,7 +6,7 @@ import {
 import {
   InvalidFormulaArgumentType,
   InvalidNumberOfArguments,
-} from '@baserow/formula/parser/errors'
+} from '@baserow/modules/core/formula/parser/errors'
 import { Node, VueNodeViewRenderer } from '@tiptap/vue-2'
 import GetFormulaComponent from '@baserow/modules/core/components/formula/GetFormulaComponent'
 import { mergeAttributes } from '@tiptap/core'

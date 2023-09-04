@@ -57,14 +57,14 @@ docker run -it --rm \
     "
 
 echo "Copying the new generated parsers into Baserow's source code overwriting the old ones..."
-FRONTEND_OUTPUT_DIR=./../web-frontend/formula/parser/generated/
+FRONTEND_OUTPUT_DIR=./../web-frontend/modules/core/formula/parser/generated/
 mkdir -p $FRONTEND_OUTPUT_DIR
 # Delete all old parser files already in the source code to ensure we are getting a
 # fresh clean build
 rm -f "$FRONTEND_OUTPUT_DIR"BaserowFormula*
 cp out/frontend_parser/* $FRONTEND_OUTPUT_DIR
 
-BACKEND_OUTPUT_DIR=./../backend/src/baserow/formula/parser/generated/
+BACKEND_OUTPUT_DIR=./../backend/src/baserow/core/formula/parser/generated/
 mkdir -p $BACKEND_OUTPUT_DIR
 rm -f "$BACKEND_OUTPUT_DIR"BaserowFormula*
 cp out/backend_parser/* $BACKEND_OUTPUT_DIR
