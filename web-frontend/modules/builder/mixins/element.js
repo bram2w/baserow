@@ -1,5 +1,5 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
-import { resolveFormula } from '@baserow/formula'
+import { resolveFormula } from '@baserow/modules/core/formula'
 
 export default {
   inject: ['builder', 'page', 'mode'],

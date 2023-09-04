@@ -39,9 +39,9 @@ from baserow.contrib.database.formula.types.visitors import (
     FieldDependencyExtractingVisitor,
     FunctionsUsedVisitor,
 )
+from baserow.core.formula import BaserowFormulaException
+from baserow.core.formula.parser.parser import get_parse_tree_for_formula
 from baserow.core.telemetry.utils import baserow_trace_methods
-from baserow.formula import BaserowFormulaException
-from baserow.formula.parser.parser import get_parse_tree_for_formula
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import FormulaField

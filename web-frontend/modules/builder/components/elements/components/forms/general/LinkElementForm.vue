@@ -145,7 +145,7 @@ import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
-import { isValidFormula } from '@baserow/formula'
+import { isValidFormula } from '@baserow/modules/core/formula'
 
 export default {
   name: 'LinkElementForm',

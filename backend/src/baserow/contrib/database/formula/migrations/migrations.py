@@ -3,7 +3,7 @@ from typing import Callable, Union
 
 from django.db.models import Q, QuerySet
 
-from baserow.formula import BaserowFormulaException
+from baserow.core.formula import BaserowFormulaException
 
 NO_FORMULAS = Q(pk__in=[])
 ALL_FORMULAS = ~NO_FORMULAS

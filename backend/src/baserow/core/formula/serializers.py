@@ -3,8 +3,8 @@ from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from baserow.formula.parser.exceptions import BaserowFormulaSyntaxError
-from baserow.formula.parser.parser import get_parse_tree_for_formula
+from baserow.core.formula.parser.exceptions import BaserowFormulaSyntaxError
+from baserow.core.formula.parser.parser import get_parse_tree_for_formula
 
 
 @extend_schema_field(OpenApiTypes.STR)

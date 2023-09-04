@@ -1,5 +1,5 @@
-import BaserowFormulaVisitor from '@baserow/formula/parser/generated/BaserowFormulaVisitor'
-import { UnknownOperatorError } from '@baserow/formula/parser/errors'
+import BaserowFormulaVisitor from '@baserow/modules/core/formula/parser/generated/BaserowFormulaVisitor'
+import { UnknownOperatorError } from '@baserow/modules/core/formula/parser/errors'
 import _ from 'lodash'
 
 export class ToTipTapVisitor extends BaserowFormulaVisitor {

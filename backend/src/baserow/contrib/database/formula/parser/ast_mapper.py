@@ -11,7 +11,7 @@ from baserow.contrib.database.formula.ast.tree import (
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.formula.types.formula_type import UnTyped
-from baserow.formula.parser.exceptions import (
+from baserow.core.formula.parser.exceptions import (
     BaserowFormulaSyntaxError,
     FieldByIdReferencesAreDeprecated,
     FormulaFunctionTypeDoesNotExist,
@@ -19,9 +19,11 @@ from baserow.formula.parser.exceptions import (
     MaximumFormulaSizeError,
     UnknownOperator,
 )
-from baserow.formula.parser.generated.BaserowFormula import BaserowFormula
-from baserow.formula.parser.generated.BaserowFormulaVisitor import BaserowFormulaVisitor
-from baserow.formula.parser.parser import (
+from baserow.core.formula.parser.generated.BaserowFormula import BaserowFormula
+from baserow.core.formula.parser.generated.BaserowFormulaVisitor import (
+    BaserowFormulaVisitor,
+)
+from baserow.core.formula.parser.parser import (
     convert_string_literal_token_to_string,
     get_parse_tree_for_formula,
 )

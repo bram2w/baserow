@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Any
 
 from baserow.core.formula.exceptions import RuntimeFormulaRecursion
+from baserow.core.formula.types import FormulaContext
 from baserow.core.utils import to_path
-from baserow.formula.types import FormulaContext
 
 if TYPE_CHECKING:
     from baserow.core.formula.registries import DataProviderTypeRegistry

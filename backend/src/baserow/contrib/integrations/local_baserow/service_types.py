@@ -20,6 +20,7 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowListRows,
 )
+from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.formula.serializers import FormulaSerializerField
@@ -28,7 +29,6 @@ from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import ListServiceType, ServiceType
 from baserow.core.services.types import ServiceDict
-from baserow.formula import resolve_formula
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.field_filters import FilterBuilder

@@ -1,4 +1,4 @@
-import { FunctionCollection } from '@baserow/formula/parser/javascriptExecutor'
+import { FunctionCollection } from '@baserow/modules/core/formula/parser/javascriptExecutor'
 
 export class RuntimeFunctionCollection extends FunctionCollection {
   constructor($registry) {

@@ -1,7 +1,7 @@
 import {
   autocompleteFormula,
   calculateFilteredFunctionsAndFieldsBasedOnCursorLocation,
-} from '@baserow/formula/autocompleter/formulaAutocompleter'
+} from '@baserow/modules/core/formula/autocompleter/formulaAutocompleter'
 
 function wrap(fields) {
   return fields.map((f) => ({

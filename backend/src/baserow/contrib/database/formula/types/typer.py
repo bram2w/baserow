@@ -3,7 +3,7 @@ import typing
 from django.db import connection
 
 from baserow.contrib.database.formula.types.visitors import FormulaTypingVisitor
-from baserow.formula.parser.exceptions import MaximumFormulaSizeError
+from baserow.core.formula.parser.exceptions import MaximumFormulaSizeError
 
 if typing.TYPE_CHECKING:
     from baserow.contrib.database.fields.models import FormulaField

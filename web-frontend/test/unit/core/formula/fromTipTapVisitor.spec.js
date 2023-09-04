@@ -1,6 +1,6 @@
 import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollection'
 import { TestApp } from '@baserow/test/helpers/testApp'
-import { FromTipTapVisitor } from '@baserow/modules/core/formula/fromTipTapVisitor'
+import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipTapVisitor'
 import testCases from '@baserow_test_cases/tip_tap_visitor_cases.json'
 
 describe('fromTipTapVisitor', () => {
