@@ -1,15 +1,19 @@
 import contextlib
 from collections import defaultdict
 from decimal import Decimal
+from functools import cache
 from math import ceil
 from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.db import DEFAULT_DB_ALIAS, connection, transaction
 from django.db.models import Max, Model, QuerySet
+from django.db.models.functions import Collate
 from django.db.models.sql.query import LOOKUP_SEP
 from django.db.transaction import Atomic, get_connection
 
+from loguru import logger
 from psycopg2 import sql
 
 from .utils import find_intermediate_order
@@ -318,3 +322,42 @@ def recalculate_full_orders(
             where_clause=where_clause,
         )
         cursor.execute(sql_query)
+
+
+@cache
+def get_collation_name() -> Optional[str]:
+    """
+    Performs a simple check to determine if expected Baserow collation
+    can be used by sourcing pg_collation table.
+
+    Returns the name of the Baserow collation if it
+    can be used, None otherwise.
+    """
+
+    if "collation" not in settings.FEATURE_FLAGS:
+        return None
+
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "SELECT collname FROM pg_collation where collname = %s AND collencoding = -1",
+            [settings.EXPECTED_COLLATION],
+        )
+        row = cursor.fetchone()
+        if row is None:
+            logger.warning(
+                f"Database collation '{settings.EXPECTED_COLLATION}' cannot be used."
+                " This might result in unexpected behavior. Please configure your"
+                " database appropriately."
+            )
+        return settings.EXPECTED_COLLATION if row else None
+
+
+def collate_expression(expression):
+    """
+    If default Baserow collation can be used
+    the provided expression will be collated.
+    If not, the original expression is returned.
+    """
+
+    coll_name = get_collation_name()
+    return Collate(expression, coll_name) if coll_name else expression

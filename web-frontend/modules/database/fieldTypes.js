@@ -1,14 +1,16 @@
 import BigNumber from 'bignumber.js'
 
-import moment from '@baserow/modules/core/moment'
-import guessFormat from 'moment-guess'
 import {
+  collatedStringCompare,
   getFilenameFromUrl,
   isNumeric,
   isSimplePhoneNumber,
   isValidEmail,
   isValidURL,
 } from '@baserow/modules/core/utils/string'
+
+import moment from '@baserow/modules/core/moment'
+import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
@@ -667,9 +669,7 @@ export class TextFieldType extends FieldType {
     return (a, b) => {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -745,9 +745,7 @@ export class LongTextFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -1772,9 +1770,7 @@ export class URLFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -1861,9 +1857,7 @@ export class EmailFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -2142,9 +2136,7 @@ export class SingleSelectFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name].value
       const stringB = b[name] === null ? '' : '' + b[name].value
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -2334,9 +2326,7 @@ export class MultipleSelectFieldType extends FieldType {
       const stringB =
         valuesB.length > 0 ? valuesB.map((obj) => obj.value).join('') : ''
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -2563,9 +2553,7 @@ export class PhoneNumberFieldType extends FieldType {
       const stringA = a[name] === null ? '' : '' + a[name]
       const stringB = b[name] === null ? '' : '' + b[name]
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 
@@ -2940,9 +2928,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
         stringB = valuesB.map((obj) => obj.name).join('')
       }
 
-      return order === 'ASC'
-        ? stringA.localeCompare(stringB)
-        : stringB.localeCompare(stringA)
+      return collatedStringCompare(stringA, stringB, order)
     }
   }
 

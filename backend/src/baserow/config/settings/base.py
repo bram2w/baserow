@@ -387,6 +387,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Collation that the backend database should
+# support in order to make front end and back end
+# collations as close as possible to match sorting and
+# other operations.
+EXPECTED_COLLATION = "en-x-icu"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 

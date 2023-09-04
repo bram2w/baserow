@@ -79,6 +79,7 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.core.db import collate_expression
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.formula import BaserowFormulaException
 from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
@@ -168,6 +169,20 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import GeneratedTableModel
+
+
+class CollationSortMixin:
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        field_expr = collate_expression(F(field_name))
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(order=field_order_by, can_be_indexed=True)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -289,7 +304,7 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
         return BaserowFormulaCharType(nullable=True)
 
 
-class TextFieldType(FieldType):
+class TextFieldType(CollationSortMixin, FieldType):
     type = "text"
     model_class = TextField
     allowed_fields = ["text_default"]
@@ -329,8 +344,12 @@ class TextFieldType(FieldType):
     ) -> TextField:
         return TextField()
 
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
-class LongTextFieldType(FieldType):
+
+class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
 
@@ -365,8 +384,12 @@ class LongTextFieldType(FieldType):
     ) -> "LongTextField":
         return LongTextField()
 
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
-class URLFieldType(TextFieldMatchingRegexFieldType):
+
+class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
     type = "url"
     model_class = URLField
 
@@ -379,6 +402,10 @@ class URLFieldType(TextFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.url()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class NumberFieldType(FieldType):
@@ -2212,7 +2239,7 @@ class LinkRowFieldType(FieldType):
         )
 
 
-class EmailFieldType(CharFieldMatchingRegexFieldType):
+class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     type = "email"
     model_class = EmailField
 
@@ -2239,6 +2266,10 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.email()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class FileFieldType(FieldType):
@@ -2605,7 +2636,8 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> int:
-        return getattr(row, field.db_column)
+        value = getattr(row, field.db_column)
+        return value
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -2803,7 +2835,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         to the correct position.
         """
 
-        order = F(f"{field_name}__value")
+        name = f"{field_name}__value"
+        order = collate_expression(F(name))
+
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
         else:
@@ -2882,7 +2916,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
         related_objects = getattr(row, field.db_column)
         values = [related_object.value for related_object in related_objects.all()]
-        return list_to_comma_separated_string(values)
+        value = list_to_comma_separated_string(values)
+        return value
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -3183,8 +3218,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
         annotation = {sort_column_name: query}
+        order = collate_expression(F(sort_column_name))
 
-        order = F(sort_column_name)
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
         else:
@@ -4551,7 +4586,8 @@ class MultipleCollaboratorsFieldType(FieldType):
         query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
         annotation = {sort_column_name: query}
 
-        order = F(sort_column_name)
+        order = collate_expression(F(sort_column_name))
+
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
         else:
@@ -4562,4 +4598,5 @@ class MultipleCollaboratorsFieldType(FieldType):
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> any:
         related_objects = getattr(row, field.db_column)
         values = [related_object.first_name for related_object in related_objects.all()]
-        return list_to_comma_separated_string(values)
+        value = list_to_comma_separated_string(values)
+        return value
