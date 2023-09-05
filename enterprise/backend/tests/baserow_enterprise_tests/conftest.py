@@ -1,6 +1,8 @@
 from django.apps import apps
 from django.test.utils import override_settings
 
+from baserow_premium_tests.conftest import *  # noqa: F403, F401
+
 from baserow.core.apps import sync_operations_after_migrate
 
 # noinspection PyUnresolvedReferences

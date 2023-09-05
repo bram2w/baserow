@@ -121,18 +121,16 @@ export default {
   layout: 'app',
   middleware: 'authenticated',
   asyncData({ app, error, route, store }) {
-    if (!app.$hasFeature(EnterpriseFeatures.AUDIT_LOG)) {
-      return error({
-        statusCode: 401,
-        message: 'Available in the advanced/enterprise version',
-      })
-    }
-
     const workspaceId = route.params.workspaceId
       ? parseInt(route.params.workspaceId)
       : null
     if (workspaceId) {
-      if (
+      if (!app.$hasFeature(EnterpriseFeatures.AUDIT_LOG, workspaceId)) {
+        return error({
+          statusCode: 401,
+          message: 'Available in the advanced/enterprise version',
+        })
+      } else if (
         !app.$hasPermission(
           'workspace.list_audit_log_entries',
           store.getters['workspace/get'](workspaceId),
@@ -141,6 +139,11 @@ export default {
       ) {
         return error({ statusCode: 404, message: 'Page not found' })
       }
+    } else if (!app.$hasFeature(EnterpriseFeatures.AUDIT_LOG)) {
+      return error({
+        statusCode: 401,
+        message: 'Available in the advanced/enterprise version',
+      })
     } else if (!store.getters['auth/isStaff']) {
       return error({ statusCode: 403, message: 'Forbidden.' })
     }

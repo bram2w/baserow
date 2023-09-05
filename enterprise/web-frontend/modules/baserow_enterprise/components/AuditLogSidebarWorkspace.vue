@@ -44,7 +44,7 @@ export default {
   },
   computed: {
     deactivated() {
-      return !this.$hasFeature(EnterpriseFeatures.AUDIT_LOG)
+      return !this.$hasFeature(EnterpriseFeatures.AUDIT_LOG, this.workspace.id)
     },
     hasPermission() {
       return this.$hasPermission(
