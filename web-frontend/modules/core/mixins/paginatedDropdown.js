@@ -53,6 +53,11 @@ export default {
       required: false,
       default: 20,
     },
+    includeDisplayNameInSelectedEvent: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -91,7 +96,11 @@ export default {
      */
     select(value) {
       const displayName = this.getSelectedProperty(value, 'name')
-      dropdown.methods.select.call(this, value)
+      if (this.includeDisplayNameInSelectedEvent) {
+        dropdown.methods.select.call(this, { value, displayName })
+      } else {
+        dropdown.methods.select.call(this, value)
+      }
       this.displayName = displayName
     },
     /**
