@@ -684,7 +684,11 @@ class UpdateRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update rows"), _("Rows (%(row_ids)s) updated"), TABLE_ACTION_CONTEXT
     )
-    privacy_sensitive_params = ["row_values", "original_rows_values"]
+    privacy_sensitive_params = [
+        "row_values",
+        "original_rows_values_by_id",
+        "updated_rows_fields_metadata_by_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -693,6 +697,9 @@ class UpdateRowsActionType(UndoableActionType):
         database_id: int
         database_name: str
         row_ids: List[int]
+        # !!! WARNING !!!
+        # Make sure these values are kept in sync with privacy_sensitive_params above
+        # !!! WARNING !!!
         row_values: List[Dict[str, Any]]  # TODO: rename to rows_values
         original_rows_values_by_id: Dict[int, Dict[str, Any]]
         updated_rows_fields_metadata_by_id: Dict[int, Dict[str, Any]]
