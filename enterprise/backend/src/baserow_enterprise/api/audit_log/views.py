@@ -58,10 +58,7 @@ def check_for_license_and_permissions_or_raise(
     audit log entries. If not, an exception is raised.
     """
 
-    if user.is_staff:
-        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(AUDIT_LOG, user)
-        return True
-    elif workspace_id is not None:
+    if workspace_id is not None:
         workspace = CoreHandler().get_workspace(workspace_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(AUDIT_LOG, user, workspace)
         CoreHandler().check_permissions(
@@ -71,7 +68,9 @@ def check_for_license_and_permissions_or_raise(
             context=workspace,
         )
     else:
-        raise PermissionDenied()
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(AUDIT_LOG, user)
+        if not user.is_staff:
+            raise PermissionDenied()
 
 
 class AuditLogView(APIListingView):

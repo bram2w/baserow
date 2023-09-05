@@ -51,12 +51,22 @@ class PerWorkspaceLicensePlugin(LicensePlugin):
     def restrict_user_premium_to(
         self, user: AbstractUser, workspace_ids_or_id: Union[int, List[int]]
     ):
+        self.restrict_user_license_to(
+            user, PremiumLicenseType.type, workspace_ids_or_id
+        )
+
+    def restrict_user_license_to(
+        self,
+        user: AbstractUser,
+        license_type: str,
+        workspace_ids_or_id: Union[int, List[int]],
+    ):
         if isinstance(workspace_ids_or_id, int):
             workspace_ids_or_id = [workspace_ids_or_id]
         self.per_workspace_licenses[user.id] = defaultdict(set)
         for workspace_id in workspace_ids_or_id:
             self.per_workspace_licenses[user.id][workspace_id].add(
-                license_type_registry.get(PremiumLicenseType.type)
+                license_type_registry.get(license_type)
             )
 
 

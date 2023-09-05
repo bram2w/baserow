@@ -12,6 +12,8 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow_enterprise.license_types import EnterpriseLicenseType
+
 
 @pytest.mark.django_db
 @pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
@@ -193,6 +195,55 @@ def test_workspace_audit_log_user_filter_returns_only_workspace_users(
         "previous": None,
         "results": [{"id": user_wp1.id, "value": "user_wp1@test.com"}],
     }
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
+def test_staff_member_can_access_audit_log_for_their_own_workspace(
+    api_client,
+    enterprise_data_fixture,
+    stubbed_storage,
+    alternative_per_workspace_license_service,
+    url_name,
+):
+    admin_user, admin_token = enterprise_data_fixture.create_user_and_token(
+        email="admin@test.com", is_staff=True
+    )
+    workspace = enterprise_data_fixture.create_workspace(user=admin_user)
+    alternative_per_workspace_license_service.restrict_user_license_to(
+        admin_user, EnterpriseLicenseType.type, workspace.id
+    )
+    response = api_client.get(
+        reverse(f"api:enterprise:audit_log:{url_name}")
+        + f"?workspace_id={workspace.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {admin_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
+def test_staff_member_cant_access_audit_log_for_own_workspace_without_license(
+    api_client,
+    enterprise_data_fixture,
+    stubbed_storage,
+    alternative_per_workspace_license_service,
+    url_name,
+):
+    admin_user, admin_token = enterprise_data_fixture.create_user_and_token(
+        email="admin@test.com", is_staff=True
+    )
+    workspace = enterprise_data_fixture.create_workspace(user=admin_user)
+    response = api_client.get(
+        reverse(f"api:enterprise:audit_log:{url_name}")
+        + f"?workspace_id={workspace.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {admin_token}",
+    )
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
 
 
 @pytest.mark.django_db

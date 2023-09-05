@@ -549,6 +549,7 @@ def test_audit_log_can_export_to_csv_all_entries(
     enterprise_data_fixture,
     synced_roles,
     django_capture_on_commit_callbacks,
+    stubbed_storage,
 ):
     _, admin_token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
 
