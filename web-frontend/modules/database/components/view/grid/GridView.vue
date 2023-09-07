@@ -253,6 +253,7 @@
       ref="rowEditModal"
       :database="database"
       :table="table"
+      :fields="fields"
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"

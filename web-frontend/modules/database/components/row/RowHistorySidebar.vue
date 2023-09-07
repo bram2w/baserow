@@ -3,7 +3,7 @@
     <div v-if="!loaded && loading" class="loading-absolute-center" />
     <template v-else>
       <div class="row-history">
-        <div v-if="totalCount > 0">
+        <div v-if="entriesWithContents.length > 0">
           <InfiniteScroll
             ref="infiniteScroll"
             :current-count="currentCount"
@@ -11,14 +11,28 @@
             :loading="loading"
             :reverse="true"
             :render-end="false"
+            @load-next-page="loadNextPage"
           >
             <template #default>
-              <RowHistoryEntry
-                v-for="entry in entries"
+              <div
+                v-for="(entry, index) in entriesWithContents"
                 :key="entry.id"
-                :entry="entry"
               >
-              </RowHistoryEntry>
+                <div
+                  v-if="
+                    shouldDisplayDateSeparator(
+                      entriesWithContents,
+                      'timestamp',
+                      index
+                    )
+                  "
+                  class="row-history__day-separator"
+                >
+                  <span>{{ formatDateSeparator(entry.timestamp) }}</span>
+                </div>
+                <RowHistoryEntry :entry="entry" :fields="fields">
+                </RowHistoryEntry>
+              </div>
             </template>
           </InfiniteScroll>
         </div>
@@ -34,6 +48,10 @@
 </template>
 
 <script>
+import {
+  shouldDisplayDateSeparator,
+  formatDateSeparator,
+} from '@baserow/modules/database/utils/date'
 import { mapGetters } from 'vuex'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
@@ -54,6 +72,10 @@ export default {
       type: Object,
       required: true,
     },
+    fields: {
+      type: Array,
+      required: true,
+    },
     row: {
       type: Object,
       required: true,
@@ -67,6 +89,19 @@ export default {
       currentCount: 'rowHistory/getCurrentCount',
       totalCount: 'rowHistory/getTotalCount',
     }),
+    entriesWithContents() {
+      const fieldIds = this.fields.map((f) => f.id)
+      const entriesToRender = this.entries.filter((entry) => {
+        const entryFields = new Set(
+          Object.keys(entry.before).concat(Object.keys(entry.after))
+        )
+        const validEntryFieldIds = entryFields
+          .map((fieldIdentifier) => entry.fields_metadata[fieldIdentifier]?.id)
+          .filter((entryFieldId) => fieldIds.includes(entryFieldId))
+        return validEntryFieldIds.size > 0
+      })
+      return entriesToRender
+    },
   },
   async created() {
     await this.initialLoad()
@@ -84,6 +119,20 @@ export default {
         notifyIf(e, 'application')
       }
     },
+    async loadNextPage() {
+      try {
+        const tableId = this.table.id
+        const rowId = this.row.id
+        await this.$store.dispatch('rowHistory/fetchNextPage', {
+          tableId,
+          rowId,
+        })
+      } catch (e) {
+        notifyIf(e, 'application')
+      }
+    },
+    shouldDisplayDateSeparator,
+    formatDateSeparator,
   },
 }
 </script>

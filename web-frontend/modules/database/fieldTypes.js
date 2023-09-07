@@ -82,6 +82,8 @@ import RowCardFieldText from '@baserow/modules/database/components/card/RowCardF
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 
+import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
+
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
@@ -194,6 +196,13 @@ export class FieldType extends Registerable {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
+  }
+
+  /**
+   * This component displays row change difference for values of the field type.
+   */
+  getRowHistoryEntryComponent() {
+    return null
   }
 
   /**
@@ -661,6 +670,10 @@ export class TextFieldType extends FieldType {
     return RowCardFieldText
   }
 
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
+  }
+
   getEmptyValue(field) {
     return field.text_default
   }
@@ -734,6 +747,10 @@ export class LongTextFieldType extends FieldType {
 
   getCardComponent() {
     return RowCardFieldText
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
   }
 
   getEmptyValue(field) {

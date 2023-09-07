@@ -99,6 +99,7 @@
       enable-navigation
       :database="database"
       :table="table"
+      :fields="fields"
       :primary-is-sortable="true"
       :visible-fields="cardFields"
       :hidden-fields="hiddenFields"

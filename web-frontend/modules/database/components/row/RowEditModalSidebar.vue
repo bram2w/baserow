@@ -17,6 +17,7 @@
         :row="row"
         :table="table"
         :database="database"
+        :fields="fields"
       ></component>
     </Tab>
   </Tabs>
@@ -39,6 +40,10 @@ export default {
     },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
     row: {
