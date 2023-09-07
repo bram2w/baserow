@@ -5,6 +5,7 @@
     :database="database"
     :table="table"
     :rows="[]"
+    :fields="fields"
     :visible-fields="fields"
     @hidden="$emit('hidden', $event)"
   ></RowEditModal>

@@ -11,7 +11,15 @@ export const state = () => ({
 
 export const mutations = {
   ADD_ENTRIES(state, { entries }) {
-    state.entries = entries
+    entries.forEach((newEntry) => {
+      const existingIndex = state.entries.findIndex((e) => e.id === newEntry.id)
+      if (existingIndex >= 0) {
+        // Prevent duplicates by just replacing them inline
+        state.entries.splice(existingIndex, 0, newEntry)
+      } else {
+        state.entries.push(newEntry)
+      }
+    })
   },
   RESET_ENTRIES(state) {
     state.entries = []
@@ -38,14 +46,30 @@ export const actions = {
     commit('SET_LOADING', true)
     commit('SET_LOADED', false)
     try {
-      const { data } = await RowHistoryService(this.$client).fetchAll(
+      const { data } = await RowHistoryService(this.$client).fetchAll({
         tableId,
-        rowId
-      )
+        rowId,
+        limit: 5,
+      })
       commit('ADD_ENTRIES', { entries: data.results })
       commit('SET_TOTAL_COUNT', data.count)
       commit('SET_LOADED_TABLE_AND_ROW', { tableId, rowId })
       commit('SET_LOADED', true)
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+  async fetchNextPage({ commit, getters }, { tableId, rowId }) {
+    commit('SET_LOADING', true)
+    try {
+      const { data } = await RowHistoryService(this.$client).fetchAll({
+        tableId,
+        rowId,
+        limit: 5,
+        offset: getters.getCurrentCount,
+      })
+      commit('ADD_ENTRIES', { entries: data.results })
+      commit('SET_TOTAL_COUNT', data.count)
     } finally {
       commit('SET_LOADING', false)
     }

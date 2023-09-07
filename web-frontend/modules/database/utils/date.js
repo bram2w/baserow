@@ -144,3 +144,40 @@ export const splitTimezoneAndFilterValue = (
   timezone = moment.tz.zone(timezone) ? timezone : null
   return [timezone, filterValue]
 }
+
+/**
+ * Compares an item with a previous item to determine
+ * whether a day separator should be rendered.
+ *
+ * @param {*} items All items that contains the timestamp property
+ * @param {String} prop The name of the property that holds the timestamp
+ * @param {Number} index Index at which we need to decide if previous and
+ *  next item's datetimes differ
+ * @returns {Boolean} Whether the timestamps around the index warrant
+ *  rendering a date separator
+ */
+export const shouldDisplayDateSeparator = (items, prop, index) => {
+  if (index === items.length - 1) {
+    return true
+  }
+  const tzone = moment.tz.guess()
+  const prevDate = moment.utc(items[index][prop]).tz(tzone)
+  const currentDate = moment.utc(items[index + 1][prop]).tz(tzone)
+  return !prevDate.isSame(currentDate, 'day')
+}
+
+/**
+ * Formats output for date separators when separating items based on
+ * day (today, yesterday, etc.)
+ *
+ * @param {moment} timestamp The datetime to format
+ * @returns {String} The formatted timestamp
+ */
+export const formatDateSeparator = (timestamp) => {
+  return moment.utc(timestamp).tz(moment.tz.guess()).calendar(null, {
+    sameDay: '[Today]',
+    lastDay: '[Yesterday]',
+    lastWeek: 'LL',
+    sameElse: 'LL',
+  })
+}

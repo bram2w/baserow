@@ -57,10 +57,12 @@
                   :key="'row-comment-' + c.id"
                 >
                   <div
-                    v-if="isNewDayForComments(index)"
+                    v-if="
+                      shouldDisplayDateSeparator(comments, 'created_on', index)
+                    "
                     class="row-comment__day-separator"
                   >
-                    <span>{{ formatSeparatorDate(c) }}</span>
+                    <span>{{ formatDateSeparator(c.created_on) }}</span>
                   </div>
                   <RowComment
                     :comment="c"
@@ -95,7 +97,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import moment from '@baserow/modules/core/moment'
+import {
+  shouldDisplayDateSeparator,
+  formatDateSeparator,
+} from '@baserow/modules/database/utils/date'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import RowComment from '@baserow_premium/components/row_comments/RowComment'
 import InfiniteScroll from '@baserow/modules/core/components/helpers/InfiniteScroll'
@@ -160,21 +165,6 @@ export default {
         this.database.workspace.id
       )
     },
-    isNewDayForComments() {
-      return (index) => {
-        if (index === this.comments.length - 1) {
-          return true
-        }
-        const tzone = moment.tz.guess()
-        const previousCreationDate = moment
-          .utc(this.comments[index].created_on)
-          .tz(tzone)
-        const currentCreationDate = moment
-          .utc(this.comments[index + 1].created_on)
-          .tz(tzone)
-        return !previousCreationDate.isSame(currentCreationDate, 'day')
-      }
-    },
   },
   watch: {
     async hasPremiumFeaturesEnabled() {
@@ -200,17 +190,6 @@ export default {
       } catch (e) {
         notifyIf(e, 'application')
       }
-    },
-    formatSeparatorDate(comment) {
-      return moment
-        .utc(comment.created_on)
-        .tz(moment.tz.guess())
-        .calendar(null, {
-          sameDay: '[Today]',
-          lastDay: '[Yesterday]',
-          lastWeek: 'LL',
-          sameElse: 'LL',
-        })
     },
     async postComment() {
       const comment = this.comment
@@ -246,6 +225,8 @@ export default {
         notifyIf(e, 'application')
       }
     },
+    shouldDisplayDateSeparator,
+    formatDateSeparator,
   },
 }
 </script>

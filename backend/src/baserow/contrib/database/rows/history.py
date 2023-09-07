@@ -157,7 +157,7 @@ class RowHistoryHandler:
     @baserow_trace(tracer)
     def list_row_history(cls, table_id, row_id):
         return RowHistory.objects.filter(table_id=table_id, row_id=row_id).order_by(
-            "-action_timestamp"
+            "-action_timestamp", "-id"
         )
 
 

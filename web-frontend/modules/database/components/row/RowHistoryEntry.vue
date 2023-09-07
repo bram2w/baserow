@@ -9,21 +9,17 @@
     </div>
     <div class="row-history-entry__content">
       <template v-for="field in entryFields">
-        <div :key="field" class="row-history-entry__field">{{ field }}</div>
-        <div :key="field + 'content'" class="row-history-entry__field-content">
-          <div v-if="entry.before[field]">
-            <div
-              class="row-history-entry__diff row-history-entry__diff--removed"
-            >
-              {{ entry.before[field] }}
-            </div>
+        <template v-if="getFieldName(field) && getEntryComponent(field)">
+          <div :key="field" class="row-history-entry__field">
+            {{ getFieldName(field) }}
           </div>
-          <div v-if="entry.after[field]">
-            <div class="row-history-entry__diff row-history-entry__diff--added">
-              {{ entry.after[field] }}
-            </div>
-          </div>
-        </div>
+          <component
+            :is="getEntryComponent(field)"
+            :key="field + 'content'"
+            :entry="entry"
+            :field-identifier="field"
+          ></component>
+        </template>
       </template>
     </div>
   </div>
@@ -37,6 +33,10 @@ export default {
   props: {
     entry: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
   },
@@ -62,6 +62,22 @@ export default {
   methods: {
     getLocalizedMoment(timestamp) {
       return moment.utc(timestamp).tz(moment.tz.guess())
+    },
+    getFieldName(fieldIdentifier) {
+      const id = this.entry.fields_metadata[fieldIdentifier].id
+      const field = this.fields.find((f) => f.id === id)
+      if (field) {
+        return field.name
+      }
+      return null
+    },
+    getEntryComponent(fieldIdentifier) {
+      const type = this.entry.fields_metadata[fieldIdentifier].type
+      const fieldType = this.$registry.get('field', type)
+      if (fieldType) {
+        return fieldType.getRowHistoryEntryComponent()
+      }
+      return null
     },
   },
 }

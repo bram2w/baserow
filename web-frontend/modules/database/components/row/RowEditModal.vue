@@ -97,6 +97,7 @@
         :row="row"
         :table="table"
         :database="database"
+        :fields="fields"
       ></RowEditModalSidebar>
     </template>
   </Modal>
@@ -127,6 +128,10 @@ export default {
     },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
     primaryIsSortable: {
