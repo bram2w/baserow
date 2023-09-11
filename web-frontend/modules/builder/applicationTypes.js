@@ -36,6 +36,13 @@ export class BuilderApplicationType extends ApplicationType {
     return values
   }
 
+  delete(application, { $router }) {
+    const pageSelected = application.pages.some((page) => page._.selected)
+    if (pageSelected) {
+      $router.push({ name: 'dashboard' })
+    }
+  }
+
   select(application, { $router, $i18n, $store }, callback = null) {
     const pages = application.pages
       .map((p) => p)
