@@ -1,5 +1,53 @@
 # Changelog
 
+## Released 1.20.0
+
+### New features
+* Add collapse button to hide the comments panel [#1599](https://gitlab.com/baserow/baserow/-/issues/1599)
+* Added search functionality to Calendar View [#1634](https://gitlab.com/baserow/baserow/-/issues/1634)
+* Added search parameter to Calendar view API [#1634](https://gitlab.com/baserow/baserow/-/issues/1634)
+* Allow select options to optionally be positioned fixed. [#1659](https://gitlab.com/baserow/baserow/-/issues/1659)
+* Enabled auto max height for views and workspaces context. [#1659](https://gitlab.com/baserow/baserow/-/issues/1659)
+* Optionally automatically add a scrollbar to the context menu if it is outside of the viewport. [#1659](https://gitlab.com/baserow/baserow/-/issues/1659)
+* Add `BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT` environment variable to allow adjustment of the autodetection limit for multiselect options. [#1718](https://gitlab.com/baserow/baserow/-/issues/1718)
+* Add 'Number is even and whole' view filter [#1783](https://gitlab.com/baserow/baserow/-/issues/1783)
+* Added "Copy Row URL" link to row context menu [#1798](https://gitlab.com/baserow/baserow/-/issues/1798)
+* Add new collaborator field option to notify any users when added as a collaborator in a cell. [#1807](https://gitlab.com/baserow/baserow/-/issues/1807)
+* Add search shortcut for table views [#1815](https://gitlab.com/baserow/baserow/-/issues/1815)
+* Add ability to select adjacent rows with Shift and arrow keys [#1847](https://gitlab.com/baserow/baserow/-/issues/1847)
+* Add search shortcuts to other screens [#1870](https://gitlab.com/baserow/baserow/-/issues/1870)
+* Send new notifications via email. [#1873](https://gitlab.com/baserow/baserow/-/issues/1873)
+* Introduced color picker component. [#1889](https://gitlab.com/baserow/baserow/-/issues/1889)
+* Introduce Workspace level audit log feature [#1901](https://gitlab.com/baserow/baserow/-/issues/1901)
+* Introduce new border radius design [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Introduce new elevation design [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Added support for `user_field_names` in the list rows endpoint's filtering mechanism. [#510](https://gitlab.com/baserow/baserow/-/issues/510)
+* Add forumulas to encode complete and partial URIs. [#983](https://gitlab.com/baserow/baserow/-/issues/983)
+* Implemented optional Posthog product analytics.
+
+### Bug fixes
+* Fix editable height when content is empty [#1858](https://gitlab.com/baserow/baserow/-/issues/1858)
+* fix cells with massive amounts of causing full text search index updates to fail [#1869](https://gitlab.com/baserow/baserow/-/issues/1869)
+* Fix allowing builders to create or edit lookup formulas to target fields in tables where they dont have access [#1883](https://gitlab.com/baserow/baserow/-/issues/1883)
+* Ensure that the public grid view doesn't show a Delete Rows list item in its context. [#1907](https://gitlab.com/baserow/baserow/-/issues/1907)
+* Fix prefill link to table fields display no longer working correctly. [#1913](https://gitlab.com/baserow/baserow/-/issues/1913)
+* Fix submitting empty link_row value in form view. [#1914](https://gitlab.com/baserow/baserow/-/issues/1914)
+* Fix not being able to delete a row with a link row cell pointing at a primary field with an empty multi select cell. [#1916](https://gitlab.com/baserow/baserow/-/issues/1916)
+* two linked tables with publically shared views can cause bugs caused by prefetch caching fields [#1925](https://gitlab.com/baserow/baserow/-/issues/1925)
+* prevent excessive number of sql statements being executed when using a deserialized model cache [#1926](https://gitlab.com/baserow/baserow/-/issues/1926)
+* BooleanViewFilterType breaks comparing null values causing the frontend to crash. [#1927](https://gitlab.com/baserow/baserow/-/issues/1927)
+* Fixed 'timezone for all collaborators' persistence in date fields. [#1928](https://gitlab.com/baserow/baserow/-/issues/1928)
+* Fixed bug where duplicating a link/multi select/collaborator field with data resulted a duplicate field that couldn't have new values added until you tried a certain number of times. [#1931](https://gitlab.com/baserow/baserow/-/issues/1931)
+* change backup_baserow to also batch up collaborator field m2m through tables as lock failures [#1933](https://gitlab.com/baserow/baserow/-/issues/1933)
+* fix moving rows or updating link row fields in a tables with a lookup of a link row field [#1934](https://gitlab.com/baserow/baserow/-/issues/1934)
+* Fix Airtable because `rawTables` key not found error.
+
+### Refactors
+* Don't use overwriting storage by default [#1878](https://gitlab.com/baserow/baserow/-/issues/1878)
+* Remove the usage of 'TokenHandler.update_token_usage' method to improve performance [#1908](https://gitlab.com/baserow/baserow/-/issues/1908)
+* Changed the font to Inter and use the new color palette. [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+
+
 ## Released 1.19.1
 
 ### Bug fixes
@@ -34,6 +82,7 @@
 ### Refactors
 * Move formula language into its own module [#1768](https://gitlab.com/baserow/baserow/-/issues/1768)
 * Fix last modified not matching created on when making new rows [#1779](https://gitlab.com/baserow/baserow/-/issues/1779)
+* Use nuxt runtimeConfig instead of nuxt-env module
 
 ### Breaking API changes
 * Baserows default max per table field limit now defaults to 600 due to full text search and undo/redo needing to use the rest of the postgres 1600 column limit. This can be reverted using the new BASEROW_MAX_FIELD_LIMIT env var. If you want to have more than 600 fields we also recommend you turn off full text search as it needs an extra column per field to work, this can be done by setting BASEROW_USE_PG_FULLTEXT_SEARCH to false. [#1706](https://gitlab.com/baserow/baserow/-/issues/1706)
