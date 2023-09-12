@@ -936,7 +936,10 @@ def test_can_undo_redo_update_kanban_view(data_fixture, premium_data_fixture):
         "card_cover_image_field": cover_image_file_field_1,
     }
 
-    kanban_view = ViewHandler().update_view(user, kanban_view, **original_kanban_data)
+    kanban_view_with_changes = ViewHandler().update_view(
+        user, kanban_view, **original_kanban_data
+    )
+    kanban_view = kanban_view_with_changes.updated_view_instance
 
     assert kanban_view.name == original_kanban_data["name"]
     assert kanban_view.filter_type == original_kanban_data["filter_type"]

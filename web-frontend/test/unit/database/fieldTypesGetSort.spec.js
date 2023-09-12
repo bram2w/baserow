@@ -1,4 +1,10 @@
-import { MultipleSelectFieldType } from '@baserow/modules/database/fieldTypes'
+import path from 'path'
+import fs from 'fs'
+
+import {
+  TextFieldType,
+  MultipleSelectFieldType,
+} from '@baserow/modules/database/fieldTypes'
 import { firstBy } from 'thenby'
 import { TestApp } from '@baserow/test/helpers/testApp'
 
@@ -117,5 +123,25 @@ describe('MultipleSelectFieldType sorting', () => {
     testTableDataWithNull.sort(sortDESC)
     ids = testTableDataWithNull.map((obj) => obj.id)
     expect(ids).toEqual([3, 2, 1])
+  })
+})
+
+describe('TextFieldType sorting', () => {
+  test('Test sort matches backend', () => {
+    const sortedChars = fs.readFileSync(
+      path.join(__dirname, '/../../../../tests/sorted_chars.txt'),
+      'utf8'
+    )
+    const data = fs.readFileSync(
+      path.join(__dirname, '/../../../../tests/all_chars.txt'),
+      'utf8'
+    )
+    const chars = Array.from(data).map((value) => {
+      return { v: value }
+    })
+    const sortFunction = new TextFieldType().getSort('v', 'ASC')
+    chars.sort(sortFunction)
+    const result = chars.map((value) => value.v).join('')
+    expect(result).toBe(sortedChars)
   })
 })

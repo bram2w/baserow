@@ -54,10 +54,14 @@ export default {
         })
         this.$refs.pageForm.$v.$reset()
         this.hide()
-        await this.$router.push({
-          name: 'builder-page',
-          params: { builderId: this.builder.id, pageId: page.id },
-        })
+        this.$router.push(
+          {
+            name: 'builder-page',
+            params: { builderId: this.builder.id, pageId: page.id },
+          },
+          null,
+          () => {}
+        )
       } catch (error) {
         notifyIf(error, 'application')
       }

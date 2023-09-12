@@ -14,6 +14,7 @@ from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
+from baserow.contrib.builder.api.data_sources.serializers import DataSourceSerializer
 from baserow.contrib.builder.api.domains.errors import (
     ERROR_DOMAIN_DOES_NOT_EXIST,
     ERROR_DOMAIN_NOT_IN_BUILDER,
@@ -25,13 +26,13 @@ from baserow.contrib.builder.api.domains.serializers import (
     PublicBuilderSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
 )
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.builder.domains.models import Domain
-from baserow.contrib.builder.domains.operations import PublishDomainOperationType
 from baserow.contrib.builder.domains.service import DomainService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -42,10 +43,10 @@ from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.service import BuilderService
 from baserow.core.exceptions import ApplicationDoesNotExist
-from baserow.core.handler import CoreHandler
 from baserow.core.jobs.registries import job_type_registry
+from baserow.core.services.registries import service_type_registry
 
-from .serializers import PublicElementSerializer
+from .serializers import PublicDataSourceSerializer, PublicElementSerializer
 
 
 class DomainsView(APIView):
@@ -349,6 +350,57 @@ class PublicBuilderByIdView(APIView):
         return Response(PublicBuilderSerializer(builder).data)
 
 
+class AsyncPublishDomainView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="domain_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The builder application id the user wants to publish.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder domains"],
+        operation_id="publish_builder_domain",
+        description=(
+            "This endpoint starts an asynchronous job to publish the builder. "
+            "The job clones the current version of the given builder and publish it "
+            "for the given domain."
+        ),
+        request=None,
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            DomainDoesNotExist: ERROR_DOMAIN_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, domain_id: int):
+        """
+        Starts an async job to publish a builder to the given domain.
+        """
+
+        domain = DomainHandler().get_domain(domain_id)
+
+        job = DomainService().async_publish(request.user, domain)
+
+        serializer = job_type_registry.get_serializer(job, JobSerializer)
+        return Response(serializer.data, status=HTTP_202_ACCEPTED)
+
+
 class PublicElementsView(APIView):
     permission_classes = (AllowAny,)
 
@@ -397,59 +449,54 @@ class PublicElementsView(APIView):
         return Response(data)
 
 
-class AsyncPublishDomainView(APIView):
-    permission_classes = (IsAuthenticated,)
+class PublicDataSourcesView(APIView):
+    permission_classes = (AllowAny,)
 
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                name="domain_id",
+                name="page_id",
                 location=OpenApiParameter.PATH,
                 type=OpenApiTypes.INT,
-                description="The builder application id the user wants to publish.",
-            ),
-            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+                description="Returns only the data_sources of the page related to the "
+                "provided Id if the related builder is public.",
+            )
         ],
-        tags=["Builder domains"],
-        operation_id="publish_builder_domain",
+        tags=["Builder data sources"],
+        operation_id="list_public_builder_page_data_sources",
         description=(
-            "This endpoint starts an asynchronous job to publish the builder. "
-            "The job clones the current version of the given builder and publish it "
-            "for the given domain."
+            "Lists all the data_sources of the page related to the provided parameter "
+            "if the builder is public."
         ),
-        request=None,
         responses={
-            204: None,
-            400: get_error_schema(
-                [
-                    "ERROR_REQUEST_BODY_VALIDATION",
-                ]
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                service_type_registry, DataSourceSerializer, many=True
             ),
-            404: get_error_schema(["ERROR_APPLICATION_DOES_NOT_EXIST"]),
+            404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
         },
     )
-    @transaction.atomic
     @map_exceptions(
         {
-            ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
-            DomainDoesNotExist: ERROR_DOMAIN_DOES_NOT_EXIST,
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
         }
     )
-    def post(self, request, domain_id: int):
+    def get(self, request, page_id):
         """
-        Starts an async job to publish a builder to the given domain.
+        Responds with a list of serialized data_sources that belong to the page if the
+        user has access to it.
         """
 
-        domain = DomainHandler().get_domain(domain_id)
+        page = PageHandler().get_page(page_id)
 
-        CoreHandler().check_permissions(
-            request.user,
-            PublishDomainOperationType.type,
-            workspace=domain.builder.workspace,
-            context=domain,
-        )
+        data_sources = DataSourceService().get_data_sources(request.user, page)
 
-        job = DomainService().async_publish(request.user, domain)
-
-        serializer = job_type_registry.get_serializer(job, JobSerializer)
-        return Response(serializer.data, status=HTTP_202_ACCEPTED)
+        data = [
+            service_type_registry.get_serializer(
+                data_source.service,
+                PublicDataSourceSerializer,
+                context={"data_source": data_source},
+            ).data
+            for data_source in data_sources
+            if data_source.service and data_source.service.integration_id
+        ]
+        return Response(data)

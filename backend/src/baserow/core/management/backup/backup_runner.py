@@ -12,7 +12,11 @@ from django.utils import timezone
 
 import psycopg2
 
-from baserow.contrib.database.fields.models import LinkRowField, MultipleSelectField
+from baserow.contrib.database.fields.models import (
+    LinkRowField,
+    MultipleCollaboratorsField,
+    MultipleSelectField,
+)
 from baserow.contrib.database.table.constants import USER_TABLE_DATABASE_NAME_PREFIX
 from baserow.core.management.backup.exceptions import InvalidBaserowBackupArchive
 
@@ -166,6 +170,7 @@ class BaserowBackupRunner:
         additional_pg_dump_args: List[str],
     ):
         args = [
+            f"--exclude-table={MultipleCollaboratorsField.THROUGH_DATABASE_TABLE_PREFIX}*",
             f"--exclude-table={MultipleSelectField.THROUGH_DATABASE_TABLE_PREFIX}*",
             f"--exclude-table={USER_TABLE_DATABASE_NAME_PREFIX}*",
             f"--exclude-table={LinkRowField.THROUGH_DATABASE_TABLE_PREFIX}*",
@@ -281,6 +286,9 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
         multipleselect_table_regex_escaped = re.escape(
             MultipleSelectField.THROUGH_DATABASE_TABLE_PREFIX
         )
+        multiplecollaborators_table_regex_escaped = re.escape(
+            MultipleCollaboratorsField.THROUGH_DATABASE_TABLE_PREFIX
+        )
         # Ensure we order the tables by their numerical ID for consistent and
         # understandable back-up ordering.
         cursor.execute(
@@ -288,7 +296,8 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
     FROM information_schema.tables
     WHERE table_name ~ %(table_prefix_regex_escaped)s  or
           table_name ~ %(through_table_regex_escaped)s or
-          table_name ~ %(multipleselect_table_regex_escaped)s
+          table_name ~ %(multipleselect_table_regex_escaped)s or
+          table_name ~ %(multiplecollaborators_table_regex_escaped)s
     ORDER BY table_schema,
              substring(table_name FROM '[a-zA-Z]+'),
              substring(table_name FROM '[0-9]+')::int""",
@@ -296,6 +305,7 @@ def _get_sorted_user_tables_names(conn) -> List[str]:
                 "table_prefix_regex_escaped": f"^{table_prefix_regex_escaped}.*$",
                 "through_table_regex_escaped": f"^{through_table_regex_escaped}.*$",
                 "multipleselect_table_regex_escaped": f"^{multipleselect_table_regex_escaped}.*$",
+                "multiplecollaborators_table_regex_escaped": f"^{multiplecollaborators_table_regex_escaped}.*$",
             },
         )
         return [r[0] for r in cursor.fetchall()]

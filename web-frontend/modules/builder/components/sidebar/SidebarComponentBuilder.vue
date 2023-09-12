@@ -103,14 +103,17 @@ export default {
     },
   },
   computed: {
-    ...mapGetters({ isAppSelected: 'application/isSelected' }),
+    ...mapGetters({
+      isAppSelected: 'application/isSelected',
+      allJobs: 'job/getAll',
+    }),
     orderedPages() {
       return this.application.pages
         .map((page) => page)
         .sort((a, b) => a.order - b.order)
     },
     pendingJobs() {
-      return this.$store.getters['job/getAll'].filter((job) =>
+      return this.allJobs.filter((job) =>
         this.$registry
           .get('job', job.type)
           .isJobPartOfApplication(job, this.application)

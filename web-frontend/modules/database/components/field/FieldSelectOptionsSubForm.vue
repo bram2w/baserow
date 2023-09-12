@@ -71,7 +71,7 @@ export default {
       try {
         const { data } = await FieldService(this.$client).getUniqueRowValues(
           this._props.defaultValues.id,
-          10,
+          this.$config.BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT,
           splitCommaSeparated
         )
         for (const value of data.values) {

@@ -37,7 +37,7 @@ black==23.3.0
     # via -r dev.in
 build==0.8.0
     # via pip-tools
-certifi==2022.12.7
+certifi==2023.7.22
     # via
     #   -c base.txt
     #   requests
@@ -62,7 +62,7 @@ decorator==5.1.1
     # via
     #   -c base.txt
     #   ipython
-django==3.2.20
+django==3.2.21
     # via
     #   -c base.txt
     #   django-extensions
@@ -108,7 +108,7 @@ freezegun==1.2.2
     # via -r dev.in
 gitdb==4.0.9
     # via gitpython
-gitpython==3.1.28
+gitpython==3.1.33
     # via bandit
 gprof2dot==2022.7.29
     # via django-silk
@@ -183,7 +183,7 @@ pexpect==4.8.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pip-tools==6.12.3
+pip-tools==6.13.0
     # via -r dev.in
 platformdirs==2.5.2
     # via black

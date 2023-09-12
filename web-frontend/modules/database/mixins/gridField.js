@@ -135,7 +135,7 @@ export default {
           ArrowDown: 'selectBelow',
         }
         if (this.canSelectNext(event)) {
-          if (Object.keys(arrowKeysMapping).includes(key)) {
+          if (Object.keys(arrowKeysMapping).includes(key) && !shiftKey) {
             event.preventDefault()
             this.$emit(arrowKeysMapping[key])
           } else if (key === 'Tab') {

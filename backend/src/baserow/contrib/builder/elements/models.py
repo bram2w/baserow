@@ -1,22 +1,33 @@
+from typing import Optional
+
 from django.contrib.contenttypes.models import ContentType
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import QuerySet
 
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.expression.field import ExpressionField
+from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import (
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
     HierarchicalModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.user_files.models import UserFile
 
 
-class ALIGNMENTS(models.TextChoices):
+class HorizontalAlignments(models.TextChoices):
     LEFT = "left"
     CENTER = "center"
     RIGHT = "right"
+
+
+class VerticalAlignments(models.TextChoices):
+    TOP = "top"
+    CENTER = "center"
+    BOTTOM = "bottom"
 
 
 def get_default_element_content_type():
@@ -29,6 +40,7 @@ class Element(
     CreatedAndUpdatedOnMixin,
     FractionOrderableMixin,
     PolymorphicContentTypeMixin,
+    WithRegistry,
     models.Model,
 ):
     """
@@ -50,6 +62,25 @@ class Element(
         related_name="page_elements",
         on_delete=models.SET(get_default_element_content_type),
     )
+    # This is used for container elements, if NULL then this is a root element
+    parent_element = models.ForeignKey(
+        "self",
+        on_delete=models.CASCADE,
+        null=True,
+        default=None,
+        help_text="The parent element, if inside a container.",
+        related_name="children",
+    )
+
+    # The following fields are used to store the position of the element in the
+    # container. If the element is a root element then this is null.
+    place_in_container = models.CharField(
+        null=True,
+        blank=True,
+        default=None,
+        max_length=255,
+        help_text="The place in the container.",
+    )
 
     style_padding_top = models.PositiveIntegerField(default=10)
     style_padding_bottom = models.PositiveIntegerField(default=10)
@@ -57,28 +88,77 @@ class Element(
     class Meta:
         ordering = ("order", "id")
 
+    @staticmethod
+    def get_type_registry():
+        from .registries import element_type_registry
+
+        return element_type_registry
+
     def get_parent(self):
         return self.page
 
+    def get_sibling_elements(self):
+        return Element.objects.filter(
+            parent_element=self.parent_element, page=self.page
+        ).exclude(id=self.id)
+
+    @property
+    def is_root_element(self):
+        return self.parent_element is None
+
     @classmethod
-    def get_last_order(cls, page: Page):
+    def get_last_order(
+        cls,
+        page: Page,
+        parent_element_id: Optional[int] = None,
+        place_in_container: Optional[str] = None,
+    ):
         """
         Returns the last order for the given page.
 
         :param page: The page we want the order for.
+        :param base_queryset: The base queryset to use.
+        :return: The last order.
+        """
+
+        return cls.get_last_orders(page, parent_element_id, place_in_container)[0]
+
+    @classmethod
+    def get_last_orders(
+        cls,
+        page: Page,
+        parent_element_id: Optional[int] = None,
+        place_in_container: Optional[str] = None,
+        amount=1,
+    ):
+        """
+        Returns the last orders for the given page.
+
+        :param page: The page we want the order for.
+        :param parent_element_id: The id of the parent element.
+        :param place_in_container: The place in the container
+        :param amount: The number of orders you wish to have returned
         :return: The last order.
         """
 
         queryset = Element.objects.filter(page=page)
-        return cls.get_highest_order_of_queryset(queryset)[0]
+
+        queryset = cls._scope_queryset_to_container(
+            queryset, parent_element_id, place_in_container
+        )
+
+        return cls.get_highest_order_of_queryset(queryset, amount=amount)
 
     @classmethod
-    def get_unique_order_before_element(cls, before: "Element"):
+    def get_unique_order_before_element(
+        cls, before: "Element", parent_element_id: int, place_in_container: str
+    ):
         """
         Returns a safe order value before the given element in the given page.
 
-        :param page: The page we want the order for.
         :param before: The element before which we want the safe order
+        :param parent_element_id: The id of the parent element.
+        :param place_in_container: The place in the container
         :raises CannotCalculateIntermediateOrder: If it's not possible to find an
             intermediate order. The full order of the items must be recalculated in this
             case before calling this method again.
@@ -86,7 +166,73 @@ class Element(
         """
 
         queryset = Element.objects.filter(page=before.page)
+
+        queryset = cls._scope_queryset_to_container(
+            queryset, parent_element_id, place_in_container
+        )
+
         return cls.get_unique_orders_before_item(before, queryset)[0]
+
+    @classmethod
+    def _scope_queryset_to_container(
+        cls, queryset: QuerySet, parent_element_id: int, place_in_container: str
+    ) -> QuerySet:
+        """
+        Filters the queryset to only include elements that are in the same container
+        as the child element.
+
+        :param queryset: The queryset to filter.
+        :param parent_element_id: The ID of the parent element.
+        :param place_in_container: The place in container of the child element.
+        :return: The filtered queryset.
+        """
+
+        if parent_element_id:
+            return queryset.filter(
+                parent_element_id=parent_element_id,
+                place_in_container=place_in_container,
+            )
+        else:
+            return queryset.filter(
+                parent_element_id=None,
+            )
+
+
+class ContainerElement(Element):
+    """
+    Base class for container elements.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class ColumnElement(ContainerElement):
+    """
+    A column element that can contain other elements.
+    """
+
+    column_amount = models.IntegerField(
+        default=3,
+        help_text="The amount of columns inside this column element.",
+        validators=[
+            MinValueValidator(1, message="Value cannot be less than 0."),
+            MaxValueValidator(6, message="Value cannot be greater than 6."),
+        ],
+    )
+    column_gap = models.IntegerField(
+        default=30,
+        help_text="The amount of space between the columns.",
+        validators=[
+            MinValueValidator(0, message="Value cannot be less than 0."),
+            MaxValueValidator(2000, message="Value cannot be greater than 2000."),
+        ],
+    )
+    alignment = models.CharField(
+        choices=VerticalAlignments.choices,
+        max_length=10,
+        default=VerticalAlignments.TOP,
+    )
 
 
 class HeadingElement(Element):
@@ -101,7 +247,7 @@ class HeadingElement(Element):
         H4 = 4
         H5 = 5
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
@@ -112,7 +258,7 @@ class ParagraphElement(Element):
     A simple paragraph.
     """
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
 
 
 class LinkElement(Element):
@@ -136,7 +282,7 @@ class LinkElement(Element):
         AUTO = "auto"
         FULL = "full"
 
-    value = ExpressionField(default="")
+    value = FormulaField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
         help_text="The navigation type.",
@@ -152,7 +298,7 @@ class LinkElement(Element):
             "navigate_to_url property instead.",
         ),
     )
-    navigate_to_url = ExpressionField(
+    navigate_to_url = FormulaField(
         default="",
         help_text="If no page is selected, this indicate the destination of the link.",
     )
@@ -179,7 +325,9 @@ class LinkElement(Element):
         default=WIDTHS.AUTO,
     )
     alignment = models.CharField(
-        choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
     )
 
 
@@ -214,5 +362,36 @@ class ImageElement(Element):
         blank=True,
     )
     alignment = models.CharField(
-        choices=ALIGNMENTS.choices, max_length=10, default=ALIGNMENTS.LEFT
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
+
+
+class InputElement(Element):
+    """
+    The base input element, which can be extended to
+    support an element for each supported type.
+    """
+
+    class Meta:
+        abstract = True
+
+
+class InputTextElement(InputElement):
+    """
+    An input element of text type.
+    """
+
+    default_value = FormulaField(
+        default="", help_text="This text input's default value."
+    )
+    required = models.BooleanField(
+        default=False, help_text="Whether this text input is a required field."
+    )
+    placeholder = models.CharField(
+        blank=True,
+        default="",
+        max_length=225,
+        help_text="The placeholder text which should be applied to the element.",
     )

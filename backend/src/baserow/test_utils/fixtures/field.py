@@ -192,6 +192,9 @@ class FieldFixtures:
     ):
         self.set_test_field_kwarg_defaults(user, kwargs)
 
+        if "notify_user_when_added" not in kwargs:
+            kwargs["notify_user_when_added"] = False
+
         field = MultipleCollaboratorsField.objects.create(**kwargs)
 
         if create_field:

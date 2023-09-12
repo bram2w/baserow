@@ -2,15 +2,19 @@
   <Context
     class="data-source-context"
     :class="{ 'context--loading-overlay': state === 'loading' }"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
     @shown="shown"
   >
     <template v-if="state === 'loaded'">
       <div v-if="dataSources.length > 0">
         <DataSourceForm
           v-for="dataSource in dataSources"
+          :id="dataSource.id"
           :ref="`dataSourceForm_${dataSource.id}`"
           :key="dataSource.id"
           :builder="builder"
+          :page="page"
           :default-values="dataSource"
           :integrations="integrations"
           @delete="deleteDataSource(dataSource)"
@@ -29,7 +33,12 @@
         </div>
       </template>
 
-      <Button type="link" prepend-icon="plus" @click="createDataSource()">
+      <Button
+        type="link"
+        prepend-icon="plus"
+        :loading="creationInProgress"
+        @click="createDataSource()"
+      >
         {{ $t('dataSourceContext.addDataSource') }}
       </Button>
     </template>
@@ -56,18 +65,19 @@ export default {
     },
   },
   data() {
-    return { state: null }
+    return { state: null, creationInProgress: false, onGoingUpdate: {} }
   },
   computed: {
     ...mapGetters({
       integrations: 'integration/getIntegrations',
-      dataSources: 'dataSource/getDataSources',
     }),
+    dataSources() {
+      return this.$store.getters['dataSource/getPageDataSources'](this.page)
+    },
   },
   methods: {
     ...mapActions({
       actionFetchIntegrations: 'integration/fetch',
-      actionFetchDataSources: 'dataSource/fetch',
       actionCreateDataSource: 'dataSource/create',
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
@@ -75,7 +85,6 @@ export default {
     async shown() {
       this.state = 'loading'
       try {
-        await this.actionFetchDataSources({ page: this.page })
         await this.actionFetchIntegrations({ applicationId: this.builder.id })
       } catch (error) {
         notifyIf(error)
@@ -83,28 +92,36 @@ export default {
       this.state = 'loaded'
     },
     async createDataSource() {
+      this.creationInProgress = true
       try {
         await this.actionCreateDataSource({
-          pageId: this.page.id,
+          page: this.page,
           values: {},
         })
       } catch (error) {
         notifyIf(error)
       }
+      this.creationInProgress = false
     },
     async updateDataSource(dataSource, newValues) {
-      const hasDifference = Object.entries(newValues).some(
-        ([key, value]) => !_.isEqual(value, dataSource[key])
+      const differences = Object.fromEntries(
+        Object.entries(newValues).filter(
+          ([key, value]) => !_.isEqual(value, dataSource[key])
+        )
       )
 
-      if (hasDifference) {
+      if (Object.keys(differences).length > 0) {
         try {
           await this.actionUpdateDataSource({
+            page: this.page,
             dataSourceId: dataSource.id,
-            values: clone(newValues),
+            values: clone(differences),
           })
+          if (differences.type) {
+            this.$refs[`dataSourceForm_${dataSource.id}`][0].reset()
+          }
         } catch (error) {
-          // Restore the previous saved values from the store
+          // Restore the previously saved values from the store
           this.$refs[`dataSourceForm_${dataSource.id}`][0].reset()
           notifyIf(error)
         }
@@ -112,7 +129,10 @@ export default {
     },
     async deleteDataSource(dataSource) {
       try {
-        await this.actionDeleteDataSource({ dataSourceId: dataSource.id })
+        await this.actionDeleteDataSource({
+          page: this.page,
+          dataSourceId: dataSource.id,
+        })
       } catch (error) {
         notifyIf(error)
       }

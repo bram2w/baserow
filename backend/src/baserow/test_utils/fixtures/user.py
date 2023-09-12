@@ -27,7 +27,7 @@ class UserFixtures:
         profile_data = {}
 
         if "email" not in kwargs:
-            kwargs["email"] = self.fake.email()
+            kwargs["email"] = self.fake.unique.email()
 
         if "username" not in kwargs:
             kwargs["username"] = kwargs["email"]
@@ -45,6 +45,10 @@ class UserFixtures:
         profile_data["language"] = kwargs.pop("language", "en")
         profile_data["to_be_deleted"] = kwargs.pop("to_be_deleted", False)
         profile_data["concurrency_limit"] = kwargs.pop("concurrency_limit", None)
+        profile_data["email_notification_frequency"] = kwargs.pop(
+            "email_notification_frequency", "instant"
+        )
+        profile_data["timezone"] = kwargs.pop("timezone", "UTC")
 
         user = User(**kwargs)
         user.set_password(kwargs["password"])

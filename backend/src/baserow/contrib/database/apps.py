@@ -302,6 +302,7 @@ class DatabaseConfig(AppConfig):
             FilenameContainsViewFilterType,
             HasFileTypeViewFilterType,
             HigherThanViewFilterType,
+            IsEvenAndWholeViewFilterType,
             LengthIsLowerThanViewFilterType,
             LinkRowContainsViewFilterType,
             LinkRowHasNotViewFilterType,
@@ -329,6 +330,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(LengthIsLowerThanViewFilterType())
         view_filter_type_registry.register(HigherThanViewFilterType())
         view_filter_type_registry.register(LowerThanViewFilterType())
+        view_filter_type_registry.register(IsEvenAndWholeViewFilterType())
         view_filter_type_registry.register(DateEqualViewFilterType())
         view_filter_type_registry.register(DateBeforeViewFilterType())
         view_filter_type_registry.register(DateBeforeOrEqualViewFilterType())
@@ -553,6 +555,7 @@ class DatabaseConfig(AppConfig):
             DeleteDatabaseRowOperationType,
             MoveRowDatabaseRowOperationType,
             ReadAdjacentRowDatabaseRowOperationType,
+            ReadDatabaseRowHistoryOperationType,
             ReadDatabaseRowOperationType,
             RestoreDatabaseRowOperationType,
             UpdateDatabaseRowOperationType,
@@ -670,6 +673,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(TypeFormulaOperationType())
         operation_type_registry.register(ListRowNamesDatabaseTableOperationType())
         operation_type_registry.register(ReadAdjacentRowDatabaseRowOperationType())
+        operation_type_registry.register(ReadDatabaseRowHistoryOperationType())
         operation_type_registry.register(ReadAggregationsViewOperationType())
         operation_type_registry.register(ListAggregationsViewOperationType())
         operation_type_registry.register(ExportTableOperationType())
@@ -701,6 +705,14 @@ class DatabaseConfig(AppConfig):
 
         subject_type_registry.register(TokenSubjectType())
 
+        # notification_types
+        from baserow.contrib.database.fields.notification_types import (
+            CollaboratorAddedToRowNotificationType,
+        )
+        from baserow.core.notifications.registries import notification_type_registry
+
+        notification_type_registry.register(CollaboratorAddedToRowNotificationType())
+
         # The signals must always be imported last because they use the registries
         # which need to be filled first.
         import baserow.contrib.database.search.signals  # noqa: F403, F401
@@ -710,6 +722,7 @@ class DatabaseConfig(AppConfig):
         pre_migrate.connect(clear_generated_model_cache_receiver, sender=self)
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
+        import baserow.contrib.database.rows.history  # noqa: F401
         import baserow.contrib.database.search.tasks  # noqa: F401
         import baserow.contrib.database.views.tasks  # noqa: F401
 

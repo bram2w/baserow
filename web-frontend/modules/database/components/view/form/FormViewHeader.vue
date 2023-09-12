@@ -75,7 +75,7 @@ export default {
   computed: {
     formUrl() {
       return (
-        this.$env.PUBLIC_WEB_FRONTEND_URL +
+        this.$config.PUBLIC_WEB_FRONTEND_URL +
         this.$nuxt.$router.resolve({
           name: this.$registry.get('view', this.view.type).getPublicRoute(),
           params: { slug: this.view.slug },

@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List
 
 from django.db.models import Q
 
@@ -66,7 +66,7 @@ def update_fields_with_broken_references(field: "field_models.Field"):
 def rebuild_field_dependencies(
     field_instance,
     field_cache: FieldCache,
-):
+) -> List[FieldDependency]:
     """
     Deletes all existing dependencies a field has and resets them to the ones
     defined by the field_instances FieldType.get_field_dependencies. Does not
@@ -75,6 +75,7 @@ def rebuild_field_dependencies(
     :param field_instance: The field whose dependencies to change.
     :param field_cache: A cache which will be used to lookup the actual
         fields referenced by any provided field dependencies.
+    :return: Any new dependencies created by the rebuild.
     """
 
     from baserow.contrib.database.fields.registries import field_type_registry
@@ -106,8 +107,9 @@ def rebuild_field_dependencies(
         ):
             raise CircularFieldDependencyError()
 
-    FieldDependency.objects.bulk_create(new_dependencies_to_create)
+    new_dependencies = FieldDependency.objects.bulk_create(new_dependencies_to_create)
     # All new dependencies will have been removed from current_deps_by_str and so any
     # remaining ones are old dependencies which should no longer exist. Delete them.
     delete_ids = [dep.id for dep in current_deps_by_str.values()]
     FieldDependency.objects.filter(pk__in=delete_ids).delete()
+    return new_dependencies

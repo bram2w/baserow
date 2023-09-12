@@ -1,17 +1,17 @@
-export const DIRECTIONS = {
-  UP: 'up',
-  DOWN: 'down',
-  LEFT: 'left',
-  RIGHT: 'right',
-}
+import {
+  ensureInteger,
+  ensureString,
+} from '@baserow/modules/core/utils/validator'
 
 export const PLACEMENTS = {
   BEFORE: 'before',
   AFTER: 'after',
+  LEFT: 'left',
+  RIGHT: 'right',
 }
 export const PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS = {
-  numeric: (value) => !isNaN(value),
-  text: () => true, // Everything starts as text
+  numeric: ensureInteger,
+  text: ensureString,
 }
 
 export const IMAGE_SOURCE_TYPES = {
@@ -19,20 +19,35 @@ export const IMAGE_SOURCE_TYPES = {
   URL: 'url',
 }
 
-export const ALIGNMENTS = {
+export const HORIZONTAL_ALIGNMENTS = {
   LEFT: {
-    name: 'alignmentSelector.alignmentLeft',
+    name: 'horizontalAlignmentSelector.alignmentLeft',
     value: 'left',
     icon: 'align-left',
   },
   CENTER: {
-    name: 'alignmentSelector.alignmentCenter',
+    name: 'horizontalAlignmentSelector.alignmentCenter',
     value: 'center',
     icon: 'align-center',
   },
   RIGHT: {
-    name: 'alignmentSelector.alignmentRight',
+    name: 'horizontalAlignmentSelector.alignmentRight',
     value: 'right',
     icon: 'align-right',
+  },
+}
+
+export const VERTICAL_ALIGNMENTS = {
+  TOP: {
+    name: 'verticalAlignmentSelector.alignmentTop',
+    value: 'top',
+  },
+  CENTER: {
+    name: 'verticalAlignmentSelector.alignmentCenter',
+    value: 'center',
+  },
+  BOTTOM: {
+    name: 'verticalAlignmentSelector.alignmentBottom',
+    value: 'bottom',
   },
 }

@@ -39,6 +39,7 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch('view/unselect')
     this.$store.dispatch('table/unselect')
+    this.$store.dispatch('application/unselect')
     next()
   },
   async beforeRouteUpdate(to, from, next) {
@@ -136,7 +137,7 @@ export default {
       const firstViewType = app.$registry.get('view', firstView.type)
       // If the view is deactivated, it's not possible to open the view because it will
       // put the user in an unrecoverable state. Therefore, it's better to not select a
-      // view, so that the user can choose which he wants to select in the top left
+      // view, so that the user can choose which they want to select in the top left
       // corner.
       if (!firstViewType.isDeactivated(data.database.workspace.id)) {
         viewId = firstView.id

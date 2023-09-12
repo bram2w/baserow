@@ -10,11 +10,11 @@
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
-  border-radius: 3px;
   padding: 0 32px 0 12px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   @include fixed-height(36px, 13px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -59,12 +59,22 @@
 
 .dropdown__items {
   border: 1px solid $color-primary-500;
-  border-radius: 3px;
   background-color: $white;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
   z-index: 1;
 
   @include absolute(0, 0, auto, 0);
+  @include rounded($rounded);
+
+  &.dropdown__items--fixed {
+    flex-direction: column;
+    position: fixed;
+    right: auto;
+
+    &:not(.hidden) {
+      display: flex;
+    }
+  }
 
   .select__item:hover {
     background-color: transparent;

@@ -20,7 +20,7 @@
 
 .form-view__sidebar-fields-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .form-view__sidebar-fields-actions {
@@ -39,7 +39,7 @@
 
 .form-view__sidebar-fields-description {
   font-size: 13px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin: 18px 0;
 }
 
@@ -56,9 +56,9 @@
   position: relative;
   display: flex;
   border: solid 1px $color-neutral-300;
-  border-radius: 3px;
   background-color: $white;
   padding: 0 30px 0 12px;
+  @include rounded($rounded);
 
   &::after {
     @extend .fas;
@@ -67,7 +67,7 @@
     width: 24px;
     line-height: 14px;
     text-align: center;
-    color: $color-primary-900;
+    color: $color-neutral-900;
     margin-top: -7px;
     display: none;
 
@@ -117,7 +117,7 @@
   width: 100%;
   line-height: 36px;
   font-size: 13px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .form-view__sidebar-prefill-or-hide-link {
@@ -156,9 +156,9 @@
   border: 2px dashed $color-neutral-300;
   font-size: 13px;
   font-weight: 600;
-  border-radius: 12px;
   color: $color-neutral-600;
   overflow: hidden;
+  @include rounded($rounded-xl);
 
   &:hover {
     text-decoration: none;
@@ -201,7 +201,7 @@
   text-align: center;
   margin-left: -50px;
   margin-top: -6.5px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .form-view__file-dragging {
@@ -259,7 +259,7 @@
   padding-left: 8px;
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 
   &::after {
@@ -302,7 +302,7 @@
 
 .form-view__title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 20px 0;
 }
 
@@ -316,10 +316,10 @@
   margin-top: 30px;
   padding: 30px;
   border: solid 1px $color-neutral-200;
-  border-radius: 6px;
   font-size: 16px;
   color: $color-neutral-600;
   line-height: 160%;
+  @include rounded($rounded-md);
 }
 
 .form-view__fields {
@@ -332,7 +332,7 @@
 
 .form-view__field {
   position: relative;
-  border-radius: 12px;
+  @include rounded($rounded-xl);
 
   &.form-view__field--editable {
     border: 1px solid transparent;
@@ -401,7 +401,7 @@
 
   max-width: 100%;
   font-size: 13px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .form-view__field-head-options {
@@ -409,7 +409,7 @@
   color: $color-neutral-600;
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }
 
@@ -418,7 +418,7 @@
   color: $color-neutral-600;
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }
 
@@ -428,7 +428,7 @@
 
 .form-view__field-name {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 14px;
 }
 
@@ -531,7 +531,7 @@
 
 .form-view__submitted-message {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 160%;
   margin-bottom: 40px;
   text-align: center;

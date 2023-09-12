@@ -66,7 +66,7 @@
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;
-  font-weight: bold;
+  font-weight: 600;
 
   @include center-text(30px, 12px);
 
@@ -126,14 +126,13 @@
   max-width: 100%;
   margin-left: 0;
   margin-right: auto;
-  border-radius: 8px;
   border-top-left-radius: 3px;
   word-wrap: break-word;
   border: 1px solid $color-neutral-200;
-  box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
-  -webkit-box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
-  -moz-box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
   white-space: pre-line;
+
+  @include rounded($rounded-md);
+  @include add-elevation($elevation-low);
 
   .auto-expandable-textarea {
     font-size: 13px;
@@ -145,11 +144,10 @@
     text-align: right;
     margin-left: auto;
     margin-right: 0;
-    border-radius: 8px;
     border-top-right-radius: 3px;
     box-shadow: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
+
+    @include rounded($rounded-md);
   }
 
   .row-comments__comment--editing & {
@@ -174,8 +172,9 @@
 
   .rich-text-editor {
     border: 1px solid #9fa4ab;
-    border-radius: 3px;
     padding: 8px 12px 8px 12px;
+
+    @include rounded($rounded);
   }
 }
 
@@ -184,9 +183,10 @@
 
   white-space: nowrap;
   color: $color-primary-900;
-  border-radius: 3px;
   background-color: $color-neutral-100;
   text-decoration: none;
+
+  @include rounded($rounded);
 
   &:hover {
     background-color: $color-primary-100;
@@ -243,9 +243,10 @@
     background: white;
     padding: 8px 12px;
     border: 1px solid $color-neutral-200;
-    box-shadow: 0 1px 2px rgba(19, 45, 69, 0.1);
     border-radius: 80px;
-    font-weight: 600;
+    font-weight: 500;
+
+    @include add-elevation($elevation-low);
   }
 }
 

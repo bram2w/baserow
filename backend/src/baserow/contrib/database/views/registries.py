@@ -69,7 +69,7 @@ class ViewType(
     This abstract class represents a custom view type that can be added to the
     view type registry. It must be extended so customisation can be done. Each view type
     will have his own model that must extend the View model, this is needed so that the
-    user can set custom settings per view instance he has created.
+    user can set custom settings per view instance they have created.
 
     The added API urls will be available under the namespace 'api:database:views'.
     So if a url with name 'example' is returned by the method it will available under
@@ -527,6 +527,17 @@ class ViewType(
         :param user: The user on whose behalf the change is made.
         :return: The updates values.
         """
+
+        from baserow.contrib.database.views.models import View
+
+        raw_public_view_password = values.get("raw_public_view_password", None)
+        if raw_public_view_password is not None:
+            if raw_public_view_password:
+                values["public_view_password"] = View.make_password(
+                    raw_public_view_password
+                )
+            else:
+                values["public_view_password"] = ""  # nosec b105
 
         return values
 

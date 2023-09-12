@@ -51,6 +51,21 @@ function extractMetadataAndPopulateRow(data, rowIndex) {
   populateRow(row, metadata[row.id])
 }
 
+const updatePositionFn = {
+  previous: (rowIndex, fieldIndex) => {
+    return [rowIndex, fieldIndex - 1]
+  },
+  next: (rowIndex, fieldIndex) => {
+    return [rowIndex, fieldIndex + 1]
+  },
+  above: (rowIndex, fieldIndex) => {
+    return [rowIndex - 1, fieldIndex]
+  },
+  below: (rowIndex, fieldIndex) => {
+    return [rowIndex + 1, fieldIndex]
+  },
+}
+
 export const state = () => ({
   // Indicates if multiple cell selection is active
   multiSelectActive: false,
@@ -67,6 +82,9 @@ export const state = () => ({
   multiSelectHeadFieldIndex: -1,
   multiSelectTailRowIndex: -1,
   multiSelectTailFieldIndex: -1,
+  // Keep the original row and field index to remember where the selection began
+  multiSelectStartRowIndex: -1,
+  multiSelectStartFieldIndex: -1,
   // The last used grid id.
   lastGridId: -1,
   // Contains the custom field options per view. Things like the field width are
@@ -229,7 +247,7 @@ export const mutations = {
   },
   DELETE_FIELD_OPTIONS(state, fieldId) {
     if (Object.prototype.hasOwnProperty.call(state.fieldOptions, fieldId)) {
-      delete state.fieldOptions[fieldId]
+      Vue.delete(state.fieldOptions, fieldId)
     }
   },
   SET_ROW_HOVER(state, { row, value }) {
@@ -281,17 +299,19 @@ export const mutations = {
       }
     })
   },
+  SET_MULTISELECT_START_ROW_INDEX(state, value) {
+    state.multiSelectStartRowIndex = value
+  },
+  SET_MULTISELECT_START_FIELD_INDEX(state, value) {
+    state.multiSelectStartFieldIndex = value
+  },
   UPDATE_MULTISELECT(state, { position, rowIndex, fieldIndex }) {
     if (position === 'head') {
       state.multiSelectHeadRowIndex = rowIndex
       state.multiSelectHeadFieldIndex = fieldIndex
     } else if (position === 'tail') {
-      // Limit selection to 200 rows (199 since rows start at index 0)
-      // This limit is set by the backend
-      if (Math.abs(state.multiSelectHeadRowIndex - rowIndex) <= 199) {
-        state.multiSelectTailRowIndex = rowIndex
-        state.multiSelectTailFieldIndex = fieldIndex
-      }
+      state.multiSelectTailRowIndex = rowIndex
+      state.multiSelectTailFieldIndex = fieldIndex
     }
   },
   SET_MULTISELECT_HOLDING(state, value) {
@@ -301,11 +321,16 @@ export const mutations = {
     state.multiSelectActive = value
   },
   CLEAR_MULTISELECT(state) {
+    state.multiSelectActive = false
     state.multiSelectHolding = false
     state.multiSelectHeadRowIndex = -1
     state.multiSelectHeadFieldIndex = -1
     state.multiSelectTailRowIndex = -1
     state.multiSelectTailFieldIndex = -1
+  },
+  CLEAR_MULTISELECT_START(state) {
+    state.multiSelectStartRowIndex = -1
+    state.multiSelectStartFieldIndex = -1
   },
   ADD_FIELD_TO_ROWS_IN_BUFFER(state, { field, value }) {
     const name = `field_${field.id}`
@@ -379,7 +404,7 @@ export const mutations = {
     const currentValue = row._.metadata[rowMetadataType]
     Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
   },
-  FINALIZE_ROWS_IN_BUFFER(state, { oldRows, newRows }) {
+  FINALIZE_ROWS_IN_BUFFER(state, { oldRows, newRows, fields }) {
     const stateRowsCopy = { ...state.rows }
 
     for (let i = 0; i < oldRows.length; i++) {
@@ -396,7 +421,9 @@ export const mutations = {
       stateRowsCopy[index].order = new BigNumber(newRow.order)
       stateRowsCopy[index]._.loading = false
       Object.keys(newRow).forEach((key) => {
-        stateRowsCopy[index][key] = newRow[key]
+        if (fields.includes(key)) {
+          stateRowsCopy[index][key] = newRow[key]
+        }
       })
     }
 
@@ -581,7 +608,7 @@ export const actions = {
           limit: requestLimit,
           signal: lastQueryController.signal,
           search: getters.getServerSearchTerm,
-          searchMode: getDefaultSearchModeFromEnv(this.$env),
+          searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -742,7 +769,7 @@ export const actions = {
       limit,
       includeFieldOptions: true,
       search: getters.getServerSearchTerm,
-      searchMode: getDefaultSearchModeFromEnv(this.$env),
+      searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -790,7 +817,7 @@ export const actions = {
       .fetchCount({
         gridId,
         search: getters.getServerSearchTerm,
-        searchMode: getDefaultSearchModeFromEnv(this.$env),
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
         signal: lastRefreshRequestController.signal,
         publicUrl: rootGetters['page/view/public/getIsPublic'],
         publicAuthToken: rootGetters['page/view/public/getAuthToken'],
@@ -816,7 +843,7 @@ export const actions = {
             includeFieldOptions,
             signal: lastRefreshRequestController.signal,
             search: getters.getServerSearchTerm,
-            searchMode: getDefaultSearchModeFromEnv(this.$env),
+            searchMode: getDefaultSearchModeFromEnv(this.$config),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -852,6 +879,7 @@ export const actions = {
             commit('REPLACE_ALL_FIELD_OPTIONS', data.field_options)
           }
         }
+        dispatch('correctMultiSelect')
         dispatch('fetchAllFieldAggregationData', {
           view,
         })
@@ -926,11 +954,12 @@ export const actions = {
    * Updates the field options of a given field in the store. So no API request to
    * the backend is made.
    */
-  setFieldOptionsOfField({ commit, getters }, { field, values }) {
+  setFieldOptionsOfField({ commit, getters, dispatch }, { field, values }) {
     commit('UPDATE_FIELD_OPTIONS_OF_FIELD', {
       fieldId: field.id,
       values,
     })
+    dispatch('correctMultiSelect')
   },
   /**
    * Replaces all field options with new values and also makes an API request to the
@@ -959,6 +988,7 @@ export const actions = {
         })
       } catch (error) {
         dispatch('forceUpdateAllFieldOptions', oldFieldOptions)
+        dispatch('correctMultiSelect')
         throw error
       }
     }
@@ -966,8 +996,9 @@ export const actions = {
   /**
    * Forcefully updates all field options without making a call to the backend.
    */
-  forceUpdateAllFieldOptions({ commit }, fieldOptions) {
+  forceUpdateAllFieldOptions({ commit, dispatch }, fieldOptions) {
     commit('UPDATE_ALL_FIELD_OPTIONS', fieldOptions)
+    dispatch('correctMultiSelect')
   },
   /**
    * Fetch all field aggregation data from the server for this view. Set loading state
@@ -1016,7 +1047,7 @@ export const actions = {
       ).fetchFieldAggregations({
         gridId: view.id,
         search,
-        searchMode: getDefaultSearchModeFromEnv(this.$env),
+        searchMode: getDefaultSearchModeFromEnv(this.$config),
         signal: lastAggregationRequest.controller.signal,
       })
 
@@ -1176,8 +1207,9 @@ export const actions = {
   /**
    * Deletes the field options of the provided field id if they exist.
    */
-  forceDeleteFieldOptions({ commit }, fieldId) {
+  forceDeleteFieldOptions({ commit, dispatch }, fieldId) {
     commit('DELETE_FIELD_OPTIONS', fieldId)
+    dispatch('correctMultiSelect')
   },
   setWindowHeight({ dispatch, commit, getters }, value) {
     commit('SET_WINDOW_HEIGHT', value)
@@ -1187,8 +1219,54 @@ export const actions = {
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
   },
-  setSelectedCell({ commit }, { rowId, fieldId }) {
+  setSelectedCell({ commit, getters, rootGetters }, { rowId, fieldId }) {
     commit('SET_SELECTED_CELL', { rowId, fieldId })
+
+    const rowIndex = getters.getRowIndexById(rowId)
+
+    if (rowIndex !== -1) {
+      commit('SET_MULTISELECT_START_ROW_INDEX', rowIndex)
+
+      const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+      commit(
+        'SET_MULTISELECT_START_FIELD_INDEX',
+        visibleFieldEntries.findIndex((f) => parseInt(f[0]) === fieldId)
+      )
+    }
+  },
+  setSelectedCellCancelledMultiSelect(
+    { commit, getters, rootGetters, dispatch },
+    { direction }
+  ) {
+    const rowIndex = getters.getMultiSelectStartRowIndex
+    const fieldIndex = getters.getMultiSelectStartFieldIndex
+    const [newRowIndex, newFieldIndex] = updatePositionFn[direction](
+      rowIndex,
+      fieldIndex
+    )
+
+    const rows = getters.getAllRows
+    const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+    const row = rows[newRowIndex - getters.getBufferStartIndex]
+    const field = visibleFieldEntries[newFieldIndex]
+
+    if (row && field) {
+      dispatch('setSelectedCell', {
+        rowId: row.id,
+        fieldId: parseInt(field[0]),
+      })
+    } else {
+      const oldRow = rows[rowIndex - getters.getBufferStartIndex]
+      const oldField = visibleFieldEntries[fieldIndex]
+
+      if (oldRow && oldField) {
+        dispatch('setSelectedCell', {
+          rowId: oldRow.id,
+          fieldId: parseInt(oldField[0]),
+        })
+      }
+    }
+    dispatch('clearAndDisableMultiSelect')
   },
   setMultiSelectHolding({ commit }, value) {
     commit('SET_MULTISELECT_HOLDING', value)
@@ -1200,41 +1278,193 @@ export const actions = {
     commit('CLEAR_MULTISELECT')
     commit('SET_MULTISELECT_ACTIVE', false)
   },
-  multiSelectStart({ getters, commit }, { rowId, fieldIndex }) {
+  multiSelectStart({ getters, commit, dispatch }, { rowId, fieldIndex }) {
     commit('CLEAR_MULTISELECT')
 
     const rowIndex = getters.getRowIndexById(rowId)
+
     // Set the head and tail index to highlight the first cell
-    commit('UPDATE_MULTISELECT', { position: 'head', rowIndex, fieldIndex })
-    commit('UPDATE_MULTISELECT', { position: 'tail', rowIndex, fieldIndex })
+    dispatch('updateMultipleSelectIndexes', {
+      position: 'head',
+      rowIndex,
+      fieldIndex,
+    })
+    dispatch('updateMultipleSelectIndexes', {
+      position: 'tail',
+      rowIndex,
+      fieldIndex,
+    })
+    commit('CLEAR_MULTISELECT_START')
+    commit('SET_MULTISELECT_START_ROW_INDEX', rowIndex)
+    commit('SET_MULTISELECT_START_FIELD_INDEX', fieldIndex)
 
     // Update the store to show that the mouse is being held for multi-select
     commit('SET_MULTISELECT_HOLDING', true)
     // Do not enable multi-select if only a single cell is selected
     commit('SET_MULTISELECT_ACTIVE', false)
   },
-  multiSelectShiftClick({ state, getters, commit }, { rowId, fieldIndex }) {
+  multiSelectShiftClick(
+    { state, getters, commit, dispatch },
+    { rowId, fieldIndex }
+  ) {
     commit('SET_MULTISELECT_ACTIVE', true)
+    dispatch('setMultiSelectHeadOrTail', { rowId, fieldIndex })
+  },
+  multiSelectShiftChange({ getters, commit, dispatch }, { direction }) {
+    if (
+      getters.getMultiSelectStartRowIndex === -1 ||
+      getters.getMultiSelectStartFieldIndex === -1
+    ) {
+      return {
+        position: null,
+        rowIndex: -1,
+        fieldIndex: -1,
+      }
+    }
+
+    if (!getters.isMultiSelectActive) {
+      commit('SET_MULTISELECT_ACTIVE', true)
+      dispatch('updateMultipleSelectIndexes', {
+        position: 'head',
+        rowIndex: getters.getMultiSelectStartRowIndex,
+        fieldIndex: getters.getMultiSelectStartFieldIndex,
+      })
+      dispatch('updateMultipleSelectIndexes', {
+        position: 'tail',
+        rowIndex: getters.getMultiSelectStartRowIndex,
+        fieldIndex: getters.getMultiSelectStartFieldIndex,
+      })
+      commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+    }
+
+    const tailRowIndex = getters.getMultiSelectTailRowIndex
+    const tailFieldIndex = getters.getMultiSelectTailFieldIndex
+    const headRowIndex = getters.getMultiSelectHeadRowIndex
+    const headFieldIndex = getters.getMultiSelectHeadFieldIndex
+
+    const [newRowTailIndex, newFieldTailIndex] = updatePositionFn[direction](
+      tailRowIndex,
+      tailFieldIndex
+    )
+    const [newRowHeadIndex, newFieldHeadIndex] = updatePositionFn[direction](
+      headRowIndex,
+      headFieldIndex
+    )
+    let positionToMove
+
+    if (direction === 'below') {
+      if (headRowIndex === getters.getMultiSelectStartRowIndex) {
+        positionToMove = 'tail'
+      } else {
+        positionToMove = 'head'
+      }
+    }
+
+    if (direction === 'above') {
+      if (tailRowIndex === getters.getMultiSelectStartRowIndex) {
+        positionToMove = 'head'
+      } else {
+        positionToMove = 'tail'
+      }
+    }
+
+    if (direction === 'previous') {
+      if (tailFieldIndex === getters.getMultiSelectStartFieldIndex) {
+        positionToMove = 'head'
+      } else {
+        positionToMove = 'tail'
+      }
+    }
+
+    if (direction === 'next') {
+      if (headFieldIndex === getters.getMultiSelectStartFieldIndex) {
+        positionToMove = 'tail'
+      } else {
+        positionToMove = 'head'
+      }
+    }
+
+    dispatch('updateMultipleSelectIndexes', {
+      position: positionToMove,
+      rowIndex: positionToMove === 'tail' ? newRowTailIndex : newRowHeadIndex,
+      fieldIndex:
+        positionToMove === 'tail' ? newFieldTailIndex : newFieldHeadIndex,
+    })
+
+    return {
+      position: positionToMove,
+      rowIndex: positionToMove === 'tail' ? newRowTailIndex : newRowHeadIndex,
+      fieldIndex:
+        positionToMove === 'tail' ? newFieldTailIndex : newFieldHeadIndex,
+    }
+  },
+  multiSelectHold({ getters, commit, dispatch }, { rowId, fieldIndex }) {
+    if (getters.isMultiSelectHolding) {
+      dispatch('setMultiSelectHeadOrTail', { rowId, fieldIndex })
+    }
+  },
+  setMultiSelectHeadOrTail(
+    { getters, commit, dispatch },
+    { rowId, fieldIndex }
+  ) {
+    commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+
+    const rowIndex = getters.getRowIndexById(rowId)
+    const startRowIndex = getters.getMultiSelectStartRowIndex
+    const startFieldIndex = getters.getMultiSelectStartFieldIndex
+
+    const newHeadRowIndex = Math.min(startRowIndex, rowIndex)
+    const newHeadFieldIndex = Math.min(startFieldIndex, fieldIndex)
+    const newTailRowIndex = Math.max(startRowIndex, rowIndex)
+    const newTailFieldIndex = Math.max(startFieldIndex, fieldIndex)
+
+    dispatch('updateMultipleSelectIndexes', {
+      position: 'head',
+      rowIndex: newHeadRowIndex,
+      fieldIndex: newHeadFieldIndex,
+    })
+
+    dispatch('updateMultipleSelectIndexes', {
+      position: 'tail',
+      rowIndex: newTailRowIndex,
+      fieldIndex: newTailFieldIndex,
+    })
+
+    commit('SET_MULTISELECT_ACTIVE', true)
+  },
+  correctMultiSelect({ getters, commit }) {
+    const headRowIndex = getters.getMultiSelectHeadRowIndex
+    const tailRowIndex = getters.getMultiSelectTailRowIndex
+
+    const headFieldIndex = getters.getMultiSelectHeadFieldIndex
+    const tailFieldIndex = getters.getMultiSelectTailFieldIndex
+
+    const startRowIndex = getters.getMultiSelectStartRowIndex
+    const startFieldIndex = getters.getMultiSelectStartFieldIndex
+
+    const maxRowIndex = getters.getRowsLength + getters.getBufferStartIndex - 1
+    const maxFieldIndex = getters.getNumberOfVisibleFields - 1
+
+    if (headRowIndex > maxRowIndex || headFieldIndex > maxFieldIndex) {
+      commit('CLEAR_MULTISELECT')
+      commit('CLEAR_MULTISELECT_START')
+      return
+    }
 
     commit('UPDATE_MULTISELECT', {
       position: 'tail',
-      rowIndex: getters.getRowIndexById(rowId),
-      fieldIndex,
+      rowIndex: tailRowIndex > maxRowIndex ? maxRowIndex : tailRowIndex,
+      fieldIndex:
+        tailFieldIndex > maxFieldIndex ? maxFieldIndex : tailFieldIndex,
     })
-  },
-  multiSelectHold({ getters, commit }, { rowId, fieldIndex }) {
-    if (getters.isMultiSelectHolding) {
-      // Unselect single cell
-      commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
 
-      commit('UPDATE_MULTISELECT', {
-        position: 'tail',
-        rowIndex: getters.getRowIndexById(rowId),
-        fieldIndex,
-      })
+    const newStartRowIndex =
+      startRowIndex > maxRowIndex ? maxRowIndex : startRowIndex
+    const newStartFieldIndex =
+      startFieldIndex > maxFieldIndex ? maxFieldIndex : startFieldIndex
 
-      commit('SET_MULTISELECT_ACTIVE', true)
-    }
+    commit('SET_MULTISELECT_START_ROW_INDEX', newStartRowIndex)
+    commit('SET_MULTISELECT_START_FIELD_INDEX', newStartFieldIndex)
   },
   /**
    * Returns the fields and rows necessaries to extract data from the selection.
@@ -1286,7 +1516,7 @@ export const actions = {
       offset: startIndex,
       limit,
       search: getters.getServerSearchTerm,
-      searchMode: getDefaultSearchModeFromEnv(this.$env),
+      searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
@@ -1459,9 +1689,13 @@ export const actions = {
         before !== null ? before.id : null
       )
 
+      const fieldsToFinalize = fields
+        .filter((field) => field.read_only)
+        .map((field) => `field_${field.id}`)
       commit('FINALIZE_ROWS_IN_BUFFER', {
         oldRows: rowsPopulated,
         newRows: data.items,
+        fields: fieldsToFinalize,
       })
 
       for (let i = 0; i < data.items.length; i += 1) {
@@ -1722,23 +1956,64 @@ export const actions = {
    * Set the multiple select indexes using the row and field head and tail indexes.
    */
   setMultipleSelect(
-    { commit },
+    { commit, dispatch },
     { rowHeadIndex, fieldHeadIndex, rowTailIndex, fieldTailIndex }
   ) {
-    commit('UPDATE_MULTISELECT', {
+    dispatch('updateMultipleSelectIndexes', {
       position: 'head',
       rowIndex: rowHeadIndex,
       fieldIndex: fieldHeadIndex,
     })
-    commit('UPDATE_MULTISELECT', {
+    dispatch('updateMultipleSelectIndexes', {
       position: 'tail',
       rowIndex: rowTailIndex,
       fieldIndex: fieldTailIndex,
     })
     commit('SET_MULTISELECT_ACTIVE', true)
-    // Unselect a single selected cell because we've just updated the multiple
-    // selected and we don't want that to conflict.
     commit('SET_SELECTED_CELL', { rowId: -1, fieldId: -1 })
+  },
+  /**
+   * Action to update head or tail (position) indexes for row and field
+   * multiple select operations.
+   *
+   * It will prevent updating selection to nonsense indexes by doing nothing
+   * if a provided index isn't correct.
+   */
+  updateMultipleSelectIndexes(
+    { commit, getters },
+    { position, rowIndex, fieldIndex }
+  ) {
+    if (
+      (position === 'tail' && getters.getMultiSelectHeadRowIndex !== -1) ||
+      (position === 'head' && getters.getMultiSelectTailRowIndex !== -1)
+    ) {
+      // check if the selection would go over limit
+      const limit = this.$config.BASEROW_ROW_PAGE_SIZE_LIMIT
+      const previousIndex =
+        position === 'head'
+          ? getters.getMultiSelectTailRowIndex
+          : getters.getMultiSelectHeadRowIndex
+      if (Math.abs(previousIndex - rowIndex) > limit) {
+        return
+      }
+    }
+
+    if (rowIndex < 0 || fieldIndex < 0) {
+      return
+    }
+
+    if (
+      rowIndex > getters.getRowsLength + getters.getBufferStartIndex - 1 ||
+      fieldIndex > getters.getNumberOfVisibleFields - 1
+    ) {
+      return
+    }
+
+    commit('UPDATE_MULTISELECT', {
+      position,
+      rowIndex,
+      fieldIndex,
+    })
   },
   /**
    * This action is used by the grid view to change multiple cells when pasting
@@ -2025,6 +2300,7 @@ export const actions = {
       if (oldRowInBuffer && !newRowInBuffer && (newIsFirst || newIsLast)) {
         commit('DELETE_ROW_IN_BUFFER_WITHOUT_UPDATE', row)
       }
+      dispatch('correctMultiSelect')
     }
   },
   /**
@@ -2124,6 +2400,7 @@ export const actions = {
     // accordingly.
     if (exists) {
       commit('DELETE_ROW_IN_BUFFER', row)
+      dispatch('correctMultiSelect')
       return
     }
 
@@ -2145,6 +2422,7 @@ export const actions = {
 
     // Regardless of where the
     commit('SET_COUNT', getters.getCount - 1)
+    dispatch('correctMultiSelect')
   },
   /**
    * Triggered when a row has been changed, or has a pending change in the provided
@@ -2218,7 +2496,7 @@ export const actions = {
         getters.isHidingRowsNotMatchingSearch,
         fields,
         this.$registry,
-        getDefaultSearchModeFromEnv(this.$env),
+        getDefaultSearchModeFromEnv(this.$config),
         overrides
       )
 
@@ -2379,6 +2657,29 @@ export const getters = {
   getAllFieldOptions(state) {
     return state.fieldOptions
   },
+  getOrderedFieldOptions(state, getters) {
+    return Object.entries(getters.getAllFieldOptions)
+      .map(([fieldIdStr, options]) => [parseInt(fieldIdStr), options])
+      .sort(([a, { order: orderA }], [b, { order: orderB }]) => {
+        // First by order.
+        if (orderA > orderB) {
+          return 1
+        } else if (orderA < orderB) {
+          return -1
+        }
+
+        return a - b
+      })
+  },
+  getOrderedVisibleFieldOptions(state, getters) {
+    return getters.getOrderedFieldOptions.filter(
+      ([fieldId, options]) => options.hidden === false
+    )
+  },
+  getNumberOfVisibleFields(state) {
+    return Object.values(state.fieldOptions).filter((fo) => fo.hidden === false)
+      .length
+  },
   isFirst: (state) => (id) => {
     const index = state.rows.findIndex((row) => row.id === id)
     return index === 0
@@ -2434,18 +2735,22 @@ export const getters = {
     ]
   },
   getMultiSelectHeadFieldIndex(state) {
-    // Return the leftmost
-    return Math.min(
-      state.multiSelectHeadFieldIndex,
-      state.multiSelectTailFieldIndex
-    )
+    return state.multiSelectHeadFieldIndex
+  },
+  getMultiSelectTailFieldIndex(state) {
+    return state.multiSelectTailFieldIndex
   },
   getMultiSelectHeadRowIndex(state) {
-    // Return the topmost
-    return Math.min(
-      state.multiSelectHeadRowIndex,
-      state.multiSelectTailRowIndex
-    )
+    return state.multiSelectHeadRowIndex
+  },
+  getMultiSelectTailRowIndex(state) {
+    return state.multiSelectTailRowIndex
+  },
+  getMultiSelectStartRowIndex(state) {
+    return state.multiSelectStartRowIndex
+  },
+  getMultiSelectStartFieldIndex(state) {
+    return state.multiSelectStartFieldIndex
   },
   // Get the index of a row given it's row id.
   // This will calculate the row index from the current buffer position and offset.
@@ -2453,6 +2758,20 @@ export const getters = {
     const bufferIndex = state.rows.findIndex((r) => r.id === rowId)
     if (bufferIndex !== -1) {
       return getters.getBufferStartIndex + bufferIndex
+    }
+    return -1
+  },
+  getRowIdByIndex: (state, getters) => (rowIndex) => {
+    const row = state.rows[rowIndex - getters.getBufferStartIndex]
+    if (row) {
+      return row.id
+    }
+    return -1
+  },
+  getFieldIdByIndex: (state, getters) => (fieldIndex) => {
+    const orderedFieldOptions = getters.getOrderedVisibleFieldOptions
+    if (orderedFieldOptions[fieldIndex]) {
+      return orderedFieldOptions[fieldIndex][0]
     }
     return -1
   },

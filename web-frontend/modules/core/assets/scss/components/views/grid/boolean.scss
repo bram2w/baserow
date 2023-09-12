@@ -5,11 +5,11 @@
 
 .grid-field-boolean__checkbox {
   margin: auto;
-  border-radius: 3px;
   color: $color-success-600;
   cursor: pointer;
 
   @include center-text(18px, 11px);
+  @include rounded($rounded);
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;

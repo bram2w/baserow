@@ -1,5 +1,12 @@
 <template>
-  <div class="context" :class="{ 'visibility-hidden': !open || !updatedOnce }">
+  <div
+    v-auto-overflow-scroll="open && overflowScroll"
+    class="context"
+    :class="{
+      'visibility-hidden': !open || !updatedOnce,
+      'context--overflow-scroll': overflowScroll,
+    }"
+  >
     <slot v-if="openedOnce"></slot>
   </div>
 </template>
@@ -22,6 +29,16 @@ export default {
       default: true,
       required: false,
     },
+    overflowScroll: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+    maxHeightIfOutsideViewport: {
+      type: Boolean,
+      default: () => false,
+      required: false,
+    },
   },
   data() {
     return {
@@ -30,6 +47,7 @@ export default {
       updatedOnce: false,
       // If opened once, should stay in DOM to keep nested content
       openedOnce: false,
+      maxHeightOffset: 10,
     }
   },
   methods: {
@@ -106,11 +124,37 @@ export default {
               horizontalOffset
             )
 
+        // If the context menu doesn't fit inside the viewport from the opposite.
+        // direction, then it will break out of it. We will therefore close it. This can
+        // happen the height or width of the viewport decreases.
+        if (
+          (css.bottom && css.bottom < 0) ||
+          (css.right && css.right < 0) ||
+          (css.top && css.top > window.innerHeight)
+        ) {
+          this.hide()
+          return
+        }
+
         // Set the calculated positions of the context.
         for (const key in css) {
-          const value = css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
-          this.$el.style[key] = value
+          const cssValue =
+            css[key] !== null ? Math.ceil(css[key]) + 'px' : 'auto'
+          this.$el.style[key] = cssValue
         }
+
+        // The max height can optionally be automatically to prevent the context from
+        // breaking out of the viewport.
+        if (this.maxHeightIfOutsideViewport) {
+          const maxHeight =
+            css.top || css.bottom
+              ? `calc(100vh - ${
+                  (css.top || css.bottom) + this.maxHeightOffset
+                }px)`
+              : 'none'
+          this.$el.style['max-height'] = maxHeight
+        }
+
         this.updatedOnce = true
       }
 
@@ -131,7 +175,7 @@ export default {
           this.open &&
           // If the prop allows it to be closed by clicking outside.
           this.hideOnClickOutside &&
-          // If the click was not on the opener because he can trigger the toggle
+          // If the click was not on the opener because they can trigger the toggle
           // method.
           !isElement(this.opener, target) &&
           // If the click was not inside one of the context children of this context
@@ -144,11 +188,30 @@ export default {
         }
       })
 
-      this.$el.updatePositionEvent = (event) => {
+      this.$el.updatePositionViaScrollEvent = (event) => {
+        // The context menu itself can have a scrollbar, and resizing everytime you
+        // scroll internally doesn't make sense because it can't influence the position.
+        if (
+          !isElement(this.$el, event.target) &&
+          // If the scroll was not inside one of the context children of this context
+          // menu.
+          !this.moveToBody.children.some((child) => {
+            return isElement(child.$el, target)
+          })
+        ) {
+          updatePosition()
+        }
+      }
+      window.addEventListener(
+        'scroll',
+        this.$el.updatePositionViaScrollEvent,
+        true
+      )
+
+      this.$el.updatePositionViaResizeEvent = () => {
         updatePosition()
       }
-      window.addEventListener('scroll', this.$el.updatePositionEvent, true)
-      window.addEventListener('resize', this.$el.updatePositionEvent)
+      window.addEventListener('resize', this.$el.updatePositionViaResizeEvent)
 
       this.$emit('shown')
     },
@@ -158,7 +221,7 @@ export default {
     toggleNextToMouse(
       clickEvent,
       vertical = 'bottom',
-      horizontal = 'right',
+      horizontal = 'left',
       verticalOffset = 10,
       horizontalOffset = 0,
       value = true
@@ -181,7 +244,7 @@ export default {
     showNextToMouse(
       clickEvent,
       vertical = 'bottom',
-      horizontal = 'right',
+      horizontal = 'left',
       verticalOffset = 10,
       horizontalOffset = 0
     ) {
@@ -222,8 +285,15 @@ export default {
       ) {
         this.$el.cancelOnClickOutside()
       }
-      window.removeEventListener('scroll', this.$el.updatePositionEvent, true)
-      window.removeEventListener('resize', this.$el.updatePositionEvent)
+      window.removeEventListener(
+        'scroll',
+        this.$el.updatePositionViaScrollEvent,
+        true
+      )
+      window.removeEventListener(
+        'resize',
+        this.$el.updatePositionViaResizeEvent
+      )
     },
     /**
      * Calculates the absolute position of the context based on the original clicked
@@ -248,39 +318,16 @@ export default {
       }
 
       const targetRect = target.getBoundingClientRect()
-
-      const positions = { top: null, right: null, bottom: null, left: null }
-
-      // Take into account that the document might be scrollable.
-      verticalOffset += document.documentElement.scrollTop
-      horizontalOffset += document.documentElement.scrollLeft
-
-      const { vertical: verticalAdjusted, horizontal: horizontalAdjusted } =
-        this.checkForEdges(
-          targetRect,
-          vertical,
-          horizontal,
-          verticalOffset,
-          horizontalOffset
-        )
-
-      // Calculate the correct positions for horizontal and vertical values.
-      if (horizontalAdjusted === 'left') {
-        positions.left = targetRect.left + horizontalOffset
-      }
-
-      if (horizontalAdjusted === 'right') {
-        positions.right =
-          window.innerWidth - targetRect.right - horizontalOffset
-      }
-
-      if (verticalAdjusted === 'bottom') {
-        positions.top = targetRect.bottom + verticalOffset
-      }
-
-      if (verticalAdjusted === 'top') {
-        positions.bottom = window.innerHeight - targetRect.top + verticalOffset
-      }
+      const positions = this.calculatePositions(
+        horizontal,
+        vertical,
+        targetRect.top,
+        targetRect.right,
+        targetRect.bottom,
+        targetRect.left,
+        verticalOffset,
+        horizontalOffset
+      )
 
       if (!visible) {
         target.classList.remove('forced-block')
@@ -303,12 +350,38 @@ export default {
     ) {
       const targetTop = coordinates.top
       const targetLeft = coordinates.left
-      const targetBottom = window.innerHeight - targetTop
-      const targetRight = window.innerWidth - targetLeft
+      // The bottom and right must be equal to the top and left because when calculating
+      // the position fixed, it's a mouseclick which just has an x and y coordinate and
+      // is not an element with a width and height.
+      const targetBottom = coordinates.top
+      const targetRight = coordinates.left
 
-      const contextRect = this.$el.getBoundingClientRect()
-      const positions = { top: null, right: null, bottom: null, left: null }
+      const positions = this.calculatePositions(
+        horizontal,
+        vertical,
+        targetTop,
+        targetRight,
+        targetBottom,
+        targetLeft,
+        verticalOffset,
+        horizontalOffset
+      )
 
+      return positions
+    },
+    /**
+     * Calculates the optimal positions based on the chosen position, target and offset.
+     */
+    calculatePositions(
+      horizontal,
+      vertical,
+      targetTop,
+      targetRight,
+      targetBottom,
+      targetLeft,
+      verticalOffset,
+      horizontalOffset
+    ) {
       // Take into account that the document might be scrollable.
       verticalOffset += document.documentElement.scrollTop
       horizontalOffset += document.documentElement.scrollLeft
@@ -327,21 +400,23 @@ export default {
           horizontalOffset
         )
 
+      const positions = { top: null, right: null, bottom: null, left: null }
+
       // Calculate the correct positions for horizontal and vertical values.
       if (horizontalAdjusted === 'left') {
-        positions.left = targetLeft - contextRect.width + horizontalOffset
+        positions.left = targetLeft + horizontalOffset
       }
 
       if (horizontalAdjusted === 'right') {
-        positions.right = targetRight - contextRect.width - horizontalOffset
+        positions.right = window.innerWidth - targetRight - horizontalOffset
       }
 
       if (verticalAdjusted === 'bottom') {
-        positions.top = targetTop + verticalOffset
+        positions.top = targetBottom + verticalOffset
       }
 
       if (verticalAdjusted === 'top') {
-        positions.bottom = targetBottom + verticalOffset
+        positions.bottom = window.innerHeight - targetTop + verticalOffset
       }
 
       return positions
@@ -361,11 +436,17 @@ export default {
       horizontalOffset
     ) {
       const contextRect = this.$el.getBoundingClientRect()
-      const canTop = targetRect.top - contextRect.height - verticalOffset > 0
+      // We need to use the scrollHeight in the calculations because we need to work
+      // with the full height of the element without scrollbar to calculate the optimal
+      // position.
+      const scrollHeight = this.$el.scrollHeight
+      const canTop = targetRect.top - scrollHeight - verticalOffset > 0
       const canBottom =
         window.innerHeight -
           targetRect.bottom -
-          contextRect.height -
+          scrollHeight -
+          this.maxHeightOffset -
+          1 -
           verticalOffset >
         0
       const canRight =
@@ -383,7 +464,7 @@ export default {
         vertical = 'top'
       }
 
-      if (vertical === 'top' && !canTop) {
+      if (vertical === 'top' && !canTop && canBottom) {
         vertical = 'bottom'
       }
 
@@ -391,7 +472,7 @@ export default {
         horizontal = 'right'
       }
 
-      if (horizontal === 'right' && !canRight) {
+      if (horizontal === 'right' && !canRight && canLeft) {
         horizontal = 'left'
       }
 

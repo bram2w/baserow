@@ -21,10 +21,15 @@ export default (client) => {
     delete(elementId) {
       return client.delete(`builder/element/${elementId}/`)
     },
-    move(elementId, beforeId) {
+    move(elementId, beforeId, parentElementId, placeInContainer) {
       return client.patch(`builder/element/${elementId}/move/`, {
         before_id: beforeId,
+        parent_element_id: parentElementId,
+        place_in_container: placeInContainer,
       })
+    },
+    duplicate(elementId) {
+      return client.post(`builder/element/${elementId}/duplicate/`)
     },
   }
 }

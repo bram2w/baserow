@@ -150,6 +150,16 @@
   white-space: pre-wrap;
 }
 
+.remove-number-input-controls {
+  -moz-appearance: textfield !important;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);

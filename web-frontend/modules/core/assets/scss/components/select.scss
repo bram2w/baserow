@@ -2,9 +2,12 @@
   @extend .context;
 
   max-width: 360px;
+  display: flex;
+  flex-direction: column;
 }
 
 .select__search {
+  flex: 0 0;
   position: relative;
   border-bottom: 1px solid $color-neutral-200;
 }
@@ -32,7 +35,8 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: (4 * 36px) + 20px; // we show max 8 items
+  min-height: 0;
+  max-height: (4 * 36px) + 20px; // we show max 4 items
   // note that the value is `scroll` and not `auto` because it depends on the
   // v-auto-overflow-scroll directive.
   overflow-y: scroll;
@@ -44,6 +48,17 @@
     height: 10px;
     width: 100%;
   }
+
+  // This class can be set if the max-height is managed by a container element.
+  &.select__items--no-max-height {
+    max-height: none;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 .select__items--empty {
@@ -51,11 +66,6 @@
   white-space: normal;
   text-align: center;
   color: $color-neutral-500;
-}
-
-.select__items--expanded {
-  max-height: 100%;
-  overflow-y: auto;
 }
 
 .select__items-loading {
@@ -72,6 +82,16 @@
   }
 }
 
+.select__item-label {
+  color: $color-neutral-600;
+  margin: 10px 0 10px 10px;
+  font-size: 14px;
+
+  li:first-child & {
+    margin-top: 0;
+  }
+}
+
 %select__item-size {
   @include fixed-height(32px, 14px);
 }
@@ -80,8 +100,8 @@
   position: relative;
   margin: 0 8px 4px 8px;
   padding: 0 32px 0 10px;
-  border-radius: 3px;
   user-select: none;
+  @include rounded($rounded);
 
   &.select__item--has-notification {
     padding-right: 48px;
@@ -93,6 +113,14 @@
 
   &:hover {
     background-color: $color-neutral-100;
+  }
+
+  &--selected {
+    background-color: $color-primary-100;
+  }
+
+  &--indented {
+    margin-left: 20px;
   }
 
   &.select__item--loading::before {
@@ -133,7 +161,7 @@
 
 .select__item-link {
   display: block;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -209,6 +237,7 @@
 }
 
 .select__footer {
+  flex: 0 0;
   border-top: 1px solid $color-neutral-200;
 }
 
@@ -247,13 +276,13 @@
   position: relative;
   flex: 0 0 calc(50% - 10px);
   width: calc(50% - 10px);
-  color: $color-primary-900;
-  border-radius: 3px;
+  color: $color-neutral-900;
   padding: 0 32px 0 10px;
   margin-bottom: 4px;
   min-width: 0;
   line-height: 26px;
   font-size: 13px;
+  @include rounded($rounded);
 
   &:only-child {
     width: 100%;

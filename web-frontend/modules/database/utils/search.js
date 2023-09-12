@@ -9,8 +9,8 @@ export const SearchModes = {
   MODE_FT_WITH_COUNT: 'full-text-with-count',
 }
 
-export function getDefaultSearchModeFromEnv($env) {
-  return $env.BASEROW_USE_PG_FULLTEXT_SEARCH === 'true'
+export function getDefaultSearchModeFromEnv($config) {
+  return $config.BASEROW_USE_PG_FULLTEXT_SEARCH === 'true'
     ? SearchModes.MODE_FT_WITH_COUNT
     : SearchModes.MODE_COMPAT
 }

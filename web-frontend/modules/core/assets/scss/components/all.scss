@@ -50,8 +50,7 @@
 @import 'views/gallery';
 @import 'views/sharing';
 @import 'views/public';
-@import 'views/view_ownership_select';
-@import 'views/views_context';
+@import 'view_ownership_select';
 @import 'decorator/list';
 @import 'decorator/item';
 @import 'decorator/context';
@@ -107,6 +106,9 @@
 @import 'snapshots_modal';
 @import 'import_modal';
 @import 'row_edit_modal';
+@import 'row_edit_modal_sidebar';
+@import 'row_history';
+@import 'row_history_entry';
 @import 'data_table';
 @import 'auth';
 @import 'expand_on_overflow_list';
@@ -124,3 +126,7 @@
 @import 'integrations/all';
 @import 'editable';
 @import 'notification_panel';
+@import 'color_picker';
+@import 'color_picker_context';
+@import 'formula_input_field';
+@import 'get_formula_component';

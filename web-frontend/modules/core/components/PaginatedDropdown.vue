@@ -66,6 +66,11 @@ export default {
       type: Function,
       required: true,
     },
+    includeDisplayNameInSelectedEvent: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
 }
 </script>

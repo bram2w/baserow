@@ -6,7 +6,6 @@ import pytest
 from faker import Faker
 
 from baserow.contrib.database.fields.field_types import MultipleCollaboratorsFieldType
-from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import MultipleCollaboratorsField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
@@ -21,14 +20,10 @@ def test_multiple_collaborators_field_type_create(data_fixture):
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
 
-    field_handler = FieldHandler()
     row_handler = RowHandler()
 
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     field_id = collaborator_field.db_column
 
@@ -55,14 +50,10 @@ def test_multiple_collaborators_field_type_update(data_fixture):
     )
     table = data_fixture.create_database_table(name="Example", database=database)
 
-    field_handler = FieldHandler()
     row_handler = RowHandler()
 
-    collaborator_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Collaborator 1",
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Collaborator 1"
     )
     field_id = collaborator_field.db_column
 
@@ -93,15 +84,11 @@ def test_get_set_export_serialized_value_multiple_collaborators_field(data_fixtu
     data_fixture.create_user_workspace(workspace=imported_workspace, user=user_2)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    field_handler = FieldHandler()
     row_handler = RowHandler()
     core_handler = CoreHandler()
 
-    multiple_collaborators__field = field_handler.create_field(
-        user=user,
-        table=table,
-        name="Multiple collaborators",
-        type_name="multiple_collaborators",
+    multiple_collaborators__field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple collaborators"
     )
 
     row_handler.create_row(
@@ -183,14 +170,10 @@ def test_multiple_collaborators_field_type_sorting(
     table = data_fixture.create_database_table(name="Example", database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
     view_handler = ViewHandler()
 
-    field = field_handler.create_field(
-        user=user,
-        table=table,
-        name="Multiple Collaborators",
-        type_name="multiple_collaborators",
+    field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple Collaborators"
     )
 
     row_1 = data_fixture.create_row_for_many_to_many_field(
@@ -235,12 +218,8 @@ def test_call_apps_registry_pending_operations(data_fixture):
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
 
-    field_handler = FieldHandler()
-    field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Test",
+    data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Test"
     )
     table.get_model()
     # Make sure that there are no pending operations in the app registry. Because a
@@ -261,12 +240,8 @@ def test_multiple_collaborators_model_field(data_fixture):
     )
     table = data_fixture.create_database_table(name="Example", database=database)
 
-    field_handler = FieldHandler()
-    field = field_handler.create_field(
-        user=user,
-        table=table,
-        name="Multiple Collaborators",
-        type_name="multiple_collaborators",
+    field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple Collaborators"
     )
 
     data_fixture.create_row_for_many_to_many_field(
@@ -335,13 +310,8 @@ def test_multiple_collaborators_model_enhanced_field(
         workspace=database.workspace, user=user_3
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-
-    field_handler = FieldHandler()
-    field = field_handler.create_field(
-        user=user,
-        table=table,
-        name="Multiple Collaborators",
-        type_name="multiple_collaborators",
+    field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple Collaborators"
     )
 
     data_fixture.create_row_for_many_to_many_field(
@@ -410,15 +380,11 @@ def test_multiple_collaborators_field_type_random_value(data_fixture):
         user=user, workspace=workspace, name="database"
     )
     table = data_fixture.create_database_table(name="table", database=database)
-    field_handler = FieldHandler()
     cache = {}
     fake = Faker()
 
-    field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multiple collaborators",
+    field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple collaborators"
     )
 
     possible_collaborators = [user, user2, user3]
@@ -448,13 +414,9 @@ def test_multiple_collaborators_field_adjacent_row(data_fixture):
     )
     table = data_fixture.create_database_table(name="table", database=database)
     grid_view = data_fixture.create_grid_view(table=table)
-    field_handler = FieldHandler()
 
-    field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multiple collaborators",
+    field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple collaborators"
     )
 
     data_fixture.create_view_sort(view=grid_view, field=field, order="DESC")

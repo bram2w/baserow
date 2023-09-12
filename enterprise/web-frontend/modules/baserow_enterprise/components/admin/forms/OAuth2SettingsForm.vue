@@ -118,9 +118,9 @@ export default {
       if (!this.authProvider.id) {
         const nextProviderId =
           this.$store.getters['authProviderAdmin/getNextProviderId']
-        return `${this.$env.PUBLIC_BACKEND_URL}/api/sso/oauth2/callback/${nextProviderId}/`
+        return `${this.$config.PUBLIC_BACKEND_URL}/api/sso/oauth2/callback/${nextProviderId}/`
       }
-      return `${this.$env.PUBLIC_BACKEND_URL}/api/sso/oauth2/callback/${this.authProvider.id}/`
+      return `${this.$config.PUBLIC_BACKEND_URL}/api/sso/oauth2/callback/${this.authProvider.id}/`
     },
   },
   methods: {

@@ -1,3 +1,4 @@
+import dataclasses
 import re
 import traceback
 from collections import defaultdict, namedtuple
@@ -13,7 +14,8 @@ from django.core.cache import cache
 from django.core.exceptions import FieldDoesNotExist, ValidationError
 from django.db import connection
 from django.db import models as django_models
-from django.db.models import Count, Q, expressions
+from django.db.models import Count, Q
+from django.db.models.expressions import F, OrderBy
 from django.db.models.query import QuerySet
 
 import jwt
@@ -25,11 +27,11 @@ from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
+from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.rows.signals import rows_created
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
@@ -63,7 +65,10 @@ from baserow.contrib.database.views.operations import (
     UpdateViewSlugOperationType,
     UpdateViewSortOperationType,
 )
-from baserow.contrib.database.views.registries import view_ownership_type_registry
+from baserow.contrib.database.views.registries import (
+    ViewType,
+    view_ownership_type_registry,
+)
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.telemetry.utils import baserow_trace_methods
@@ -141,6 +146,13 @@ PerViewTableIndexUpdate = namedtuple(
 )
 
 
+@dataclasses.dataclass
+class UpdatedViewWithChangedAttributes:
+    updated_view_instance: View
+    original_view_attributes: Dict[str, Any]
+    new_view_attributes: Dict[str, Any]
+
+
 class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
     @classmethod
     def does_index_exist(cls, index_name: str) -> bool:
@@ -172,36 +184,47 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         return f"i{table_id}:"
 
     @classmethod
-    def _get_index_hash(cls, index_fields: List[expressions.OrderBy]) -> Optional[str]:
+    def _get_index_hash(
+        cls, field_order_bys: List[OptionallyAnnotatedOrderBy]
+    ) -> Optional[str]:
         """
-        Returns a key for the provided view based on the fields used for sorting.
+        Returns a key used for sorting a view.
         View sharing the same key will have the same index name, so that the
         index can be reused.
 
-        :param view: The view to get the index key for.
+        :param field_order_bys: List of order bys that form the sort on a view.
         :return: The index hash key calculated from the fields used for sorting.
         """
 
+        def concat_attrs(field_order_by):
+            collation = (
+                f":{field_order_by.collation}" if field_order_by.collation else ""
+            )
+            return f"{field_order_by.field_expression}{collation}:{field_order_by.order.descending}"
+
         index_key = "-".join(
-            map(lambda vs: f"{vs.expression.name}:{vs.descending}", index_fields)
+            map(
+                concat_attrs,
+                field_order_bys,
+            )
         )
         # limit to 20 characters, considering the limit of 30 for the index name
         return shake_128(index_key.encode("utf-8")).hexdigest(10)
 
     @classmethod
     def get_index_name(
-        cls, table_id: int, index_fields: List[expressions.OrderBy]
+        cls, table_id: int, field_order_bys: List[OptionallyAnnotatedOrderBy]
     ) -> str:
         """
-        Returns the name of the index for the provided view.
+        Returns the name of the index for a view based on provided field sortings.
 
         :param table_id: The id of the table.
-        :param index_fields: The view sorts to get the index name for.
+        :param field_order_bys: List of order bys that form the sort on a view.
         :return: The index name.
         """
 
         index_name_prefix = cls._get_index_name_prefix(table_id)
-        index_hash = cls._get_index_hash(index_fields)
+        index_hash = cls._get_index_hash(field_order_bys)
         return f"{index_name_prefix}{index_hash}"
 
     @classmethod
@@ -248,7 +271,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         if model is None:
             model = view.table.get_model()
 
-        index_fields = []
+        field_order_bys = []
 
         for view_sort in view.viewsort_set.all():
             field_object = model._field_objects[view_sort.field_id]
@@ -261,12 +284,14 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
             if not annotated_order_by.can_be_indexed:
                 return None
 
-            index_fields.append(annotated_order_by.order)
+            field_order_bys.append(annotated_order_by)
+
+        index_fields = [order_by.order for order_by in field_order_bys]
 
         if not index_fields:
             return None
 
-        index_name = cls.get_index_name(view.table_id, index_fields)
+        index_name = cls.get_index_name(view.table_id, field_order_bys)
         return django_models.Index(
             *index_fields,
             "order",
@@ -746,7 +771,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
     def update_view(
         self, user: AbstractUser, view: View, **data: Dict[str, Any]
-    ) -> View:
+    ) -> UpdatedViewWithChangedAttributes:
         """
         Updates an existing view instance.
 
@@ -777,6 +802,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "show_logo",
         ] + view_type.allowed_fields
 
+        changed_allowed_keys = extract_allowed(view_values, allowed_fields).keys()
+        original_view_values = self._get_prepared_values_for_data(
+            view_type, view, changed_allowed_keys
+        )
+
         previous_public_value = view.public
         view = set_allowed_attrs(view_values, allowed_fields, view)
         if previous_public_value != view.public:
@@ -788,12 +818,20 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
         view.save()
 
+        new_view_values = self._get_prepared_values_for_data(
+            view_type, view, changed_allowed_keys
+        )
+
         if "filters_disabled" in view_values:
             view_type.after_filter_update(view)
 
         view_updated.send(self, view=view, user=user)
 
-        return view
+        return UpdatedViewWithChangedAttributes(
+            updated_view_instance=view,
+            original_view_attributes=original_view_values,
+            new_view_attributes=new_view_values,
+        )
 
     def order_views(self, user: AbstractUser, table: Table, order: List[int]):
         """
@@ -866,7 +904,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ownership_type=ownership_type
         )
         queryset = CoreHandler().filter_queryset(
-            user, ListViewsOperationType.type, queryset, table.database.workspace
+            user,
+            ListViewsOperationType.type,
+            queryset,
+            table.database.workspace,
+            context=table,
         )
 
         order = queryset.values_list("id", flat=True)
@@ -1122,7 +1164,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
-    def _get_filter_builder(
+    def get_filter_builder(
         self, view: View, model: GeneratedTableModel
     ) -> FilterBuilder:
         """
@@ -1172,7 +1214,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.filters_disabled:
             return queryset
 
-        filter_builder = self._get_filter_builder(view, model)
+        filter_builder = self.get_filter_builder(view, model)
         return filter_builder.apply_to_queryset(queryset)
 
     def list_filters(self, user: AbstractUser, view_id: int) -> QuerySet[ViewFilter]:
@@ -1399,6 +1441,58 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
+    def extract_view_sorts(
+        self,
+        view: View,
+        model: GeneratedTableModel,
+        queryset: Optional[QuerySet] = None,
+        restrict_to_field_ids: Optional[Iterable[int]] = None,
+    ) -> Tuple[List[OrderBy], Optional[QuerySet]]:
+        """
+        Responsible for generating a list of OrderBy objects which a queryset
+        can use to `order_by` with.
+
+        :param view: The view where to fetch the sorting from.
+        :param model: The table's generated table model.
+        :param queryset: The queryset where the sorting need to be applied to.
+        :param restrict_to_field_ids: Only field ids in this iterable will have their
+            view sorts applied in the resulting queryset.
+        :return: A tuple containing a list of zero or more OrderBy expressions,
+            and optionally a queryset if one was passed to us.
+        """
+
+        order_by = []
+        qs = view.viewsort_set
+        if restrict_to_field_ids is not None:
+            qs = qs.filter(field_id__in=restrict_to_field_ids)
+        for view_sort in qs.all():
+            # If the to be sort field is not present in the `_field_objects` we
+            # cannot filter so we raise a ValueError.
+            if view_sort.field_id not in model._field_objects:
+                raise ValueError(
+                    f"The table model does not contain field {view_sort.field_id}."
+                )
+
+            field = model._field_objects[view_sort.field_id]["field"]
+            field_name = model._field_objects[view_sort.field_id]["name"]
+            field_type = model._field_objects[view_sort.field_id]["type"]
+
+            field_annotated_order_by = field_type.get_order(
+                field, field_name, view_sort.order
+            )
+            field_annotation = field_annotated_order_by.annotation
+            field_order_by = field_annotated_order_by.order
+
+            if queryset and field_annotation is not None:
+                queryset = queryset.annotate(**field_annotation)
+
+            order_by.append(field_order_by)
+
+        order_by.append(F("order").asc(nulls_first=True))
+        order_by.append(F("id").asc(nulls_first=True))
+
+        return order_by, queryset
+
     def apply_sorting(
         self,
         view: View,
@@ -1441,36 +1535,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.trashed:
             raise ViewSortDoesNotExist(f"The view {view.id} is trashed.")
 
-        order_by = []
+        order_by, queryset = self.extract_view_sorts(
+            view, model, queryset, restrict_to_field_ids
+        )
 
-        qs = view.viewsort_set
-        if restrict_to_field_ids is not None:
-            qs = qs.filter(field_id__in=restrict_to_field_ids)
-        for view_sort in qs.all():
-            # If the to be sort field is not present in the `_field_objects` we
-            # cannot filter so we raise a ValueError.
-            if view_sort.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field {view_sort.field_id}."
-                )
-
-            field = model._field_objects[view_sort.field_id]["field"]
-            field_name = model._field_objects[view_sort.field_id]["name"]
-            field_type = model._field_objects[view_sort.field_id]["type"]
-
-            field_annoteted_order_by = field_type.get_order(
-                field, field_name, view_sort.order
-            )
-            field_annotation = field_annoteted_order_by.annotation
-            field_order_by = field_annoteted_order_by.order
-
-            if field_annotation is not None:
-                queryset = queryset.annotate(**field_annotation)
-
-            order_by.append(field_order_by)
-
-        order_by.append("order")
-        order_by.append("id")
         queryset = queryset.order_by(*order_by)
 
         return queryset
@@ -2407,7 +2475,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         return view
 
-    def submit_form_view(self, form, values, model=None, enabled_field_options=None):
+    def submit_form_view(
+        self, user, form, values, model=None, enabled_field_options=None
+    ):
         """
         Handles when a form is submitted. It will validate the data by checking if
         the required fields are provided and not empty and it will create a new row
@@ -2453,13 +2523,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ValidationError(field_errors)
 
         allowed_values = extract_allowed(values, allowed_field_names)
-        instance = RowHandler().force_create_row(table, allowed_values, model)
-
-        rows_created.send(
-            self, rows=[instance], before=None, user=None, table=table, model=model
-        )
-
-        return instance
+        return RowHandler().force_create_row(user, table, allowed_values, model)
 
     def get_public_views_row_checker(
         self,
@@ -2684,6 +2748,15 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         return queryset, field_ids, publicly_visible_field_options
 
+    def _get_prepared_values_for_data(
+        self, view_type: ViewType, view: View, changed_allowed_keys: Iterable[str]
+    ) -> Dict[str, Any]:
+        return {
+            key: value
+            for key, value in view_type.export_prepared_values(view).items()
+            if key in changed_allowed_keys
+        }
+
 
 @dataclass
 class PublicViewRows:
@@ -2729,7 +2802,14 @@ class CachingPublicViewRowChecker:
         self._always_visible_views = []
         self._view_row_check_cache = defaultdict(dict)
         handler = ViewHandler()
-        for view in self._public_views:
+        for view in specific_iterator(
+            self._public_views,
+            per_content_type_queryset_hook=(
+                lambda model, queryset: view_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
+        ):
             if only_include_views_which_want_realtime_events:
                 view_type = view_type_registry.get_by_model(view.specific_class)
                 if not view_type.when_shared_publicly_requires_realtime_events:

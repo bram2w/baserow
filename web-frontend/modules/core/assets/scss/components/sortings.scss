@@ -12,7 +12,7 @@
 }
 
 .sortings__none-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   padding: 6px 0;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-bottom: 6px;
@@ -48,7 +48,7 @@
 .sortings__remove {
   flex: 0 0 32px;
   width: 32px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
   text-align: center;
 
@@ -91,16 +91,16 @@
   justify-content: center;
   flex-wrap: nowrap;
   line-height: 32px;
-  border-radius: 3px;
   color: $color-neutral-900;
   width: 80px;
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 10px;
   }
 
   > div {
-    font-weight: 700;
+    font-weight: 600;
 
     &:not(:last-child) {
       margin-right: 8px;
@@ -132,15 +132,10 @@
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }
 
-.sortings__add-context {
-  max-height: 32 * 4 + 20px;
-  overflow: auto;
-
-  .context__menu-icon {
-    color: $color-primary-900;
-  }
+.sortings__add-context .context__menu-icon {
+  color: $color-neutral-900;
 }

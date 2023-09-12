@@ -139,7 +139,7 @@ describe('Dropdown component', () => {
 
     await wrapper
       .find('.dropdown')
-      .trigger('focusout', { relatedTarget: new EventTarget() })
+      .trigger('focusout', { relatedTarget: document.createElement('div') })
 
     expect(wrapper.element).toMatchSnapshot()
   })

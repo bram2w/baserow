@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
 from zipfile import ZipFile
 
+from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
@@ -64,7 +65,7 @@ class FieldType(
     This abstract class represents a custom field type that can be added to the
     field type registry. It must be extended so customisation can be done. Each field
     type will have its own model that must extend the Field model, this is needed so
-    that the user can set custom settings per field instance he has created.
+    that the user can set custom settings per field instance they have created.
 
     Example:
         from baserow.contrib.database.fields.models import Field
@@ -120,6 +121,13 @@ class FieldType(
     """Set this to True your after_import_serialized function can cause the field
     data to change and hence it needs to be refreshed after this function has run
     inside of the import process.
+    """
+
+    is_many_to_many_field = False
+    """
+    Set this to True if the underlying database field is a ManyToManyField. This
+    let the RowM2MChangeTracker to track changes to the field when creating/updating
+    values without having to query the database.
     """
 
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
@@ -1509,6 +1517,42 @@ class FieldType(
         """Indicates whether the field can be used to represent date or datetime."""
 
         return False
+
+    def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
+        self, user: AbstractUser, changed_field: Field, forbidden_field: Field
+    ) -> Exception:
+        """
+        Called when the field has been created or changed in a way that resulted in
+        it depending on another field in a way that was forbidden for the user
+        who triggered the change.
+
+        :param user: The user.
+        :param changed_field: The changed field.
+        :param forbidden_field: The forbidden field.
+        """
+
+        return PermissionError(user)
+
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        """
+        Returns a dictionary of metadata that should be stored in the row history
+        table for this field type. This is necessary for fields that have a
+        non-trivial value representation to be able to reconstruct the value from
+        the history table.
+
+        :param field: The field instance that the value belongs to.
+        :param new_value: The new value of the field.
+        :param old_value: The old value of the field.
+        :return: A dictionary of metadata that should be stored in the row history
+            table for this field type.
+        """
+
+        return {
+            "id": field.id,
+            "type": self.type,
+        }
 
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):

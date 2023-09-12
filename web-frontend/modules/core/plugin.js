@@ -10,6 +10,7 @@ import {
 import {
   AccountSettingsType,
   PasswordSettingsType,
+  EmailNotificationsSettingsType,
   DeleteAccountSettingsType,
 } from '@baserow/modules/core/settingsTypes'
 import {
@@ -66,9 +67,12 @@ import {
   RuntimeGet,
 } from '@baserow/modules/core/runtimeFormulaTypes'
 
+import priorityBus from '@baserow/modules/core/plugins/priorityBus'
+
 export default (context, inject) => {
   const { store, isDev, app } = context
   inject('bus', new Vue())
+  inject('priorityBus', priorityBus)
 
   // Allow locale file hot reloading in dev
   if (isDev && app.i18n) {
@@ -93,10 +97,11 @@ export default (context, inject) => {
   registry.registerNamespace('settings')
   registry.registerNamespace('userFileUpload')
   registry.registerNamespace('membersPagePlugins')
-  registry.registerNamespace('runtime_formula_type')
+  registry.registerNamespace('runtimeFormulaFunction')
   registry.registerNamespace('notification')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
+  registry.register('settings', new EmailNotificationsSettingsType(context))
   registry.register('settings', new DeleteAccountSettingsType(context))
   registry.register('permissionManager', new CorePermissionManagerType(context))
   registry.register(
@@ -154,9 +159,9 @@ export default (context, inject) => {
 
   registry.register('errorPage', new DefaultErrorPageType(context))
 
-  registry.register('runtime_formula_type', new RuntimeConcat(context))
-  registry.register('runtime_formula_type', new RuntimeGet(context))
-  registry.register('runtime_formula_type', new RuntimeAdd(context))
+  registry.register('runtimeFormulaFunction', new RuntimeConcat(context))
+  registry.register('runtimeFormulaFunction', new RuntimeGet(context))
+  registry.register('runtimeFormulaFunction', new RuntimeAdd(context))
 
   // Notification types
   registry.register(

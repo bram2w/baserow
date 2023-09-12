@@ -1,6 +1,7 @@
 /**
  * Copies the given text to the clipboard by temporarily creating a textarea and
  * using the documents `copy` command.
+ * @param {string} text
  */
 export const copyToClipboard = (text) => {
   navigator.clipboard.writeText(text)

@@ -2,10 +2,10 @@
   display: flex;
   flex-wrap: nowrap;
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   z-index: 2;
 
   @include absolute(5px, 5px, auto, auto);
+  @include rounded($rounded);
 }
 
 .element-preview__insert {
@@ -15,7 +15,7 @@
   border-radius: 100%;
   border: solid 1px $color-neutral-300;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16);
-  color: $color-primary-900;
+  color: $color-neutral-900;
   background-color: $white;
 
   &:hover {
@@ -88,8 +88,8 @@
   color: $white;
   line-height: 20px;
   padding: 0 4px;
-  border-radius: 3px;
   white-space: nowrap;
+  @include rounded($rounded);
 }
 
 .element-preview__menu-item {
@@ -97,7 +97,7 @@
 
   position: relative;
   background-color: $white;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     background-color: $color-neutral-100;

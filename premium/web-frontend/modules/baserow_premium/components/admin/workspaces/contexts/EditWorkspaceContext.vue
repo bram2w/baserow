@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <template v-if="Object.keys(workspace).length > 0">
       <div class="context__menu-title">
         {{ workspace.name }} ({{ workspace.id }})

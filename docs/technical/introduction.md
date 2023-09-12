@@ -112,7 +112,7 @@ are accepted.
   url is reachable with your browser.
 * `FROM_EMAIL` (default `no-reply@localhost`): The 'from' email address of the emails
   that the platform sends. Like when a user requests a password recovery.
-* `INITIAL_TABLE_DATA_LIMIT` (default `null`): Indicates the initial table data limit.
+* `INITIAL_TABLE_DATA_LIMIT` (default not set): Indicates the initial table data limit.
   If for example 100 is provided then it will not be possible to import a CSV file with
   more than 100 rows.
 * `REDIS_HOST` (default `redis`): The hostname of the Redis server.

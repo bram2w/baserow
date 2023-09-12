@@ -1,4 +1,4 @@
-import { FunctionCollection } from '@baserow/formula/parser/javascriptExecutor'
+import { FunctionCollection } from '@baserow/modules/core/formula/parser/javascriptExecutor'
 
 export class RuntimeFunctionCollection extends FunctionCollection {
   constructor($registry) {
@@ -7,6 +7,10 @@ export class RuntimeFunctionCollection extends FunctionCollection {
   }
 
   get(name) {
-    return this.$registry.get('runtime_formula_type', name)
+    return this.$registry.get('runtimeFormulaFunction', name)
+  }
+
+  getAll() {
+    return this.$registry.getAll('runtimeFormulaFunction')
   }
 }

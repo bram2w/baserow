@@ -43,6 +43,7 @@ from baserow.contrib.database.fields.operations import (
     CreateFieldOperationType,
     DeleteFieldOperationType,
     DuplicateFieldOperationType,
+    ReadFieldOperationType,
     UpdateFieldOperationType,
 )
 from baserow.contrib.database.table.models import Table
@@ -308,7 +309,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
 
         field_cache = FieldCache()
         instance.save(field_cache=field_cache, raise_if_invalid=True)
-        FieldDependencyHandler.rebuild_dependencies(instance, field_cache)
+        FieldDependencyHandler.rebuild_or_raise_if_user_doesnt_have_permissions_after(
+            workspace, user, instance, field_cache, ReadFieldOperationType.type
+        )
 
         # Add the field to the table schema.
         with safe_django_schema_editor(atomic=False) as schema_editor:
@@ -458,7 +461,9 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         field = set_allowed_attrs(field_values, allowed_fields, field)
 
         field.save(field_cache=field_cache, raise_if_invalid=True)
-        FieldDependencyHandler.rebuild_dependencies(field, field_cache)
+        FieldDependencyHandler.rebuild_or_raise_if_user_doesnt_have_permissions_after(
+            workspace, user, field, field_cache, ReadFieldOperationType.type
+        )
         # If no converter is found we are going to convert to field using the
         # lenient schema editor which will alter the field's type and set the data
         # value to null if it can't be converted.

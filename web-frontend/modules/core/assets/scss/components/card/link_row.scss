@@ -1,7 +1,7 @@
 .card-link-row {
   padding: 0 5px;
   background-color: $color-primary-100;
-  border-radius: 3px;
+  @include rounded($rounded);
 }
 
 .card-link-row--unnamed {

@@ -306,14 +306,73 @@ class MoveElementView(APIView):
         element = ElementHandler().get_element_for_update(element_id)
 
         before_id = data.get("before_id", None)
+        parent_element_id = data.get("parent_element_id", element.parent_element_id)
+        place_in_container = data.get("place_in_container", element.place_in_container)
 
         before = None
-        if before_id:
+        if before_id is not None:
             before = ElementHandler().get_element(before_id)
 
-        moved_element = ElementService().move_element(request.user, element, before)
+        parent_element = None
+        if parent_element_id is not None:
+            parent_element = ElementHandler().get_element(parent_element_id)
+
+        moved_element = ElementService().move_element(
+            request.user, element, parent_element, place_in_container, before
+        )
 
         serializer = element_type_registry.get_serializer(
             moved_element, ElementSerializer
         )
         return Response(serializer.data)
+
+
+class DuplicateElementView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="element_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the element to duplicate",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder elements"],
+        operation_id="duplicate_builder_page_element",
+        description="Duplicates an element and all of the elements children",
+        responses={
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                element_type_registry, ElementSerializer, many=True
+            ),
+            400: get_error_schema(["ERROR_REQUEST_BODY_VALIDATION"]),
+            404: get_error_schema(
+                [
+                    "ERROR_ELEMENT_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ElementDoesNotExist: ERROR_ELEMENT_DOES_NOT_EXIST,
+        }
+    )
+    def post(self, request, element_id: int):
+        """
+        Duplicates the element and all of its children
+        """
+
+        element = ElementHandler().get_element_for_update(element_id)
+
+        elements_duplicated = ElementService().duplicate_element(request.user, element)
+
+        elements_serialized = [
+            element_type_registry.get_serializer(
+                element_current, ElementSerializer
+            ).data
+            for element_current in elements_duplicated
+        ]
+
+        return Response(elements_serialized)

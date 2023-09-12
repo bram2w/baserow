@@ -1,5 +1,9 @@
 <template>
-  <Context ref="context">
+  <Context
+    ref="context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+  >
     <ul class="context__menu">
       <li v-if="canBeEdited(authProvider.type)">
         <a @click="$emit('edit', authProvider.id)">

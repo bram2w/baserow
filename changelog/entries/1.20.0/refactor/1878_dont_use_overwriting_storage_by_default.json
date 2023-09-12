@@ -1,0 +1,7 @@
+{
+    "type": "refactor",
+    "message": "Don't use overwriting storage by default",
+    "issue_number": 1878,
+    "bullet_points": [],
+    "created_at": "2023-07-31"
+}

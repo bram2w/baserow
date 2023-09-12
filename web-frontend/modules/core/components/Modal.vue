@@ -36,13 +36,31 @@
           >
             <i class="fas fa-times"></i>
           </a>
+
+          <a
+            v-if="collapsibleRightSidebar"
+            class="sidebar__collapse"
+            @click="collapseSidebar"
+          >
+            <i
+              class="fas"
+              :class="{
+                'fa-angle-double-right': !sidebarCollapsed,
+                'fa-angle-double-left': sidebarCollapsed,
+              }"
+            ></i>
+          </a>
         </div>
+
         <div
           v-if="rightSidebar"
           class="modal__box-sidebar modal__box-sidebar--right"
-          :class="{ 'modal__box-sidebar--scrollable': rightSidebarScrollable }"
+          :class="{
+            'modal__box-sidebar--scrollable': rightSidebarScrollable,
+            'modal__box-sidebar--collapsed': sidebarCollapsed,
+          }"
         >
-          <slot name="sidebar"></slot>
+          <slot v-if="!sidebarCollapsed" name="sidebar"></slot>
         </div>
       </template>
       <template v-if="!sidebar">
@@ -123,10 +141,25 @@ export default {
       default: true,
       required: false,
     },
+    collapsibleRightSidebar: {
+      type: Boolean,
+      default: false,
+      required: false,
+    },
+  },
+  data() {
+    return {
+      sidebarCollapsed: false,
+    }
   },
   computed: {
     sidebar() {
       return this.leftSidebar || this.rightSidebar
+    },
+  },
+  methods: {
+    collapseSidebar() {
+      this.sidebarCollapsed = !this.sidebarCollapsed
     },
   },
 }

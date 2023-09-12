@@ -6,9 +6,10 @@
   position: relative;
   border: 1px solid $color-neutral-200;
   background-color: $white;
-  border-radius: 6px;
   padding: 30px;
   height: 100%;
+
+  @include rounded($rounded-md);
 }
 
 .admin-dashboard__box-title {

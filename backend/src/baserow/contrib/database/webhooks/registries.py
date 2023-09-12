@@ -115,6 +115,9 @@ class WebhookEventType(Instance):
 
         from baserow.contrib.database.webhooks.handler import WebhookHandler
 
+        if not kwargs.get("send_webhooks_events", True):
+            return
+
         table = self.get_table_object(**kwargs)
         webhook_handler = WebhookHandler()
         webhooks = webhook_handler.find_webhooks_to_call(table.id, self.type)

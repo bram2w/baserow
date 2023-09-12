@@ -34,7 +34,7 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaType,
 )
 from baserow.core.formula.exceptions import formula_exception_handler
-from baserow.formula.parser.exceptions import MaximumFormulaSizeError
+from baserow.core.formula.parser.exceptions import MaximumFormulaSizeError
 
 
 def baserow_expression_to_update_django_expression(

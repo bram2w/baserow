@@ -23,7 +23,7 @@ class HerokuExternalFileStorageConfiguredHealthCheck(BaseHealthCheckBackend):
     def check_status(self):
         if (
             settings.DEFAULT_FILE_STORAGE
-            == "baserow.core.storage.OverwriteFileSystemStorage"
+            == "django.core.files.storage.FileSystemStorage"
         ):
             raise ServiceWarning(
                 "Any uploaded files will be lost on dyno restart because you have "

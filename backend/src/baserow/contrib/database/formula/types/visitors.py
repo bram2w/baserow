@@ -16,6 +16,9 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowStringLiteral,
 )
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
+from baserow.contrib.database.formula.types.exceptions import (
+    get_invalid_field_and_table_formula_error,
+)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
@@ -254,9 +257,9 @@ class FormulaTypingVisitor(
                 )
                 if target_field is None:
                     return field_reference.with_invalid_type(
-                        f"references the deleted or unknown field"
-                        f" {field_reference.target_field} in table "
-                        f"{target_table.name}"
+                        get_invalid_field_and_table_formula_error(
+                            field_reference.target_field, target_table.name
+                        )
                     )
                 else:
                     return self._create_lookup_reference(

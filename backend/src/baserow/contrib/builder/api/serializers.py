@@ -5,6 +5,10 @@ from rest_framework import serializers
 
 from baserow.api.applications.serializers import ApplicationSerializer
 from baserow.contrib.builder.api.pages.serializers import PageSerializer
+from baserow.contrib.builder.api.theme.serializers import (
+    CombinedThemeConfigBlocksSerializer,
+    serialize_builder_theme,
+)
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.operations import ListPagesBuilderOperationType
 from baserow.core.handler import CoreHandler
@@ -15,10 +19,14 @@ class BuilderSerializer(ApplicationSerializer):
         help_text="This field is specific to the `builder` application and contains "
         "an array of pages that are in the builder."
     )
+    theme = serializers.SerializerMethodField(
+        help_text="This field is specific to the `builder` application and contains "
+        "the theme settings."
+    )
 
     class Meta(ApplicationSerializer.Meta):
         ref_name = "BuilderApplication"
-        fields = ApplicationSerializer.Meta.fields + ("pages",)
+        fields = ApplicationSerializer.Meta.fields + ("pages", "theme")
 
     @extend_schema_field(PageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:
@@ -49,3 +57,7 @@ class BuilderSerializer(ApplicationSerializer):
             )
 
         return PageSerializer(pages, many=True).data
+
+    @extend_schema_field(CombinedThemeConfigBlocksSerializer())
+    def get_theme(self, instance):
+        return serialize_builder_theme(instance)

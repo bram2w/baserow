@@ -142,6 +142,8 @@ def get_rows_grouped_by_date_field(
     from_timestamp: datetime,
     to_timestamp: datetime,
     user_timezone: str,
+    search: Optional[str] = None,
+    search_mode: Optional[str] = None,
     limit: int = 40,
     offset: int = 0,
     model: Optional[GeneratedTableModel] = None,
@@ -180,14 +182,14 @@ def get_rows_grouped_by_date_field(
     date_field_type = field_type_registry.get_by_model(date_field)
     if not date_field_type.can_represent_date(date_field):
         raise CalendarViewHasNoDateField()
-
     if base_queryset is None:
         base_queryset = (
             model.objects.all()
             .enhance_by_fields()
             .order_by(f"field_{date_field.id}", "order", "id")
         )
-
+    if search is not None:
+        base_queryset = base_queryset.search_all_fields(search, search_mode=search_mode)
     base_option_queryset = ViewHandler().apply_filters(view, base_queryset)
     all_filters = Q()
     count_aggregates = {}

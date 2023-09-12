@@ -25,7 +25,11 @@
           }}</template></span
         >
       </a>
-      <Context ref="stackedContext">
+      <Context
+        ref="stackedContext"
+        :overflow-scroll="true"
+        :max-height-if-outside-viewport="true"
+      >
         <KanbanViewStackedBy
           :table="table"
           :view="view"

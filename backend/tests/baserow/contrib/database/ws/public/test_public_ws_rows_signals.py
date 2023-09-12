@@ -1067,9 +1067,11 @@ def test_batch_update_rows_visible_in_public_view_to_some_not_be_visible_event_s
         [initially_visible_row, initially_visible_row2]
     ) == [
         PublicViewRows(
-            ViewHandler().get_view_as_user(
+            ViewHandler()
+            .get_view_as_user(
                 user, public_view_with_filters_initially_hiding_all_rows.id
-            ),
+            )
+            .specific,
             allowed_row_ids={1, 2},
         )
     ]
@@ -1188,7 +1190,7 @@ def test_given_row_visible_in_public_view_when_updated_to_be_not_visible_event_s
         table, model, only_include_views_which_want_realtime_events=True
     )
     assert row_checker.get_public_views_where_row_is_visible(initially_visible_row) == [
-        public_view_with_row_showing.view_ptr
+        public_view_with_row_showing.view_ptr.specific
     ]
 
     # Update the row so it is no longer visible
@@ -1284,14 +1286,12 @@ def test_batch_update_rows_visible_in_public_view_to_be_not_visible_event_sent(
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
     )
-    assert row_checker.get_public_views_where_rows_are_visible(
+    public_views = row_checker.get_public_views_where_rows_are_visible(
         [initially_visible_row, initially_visible_row2]
-    ) == [
-        PublicViewRows(
-            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
-            allowed_row_ids={1, 2},
-        )
-    ]
+    )
+    assert len(public_views) == 1
+    assert public_views[0].allowed_row_ids == {1, 2}
+    assert public_views[0].view.id == public_view_with_row_showing.id
 
     # Update rows so that they are no longer visible
     with transaction.atomic():
@@ -1395,7 +1395,7 @@ def test_given_row_visible_in_public_view_when_updated_to_still_be_visible_event
         table, model, only_include_views_which_want_realtime_events=True
     )
     assert row_checker.get_public_views_where_row_is_visible(initially_visible_row) == [
-        public_view_with_row_showing.view_ptr
+        public_view_with_row_showing.view_ptr.specific
     ]
 
     # Update the row so it is still visible but changed
@@ -1496,14 +1496,12 @@ def test_batch_update_rows_visible_in_public_view_still_be_visible_event_sent(
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
     )
-    assert row_checker.get_public_views_where_rows_are_visible(
+    public_views = row_checker.get_public_views_where_rows_are_visible(
         [initially_visible_row, initially_visible_row2]
-    ) == [
-        PublicViewRows(
-            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
-            allowed_row_ids={1, 2},
-        )
-    ]
+    )
+    assert len(public_views) == 1
+    assert public_views[0].allowed_row_ids == {1, 2}
+    assert public_views[0].view.id == public_view_with_row_showing.id
 
     # Update the row so that they are still visible but changed
     with transaction.atomic():
@@ -1598,14 +1596,12 @@ def test_batch_update_subset_rows_visible_in_public_view_no_filters(
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
     )
-    assert row_checker.get_public_views_where_rows_are_visible(
+    public_views = row_checker.get_public_views_where_rows_are_visible(
         [initially_visible_row, initially_visible_row2]
-    ) == [
-        PublicViewRows(
-            ViewHandler().get_view_as_user(user, public_view_with_row_showing.id),
-            allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
-        )
-    ]
+    )
+    assert len(public_views) == 1
+    assert public_views[0].allowed_row_ids == PublicViewRows.ALL_ROWS_ALLOWED
+    assert public_views[0].view.id == public_view_with_row_showing.id
 
     # Update the row so that they are still visible but changed
     with transaction.atomic():
@@ -1808,7 +1804,7 @@ def test_when_row_restored_public_views_receive_row_created_only_when_filters_ma
 
 @pytest.mark.django_db(transaction=True)
 @patch("baserow.ws.registries.broadcast_to_channel_group")
-def test_batch_rows_restored_public_views_receive_rows_created_only_when_filters_match(
+def test_batch_rows_created_public_views_receive_rows_created_only_when_filters_match(
     mock_broadcast_to_channel_group, data_fixture, public_realtime_view_tester
 ):
     user = data_fixture.create_user()
@@ -1962,7 +1958,7 @@ def test_given_row_visible_in_public_view_when_moved_row_updated_sent(
         table, model, only_include_views_which_want_realtime_events=True
     )
     assert row_checker.get_public_views_where_row_is_visible(visible_moving_row) == [
-        public_view.view_ptr
+        public_view.view_ptr.specific
     ]
 
     # Move the visible row behind the invisible one

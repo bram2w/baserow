@@ -112,6 +112,14 @@
             large
             icon-left="search"
           />
+          <FormInput
+            v-model="input"
+            horizontal
+            label="Horizontal Large icon field left"
+            placeholder="Enter something here"
+            large
+            icon-left="search"
+          />
           <div class="control">
             <label class="control__label">Checkbox field</label>
             <div class="control__elements">
@@ -1740,6 +1748,29 @@
             avatar-color="ghost"
           />
         </div>
+        <div
+          class="margin-bottom-3"
+          style="background-color: #ffffff; padding: 20px"
+        >
+          <ColorPicker ref="colorPicker" v-model="color"></ColorPicker>
+          <br /><br />
+          <a
+            ref="colorPickerLink"
+            href="#"
+            @click="$refs.colorPicker.toggle($refs.colorPickerLink)"
+            >Open color picker context</a
+          >
+          <ColorPickerContext
+            ref="colorPicker"
+            v-model="color"
+          ></ColorPickerContext>
+          <br /><br />
+          {{ color }}
+          <br /><br />
+          <div
+            :style="`width: 40px; height: 20px; background-color: ${color};`"
+          ></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1749,9 +1780,13 @@
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/AutoExpandableTextarea'
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
+import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext.vue'
+import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
 
 export default {
   components: {
+    ColorPicker,
+    ColorPickerContext,
     Toasts,
     AutoExpandableTextarea,
   },
@@ -1768,6 +1803,7 @@ export default {
       formula: 'concat(field("Text"), field("Text"))',
       image: BaserowIcon,
       input: '',
+      color: '#ffffffff',
     }
   },
   head() {

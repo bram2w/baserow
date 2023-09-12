@@ -1,13 +1,16 @@
 import { Registerable } from '@baserow/modules/core/registry'
-import _ from 'lodash'
 import {
   NumberBaserowRuntimeFormulaArgumentType,
   TextBaserowRuntimeFormulaArgumentType,
-} from '@baserow/formula/parser/argumentTypes'
+} from '@baserow/modules/core/runtimeFormulaArgumentTypes'
 import {
   InvalidFormulaArgumentType,
   InvalidNumberOfArguments,
-} from '@baserow/formula/parser/errors'
+} from '@baserow/modules/core/formula/parser/errors'
+import { Node, VueNodeViewRenderer } from '@tiptap/vue-2'
+import GetFormulaComponent from '@baserow/modules/core/components/formula/GetFormulaComponent'
+import { mergeAttributes } from '@tiptap/core'
+import _ from 'lodash'
 
 export class RuntimeFormulaFunction extends Registerable {
   /**
@@ -96,6 +99,38 @@ export class RuntimeFormulaFunction extends Registerable {
 
     return args.map((arg, index) => this.args[index].parse(arg))
   }
+
+  /**
+   * The type name of the formula component that should be used to render the formula
+   * in the editor.
+   * @returns {string || null}
+   */
+  get formulaComponentType() {
+    return null
+  }
+
+  /**
+   * The component configuration that should be used to render the formula in the
+   * editor.
+   *
+   * @returns {null}
+   */
+  get formulaComponent() {
+    return null
+  }
+
+  /**
+   * This function returns one or many nodes that can be used to render the formula
+   * in the editor.
+   *
+   * @param args - The args that are being parsed
+   * @returns {object || Array} - The component configuration or a list of components
+   */
+  toNode(args) {
+    return {
+      type: this.formulaComponentType,
+    }
+  }
 }
 
 export class RuntimeConcat extends RuntimeFormulaFunction {
@@ -110,6 +145,10 @@ export class RuntimeConcat extends RuntimeFormulaFunction {
   validateNumberOfArgs(args) {
     return args.length >= 2
   }
+
+  toNode(args) {
+    return _.flatten(args)
+  }
 }
 
 export class RuntimeGet extends RuntimeFormulaFunction {
@@ -121,8 +160,58 @@ export class RuntimeGet extends RuntimeFormulaFunction {
     return [new TextBaserowRuntimeFormulaArgumentType()]
   }
 
+  get formulaComponentType() {
+    return 'get-formula-component'
+  }
+
+  get formulaComponent() {
+    const formulaComponentType = this.formulaComponentType
+    return Node.create({
+      name: formulaComponentType,
+      group: 'inline',
+      inline: true,
+      selectable: false,
+      atom: true,
+      addNodeView() {
+        return VueNodeViewRenderer(GetFormulaComponent)
+      },
+      addAttributes() {
+        return {
+          path: {
+            default: '',
+          },
+        }
+      },
+      parseHTML() {
+        return [
+          {
+            tag: formulaComponentType,
+          },
+        ]
+      },
+      renderHTML({ HTMLAttributes }) {
+        return [formulaComponentType, mergeAttributes(HTMLAttributes)]
+      },
+    })
+  }
+
   execute(context, args) {
-    return _.get(context, args[0])
+    return context[args[0]]
+  }
+
+  toNode(args) {
+    const [textNode] = args
+    const defaultConfiguration = super.toNode(args)
+    const specificConfiguration = {
+      attrs: {
+        path: textNode.text,
+      },
+    }
+    return _.merge(specificConfiguration, defaultConfiguration)
+  }
+
+  fromNodeToFormula(node) {
+    return `get('${node.attrs.path}')`
   }
 }
 

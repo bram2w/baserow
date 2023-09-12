@@ -7,6 +7,10 @@ export function populatePage(page) {
   page._ = {
     selected: false,
   }
+
+  page.dataSources = []
+  page.elements = []
+
   return page
 }
 
@@ -38,7 +42,7 @@ const mutations = {
     state.selected = page
   },
   UNSELECT(state) {
-    if (state.selected) {
+    if (state.selected?._?.selected) {
       state.selected._.selected = false
     }
     state.selected = {}
@@ -65,10 +69,7 @@ const actions = {
   forceCreate({ commit }, { builder, page }) {
     commit('ADD_ITEM', { builder, page })
   },
-  async selectById({ commit, dispatch }, { builderId, pageId }) {
-    const builder = await dispatch('application/selectById', builderId, {
-      root: true,
-    })
+  selectById({ commit, dispatch, getters }, { builder, pageId }) {
     const type = BuilderApplicationType.getType()
 
     // Check if the just selected application is a builder
@@ -79,13 +80,7 @@ const actions = {
     }
 
     // Check if the provided page id is found in the just selected builder.
-    const index = builder.pages.findIndex((item) => item.id === pageId)
-    if (index === -1) {
-      throw new StoreItemLookupError(
-        'The page is not found in the selected application.'
-      )
-    }
-    const page = builder.pages[index]
+    const page = getters.getById(builder, pageId)
 
     commit('SET_SELECTED', { builder, page })
 
@@ -98,15 +93,15 @@ const actions = {
       { root: true }
     )
 
-    return { builder, page }
+    return page
   },
   unselect({ commit }) {
     commit('UNSELECT')
   },
-  forceDelete({ commit }, { builder, page }) {
+  async forceDelete({ commit }, { builder, page }) {
     if (page._.selected) {
       // Redirect back to the dashboard because the page doesn't exist anymore.
-      this.$router.push({ name: 'dashboard' })
+      await this.$router.push({ name: 'dashboard' })
     }
 
     commit('DELETE_ITEM', { builder, id: page.id })
@@ -121,7 +116,7 @@ const actions = {
 
     commit('ADD_ITEM', { builder, page })
 
-    await dispatch('selectById', { builderId: builder.id, pageId: page.id })
+    await dispatch('selectById', { builder, pageId: page.id })
 
     return page
   },
@@ -166,6 +161,17 @@ const actions = {
 }
 
 const getters = {
+  getById: (state) => (builder, pageId) => {
+    const index = builder.pages.findIndex((item) => item.id === pageId)
+
+    if (index === -1) {
+      throw new StoreItemLookupError(
+        'The page is not found in the selected application.'
+      )
+    }
+
+    return builder.pages[index]
+  },
   getSelected(state) {
     return state.selected
   },

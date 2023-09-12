@@ -1,5 +1,9 @@
 <template>
-  <Context ref="context">
+  <Context
+    ref="context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+  >
     <ViewDecoratorList
       :database="database"
       :view="view"

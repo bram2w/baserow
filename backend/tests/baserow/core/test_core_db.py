@@ -212,14 +212,18 @@ def test_specific_iterator_per_content_type(data_fixture, django_assert_num_quer
     gallery_view_1 = data_fixture.create_gallery_view(table=table)
     gallery_view_2 = data_fixture.create_gallery_view(table=table)
 
-    base_queryset = View.objects.filter(
-        id__in=[
-            grid_view_1.id,
-            grid_view_2.id,
-            gallery_view_1.id,
-            gallery_view_2.id,
-        ]
-    ).prefetch_related("viewfilter_set")
+    base_queryset = (
+        View.objects.filter(
+            id__in=[
+                grid_view_1.id,
+                grid_view_2.id,
+                gallery_view_1.id,
+                gallery_view_2.id,
+            ]
+        )
+        .prefetch_related("viewfilter_set")
+        .order_by("id")
+    )
 
     with django_assert_num_queries(6):
 

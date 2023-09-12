@@ -20,11 +20,11 @@
 .field-file__icon {
   display: block;
   border: solid 1px $color-neutral-300;
-  border-radius: 3px;
   color: $color-neutral-600;
   overflow: hidden;
 
   @include center-text(48px, 22px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -76,16 +76,16 @@
 .field-file__action {
   position: relative;
   color: $color-neutral-400;
-  border-radius: 3px;
 
   @include center-text(24px, 13px);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 8px;
   }
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-neutral-100;
   }
 }

@@ -16,6 +16,8 @@ import elementStore from '@baserow/modules/builder/store/element'
 import domainStore from '@baserow/modules/builder/store/domain'
 import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
 import dataSourceStore from '@baserow/modules/builder/store/dataSource'
+import pageParameterStore from '@baserow/modules/builder/store/pageParameter'
+import dataSourceContentStore from '@baserow/modules/builder/store/dataSourceContent'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
@@ -23,6 +25,8 @@ import {
   ImageElementType,
   ParagraphElementType,
   LinkElementType,
+  InputTextElementType,
+  ColumnElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -56,6 +60,11 @@ import {
   PublishPageActionType,
 } from '@baserow/modules/builder/pageActionTypes'
 
+import {
+  PageParameterDataProviderType,
+  DataSourceDataProviderType,
+} from '@baserow/modules/builder/dataProviderTypes'
+
 export default (context) => {
   const { store, app, isDev } = context
 
@@ -78,6 +87,8 @@ export default (context) => {
   store.registerModule('domain', domainStore)
   store.registerModule('publicBuilder', publicBuilderStore)
   store.registerModule('dataSource', dataSourceStore)
+  store.registerModule('pageParameter', pageParameterStore)
+  store.registerModule('dataSourceContent', dataSourceContentStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -86,6 +97,7 @@ export default (context) => {
   app.$registry.registerNamespace('domain')
   app.$registry.registerNamespace('pageSettings')
   app.$registry.registerNamespace('pathParamType')
+  app.$registry.registerNamespace('builderDataProvider')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -109,6 +121,8 @@ export default (context) => {
   app.$registry.register('element', new ParagraphElementType(context))
   app.$registry.register('element', new LinkElementType(context))
   app.$registry.register('element', new ImageElementType(context))
+  app.$registry.register('element', new InputTextElementType(context))
+  app.$registry.register('element', new ColumnElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))
@@ -147,4 +161,13 @@ export default (context) => {
 
   app.$registry.register('pageAction', new PublishPageActionType(context))
   app.$registry.register('pageAction', new PreviewPageActionType(context))
+
+  app.$registry.register(
+    'builderDataProvider',
+    new DataSourceDataProviderType(context)
+  )
+  app.$registry.register(
+    'builderDataProvider',
+    new PageParameterDataProviderType(context)
+  )
 }

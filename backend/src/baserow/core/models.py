@@ -122,6 +122,14 @@ class UserProfile(models.Model):
     default user model.
     """
 
+    # Keep these in sync with the web-frontend options in
+    # web-frontend/modules/core/enums.js
+    class EmailNotificationFrequencyOptions(models.TextChoices):
+        INSTANT = "instant", "instant"
+        DAILY = "daily", "daily"
+        WEEKLY = "weekly", "weekly"
+        NEVER = "never", "never"
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     language = models.TextField(
         max_length=10,
@@ -140,6 +148,21 @@ class UserProfile(models.Model):
         default=None,
         blank=True,
         help_text="An optional per user concurrency limit.",
+    )
+    timezone = models.CharField(
+        max_length=255,
+        null=True,
+        help_text="The user timezone to use for dates and times.",
+    )
+    email_notification_frequency = models.TextField(
+        max_length=16,
+        choices=EmailNotificationFrequencyOptions.choices,
+        default=EmailNotificationFrequencyOptions.INSTANT,
+    )
+    last_notifications_email_sent_at = models.DateTimeField(
+        null=True,
+        default=None,
+        help_text="The last time an email notification was sent to the user.",
     )
 
 

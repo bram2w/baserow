@@ -1,3 +1,8 @@
+import {
+  featureFlagIsEnabled,
+  getFeatureFlags,
+} from '@baserow/modules/core/utils/env'
+
 export const uuid = function () {
   let dt = new Date().getTime()
   const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -164,4 +169,17 @@ export const isSubstringOfStrings = (strings, searchTerm) => {
   const searchTermSanitised = searchTerm.toLowerCase().trim()
 
   return stringsSanitised.some((s) => s.includes(searchTermSanitised))
+}
+
+export function collatedStringCompare(stringA, stringB, order) {
+  const featureFlags = getFeatureFlags()
+  if (featureFlagIsEnabled(featureFlags, 'collation')) {
+    return order === 'ASC'
+      ? stringA.localeCompare(stringB, 'en')
+      : stringB.localeCompare(stringA, 'en')
+  } else {
+    return order === 'ASC'
+      ? stringA.localeCompare(stringB)
+      : stringB.localeCompare(stringA)
+  }
 }

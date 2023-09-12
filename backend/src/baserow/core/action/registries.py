@@ -3,6 +3,7 @@ import dataclasses
 from copy import deepcopy
 from datetime import datetime
 from typing import Any, Dict, NewType, Optional
+from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
@@ -153,8 +154,8 @@ class ActionType(
     metaclass=baserow_trace_methods(tracer, only=["do", "undo", "redo"], abc=True),
 ):
     type: str = NotImplemented
-
     description: ActionTypeDescription = ActionTypeDescription()
+    privacy_sensitive_params = []
 
     @dataclasses.dataclass
     class Params:
@@ -237,9 +238,11 @@ class ActionType(
         action_command_type: ActionCommandType = ActionCommandType.DO,
     ):
         """
-        Sends the action done signal. This is called by the do method of the action
-        type. This is a separate method so that it can be called from other places
-        where the action is performed but not registered.
+        Sends the action done signal. This is a separate method so that it can
+        be called from other places where the action is performed but not
+        registered. This method is called both from the do method of the action
+        type and from the ActionHandler when an action is undone or redone,
+        passing the action_command_type as either UNDO or REDO.
         """
 
         session = get_untrusted_client_session_id(user)
@@ -264,6 +267,7 @@ class ActionType(
             session=session,
             scope=scope,
             action_group=action_group,
+            action_uuid=str(uuid4()),
         )
 
     @classmethod

@@ -328,7 +328,7 @@ export const actions = {
     try {
       await ViewService(this.$client).order(table.id, ownershipType, order)
     } catch (error) {
-      commit('ORDER_ITEMS', { ownershipType, oldOrder })
+      commit('ORDER_ITEMS', { ownershipType, order: oldOrder })
       throw error
     }
   },

@@ -31,8 +31,9 @@
   align-items: center;
   color: $color-primary-900;
   padding: 6px;
-  border-radius: 4px;
   margin-left: 4px;
+
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -46,8 +47,9 @@
   padding: 6px 9px;
   text-align: center;
   color: $color-primary-900;
-  border-radius: 3px;
   font-size: 14px;
+
+  @include rounded($rounded);
 }
 
 .conditional-color-value-provider-form__color-filter--empty {

@@ -8,7 +8,7 @@
         {{ $t('fieldSelectThroughFieldSubForm.selectThroughFieldLabel') }}
       </label>
       <div class="control__elements">
-        <Dropdown
+        <FixedItemsDropdown
           v-model="values.through_field_id"
           :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
           @hide="$v.values.through_field_id.$touch()"
@@ -22,7 +22,7 @@
             :value="field.id"
             :icon="field.icon"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
         <div v-if="$v.values.through_field_id.$error" class="error">
           {{ $t('error.requiredField') }}
         </div>
@@ -37,9 +37,11 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import { LinkRowFieldType } from '@baserow/modules/database/fieldTypes'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'FieldSelectThroughFieldSubForm',
+  components: { FixedItemsDropdown },
   mixins: [form],
   props: {
     database: {
@@ -75,7 +77,16 @@ export default {
       return this.$store.getters['application/getAll'].reduce(
         (tables, application) => {
           if (application.type === databaseType) {
-            return tables.concat(application.tables || [])
+            const tablesWithCreateFieldAccess = (
+              application.tables || []
+            ).filter((table) =>
+              this.$hasPermission(
+                'database.table.create_field',
+                table,
+                this.database.workspace.id
+              )
+            )
+            return tables.concat(tablesWithCreateFieldAccess)
           }
           return tables
         },

@@ -26,8 +26,8 @@ from baserow.contrib.database.formula import TypeFormulaOperationType
 from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.core.exceptions import UserNotInWorkspace
+from baserow.core.formula import BaserowFormulaException
 from baserow.core.handler import CoreHandler
-from baserow.formula import BaserowFormulaException
 
 
 class TypeFormulaView(APIView):

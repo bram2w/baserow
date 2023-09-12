@@ -17,10 +17,29 @@ from typing import Dict, Iterable, List, Optional, Tuple, Union
 from django.db import transaction
 from django.db.models import ForeignKey
 from django.db.models.fields import NOT_PROVIDED
+from django.db.transaction import get_connection
 
 from baserow.contrib.database.db.schema import optional_atomic
 
 from .exceptions import CannotCalculateIntermediateOrder
+
+RE_ESCAPE_CHAR = re.compile(r"\\(\\)?")
+RE_PROP_NAME = re.compile(
+    # Match anything that isn't a dot or bracket.
+    r"[^.[\]]+"
+    + "|"
+    # Or match property names within brackets.
+    + r"\[(?:"
+    # Match a non-string expression.
+    + r'([^"\'][^[]*)'
+    + "|"
+    # Or match strings (supports escaping characters)
+    + r'(["\'])((?:(?!\\2)[^\\\\]|\\\\.)*?)\\2'
+    + r")\]"
+    + "|"
+    # Or match "" as the space between consecutive dots or empty brackets.
+    + r"(?=(?:\.|\[\])(?:\.|\[\]|$))"
+)
 
 
 def extract_allowed(values, allowed_fields):
@@ -188,7 +207,54 @@ def dict_to_object(values, name="Struct"):
     return namedtuple(name, values.keys())(*values.values())
 
 
-def get_nested_value_from_dict(nested_dict: Dict, value_path_in_dot_notation: str):
+# This function has been adapted from js lodash stringToPath function.
+# See https://github.com/lodash/lodash/blob/master/.internal/stringToPath.js
+# for more information.
+# The idea is to be as close as possible to the frontend version.
+def to_path(path):
+    """
+    Generate an array of path parts from a string path.
+
+    The function splits the input path string into individual parts,
+    including attribute names and indexed access. It returns an array
+    containing the path parts in the order they appear in the input path.
+
+    Args:
+        path (str): The string path to be split into parts.
+
+    Returns:
+        list: A list of path parts.
+
+    Example:
+        >>> path = 'a[0].b.c'
+        >>> result = to_path(path)
+        >>> print(result)
+        ['a', '0', 'b', 'c']
+    """
+
+    if not path:
+        return []
+
+    result = []
+
+    if path[0] == ".":
+        result.append("")
+
+    def replace(match):
+        expression, *rest = match.groups()
+        key = match.group(0)
+        if expression:
+            key = expression
+
+        result.append(key.strip())
+
+    RE_PROP_NAME.sub(replace, path)
+    return result
+
+
+def get_nested_value_from_dict(
+    nested_dict: Dict, value_path_in_dot_notation: Union[str, List[str]]
+):
     """
     This util allows you to get a value from a nested dictionary using dot notation like
     such:
@@ -216,11 +282,16 @@ def get_nested_value_from_dict(nested_dict: Dict, value_path_in_dot_notation: st
     print(result)  # Output: 123
 
     :param nested_dict: The dict that holds the value
-    :param value_path_in_dot_notation: The path to the value
+    :param value_path_in_dot_notation: The path to the value or an array with the path
+        parts
     :return: The value held by the path
     """
 
-    keys = value_path_in_dot_notation.split(".")
+    if isinstance(value_path_in_dot_notation, str):
+        keys = to_path(value_path_in_dot_notation)
+    else:
+        keys = value_path_in_dot_notation
+
     current_value = nested_dict
     for key in keys:
         if isinstance(current_value, dict) and key in current_value:
@@ -846,3 +917,9 @@ def exception_capturer(e):
         capture_exception(e)
     except ImportError:
         pass
+
+
+def transaction_on_commit_if_not_already(func):
+    funcs = set(func for _, func in get_connection().run_on_commit or [])
+    if func not in funcs:
+        transaction.on_commit(func)

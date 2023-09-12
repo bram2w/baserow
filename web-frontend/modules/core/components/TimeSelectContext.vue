@@ -1,5 +1,9 @@
 <template>
-  <Context :hide-on-click-outside="hideOnClickOutside" class="time-select">
+  <Context
+    :hide-on-click-outside="hideOnClickOutside"
+    class="time-select"
+    :max-height-if-outside-viewport="true"
+  >
     <ul @mousedown="$event.preventDefault()">
       <li v-for="time in getTimes(notation)" :key="time">
         <a :class="{ active: time === value }" @click="select(time)">

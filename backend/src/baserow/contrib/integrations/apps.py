@@ -5,7 +5,7 @@ class IntegrationsConfig(AppConfig):
     name = "baserow.contrib.integrations"
 
     def ready(self):
-        from baserow.contrib.integrations.local_baserow.integration_type import (
+        from baserow.contrib.integrations.local_baserow.integration_types import (
             LocalBaserowIntegrationType,
         )
         from baserow.core.integrations.registries import integration_type_registry
@@ -13,7 +13,7 @@ class IntegrationsConfig(AppConfig):
 
         integration_type_registry.register(LocalBaserowIntegrationType())
 
-        from baserow.contrib.integrations.local_baserow.integration_service_types import (
+        from baserow.contrib.integrations.local_baserow.service_types import (
             LocalBaserowGetRowUserServiceType,
             LocalBaserowListRowsUserServiceType,
         )

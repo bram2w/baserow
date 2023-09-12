@@ -39,6 +39,7 @@ import {
   LengthIsLowerThanViewFilterType,
   HigherThanViewFilterType,
   LowerThanViewFilterType,
+  IsEvenAndWholeViewFilterType,
   SingleSelectEqualViewFilterType,
   SingleSelectNotEqualViewFilterType,
   BooleanViewFilterType,
@@ -102,6 +103,7 @@ import formStore from '@baserow/modules/database/store/view/form'
 import rowModal from '@baserow/modules/database/store/rowModal'
 import publicStore from '@baserow/modules/database/store/view/public'
 import rowModalNavigationStore from '@baserow/modules/database/store/rowModalNavigation'
+import rowHistoryStore from '@baserow/modules/database/store/rowHistory'
 
 import { registerRealtimeEvents } from '@baserow/modules/database/realtime'
 import { CSVTableExporterType } from '@baserow/modules/database/exporterTypes'
@@ -115,6 +117,8 @@ import {
   BaserowDatetimeFormatTz,
   BaserowDay,
   BaserowDivide,
+  BaserowEncodeUri,
+  BaserowEncodeUriComponent,
   BaserowEqual,
   BaserowField,
   BaserowSearch,
@@ -225,6 +229,8 @@ import {
 import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
 import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
+import { CollaboratorAddedToRowNotificationType } from '@baserow/modules/database/notificationTypes'
+import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
 import fr from '@baserow/modules/database/locales/fr.json'
@@ -254,6 +260,7 @@ export default (context) => {
   store.registerModule('field', fieldStore)
   store.registerModule('rowModal', rowModal)
   store.registerModule('rowModalNavigation', rowModalNavigationStore)
+  store.registerModule('rowHistory', rowHistoryStore)
   store.registerModule('page/view/grid', gridStore)
   store.registerModule('page/view/gallery', galleryStore)
   store.registerModule('page/view/form', formStore)
@@ -361,6 +368,10 @@ export default (context) => {
   app.$registry.register('viewFilter', new LowerThanViewFilterType(context))
   app.$registry.register(
     'viewFilter',
+    new IsEvenAndWholeViewFilterType(context)
+  )
+  app.$registry.register(
+    'viewFilter',
     new SingleSelectEqualViewFilterType(context)
   )
   app.$registry.register(
@@ -446,6 +457,11 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowSearch(context))
   app.$registry.register('formula_function', new BaserowLength(context))
   app.$registry.register('formula_function', new BaserowReverse(context))
+  app.$registry.register('formula_function', new BaserowEncodeUri(context))
+  app.$registry.register(
+    'formula_function',
+    new BaserowEncodeUriComponent(context)
+  )
   // Number functions
   app.$registry.register('formula_function', new BaserowMultiply(context))
   app.$registry.register('formula_function', new BaserowDivide(context))
@@ -626,6 +642,17 @@ export default (context) => {
   )
 
   app.$registry.register('formViewMode', new FormViewFormModeType(context))
+
+  // notifications
+  app.$registry.register(
+    'notification',
+    new CollaboratorAddedToRowNotificationType(context)
+  )
+
+  app.$registry.register(
+    'rowModalSidebar',
+    new HistoryRowModalSidebarType(context)
+  )
 
   registerRealtimeEvents(app.$realtime)
 }

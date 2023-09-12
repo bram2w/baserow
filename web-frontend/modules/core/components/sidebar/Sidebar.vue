@@ -32,7 +32,11 @@
           <div class="sidebar__user-email">{{ email }}</div>
         </div>
       </a>
-      <Context ref="userContext">
+      <Context
+        ref="userContext"
+        :overflow-scroll="true"
+        :max-height-if-outside-viewport="true"
+      >
         <div class="context__menu-title">{{ name }}</div>
         <ul class="context__menu">
           <li>
@@ -302,12 +306,18 @@
                 'tree__item--loading': workspace._.additionalLoading,
               }"
             >
-              <div class="tree__action tree__action--has-right-icon">
+              <div
+                class="tree__action tree__action--has-right-icon tree__action--has-notification"
+              >
                 <a
                   class="tree__link tree__link--group"
                   @click="$store.dispatch('workspace/select', workspace)"
                   >{{ workspace.name }}</a
                 >
+                <span
+                  v-if="hasUnreadNotifications(workspace.id)"
+                  class="sidebar__unread-notifications-icon"
+                ></span>
                 <i class="tree__right-icon fas fa-arrow-right"></i>
               </div>
             </li>
@@ -438,8 +448,8 @@ export default {
     },
     sidebarWorkspaceComponents() {
       return Object.values(this.$registry.getAll('plugin'))
-        .map((plugin) =>
-          plugin.getSidebarWorkspaceComponent(this.selectedWorkspace)
+        .flatMap((plugin) =>
+          plugin.getSidebarWorkspaceComponents(this.selectedWorkspace)
         )
         .filter((component) => component !== null)
     },
@@ -476,6 +486,9 @@ export default {
     }),
   },
   methods: {
+    hasUnreadNotifications(workspaceId) {
+      return this.$store.getters['notification/workspaceHasUnread'](workspaceId)
+    },
     getApplicationComponent(application) {
       return this.$registry
         .get('application', application.type)

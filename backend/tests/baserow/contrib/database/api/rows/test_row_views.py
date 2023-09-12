@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.shortcuts import reverse
+from django.test import override_settings
 
 import pytest
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -13,11 +16,18 @@ from rest_framework.status import (
 
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.table.cache import invalidate_table_in_model_cache
 from baserow.contrib.database.tokens.handler import TokenHandler
-from baserow.test_utils.helpers import setup_interesting_test_table
+from baserow.core.action.handler import ActionHandler
+from baserow.core.action.registries import action_type_registry
+from baserow.test_utils.helpers import (
+    AnyInt,
+    assert_undo_redo_actions_are_valid,
+    setup_interesting_test_table,
+)
 
 
 @pytest.mark.django_db
@@ -398,6 +408,103 @@ def test_list_rows(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_list_rows_user_field_names(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_text_field(name="field_123456", table=table)
+    field_3 = data_fixture.create_text_field(name="field_üńîćødë", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(
+        name="Product 1", field123456="1st product", order=Decimal("1")
+    )
+    row_2 = model.objects.create(
+        name="Product 2", field123456="2nd product", order=Decimal("2")
+    )
+    row_3 = model.objects.create(
+        name="Product 3", field123456="3rd product", order=Decimal("3")
+    )
+    row_4 = model.objects.create(
+        name="Product 4", fieldüńîćødë="Unicode product", order=Decimal("4")
+    )
+
+    # Test with field names
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_1.name}__equal=Product 1",
+        f"filter__{field_1.name}__equal=Product 2",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 2
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == row_1.id
+    assert response_json["results"][1]["id"] == row_2.id
+
+    # Test with field_id and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__field_{field_1.id}__equal=Product 1",
+        f"filter__field_{field_1.id}__equal=Product 2",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 2
+    assert len(response_json["results"]) == 2
+    assert response_json["results"][0]["id"] == row_1.id
+    assert response_json["results"][1]["id"] == row_2.id
+
+    # Test with field name "field_123456" and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_2.name}__equal=3rd product",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
+
+    # Test with field name "field_üńîćødë" and user_field_names=true
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+    get_params = [
+        f"filter__{field_3.name}__equal=Unicode product",
+        "filter_type=or",
+    ]
+    response = api_client.get(
+        f'{url}?user_field_names=true&{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_4.id
+
+
+@pytest.mark.django_db
 def test_list_rows_sort_query_overrides_existing_sort(data_fixture, api_client):
     user, jwt_token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
@@ -617,9 +724,6 @@ def test_create_row(api_client, data_fixture):
     assert response_json_row_4[f"field_{text_field_2.id}"] == ""
     assert response_json_row_4["order"] == "4.00000000000000000000"
 
-    token.refresh_from_db()
-    assert token.handled_calls == 1
-
     url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
     response = api_client.post(
         f"{url}?before={response_json_row_3['id']}",
@@ -639,9 +743,6 @@ def test_create_row(api_client, data_fixture):
     assert not response_json_row_5[f"field_{boolean_field.id}"]
     assert response_json_row_5[f"field_{text_field_2.id}"] == ""
     assert response_json_row_5["order"] == "2.50000000000000000000"
-
-    token.refresh_from_db()
-    assert token.handled_calls == 2
 
     model = table.get_model()
     assert model.objects.all().count() == 5
@@ -2054,3 +2155,533 @@ def test_get_row_adjacent_search(api_client, data_fixture, search_mode):
         HTTP_AUTHORIZATION=f"JWT {jwt_token}",
     )
     assert response.status_code == HTTP_204_NO_CONTENT, response.json()
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_list_row_history_for_different_rows(data_fixture, api_client):
+    user, jwt_token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, name="Number", number_decimal_places=2
+    )
+
+    row_handler = RowHandler()
+
+    row_one = row_handler.create_row(user, table, {name_field.id: "Original 1"})
+    row_two = row_handler.create_row(user, table, {name_field.id: "Original 2"})
+
+    with freeze_time("2021-01-01 12:00"):
+        action_type_registry.get_by_type(UpdateRowsActionType).do(
+            user,
+            table,
+            [
+                {
+                    "id": row_one.id,
+                    f"field_{name_field.id}": "New 1",
+                    f"field_{number_field.id}": "1.00",
+                },
+                {
+                    "id": row_two.id,
+                    f"field_{name_field.id}": "New 2",
+                    f"field_{number_field.id}": None,
+                },
+            ],
+        )
+
+    with freeze_time("2021-01-01 12:01"):
+        action_type_registry.get_by_type(UpdateRowsActionType).do(
+            user,
+            table,
+            [{"id": row_one.id, f"field_{name_field.id}": "New 1.1"}],
+        )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row_one.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:01:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1.1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                    f"field_{number_field.id}": None,
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1",
+                    f"field_{number_field.id}": "1.00",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                    f"field_{number_field.id}": {
+                        "id": number_field.id,
+                        "type": "number",
+                        "number_decimal_places": 2,
+                    },
+                },
+            },
+        ],
+    }
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row_two.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 2",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 2",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_undo_redo_create_new_entries_in_row_history(data_fixture, api_client):
+    session_id = "session_id"
+    user, jwt_token = data_fixture.create_user_and_token(session_id=session_id)
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(table=table, name="Name")
+
+    row_handler = RowHandler()
+
+    row = row_handler.create_row(user, table, {name_field.id: "Original 1"})
+
+    with freeze_time("2021-01-01 12:00"):
+        action_type_registry.get_by_type(UpdateRowsActionType).do(
+            user,
+            table,
+            [
+                {"id": row.id, f"field_{name_field.id}": "New 1"},
+            ],
+        )
+
+    # undo
+    with freeze_time("2021-01-01 12:01"):
+        actions = ActionHandler.undo(
+            user, [UpdateRowsActionType.scope(table.id)], session_id
+        )
+        assert_undo_redo_actions_are_valid(actions, [UpdateRowsActionType])
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 2,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:01:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                },
+            },
+        ],
+    }
+
+    # redo
+    with freeze_time("2021-01-01 12:02"):
+        actions = ActionHandler.redo(
+            user, [UpdateRowsActionType.scope(table.id)], session_id
+        )
+        assert_undo_redo_actions_are_valid(actions, [UpdateRowsActionType])
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 3,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:02:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:01:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                },
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_list_row_history_endpoint_handle_errors_correctly(data_fixture, api_client):
+    user, jwt_token = data_fixture.create_user_and_token()
+    _, other_token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    row = RowHandler().create_row(user, table, {name_field.id: "Original 1"})
+
+    with freeze_time("2021-01-01 12:01"):
+        action_type_registry.get_by_type(UpdateRowsActionType).do(
+            user,
+            table,
+            [{"id": row.id, f"field_{name_field.id}": "New 1.1"}],
+        )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {other_token}",
+    )
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_USER_NOT_IN_GROUP"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": 9999, "row_id": row.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_TABLE_DOES_NOT_EXIST"
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": 9999},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ROW_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+@override_settings(ROW_PAGE_SIZE_LIMIT=10)
+def test_list_row_history_endpoint_is_paginated(data_fixture, api_client):
+    user, jwt_token = data_fixture.create_user_and_token()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    row = RowHandler().create_row(user, table, {name_field.id: "Original 1"})
+
+    for i in range(5):
+        timestamp = datetime(2023, 1, 1, 12) + timedelta(minutes=i)
+        with freeze_time(timestamp):
+            action_type_registry.get_by_type(UpdateRowsActionType).do(
+                user,
+                table,
+                [{"id": row.id, f"field_{name_field.id}": f"New 1.{i}"}],
+            )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        )
+        + "?limit=2",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 5,
+        "next": f"http://testserver/api/database/rows/table/{table.id}/{row.id}/history/?limit=2&offset=2",
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2023-01-01T12:04:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1.3",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1.4",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2023-01-01T12:03:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1.2",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1.3",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+        ],
+    }
+
+    # Use offset
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row.id},
+        )
+        + "?offset=3",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 5,
+        "next": None,
+        "previous": f"http://testserver/api/database/rows/table/{table.id}/{row.id}/history/?limit=10",
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2023-01-01T12:01:00Z",
+                "before": {
+                    f"field_{name_field.id}": "New 1.0",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1.1",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2023-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1.0",
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    }
+                },
+            },
+        ],
+    }

@@ -1,68 +1,106 @@
 <template>
-  <PublicPage :page="page" :path="path" :params="params" />
+  <PageContent
+    :page="page"
+    :path="path"
+    :params="params"
+    :elements="elements"
+  />
 </template>
 
 <script>
-import PublicPage from '@baserow/modules/builder/components/page/PublicPage'
+import PageContent from '@baserow/modules/builder/components/page/PageContent'
 import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 
 export default {
-  components: { PublicPage },
+  components: { PageContent },
   provide() {
-    return { builder: this.builder, mode: this.mode }
+    return { builder: this.builder, page: this.page, mode: this.mode }
   },
-  async asyncData(context) {
-    let builder = context.store.getters['publicBuilder/getBuilder']
+  async asyncData({ store, params, error, $registry, app, req }) {
     let mode = 'public'
-    const builderId = context.route.params.builderId
+    const builderId = parseInt(params.builderId, 10)
 
-    if (!builder) {
-      try {
-        if (builderId) {
-          // We have the builderId in the params so this is a preview
-          // Must fetch the builder instance by this Id.
-          await context.store.dispatch('publicBuilder/fetchById', {
-            builderId,
-          })
-        } else {
-          // We don't have the builderId so it's a public page.
-          // Must fetch the builder instance by domain name.
-          const host = process.server
-            ? context.req.headers.host
-            : window.location.host
-          const domain = new URL(`http://${host}`).hostname
-
-          await context.store.dispatch('publicBuilder/fetchByDomain', {
-            domain,
-          })
-        }
-        builder = context.store.getters['publicBuilder/getBuilder']
-      } catch (e) {
-        return context.error({
-          statusCode: 404,
-          message: context.app.i18n.t('publicPage.siteNotFound'),
-        })
-      }
-    }
-
+    // We have a builderId parameter in the path so it's a preview
     if (builderId) {
       mode = 'preview'
     }
 
-    const found = resolveApplicationRoute(
-      builder.pages,
-      context.route.params.pathMatch
-    )
+    let builder = store.getters['application/getSelected']
+
+    if (!builder || builderId !== builder.id) {
+      try {
+        if (builderId) {
+          // We have the builderId in the params so this is a preview
+          // Must fetch the builder instance by this Id.
+          await store.dispatch('publicBuilder/fetchById', {
+            builderId,
+          })
+          builder = await store.dispatch('application/selectById', builderId)
+        } else {
+          // We don't have the builderId so it's a public page.
+          // Must fetch the builder instance by domain name.
+          const host = process.server ? req.headers.host : window.location.host
+          const domain = new URL(`http://${host}`).hostname
+
+          const { id: receivedBuilderId } = await store.dispatch(
+            'publicBuilder/fetchByDomain',
+            {
+              domain,
+            }
+          )
+          builder = await store.dispatch(
+            'application/selectById',
+            receivedBuilderId
+          )
+        }
+      } catch (e) {
+        return error({
+          statusCode: 404,
+          message: app.i18n.t('publicPage.siteNotFound'),
+        })
+      }
+    }
+
+    const found = resolveApplicationRoute(builder.pages, params.pathMatch)
 
     // Handle 404
     if (!found) {
-      return context.error({
+      return error({
         statusCode: 404,
-        message: context.app.i18n.t('publicPage.pageNotFound'),
+        message: app.i18n.t('publicPage.pageNotFound'),
       })
     }
 
-    const [page, path, params] = found
+    const [pageFound, path, pageParamsValue] = found
+
+    const page = await store.getters['page/getById'](builder, pageFound.id)
+
+    await Promise.all([
+      store.dispatch('dataSource/fetchPublished', {
+        page,
+      }),
+      store.dispatch('element/fetchPublished', { page }),
+    ])
+
+    const runtimeFormulaContext = new RuntimeFormulaContext(
+      $registry.getAll('builderDataProvider'),
+      {
+        builder,
+        page,
+        pageParamsValue,
+        mode,
+      }
+    )
+
+    // Initialize all data provider contents
+    await runtimeFormulaContext.initAll()
+
+    // And finally select the page to display it
+    await store.dispatch('page/selectById', {
+      builder,
+      pageId: pageFound.id,
+    })
 
     return {
       builder,
@@ -80,6 +118,42 @@ export default {
         class: 'public-page',
       },
     }
+  },
+  computed: {
+    elements() {
+      return this.$store.getters['element/getRootElements'](this.page)
+    },
+    runtimeFormulaContext() {
+      return new RuntimeFormulaContext(
+        this.$registry.getAll('builderDataProvider'),
+        {
+          builder: this.builder,
+          page: this.page,
+          pageParamsValue: this.params,
+          mode: this.mode,
+        }
+      )
+    },
+    backendContext() {
+      return this.runtimeFormulaContext.getAllBackendContext()
+    },
+  },
+  watch: {
+    backendContext: {
+      deep: true,
+      /**
+       * Update data source content on backend context changes
+       */
+      handler(newValue) {
+        this.$store.dispatch(
+          'dataSourceContent/debouncedFetchPageDataSourceContent',
+          {
+            page: this.page,
+            data: newValue,
+          }
+        )
+      },
+    },
   },
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <Context>
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <KanbanViewOptionForm
       ref="form"
       :default-values="option"

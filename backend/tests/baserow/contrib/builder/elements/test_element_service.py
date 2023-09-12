@@ -258,7 +258,13 @@ def test_move_element(element_updated_mock, data_fixture):
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_paragraph_element(page=page)
 
-    element_moved = ElementService().move_element(user, element3, before=element2)
+    element_moved = ElementService().move_element(
+        user,
+        element3,
+        element3.parent_element,
+        element3.place_in_container,
+        before=element2,
+    )
 
     assert element_updated_mock.called_with(element=element_moved, user=user)
 
@@ -273,7 +279,13 @@ def test_move_element_not_same_page(data_fixture, stub_check_permissions):
     element3 = data_fixture.create_builder_paragraph_element(page=page2)
 
     with pytest.raises(ElementNotInSamePage):
-        ElementService().move_element(user, element3, before=element2)
+        ElementService().move_element(
+            user,
+            element3,
+            element3.parent_element,
+            element3.place_in_container,
+            before=element2,
+        )
 
 
 @pytest.mark.django_db
@@ -287,7 +299,13 @@ def test_move_element_permission_denied(data_fixture, stub_check_permissions):
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        ElementService().move_element(user, element3, before=element2)
+        ElementService().move_element(
+            user,
+            element3,
+            element3.parent_element,
+            element3.place_in_container,
+            before=element2,
+        )
 
 
 @pytest.mark.django_db
@@ -305,6 +323,36 @@ def test_move_element_trigger_order_recalculed(
     )
     element3 = data_fixture.create_builder_heading_element(page=page, order="3.0000")
 
-    ElementService().move_element(user, element3, before=element2)
+    ElementService().move_element(
+        user,
+        element3,
+        element3.parent_element,
+        element3.place_in_container,
+        before=element2,
+    )
 
     assert element_orders_recalculated_mock.called_with(page=page, user=user)
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.builder.elements.service.elements_created")
+def test_duplicate_element(elements_created_mock, data_fixture):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_heading_element(user=user)
+
+    elements_duplicated = ElementService().duplicate_element(user, element)
+
+    assert elements_created_mock.called_with(
+        elements=elements_duplicated, user=user, page=element.page
+    )
+
+
+@pytest.mark.django_db(transaction=True)
+def test_duplicate_element_permission_denied(data_fixture, stub_check_permissions):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_heading_element(user=user)
+
+    with stub_check_permissions(raise_permission_denied=True), pytest.raises(
+        PermissionException
+    ):
+        ElementService().duplicate_element(user, element)

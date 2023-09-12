@@ -9,6 +9,7 @@ from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchQuery, SearchVectorField
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
+from django.db.models import Field as DjangoModelFieldClass
 from django.db.models import JSONField, Q, QuerySet, Value
 
 from loguru import logger
@@ -60,9 +61,8 @@ from baserow.core.mixins import (
 from baserow.core.telemetry.utils import baserow_trace
 from baserow.core.utils import split_comma_separated_string
 
-deconstruct_filter_key_regex = re.compile(
-    r"filter__field_([0-9]+|created_on|updated_on)__([a-zA-Z0-9_]*)$"
-)
+extract_filter_sections_regex = re.compile(r"filter__(.+)__(.+)$")
+field_id_regex = re.compile(r"field_(\d+)$")
 
 tracer = trace.get_tracer(__name__)
 
@@ -359,7 +359,11 @@ class TableModelQuerySet(models.QuerySet):
         return self.annotate(**annotations).order_by(*order_by)
 
     def filter_by_fields_object(
-        self, filter_object, filter_type=FILTER_TYPE_AND, only_filter_by_field_ids=None
+        self,
+        filter_object,
+        filter_type=FILTER_TYPE_AND,
+        only_filter_by_field_ids=None,
+        user_field_names=False,
     ):
         """
         Filters the query by the provided filters in the filter_object. The following
@@ -387,6 +391,9 @@ class TableModelQuerySet(models.QuerySet):
             filtered by. Other fields not in the iterable will be ignored and not be
             filtered.
         :type only_filter_by_field_ids: Optional[Iterable[int]]
+        :param user_field_names: If True, use field names in the filter object
+            instead of ids
+        :type user_field_names: bool
         :raises ValueError: Raised when the provided filer_type isn't AND or OR.
         :raises FilterFieldNotFound: Raised when the provided field isn't found in
             the model.
@@ -402,23 +409,37 @@ class TableModelQuerySet(models.QuerySet):
 
         filter_builder = FilterBuilder(filter_type=filter_type)
 
-        for key, values in filter_object.items():
-            matches = deconstruct_filter_key_regex.match(key)
+        user_field_name_to_id_mapping = (
+            {v["field"].name: k for k, v in self.model._field_objects.items()}
+            if user_field_names
+            else {}
+        )
 
-            if not matches:
+        fixed_field_instance_mapping = {
+            "field_created_on": CreatedOnField(),
+            "field_updated_on": LastModifiedField(),
+        }
+
+        for key, values in filter_object.items():
+            filter_sections = extract_filter_sections_regex.match(key)
+            if not filter_sections:
                 continue
 
-            fixed_field_instance_mapping = {
-                "created_on": CreatedOnField(),
-                "updated_on": LastModifiedField(),
-            }
+            field_name_or_id, view_filter_name = filter_sections.groups()
 
-            if matches[1] in fixed_field_instance_mapping.keys():
-                field_name = matches[1]
-                field_instance = fixed_field_instance_mapping.get(field_name)
+            if user_field_names and field_name_or_id in user_field_name_to_id_mapping:
+                field_id = user_field_name_to_id_mapping[field_name_or_id]
+            elif field_name_or_id in fixed_field_instance_mapping.keys():
+                field_instance = fixed_field_instance_mapping[field_name_or_id]
+                field_name = field_name_or_id.replace("field_", "")
             else:
-                field_id = int(matches[1])
+                field_id_match = field_id_regex.match(field_name_or_id)
+                if field_id_match:
+                    field_id = int(field_id_match.group(1))
+                else:
+                    continue
 
+            if field_name_or_id not in fixed_field_instance_mapping.keys():
                 if field_id not in self.model._field_objects or (
                     only_filter_by_field_ids is not None
                     and field_id not in only_filter_by_field_ids
@@ -433,10 +454,11 @@ class TableModelQuerySet(models.QuerySet):
                 field_type = field_object["type"].type
 
             model_field = self.model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(matches[2])
+            view_filter_type = view_filter_type_registry.get(view_filter_name)
+
             if not view_filter_type.field_is_compatible(field_instance):
                 raise ViewFilterTypeNotAllowedForField(
-                    matches[2],
+                    view_filter_name,
                     field_type,
                 )
 
@@ -528,10 +550,13 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         ]
 
     @classmethod
-    def get_field_object_or_none(cls, field_name: str, include_trash: bool = False):
+    def get_field_object(cls, field_name: str, include_trash: bool = False):
         field_objects = cls.get_field_objects(include_trash)
 
-        return next(filter(lambda f: f["name"] == field_name, field_objects), None)
+        try:
+            return next(filter(lambda f: f["name"] == field_name, field_objects))
+        except StopIteration:
+            raise ValueError(f"Field {field_name} not found.")
 
     @classmethod
     def get_field_objects(cls, include_trash: bool = False):
@@ -541,6 +566,12 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
                 field_objects, cls._trashed_field_objects.values()
             )
         return field_objects
+
+    @classmethod
+    def get_field_objects_by_type(cls, field_type: str, include_trash: bool = False):
+        field_objects = cls.get_field_objects(include_trash)
+
+        return filter(lambda f: f["type"].type == field_type, field_objects)
 
     @classmethod
     def get_fields_missing_search_index(cls) -> List[Field]:
@@ -598,20 +629,22 @@ class DefaultAppsProxy:
     A proxy class to the default apps registry.
     This class is needed to make our dynamic models available in the
     options then the relation tree is built.
+
+    This permits to django to find the reverse relation in the _relation_tree.
+    Look into django.db.models.options.py - _populate_directed_relation_graph
+    for more information.
     """
 
-    def __init__(self):
-        self._extra_models = []
-
-    def add_models(self, *dynamic_models):
-        """
-        Adds a model to the default apps registry.
-        """
-
-        self._extra_models.extend(dynamic_models)
+    def __init__(self, baserow_m2m_models):
+        self.baserow_m2m_models = baserow_m2m_models
 
     def get_models(self, *args, **kwargs):
-        return apps.get_models(*args, **kwargs) + self._extra_models
+        # Called by django and must contain ALL the models that have been generated
+        # and connected together as django will loop over every model in this list
+        # and set cached properties on each. These cached django properties are then
+        # used to when looking up fields, so they must include every connected model
+        # that could be involved in queries and not just a sub-set of them.
+        return apps.get_models(*args, **kwargs) + list(self.baserow_m2m_models.values())
 
     def __getattr__(self, attr):
         return getattr(apps, attr)
@@ -624,11 +657,12 @@ def patch_meta_get_field(_meta):
         try:
             return original_get_field(field_name, *args, **kwargs)
         except DjangoFieldDoesNotExist as exc:
-            field_object = self.model.get_field_object_or_none(
-                field_name, include_trash=True
-            )
+            try:
+                field_object = self.model.get_field_object(
+                    field_name, include_trash=True
+                )
 
-            if field_object is None:
+            except ValueError:
                 raise exc
 
             field_type = field_object["type"]
@@ -769,11 +803,12 @@ class Table(
         ]
 
         app_label = "database_table"
+        baserow_m2m_models = manytomany_models or {}
         meta = type(
             "Meta",
             (),
             {
-                "apps": DefaultAppsProxy(),
+                "apps": DefaultAppsProxy(baserow_m2m_models),
                 "managed": managed,
                 "db_table": self.get_database_table_name(),
                 "app_label": app_label,
@@ -804,18 +839,11 @@ class Table(
             "_generated_table_model": True,
             "baserow_table": self,
             "baserow_table_id": self.id,
-            "baserow_m2m_models": manytomany_models or {},
+            "baserow_m2m_models": baserow_m2m_models,
             # We are using our own table model manager to implement some queryset
             # helpers.
             "objects": TableModelManager(),
             "objects_and_trash": TableModelTrashAndObjectsManager(),
-            # Indicates which position the row has.
-            "order": models.DecimalField(
-                max_digits=40,
-                decimal_places=20,
-                editable=False,
-                default=1,
-            ),
             "__str__": __str__,
         }
 
@@ -848,6 +876,36 @@ class Table(
 
             if use_cache:
                 set_cached_model_field_attrs(self, field_attrs)
+        else:
+            # We found cached model fields, they will have a cached creation_counter
+            # attribute each used to compare model fields to do django
+            # fundamental internal operations like generating SQL to select from this
+            # table. Any new model fields added to this table will use a global
+            # static counter on the Model class itself. To prevent any possibility
+            # of collisions between the model fields that just came out of the cache
+            # and these new model fields we are about to init below, we increase
+            # this global creation_counter to prevent any possible collision and
+            # horrible bugs.
+            max_creation_counter_from_cache = DjangoModelFieldClass.creation_counter
+            for f in field_attrs.values():
+                if isinstance(f, DjangoModelFieldClass) and not f.auto_created:
+                    max_creation_counter_from_cache = max(
+                        max_creation_counter_from_cache,
+                        getattr(f, "creation_counter", max_creation_counter_from_cache),
+                    )
+            DjangoModelFieldClass.creation_counter = max_creation_counter_from_cache + 1
+
+        # We have to add the order field after reading the potentially cached values
+        # as those cached model fields will have a cached creation_counter and we need
+        # to ensure any other model fields added to this same model are __init__ed
+        # after we've fixed the global DjangoModelFieldClass.creation_counter
+        # above.
+        field_attrs["order"] = models.DecimalField(
+            max_digits=40,
+            decimal_places=20,
+            editable=False,
+            default=1,
+        )
 
         self._add_search_tsvector_fields_to_model(
             field_attrs, indexes, force_add_tsvectors

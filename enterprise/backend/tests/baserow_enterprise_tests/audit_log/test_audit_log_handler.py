@@ -11,25 +11,11 @@ from baserow_enterprise.audit_log.handler import AuditLogHandler
 from baserow_enterprise.audit_log.models import AuditLogEntry
 
 
-@pytest.mark.django_db(transaction=True)
-@override_settings(DEBUG=True)
-def test_actions_are_not_inserted_as_audit_log_entries_without_license(
-    api_client, enterprise_data_fixture
-):
-    user = enterprise_data_fixture.create_user()
-
-    with freeze_time("2023-01-01 12:00:00"):
-        CreateWorkspaceActionType.do(user, "workspace 1")
-
-    assert AuditLogEntry.objects.count() == 0
-
-
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_actions_are_inserted_as_audit_log_entries_with_license(
+def test_actions_are_inserted_as_audit_log_entries_and_can_be_deleted_even_without_license(
     api_client, enterprise_data_fixture, synced_roles
 ):
-    enterprise_data_fixture.enable_enterprise()
     user = enterprise_data_fixture.create_user()
 
     with freeze_time("2023-01-01 12:00:00"):
@@ -39,6 +25,10 @@ def test_actions_are_inserted_as_audit_log_entries_with_license(
         CreateWorkspaceActionType.do(user, "workspace 2")
 
     assert AuditLogEntry.objects.count() == 2
+
+    AuditLogHandler.delete_entries_older_than(datetime(2023, 1, 1, 13, 0, 0))
+
+    assert AuditLogEntry.objects.count() == 0
 
 
 @pytest.mark.django_db

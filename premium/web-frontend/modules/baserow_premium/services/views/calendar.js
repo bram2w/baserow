@@ -12,6 +12,8 @@ export default (client) => {
       userTimeZone = null,
       publicUrl = false,
       publicAuthToken = null,
+      search = '',
+      searchMode = '',
     }) {
       const include = []
       const params = new URLSearchParams()
@@ -34,6 +36,12 @@ export default (client) => {
 
       if (userTimeZone) {
         params.append('user_timezone', userTimeZone)
+      }
+      if (search) {
+        params.append('search', search)
+        if (searchMode) {
+          params.append('search_mode', searchMode)
+        }
       }
 
       const config = { params }

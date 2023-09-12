@@ -4,7 +4,7 @@ import django.db.models.deletion
 from django.conf import settings
 from django.db import migrations, models
 
-import baserow.core.expression.field
+import baserow.core.formula.field
 
 
 class Migration(migrations.Migration):
@@ -88,7 +88,7 @@ class Migration(migrations.Migration):
                         to="core.service",
                     ),
                 ),
-                ("row_id", baserow.core.expression.field.ExpressionField()),
+                ("row_id", baserow.core.formula.field.FormulaField()),
                 (
                     "table",
                     models.ForeignKey(

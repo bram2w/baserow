@@ -4,8 +4,8 @@
   font-size: 14px;
   font-weight: 600;
   padding: 0 20px;
-  color: $color-primary-900;
-  border-radius: 6px;
+  color: $color-neutral-900;
+  @include rounded($rounded-md);
 
   &:hover {
     text-decoration: none;
@@ -37,7 +37,7 @@
 
 .view-sharing__shared-link-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
@@ -51,13 +51,13 @@
 }
 
 .view-sharing__shared-link-box {
-  border-radius: 3px;
   background-color: $color-neutral-100;
   line-height: 32px;
   padding: 0 8px;
   font-family: monospace;
   font-size: 10px;
   min-width: 0;
+  @include rounded($rounded);
 }
 
 .view-sharing__shared-link-action {
@@ -65,10 +65,10 @@
   width: 32px;
   margin-left: 8px;
   line-height: 32px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   font-size: 12px;
   text-align: center;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &:not(.view-sharing__shared-link-action--loading):hover {
     background-color: $color-neutral-100;
@@ -90,7 +90,7 @@
   }
 
   &.view-sharing__shared-link-action--disabled {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: transparent;
 
     &:hover {
@@ -132,7 +132,7 @@ p.box__description {
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 
   i {

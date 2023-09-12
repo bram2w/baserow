@@ -51,8 +51,8 @@ def test_user_can_see_notifications_paginated(data_fixture, api_client):
     notifications_count = settings.ROW_PAGE_SIZE_LIMIT + 2
 
     for _ in range(notifications_count):
-        data_fixture.create_workspace_notification(
-            workspace=workspace, recipients=[user], type="test"
+        data_fixture.create_workspace_notification_for_users(
+            workspace=workspace, recipients=[user], notification_type="test"
         )
 
     # Offset 0 and limit as by default.
@@ -93,7 +93,7 @@ def test_user_get_unread_workspace_count_listing_workspaces(data_fixture, api_cl
     workspace = data_fixture.create_workspace(user=user)
 
     with freeze_time("2021-01-01 12:00"):
-        data_fixture.create_workspace_notification(
+        data_fixture.create_workspace_notification_for_users(
             workspace=workspace, recipients=[user]
         )
 
@@ -128,7 +128,7 @@ def test_user_get_unread_user_count_refreshing_token(data_fixture, api_client):
     assert response.status_code == HTTP_200_OK
     assert response.json()["user_notifications"]["unread_count"] == 0
 
-    data_fixture.create_user_notification(recipients=[user])
+    data_fixture.create_user_notification_for_users(recipients=[user])
 
     response = api_client.post(
         reverse("api:user:token_auth"),
@@ -154,16 +154,16 @@ def test_user_fetch_workspace_and_user_notifications_together(data_fixture, api_
     workspace = data_fixture.create_workspace(user=user)
 
     with freeze_time("2021-01-01 12:00"):
-        data_fixture.create_workspace_notification(
+        data_fixture.create_workspace_notification_for_users(
             sender=user,
             workspace=workspace,
             recipients=[user],
-            type="fake_application_notification",
+            notification_type="fake_application_notification",
         )
     with freeze_time("2021-01-01 12:01"):
-        data_fixture.create_user_notification(
+        data_fixture.create_user_notification_for_users(
             recipients=[user],
-            type="version_update",
+            notification_type="version_update",
             data={"version": "1.0.0"},
         )
 
@@ -204,7 +204,7 @@ def test_user_can_mark_notifications_as_read(data_fixture, api_client):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
 
-    notification = data_fixture.create_workspace_notification(
+    notification = data_fixture.create_workspace_notification_for_users(
         workspace=workspace, recipients=[user]
     )
     recipient = NotificationRecipient.objects.get(
@@ -232,7 +232,7 @@ def test_user_cannot_mark_notifications_as_read_if_not_part_of_workspace(
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace()
 
-    notification = data_fixture.create_workspace_notification(
+    notification = data_fixture.create_workspace_notification_for_users(
         workspace=workspace, recipients=[user]
     )
 
@@ -276,11 +276,13 @@ def test_user_can_mark_all_own_notifications_as_read(data_fixture, api_client):
     workspace = data_fixture.create_workspace(user=user)
     other_workspace = data_fixture.create_workspace(user=other_user)
 
-    data_fixture.create_workspace_notification(workspace=workspace, recipients=[user])
-    data_fixture.create_user_notification(recipients=[user])
+    data_fixture.create_workspace_notification_for_users(
+        workspace=workspace, recipients=[user]
+    )
+    data_fixture.create_user_notification_for_users(recipients=[user])
 
     # other workspace
-    data_fixture.create_workspace_notification(
+    data_fixture.create_workspace_notification_for_users(
         workspace=other_workspace, recipients=[other_user]
     )
 
@@ -318,8 +320,10 @@ def test_user_cannot_mark_all_notifications_as_read_if_not_part_of_workspace(
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace()
 
-    data_fixture.create_workspace_notification(workspace=workspace, recipients=[user])
-    data_fixture.create_user_notification(recipients=[user])
+    data_fixture.create_workspace_notification_for_users(
+        workspace=workspace, recipients=[user]
+    )
+    data_fixture.create_user_notification_for_users(recipients=[user])
 
     response = api_client.post(
         reverse(
@@ -358,8 +362,10 @@ def test_user_cannot_clear_all_notifications_if_not_part_of_workspace(
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace()
 
-    data_fixture.create_workspace_notification(workspace=workspace, recipients=[user])
-    data_fixture.create_user_notification(recipients=[user])
+    data_fixture.create_workspace_notification_for_users(
+        workspace=workspace, recipients=[user]
+    )
+    data_fixture.create_user_notification_for_users(recipients=[user])
 
     response = api_client.delete(
         reverse(
@@ -397,14 +403,16 @@ def test_user_can_clear_all_own_notifications(data_fixture, api_client):
     workspace = data_fixture.create_workspace(user=user)
     workspace_2 = data_fixture.create_workspace(user=user_2)
 
-    data_fixture.create_workspace_notification(recipients=[user], workspace=workspace)
-    data_fixture.create_user_notification(recipients=[user])
+    data_fixture.create_workspace_notification_for_users(
+        recipients=[user], workspace=workspace
+    )
+    data_fixture.create_user_notification_for_users(recipients=[user])
 
     # other workspace and user
-    data_fixture.create_workspace_notification(
+    data_fixture.create_workspace_notification_for_users(
         workspace=workspace_2, recipients=[user_2]
     )
-    data_fixture.create_user_notification(recipients=[user_2])
+    data_fixture.create_user_notification_for_users(recipients=[user_2])
 
     assert Notification.objects.count() == 4
 

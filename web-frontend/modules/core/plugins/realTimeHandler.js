@@ -51,7 +51,7 @@ export class RealTimeHandler {
 
     // The web socket url is the same as the PUBLIC_BACKEND_URL apart from the
     // protocol.
-    const rawUrl = this.context.app.$env.PUBLIC_BACKEND_URL
+    const rawUrl = this.context.app.$config.PUBLIC_BACKEND_URL
     const url = new URL(rawUrl)
     url.protocol = isSecureURL(rawUrl) ? 'wss:' : 'ws:'
     url.pathname = '/ws/core/'
@@ -331,10 +331,15 @@ export class RealTimeHandler {
     })
 
     // notifications
-
     this.registerEvent('notifications_created', ({ store }, data) => {
       store.dispatch('notification/forceCreateInBulk', {
         notifications: data.notifications,
+      })
+    })
+
+    this.registerEvent('notifications_fetch_required', ({ store }, data) => {
+      store.dispatch('notification/forceRefetch', {
+        notificationsAdded: data.notifications_added,
       })
     })
 

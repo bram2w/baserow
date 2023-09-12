@@ -51,11 +51,13 @@
         "markAllAsRead": "Mark all as read",
         "clearAll": "Clear all",
         "noNotificationTitle": "You don't have any notifications",
-        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow."
+        "noNotification": "We'll notify you about important updates and any time you're mentioned on Baserow.",
+        "newNotificationsAvailable": "New notifications available",
+        "refresh": "Refresh"
     },
     "clearAllNotificationsConfirmModal": {
         "title": "Are you sure you want to clear all notifications?",
-        "message": "All the notifications will be permanently deleted and you won't be able to see them again." 
+        "message": "All the notifications will be permanently deleted and you won't be able to see them again."
     },
     "passwordSettings": {
         "title": "Change password",
@@ -142,6 +144,7 @@
     "workspaceContext": {
         "renameWorkspace": "Rename workspace",
         "members": "Members",
+        "auditLog": "Audit log",
         "viewTrash": "View trash",
         "leaveWorkspace": "Leave workspace",
         "deleteWorkspace": "Delete workspace"
@@ -537,13 +540,6 @@
     "dropdown": {
         "empty": "No items available"
     },
-    "styleSidePanel": {
-        "paddingTop": "Padding top",
-        "paddingBottom": "Padding bottom"
-    },
-    "styleBoxForm": {
-        "paddingError": "The value must be an integer between 0 and 200."
-    },
     "richTextEditorMentionsList": {
         "notFound": "No users found"
     },
@@ -558,5 +554,18 @@
     },
     "versionUpgradeNotification": {
         "title": "{version} is here! Check out what's new."
+    },
+    "emailNotifications": {
+        "title": "Email notifications",
+        "label": "Mentions, comments and other notifications",
+        "description": "Configure the frequency in which emails are sent to your inbox.",
+        "instant": "Instant",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "never": "Never",
+        "submitButton": "Update frequency"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "The formula is invalid."
     }
 }

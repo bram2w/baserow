@@ -1,9 +1,9 @@
 import ElementService from '@baserow/modules/builder/services/element'
+import PublicBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import { calculateTempOrder } from '@baserow/modules/core/utils/order'
+import BigNumber from 'bignumber.js'
 
 const state = {
-  // The elements of the currently selected page
-  elements: [],
-
   // The currently selected element
   selected: null,
 }
@@ -15,67 +15,80 @@ const updateContext = {
 }
 
 const mutations = {
-  ADD_ITEM(state, { element, beforeId = null }) {
-    if (beforeId === null) {
-      state.elements.push(element)
-    } else {
-      const insertionIndex = state.elements.findIndex((e) => e.id === beforeId)
-      state.elements.splice(insertionIndex, 0, element)
-    }
+  SET_ITEMS(state, { page, elements }) {
+    state.selected = null
+    page.elements = elements
   },
-  UPDATE_ITEM(state, { element: elementToUpdate, values }) {
-    state.elements.forEach((element) => {
+  ADD_ITEM(state, { page, element, beforeId = null }) {
+    page.elements.push(element)
+  },
+  UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
+    page.elements.forEach((element) => {
       if (element.id === elementToUpdate.id) {
         Object.assign(element, values)
       }
     })
-  },
-  DELETE_ITEM(state, { elementId }) {
-    const index = state.elements.findIndex(
-      (element) => element.id === elementId
-    )
-    if (index > -1) {
-      state.elements.splice(index, 1)
+    if (state.selected?.id === elementToUpdate.id) {
+      Object.assign(state.selected, values)
     }
   },
-  MOVE_ITEM(state, { index, oldIndex }) {
-    state.elements.splice(index, 0, state.elements.splice(oldIndex, 1)[0])
+  DELETE_ITEM(state, { page, elementId }) {
+    const index = page.elements.findIndex((element) => element.id === elementId)
+    if (index > -1) {
+      page.elements.splice(index, 1)
+    }
+  },
+  MOVE_ITEM(state, { page, index, oldIndex }) {
+    page.elements.splice(index, 0, page.elements.splice(oldIndex, 1)[0])
   },
   SELECT_ITEM(state, { element }) {
     state.selected = element
   },
-  CLEAR_ITEMS(state) {
-    state.elements = []
+  CLEAR_ITEMS(state, { page }) {
+    page.elements = []
   },
 }
 
 const actions = {
-  forceCreate({ commit }, { element, beforeId = null }) {
-    commit('ADD_ITEM', { element, beforeId })
+  clearAll({ commit }, { page }) {
+    commit('CLEAR_ITEMS', { page })
   },
-  forceUpdate({ commit }, { element, values }) {
-    commit('UPDATE_ITEM', { element, values })
+  forceCreate({ commit }, { page, element }) {
+    commit('ADD_ITEM', { page, element })
   },
-  forceDelete({ commit, getters }, { elementId }) {
+  forceUpdate({ commit }, { page, element, values }) {
+    commit('UPDATE_ITEM', { page, element, values })
+  },
+  forceDelete({ commit, getters }, { page, elementId }) {
     if (getters.getSelected.id === elementId) {
       commit('SELECT_ITEM', { element: null })
     }
-    commit('DELETE_ITEM', { elementId })
+    commit('DELETE_ITEM', { page, elementId })
   },
-  forceMove({ commit, getters }, { elementId, beforeElementId }) {
-    const currentOrder = getters.getElements.map((element) => element.id)
-    const oldIndex = currentOrder.findIndex((id) => id === elementId)
-    const index = beforeElementId
-      ? currentOrder.findIndex((id) => id === beforeElementId)
-      : getters.getElements.length
+  forceMove(
+    { commit, getters },
+    { page, elementId, beforeElementId, parentElementId, placeInContainer }
+  ) {
+    const beforeElement = getters.getElementById(page, beforeElementId)
+    const afterOrder = beforeElement?.order || null
+    const beforeOrder =
+      getters.getPreviousElement(
+        page,
+        beforeElement,
+        parentElementId,
+        placeInContainer
+      )?.order || null
+    const tempOrder = calculateTempOrder(beforeOrder, afterOrder)
 
-    // If the element is before the beforeElement we must decrease the target index by
-    // one to compensate the removed element.
-    if (oldIndex < index) {
-      commit('MOVE_ITEM', { index: index - 1, oldIndex })
-    } else {
-      commit('MOVE_ITEM', { index, oldIndex })
-    }
+    commit('UPDATE_ITEM', {
+      page,
+      element: getters.getElementById(page, elementId),
+      values: {
+        order: tempOrder,
+        parent_element_id: parentElementId,
+        place_in_container: placeInContainer,
+      },
+    })
   },
   select({ commit }, { element }) {
     updateContext.lastUpdatedValues = null
@@ -83,18 +96,29 @@ const actions = {
   },
   async create(
     { dispatch },
-    { pageId, elementType, beforeId = null, configuration = null }
+    {
+      page,
+      elementType,
+      beforeId = null,
+      configuration = null,
+      forceCreate = true,
+    }
   ) {
     const { data: element } = await ElementService(this.$client).create(
-      pageId,
+      page.id,
       elementType,
       beforeId,
       configuration
     )
 
-    await dispatch('forceCreate', { element, beforeId })
+    if (forceCreate) {
+      await dispatch('forceCreate', { page, element })
+      await dispatch('select', { element })
+    }
+
+    return element
   },
-  async update({ dispatch }, { element, values }) {
+  async update({ dispatch }, { page, element, values }) {
     const elementType = this.$registry.get('element', element.type)
     const oldValues = {}
     const newValues = {}
@@ -105,7 +129,7 @@ const actions = {
       }
     })
 
-    await dispatch('forceUpdate', { element, values: newValues })
+    await dispatch('forceUpdate', { page, element, values: newValues })
 
     try {
       await ElementService(this.$client).update(
@@ -113,12 +137,12 @@ const actions = {
         elementType.prepareValuesForRequest(values)
       )
     } catch (error) {
-      await dispatch('forceUpdate', { element, values: oldValues })
+      await dispatch('forceUpdate', { page, element, values: oldValues })
       throw error
     }
   },
 
-  async debouncedUpdateSelected({ dispatch, getters }, { values }) {
+  async debouncedUpdateSelected({ dispatch, getters }, { page, values }) {
     const element = getters.getSelected
     const elementType = this.$registry.get('element', element.type)
     const oldValues = {}
@@ -130,7 +154,7 @@ const actions = {
       }
     })
 
-    await dispatch('forceUpdate', { element, values: newValues })
+    await dispatch('forceUpdate', { page, element, values: newValues })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
@@ -143,6 +167,7 @@ const actions = {
         } catch (error) {
           // Revert to old values on error
           await dispatch('forceUpdate', {
+            page,
             element,
             values: updateContext.lastUpdatedValues,
           })
@@ -166,73 +191,158 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async delete({ dispatch, getters }, { elementId }) {
-    const elementsOfPage = getters.getElements
+  async delete({ dispatch, getters }, { page, elementId }) {
+    const elementsOfPage = getters.getElements(page)
     const elementIndex = elementsOfPage.findIndex(
       (element) => element.id === elementId
     )
     const elementToDelete = elementsOfPage[elementIndex]
-    const beforeId =
-      elementIndex !== elementsOfPage.length - 1
-        ? elementsOfPage[elementIndex + 1].id
-        : null
 
-    await dispatch('forceDelete', { elementId })
+    await dispatch('forceDelete', { page, elementId })
 
     try {
       await ElementService(this.$client).delete(elementId)
     } catch (error) {
       await dispatch('forceCreate', {
+        page,
         element: elementToDelete,
-        beforeId,
       })
       throw error
     }
   },
-  async fetch({ dispatch, commit }, { page }) {
-    commit('CLEAR_ITEMS')
-
+  async fetch({ commit }, { page }) {
     const { data: elements } = await ElementService(this.$client).fetchAll(
       page.id
     )
 
-    await Promise.all(
-      elements.map((element) => dispatch('forceCreate', { element }))
-    )
+    commit('SET_ITEMS', { page, elements })
 
     return elements
   },
-  async move({ dispatch }, { elementId, beforeElementId }) {
-    await dispatch('forceMove', {
+  async fetchPublished({ commit }, { page }) {
+    const { data: elements } = await PublicBuilderService(
+      this.$client
+    ).fetchElements(page)
+
+    commit('SET_ITEMS', { page, elements })
+
+    return elements
+  },
+  async move(
+    { dispatch, getters },
+    {
+      page,
       elementId,
       beforeElementId,
+      parentElementId = null,
+      placeInContainer = null,
+    }
+  ) {
+    const element = getters.getElementById(page, elementId)
+
+    await dispatch('forceMove', {
+      page,
+      elementId,
+      beforeElementId,
+      parentElementId,
+      placeInContainer,
     })
 
     try {
-      await ElementService(this.$client).move(elementId, beforeElementId)
+      const { data: elementUpdated } = await ElementService(this.$client).move(
+        elementId,
+        beforeElementId,
+        parentElementId,
+        placeInContainer
+      )
+
+      dispatch('forceUpdate', {
+        page,
+        element: elementUpdated,
+        values: { ...elementUpdated },
+      })
     } catch (error) {
-      await dispatch('forceMove', {
-        elementId: beforeElementId,
-        beforeElementId: elementId,
+      await dispatch('forceUpdate', {
+        page,
+        element,
+        values: element,
       })
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { elementId, pageId }) {
-    const element = getters.getElements.find((e) => e.id === elementId)
-    await dispatch('create', {
-      pageId,
-      beforeId: element.id,
-      elementType: element.type,
-      configuration: element,
-    })
+  async duplicate({ dispatch }, { page, elementId }) {
+    const { data: elementsCreated } = await ElementService(
+      this.$client
+    ).duplicate(elementId)
+
+    await Promise.all(
+      elementsCreated.map((element) =>
+        dispatch('forceCreate', { page, element })
+      )
+    )
+
+    return elementsCreated
   },
 }
 
 const getters = {
-  getElements: (state) => {
-    return state.elements
+  getElements: (state) => (page) => {
+    return page.elements.map((element) => ({
+      ...element,
+      order: new BigNumber(element.order),
+    }))
   },
+  getElementById: (state, getters) => (page, id) => {
+    return getters.getElements(page).find((e) => e.id === id)
+  },
+  getElementsOrdered: (state, getters) => (page) => {
+    return [...getters.getElements(page)].sort((a, b) => {
+      if (a.parent_element_id !== b.parent_element_id) {
+        return a.parent_element_id > b.parent_element_id ? 1 : -1
+      }
+      if (a.place_in_container !== b.place_in_container) {
+        return a.place_in_container > b.place_in_container ? 1 : -1
+      }
+      return a.order.gt(b.order) ? 1 : -1
+    })
+  },
+  getRootElements: (state, getters) => (page) => {
+    return getters
+      .getElementsOrdered(page)
+      .filter((e) => e.parent_element_id === null)
+  },
+  getChildren: (state, getters) => (page, element) => {
+    return getters
+      .getElementsOrdered(page)
+      .filter((e) => e.parent_element_id === element.id)
+  },
+  getSiblings: (state, getters) => (page, element) => {
+    return getters
+      .getElementsOrdered(page)
+      .filter((e) => e.parent_element_id === element.parent_element_id)
+  },
+  getElementsInPlace:
+    (state, getters) => (page, parentId, placeInContainer) => {
+      return getters
+        .getElementsOrdered(page)
+        .filter(
+          (e) =>
+            e.parent_element_id === parentId &&
+            e.place_in_container === placeInContainer
+        )
+    },
+  getPreviousElement:
+    (state, getters) => (page, before, parentId, placeInContainer) => {
+      const elementsInPlace = getters.getElementsInPlace(
+        page,
+        parentId,
+        placeInContainer
+      )
+      return before
+        ? elementsInPlace.reverse().find((e) => e.order.lt(before.order)) ||
+            null
+        : elementsInPlace.at(-1)
+    },
   getSelected(state) {
     return state.selected
   },

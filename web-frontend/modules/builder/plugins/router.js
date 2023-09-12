@@ -17,11 +17,19 @@ import {
  */
 export function createRouter(ssrContext, config) {
   let isWebFrontendHostname = true
-
   // On the server
-  if (process.server && ssrContext && ssrContext.nuxt && ssrContext.req) {
+  if (
+    process.server &&
+    ssrContext &&
+    ssrContext.nuxt &&
+    ssrContext.req &&
+    ssrContext.runtimeConfig
+  ) {
     const req = ssrContext.req
-    const frontendHostname = new URL(req.env.PUBLIC_WEB_FRONTEND_URL).hostname
+    const runtimeConfig = ssrContext.runtimeConfig
+    const frontendHostname = new URL(
+      runtimeConfig.public.PUBLIC_WEB_FRONTEND_URL
+    ).hostname
     const requestHostname = new URL(`http://${req.headers.host}`).hostname
     isWebFrontendHostname = frontendHostname === requestHostname
     // Send the variable to the frontend using the `__NUXT__` property

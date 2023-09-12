@@ -3,10 +3,14 @@
     <Tabs :full-height="true">
       <Tab
         v-for="pageSidePanelType in pageSidePanelTypes"
-        :key="pageSidePanelType.label"
+        :key="pageSidePanelType.getType()"
         :title="pageSidePanelType.label"
       >
-        <component :is="pageSidePanelType.component" v-if="element" />
+        <component
+          :is="pageSidePanelType.component"
+          v-if="element"
+          class="side-panels__panel"
+        />
         <EmptySidePanelState v-else />
       </Tab>
     </Tabs>

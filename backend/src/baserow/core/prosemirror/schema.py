@@ -12,14 +12,18 @@ nodes = {
         "group": "block",
         "parseDOM": [{"tag": "p"}],
         "toDOM": lambda _: p_dom,
+        "toText": lambda node, fnc: "".join(
+            fnc(child) for child in node.content.content
+        ),
     },
-    "text": {"group": "inline"},
+    "text": {"group": "inline", "toText": lambda node, _: node.text},
     "hardBreak": {
         "inline": True,
         "group": "inline",
         "selectable": False,
         "parseDOM": [{"tag": "br"}],
         "toDOM": lambda _: br_dom,
+        "toText": lambda node, _: "\n",
     },
     "mention": {
         "group": "inline",
@@ -29,12 +33,12 @@ nodes = {
             "span",
             {
                 "class": "mention",
-                "data-id": node.attrs["id"],
+                "data-id": str(node.attrs["id"]),
                 "data-label": node.attrs["label"],
                 "data-type": "mention",
                 "contenteditable": "false",
             },
-            "@" + node.attrs["name"],
+            "@" + node.attrs["label"],
         ],
         "parseDOM": [
             {
@@ -45,6 +49,7 @@ nodes = {
                 },
             }
         ],
+        "toText": lambda node, _: "@" + node.attrs["label"],
     },
 }
 

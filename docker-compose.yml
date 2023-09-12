@@ -74,6 +74,7 @@ x-backend-variables: &backend-variables
   BATCH_ROWS_SIZE_LIMIT:
   INITIAL_TABLE_DATA_LIMIT:
   BASEROW_FILE_UPLOAD_SIZE_LIMIT_MB:
+  BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
 
   BASEROW_EXTRA_ALLOWED_HOSTS:
   ADDITIONAL_APPS:
@@ -94,6 +95,8 @@ x-backend-variables: &backend-variables
   BASEROW_DEPLOYMENT_ENV:
   OTEL_EXPORTER_OTLP_ENDPOINT:
   OTEL_RESOURCE_ATTRIBUTES:
+  POSTHOG_PROJECT_API_KEY:
+  POSTHOG_HOST:
 
   PRIVATE_BACKEND_URL: http://backend:8000
   PUBLIC_BACKEND_URL:
@@ -178,7 +181,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.19.1
+    image: baserow/backend:1.20.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -191,7 +194,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.19.1
+    image: baserow/web-frontend:1.20.0
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -212,13 +215,17 @@ services:
       BASEROW_DEPLOYMENT_ENV:
       BASEROW_OSS_ONLY:
       BASEROW_USE_PG_FULLTEXT_SEARCH:
+      POSTHOG_PROJECT_API_KEY:
+      POSTHOG_HOST:
+      BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
+      BASEROW_ROW_PAGE_SIZE_LIMIT:
     depends_on:
       - backend
     networks:
       local:
 
   celery:
-    image: baserow/backend:1.19.1
+    image: baserow/backend:1.20.0
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -235,7 +242,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.19.1
+    image: baserow/backend:1.20.0
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -252,7 +259,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.19.1
+    image: baserow/backend:1.20.0
     restart: unless-stopped
     command: celery-beat
     environment:

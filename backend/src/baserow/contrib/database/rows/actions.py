@@ -16,7 +16,6 @@ from baserow.contrib.database.rows.handler import (
 )
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
-from baserow.contrib.database.table.signals import table_updated
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -229,12 +228,8 @@ class ImportRowsActionType(UndoableActionType):
         """
 
         created_rows, error_report = RowHandler().import_rows(
-            user, table, data, progress=progress, send_signal=False
+            user, table, data, progress=progress
         )
-
-        # Use table signal here instead of row signal because we can import a
-        # big amount of data.
-        table_updated.send(cls, table=table, user=user, force_table_refresh=True)
 
         workspace = table.database.workspace
         params = cls.Params(
@@ -583,11 +578,13 @@ class MoveRowActionType(UndoableActionType):
         row_handler.move_row(user, table, row, before_row=before_row, model=model)
 
 
+# Deprecated in favor of UpdateRowsActionType
 class UpdateRowActionType(UndoableActionType):
     type = "update_row"
     description = ActionTypeDescription(
         _("Update row"), _("Row (%(row_id)s) updated"), TABLE_ACTION_CONTEXT
     )
+    privacy_sensitive_params = ["row_values", "original_row_values"]
 
     @dataclasses.dataclass
     class Params:
@@ -641,14 +638,11 @@ class UpdateRowActionType(UndoableActionType):
         row = row_handler.get_row_for_update(
             user, table, row_id, enhance_by_fields=True, model=model
         )
-        field_keys = list(values.keys())
-
-        original_row_values = row_handler.get_internal_values_for_fields(
-            row, field_keys
-        )
+        field_ids = set(row_handler.extract_field_ids_from_keys(values.keys()))
+        original_row_values = row_handler.get_internal_values_for_fields(row, field_ids)
 
         updated_row = row_handler.update_row(user, table, row, values, model=model)
-        row_values = row_handler.get_internal_values_for_fields(row, field_keys)
+        row_values = row_handler.get_internal_values_for_fields(row, field_ids)
 
         workspace = table.database.workspace
         params = cls.Params(
@@ -690,6 +684,11 @@ class UpdateRowsActionType(UndoableActionType):
     description = ActionTypeDescription(
         _("Update rows"), _("Rows (%(row_ids)s) updated"), TABLE_ACTION_CONTEXT
     )
+    privacy_sensitive_params = [
+        "row_values",
+        "original_rows_values_by_id",
+        "updated_rows_fields_metadata_by_id",
+    ]
 
     @dataclasses.dataclass
     class Params:
@@ -698,15 +697,19 @@ class UpdateRowsActionType(UndoableActionType):
         database_id: int
         database_name: str
         row_ids: List[int]
-        row_values: List[Dict[str, Any]]
-        original_rows_values: List[Dict[str, Any]]
+        # !!! WARNING !!!
+        # Make sure these values are kept in sync with privacy_sensitive_params above
+        # !!! WARNING !!!
+        row_values: List[Dict[str, Any]]  # TODO: rename to rows_values
+        original_rows_values_by_id: Dict[int, Dict[str, Any]]
+        updated_rows_fields_metadata_by_id: Dict[int, Dict[str, Any]]
 
     @classmethod
     def do(
         cls,
         user: AbstractUser,
         table: Table,
-        rows: List[Dict[str, Any]],
+        rows_values: List[Dict[str, Any]],
         model: Optional[Type[GeneratedTableModel]] = None,
     ) -> List[GeneratedTableModelForUpdate]:
         """
@@ -718,7 +721,8 @@ class UpdateRowsActionType(UndoableActionType):
 
         :param user: The user of whose behalf the change is made.
         :param table: The table for which the rows must be updated.
-        :param rows: The rows that must be updated.
+        :param rows_values: The rows values that must be updated. The keys must be the
+            field ids plus the id of the row.
         :param model: If the correct model has already been generated it can be
             provided so that it does not have to be generated for a second time.
         :return: The updated rows.
@@ -726,27 +730,8 @@ class UpdateRowsActionType(UndoableActionType):
 
         row_handler = RowHandler()
 
-        if model is None:
-            model = table.get_model()
-
-        rows_keys_map = {row["id"]: row.keys() for row in rows}
-
-        row_ids = rows_keys_map.keys()
-        original_rows = row_handler.get_rows_for_update(model, row_ids)
-
-        original_rows_values = []
-        for row in original_rows:
-            original_row_values = row_handler.get_internal_values_for_fields(
-                row, rows_keys_map[row.id]
-            )
-            original_row_values["id"] = row.id
-            original_rows_values.append(original_row_values)
-
-        new_rows = deepcopy(rows)
-
-        updated_rows = row_handler.update_rows(
-            user, table, rows, model=model, rows_to_update=original_rows
-        )
+        result = row_handler.update_rows(user, table, rows_values, model=model)
+        updated_rows = result.updated_rows
 
         workspace = table.database.workspace
         params = cls.Params(
@@ -755,12 +740,38 @@ class UpdateRowsActionType(UndoableActionType):
             table.database.id,
             table.database.name,
             [row.id for row in updated_rows],
-            new_rows,
-            original_rows_values,
+            rows_values,
+            result.original_rows_values_by_id,
+            result.updated_row_fields_metadata_by_row_id,
         )
         cls.register_action(user, params, cls.scope(table.id), workspace=workspace)
 
         return updated_rows
+
+    @classmethod
+    def serialized_to_params(cls, serialized_params: Any) -> Any:
+        """
+        When storing integers as dictionary keys in a database, they are saved
+        as strings. This method is designed to convert these string keys back
+        into integers. This ensures that we can accurately use the row.id as a
+        key."
+        """
+
+        serialized_params["original_rows_values_by_id"] = {
+            int(row_id): row_values
+            for row_id, row_values in serialized_params[
+                "original_rows_values_by_id"
+            ].items()
+        }
+
+        serialized_params["updated_rows_fields_metadata_by_id"] = {
+            int(row_id): row_values
+            for row_id, row_values in serialized_params[
+                "updated_rows_fields_metadata_by_id"
+            ].items()
+        }
+
+        return cls.Params(**deepcopy(serialized_params))
 
     @classmethod
     def scope(cls, table_id) -> ActionScopeStr:
@@ -769,7 +780,8 @@ class UpdateRowsActionType(UndoableActionType):
     @classmethod
     def undo(cls, user: AbstractUser, params: Params, action_being_undone: Action):
         table = TableHandler().get_table(params.table_id)
-        RowHandler().update_rows(user, table, params.original_rows_values)
+        original_rows_values = list(params.original_rows_values_by_id.values())
+        RowHandler().update_rows(user, table, original_rows_values)
 
     @classmethod
     def redo(cls, user: AbstractUser, params: Params, action_being_redone: Action):

@@ -11,7 +11,7 @@
         {{ label }}
       </label>
       <div class="control__elements">
-        <Dropdown
+        <FixedItemsDropdown
           v-model="values.target_field_id"
           :class="{ 'dropdown--error': $v.values.target_field_id.$error }"
           @hide="$v.values.target_field_id.$touch()"
@@ -24,7 +24,7 @@
             :value="field.id"
             :icon="field.icon"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
       </div>
       <div v-if="$v.values.target_field_id.$error" class="error">
         {{ $t('error.requiredField') }}
@@ -39,9 +39,11 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import FieldService from '@baserow/modules/database/services/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown.vue'
 
 export default {
   name: 'FieldSelectTargetFieldSubForm',
+  components: { FixedItemsDropdown },
   mixins: [form],
   props: {
     database: {
@@ -82,7 +84,7 @@ export default {
       return (
         this.linkedToTable &&
         this.$hasPermission(
-          'database.table.list_fields',
+          'database.table.create_field',
           this.linkedToTable,
           this.database.workspace.id
         )
@@ -112,6 +114,13 @@ export default {
             return this.$registry
               .get('field', f.type)
               .canBeReferencedByFormulaField()
+          })
+          .filter((f) => {
+            return this.$hasPermission(
+              'database.table.field.update',
+              f,
+              this.database.workspace.id
+            )
           })
           .map((f) => {
             const fieldType = this.$registry.get('field', f.type)

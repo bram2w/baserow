@@ -33,6 +33,7 @@
       enable-navigation
       :database="database"
       :table="table"
+      :fields="fields"
       :primary-is-sortable="false"
       :visible-fields="visibleCardFields"
       :hidden-fields="hiddenFields"

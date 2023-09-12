@@ -335,6 +335,11 @@ def test_can_undo_redo_importing_rows(row_send_mock, table_send_mock, data_fixtu
 
     table_send_mock.assert_called_once()
     table_send_mock.reset_mock()
+    row_send_mock.assert_called_once()
+    args = row_send_mock.call_args
+    assert args[1]["send_realtime_update"] is False
+    assert args[1]["send_webhook_events"] is False
+    row_send_mock.reset_mock()
 
     assert model.objects.all().count() == 3
 

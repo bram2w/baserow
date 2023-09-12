@@ -199,6 +199,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
 
         result = {}
         undetermined_checks = set(checks)
+
         for permission_manager_name in settings.PERMISSION_MANAGERS:
             if not undetermined_checks:
                 break
@@ -589,9 +590,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         except WorkspaceUser.DoesNotExist:
             raise UserNotInWorkspace(user, self)
 
-        # If the current user is an admin and he is the last admin left, he is not
-        # allowed to leave the workspace otherwise no one will have control over it. He
-        # needs to give someone else admin permissions first or he must
+        # If the current user is an admin and they are the last admin left, they are not
+        # allowed to leave the workspace otherwise no one will have control over it.
+        # They need to give someone else admin permissions first or they must
         # leave the workspace.
         if (
             workspace_user.permissions == WORKSPACE_USER_PERMISSION_ADMIN
@@ -985,8 +986,8 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         :param email: The email address of the person that is invited to the workspace.
             Can be an existing or not existing user.
         :type email: str
-        :param permissions: The workspace permissions that the user will get once he has
-            accepted the invitation.
+        :param permissions: The workspace permissions that the user will get once they
+            have accepted the invitation.
         :type permissions: str
         :param base_url: The base url of the frontend, where the user can accept his
             invitation. The signed invitation id is appended to the URL (base_url +
@@ -1028,7 +1029,9 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
 
         try:
-            invited_user = User.objects.get(email=invitation.email)
+            invited_user = User.objects.select_related("profile").get(
+                email=invitation.email
+            )
         except User.DoesNotExist:
             invited_user = None
 

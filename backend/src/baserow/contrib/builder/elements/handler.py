@@ -1,21 +1,39 @@
-from typing import Iterable, Optional, Union, cast
+from typing import Iterable, List, Optional, Union, cast
 
 from django.db.models import QuerySet
 
-from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
-from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.elements.exceptions import (
+    ElementDoesNotExist,
+    ElementNotInSamePage,
+)
+from baserow.contrib.builder.elements.models import ContainerElement, Element
 from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
+from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.utils import extract_allowed
 
 from .types import ElementForUpdate
 
 
 class ElementHandler:
+    allowed_fields_create = [
+        "parent_element_id",
+        "place_in_container",
+        "style_padding_top",
+        "style_padding_bottom",
+    ]
+
+    allowed_fields_update = [
+        "parent_element_id",
+        "place_in_container",
+        "style_padding_top",
+        "style_padding_bottom",
+    ]
+
     def get_element(
         self, element_id: int, base_queryset: Optional[QuerySet] = None
     ) -> Element:
@@ -91,13 +109,19 @@ class ElementHandler:
             return queryset
 
     def create_element(
-        self, element_type: ElementType, page: Page, before=None, **kwargs
+        self,
+        element_type: ElementType,
+        page: Page,
+        before: Optional[Element] = None,
+        **kwargs
     ) -> Element:
         """
         Creates a new element for a page.
 
         :param element_type: The type of the element.
         :param page: The page the element exists in.
+        :param before: If provided and no order is provided, will place the new element
+            before the given element.
         :param kwargs: Additional attributes of the element.
         :raises CannotCalculateIntermediateOrder: If it's not possible to find an
             intermediate order. The full order of the element of the page must be
@@ -105,14 +129,18 @@ class ElementHandler:
         :return: The created element.
         """
 
-        if before:
-            order = Element.get_unique_order_before_element(before)
-        else:
-            order = Element.get_last_order(page)
+        parent_element_id = kwargs.get("parent_element_id", None)
+        place_in_container = kwargs.get("place_in_container", None)
 
-        shared_allowed_fields = ["type", "style_padding_top", "style_padding_bottom"]
+        if before:
+            order = Element.get_unique_order_before_element(
+                before, parent_element_id, place_in_container
+            )
+        else:
+            order = Element.get_last_order(page, parent_element_id, place_in_container)
+
         allowed_values = extract_allowed(
-            kwargs, shared_allowed_fields + element_type.allowed_fields
+            kwargs, self.allowed_fields_create + element_type.allowed_fields
         )
 
         allowed_values = element_type.prepare_value_for_db(allowed_values)
@@ -143,14 +171,11 @@ class ElementHandler:
         :return: The updated element.
         """
 
-        element_type = element_type_registry.get_by_model(element)
-
-        shared_allowed_fields = ["style_padding_top", "style_padding_bottom"]
         allowed_updates = extract_allowed(
-            kwargs, shared_allowed_fields + element_type.allowed_fields
+            kwargs, self.allowed_fields_update + element.get_type().allowed_fields
         )
 
-        allowed_updates = element_type.prepare_value_for_db(
+        allowed_updates = element.get_type().prepare_value_for_db(
             allowed_updates, instance=element
         )
 
@@ -162,7 +187,11 @@ class ElementHandler:
         return element
 
     def move_element(
-        self, element: ElementForUpdate, before: Optional[Element] = None
+        self,
+        element: ElementForUpdate,
+        parent_element: Optional[Element],
+        place_in_container: str,
+        before: Optional[Element] = None,
     ) -> Element:
         """
         Moves the given element before the specified `before` element in the same page.
@@ -170,20 +199,112 @@ class ElementHandler:
         :param element: The element to move.
         :param before: The element before which to move the `element`. If before is not
             specified, the element is moved at the end of the list.
+        :param parent_element: The new parent element of the element.
+        :param place_in_container: The new place in container of the element.
         :raises CannotCalculateIntermediateOrder: If it's not possible to find an
             intermediate order. The full order of the element of the page must be
             recalculated in this case before calling this method again.
         :return: The moved element.
         """
 
+        parent_element_id = getattr(parent_element, "id", None)
+
+        if parent_element is not None and place_in_container is not None:
+            parent_element = parent_element.specific
+            parent_element_type = element_type_registry.get_by_model(parent_element)
+            parent_element_type.validate_place_in_container(
+                place_in_container, parent_element
+            )
+
         if before:
-            element.order = Element.get_unique_order_before_element(before)
+            element.order = Element.get_unique_order_before_element(
+                before, parent_element_id, place_in_container
+            )
         else:
-            element.order = Element.get_last_order(element.page)
+            element.order = Element.get_last_order(
+                element.page, parent_element_id, place_in_container
+            )
+
+        element.parent_element = parent_element
+        element.place_in_container = place_in_container
 
         element.save()
 
         return element
+
+    def order_elements(self, page: Page, order: List[int], base_qs=None) -> List[int]:
+        """
+        Assigns a new order to the elements on a page.
+        You can provide a base_qs for pre-filter the elements affected by this change
+
+        :param page: The page that the elements belong to
+        :param order: The new order of the elements
+        :param base_qs: A QS that can have filters already applied
+        :raises ElementNotInSamePage: If the element is not part of the provided page
+        :return: The new order of the elements
+        """
+
+        if base_qs is None:
+            base_qs = Element.objects.filter(page=page)
+
+        try:
+            full_order = Element.order_objects(base_qs, order)
+        except IdDoesNotExist:
+            raise ElementNotInSamePage()
+
+        return full_order
+
+    def before_places_in_container_removed(
+        self, container_element: ContainerElement, places: List[str]
+    ) -> List[Element]:
+        """
+        This should be called before places in a container have been removed to make
+        sure that all the elements that used to be in the removed containers are moved
+        somewhere else.
+
+        :param container_element: The container element affected
+        :param places: The places that were removed
+        :return: The elements that received a new order
+        """
+
+        element_type = element_type_registry.get_by_model(container_element)
+
+        elements_being_moved = Element.objects.filter(
+            parent_element=container_element,
+            place_in_container__in=places,
+        )
+
+        element_count = elements_being_moved.count()
+
+        if element_count == 0:
+            return []
+
+        new_place_in_container = element_type.get_new_place_in_container(
+            container_element, places
+        )
+
+        new_order_values = Element.get_last_orders(
+            container_element.page,
+            container_element.id,
+            new_place_in_container,
+            amount=element_count,
+        )
+
+        elements_being_moved = element_type.apply_order_by_children(
+            elements_being_moved
+        )
+        elements_being_moved = list(elements_being_moved)
+
+        to_update = []
+        for element in elements_being_moved:
+            # Add order values in the same order
+            element.order = new_order_values.pop(0)
+            element.place_in_container = new_place_in_container
+            to_update.append(element)
+
+        Element.objects.bulk_update(to_update, ["order", "place_in_container"])
+
+        return elements_being_moved
 
     def recalculate_full_orders(
         self,
@@ -194,3 +315,59 @@ class ElementHandler:
         """
 
         Element.recalculate_full_orders(queryset=Element.objects.filter(page=page))
+
+    def duplicate_element(self, element: Element) -> List[Element]:
+        """
+        Duplicate an element in a recursive fashion. If the element has any children
+        they will also be imported using the same method and so will their children
+        and so on.
+
+        :param element: The element that should be duplicated
+        :return: All the elements that were created in the process
+        """
+
+        return self._duplicate_element_recursive(element)
+
+    def _duplicate_element_recursive(
+        self, element: Element, elements_duplicated=None, overwrites=None
+    ) -> List[Element]:
+        """
+        Duplicates an element and all of its children.
+
+        This method is separate from `duplicate_element` since it has additional params
+        only required for the recursive calls.
+
+        :param element: The element being duplicated
+        :param elements_duplicated: The elements that have already been duplicated
+        :param overwrites: Any overwrites of the attributes of an element
+        :return: A list of duplicated elements
+        """
+
+        if elements_duplicated is None:
+            elements_duplicated = []
+
+        if overwrites is None:
+            overwrites = {}
+
+        element_type = element_type_registry.get_by_model(element)
+
+        other_properties = {
+            key: getattr(element, key)
+            for key in self.allowed_fields_create + element_type.allowed_fields
+        }
+        other_properties = {**other_properties, **overwrites}
+
+        element_duplicated = self.create_element(
+            element_type, element.page, before=element, **other_properties
+        )
+
+        elements_duplicated.append(element_duplicated)
+
+        for child in element.children.all():
+            elements_duplicated = self._duplicate_element_recursive(
+                child.specific,
+                elements_duplicated,
+                overwrites={"parent_element_id": element_duplicated.id},
+            )
+
+        return elements_duplicated

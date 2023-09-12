@@ -8,13 +8,13 @@
   color: #fff;
   border: 1px solid transparent;
   text-align: center;
-  font-weight: 700;
-  border-radius: 3px;
+  font-weight: 600;
   transition: padding 0.05s ease-in-out;
   vertical-align: middle;
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);
+  @include rounded($rounded-md);
 
   &:hover,
   &:focus {
@@ -47,7 +47,7 @@
 }
 
 .button--ghost {
-  @include button-style($white, $color-neutral-100, $color-primary-900);
+  @include button-style($white, $color-neutral-100, $color-neutral-900);
 
   &.button--loading::after {
     border-color: $color-neutral-900 transparent $color-neutral-900 transparent;
@@ -109,9 +109,13 @@
   &:focus,
   &:active,
   &.button--loading {
-    color: $color-neutral-900;
     box-shadow: none;
     background: none;
+  }
+
+  &:hover,
+  &:focus {
+    color: $color-neutral-900;
   }
 
   &.button--loading {
@@ -181,5 +185,4 @@
   @include button-size(15px, 44px, 28px);
 
   width: 100%;
-  font-weight: 400;
 }

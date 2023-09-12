@@ -29,6 +29,7 @@ from baserow.core.utils import (
     split_comma_separated_string,
     stream_size,
     to_pascal_case,
+    to_path,
     to_snake_case,
     truncate_middle,
     unique_dicts_in_list,
@@ -464,6 +465,30 @@ def test_find_intermediate_with_equal_order():
         )
 
 
+@pytest.mark.parametrize(
+    "path, expected_result",
+    [
+        ("a[0].b.c", ["a", "0", "b", "c"]),
+        ("a[0].b..c", ["a", "0", "b", "", "c"]),
+        ("a[1 2].b.c", ["a", "1 2", "b", "c"]),
+        ("a[0].b[abc].c", ["a", "0", "b", "abc", "c"]),
+        ("a[0].b['abc'].c", ["a", "0", "b", "'abc'", "c"]),
+        ("person.name.first", ["person", "name", "first"]),
+        (".person.name.first", ["", "person", "name", "first"]),
+        ("person name.first", ["person name", "first"]),
+        ("person  . name  .  first", ["person", "name", "first"]),
+        ("person.friends[0].name.last", ["person", "friends", "0", "name", "last"]),
+    ],
+)
+def test_to_path(path, expected_result):
+    if isinstance(expected_result, type):
+        with expected_result:
+            to_path(path)
+    else:
+        result = to_path(path)
+        assert result == expected_result
+
+
 @pytest.fixture
 def nested_dict():
     return {"a": {"b": {"c": 123}}, "list": [{"d": 456}, {"d": 789}]}
@@ -474,10 +499,12 @@ def nested_dict():
     [
         ("a.b.c", 123),
         ("list.1.d", 789),
+        ("list[1]d", 789),
         ("a.b.x", None),
         ("list.5.d", None),
-        ("", None),
+        ("", {"a": {"b": {"c": 123}}, "list": [{"d": 456}, {"d": 789}]}),
         ("a.b", {"c": 123}),
+        ("a[b]", {"c": 123}),
         ("list", [{"d": 456}, {"d": 789}]),
     ],
 )

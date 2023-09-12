@@ -5,6 +5,17 @@
     display: flex;
     justify-content: right;
   }
+
+  &.control--horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    & .control__elements {
+      flex-basis: 70%;
+      margin-top: 0;
+    }
+  }
 }
 
 .control__description {
@@ -16,8 +27,8 @@
 
 .control__label {
   display: block;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   margin-bottom: 8px;
 
   & + :not(.control__description) {
@@ -26,11 +37,17 @@
 
   &.control__label--small {
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 600;
 
     & + :not(.control__description) {
       margin-top: 4px;
     }
+  }
+
+  .control--horizontal & {
+    flex-basis: 30%;
+    font-weight: 500;
+    margin: 0;
   }
 }
 
@@ -46,7 +63,7 @@
 }
 
 .control__context {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-left: 6px;
 
   &:hover {
@@ -60,10 +77,11 @@
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
-  border-radius: 3px;
   padding: 8px 12px;
   outline: none;
   line-height: 100%;
+
+  @include rounded($rounded-md);
 
   &:active,
   &:focus {
@@ -83,7 +101,7 @@
   }
 
   &[disabled] {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-neutral-50;
 
     &:active,
@@ -172,13 +190,13 @@
     font-family: $font-awesome-font-family;
     font-weight: $font-awesome-font-weight;
     border: 1px solid $color-neutral-400;
-    border-radius: 3px;
     width: 18px;
     height: 18px;
     line-height: 18px;
     text-align: center;
     background-color: $white;
     color: $color-success-600;
+    @include rounded($rounded);
   }
 
   &.active::before {
@@ -289,11 +307,11 @@
 
   &::before {
     content: '';
-    border-radius: 12px;
     width: 22px;
     height: 12px;
     background-color: $color-neutral-200;
 
+    @include rounded($rounded-xl);
     @include absolute(9px, auto, auto, 0);
   }
 

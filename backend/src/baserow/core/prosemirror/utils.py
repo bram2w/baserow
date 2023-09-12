@@ -62,7 +62,7 @@ def extract_mentioned_users_in_workspace(
     mentioned_user_ids = extract_mentioned_user_ids(json_doc)
     return workspace.users.filter(
         id__in=mentioned_user_ids, profile__to_be_deleted=False
-    )
+    ).select_related("profile")
 
 
 def prosemirror_doc_from_plain_text(plain_text_message) -> Dict[str, Any]:
@@ -82,3 +82,18 @@ def prosemirror_doc_from_plain_text(plain_text_message) -> Dict[str, Any]:
             }
         ],
     }
+
+
+def prosemirror_doc_to_plain_text(json_doc: Dict[str, Any]) -> str:
+    """
+    Returns a plain text message from the given json document.
+
+    :param json_doc: The json document to convert to a plain text message.
+    :return: A plain text message.
+    """
+
+    def _to_plain_text(node):
+        return node.type.spec["toText"](node, _to_plain_text)
+
+    doc = Node.from_json(schema, json_doc)
+    return _to_plain_text(doc.content.content[0])

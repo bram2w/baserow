@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix not being able to delete a row with a link row cell pointing at a primary field with an empty multi select cell.",
+    "issue_number": 1916,
+    "bullet_points": [],
+    "created_at": "2023-08-18"
+}

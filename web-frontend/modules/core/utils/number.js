@@ -11,3 +11,7 @@ export const ceil = (n, digits = 0) => {
   const r = rounder(digits)
   return Math.ceil(n * r) / r
 }
+
+export const clamp = (value, min, max) => {
+  return Math.max(min, Math.min(value, max))
+}

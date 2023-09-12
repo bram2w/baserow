@@ -1,10 +1,11 @@
 <template>
   <component
-    :is="elementType.formComponent"
+    :is="elementType.generalFormComponent"
     :key="element.id"
-    ref="elementForm"
+    ref="panelForm"
     class="element-form"
     :builder="builder"
+    :page="page"
     :default-values="defaultValues"
     @values-changed="onChange($event)"
   />

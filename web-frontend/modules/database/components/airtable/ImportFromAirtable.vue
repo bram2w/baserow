@@ -149,7 +149,7 @@ export default {
   validations: {
     airtableUrl: {
       valid(value) {
-        const regex = /https:\/\/airtable.com\/shr(.*)$/g
+        const regex = /https:\/\/airtable.com\/[shr|app](.*)$/g
         return !!value.match(regex)
       },
     },

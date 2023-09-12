@@ -62,7 +62,7 @@ def test_create_element(api_client, data_fixture):
         url,
         {
             "type": "heading",
-            "value": "test",
+            "value": '"test"',
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -70,7 +70,7 @@ def test_create_element(api_client, data_fixture):
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json["value"] == "test"
+    assert response_json["value"] == '"test"'
 
 
 @pytest.mark.django_db
@@ -89,6 +89,28 @@ def test_create_element_bad_request(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+
+@pytest.mark.django_db
+def test_create_element_bad_request_for_formula(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {"type": "heading", "value": "not a formula"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert (
+        response_json["detail"]["value"][0]["error"]
+        == "The formula is invalid: Invalid syntax at line 1, col 3: missing '(' at ' '"
+    )
 
 
 @pytest.mark.django_db
@@ -135,12 +157,12 @@ def test_update_element(api_client, data_fixture):
     url = reverse("api:builder:element:item", kwargs={"element_id": element1.id})
     response = api_client.patch(
         url,
-        {"value": "unusual suspect", "level": 3},
+        {"value": '"unusual suspect"', "level": 3},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     assert response.status_code == HTTP_200_OK
-    assert response.json()["value"] == "unusual suspect"
+    assert response.json()["value"] == '"unusual suspect"'
     assert response.json()["level"] == 3
 
 
@@ -168,7 +190,7 @@ def test_update_element_does_not_exist(api_client, data_fixture):
     url = reverse("api:builder:element:item", kwargs={"element_id": 0})
     response = api_client.patch(
         url,
-        {"value": "test"},
+        {"value": '"test"'},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -350,5 +372,73 @@ def test_link_element_path_parameter_wrong_type(api_client, data_fixture):
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    assert response.status_code == 400
-    assert response.json()[0] == "'not a number' is not of type numeric"
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+
+    assert (
+        response.json()["detail"]["page_parameters"][0]["value"][0]["error"]
+        == "The formula is invalid: Invalid syntax at line 1, col 3: missing '(' at ' '"
+    )
+
+
+@pytest.mark.django_db
+def test_can_move_element_inside_container(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    container_element = data_fixture.create_builder_column_element(page=page)
+    element_one = data_fixture.create_builder_heading_element(
+        page=page, parent_element=container_element, place_in_container="0"
+    )
+    element_two = data_fixture.create_builder_heading_element(
+        page=page, parent_element=container_element, place_in_container="0"
+    )
+
+    assert element_two.parent_element is container_element
+    assert element_two.place_in_container == "0"
+
+    url = reverse("api:builder:element:move", kwargs={"element_id": element_two.id})
+    response = api_client.patch(
+        url,
+        {
+            "before_id": element_one.id,
+            "parent_element_id": None,
+            "place_in_container": None,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == 200
+
+    element_two.refresh_from_db()
+
+    assert element_two.parent_element is None
+    assert element_two.place_in_container is None
+
+
+@pytest.mark.django_db
+def test_duplicate_element(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    element = data_fixture.create_builder_heading_element(user=user, value="test")
+
+    url = reverse("api:builder:element:duplicate", kwargs={"element_id": element.id})
+    response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json[0]["id"] != element.id
+    assert response_json[0]["value"] == element.value
+
+
+@pytest.mark.django_db
+def test_duplicate_element_does_not_exist(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    url = reverse("api:builder:element:duplicate", kwargs={"element_id": 0})
+    response = api_client.post(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_404_NOT_FOUND
+    assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"

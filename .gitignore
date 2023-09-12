@@ -118,6 +118,9 @@ out/
 .vscode/
 !config/vscode/.vscode/
 
+# VIM's swap files
+*.swp
+
 formula/out/
 
 .coverage

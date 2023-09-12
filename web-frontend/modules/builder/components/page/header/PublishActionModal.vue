@@ -85,7 +85,7 @@ import { mapActions, mapGetters } from 'vuex'
 import modal from '@baserow/modules/core/mixins/modal'
 import error from '@baserow/modules/core/mixins/error'
 import jobProgress from '@baserow/modules/core/mixins/jobProgress'
-import PublishedDomainService from '@baserow/modules/builder/services/publishedDomain.js'
+import PublishedDomainService from '@baserow/modules/builder/services/publishedBuilder'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { copyToClipboard } from '@baserow/modules/database/utils/clipboard'
 import LastPublishedDomainDate from '@baserow/modules/builder/components/domain/LastPublishedDomainDate'
@@ -159,7 +159,7 @@ export default {
       this.loading = false
     },
     getDomainUrl(domain) {
-      const url = new URL(this.$env.PUBLIC_WEB_FRONTEND_URL)
+      const url = new URL(this.$config.PUBLIC_WEB_FRONTEND_URL)
       return `${url.protocol}//${domain.domain_name}${
         url.port ? `:${url.port}` : ''
       }`

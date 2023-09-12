@@ -3,6 +3,8 @@ from django.db.models import Expression
 
 
 class LocalisedSearchVector(SearchVector):
+    function = "try_set_tsv"
+
     """
     A `SearchVector` which is responsible for two additional requirements:
 

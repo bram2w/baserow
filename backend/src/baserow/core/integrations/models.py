@@ -8,6 +8,7 @@ from baserow.core.mixins import (
     HierarchicalModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 
 if TYPE_CHECKING:
@@ -21,6 +22,7 @@ def get_default_integration():
 class Integration(
     HierarchicalModelMixin,
     PolymorphicContentTypeMixin,
+    WithRegistry,
     FractionOrderableMixin,
     TrashableModelMixin,
     models.Model,
@@ -52,6 +54,12 @@ class Integration(
         related_name="integrations",
         on_delete=models.SET(get_default_integration),
     )
+
+    @staticmethod
+    def get_type_registry():
+        from .registries import integration_type_registry
+
+        return integration_type_registry
 
     class Meta:
         ordering = ("order", "id")

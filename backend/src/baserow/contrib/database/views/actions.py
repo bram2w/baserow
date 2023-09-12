@@ -24,7 +24,6 @@ from baserow.contrib.database.views.models import (
     ViewFilter,
     ViewSort,
 )
-from baserow.contrib.database.views.registries import view_type_registry
 from baserow.core.action.models import Action
 from baserow.core.action.registries import (
     ActionScopeStr,
@@ -771,6 +770,7 @@ class RotateViewSlugActionType(UndoableActionType):
         _("View changed public slug URL"),
         VIEW_ACTION_CONTEXT,
     )
+    privacy_sensitive_params = ["slug", "original_slug"]
 
     @dataclasses.dataclass
     class Params:
@@ -840,6 +840,7 @@ class UpdateViewActionType(UndoableActionType):
         _('View "%(view_name)s" (%(view_id)s) updated'),
         TABLE_ACTION_CONTEXT,
     )
+    privacy_sensitive_params = ["data", "original_data"]
 
     @dataclasses.dataclass
     class Params:
@@ -870,19 +871,8 @@ class UpdateViewActionType(UndoableActionType):
         :params data: The data to update.
         """
 
-        def get_prepared_values_for_data(view):
-            return {
-                key: value
-                for key, value in view_type.export_prepared_values(view).items()
-                if key in data
-            }
-
-        view_type = view_type_registry.get_by_model(view)
-        original_data = get_prepared_values_for_data(view)
-
-        view = ViewHandler().update_view(user, view, **data)
-
-        new_data = get_prepared_values_for_data(view)
+        updated_view_with_changes = ViewHandler().update_view(user, view, **data)
+        view = updated_view_with_changes.updated_view_instance
 
         cls.register_action(
             user=user,
@@ -893,8 +883,8 @@ class UpdateViewActionType(UndoableActionType):
                 view.table.name,
                 view.table.database.id,
                 view.table.database.name,
-                new_data,
-                original_data,
+                updated_view_with_changes.new_view_attributes,
+                updated_view_with_changes.original_view_attributes,
             ),
             scope=cls.scope(view.id),
             workspace=view.table.database.workspace,

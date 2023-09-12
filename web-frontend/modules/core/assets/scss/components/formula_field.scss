@@ -3,7 +3,6 @@
 
   display: flex;
   flex-direction: column;
-  position: relative;
   width: 510px;
   border: solid 1px $color-neutral-300;
 }
@@ -55,6 +54,7 @@
 .formula-field__body {
   display: flex;
   max-height: 302px;
+  min-height: 0;
 }
 
 .formula-field__items {
@@ -93,8 +93,8 @@
   padding: 0 6px;
   font-size: 13px;
   line-height: 24px;
-  color: $color-primary-900;
-  border-radius: 3px;
+  color: $color-neutral-900;
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -119,20 +119,20 @@
 .formula-field__description-icon {
   font-size: 18px;
   width: 18px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 12px;
   margin-right: 6px;
 }
 
 .formula-field__description-heading-1 {
   font-size: 18px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 12px;
 }
 
 .formula-field__description-heading-2 {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 
@@ -144,8 +144,8 @@
 .formula-field__description-example {
   font-family: monospace;
   background-color: $color-neutral-100;
-  border-radius: 3px;
   padding: 6px 10px;
+  @include rounded($rounded);
 
   code {
     font-size: 13px;

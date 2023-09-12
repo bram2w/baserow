@@ -4,7 +4,6 @@
       v-for="element in elements"
       :key="element.id"
       :element="element"
-      :builder="builder"
       :mode="mode"
     />
   </div>

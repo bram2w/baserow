@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add `BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT` environment variable to allow adjustment of the autodetection limit for multiselect options.",
+    "issue_number": 1718,
+    "bullet_points": [],
+    "created_at": "2023-07-27"
+}

@@ -1,6 +1,6 @@
 <template>
-  <Context>
-    <ul v-auto-overflow-scroll class="select__items">
+  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+    <ul class="select__items prevent-scroll">
       <li
         v-for="(mode, index) in modes"
         :key="mode.getType()"

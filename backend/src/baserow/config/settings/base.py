@@ -12,6 +12,7 @@ from urllib.parse import urljoin, urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
+import posthog
 from corsheaders.defaults import default_headers
 
 from baserow.cachalot_patch import patch_cachalot_for_baserow
@@ -386,6 +387,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Collation that the backend database should
+# support in order to make front end and back end
+# collations as close as possible to match sorting and
+# other operations.
+EXPECTED_COLLATION = "en-x-icu"
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
@@ -473,7 +480,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.19.1",
+    "VERSION": "1.20.0",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -509,6 +516,7 @@ SPECTACULAR_SETTINGS = {
         {"name": "Builder domains"},
         {"name": "Builder public"},
         {"name": "Builder data sources"},
+        {"name": "Builder theme"},
         {"name": "Admin"},
     ],
     "ENUM_NAME_OVERRIDES": {
@@ -612,8 +620,7 @@ class AttrDict(dict):
         globals()[key] = value
 
 
-# The storage must always overwrite existing files.
-DEFAULT_FILE_STORAGE = "baserow.core.storage.OverwriteFileSystemStorage"
+DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
 
 AWS_STORAGE_ENABLED = os.getenv("AWS_ACCESS_KEY_ID", "") != ""
 GOOGLE_STORAGE_ENABLED = os.getenv("GS_BUCKET_NAME", "") != ""
@@ -632,6 +639,7 @@ if sum(ALL_STORAGE_ENABLED_VARS) > 1:
 
 if AWS_STORAGE_ENABLED:
     DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_S3_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -650,7 +658,6 @@ if AWS_STORAGE_ENABLED:
             Setting("AWS_QUERYSTRING_AUTH", parser=str_to_bool),
             Setting("AWS_S3_MAX_MEMORY_SIZE", parser=int),
             Setting("AWS_QUERYSTRING_EXPIRE", parser=int),
-            Setting("AWS_S3_FILE_OVERWRITE", parser=str_to_bool, default=True),
             "AWS_S3_URL_PROTOCOL",
             "AWS_S3_REGION_NAME",
             "AWS_S3_ENDPOINT_URL",
@@ -681,6 +688,7 @@ if GOOGLE_STORAGE_ENABLED:
     # details on what these env variables do
 
     DEFAULT_FILE_STORAGE = "storages.backends.gcloud.GoogleCloudStorage"
+    GS_FILE_OVERWRITE = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -690,7 +698,6 @@ if GOOGLE_STORAGE_ENABLED:
             "GZIP_CONTENT_TYPES",
             Setting("GS_DEFAULT_ACL", default="publicRead"),
             Setting("GS_QUERYSTRING_AUTH", parser=str_to_bool),
-            Setting("GS_FILE_OVERWRITE", parser=str_to_bool),
             Setting("GS_MAX_MEMORY_SIZE", parser=int),
             Setting("GS_BLOB_CHUNK_SIZE", parser=int),
             Setting("GS_OBJECT_PARAMETERS", parser=json.loads),
@@ -707,6 +714,7 @@ if GOOGLE_STORAGE_ENABLED:
 
 if AZURE_STORAGE_ENABLED:
     DEFAULT_FILE_STORAGE = "storages.backends.azure_storage.AzureStorage"
+    AZURE_OVERWRITE_FILES = False
     set_settings_from_env_if_present(
         AttrDict(vars()),
         [
@@ -722,7 +730,6 @@ if AZURE_STORAGE_ENABLED:
             Setting("AZURE_UPLOAD_MAX_CONN", parser=int),
             Setting("AZURE_CONNECTION_TIMEOUT_SECS", parser=int),
             Setting("AZURE_URL_EXPIRATION_SECS", parser=int),
-            Setting("AZURE_OVERWRITE_FILES", parser=str_to_bool),
             "AZURE_LOCATION",
             "AZURE_ENDPOINT_SUFFIX",
             "AZURE_CUSTOM_DOMAIN",
@@ -792,7 +799,9 @@ BATCH_ROWS_SIZE_LIMIT = int(
 TRASH_PAGE_SIZE_LIMIT = 200  # How many trash entries can be requested at once.
 
 # How many unique row values can be requested at once.
-UNIQUE_ROW_VALUES_SIZE_LIMIT = 50
+BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT = int(
+    os.getenv("BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT", 100)
+)
 
 # The amount of rows that can be imported when creating a table.
 INITIAL_TABLE_DATA_LIMIT = None
@@ -860,6 +869,58 @@ if os.getenv("EMAIL_SMTP", ""):
 else:
     CELERY_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+# Enable email notifications globally. If disabled, tasks will reset the
+# email_scheduled field without sending any emails.
+EMAIL_NOTIFICATIONS_ENABLED = str_to_bool(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_ENABLED", "true")
+)
+# The maximum amount of email notifications that can be sent per task. This
+# equals the amount of users that will receive an email, since all the
+# notifications for a user are sent in one email. If you want to limit the
+# number of emails sent per minute, look at MAX_EMAILS_PER_MINUTE.
+EMAIL_NOTIFICATIONS_LIMIT_PER_TASK = {
+    "instant": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_INSTANT", 50)),
+    "daily": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_DAILY", 1000)),
+    "weekly": int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_LIMIT_WEEKLY", 5000)),
+}
+# The crontab used to schedule the instant email notifications task.
+EMAIL_NOTIFICATIONS_INSTANT_CRONTAB = get_crontab_from_env(
+    "BASEROW_EMAIL_NOTIFICATIONS_INSTANT_CRONTAB", default_crontab="* * * * *"
+)
+# The hour of the day (between 0 and 23) when the daily and weekly email
+# notifications task is scheduled, according to the user timezone. Every hour a
+# task is scheduled and only the users in the correct timezone will receive an
+# email.
+EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY = int(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_DAILY_HOUR_OF_DAY", 0)
+)
+# The day of the week when the weekly email notifications task is scheduled,
+# according to the user timezone (0: Monday, ..., 6: Sunday).
+EMAIL_NOTIFICATIONS_WEEKLY_DAY_OF_WEEK = int(
+    os.getenv("BASEROW_EMAIL_NOTIFICATIONS_WEEKLY_DAY_OF_WEEK", 0)
+)
+# 0 seconds means that the task will not be retried if the limit of users being
+# notified is reached. Provide a positive number to enable retries after this many
+# seconds.
+EMAIL_NOTIFICATIONS_AUTO_RETRY_IF_LIMIT_REACHED_AFTER = (
+    int(os.getenv("BASEROW_EMAIL_NOTIFICATIONS_AUTO_RETRY_IF_LIMIT_REACHED_AFTER", 0))
+    or None
+)
+
+# The maximum number of notifications that are going to be listed in a single email.
+# All the additional notifications are going to be included in a single "and x more"
+MAX_NOTIFICATIONS_LISTED_PER_EMAIL = int(
+    os.getenv("BASEROW_MAX_NOTIFICATIONS_LISTED_PER_EMAIL", 10)
+)
+
+# Look into `CeleryEmailBackend` for more information about these settings.
+CELERY_EMAIL_CHUNK_SIZE = int(os.getenv("CELERY_EMAIL_CHUNK_SIZE", 10))
+# Use a multiple of CELERY_EMAIL_CHUNK_SIZE to have a sensible rate limit.
+MAX_EMAILS_PER_MINUTE = int(os.getenv("BASEROW_MAX_EMAILS_PER_MINUTE", 50))
+CELERY_EMAIL_TASK_CONFIG = {
+    "rate_limit": f"{int(MAX_EMAILS_PER_MINUTE / CELERY_EMAIL_CHUNK_SIZE)}/m",
+}
+
 # Configurable thumbnails that are going to be generated when a user uploads an image
 # file.
 USER_THUMBNAILS = {"tiny": [None, 21], "small": [48, 48], "card_cover": [300, 160]}
@@ -874,6 +935,7 @@ APPLICATION_TEMPLATES_DIR = os.path.join(BASE_DIR, "../../../templates")
 DEFAULT_APPLICATION_TEMPLATE = "project-tracker"
 
 MAX_FIELD_LIMIT = int(os.getenv("BASEROW_MAX_FIELD_LIMIT", 600))
+
 INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT = int(
     os.getenv(
         "BASEROW_INITIAL_MIGRATION_FULL_TEXT_SEARCH_MAX_FIELD_LIMIT", MAX_FIELD_LIMIT
@@ -1107,6 +1169,15 @@ USE_PG_FULLTEXT_SEARCH = str_to_bool(
 )
 PG_SEARCH_CONFIG = os.getenv("BASEROW_PG_SEARCH_CONFIG", "simple")
 AUTO_VACUUM_AFTER_SEARCH_UPDATE = str_to_bool(os.getenv("BASEROW_AUTO_VACUUM", "true"))
+
+POSTHOG_PROJECT_API_KEY = os.getenv("POSTHOG_PROJECT_API_KEY", "")
+POSTHOG_HOST = os.getenv("POSTHOG_HOST", "")
+POSTHOG_ENABLED = POSTHOG_PROJECT_API_KEY and POSTHOG_HOST
+if POSTHOG_ENABLED:
+    posthog.project_api_key = POSTHOG_PROJECT_API_KEY
+    posthog.host = POSTHOG_HOST
+else:
+    posthog.disabled = True
 
 # Indicates whether we are running the tests or not. Set to True in the test.py settings
 # file used by pytest.ini

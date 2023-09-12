@@ -48,7 +48,7 @@ export const mutations = {
   },
   COMPUTE_NEXT_TIMEOUT_MS(state, unfinishedJobIds) {
     const newJobsToUpdate = !_.isEqual(unfinishedJobIds, state.lastUpdateJobIds)
-    const maxTimeout = this.$env.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS
+    const maxTimeout = this.$config.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS
     if (unfinishedJobIds.length === 0) {
       // no unfinished jobs to update, so we can relax the refresh until
       // a new job is added.

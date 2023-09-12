@@ -46,7 +46,7 @@ export default {
   },
   computed: {
     downloadXHR() {
-      return this.$env.DOWNLOAD_FILE_VIA_XHR === '1'
+      return this.$config.DOWNLOAD_FILE_VIA_XHR === '1'
     },
   },
   methods: {

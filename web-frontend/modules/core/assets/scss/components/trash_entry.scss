@@ -23,7 +23,7 @@
   border-radius: 100%;
   background-color: $color-primary-500;
   color: $white;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 15px;
 
   @include center-text(36px, 13px);
@@ -42,7 +42,7 @@
   @extend %ellipsis;
 
   font-size: 13px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-bottom: 6px;
   max-width: 100%;
 }
@@ -66,9 +66,9 @@
   li {
     font-size: 12px;
     background-color: $color-primary-100;
-    border-radius: 3px;
     padding: 4px;
     margin-top: 6px;
+    @include rounded($rounded);
 
     &:not(:last-child) {
       margin-right: 6px;

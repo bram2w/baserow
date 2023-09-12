@@ -7,11 +7,11 @@
   z-index: $z-index-context;
   white-space: nowrap;
   background-color: $white;
-  border-radius: 6px;
   border: 1px solid $color-neutral-200;
   box-shadow: 0 2px 6px 0 rgba($black, 0.16);
   display: flex;
   flex-direction: column;
+  @include rounded($rounded-md);
 }
 
 .notification-panel__head {
@@ -162,4 +162,32 @@
   margin-bottom: 30px;
   white-space: normal;
   color: $color-neutral-500;
+}
+
+.notification-panel__refresh-hint {
+  height: 52px;
+  padding: 16px;
+  border-bottom: 1px solid #d9dbde;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $color-neutral-50;
+
+  & + .infinite-scroll {
+    top: 105px;
+  }
+}
+
+.notification-panel__refresh-hint-icon {
+  width: 8px;
+  height: 8px;
+  border-radius: 100%;
+  background-color: $color-primary-500;
+  display: inline-block;
+  margin-right: 12px;
+  margin-left: 8px;
+}
+
+.notification-panel__refresh-hint-text {
+  font-weight: 600;
 }

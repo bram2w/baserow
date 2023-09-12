@@ -1,13 +1,13 @@
 .alert {
   border: 1px solid;
-  border-radius: 3px;
   margin: 30px 0;
   padding: 20px;
+  @include rounded($rounded-md);
 
   @include alert-style(
     $color-primary-100,
     $color-primary-300,
-    $color-primary-900,
+    $color-neutral-900,
     $color-primary-700,
     $color-primary-400
   );
@@ -18,7 +18,7 @@
   }
 
   &.alert--with-shadow {
-    box-shadow: 0 2px 6px 0 rgba($black, 0.16);
+    @include add-elevation($elevation-medium);
   }
 }
 
@@ -41,7 +41,7 @@
 
 .alert__title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 8px;
 }
 

@@ -10,7 +10,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
+from baserow.contrib.database.search.handler import ALL_SEARCH_MODES, SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.exceptions import (
     CannotShareViewTypeError,
@@ -49,6 +49,7 @@ from baserow.contrib.database.views.registries import (
     view_filter_type_registry,
     view_type_registry,
 )
+from baserow.contrib.database.views.signals import view_loaded
 from baserow.contrib.database.views.view_ownership_types import (
     CollaborativeViewOwnershipType,
 )
@@ -203,7 +204,8 @@ def test_update_grid_view(send_mock, data_fixture):
     with pytest.raises(ValueError):
         handler.update_view(user=user, view=object(), name="Test 1")
 
-    view = handler.update_view(user=user, view=grid, name="Test 1")
+    view_with_changes = handler.update_view(user=user, view=grid, name="Test 1")
+    view = view_with_changes.updated_view_instance
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == view.id
@@ -351,7 +353,7 @@ def test_update_form_view(send_mock, data_fixture):
     user_file_2 = data_fixture.create_user_file()
 
     handler = ViewHandler()
-    view = handler.update_view(
+    view_with_changes = handler.update_view(
         user=user,
         view=form,
         slug="Test slug",
@@ -364,6 +366,7 @@ def test_update_form_view(send_mock, data_fixture):
         submit_action="REDIRECT",
         submit_action_redirect_url="https://localhost",
     )
+    view = view_with_changes.updated_view_instance
 
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view"].id == view.id
@@ -1504,7 +1507,8 @@ def test_get_public_view_by_slug(data_fixture):
 @pytest.mark.django_db
 @patch("baserow.contrib.database.rows.signals.rows_created.send")
 def test_submit_form_view(send_mock, data_fixture):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
     form = data_fixture.create_form_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     number_field = data_fixture.create_number_field(table=table)
@@ -1522,15 +1526,17 @@ def test_submit_form_view(send_mock, data_fixture):
     handler = ViewHandler()
 
     with pytest.raises(ValidationError) as e:
-        handler.submit_form_view(form=form, values={})
+        handler.submit_form_view(user, form=form, values={})
 
     with pytest.raises(ValidationError) as e:
-        handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+        handler.submit_form_view(
+            user, form=form, values={f"field_{number_field.id}": 0}
+        )
 
     assert f"field_{text_field.id}" in e.value.error_dict
 
     instance = handler.submit_form_view(
-        form=form, values={f"field_{text_field.id}": "Text value"}
+        None, form=form, values={f"field_{text_field.id}": "Text value"}
     )
 
     send_mock.assert_called_once()
@@ -1541,6 +1547,7 @@ def test_submit_form_view(send_mock, data_fixture):
     assert send_mock.call_args[1]["model"]._generated_table_model
 
     handler.submit_form_view(
+        user,
         form=form,
         values={
             f"field_{text_field.id}": "Another value",
@@ -1562,7 +1569,8 @@ def test_submit_form_view(send_mock, data_fixture):
 
 @pytest.mark.django_db
 def test_submit_form_view_skip_required_with_conditions(data_fixture):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
     form = data_fixture.create_form_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     number_field = data_fixture.create_number_field(table=table)
@@ -1576,13 +1584,17 @@ def test_submit_form_view_skip_required_with_conditions(data_fixture):
     handler = ViewHandler()
 
     with pytest.raises(ValidationError):
-        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+        handler.submit_form_view(
+            user, form=form, values={f"field_{text_field.id}": "1"}
+        )
 
     number_option.show_when_matching_conditions = True
     number_option.save()
 
     with pytest.raises(ValidationError):
-        handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+        handler.submit_form_view(
+            user, form=form, values={f"field_{text_field.id}": "1"}
+        )
 
     # When there is a condition and `show_when_matching_conditions` is `True`,
     # the backend can't validate whether the values match the filter, we we don't do
@@ -1591,7 +1603,7 @@ def test_submit_form_view_skip_required_with_conditions(data_fixture):
         field_option=number_option, field=text_field
     )
 
-    handler.submit_form_view(form=form, values={f"field_{text_field.id}": "1"})
+    handler.submit_form_view(user, form=form, values={f"field_{text_field.id}": "1"})
     model = table.get_model()
     assert model.objects.all().count() == 1
 
@@ -1666,12 +1678,12 @@ def test_get_public_views_which_include_row(data_fixture, django_assert_num_quer
         table, model, only_include_views_which_want_realtime_events=True
     )
     assert checker.get_public_views_where_row_is_visible(row) == [
-        public_view1.view_ptr,
-        public_view3.view_ptr,
+        public_view1.view_ptr.specific,
+        public_view3.view_ptr.specific,
     ]
     assert checker.get_public_views_where_row_is_visible(row2) == [
-        public_view2.view_ptr,
-        public_view3.view_ptr,
+        public_view2.view_ptr.specific,
+        public_view3.view_ptr.specific,
     ]
 
 
@@ -1745,15 +1757,15 @@ def test_get_public_views_which_include_rows(data_fixture):
 
     assert checker.get_public_views_where_rows_are_visible([row, row2]) == [
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view1.id),
+            view=ViewHandler().get_view_as_user(user, public_view1.id).specific,
             allowed_row_ids={1},
         ),
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view2.id),
+            view=ViewHandler().get_view_as_user(user, public_view2.id).specific,
             allowed_row_ids={2},
         ),
         PublicViewRows(
-            view=ViewHandler().get_view_as_user(user, public_view3.id),
+            view=ViewHandler().get_view_as_user(user, public_view3.id).specific,
             allowed_row_ids=PublicViewRows.ALL_ROWS_ALLOWED,
         ),
     ]
@@ -1799,7 +1811,7 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1807,7 +1819,7 @@ def test_public_view_row_checker_caches_when_only_unfiltered_fields_updated(
     # be changing unfiltered_field it knows it can cache the results
     with django_assert_num_queries(0):
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            public_grid_view.view_ptr.specific
         ]
         assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1848,13 +1860,14 @@ def test_public_view_row_checker_includes_public_views_with_no_filters_with_no_q
         updated_field_ids=[unfiltered_field.id],
     )
 
+    view_ptr_specific = public_grid_view.view_ptr.specific
     # It should precalculate that this view is always visible.
     with django_assert_num_queries(0):
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
         assert row_checker.get_public_views_where_row_is_visible(other_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
 
 
@@ -1898,7 +1911,7 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
     )
 
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == []
 
@@ -1910,7 +1923,7 @@ def test_public_view_row_checker_does_not_cache_when_any_filtered_fields_updated
     visible_row.save()
 
     assert row_checker.get_public_views_where_row_is_visible(invisible_row) == [
-        public_grid_view.view_ptr
+        public_grid_view.view_ptr.specific
     ]
     assert row_checker.get_public_views_where_row_is_visible(visible_row) == []
 
@@ -1933,7 +1946,8 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
     )
     model = table.get_model()
-    with django_assert_num_queries(2):
+    num_queries = 6
+    with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
             table,
@@ -1954,7 +1968,7 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
     )
 
     # Adding another view shouldn't result in more queries
-    with django_assert_num_queries(2):
+    with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
             table,
@@ -2002,11 +2016,12 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
         updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
 
+    view_ptr_specific = public_grid_view.view_ptr.specific
     with django_assert_num_queries(1):
         # Only should run a single exists query to check if the row is in the single
         # public view
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr
+            view_ptr_specific
         ]
     with django_assert_num_queries(1):
         # Only should run a single exists query to check if the row is in the single
@@ -2029,11 +2044,12 @@ def test_public_view_row_checker_runs_expected_queries_when_checking_rows(
         only_include_views_which_want_realtime_events=True,
         updated_field_ids=[filtered_field.id, unfiltered_field.id],
     )
+    specific_another_view = another_public_grid_view.view_ptr.specific
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view
         assert row_checker.get_public_views_where_row_is_visible(visible_row) == [
-            public_grid_view.view_ptr,
-            another_public_grid_view.view_ptr,
+            view_ptr_specific,
+            specific_another_view,
         ]
     with django_assert_num_queries(2):
         # Now should run two queries, one per public view
@@ -2121,20 +2137,24 @@ def test_get_public_rows_queryset_and_field_ids_view_search(data_fixture, search
     field = data_fixture.create_number_field(table=grid_view.table)
 
     model = grid_view.table.get_model()
-    model.objects.create(**{f"field_{field.id}": 1})
-    model.objects.create(**{f"field_{field.id}": 2})
-    model.objects.create(**{f"field_{field.id}": 3})
+    model.objects.create(**{f"field_{field.id}": 4})
+    model.objects.create(**{f"field_{field.id}": 5})
+    model.objects.create(**{f"field_{field.id}": 6})
+
+    SearchHandler.update_tsvector_columns(
+        field.table, update_tsvectors_for_changed_rows_only=False
+    )
 
     (
         queryset,
         field_ids,
         publicly_visible_field_options,
     ) = ViewHandler().get_public_rows_queryset_and_field_ids(
-        grid_view, search="2", search_mode=search_mode
+        grid_view, search="5", search_mode=search_mode
     )
 
     assert queryset.count() == 1
-    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [2]
+    assert list(queryset.values_list(f"field_{field.id}", flat=True)) == [Decimal(5)]
 
 
 @pytest.mark.django_db
@@ -2247,7 +2267,8 @@ def test_get_public_rows_queryset_and_field_ids_filters_stack(data_fixture):
 
 @pytest.mark.django_db
 def test_can_submit_form_view_handler_with_zero_number_required(data_fixture):
-    table = data_fixture.create_database_table()
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
     form = data_fixture.create_form_view(table=table)
     number_field = data_fixture.create_number_field(table=table)
     data_fixture.create_form_view_field_option(
@@ -2256,9 +2277,11 @@ def test_can_submit_form_view_handler_with_zero_number_required(data_fixture):
 
     handler = ViewHandler()
 
-    handler.submit_form_view(form=form, values={f"field_{number_field.id}": 0})
+    handler.submit_form_view(user, form=form, values={f"field_{number_field.id}": 0})
     with pytest.raises(ValidationError):
-        handler.submit_form_view(form=form, values={f"field_{number_field.id}": False})
+        handler.submit_form_view(
+            user, form=form, values={f"field_{number_field.id}": False}
+        )
 
 
 @pytest.mark.django_db
@@ -3039,3 +3062,87 @@ def test_loading_a_view_checks_for_db_index_without_additional_queries(
         ViewIndexingHandler.schedule_index_creation_if_needed(view, model)
         # the task should not be called again
         assert mocked_view_index_update_task.call_count == 1
+
+
+@override_settings(
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@pytest.mark.django_db(transaction=True)
+def test_update_index_replaces_index_with_diff_collation(
+    settings, data_fixture, enable_singleton_testing
+):
+    with patch("baserow.core.db.get_collation_name", new=lambda: None):
+        user = data_fixture.create_user()
+        table = data_fixture.create_database_table(user=user)
+        text_field = data_fixture.create_text_field(user=user, table=table)
+        handler = ViewHandler()
+        grid_view = handler.create_view(
+            user=user,
+            table=table,
+            type_name="grid",
+            name="Test grid",
+            ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+        )
+        table_model = table.get_model()
+        view_sort_1 = handler.create_sort(
+            user=user, view=grid_view, field=text_field, order="ASC"
+        )
+        index_1 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is True
+        grid_view.refresh_from_db()
+
+    with patch(
+        "baserow.core.db.get_collation_name", new=lambda: settings.EXPECTED_COLLATION
+    ):
+        # different collation settings should overwrite the index
+        ViewIndexingHandler.update_index(grid_view, table_model)
+
+        index_2 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert index_1.name != index_2.name
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is False
+        assert ViewIndexingHandler.does_index_exist(index_2.name) is True
+
+
+@override_settings(
+    AUTO_INDEX_VIEW_ENABLED=True,
+)
+@pytest.mark.django_db(transaction=True)
+def test_view_loaded_replaces_index_with_diff_collation(
+    settings, data_fixture, enable_singleton_testing
+):
+    with patch("baserow.core.db.get_collation_name", new=lambda: None):
+        user = data_fixture.create_user()
+        table = data_fixture.create_database_table(user=user)
+        text_field = data_fixture.create_text_field(user=user, table=table)
+        handler = ViewHandler()
+        grid_view = handler.create_view(
+            user=user,
+            table=table,
+            type_name="grid",
+            name="Test grid",
+            ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
+        )
+        table_model = table.get_model()
+        view_sort_1 = handler.create_sort(
+            user=user, view=grid_view, field=text_field, order="ASC"
+        )
+        index_1 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is True
+        grid_view.refresh_from_db()
+
+    with patch(
+        "baserow.core.db.get_collation_name", new=lambda: settings.EXPECTED_COLLATION
+    ):
+        # different collation settings should overwrite the index
+        view_loaded.send(
+            sender=None,
+            table=table,
+            view=grid_view,
+            table_model=table_model,
+            user=user,
+        )
+
+        index_2 = ViewIndexingHandler.get_index(grid_view, table_model)
+        assert index_1.name != index_2.name
+        assert ViewIndexingHandler.does_index_exist(index_1.name) is False
+        assert ViewIndexingHandler.does_index_exist(index_2.name) is True

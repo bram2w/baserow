@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix submitting empty link_row value in form view.",
+  "issue_number": 1914,
+  "bullet_points": [],
+  "created_at": "2023-08-21"
+}

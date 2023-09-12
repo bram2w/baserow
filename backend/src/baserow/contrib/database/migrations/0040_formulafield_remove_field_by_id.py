@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from django.db import migrations, models
 
 from baserow.contrib.database.formula import FormulaHandler
-from baserow.formula import (
+from baserow.core.formula import (
     BaserowFormula,
     BaserowFormulaVisitor,
     MaximumFormulaSizeError,

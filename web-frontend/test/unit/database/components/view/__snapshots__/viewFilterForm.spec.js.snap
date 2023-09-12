@@ -80,7 +80,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__field"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -98,7 +98,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -116,7 +116,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -204,7 +204,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__type"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -222,7 +222,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -240,7 +240,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -494,7 +494,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         <!---->
          
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -512,12 +512,12 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <!---->
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -584,7 +584,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__field"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -602,7 +602,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -620,7 +620,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -708,7 +708,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__type"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -726,7 +726,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -744,7 +744,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -940,7 +940,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
         class="filters__field"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -958,7 +958,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -976,7 +976,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -1064,7 +1064,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
         class="filters__type"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex=""
         >
           <a
@@ -1082,7 +1082,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
           </a>
            
           <div
-            class="dropdown__items"
+            class="dropdown__items dropdown__items--fixed"
+            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
           >
             <div
               class="select__search"
@@ -1100,7 +1101,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             </div>
              
             <ul
-              class="select__items prevent-scroll"
+              class="select__items select__items--no-max-height prevent-scroll"
               tabindex=""
             >
               <li
@@ -1296,7 +1297,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
         class="filters__field"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -1314,7 +1315,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
           >
             <div
               class="select__search"
@@ -1332,7 +1333,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             </div>
              
             <ul
-              class="select__items"
+              class="select__items select__items--no-max-height"
               tabindex=""
             >
               <li
@@ -1420,7 +1421,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
         class="filters__type"
       >
         <div
-          class="dropdown dropdown--floating dropdown--tiny"
+          class="dropdown dropdown--tiny"
           tabindex="0"
         >
           <a
@@ -1438,7 +1439,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
           </a>
            
           <div
-            class="dropdown__items hidden"
+            class="dropdown__items hidden dropdown__items--fixed"
+            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
           >
             <div
               class="select__search"
@@ -1456,7 +1458,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             </div>
              
             <ul
-              class="select__items prevent-scroll"
+              class="select__items select__items--no-max-height prevent-scroll"
               tabindex=""
             >
               <li

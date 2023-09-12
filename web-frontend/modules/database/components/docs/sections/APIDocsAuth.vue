@@ -15,7 +15,7 @@
     <div class="api-docs__right">
       <APIDocsExample
         :value="value"
-        :url="$env.PUBLIC_BACKEND_URL"
+        :url="$config.PUBLIC_BACKEND_URL"
         :include-user-fields-checkbox="false"
         type=""
         @input="$emit('input', $event)"

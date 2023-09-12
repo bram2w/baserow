@@ -1,12 +1,12 @@
 import pytest
 
-from baserow.core.formula.function_collection import RuntimeFunctionCollection
-from baserow.formula.parser.exceptions import (
+from baserow.core.formula.parser.exceptions import (
     BaserowFormulaSyntaxError,
     InvalidNumberOfArguments,
 )
-from baserow.formula.parser.parser import get_parse_tree_for_formula
-from baserow.formula.parser.python_executor import BaserowPythonExecutor
+from baserow.core.formula.parser.parser import get_parse_tree_for_formula
+from baserow.core.formula.parser.python_executor import BaserowPythonExecutor
+from baserow.core.formula.registries import formula_runtime_function_registry
 from baserow.test_utils.helpers import load_test_cases
 
 TEST_DATA = load_test_cases("formula_runtime_cases")
@@ -23,7 +23,7 @@ def test_valid_formulas(test_data):
 
     tree = get_parse_tree_for_formula(formula)
     assert (
-        BaserowPythonExecutor(RuntimeFunctionCollection(), context).visit(tree)
+        BaserowPythonExecutor(formula_runtime_function_registry, context).visit(tree)
         == result
     )
 
@@ -35,16 +35,16 @@ def test_invalid_formulas(test_data):
 
     with pytest.raises(Exception):
         tree = get_parse_tree_for_formula(formula)
-        BaserowPythonExecutor(RuntimeFunctionCollection(), context).visit(tree)
+        BaserowPythonExecutor(formula_runtime_function_registry, context).visit(tree)
 
 
 def test_formula_function_does_not_exist():
     with pytest.raises(BaserowFormulaSyntaxError):
         tree = get_parse_tree_for_formula("notExistingFunction(1,2,3)")
-        BaserowPythonExecutor(RuntimeFunctionCollection()).visit(tree)
+        BaserowPythonExecutor(formula_runtime_function_registry, {}).visit(tree)
 
 
 def test_invalid_number_of_arguments():
     with pytest.raises(InvalidNumberOfArguments):
         tree = get_parse_tree_for_formula("get(1,2)")
-        BaserowPythonExecutor(RuntimeFunctionCollection()).visit(tree)
+        BaserowPythonExecutor(formula_runtime_function_registry, {}).visit(tree)

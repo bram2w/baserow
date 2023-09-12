@@ -77,14 +77,14 @@
 
   min-width: 0;
   line-height: 22px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .sidebar__user-icon {
   flex: 0 0 20px;
   text-align: center;
   font-size: 12px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .sidebar__user-email {
@@ -153,9 +153,9 @@
 .sidebar__foot-link {
   position: relative;
   color: $color-neutral-700;
-  border-radius: 3px;
 
   @include center-text(20px, 12px);
+  @include rounded($rounded);
 
   &:hover {
     display: inline-block;
@@ -210,7 +210,6 @@
     .sidebar__item-name {
       background-color: $color-neutral-900;
       color: $white;
-      border-radius: 3px;
       padding: 0 4px;
       white-space: nowrap;
       font-weight: 400;
@@ -218,6 +217,7 @@
 
       @include absolute(6px, auto, auto, 36px);
       @include center-text(auto, 11px, 21px);
+      @include rounded($rounded);
     }
 
     &:hover .sidebar__item-name {

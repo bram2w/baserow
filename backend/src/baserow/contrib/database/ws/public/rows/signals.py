@@ -3,28 +3,22 @@ from typing import Any, Dict, List, Optional
 from django.db import transaction
 from django.dispatch import receiver
 
+from opentelemetry import trace
+
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
-from baserow.contrib.database.api.rows.serializers import (
-    RowSerializer,
-    get_row_serializer_class,
-)
+from baserow.contrib.database.api.rows.serializers import serialize_rows_for_response
 from baserow.contrib.database.rows import signals as row_signals
 from baserow.contrib.database.table.models import GeneratedTableModel
 from baserow.contrib.database.views.handler import PublicViewRows, ViewHandler
 from baserow.contrib.database.views.registries import view_type_registry
-from baserow.contrib.database.ws.rows.signals import (
-    RealtimeRowMessages,
-    before_rows_update,
-)
+from baserow.contrib.database.ws.rows.signals import RealtimeRowMessages
+from baserow.core.telemetry.utils import baserow_trace
 from baserow.ws.registries import page_registry
 
-
-def _serialize_row(model, row, many=False):
-    return get_row_serializer_class(model, RowSerializer, is_response=True)(
-        row, many=many
-    ).data
+tracer = trace.get_tracer(__name__)
 
 
+@baserow_trace(tracer)
 def _send_rows_created_event_to_views(
     serialized_rows: List[Dict[Any, Any]],
     before: Optional[GeneratedTableModel],
@@ -52,6 +46,7 @@ def _send_rows_created_event_to_views(
         )
 
 
+@baserow_trace(tracer)
 def _send_rows_deleted_event_to_views(
     serialized_deleted_rows: List[Dict[Any, Any]],
     public_views: List[PublicViewRows],
@@ -76,13 +71,27 @@ def _send_rows_deleted_event_to_views(
 
 
 @receiver(row_signals.rows_created)
-def public_rows_created(sender, rows, before, user, table, model, **kwargs):
+@baserow_trace(tracer)
+def public_rows_created(
+    sender,
+    rows,
+    before,
+    user,
+    table,
+    model,
+    send_realtime_update=True,
+    send_webhook_events=True,
+    **kwargs
+):
+    if not send_realtime_update:
+        return
+
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
     )
     transaction.on_commit(
         lambda: _send_rows_created_event_to_views(
-            _serialize_row(model, rows, many=True),
+            serialize_rows_for_response(rows, model),
             before,
             row_checker.get_public_views_where_rows_are_visible(rows),
         ),
@@ -90,6 +99,7 @@ def public_rows_created(sender, rows, before, user, table, model, **kwargs):
 
 
 @receiver(row_signals.before_rows_delete)
+@baserow_trace(tracer)
 def public_before_rows_delete(sender, rows, user, table, model, **kwargs):
     row_checker = ViewHandler().get_public_views_row_checker(
         table, model, only_include_views_which_want_realtime_events=True
@@ -98,11 +108,12 @@ def public_before_rows_delete(sender, rows, user, table, model, **kwargs):
         "deleted_rows_public_views": (
             row_checker.get_public_views_where_rows_are_visible(rows)
         ),
-        "deleted_rows": _serialize_row(model, rows, many=True),
+        "deleted_rows": serialize_rows_for_response(rows, model),
     }
 
 
 @receiver(row_signals.rows_deleted)
+@baserow_trace(tracer)
 def public_rows_deleted(sender, rows, user, table, model, before_return, **kwargs):
     public_views = dict(before_return)[public_before_rows_delete][
         "deleted_rows_public_views"
@@ -116,6 +127,7 @@ def public_rows_deleted(sender, rows, user, table, model, before_return, **kwarg
 
 
 @receiver(row_signals.before_rows_update)
+@baserow_trace(tracer)
 def public_before_rows_update(
     sender, rows, user, table, model, updated_field_ids, **kwargs
 ):
@@ -134,12 +146,21 @@ def public_before_rows_update(
 
 
 @receiver(row_signals.rows_updated)
+@baserow_trace(tracer)
 def public_rows_updated(
-    sender, rows, user, table, model, before_return, updated_field_ids, **kwargs
+    sender,
+    rows,
+    user,
+    table,
+    model,
+    before_return,
+    updated_field_ids,
+    before_rows_values,
+    **kwargs
 ):
     before_return_dict = dict(before_return)[public_before_rows_update]
-    serialized_old_rows = dict(before_return)[before_rows_update]
-    serialized_updated_rows = _serialize_row(model, rows, many=True)
+    serialized_old_rows = before_rows_values
+    serialized_updated_rows = serialize_rows_for_response(rows, model)
 
     old_row_public_views: List[PublicViewRows] = before_return_dict[
         "old_rows_public_views"
@@ -216,6 +237,7 @@ def public_rows_updated(
         view_slug_to_updated_public_view_rows.values()
     )
 
+    @baserow_trace(tracer)
     def _send_created_updated_deleted_row_signals_to_views():
         _send_rows_deleted_event_to_views(
             serialized_old_rows, public_views_where_rows_were_deleted

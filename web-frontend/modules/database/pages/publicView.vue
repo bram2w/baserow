@@ -23,6 +23,7 @@ import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/co
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import { mapGetters } from 'vuex'
 import languageDetection from '@baserow/modules/core/mixins/languageDetection'
+import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
 
 export default {
   components: { Table, Toasts },
@@ -110,7 +111,10 @@ export default {
     }),
   },
   mounted() {
-    if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
+    this.$el.keydownEvent = (event) => this.keyDown(event)
+    document.body.addEventListener('keydown', this.$el.keydownEvent)
+
+    if (!this.$config.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
       this.$realtime.connect(true, true)
 
       const token = this.$store.getters['page/view/public/getAuthToken']
@@ -118,10 +122,23 @@ export default {
     }
   },
   beforeDestroy() {
-    if (!this.$env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
+    document.body.removeEventListener('keydown', this.$el.keydownEvent)
+
+    if (!this.$config.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS) {
       this.$realtime.subscribe(null)
       this.$realtime.disconnect()
     }
+  },
+  methods: {
+    keyDown(event) {
+      if (
+        isOsSpecificModifierPressed(event) &&
+        event.key.toLowerCase() === 'f'
+      ) {
+        event.preventDefault()
+        this.$priorityBus.$emit('start-search')
+      }
+    },
   },
 }
 </script>

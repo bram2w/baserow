@@ -7,6 +7,9 @@
           class="data-source-form__name-input"
           :placeholder="$t('dataSourceForm.namePlaceholder')"
         />
+        <!-- TODO This and it's corresponding prop will be removed in the data
+         explorer MR -->
+        ({{ id }})
         <Dropdown
           v-model="values.type"
           class="data-source-form__type-dropdown"
@@ -95,8 +98,16 @@ export default {
       type: Object,
       required: true,
     },
+    page: {
+      type: Object,
+      required: true,
+    },
     integrations: {
       type: Array,
+      required: true,
+    },
+    id: {
+      type: Number,
       required: true,
     },
   },
@@ -145,7 +156,9 @@ export default {
       }
     },
     mustHaveUniqueName(param) {
-      const existingNames = this.$store.getters['dataSource/getDataSources']
+      const existingNames = this.$store.getters[
+        'dataSource/getPageDataSources'
+      ](this.page)
         .filter(({ id }) => id !== this.defaultValues.id)
         .map(({ name }) => name)
       return !existingNames.includes(param.trim())

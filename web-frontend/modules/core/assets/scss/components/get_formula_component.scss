@@ -1,0 +1,28 @@
+.get-formula-component {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: $color-neutral-100;
+  font-size: 12px;
+  margin: 1px 0;
+  user-select: all;
+  line-height: 18px;
+  @include rounded($rounded);
+}
+
+.get-formula-component__caret {
+  color: $color-neutral-300;
+  padding-left: 3px;
+  padding-right: 3px;
+  font-size: 12px;
+}
+
+.get-formula-component__remove {
+  color: $color-neutral-500;
+  padding-left: 4px;
+  font-size: 10px;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-900;
+  }
+}

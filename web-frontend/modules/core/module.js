@@ -55,76 +55,43 @@ export default function CoreModule(options) {
 
   // The core depends on these modules.
   this.requireModule('cookie-universal-nuxt')
-  this.requireModule([
-    'nuxt-env',
-    {
-      keys: [
-        {
-          key: 'PRIVATE_BACKEND_URL',
-          default: 'http://backend:8000',
-        },
-        {
-          key: 'BASEROW_DISABLE_PUBLIC_URL_CHECK',
-          default: false,
-        },
-        {
-          key: 'PUBLIC_BACKEND_URL',
-          default: 'http://localhost:8000',
-        },
-        {
-          key: 'PUBLIC_WEB_FRONTEND_URL',
-          default: 'http://localhost:3000',
-        },
-        {
-          key: 'INITIAL_TABLE_DATA_LIMIT',
-          default: null,
-        },
-        {
-          // Set to `1` to force download links to download files via XHR query
-          // to bypass `Content-Disposition: inline` that can't be overridden
-          // in another way.
-          // If your files are stored under another origin, you also
-          // must add CORS headers to your server.
-          key: 'DOWNLOAD_FILE_VIA_XHR',
-          default: false,
-        },
-        {
-          // If you change this default please also update the default for the
-          // backend found in src/baserow/config/settings/base.py:321
-          key: 'HOURS_UNTIL_TRASH_PERMANENTLY_DELETED',
-          default: 24 * 3,
-        },
-        {
-          key: 'DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS',
-          default: false,
-        },
-        {
-          key: 'BASEROW_MAX_IMPORT_FILE_SIZE_MB',
-          default: 512, // 512Mb
-        },
-        {
-          key: 'FEATURE_FLAGS',
-          default: '',
-        },
-        {
-          key: 'BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW',
-          default: '',
-        },
-        {
-          key: 'BASEROW_MAX_SNAPSHOTS_PER_GROUP',
-          default: -1,
-        },
-        {
-          key: 'BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS',
-          default: 2000,
-        },
-        {
-          key: 'BASEROW_USE_PG_FULLTEXT_SEARCH',
-          default: 'true',
-        },
-      ],
-    },
-  ])
+
+  this.options.privateRuntimeConfig = {
+    PRIVATE_BACKEND_URL:
+      process.env.PRIVATE_BACKEND_URL ?? 'http://backend:8000',
+  }
+
+  this.options.publicRuntimeConfig = {
+    BASEROW_DISABLE_PUBLIC_URL_CHECK:
+      process.env.BASEROW_DISABLE_PUBLIC_URL_CHECK ?? false,
+    PUBLIC_BACKEND_URL:
+      process.env.PUBLIC_BACKEND_URL ?? 'http://localhost:8000',
+    PUBLIC_WEB_FRONTEND_URL:
+      process.env.PUBLIC_WEB_FRONTEND_URL ?? 'http://localhost:3000',
+    INITIAL_TABLE_DATA_LIMIT: process.env.INITIAL_TABLE_DATA_LIMIT ?? null,
+    DOWNLOAD_FILE_VIA_XHR: process.env.DOWNLOAD_FILE_VIA_XHR ?? '0',
+    HOURS_UNTIL_TRASH_PERMANENTLY_DELETED:
+      process.env.HOURS_UNTIL_TRASH_PERMANENTLY_DELETED ?? 24 * 3,
+    DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS:
+      process.env.DISABLE_ANONYMOUS_PUBLIC_VIEW_WS_CONNECTIONS ?? '',
+    BASEROW_MAX_IMPORT_FILE_SIZE_MB:
+      process.env.BASEROW_MAX_IMPORT_FILE_SIZE_MB ?? 512,
+    FEATURE_FLAGS: process.env.FEATURE_FLAGS ?? '',
+    BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW:
+      process.env.BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW ?? '',
+    BASEROW_MAX_SNAPSHOTS_PER_GROUP:
+      process.env.BASEROW_MAX_SNAPSHOTS_PER_GROUP ?? -1,
+    BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS:
+      process.env.BASEROW_FRONTEND_JOBS_POLLING_TIMEOUT_MS ?? 2000,
+    BASEROW_USE_PG_FULLTEXT_SEARCH:
+      process.env.BASEROW_USE_PG_FULLTEXT_SEARCH ?? 'true',
+    POSTHOG_PROJECT_API_KEY: process.env.POSTHOG_PROJECT_API_KEY ?? '',
+    POSTHOG_HOST: process.env.POSTHOG_HOST ?? '',
+    BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
+      process.env.BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT ?? 100,
+    BASEROW_ROW_PAGE_SIZE_LIMIT:
+      parseInt(process.env.BASEROW_ROW_PAGE_SIZE_LIMIT) ?? 200,
+  }
 
   const locales = [
     { code: 'en', name: 'English', file: 'en.json' },
@@ -202,6 +169,7 @@ export default function CoreModule(options) {
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/featureFlags.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/papa.js') })
   this.appendPlugin({ src: path.resolve(__dirname, 'plugins/ensureRender.js') })
+  this.appendPlugin({ src: path.resolve(__dirname, 'plugins/posthog.js') })
 
   this.extendRoutes((configRoutes) => {
     // Remove all the routes created by nuxt.

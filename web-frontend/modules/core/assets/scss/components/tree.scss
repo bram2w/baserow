@@ -19,7 +19,7 @@
 
   position: relative;
   margin: 4px 0;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &.active {
     background-color: $color-primary-100;
@@ -42,7 +42,7 @@
   @extend %tree__size;
 
   padding: 0 6px;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &.tree__action--disabled {
     opacity: 0.6;
@@ -76,7 +76,7 @@
   @extend %tree__size;
   @extend %ellipsis;
 
-  color: $color-primary-900;
+  color: $color-neutral-900;
   font-size: 14px;
   display: block;
 
@@ -172,7 +172,7 @@
   @extend %tree_sub-size;
   @extend %ellipsis;
 
-  color: $color-primary-900;
+  color: $color-neutral-900;
   display: block;
 
   &:hover {
@@ -197,7 +197,7 @@
   cursor: not-allowed;
 
   &:hover {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     opacity: 0.6;
     text-decoration: none;
     cursor: not-allowed;
@@ -256,7 +256,7 @@
   border-radius: 80px;
   background-color: $color-primary-500;
   color: white;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   line-height: 16px;
   font-size: 11px;

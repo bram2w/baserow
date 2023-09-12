@@ -29,44 +29,54 @@
   </mj-raw>
   <mj-head>
     <mj-font
-            href="https://fonts.googleapis.com/css?family=Open+Sans:400,600"
-            name="Open Sans"
-    ></mj-font>
-    <mj-font
-            href="https://fonts.googleapis.com/css?family=Montserrat:700"
-            name="Montserrat"
+            href="https://fonts.googleapis.com/css?family=Inter:400,600"
+            name="Inter"
     ></mj-font>
     <mj-attributes>
       <mj-class
               name="title"
               font-size="22px"
-              color="#062E47"
-              font-family="Montserrat"
-              font-weight="700"
+              color="#070810"
+              font-family="Inter"
+              font-weight="600"
       />
       <mj-class
               name="text"
               font-size="13px"
-              color="#062E47"
-              font-family="Open Sans"
+              color="#070810"
+              font-family="Inter"
               line-height="170%"
       />
       <mj-class
               name="button"
               font-size="15px"
               color="#ffffff"
-              font-family="Open Sans"
+              font-family="Inter"
               font-weight="600"
               align="left"
-              background-color="#198DD6"
+              background-color="#5190ef"
               border-radius="4px"
               inner-padding="12px 30px"
       />
       <mj-class
               name="button-url"
               font-size="12px"
-              color="#828A95"
-              font-family="Open Sans"
+              color="#9c9c9f"
+              font-family="Inter"
+      />
+      <mj-class
+              name="notification-description"
+              font-size="12px"
+              color="#838387"
+              font-family="Inter"
+      />
+      <mj-class
+              name="mb-20"
+              margin-bottom="20px"
+      />
+      <mj-class
+              name="mt-20"
+              margin-top="20px"
       />
     </mj-attributes>
   </mj-head>

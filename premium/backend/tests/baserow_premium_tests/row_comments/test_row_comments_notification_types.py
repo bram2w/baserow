@@ -1,5 +1,6 @@
-from unittest.mock import call, patch
+from unittest.mock import MagicMock, call, patch
 
+from django.db.models import Q
 from django.shortcuts import reverse
 from django.test import override_settings
 
@@ -185,3 +186,70 @@ def test_notify_only_new_mentions_when_updating_a_comment(
             }
         ],
     }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.core.notifications.handler.get_mail_connection")
+@override_settings(DEBUG=True)
+def test_email_notifications_are_created_correctly(
+    mock_get_mail_connection, premium_data_fixture, api_client
+):
+    mock_connection = MagicMock()
+    mock_get_mail_connection.return_value = mock_connection
+
+    user_1, token_1 = premium_data_fixture.create_user_and_token(
+        has_active_premium_license=True, first_name="User 1"
+    )
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row", "second_row"], user=user_1
+    )
+    workspace = table.database.workspace
+    user_2 = premium_data_fixture.create_user(
+        workspace=workspace, has_active_premium_license=True, first_name="User 2"
+    )
+
+    row = rows[0]
+    message = premium_data_fixture.create_comment_message_with_mentions([user_2])
+
+    with freeze_time("2020-01-01 12:00"):
+        response = api_client.post(
+            reverse(
+                "api:premium:row_comments:list",
+                kwargs={"table_id": table.id, "row_id": row.id},
+            ),
+            {"message": message},
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token_1}",
+        )
+        assert response.status_code == HTTP_200_OK
+
+    # Force to send the notifications
+    res = NotificationHandler.send_new_notifications_to_users_matching_filters_by_email(
+        Q(pk=user_2.pk)
+    )
+    assert res.users_with_notifications == [user_2]
+    assert len(res.users_with_notifications[0].unsent_email_notifications) == 1
+    assert res.users_with_notifications[0].total_unsent_count == 1
+    assert res.remaining_users_to_notify_count == 0
+
+    mock_get_mail_connection.assert_called_once_with(fail_silently=False)
+    summary_emails = mock_connection.send_messages.call_args[0][0]
+    assert len(summary_emails) == 1
+    user_2_summary_email = summary_emails[0]
+    assert user_2_summary_email.to == [user_2.email]
+    assert user_2_summary_email.get_subject() == "You have 1 new notification - Baserow"
+
+    expected_context = {
+        "notifications": [
+            {
+                "title": f"User 1 mentioned you in row {row.id} in {table.name}.",
+                "description": "@User 2",
+            }
+        ],
+        "new_notifications_count": 1,
+        "unlisted_notifications_count": 0,
+    }
+    user_2_summary_email_context = user_2_summary_email.get_context()
+
+    for k, v in expected_context.items():
+        assert user_2_summary_email_context[k] == v

@@ -1,12 +1,16 @@
 .time-select {
   @extend .context;
 
+  display: flex;
+  flex-direction: column;
+
   ul {
     display: block;
     list-style: none;
     margin: 0;
     padding: 0;
     max-height: (6 * (24px + 4px + 4px)) + 40px;
+    min-height: 0;
     width: 92px;
     overflow: auto;
 
@@ -26,11 +30,11 @@
 
   a {
     display: block;
-    border-radius: 3px;
     line-height: 28px;
     text-align: center;
-    color: $color-primary-900;
+    color: $color-neutral-900;
     white-space: nowrap;
+    @include rounded($rounded);
 
     &:hover {
       background-color: $color-neutral-100;

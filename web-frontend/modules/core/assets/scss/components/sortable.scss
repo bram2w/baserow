@@ -7,5 +7,5 @@
   position: absolute;
   height: 3px;
   background-color: $color-neutral-500;
-  border-radius: 6px;
+  @include rounded($rounded-md);
 }

@@ -42,6 +42,27 @@ ExceptionMappingType = Dict[
 ]
 
 
+def apply_exception_mapping(mapping, exc):
+    value = _search_up_class_hierarchy_for_mapping(exc, mapping)
+    status_code = status.HTTP_400_BAD_REQUEST
+    detail = ""
+
+    if callable(value):
+        value = value(exc)
+        if value is None:
+            return None
+    if isinstance(value, str):
+        error = value
+    if isinstance(value, tuple):
+        error = value[0]
+        if len(value) > 1 and value[1] is not None:
+            status_code = value[1]
+        if len(value) > 2 and value[2] is not None:
+            detail = value[2].format(e=exc)
+
+    return status_code, error, detail
+
+
 @contextmanager
 def map_exceptions(mapping: ExceptionMappingType):
     """
@@ -106,22 +127,12 @@ def map_exceptions(mapping: ExceptionMappingType):
     try:
         yield
     except tuple(mapping.keys()) as e:
-        value = _search_up_class_hierarchy_for_mapping(e, mapping)
-        status_code = status.HTTP_400_BAD_REQUEST
-        detail = ""
+        mapped_exc = apply_exception_mapping(mapping, e)
 
-        if callable(value):
-            value = value(e)
-            if value is None:
-                raise e
-        if isinstance(value, str):
-            error = value
-        if isinstance(value, tuple):
-            error = value[0]
-            if len(value) > 1 and value[1] is not None:
-                status_code = value[1]
-            if len(value) > 2 and value[2] is not None:
-                detail = value[2].format(e=e)
+        if not mapped_exc:
+            raise e
+
+        status_code, error, detail = mapped_exc
 
         exc = APIException({"error": error, "detail": detail})
         exc.status_code = status_code

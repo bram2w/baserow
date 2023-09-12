@@ -197,7 +197,7 @@
 
 .grid-view__filtered-no-results-content {
   font-size: 24px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .grid-view__rows {
@@ -336,8 +336,8 @@
   @include center-text(18px, 11px);
 
   color: $color-neutral-400;
-  border-radius: 3px;
   visibility: hidden;
+  @include rounded($rounded);
 
   .grid-view__row--hover &,
   .grid-view__row--selected & {
@@ -458,9 +458,9 @@
 
     background-color: $color-success-500;
     color: $white;
-    border-radius: 3px;
     padding: 0 3px;
     transform: translateX(50%);
+    @include rounded($rounded);
 
     .icon {
       font-size: 9px;
@@ -600,7 +600,7 @@
   @include absolute(0, auto, 48px, auto);
 
   z-index: 5;
-  border-left: solid 1px $color-primary-900;
+  border-left: solid 1px $color-neutral-900;
 }
 
 .grid-view__row-dragging-container {
@@ -621,5 +621,5 @@
 .grid-view__row-target {
   @include absolute(auto, auto, auto, 0);
 
-  border-top: solid 1px $color-primary-900;
+  border-top: solid 1px $color-neutral-900;
 }

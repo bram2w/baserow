@@ -43,11 +43,11 @@
 .api-docs__switch {
   padding: 0 10px;
   font-weight: 600;
-  color: $color-primary-900;
-  border-radius: 3px;
+  color: $color-neutral-900;
   user-select: none;
 
   @include fixed-height(32px, 13px);
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -129,7 +129,7 @@
 }
 
 .api-docs__content {
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
 
 .api-docs__heading-wrapper {

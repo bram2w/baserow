@@ -1,3 +1,5 @@
+from typing import List
+
 from django.contrib.auth.models import AbstractUser
 from django.db import transaction
 from django.dispatch import receiver
@@ -39,6 +41,30 @@ def element_created(
     )
 
 
+@receiver(element_signals.elements_created)
+def elements_created(
+    sender, elements: List[Element], page: Page, user: AbstractUser, **kwargs
+):
+    transaction.on_commit(
+        lambda: broadcast_to_permitted_users.delay(
+            page.builder.workspace_id,
+            ListElementsPageOperationType.type,
+            BuilderPageObjectScopeType.type,
+            page.id,
+            {
+                "type": "elements_created",
+                "elements": [
+                    element_type_registry.get_serializer(
+                        element, ElementSerializer
+                    ).data
+                    for element in elements
+                ],
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
 @receiver(element_signals.element_updated)
 def element_updated(sender, element: Element, user: AbstractUser, **kwargs):
     transaction.on_commit(
@@ -72,6 +98,8 @@ def element_moved(
                 "type": "element_moved",
                 "element_id": element.id,
                 "before_id": before.id if before else None,
+                "parent_element_id": element.parent_element_id,
+                "place_in_container": element.place_in_container,
                 "page_id": element.page.id,
             },
             getattr(user, "web_socket_id", None),
@@ -108,6 +136,31 @@ def element_orders_recalculated(
                 "type": "element_orders_recalculated",
                 # A user might also not have access to the page itself
                 "page_id": generate_hash(page.id),
+            },
+            getattr(user, "web_socket_id", None),
+        )
+    )
+
+
+@receiver(element_signals.elements_moved)
+def elements_moved(
+    sender, page: Page, elements: List[Element], user: AbstractUser = None, **kwargs
+):
+    transaction.on_commit(
+        lambda: broadcast_to_permitted_users.delay(
+            page.builder.workspace_id,
+            ListElementsPageOperationType.type,
+            BuilderPageObjectScopeType.type,
+            page.id,
+            {
+                "type": "elements_moved",
+                "page_id": page.id,
+                "elements": [
+                    element_type_registry.get_serializer(
+                        element, ElementSerializer
+                    ).data
+                    for element in elements
+                ],
             },
             getattr(user, "web_socket_id", None),
         )

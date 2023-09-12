@@ -11,6 +11,12 @@ export default {
       downElement: null,
     }
   },
+  mounted() {
+    this.$bus.$on('close-modals', this.hide)
+  },
+  beforeDestroy() {
+    this.$bus.$off('close-modals', this.hide)
+  },
   destroyed() {
     window.removeEventListener('keyup', this.keyup)
   },
@@ -52,7 +58,11 @@ export default {
      * Hide the modal.
      */
     hide(emit = true) {
-      // This is a temporary fix. What happens is the model is opened by a context menu
+      if (!this.open) {
+        return
+      }
+
+      // This is a temporary fix. What happens is the modal is opened by a context menu
       // item and the user closes the modal, the element is first deleted and then the
       // click outside event of the context is fired. It then checks if the click was
       // inside one of his children, but because the modal element doesn't exists

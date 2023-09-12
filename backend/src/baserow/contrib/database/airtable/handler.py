@@ -573,7 +573,9 @@ class AirtableHandler:
         # Loop over all the tables and make a request for each table to obtain the raw
         # Airtable table data.
         tables = []
-        raw_tables = list(init_data["rawTables"].keys())
+        raw_tables = list(
+            init_data["singleApplicationScaffoldingData"]["tableById"].keys()
+        )
         for index, table_id in enumerate(
             progress.track(
                 represents_progress=99,

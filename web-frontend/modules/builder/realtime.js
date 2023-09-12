@@ -52,6 +52,7 @@ export const registerRealtimeEvents = (realtime) => {
     const selectedPage = store.getters['page/getSelected']
     if (selectedPage.id === data.element.page_id) {
       store.dispatch('element/forceCreate', {
+        page: selectedPage,
         element: data.element,
         beforeId: data.before_id,
       })
@@ -62,7 +63,19 @@ export const registerRealtimeEvents = (realtime) => {
     const selectedPage = store.getters['page/getSelected']
     if (selectedPage.id === data.page_id) {
       store.dispatch('element/forceDelete', {
+        page: selectedPage,
         elementId: data.element_id,
+      })
+    }
+  })
+
+  realtime.registerEvent('element_updated', ({ store }, { element }) => {
+    const selectedPage = store.getters['page/getSelected']
+    if (selectedPage.id === element.page_id) {
+      store.dispatch('element/forceUpdate', {
+        page: selectedPage,
+        element,
+        values: element,
       })
     }
   })
@@ -71,8 +84,11 @@ export const registerRealtimeEvents = (realtime) => {
     const selectedPage = store.getters['page/getSelected']
     if (selectedPage.id === data.page_id) {
       store.dispatch('element/forceMove', {
+        page: selectedPage,
         elementId: data.element_id,
         beforeElementId: data.before_id,
+        parentElementId: data.parent_element_id,
+        placeInContainer: data.place_in_container,
       })
     }
   })
@@ -88,4 +104,18 @@ export const registerRealtimeEvents = (realtime) => {
       }
     }
   )
+
+  realtime.registerEvent('elements_moved', ({ store, app }, { elements }) => {
+    elements.forEach((element) => {
+      const selectedPage = store.getters['page/getSelected']
+      store.dispatch('element/forceUpdate', {
+        page: selectedPage,
+        element,
+        values: {
+          order: element.order,
+          place_in_container: element.place_in_container,
+        },
+      })
+    })
+  })
 }

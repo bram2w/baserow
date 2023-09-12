@@ -31,7 +31,7 @@ export default {
       link: [
         {
           rel: 'canonical',
-          href: this.$env.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
+          href: this.$config.PUBLIC_WEB_FRONTEND_URL + this.$route.path,
         },
       ],
     }

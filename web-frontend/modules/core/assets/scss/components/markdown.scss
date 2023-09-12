@@ -3,12 +3,12 @@
     display: inline-block;
     font-size: 14px;
     padding: 3px 6px;
-    border-radius: 3px;
     background-color: $color-neutral-100;
+    @include rounded($rounded);
   }
 
   & p {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     margin-bottom: 20px;
     font-size: 13px;
     line-height: 140%;

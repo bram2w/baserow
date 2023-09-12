@@ -4,6 +4,7 @@ from .data_sources import urls as data_source_urls
 from .domains import urls as domain_urls
 from .elements import urls as element_urls
 from .pages import urls as page_urls
+from .theme import urls as theme_urls
 
 app_name = "baserow.contrib.builder.api"
 
@@ -20,6 +21,13 @@ paths_with_builder_id = [
         include(
             (domain_urls.urlpatterns_with_builder_id, page_urls.app_name),
             namespace="domains",
+        ),
+    ),
+    path(
+        "theme/",
+        include(
+            (theme_urls.urlpatterns_with_builder_id, theme_urls.app_name),
+            namespace="theme",
         ),
     ),
 ]

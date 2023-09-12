@@ -806,7 +806,7 @@ def test_admin_cannot_delete_last_provider(
     admin, token = enterprise_data_fixture.create_enterprise_admin_user_and_token()
     last_provider = enterprise_data_fixture.create_oauth_provider(type="github")
 
-    # but not he last one
+    # but they are not the last one
     last_provider_url = reverse(
         "api:enterprise:admin:auth_provider:item",
         kwargs={"auth_provider_id": last_provider.id},
@@ -846,7 +846,7 @@ def test_admin_cannot_disable_last_provider(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
-    # but not he last one
+    # but they are not the last one
     password_provider_url = reverse(
         "api:enterprise:admin:auth_provider:item",
         kwargs={"auth_provider_id": password_provider.id},

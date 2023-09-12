@@ -1,5 +1,11 @@
 <template>
-  <Context class="variables-context"> Variables </Context>
+  <Context
+    class="variables-context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+  >
+    Variables
+  </Context>
 </template>
 
 <script>

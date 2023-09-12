@@ -25,7 +25,11 @@
           >
             <i class="fas fa-ellipsis-h"></i>
           </a>
-          <Context ref="context">
+          <Context
+            ref="context"
+            :overflow-scroll="true"
+            :max-height-if-outside-viewport="true"
+          >
             <div class="api-token__key">
               <div class="api-token__key-name">
                 {{ $t('apiToken.tokenPrefix') }}

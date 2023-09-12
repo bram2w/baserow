@@ -11,10 +11,11 @@
 }
 
 .rich-text-editor__mention {
-  border-radius: 3px;
   padding: 0 2px;
   background-color: rgba(6, 46, 71, 0.08);
   font-weight: 600;
+
+  @include rounded($rounded);
 }
 
 .rich-text-editor__mention--current-user {
@@ -29,7 +30,7 @@
 
 .rich-text-editor__mention-dropdown {
   .dropdown__items {
-    bottom: 42px;
+    bottom: 1px;
     top: auto;
   }
 }

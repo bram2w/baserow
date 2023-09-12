@@ -8,9 +8,9 @@ from loguru import logger
 from rest_framework import serializers
 
 from baserow.api.search.serializers import SearchQueryParamSerializer
-from baserow.api.serializers import get_example_pagination_serializer_class
 from baserow.api.utils import get_serializer_class
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.models import RowHistory
 from baserow.contrib.database.rows.registries import row_metadata_registry
 
 
@@ -21,6 +21,15 @@ class RowSerializer(serializers.ModelSerializer):
             "order",
         )
         extra_kwargs = {"id": {"read_only": True}, "order": {"read_only": True}}
+
+
+def serialize_rows_for_response(rows, model, user_field_names=False, many=True):
+    return get_row_serializer_class(
+        model,
+        RowSerializer,
+        is_response=True,
+        user_field_names=user_field_names,
+    )(rows, many=many).data
 
 
 def get_row_serializer_class(
@@ -325,11 +334,6 @@ def remap_serialized_row_to_user_field_names(
     return new_row
 
 
-example_pagination_row_serializer_class = get_example_pagination_serializer_class(
-    get_example_row_serializer_class(example_type="get", user_field_names=True)
-)
-
-
 class MoveRowQueryParamsSerializer(serializers.Serializer):
     before_id = serializers.IntegerField(required=False)
 
@@ -395,3 +399,44 @@ class GetRowAdjacentSerializer(SearchQueryParamSerializer, serializers.Serialize
     user_field_names = serializers.BooleanField(required=False, default=False)
     previous = serializers.BooleanField(required=False, default=False)
     view_id = serializers.IntegerField(required=False)
+
+
+class RowHistoryUserSerializer(serializers.Serializer):
+    id = serializers.IntegerField(
+        source="user_id",
+        help_text="The id of the user.",
+    )
+    name = serializers.CharField(
+        source="user_name",
+        help_text="The first name of the user.",
+    )
+
+
+class RowHistorySerializer(serializers.ModelSerializer):
+    timestamp = serializers.DateTimeField(
+        source="action_timestamp",
+        help_text="The timestamp of the action that was performed.",
+    )
+    user = RowHistoryUserSerializer(
+        source="*", help_text="The user that performed the action."
+    )
+    before = serializers.JSONField(
+        source="before_values",
+        help_text="The mapping between field_ids and values for the row before the action was performed.",
+    )
+    after = serializers.JSONField(
+        source="after_values",
+        help_text="The mapping between field_ids and values for the row after the action was performed.",
+    )
+
+    class Meta:
+        model = RowHistory
+        fields = [
+            "id",
+            "action_type",
+            "user",
+            "timestamp",
+            "before",
+            "after",
+            "fields_metadata",
+        ]

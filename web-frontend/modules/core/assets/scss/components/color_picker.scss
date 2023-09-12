@@ -1,0 +1,78 @@
+.color-picker {
+  display: flex;
+}
+
+.color-picker__space {
+  position: relative;
+  flex: 208px 0 0;
+  width: 208px;
+  height: 208px;
+  overflow: hidden;
+  border: 1px solid $color-neutral-200;
+  background-image: linear-gradient(to top, #000, transparent),
+    linear-gradient(to right, #fff, transparent);
+
+  @include rounded($rounded-md);
+}
+
+.color-picker__thumb {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  transform: rotate(0);
+  margin-bottom: calc(-1 * 16px / 2);
+
+  &.color-picker__thumb--negative-top-margin {
+    margin-top: calc(-1 * 16px / 2);
+  }
+
+  &.color-picker__thumb--negative-left-margin {
+    margin-left: calc(-1 * 16px / 2);
+  }
+
+  &.color-picker__thumb--negative-bottom-margin {
+    margin-bottom: calc(-1 * 16px / 2);
+  }
+}
+
+.color-picker__slider {
+  position: relative;
+  flex: 18px 0 0;
+  margin-left: 22px;
+  overflow: hidden;
+  border: 1px solid $color-neutral-200;
+
+  @include rounded($rounded-md);
+
+  &.color-picker__slider--hue {
+    background-image: linear-gradient(
+      to top,
+      #f00 calc(100% * 0 / 360),
+      #ff0 calc(100% * 60 / 360),
+      #0f0 calc(100% * 120 / 360),
+      #0ff calc(100% * 180 / 360),
+      #00f calc(100% * 240 / 360),
+      #f0f calc(100% * 300 / 360),
+      #f00 calc(100% * 360 / 360)
+    );
+  }
+
+  &.color-picker__slider--alpha {
+    background-size: 12px 12px;
+    background-image: conic-gradient(
+      $white 90deg,
+      $color-neutral-300 90deg 180deg,
+      $white 180deg 270deg,
+      $color-neutral-300 270deg
+    );
+
+    &::before {
+      @include absolute(0, 0, 0, 0);
+
+      content: '';
+      background-image: linear-gradient(to top, transparent, var(--vacp-color));
+    }
+  }
+}

@@ -28,11 +28,16 @@ class CoreConfig(AppConfig):
         # GroupDeprecation
         trash_item_type_registry.register(GroupTrashableItemType())
 
-        from baserow.core.formula.registries import (
-            register_runtime_formula_function_types,
+        from baserow.core.formula.registries import formula_runtime_function_registry
+        from baserow.core.formula.runtime_formula_types import (
+            RuntimeAdd,
+            RuntimeConcat,
+            RuntimeGet,
         )
 
-        register_runtime_formula_function_types()
+        formula_runtime_function_registry.register(RuntimeConcat())
+        formula_runtime_function_registry.register(RuntimeGet())
+        formula_runtime_function_registry.register(RuntimeAdd())
 
         from baserow.core.permission_manager import (
             BasicPermissionManagerType,
@@ -269,7 +274,9 @@ class CoreConfig(AppConfig):
         auth_provider_type_registry.register(PasswordAuthProviderType())
 
         import baserow.core.notifications.receivers  # noqa: F401
+        import baserow.core.notifications.tasks  # noqa: F401
         from baserow.core.notification_types import (
+            BaserowVersionUpgradeNotificationType,
             WorkspaceInvitationAcceptedNotificationType,
             WorkspaceInvitationCreatedNotificationType,
             WorkspaceInvitationRejectedNotificationType,
@@ -285,6 +292,10 @@ class CoreConfig(AppConfig):
         notification_type_registry.register(
             WorkspaceInvitationRejectedNotificationType()
         )
+        notification_type_registry.register(BaserowVersionUpgradeNotificationType())
+
+        # Must import the Posthog signal, otherwise it won't work.
+        import baserow.core.posthog  # noqa: F403, F401
 
         self._setup_health_checks()
 

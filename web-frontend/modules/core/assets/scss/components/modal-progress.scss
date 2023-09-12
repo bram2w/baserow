@@ -9,16 +9,16 @@
   @include fixed-height(9px, 12px);
 
   width: 100%;
-  border-radius: 5px;
   background-color: $color-neutral-100;
   margin-right: 30px;
+  @include rounded($rounded-md);
 }
 
 .modal-progress__loading-bar-inner {
   background-color: $color-success-300;
-  border-radius: 5px;
   height: 100%;
   transition-timing-function: linear;
+  @include rounded($rounded-md);
 }
 
 .modal-progress__status-text {

@@ -41,7 +41,35 @@ class ElementType(
         :return:
         """
 
+        from baserow.contrib.builder.elements.handler import ElementHandler
+
+        parent_element_id = values.get(
+            "parent_element_id", getattr(instance, "parent_element_id", None)
+        )
+        place_in_container = values.get("place_in_container", None)
+
+        if parent_element_id is not None and place_in_container is not None:
+            parent_element = ElementHandler().get_element(parent_element_id)
+            parent_element_type = element_type_registry.get_by_model(parent_element)
+            parent_element_type.validate_place_in_container(
+                place_in_container, parent_element
+            )
+
         return values
+
+    def get_property_for_serialization(self, element: Element, prop_name: str):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "type":
+            return self.type
+
+        if prop_name == "order":
+            return str(element.order)
+
+        return getattr(element, prop_name)
 
     def export_serialized(
         self,
@@ -55,15 +83,13 @@ class ElementType(
         :return: The exported element as serialized dict.
         """
 
-        other_properties = {key: getattr(element, key) for key in self.allowed_fields}
+        property_names = self.SerializedDict.__annotations__.keys()
 
         serialized = self.SerializedDict(
-            id=element.id,
-            type=self.type,
-            order=element.order,
-            style_padding_top=element.style_padding_top,
-            style_padding_bottom=element.style_padding_bottom,
-            **other_properties
+            **{
+                key: self.get_property_for_serialization(element, key)
+                for key in property_names
+            }
         )
 
         return serialized

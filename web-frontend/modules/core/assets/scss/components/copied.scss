@@ -4,7 +4,6 @@
   line-height: 32px;
   background-color: rgba(0, 0, 0, 0.8);
   color: $white;
-  border-radius: 16px;
   text-align: center;
   font-size: 12px;
   font-weight: 400;
@@ -12,6 +11,7 @@
   margin-top: -16px;
 
   @include absolute(50%, auto, auto, 50%);
+  @include rounded($rounded-2xl);
 
   &.copied--show {
     display: block;

@@ -12,6 +12,7 @@ from baserow_premium.row_comments.operations import (
 from baserow.contrib.builder.data_sources.operations import (
     CreateDataSourceOperationType,
     DeleteDataSourceOperationType,
+    DispatchDataSourceOperationType,
     ListDataSourcesPageOperationType,
     OrderDataSourcesPageOperationType,
     ReadDataSourceOperationType,
@@ -46,6 +47,7 @@ from baserow.contrib.builder.pages.operations import (
     ReadPageOperationType,
     UpdatePageOperationType,
 )
+from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -70,6 +72,7 @@ from baserow.contrib.database.rows.operations import (
     DeleteDatabaseRowOperationType,
     MoveRowDatabaseRowOperationType,
     ReadAdjacentRowDatabaseRowOperationType,
+    ReadDatabaseRowHistoryOperationType,
     ReadDatabaseRowOperationType,
     RestoreDatabaseRowOperationType,
     UpdateDatabaseRowOperationType,
@@ -176,6 +179,9 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadWorkspaceTrashOperationType,
 )
+from baserow_enterprise.audit_log.operations import (
+    ListWorkspaceAuditLogEntriesOperationType,
+)
 from baserow_enterprise.role.constants import (
     ADMIN_ROLE_UID,
     BUILDER_ROLE_UID,
@@ -271,6 +277,7 @@ default_roles[COMMENTER_ROLE_UID].extend(
         ReadRowCommentsOperationType,
         RestoreRowCommentOperationType,
         UpdateRowCommentsOperationType,
+        ReadDatabaseRowHistoryOperationType,
     ]
 )
 default_roles[EDITOR_ROLE_UID].extend(
@@ -294,6 +301,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         CreatePageOperationType,
         DeletePageOperationType,
         UpdatePageOperationType,
+        UpdateThemeOperationType,
         DuplicatePageOperationType,
         CreateTableDatabaseTableOperationType,
         UpdateDatabaseTableOperationType,
@@ -370,6 +378,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         OrderDataSourcesPageOperationType,
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
+        DispatchDataSourceOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(
@@ -405,5 +414,6 @@ default_roles[ADMIN_ROLE_UID].extend(
         ListSnapshotsApplicationOperationType,
         DeleteApplicationSnapshotOperationType,
         RestoreDomainOperationType,
+        ListWorkspaceAuditLogEntriesOperationType,
     ]
 )

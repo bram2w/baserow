@@ -27,7 +27,6 @@
 
 .kanban-view__collapsed-stack {
   background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -37,6 +36,7 @@
   transform-origin: left top 0;
 
   @include absolute(0, auto, auto, 0);
+  @include rounded($rounded-xl);
 
   &:hover {
     text-decoration: none;
@@ -46,11 +46,12 @@
 
 .kanban-view__stack {
   background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 12px;
   max-height: 100%;
   width: 320px;
   display: flex;
   flex-direction: column;
+
+  @include rounded($rounded-xl);
 }
 
 .kanban-view__stack-head {
@@ -96,12 +97,12 @@
 .kanban-view__count {
   flex: 0 0;
   background-color: $color-neutral-200;
-  border-radius: 3px;
   color: $color-neutral-700;
   padding: 0 8px;
   margin-right: 10px;
 
   @include fixed-height(22px, 12px);
+  @include rounded($rounded);
 }
 
 .kanban-view__options {
@@ -166,7 +167,8 @@
 
   &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging):hover {
     cursor: pointer;
-    box-shadow: 0 1px 3px 0 rgba($black, 0.32);
+
+    @include add-elevation($elevation-medium);
   }
 }
 
@@ -199,8 +201,9 @@
   margin: 20px auto;
   width: 320px;
   border: solid 1px $color-neutral-200;
-  border-radius: 6px;
   background-color: $white;
+
+  @include rounded($rounded-md);
 }
 
 .kanban-view__stacked-by {

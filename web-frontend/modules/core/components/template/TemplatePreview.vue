@@ -91,10 +91,10 @@ export default {
         const { data } = await ApplicationService(this.$client).fetchAll(
           template.workspace_id
         )
-        data.forEach((application) => {
+
+        this.applications = data.map((application) =>
           populateApplication(application, this.$registry)
-        })
-        this.applications = data
+        )
 
         // Check if there is an application that can give us an initial page. The
         // database application type would for example return the first table as page.

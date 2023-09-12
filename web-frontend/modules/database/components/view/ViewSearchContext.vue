@@ -1,6 +1,8 @@
 <template>
   <Context
     :class="{ 'context--loading-overlay': view._.loading }"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
     @shown="focus"
   >
     <form class="context__form" @submit.prevent="searchIfChanged">

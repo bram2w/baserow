@@ -54,7 +54,6 @@ class CorePermissionManagerType(PermissionManagerType):
         for check in checks:
             if check.operation_name in self.ALWAYS_ALLOWED_OPERATIONS:
                 result[check] = True
-
         return result
 
     def get_permissions_object(self, actor, workspace=None):

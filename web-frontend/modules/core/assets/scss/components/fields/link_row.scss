@@ -10,10 +10,10 @@
   padding: 0 5px;
   margin-bottom: 5px;
   background-color: $color-primary-100;
-  border-radius: 3px;
   display: flex;
 
   @include fixed-height(22px, 13px);
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-right: 5px;
@@ -24,7 +24,7 @@
   @extend %ellipsis;
 
   max-width: 200px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -42,7 +42,7 @@
 }
 
 .field-link-row__remove {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   margin-left: 5px;
   font-size: 11px;
   padding: 0 2px;

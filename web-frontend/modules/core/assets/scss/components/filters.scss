@@ -12,7 +12,7 @@
 }
 
 .filters__none-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   margin-bottom: 10px;
 }
@@ -32,9 +32,9 @@
   // 142px = 20 + 72 + 10 * 4 (gaps)
   grid-template-columns: 20px 72px calc(50% - 132px) 22% 28%;
   padding: 6px 0;
-  border-radius: 3px;
   margin-left: 5px;
   column-gap: 10px;
+  @include rounded($rounded);
 
   &:not(:last-child) {
     margin-bottom: 6px;
@@ -52,7 +52,7 @@
 }
 
 .filters__remove {
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
 
   &:hover {
@@ -106,8 +106,8 @@
 
 .filters__value-rating {
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   padding: 6px 12px;
+  @include rounded($rounded);
 }
 
 .filters__value-link-row {
@@ -115,13 +115,13 @@
 
   display: block;
   position: relative;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   line-height: 30px;
   height: 30px;
   border: solid 1px $color-neutral-400;
-  border-radius: 3px;
   padding: 0 10px;
   background-color: $white;
+  @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
@@ -129,7 +129,7 @@
   }
 
   &.filters__value-link-row--disabled {
-    color: $color-primary-900;
+    color: $color-neutral-900;
     background-color: $color-neutral-50;
 
     &:hover {
@@ -150,7 +150,7 @@
 }
 
 .filters__value-link-row-choose {
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
 }
 
@@ -167,6 +167,6 @@
 
   &:hover {
     text-decoration: none;
-    color: $color-primary-900;
+    color: $color-neutral-900;
   }
 }

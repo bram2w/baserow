@@ -1,8 +1,9 @@
 .box {
   background-color: $white;
-  border-radius: 6px;
-  box-shadow: 0 3px 10px 0 rgba($black, 0.16);
   padding: 32px 40px;
+
+  @include add-elevation($elevation-medium);
+  @include rounded($rounded-md);
 }
 
 .box__head {
@@ -53,5 +54,5 @@
 }
 
 .box__message-text {
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }

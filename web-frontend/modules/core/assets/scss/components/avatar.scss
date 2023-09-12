@@ -9,6 +9,7 @@
   border: 1px solid transparent;
 
   @include center-text(36px, 15px);
+  @include rounded($rounded-md);
 }
 
 .avatar--size-large {
@@ -24,7 +25,7 @@
 }
 
 .avatar--rounded {
-  border-radius: 50%;
+  @include rounded($rounded-3xl);
 }
 
 .avatar__image {
@@ -47,5 +48,5 @@
 .avatar--ghost {
   background-color: $white;
   border-color: $color-neutral-400;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }

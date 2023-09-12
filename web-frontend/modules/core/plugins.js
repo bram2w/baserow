@@ -36,7 +36,7 @@ export class BaserowPlugin extends Registerable {
    * Every registered plugin can display an additional item in the sidebar within
    * the workspace context.
    */
-  getSidebarWorkspaceComponent(workspace) {
+  getSidebarWorkspaceComponents(workspace) {
     return null
   }
 

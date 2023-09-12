@@ -15,7 +15,7 @@
         class="api-docs__content"
         :content="
           $t('apiDocsUploadFileViaURL.description', {
-            PUBLIC_BACKEND_URL: `${$env.PUBLIC_BACKEND_URL}`,
+            PUBLIC_BACKEND_URL: `${$config.PUBLIC_BACKEND_URL}`,
           })
         "
       />

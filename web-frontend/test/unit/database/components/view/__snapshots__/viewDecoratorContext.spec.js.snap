@@ -2,7 +2,8 @@
 
 exports[`GridViewRows component with decoration Default component 1`] = `
 <div
-  class="context"
+  class="context context--overflow-scroll"
+  style="max-height: none;"
 >
   <div
     class="decorator-list"
@@ -59,7 +60,8 @@ exports[`GridViewRows component with decoration Should show cant add decorator t
     </div>
   </div>
   <div
-    class="context"
+    class="context context--overflow-scroll"
+    style="max-height: none;"
   >
     <div
       class="decorator-list"
@@ -117,7 +119,8 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
     </div>
   </div>
   <div
-    class="context"
+    class="context context--overflow-scroll"
+    style="max-height: none;"
   >
     <div
       class="decorator-list"
@@ -170,7 +173,8 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
 
 exports[`GridViewRows component with decoration View with decoration configured 1`] = `
 <div
-  class="context"
+  class="context context--overflow-scroll"
+  style="max-height: none;"
 >
   <div
     class="decorator-context"

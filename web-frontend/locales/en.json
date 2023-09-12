@@ -32,7 +32,8 @@
         "activate": "Activate",
         "deactivate": "Deactivate",
         "download": "Download",
-        "copyToClipboard": "Copy to clipboard"
+        "copyToClipboard": "Copy to clipboard",
+        "reset": "Reset"
     },
     "adminType": {
         "settings": "Settings",
@@ -51,6 +52,7 @@
     "settingType": {
         "account": "Account",
         "password": "Password",
+        "emailNotifications": "Email notifications",
         "tokens": "Database tokens",
         "deleteAccount": "Delete account"
     },
@@ -67,7 +69,10 @@
         "minLength": "A minimum of {min} characters is required here.",
         "maxLength": "A maximum of {max} characters is allowed here.",
         "minMaxLength": "A minimum of {min} and a maximum of {max} characters is allowed here.",
-        "requiredField": "This field is required."
+        "requiredField": "This field is required.",
+        "integerField": "The field must be an integer.",
+        "minValueField": "The field must be greater than or equal to {min}.",
+        "maxValueField": "The field must be less than or equal to {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -168,6 +173,7 @@
         "isWithinWeeks": "is within weeks",
         "isWithinMonths": "is within months",
         "lowerThan": "lower than",
+        "isEvenAndWhole": "is even and whole",
         "lengthIsLowerThan": "length is lower than",
         "hasFileType": "has file type"
     },
@@ -410,7 +416,9 @@
         "whenNanDescription": "Returns the first argument if it's not 'NaN'. Returns the second argument if the first argument is 'NaN'",
         "absDescription": "Returns the absolute value for the argument number provided.",
         "ceilDescription": "Returns the smallest integer that is greater than or equal the argument number provided.",
-        "floorDescription": "Returns the largest integer that is less than or equal the argument number provided."
+        "floorDescription": "Returns the largest integer that is less than or equal the argument number provided.",
+        "encodeUriDescription": "Returns a encoded URI string from the argument provided.",
+        "encodeUriComponentDescription": "Returns a encoded URI string component from the argument provided."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

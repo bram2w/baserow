@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM openjdk:17.0.2
 
 ARG UID
 ENV UID=${UID:-1000}
@@ -18,6 +18,6 @@ WORKDIR /workspace
 ENV ANTLR_VERSION 4.9
 ENV CLASSPATH .:/workspace/antlr-${ANTLR_VERSION}-complete.jar:$CLASSPATH
 
-RUN wget -q http://www.antlr.org/download/antlr-${ANTLR_VERSION}-complete.jar \
+RUN curl -O https://www.antlr.org/download/antlr-${ANTLR_VERSION}-complete.jar \
     && mv antlr-${ANTLR_VERSION}-complete.jar antlr.jar \
     && chmod +x antlr.jar

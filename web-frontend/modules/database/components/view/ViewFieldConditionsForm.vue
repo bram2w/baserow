@@ -21,11 +21,11 @@
       <span v-else class="filters__remove"></span>
       <div class="filters__operator">
         <span v-if="index === 0">{{ $t('viewFilterContext.where') }}</span>
-        <Dropdown
+        <FixedItemsDropdown
           v-if="index === 1 && !disableFilter"
           :value="filterType"
           :show-search="false"
-          class="dropdown--floating dropdown--tiny"
+          class="dropdown--tiny"
           @input="selectBooleanOperator($event)"
         >
           <DropdownItem
@@ -36,7 +36,7 @@
             :name="$t('viewFilterContext.or')"
             value="OR"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
         <span v-if="index > 1 || (index > 0 && disableFilter)">
           {{
             filterType === 'AND'
@@ -46,10 +46,10 @@
         </span>
       </div>
       <div class="filters__field">
-        <Dropdown
+        <FixedItemsDropdown
           :value="filter.field"
           :disabled="disableFilter"
-          class="dropdown--floating dropdown--tiny"
+          class="dropdown--tiny"
           @input="updateFilter(filter, { field: $event })"
         >
           <DropdownItem
@@ -59,13 +59,13 @@
             :value="field.id"
             :disabled="!hasCompatibleFilterTypes(field, filterTypes)"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
       </div>
       <div class="filters__type">
-        <Dropdown
+        <FixedItemsDropdown
           :disabled="disableFilter"
           :value="filter.type"
-          class="dropdown--floating dropdown--tiny"
+          class="dropdown--tiny"
           @input="updateFilter(filter, { type: $event })"
         >
           <DropdownItem
@@ -74,7 +74,7 @@
             :name="fType.getName()"
             :value="fType.type"
           ></DropdownItem>
-        </Dropdown>
+        </FixedItemsDropdown>
       </div>
       <div class="filters__value">
         <component
@@ -107,10 +107,12 @@
 </template>
 
 <script>
+import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 
 export default {
   name: 'ViewFieldConditionsForm',
+  components: { FixedItemsDropdown },
   props: {
     filters: {
       type: Array,

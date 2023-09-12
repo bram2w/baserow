@@ -6,6 +6,7 @@ from typing import Dict, Optional
 from unittest.mock import patch
 
 from django.conf import settings as django_settings
+from django.core.files.storage import Storage
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
@@ -119,6 +120,15 @@ def mutable_permission_manager_registry():
     before = permission_manager_type_registry.registry.copy()
     yield permission_manager_type_registry
     permission_manager_type_registry.registry = before
+
+
+@pytest.fixture
+def mutable_notification_type_registry():
+    from baserow.core.notifications.registries import notification_type_registry
+
+    before = notification_type_registry.registry.copy()
+    yield notification_type_registry
+    notification_type_registry.registry = before
 
 
 @pytest.fixture()
@@ -532,3 +542,17 @@ def enable_singleton_testing(settings):
         lambda *a, **kw: FakeRedis(server=fake_redis_server),
     ):
         yield
+
+
+@pytest.fixture
+def stubbed_storage(monkeypatch):
+    class StubbedStorage(Storage):
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def save(self, name, content, **kwargs):
+            return name
+
+    storage_instance = StubbedStorage()
+    monkeypatch.setattr("django.core.files.storage.default_storage", storage_instance)
+    return storage_instance

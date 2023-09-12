@@ -1,5 +1,10 @@
 <template>
-  <Context ref="context" class="hidings" @shown="shown()">
+  <Context
+    ref="context"
+    class="hidings"
+    :max-height-if-outside-viewport="true"
+    @shown="shown()"
+  >
     <div class="hidings__head">
       <div v-if="allowCoverImageField" class="control hidings__cover">
         <label class="control__label control__label--small">{{

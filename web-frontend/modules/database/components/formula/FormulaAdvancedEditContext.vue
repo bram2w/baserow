@@ -1,57 +1,59 @@
 <template>
-  <Context ref="editContext">
-    <div class="formula-field">
-      <div class="formula-field__input">
-        <AutoExpandableTextarea
-          ref="textAreaFormulaInput"
-          :value="formula"
-          class="formula-field__input-formula"
-          :placeholder="
-            $t('formulaAdvancedEditContext.textAreaFormulaInputPlaceholder')
-          "
-          @input="formulaChanged"
-          @blur="$emit('blur', $event)"
-          @click="recalcAutoComplete"
-          @keyup="recalcAutoComplete"
-          @keydown.tab="doAutoCompleteAfterTab"
-          @keydown.enter.exact.prevent="
-            $refs.editContext.hide()
-            $emit('hidden', $event)
-          "
-        ></AutoExpandableTextarea>
+  <Context
+    ref="editContext"
+    :max-height-if-outside-viewport="true"
+    class="formula-field"
+  >
+    <div class="formula-field__input">
+      <AutoExpandableTextarea
+        ref="textAreaFormulaInput"
+        :value="formula"
+        class="formula-field__input-formula"
+        :placeholder="
+          $t('formulaAdvancedEditContext.textAreaFormulaInputPlaceholder')
+        "
+        @input="formulaChanged"
+        @blur="$emit('blur', $event)"
+        @click="recalcAutoComplete"
+        @keyup="recalcAutoComplete"
+        @keydown.tab="doAutoCompleteAfterTab"
+        @keydown.enter.exact.prevent="
+          $refs.editContext.hide()
+          $emit('hidden', $event)
+        "
+      ></AutoExpandableTextarea>
+    </div>
+    <div v-if="error" class="formula-field__input-error">{{ error }}</div>
+    <div class="formula-field__body">
+      <div class="formula-field__items">
+        <FormulaFieldItemGroup
+          :filtered-items="filteredFields"
+          :unfiltered-items="fields"
+          :title="$t('formulaAdvancedEditContext.fields')"
+          @hover-item="selectItem"
+          @click-item="doAutoComplete(null, $event)"
+        >
+        </FormulaFieldItemGroup>
+        <FormulaFieldItemGroup
+          :filtered-items="filteredFunctions"
+          :unfiltered-items="functions"
+          :title="$t('formulaAdvancedEditContext.functions')"
+          @hover-item="selectItem"
+          @click-item="doAutoComplete($event, null)"
+        >
+        </FormulaFieldItemGroup>
+        <FormulaFieldItemGroup
+          :filtered-items="filteredOperators"
+          :unfiltered-items="unfilteredOperators"
+          :title="$t('formulaAdvancedEditContext.operators')"
+          :show-operator="true"
+          @hover-item="selectItem"
+          @click-item="doAutoComplete($event, null)"
+        >
+        </FormulaFieldItemGroup>
       </div>
-      <div v-if="error" class="formula-field__input-error">{{ error }}</div>
-      <div class="formula-field__body">
-        <div class="formula-field__items">
-          <FormulaFieldItemGroup
-            :filtered-items="filteredFields"
-            :unfiltered-items="fields"
-            :title="$t('formulaAdvancedEditContext.fields')"
-            @hover-item="selectItem"
-            @click-item="doAutoComplete(null, $event)"
-          >
-          </FormulaFieldItemGroup>
-          <FormulaFieldItemGroup
-            :filtered-items="filteredFunctions"
-            :unfiltered-items="functions"
-            :title="$t('formulaAdvancedEditContext.functions')"
-            @hover-item="selectItem"
-            @click-item="doAutoComplete($event, null)"
-          >
-          </FormulaFieldItemGroup>
-          <FormulaFieldItemGroup
-            :filtered-items="filteredOperators"
-            :unfiltered-items="unfilteredOperators"
-            :title="$t('formulaAdvancedEditContext.operators')"
-            :show-operator="true"
-            @hover-item="selectItem"
-            @click-item="doAutoComplete($event, null)"
-          >
-          </FormulaFieldItemGroup>
-        </div>
-        <FormulaFieldItemDescription :selected-item="selectedItem">
-        </FormulaFieldItemDescription>
-      </div>
+      <FormulaFieldItemDescription :selected-item="selectedItem">
+      </FormulaFieldItemDescription>
     </div>
   </Context>
 </template>
@@ -63,7 +65,7 @@ import context from '@baserow/modules/core/mixins/context'
 import {
   autocompleteFormula,
   calculateFilteredFunctionsAndFieldsBasedOnCursorLocation,
-} from '@baserow/formula/autocompleter/formulaAutocompleter'
+} from '@baserow/modules/core/formula/autocompleter/formulaAutocompleter'
 import FormulaFieldItemGroup from '@baserow/modules/database/components/formula/FormulaFieldItemGroup'
 import FormulaFieldItemDescription from '@baserow/modules/database/components/formula/FormulaFieldItemDescription'
 

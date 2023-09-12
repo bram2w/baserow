@@ -79,15 +79,16 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.validators import UnicodeRegexValidator
+from baserow.core.db import collate_expression
 from baserow.core.fields import SyncedDateTimeField
+from baserow.core.formula import BaserowFormulaException
+from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 from baserow.core.handler import CoreHandler
 from baserow.core.models import UserFile, WorkspaceUser
 from baserow.core.registries import ImportExportConfig
 from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
-from baserow.formula import BaserowFormulaException
-from baserow.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
 
 from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY
@@ -168,6 +169,20 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import GeneratedTableModel
+
+
+class CollationSortMixin:
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        field_expr = collate_expression(F(field_name))
+
+        if order_direction == "ASC":
+            field_order_by = field_expr.asc(nulls_first=True)
+        else:
+            field_order_by = field_expr.desc(nulls_last=True)
+
+        return OptionallyAnnotatedOrderBy(order=field_order_by, can_be_indexed=True)
 
 
 class TextFieldMatchingRegexFieldType(FieldType, ABC):
@@ -289,7 +304,7 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
         return BaserowFormulaCharType(nullable=True)
 
 
-class TextFieldType(FieldType):
+class TextFieldType(CollationSortMixin, FieldType):
     type = "text"
     model_class = TextField
     allowed_fields = ["text_default"]
@@ -329,8 +344,12 @@ class TextFieldType(FieldType):
     ) -> TextField:
         return TextField()
 
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
-class LongTextFieldType(FieldType):
+
+class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
 
@@ -365,8 +384,12 @@ class LongTextFieldType(FieldType):
     ) -> "LongTextField":
         return LongTextField()
 
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
-class URLFieldType(TextFieldMatchingRegexFieldType):
+
+class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
     type = "url"
     model_class = URLField
 
@@ -379,6 +402,10 @@ class URLFieldType(TextFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.url()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class NumberFieldType(FieldType):
@@ -516,6 +543,20 @@ class NumberFieldType(FieldType):
         return (old_field.number_decimal_places > new_number_decimal_places) or (
             old_field.number_negative and not new_number_negative
         )
+
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        """
+        Serializes the metadata for the row history.
+        """
+
+        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+
+        return {
+            **base,
+            "number_decimal_places": field.number_decimal_places,
+        }
 
 
 class RatingFieldType(FieldType):
@@ -1222,6 +1263,7 @@ class LinkRowFieldType(FieldType):
     _can_order_by = False
     can_be_primary_field = False
     can_get_unique_values = False
+    is_many_to_many_field = True
 
     def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
         remote_field = queryset.model._meta.get_field(field.db_column).remote_field
@@ -1609,6 +1651,7 @@ class LinkRowFieldType(FieldType):
                 related_model = instance.link_row_table.get_model(
                     manytomany_models=model.baserow_m2m_models
                 )
+                model.baserow_m2m_models[instance.link_row_table_id] = related_model
 
         instance._related_model = related_model
         related_name = f"reversed_field_{instance.id}"
@@ -1642,12 +1685,6 @@ class LinkRowFieldType(FieldType):
 
         model_field = model._meta.get_field(field_name)
         through_model = model_field.remote_field.through
-
-        # this permits to django to find the reverse relation in the _relation_tree.
-        # Look into django.db.models.options.py - _populate_directed_relation_graph
-        # for more information.
-        model._meta.apps.add_models(model, related_model)
-        related_model._meta.apps.add_models(model, related_model)
 
         # Trigger the newly created pending operations of all the models related to the
         # created ManyToManyField. They need to be called manually because normally
@@ -2202,7 +2239,7 @@ class LinkRowFieldType(FieldType):
         )
 
 
-class EmailFieldType(CharFieldMatchingRegexFieldType):
+class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     type = "email"
     model_class = EmailField
 
@@ -2229,6 +2266,10 @@ class EmailFieldType(CharFieldMatchingRegexFieldType):
 
     def random_value(self, instance, fake, cache):
         return fake.email()
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return collate_expression(Value(value))
 
 
 class FileFieldType(FieldType):
@@ -2595,7 +2636,8 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> int:
-        return getattr(row, field.db_column)
+        value = getattr(row, field.db_column)
+        return value
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -2787,13 +2829,15 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         self, field, field_name, order_direction
     ) -> OptionallyAnnotatedOrderBy:
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the select option value and not in the id which is
         stored in the table. This method generates a Case expression which maps the id
         to the correct position.
         """
 
-        order = F(f"{field_name}__value")
+        name = f"{field_name}__value"
+        order = collate_expression(F(name))
+
         if order_direction == "ASC":
             order = order.asc(nulls_first=True)
         else:
@@ -2854,6 +2898,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     type = "multiple_select"
     model_class = MultipleSelectField
     can_get_unique_values = False
+    is_many_to_many_field = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -2871,7 +2916,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> str:
         related_objects = getattr(row, field.db_column)
         values = [related_object.value for related_object in related_objects.all()]
-        return list_to_comma_separated_string(values)
+        value = list_to_comma_separated_string(values)
+        return value
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -3033,7 +3079,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_export_value(self, value, field_object, rich_value=False):
         if value is None:
-            return value if rich_value else ""
+            return [] if rich_value else ""
 
         result = [item.value for item in value.all()]
 
@@ -3163,7 +3209,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
     def get_order(self, field, field_name, order_direction):
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the select option value and not in the id which is
         stored in the table. This method generates a Case expression which maps the id
         to the correct position.
@@ -3172,8 +3218,8 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         sort_column_name = f"{field_name}_agg_sort"
         query = Coalesce(StringAgg(f"{field_name}__value", ","), Value(""))
         annotation = {sort_column_name: query}
+        order = collate_expression(F(sort_column_name))
 
-        order = F(sort_column_name)
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
         else:
@@ -3737,6 +3783,20 @@ class FormulaFieldType(ReadOnlyFieldType):
     def can_represent_date(self, field: "Field") -> bool:
         return self.to_baserow_formula_type(field.specific).can_represent_date
 
+    def get_permission_error_when_user_changes_field_to_depend_on_forbidden_field(
+        self, user: AbstractUser, changed_field: Field, forbidden_field: Field
+    ) -> Exception:
+        from baserow.contrib.database.formula import (
+            InvalidFormulaType,
+            get_invalid_field_and_table_formula_error,
+        )
+
+        return InvalidFormulaType(
+            get_invalid_field_and_table_formula_error(
+                forbidden_field.name, forbidden_field.table.name
+            )
+        )
+
 
 class CountFieldType(FormulaFieldType):
     type = "count"
@@ -4253,6 +4313,12 @@ class MultipleCollaboratorsFieldType(FieldType):
     model_class = MultipleCollaboratorsField
     can_get_unique_values = False
     can_be_in_form_view = False
+    allowed_fields = ["notify_user_when_added"]
+    serializer_field_names = ["notify_user_when_added"]
+    serializer_field_overrides = {
+        "notify_user_when_added": serializers.BooleanField(required=False)
+    }
+    is_many_to_many_field = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -4510,7 +4576,7 @@ class MultipleCollaboratorsFieldType(FieldType):
 
     def get_order(self, field, field_name, order_direction):
         """
-        If the user wants to sort the results he expects them to be ordered
+        If the user wants to sort the results they expect them to be ordered
         alphabetically based on the user's name and not in the id which is
         stored in the table. This method generates a Case expression which maps
         the id to the correct position.
@@ -4520,7 +4586,8 @@ class MultipleCollaboratorsFieldType(FieldType):
         query = Coalesce(StringAgg(f"{field_name}__first_name", ""), Value(""))
         annotation = {sort_column_name: query}
 
-        order = F(sort_column_name)
+        order = collate_expression(F(sort_column_name))
+
         if order_direction == "DESC":
             order = order.desc(nulls_first=True)
         else:
@@ -4531,4 +4598,5 @@ class MultipleCollaboratorsFieldType(FieldType):
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> any:
         related_objects = getattr(row, field.db_column)
         values = [related_object.first_name for related_object in related_objects.all()]
-        return list_to_comma_separated_string(values)
+        value = list_to_comma_separated_string(values)
+        return value

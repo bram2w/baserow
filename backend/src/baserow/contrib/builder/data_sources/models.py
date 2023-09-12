@@ -22,7 +22,7 @@ class DataSource(
 ):
     """
     A data source is a link between a page and a service that provides data. It expose
-    this data to the related page for expression interpretation.
+    this data to the related page for formula interpretation.
     """
 
     name = models.CharField(

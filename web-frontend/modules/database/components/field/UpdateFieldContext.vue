@@ -1,5 +1,10 @@
 <template>
-  <Context ref="context">
+  <Context
+    ref="context"
+    class="field-form-context"
+    :overflow-scroll="true"
+    :max-height-if-outside-viewport="true"
+  >
     <FieldForm
       ref="form"
       :table="table"

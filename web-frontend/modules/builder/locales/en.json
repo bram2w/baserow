@@ -51,7 +51,8 @@
         "lastPublished": "Last published:"
     },
     "elementsContext": {
-        "searchPlaceholder": "Search elements"
+        "searchPlaceholder": "Search elements",
+        "noElements": "No elements found"
     },
     "elementType": {
         "heading": "Heading",
@@ -61,7 +62,11 @@
         "link": "Link",
         "linkDescription": "A link to page/URL",
         "image": "Image",
-        "imageDescription": "Display image"
+        "imageDescription": "Display image",
+        "inputText": "Text input",
+        "inputTextDescription": "A text input field",
+        "column": "Columns",
+        "columnDescription": "Columns container"
     },
     "addElementButton": {
         "label": "Element"
@@ -72,7 +77,9 @@
     },
     "elementMenu": {
         "moveUp": "Move up",
-        "moveDown": "Move down"
+        "moveDown": "Move down",
+        "moveLeft": "Move left",
+        "moveRight": "Move right"
     },
     "duplicatePageJobType": {
         "duplicating": "Duplicating",
@@ -89,7 +96,8 @@
     },
     "elementForms": {
         "textInputPlaceholder": "Enter text...",
-        "urlInputPlaceholder": "Enter url..."
+        "urlInputPlaceholder": "Enter url...",
+        "invalidFormula": "The formula is invalid"
     },
     "headingElement": {
         "noValue": "No title..."
@@ -121,6 +129,19 @@
         "fileSourceTypeURL": "URL",
         "urlWarning": "Note: please make sure that you have control over, or trust the url entered.",
         "uploadFileButton": "Upload file"
+    },
+    "inputTextElementForm": {
+        "valueTitle": "Default value",
+        "valuePlaceholder": "Enter a default value (optional)",
+        "placeholderTitle": "Placeholder",
+        "placeholderPlaceholder": "Enter a placeholder (optional)",
+        "requiredTitle": "Required"
+    },
+    "columnElementForm": {
+        "columnAmountTitle": "Layout",
+        "columnAmountName": "no columns | 1 column | {columnAmount} columns",
+        "columnGapTitle": "Space between columns",
+        "columnGapPlaceholder": "Enter space between columns..."
     },
     "domainSettings": {
         "titleOverview": "Domains",
@@ -171,11 +192,17 @@
         "paramsInErrorButton": "Update parameters",
         "pageParameterTypeError": "Invalid type"
     },
-    "alignmentSelector": {
-        "alignment": "Alignment",
+    "horizontalAlignmentSelector": {
+        "alignment": "Horizontal alignment",
         "alignmentLeft": "Link",
         "alignmentCenter": "Center",
         "alignmentRight": "Right"
+    },
+    "verticalAlignmentSelector": {
+        "alignment": "Vertical alignment",
+        "alignmentTop": "Top",
+        "alignmentCenter": "Middle",
+        "alignmentBottom": "Bottom"
     },
     "pageSettingsTypes": {
         "pageName": "Page"
@@ -221,5 +248,12 @@
         "addDataSource": "Add new data source",
         "noDataSourceTitle": "You have not yet added a data",
         "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
+    },
+    "defaultStyleForm": {
+        "boxTop": "Padding top",
+        "boxBottom": "Padding bottom"
+    },
+    "styleBoxForm": {
+        "paddingError": "The value must be an integer between 0 and 200."
     }
 }

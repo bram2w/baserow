@@ -873,9 +873,10 @@ def test_can_undo_redo_update_calendar_view(data_fixture, premium_data_fixture):
         "date_field": date_field_1,
     }
 
-    calendar_view = ViewHandler().update_view(
+    calendar_view_with_changes = ViewHandler().update_view(
         user, calendar_view, **original_calendar_data
     )
+    calendar_view = calendar_view_with_changes.updated_view_instance
 
     assert calendar_view.name == original_calendar_data["name"]
     assert calendar_view.date_field_id == original_calendar_data["date_field"].id

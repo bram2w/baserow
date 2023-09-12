@@ -791,6 +791,7 @@ def test_contains_word_filter_type(data_fixture):
             {"value": "DC", "color": "blue"},
         ],
     )
+
     option_a = data_fixture.create_select_option(
         field=single_select_field, value="AC", color="blue"
     )
@@ -1646,6 +1647,71 @@ def test_lower_than_filter_type(data_fixture):
     view_filter.save()
     ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
     assert len(ids) == 0
+
+
+@pytest.mark.django_db
+def test_is_even_and_whole_number_filter_type(data_fixture):
+    """
+    Tests 'is_even_and_whole' number filter type.
+
+    Tests rows of:
+    - whole even/odd numbers
+    - fraction even/odd numbers
+    - 'None' as a number value
+    """
+
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    decimal_field = data_fixture.create_number_field(
+        table=table,
+        number_decimal_places=2,
+        number_negative=False,
+    )
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    first_even_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 2,
+        }
+    )
+    even_fraction_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 2.2,
+        }
+    )
+    odd_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 3.0,
+        }
+    )
+    odd_fraction_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 3.3,
+        }
+    )
+    second_even_whole_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": 4.00,
+        }
+    )
+    null_number_row = model.objects.create(
+        **{
+            f"field_{decimal_field.id}": None,
+        }
+    )
+
+    # Test with this filter being applied, this should return even AND whole
+    # numbers:
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view, field=decimal_field, type="is_even_and_whole", value="1"
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert first_even_whole_number_row.id in ids
+    assert second_even_whole_number_row.id in ids
 
 
 @pytest.mark.django_db
@@ -5274,12 +5340,8 @@ def test_multiple_collaborators_empty_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
     row_handler = RowHandler()
     model = table.get_model()
@@ -5336,12 +5398,8 @@ def test_multiple_collaborators_not_empty_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
     row_handler = RowHandler()
     model = table.get_model()
@@ -5399,12 +5457,8 @@ def test_multiple_collaborators_has_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multi Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multi Collaborators"
     )
 
     row_handler = RowHandler()
@@ -5526,12 +5580,8 @@ def test_multiple_collaborators_has_not_filter_type(data_fixture):
     table = data_fixture.create_database_table(database=database)
     grid_view = data_fixture.create_grid_view(table=table)
 
-    field_handler = FieldHandler()
-    multiple_collaborators_field = field_handler.create_field(
-        user=user,
-        table=table,
-        type_name="multiple_collaborators",
-        name="Multiple Collaborators",
+    multiple_collaborators_field = data_fixture.create_multiple_collaborators_field(
+        user=user, table=table, name="Multiple Collaborators"
     )
 
     row_handler = RowHandler()

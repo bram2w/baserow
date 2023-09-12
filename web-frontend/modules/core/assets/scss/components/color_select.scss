@@ -15,7 +15,7 @@
   position: relative;
   height: 28px;
   width: 28px;
-  border-radius: 3px;
+  @include rounded($rounded);
 
   &:not(.active):hover {
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.08);
@@ -25,7 +25,7 @@
     font-family: $font-awesome-font-family;
     font-weight: $font-awesome-font-weight;
     content: fa-content($fa-var-check);
-    color: $color-primary-900;
+    color: $color-neutral-900;
     text-align: center;
     font-size: 13px;
     transform: translateX(-50%) translateY(-50%);

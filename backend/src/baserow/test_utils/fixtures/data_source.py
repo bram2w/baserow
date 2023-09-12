@@ -8,19 +8,19 @@ from baserow.contrib.integrations.local_baserow.models import (
 class DataSourceFixtures:
     def create_builder_local_baserow_get_row_data_source(self, **kwargs):
         return self.create_builder_data_source(
-            service_mode_class=LocalBaserowGetRow, **kwargs
+            service_model_class=LocalBaserowGetRow, **kwargs
         )
 
     def create_builder_local_baserow_list_rows_data_source(self, **kwargs):
         return self.create_builder_data_source(
-            service_mode_class=LocalBaserowListRows, **kwargs
+            service_model_class=LocalBaserowListRows, **kwargs
         )
 
     def create_builder_data_source(
         self,
         page=None,
         user=None,
-        service_mode_class=None,
+        service_model_class=None,
         order=None,
         name=None,
         **kwargs
@@ -34,9 +34,9 @@ class DataSourceFixtures:
             page = self.create_builder_page(user=user, builder=builder, **page_args)
 
         service = kwargs.pop("service", None)
-        if service is None and service_mode_class:
+        if service is None and service_model_class:
             service = self.create_service(
-                service_mode_class,
+                service_model_class,
                 integration_args={"application": page.builder},
                 **kwargs
             )
@@ -48,7 +48,7 @@ class DataSourceFixtures:
             name = self.fake.unique.word()
 
         data_source = DataSource.objects.create(
-            page=page, name=name, service=service, order=order, **kwargs
+            page=page, name=name, service=service, order=order
         )
 
         return data_source

@@ -125,7 +125,7 @@ export class GoogleDocFilePreview extends FilePreviewType {
   }
 
   isCompatible(mimeType, fileName) {
-    if (this.app.$env.BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW) {
+    if (this.app.$config.BASEROW_DISABLE_GOOGLE_DOCS_FILE_PREVIEW) {
       return false
     }
 

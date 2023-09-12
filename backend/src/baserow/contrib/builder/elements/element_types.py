@@ -1,23 +1,178 @@
-from typing import Dict, Optional
+import abc
+from abc import ABC
+from typing import Any, Dict, List, Optional
+
+from django.db.models import IntegerField, QuerySet
+from django.db.models.functions import Cast
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from baserow.api.user_files.serializers import UserFileField, UserFileSerializer
-from baserow.contrib.builder.api.validators import image_file_validation
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
-    ALIGNMENTS,
+    ColumnElement,
+    ContainerElement,
+    Element,
     HeadingElement,
+    HorizontalAlignments,
     ImageElement,
+    InputTextElement,
     LinkElement,
     ParagraphElement,
+    VerticalAlignments,
 )
 from baserow.contrib.builder.elements.registries import ElementType
-from baserow.contrib.builder.elements.types import Expression
+from baserow.contrib.builder.elements.signals import elements_moved
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
-from baserow.core.user_files.models import UserFile
+from baserow.core.formula.types import BaserowFormula
+
+
+class ContainerElementType(ElementType, ABC):
+    @abc.abstractmethod
+    def get_new_place_in_container(
+        self, container_element: ContainerElement, places_removed: List[str]
+    ) -> str:
+        """
+        Provides an alternative place that elements can move to when places in the
+        container are removed.
+
+        :param container_element: The container element that has places removed
+        :param places_removed: The places that are being removed
+        :return: The new place in the container the elements can be moved to
+        """
+
+        pass
+
+    @abc.abstractmethod
+    def get_places_in_container_removed(
+        self, values: Dict, instance: ContainerElement
+    ) -> List[str]:
+        """
+        This method defines what elements in the container have been removed preceding
+        an update of hte container element.
+
+        :param values: The new values that are being set
+        :param instance: The current state of the element
+        :return: The places in the container that have been removed
+        """
+
+        pass
+
+    def apply_order_by_children(self, queryset: QuerySet[Element]) -> QuerySet[Element]:
+        """
+        Defines the order of the children inside the container.
+
+        :param queryset: The queryset that the order is applied to.
+        :return: A queryset with the order applied to
+        """
+
+        return queryset.order_by("place_in_container", "order")
+
+    def prepare_value_for_db(
+        self, values: Dict, instance: Optional[ContainerElement] = None
+    ):
+        if instance is not None:  # This is an update operation
+            places_removed = self.get_places_in_container_removed(values, instance)
+
+            if len(places_removed) > 0:
+                instances_moved = ElementHandler().before_places_in_container_removed(
+                    instance, places_removed
+                )
+
+                elements_moved.send(self, page=instance.page, elements=instances_moved)
+
+        return super().prepare_value_for_db(values, instance)
+
+    def validate_place_in_container(
+        self, place_in_container: str, instance: ContainerElement
+    ):
+        """
+        Validate that the place in container being set on a child is valid.
+
+        :param place_in_container: The place in container being set
+        :param instance: The instance of the container element
+        :raises ValidationError: If the place in container is invalid
+        """
+
+        pass
+
+
+class ColumnElementType(ContainerElementType):
+    """
+    A column element is a container element that can be used to display other elements
+    in a column.
+    """
+
+    type = "column"
+    model_class = ColumnElement
+
+    class SerializedDict(ElementDict):
+        column_amount: int
+        column_gap: int
+        alignment: str
+
+    @property
+    def serializer_field_names(self):
+        return super().serializer_field_names + [
+            "column_amount",
+            "column_gap",
+            "alignment",
+        ]
+
+    @property
+    def allowed_fields(self):
+        return super().allowed_fields + [
+            "column_amount",
+            "column_gap",
+            "alignment",
+        ]
+
+    def get_sample_params(self) -> Dict[str, Any]:
+        return {
+            "column_amount": 2,
+            "column_gap": 10,
+            "alignment": VerticalAlignments.TOP,
+        }
+
+    def get_new_place_in_container(
+        self, container_element_before_update: ColumnElement, places_removed: List[str]
+    ) -> int:
+        places_removed_casted = [int(place) for place in places_removed]
+
+        if len(places_removed) == 0:
+            return container_element_before_update.column_amount - 1
+
+        return min(places_removed_casted) - 1
+
+    def get_places_in_container_removed(
+        self, values: Dict, instance: ColumnElement
+    ) -> List[str]:
+        column_amount = values.get("column_amount", None)
+
+        if column_amount is None:
+            return []
+
+        places_removed = list(range(column_amount, instance.column_amount))
+
+        return [str(place) for place in places_removed]
+
+    def apply_order_by_children(self, queryset: QuerySet[Element]) -> QuerySet[Element]:
+        return queryset.annotate(
+            place_in_container_as_int=Cast(
+                "place_in_container", output_field=IntegerField()
+            )
+        ).order_by("place_in_container_as_int", "order")
+
+    def validate_place_in_container(
+        self, place_in_container: str, instance: ColumnElement
+    ):
+        max_place_in_container = instance.column_amount - 1
+        if int(place_in_container) > max_place_in_container:
+            raise ValidationError(
+                f"place_in_container can at most be {max_place_in_container}, ({place_in_container}, was given)"
+            )
 
 
 class HeadingElementType(ElementType):
@@ -31,16 +186,16 @@ class HeadingElementType(ElementType):
     allowed_fields = ["value", "level"]
 
     class SerializedDict(ElementDict):
-        value: Expression
+        value: BaserowFormula
         level: int
 
     @property
     def serializer_field_overrides(self):
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "value": ExpressionSerializer(
-                help_text="The value of the element. Must be an expression.",
+            "value": FormulaSerializerField(
+                help_text="The value of the element. Must be an formula.",
                 required=False,
                 allow_blank=True,
                 default="",
@@ -73,7 +228,7 @@ class ParagraphElementType(ElementType):
     allowed_fields = ["value"]
 
     class SerializedDict(ElementDict):
-        value: Expression
+        value: BaserowFormula
 
     def get_sample_params(self):
         return {
@@ -86,11 +241,11 @@ class ParagraphElementType(ElementType):
 
     @property
     def serializer_field_overrides(self):
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         return {
-            "value": ExpressionSerializer(
-                help_text="The value of the element. Must be an expression.",
+            "value": FormulaSerializerField(
+                help_text="The value of the element. Must be a formula.",
                 required=False,
                 allow_blank=True,
                 default="",
@@ -121,6 +276,7 @@ class LinkElementType(ElementType):
         "value",
         "navigation_type",
         "navigate_to_page_id",
+        "navigate_to_page",
         "navigate_to_url",
         "page_parameters",
         "variant",
@@ -130,9 +286,15 @@ class LinkElementType(ElementType):
     ]
 
     class SerializedDict(ElementDict):
-        value: Expression
-        destination: Expression
-        open_new_tab: bool
+        value: BaserowFormula
+        navigation_type: str
+        navigate_to_page_id: Page
+        page_parameters: List
+        navigate_to_url: BaserowFormula
+        variant: str
+        target: str
+        width: str
+        alignment: str
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
@@ -147,11 +309,11 @@ class LinkElementType(ElementType):
         from baserow.contrib.builder.api.elements.serializers import (
             PageParameterValueSerializer,
         )
-        from baserow.core.expression.serializers import ExpressionSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
-            "value": ExpressionSerializer(
-                help_text="The value of the element. Must be an expression.",
+            "value": FormulaSerializerField(
+                help_text="The value of the element. Must be an formula.",
                 required=False,
                 allow_blank=True,
                 default="",
@@ -167,7 +329,7 @@ class LinkElementType(ElementType):
                 help_text=LinkElement._meta.get_field("navigate_to_page").help_text,
                 required=False,
             ),
-            "navigate_to_url": ExpressionSerializer(
+            "navigate_to_url": FormulaSerializerField(
                 help_text=LinkElement._meta.get_field("navigate_to_url").help_text,
                 default="",
                 allow_blank=True,
@@ -194,7 +356,7 @@ class LinkElementType(ElementType):
                 required=False,
             ),
             "alignment": serializers.ChoiceField(
-                choices=ALIGNMENTS.choices,
+                choices=HorizontalAlignments.choices,
                 help_text=LinkElement._meta.get_field("alignment").help_text,
                 required=False,
             ),
@@ -206,7 +368,7 @@ class LinkElementType(ElementType):
             "value": "test",
             "navigation_type": "custom",
             "navigate_to_page_id": None,
-            "navigate_to_url": "http://example.com",
+            "navigate_to_url": '"http://example.com"',
             "page_parameters": [],
             "variant": "link",
             "target": "blank",
@@ -231,7 +393,7 @@ class LinkElementType(ElementType):
 
             self._raise_if_path_params_are_invalid(page_params, page)
 
-        return values
+        return super().prepare_value_for_db(values, instance)
 
     def _raise_if_path_params_are_invalid(self, path_params: Dict, page: Page) -> None:
         """
@@ -247,26 +409,11 @@ class LinkElementType(ElementType):
 
         for page_parameter in path_params:
             page_parameter_name = page_parameter["name"]
-            page_parameter_value = page_parameter["value"]
             page_parameter_type = parameter_types.get(page_parameter_name, None)
 
             if page_parameter_type is None:
                 raise ValidationError(
                     f"Page path parameter {page_parameter} does not exist."
-                )
-
-            # We don't need to type check empty values since they can be used as
-            # defaults for page parameters.
-            if page_parameter_value is None or page_parameter_value == "":
-                continue
-
-            try:
-                LinkElementType.PATH_PARAM_TYPE_TO_PYTHON_TYPE_MAP[page_parameter_type](
-                    page_parameter_value
-                )
-            except (ValueError, TypeError):
-                raise ValidationError(
-                    f"'{page_parameter_value}' is not of type {page_parameter_type}"
                 )
 
 
@@ -302,21 +449,24 @@ class ImageElementType(ElementType):
 
     class SerializedDict(ElementDict):
         image_source_type: str
-        image_file: UserFile
+        image_file_id: int
         image_url: str
         alt_text: str
+        alignment: str
 
     def get_sample_params(self):
         return {
             "image_source_type": ImageElement.IMAGE_SOURCE_TYPES.UPLOAD,
-            "image_file": None,
+            "image_file_id": None,
             "image_url": "https://test.com/image.png",
             "alt_text": "some alt text",
-            "alignment": ALIGNMENTS.LEFT,
+            "alignment": HorizontalAlignments.LEFT,
         }
 
     @property
     def serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileSerializer
+
         overrides = {
             "image_file": UserFileSerializer(required=False),
         }
@@ -326,6 +476,9 @@ class ImageElementType(ElementType):
 
     @property
     def request_serializer_field_overrides(self):
+        from baserow.api.user_files.serializers import UserFileField
+        from baserow.contrib.builder.api.validators import image_file_validation
+
         overrides = {
             "image_file": UserFileField(
                 allow_null=True,
@@ -335,7 +488,7 @@ class ImageElementType(ElementType):
                 validators=[image_file_validation],
             ),
             "alignment": serializers.ChoiceField(
-                choices=ALIGNMENTS.choices,
+                choices=HorizontalAlignments.choices,
                 help_text=ImageElement._meta.get_field("alignment").help_text,
                 required=False,
             ),
@@ -343,3 +496,53 @@ class ImageElementType(ElementType):
         if super().request_serializer_field_overrides is not None:
             overrides.update(super().request_serializer_field_overrides)
         return overrides
+
+
+class InputElementType(ElementType, abc.ABC):
+    pass
+
+
+class InputTextElementType(InputElementType):
+    type = "input_text"
+    model_class = InputTextElement
+    allowed_fields = ["default_value", "required", "placeholder"]
+    serializer_field_names = ["default_value", "required", "placeholder"]
+
+    class SerializedDict(ElementDict):
+        required: bool
+        placeholder: str
+        default_value: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "default_value": FormulaSerializerField(
+                help_text=InputTextElement._meta.get_field("default_value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "required": serializers.BooleanField(
+                help_text=InputTextElement._meta.get_field("required").help_text,
+                default=False,
+                required=False,
+            ),
+            "placeholder": serializers.CharField(
+                default="",
+                allow_blank=True,
+                required=False,
+                help_text=InputTextElement._meta.get_field("placeholder").help_text,
+                max_length=InputTextElement._meta.get_field("placeholder").max_length,
+            ),
+        }
+
+        return overrides
+
+    def get_sample_params(self):
+        return {
+            "required": False,
+            "placeholder": "",
+            "default_value": "Corporis perspiciatis",
+        }

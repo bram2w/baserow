@@ -381,7 +381,7 @@ def test_oauth2_callback_login_success(
 ):
     """
     When a user already have an account associated with the specific provider,
-    he can log in.
+    they can log in.
     """
 
     user, token = data_fixture.create_user_and_token(

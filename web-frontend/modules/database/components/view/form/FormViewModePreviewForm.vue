@@ -55,7 +55,7 @@
             @click="$refs.title.edit()"
           ></a>
         </h1>
-        <p class="form-view__description">
+        <p v-if="!readOnly || view.description" class="form-view__description">
           <Editable
             ref="description"
             :value="view.description"

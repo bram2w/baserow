@@ -63,7 +63,7 @@ export class ViewFilterType extends Registerable {
   /**
    * Should return a component that is responsible for the filter's value. For example
    * for the equal filter a text field will be added where the user can enter whatever
-   * he wants to filter on.
+   * they want to filter on.
    */
   getInputComponent() {
     return null
@@ -1327,6 +1327,30 @@ export class LowerThanViewFilterType extends ViewFilterType {
   }
 }
 
+export class IsEvenAndWholeViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'is_even_and_whole'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isEvenAndWhole')
+  }
+
+  getExample() {
+    return 'true'
+  }
+
+  getCompatibleFieldTypes() {
+    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    rowValue = parseFloat(rowValue)
+    return rowValue % 2 === 0 && Number.isInteger(rowValue)
+  }
+}
+
 export class SingleSelectEqualViewFilterType extends ViewFilterType {
   static getType() {
     return 'single_select_equal'
@@ -1542,7 +1566,12 @@ export class BooleanViewFilterType extends ViewFilterType {
     filterValue = trueString.includes(
       filterValue.toString().toLowerCase().trim()
     )
-    rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
+
+    if (rowValue === null) {
+      rowValue = false
+    } else {
+      rowValue = trueString.includes(rowValue.toString().toLowerCase().trim())
+    }
     return filterValue ? rowValue : !rowValue
   }
 }

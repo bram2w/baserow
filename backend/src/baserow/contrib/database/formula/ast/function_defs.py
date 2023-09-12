@@ -136,6 +136,8 @@ def register_formula_functions(registry):
     registry.register(BaserowRight())
     registry.register(BaserowTrim())
     registry.register(BaserowRegexReplace())
+    registry.register(BaserowEncodeUri())
+    registry.register(BaserowEncodeUriComponent())
     # Number functions
     registry.register(BaserowMultiply())
     registry.register(BaserowDivide())
@@ -306,6 +308,48 @@ class BaserowDatetimeFormatTz(ThreeArgumentBaserowFunction):
             arg2,
             arg3,
             function="try_datetime_format_tz",
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowEncodeUri(OneArgumentBaserowFunction):
+    type = "encode_uri"
+    arg_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaTextType(nullable=arg.expression_type.nullable)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg,
+            function="try_encode_uri",
+            output_field=fields.TextField(),
+        )
+
+
+class BaserowEncodeUriComponent(OneArgumentBaserowFunction):
+    type = "encode_uri_component"
+    arg_type = [BaserowFormulaTextType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaTextType(nullable=arg.expression_type.nullable)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg,
+            function="try_encode_uri_component",
             output_field=fields.TextField(),
         )
 

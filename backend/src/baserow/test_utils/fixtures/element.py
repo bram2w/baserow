@@ -1,4 +1,5 @@
 from baserow.contrib.builder.elements.models import (
+    ColumnElement,
     HeadingElement,
     ImageElement,
     LinkElement,
@@ -17,6 +18,10 @@ class ElementFixtures:
 
     def create_builder_image_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(ImageElement, user, page, **kwargs)
+        return element
+
+    def create_builder_column_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(ColumnElement, user, page, **kwargs)
         return element
 
     def create_builder_link_element(self, user=None, page=None, **kwargs):
