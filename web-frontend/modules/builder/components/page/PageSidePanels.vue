@@ -3,7 +3,7 @@
     <Tabs :full-height="true">
       <Tab
         v-for="pageSidePanelType in pageSidePanelTypes"
-        :key="pageSidePanelType.label"
+        :key="pageSidePanelType.getType()"
         :title="pageSidePanelType.label"
       >
         <component
