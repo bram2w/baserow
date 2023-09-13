@@ -2025,7 +2025,8 @@ export const actions = {
     {
       table,
       view,
-      fields,
+      allVisibleFields,
+      allFieldsInTable,
       getScrollTop,
       textData,
       jsonData,
@@ -2043,7 +2044,7 @@ export const actions = {
     let rowTailIndex =
       Math.min(getters.getCount, rowHeadIndex + textData.length) - 1
     const fieldTailIndex =
-      Math.min(fields.length, fieldHeadIndex + textData[0].length) - 1
+      Math.min(allVisibleFields.length, fieldHeadIndex + textData[0].length) - 1
     const newRowsCount = textData.length - (rowTailIndex - rowHeadIndex + 1)
 
     // Create extra missing rows
@@ -2051,7 +2052,7 @@ export const actions = {
       await dispatch('createNewRows', {
         view,
         table,
-        fields,
+        fields: allFieldsInTable,
         rows: Array.from(Array(newRowsCount), (element, index) => {
           return {}
         }),
@@ -2073,7 +2074,10 @@ export const actions = {
 
     // Figure out which rows are already in the buffered and temporarily store them
     // in an array.
-    const fieldsInOrder = fields.slice(fieldHeadIndex, fieldTailIndex + 1)
+    const fieldsInOrder = allVisibleFields.slice(
+      fieldHeadIndex,
+      fieldTailIndex + 1
+    )
     let rowsInOrder = getters.getAllRows.slice(
       rowHeadIndex - getters.getBufferStartIndex,
       rowTailIndex + 1 - getters.getBufferStartIndex
@@ -2155,7 +2159,7 @@ export const actions = {
       // the right position if changed.
       await dispatch('updatedExistingRow', {
         view,
-        fields,
+        fields: allFieldsInTable,
         row,
         values,
       })
@@ -2165,7 +2169,7 @@ export const actions = {
     // position and we might need to fetch missing rows.
     await dispatch('fetchByScrollTopDelayed', {
       scrollTop: getScrollTop(),
-      fields,
+      fields: allFieldsInTable,
     })
     dispatch('fetchAllFieldAggregationData', { view })
   },
@@ -2563,7 +2567,7 @@ export const actions = {
    */
   async clearValuesFromMultipleCellSelection(
     { getters, dispatch },
-    { table, view, fields, getScrollTop }
+    { table, view, allVisibleFields, allFieldsInTable, getScrollTop }
   ) {
     const [minFieldIndex, maxFieldIndex] =
       getters.getMultiSelectFieldIndexSorted
@@ -2571,7 +2575,10 @@ export const actions = {
     const [minRowIndex, maxRowIndex] = getters.getMultiSelectRowIndexSorted
     const numberOfRowsSelected = maxRowIndex - minRowIndex + 1
 
-    const selectedFields = fields.slice(minFieldIndex, maxFieldIndex + 1)
+    const selectedFields = allVisibleFields.slice(
+      minFieldIndex,
+      maxFieldIndex + 1
+    )
 
     // Get the empty value for each selected field
     const emptyValues = selectedFields.map((field) =>
@@ -2587,7 +2594,8 @@ export const actions = {
     await dispatch('updateDataIntoCells', {
       table,
       view,
-      fields,
+      allVisibleFields,
+      allFieldsInTable,
       getScrollTop,
       textData: data,
       rowIndex: minRowIndex,
