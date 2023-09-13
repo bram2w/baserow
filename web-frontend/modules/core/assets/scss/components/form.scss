@@ -62,6 +62,12 @@
   position: relative;
 }
 
+.control__elements--flex {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .control__context {
   color: $color-neutral-900;
   margin-left: 6px;

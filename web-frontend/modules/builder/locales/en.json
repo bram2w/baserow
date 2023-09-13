@@ -255,5 +255,14 @@
     },
     "styleBoxForm": {
         "paddingError": "The value must be an integer between 0 and 200."
+    },
+    "mainThemeConfigBlock": {
+      "colorsLabel": "Colors",
+      "primaryColor": "Primary",
+      "secondaryColor": "Secondary",
+      "typography": "Typography",
+      "headingLabel": "Heading {i} (h{i})",
+      "headingValue": "Heading <h{i}>",
+      "fontSizeError": "The value must be an integer between 1 and 100."
     }
 }

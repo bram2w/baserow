@@ -86,13 +86,16 @@
 .modal__box-content {
   position: relative;
   width: 100%;
-  padding: 32px 40px;
   min-width: 0;
   flex: 1;
   scrollbar-gutter: stable;
 
   &.modal__box-content--scrollable {
     overflow-y: auto;
+  }
+
+  &:not(.modal__box-content-no-padding) {
+    padding: 32px 40px;
   }
 }
 
