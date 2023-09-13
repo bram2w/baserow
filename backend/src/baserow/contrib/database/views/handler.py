@@ -1441,7 +1441,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
-    def extract_view_sorts(
+    def get_view_sorts(
         self,
         view: View,
         model: GeneratedTableModel,
@@ -1449,7 +1449,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         restrict_to_field_ids: Optional[Iterable[int]] = None,
     ) -> Tuple[List[OrderBy], Optional[QuerySet]]:
         """
-        Responsible for generating a list of OrderBy objects which a queryset
+        Responsible for return a list of OrderBy objects which a queryset
         can use to `order_by` with.
 
         :param view: The view where to fetch the sorting from.
@@ -1535,7 +1535,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.trashed:
             raise ViewSortDoesNotExist(f"The view {view.id} is trashed.")
 
-        order_by, queryset = self.extract_view_sorts(
+        order_by, queryset = self.get_view_sorts(
             view, model, queryset, restrict_to_field_ids
         )
 

@@ -363,7 +363,7 @@ def test_dispatch_local_baserow_get_row_service_row_not_exist(data_fixture):
         ServiceHandler().dispatch_service(service, runtime_formula_context)
 
 
-@patch("baserow.contrib.integrations.local_baserow.service_types.ViewHandler")
+@patch("baserow.contrib.integrations.local_baserow.mixins.ViewHandler")
 def test_local_baserow_list_rows_service_get_dispatch_list_filters_without_model(
     mock_view_handler,
 ):
@@ -371,7 +371,7 @@ def test_local_baserow_list_rows_service_get_dispatch_list_filters_without_model
     mock_service = Mock()
     mock_service.view.table.get_model.return_value = mock_model
     service_type = LocalBaserowListRowsUserServiceType()
-    service_type.get_dispatch_list_filters(mock_service)
+    service_type.get_dispatch_filters(mock_service)
     assert mock_service.view.table.get_model.called
     mock_view_handler().get_filter_builder.assert_called_with(
         mock_service.view, mock_model
@@ -408,7 +408,7 @@ def test_local_baserow_list_rows_service_get_service_list_filters(data_fixture):
         LocalBaserowListRowsUserServiceType.type
     )
     service = data_fixture.create_local_baserow_list_rows_service(view=view)
-    filter_builder = service_type.get_dispatch_list_filters(service)
+    filter_builder = service_type.get_dispatch_filters(service)
 
     model = table.get_model()
     queryset = filter_builder.apply_to_queryset(model.objects.all())
@@ -416,7 +416,7 @@ def test_local_baserow_list_rows_service_get_service_list_filters(data_fixture):
     assert queryset_pks == [row_1.id, row_2.id]
 
 
-@patch("baserow.contrib.integrations.local_baserow.service_types.ViewHandler")
+@patch("baserow.contrib.integrations.local_baserow.mixins.ViewHandler")
 def test_local_baserow_list_rows_service_get_dispatch_list_sorts_without_model(
     mock_view_handler,
 ):
@@ -424,11 +424,11 @@ def test_local_baserow_list_rows_service_get_dispatch_list_sorts_without_model(
     mock_service = Mock()
     handler = mock_view_handler()
     mock_service.view.table.get_model.return_value = mock_model
-    handler.extract_view_sorts.return_value = (None, None)
+    handler.get_view_sorts.return_value = (None, None)
     service_type = LocalBaserowListRowsUserServiceType()
-    service_type.get_dispatch_list_sorts(mock_service)
+    service_type.get_dispatch_sorts(mock_service)
     assert mock_service.view.table.get_model.called
-    handler.extract_view_sorts.assert_called_with(mock_service.view, mock_model)
+    handler.get_view_sorts.assert_called_with(mock_service.view, mock_model)
 
 
 @pytest.mark.django_db
@@ -463,7 +463,7 @@ def test_local_baserow_list_rows_service_get_service_list_sorts(data_fixture):
     service = data_fixture.create_local_baserow_list_rows_service(view=view)
 
     model = table.get_model()
-    service_sorts = service_type.get_dispatch_list_sorts(service, model)
+    service_sorts = service_type.get_dispatch_sorts(service, model)
     queryset = model.objects.all().order_by(*service_sorts)
     queryset_pks = list(queryset.values_list("id", flat=True))
     assert queryset_pks == [row_3.id, row_1.id, row_2.id]
