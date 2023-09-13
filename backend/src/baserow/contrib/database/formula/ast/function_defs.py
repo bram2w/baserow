@@ -151,6 +151,7 @@ def register_formula_functions(registry):
     registry.register(BaserowEven())
     registry.register(BaserowOdd())
     registry.register(BaserowTrunc())
+    registry.register(BaserowSplitPart())
     registry.register(BaserowLn())
     registry.register(BaserowExp())
     registry.register(BaserowLog())
@@ -852,6 +853,50 @@ class BaserowFloor(OneArgumentBaserowFunction):
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Floor(arg, output_field=int_like_numeric_output_field())
+
+
+class BaserowSplitPart(ThreeArgumentBaserowFunction):
+    type = "split_part"
+    arg1_type = [BaserowFormulaTextType]
+    arg2_type = [BaserowFormulaTextType]
+    arg3_type = [BaserowFormulaNumberType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaTextType],
+        arg2: BaserowExpression[BaserowFormulaTextType],
+        arg3: BaserowExpression[BaserowFormulaNumberType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaTextType(
+                nullable=arg1.expression_type.nullable
+                or arg2.expression_type.nullable
+                or arg3.expression_type.nullable
+            )
+        )
+
+    def to_django_expression(
+        self, arg1: Expression, arg2: Expression, arg3: Expression
+    ) -> Expression:
+        return Case(
+            When(
+                condition=(
+                    LessThanEqualOrExpr(
+                        arg3, Value(0), output_field=fields.BooleanField()
+                    )
+                ),
+                then=Value(""),
+            ),
+            default=Func(
+                arg1,
+                arg2,
+                trunc_numeric_to_int(arg3),
+                function="SPLIT_PART",
+                output_field=fields.CharField(),
+            ),
+            output_field=fields.CharField(),
+        )
 
 
 class BaserowTrunc(OneArgumentBaserowFunction):

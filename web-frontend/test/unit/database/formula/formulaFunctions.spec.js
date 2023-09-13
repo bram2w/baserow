@@ -93,6 +93,7 @@ describe('Formula Functions Test', () => {
       'button',
       'get_link_label',
       'get_link_url',
+      'split_part',
     ]
     const frontendFunctionTypes = Object.keys(
       testApp.store.$registry.getAll('formula_function')

@@ -86,6 +86,29 @@ export class BaserowLower extends BaserowFunctionDefinition {
   }
 }
 
+export class BaserowSplitPart extends BaserowFunctionDefinition {
+  static getType() {
+    return 'split_part'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.splitPartDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['split_part(text, delimiter, position)']
+  }
+
+  getExamples() {
+    return ["split_part('John, Jane, Michael', ', ', 2) = 'Jane'"]
+  }
+
+  getFormulaType() {
+    return 'text'
+  }
+}
+
 export class BaserowConcat extends BaserowFunctionDefinition {
   static getType() {
     return 'concat'
