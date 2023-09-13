@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+from typing import Any, Dict
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db.models.expressions import OrderBy
 
 from rest_framework import serializers
 
@@ -16,6 +15,11 @@ from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
 )
+from baserow.contrib.integrations.local_baserow.mixins import (
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+    LocalBaserowSortableViewServiceMixin,
+)
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowListRows,
@@ -27,15 +31,16 @@ from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.registries import ListServiceType, ServiceType
+from baserow.core.services.registries import ServiceType
 from baserow.core.services.types import ServiceDict
 
-if TYPE_CHECKING:
-    from baserow.contrib.database.fields.field_filters import FilterBuilder
-    from baserow.contrib.database.table.models import GeneratedTableModel
 
-
-class LocalBaserowListRowsUserServiceType(ListServiceType):
+class LocalBaserowListRowsUserServiceType(
+    ServiceType,
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSortableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+):
     """
     This service gives access to a list of rows from the same Baserow instance as the
     one hosting the application.
@@ -65,50 +70,6 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
             "view__viewfilter_set", "view__viewsort_set"
         )
 
-    def get_dispatch_list_filters(
-        self,
-        service: LocalBaserowListRows,
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> "FilterBuilder":
-        """
-        Responsible for defining how the `LocalBaserowListRows` service should be
-        filtered. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewFilter` records related to it. We'll use the
-        `FilterBuilder` to return a set of filters we can apply to the base queryset.
-
-        :param service: The `LocalBaserow` service we're dispatching.
-        :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A `FilterBuilder` applicable to the service's view.
-        """
-
-        view = service.view
-        if model is None:
-            model = view.table.get_model()
-        return ViewHandler().get_filter_builder(view, model)
-
-    def get_dispatch_list_sorts(
-        self,
-        service: LocalBaserowListRows,
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> List[OrderBy]:
-        """
-        Responsible for defining how `LocalBaserowIntegration` services should be
-        sorted. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewSort` records related to it. We'll use the
-        `ViewHandler.extract_view_sorts` method to return a set of `OrderBy` and
-         field name string which we can apply to the base queryset.
-
-        :param service: The `LocalBaserow` service we're dispatching.
-        :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A list of `OrderBy` expressions.
-        """
-
-        view = service.view
-        if model is None:
-            model = view.table.get_model()
-        service_sorts, _ = ViewHandler().extract_view_sorts(view, model)
-        return service_sorts
-
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:
@@ -131,8 +92,8 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
         Get the view Id from the mapping if it exists.
         """
 
-        if prop_name == "view_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
+        if prop_name == "view_id" and "database_views" in id_mapping:
+            return id_mapping["database_views"].get(value, None)
 
         return value
 
@@ -166,10 +127,10 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
         model = table.get_model()
         queryset = model.objects.all().enhance_by_fields()
 
-        filter_builder = self.get_dispatch_list_filters(service, model)
+        filter_builder = self.get_dispatch_filters(service, model)
         queryset = filter_builder.apply_to_queryset(queryset)
 
-        service_sorts = self.get_dispatch_list_sorts(service, model)
+        service_sorts = self.get_dispatch_sorts(service, model)
         queryset = queryset.order_by(*service_sorts)
 
         rows = queryset[: self.default_result_limit]
@@ -185,7 +146,12 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
         return serialized_rows
 
 
-class LocalBaserowGetRowUserServiceType(ServiceType):
+class LocalBaserowGetRowUserServiceType(
+    ServiceType,
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSortableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+):
     """
     This service gives access to one specific row from a given table from the same
     Baserow instance as the one hosting the application.

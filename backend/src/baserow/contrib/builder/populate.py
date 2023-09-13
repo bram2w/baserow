@@ -11,6 +11,7 @@ from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.database.table.models import Table
+from baserow.contrib.database.views.models import GridView
 from baserow.core.handler import CoreHandler
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
@@ -183,12 +184,13 @@ def load_test_data():
             database__workspace=workspace,
             database__trashed=False,
         )
+        view = GridView.objects.create(table=table, order=0, name="Products Grid")
 
-        DataSourceHandler().create_data_source(
+        product_detail_data_source = DataSourceHandler().create_data_source(
             product_detail,
             "Product",
             service_type=service_type,
-            table=table,
+            view=view,
             integration=integration,
             row_id='get("page_parameter.id")',
         )
@@ -196,14 +198,14 @@ def load_test_data():
         ElementHandler().create_element(
             heading_element_type,
             product_detail,
-            value='get("data_source.Product.Name")',
+            value=f'get("data_source.{product_detail_data_source.id}.Name")',
             level=1,
         )
 
         ElementHandler().create_element(
             paragraph_element_type,
             product_detail,
-            value=('get("data_source.Product.Notes")'),
+            value=(f'get("data_source.{product_detail_data_source.id}.Notes")'),
         )
 
     try:
@@ -218,12 +220,13 @@ def load_test_data():
             database__workspace=workspace,
             database__trashed=False,
         )
+        view = GridView.objects.create(table=table, order=0, name="Products Grid 2")
 
-        DataSourceHandler().create_data_source(
+        products_data_source = DataSourceHandler().create_data_source(
             products,
             "Products",
             service_type=service_type,
-            table=table,
+            view=view,
             integration=integration,
         )
 
@@ -235,25 +238,28 @@ def load_test_data():
             ElementHandler().create_element(
                 link_element_type,
                 products,
-                value=f'concat("Product {i+1} - ", get("data_source.Products.{i}.Name"))',
+                value=f'concat("Product {i+1} - ", get("data_source.{products_data_source.id}.{i}.Name"))',
                 variant="button",
                 alignment="left",
                 navigation_type="page",
                 navigate_to_page=product_detail,
                 page_parameters=[
                     {"name": "id", "value": f"{i+1}"},
-                    {"name": "name", "value": f'get("data_source.Products.{i}.Name")'},
+                    {
+                        "name": "name",
+                        "value": f'get("data_source.{products_data_source.id}.{i}.Name")',
+                    },
                 ],
             )
 
         ElementHandler().create_element(
             link_element_type,
             products,
-            value=f'concat("Product 4 - ", get("data_source.Products.3.Name"))',
+            value=f'concat("Product 4 - ", get("data_source.{products_data_source.id}.3.Name"))',
             variant="button",
             alignment="left",
             navigation_type="custom",
-            navigate_to_url='concat("/product/4/", get("data_source.Products.3.Name"))',
+            navigate_to_url=f'concat("/product/4/", get("data_source.{products_data_source.id}.3.Name"))',
         )
 
         ElementHandler().create_element(
