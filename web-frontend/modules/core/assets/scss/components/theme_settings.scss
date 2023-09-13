@@ -1,0 +1,50 @@
+.theme_settings {
+  position: relative;
+  height: 100%;
+  padding: 32px 0;
+
+  &::after {
+    @include absolute(0, 50%, 0, auto);
+
+    content: '';
+    border-right: 1px solid $color-neutral-200;
+  }
+}
+
+.theme_settings__section {
+  display: flex;
+  width: 100%;
+}
+
+.theme_settings__section-properties {
+  flex: 50% 0 0;
+  padding: 0 20px;
+}
+
+.theme_settings__section-title {
+  color: $color-neutral-900;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  margin-bottom: 20px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.theme_settings__section-title-icon {
+  font-size: 12px;
+}
+
+.theme_settings__section-preview {
+  flex: 50% 0 0;
+  width: 50%;
+  padding: 0 32px;
+}
+
+.theme_settings__section-ellipsis {
+  @extend %ellipsis;
+}

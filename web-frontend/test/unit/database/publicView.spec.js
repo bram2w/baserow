@@ -31,6 +31,22 @@ describe('Public View Page Tests', () => {
     expect(publicGridViewPage.element).toMatchSnapshot()
   })
 
+  test('Publicly shared view is not saved as a last visited view', async () => {
+    const slug = 'testSlug'
+    const gridViewName = 'my public grid view name'
+    givenAPubliclySharedGridViewWithSlug(gridViewName, slug)
+
+    await testApp.mount(PublicGrid, {
+      asyncDataParams: {
+        slug,
+      },
+    })
+
+    const allCookies = testApp.store.$cookies
+    const cookieValue = allCookies.get('defaultViewId')
+    expect(cookieValue.length).toBe(0)
+  })
+
   function givenAPubliclySharedGridViewWithSlug(name, slug) {
     const fields = [
       {

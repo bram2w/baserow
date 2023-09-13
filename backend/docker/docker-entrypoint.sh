@@ -6,7 +6,7 @@ set -euo pipefail
 # ENVIRONMENT VARIABLES USED DIRECTLY BY THIS ENTRYPOINT
 # ======================================================
 
-export BASEROW_VERSION="1.20.0"
+export BASEROW_VERSION="1.20.1"
 
 # Used by docker-entrypoint.sh to start the dev server
 # If not configured you'll receive this: CommandError: "0.0.0.0:" is not a valid port number or address:port pair.
@@ -18,6 +18,7 @@ DATABASE_HOST="${DATABASE_HOST:-db}"
 DATABASE_PORT="${DATABASE_PORT:-5432}"
 DATABASE_NAME="${DATABASE_NAME:-baserow}"
 DATABASE_PASSWORD="${DATABASE_PASSWORD:-baserow}"
+DATABASE_OPTIONS="${DATABASE_OPTIONS:-}"
 # Or you can provide a Postgresql connection url
 DATABASE_URL="${DATABASE_URL:-}"
 
@@ -46,35 +47,67 @@ BASEROW_CELERY_BEAT_DEBUG_LEVEL=${BASEROW_CELERY_BEAT_DEBUG_LEVEL:-INFO}
 
 postgres_ready() {
   if [ -z "$DATABASE_URL" ]; then
+DATABASE_NAME=$DATABASE_NAME \
+DATABASE_USER=$DATABASE_USER \
+DATABASE_HOST=$DATABASE_HOST \
+DATABASE_PORT=$DATABASE_PORT \
+DATABASE_PASSWORD=$DATABASE_PASSWORD \
+DATABASE_OPTIONS=$DATABASE_OPTIONS \
 python3 << END
 import sys
 import psycopg2
+import json
+import os
+DATABASE_NAME=os.getenv('DATABASE_NAME')
+DATABASE_USER=os.getenv('DATABASE_USER')
+DATABASE_HOST=os.getenv('DATABASE_HOST')
+DATABASE_PORT=os.getenv('DATABASE_PORT')
+DATABASE_PASSWORD=os.getenv('DATABASE_PASSWORD')
+DATABASE_OPTIONS=os.getenv('DATABASE_OPTIONS')
 try:
+    options = json.loads(DATABASE_OPTIONS or "{}")
     psycopg2.connect(
-        dbname="${DATABASE_NAME}",
-        user="${DATABASE_USER}",
-        password="${DATABASE_PASSWORD}",
-        host="${DATABASE_HOST}",
-        port="${DATABASE_PORT}",
+        dbname=DATABASE_NAME,
+        user=DATABASE_USER,
+        password=DATABASE_PASSWORD,
+        host=DATABASE_HOST,
+        port=DATABASE_PORT,
+        **options
     )
-except psycopg2.OperationalError as e:
-    print("Error: Failed to connect to the postgresql database at ${DATABASE_HOST}")
+except Exception as e:
+    print(f"Error: Failed to connect to the postgresql database at {DATABASE_HOST}")
     print("Please see the error below for more details:")
     print(e)
-    sys.exit(-1)
+    print("Trying again without any DATABASE_OPTIONS:")
+    try:
+      psycopg2.connect(
+          dbname=DATABASE_NAME,
+          user=DATABASE_USER,
+          password=DATABASE_PASSWORD,
+          host=DATABASE_HOST,
+          port=DATABASE_PORT,
+      )
+    except Exception as e:
+      print(f"Error: Failed to connect to the postgresql database at {DATABASE_HOST} without the {DATABASE_OPTIONS}")
+      print("Please see the error below for more details:")
+      print(e)
+      sys.exit(-1)
 sys.exit(0)
 END
 else
   echo "Checking the provided DATABASE_URL"
+DATABASE_URL=$DATABASE_URL \
 python3 << END
 import sys
 import psycopg2
+import os
+DATABASE_URL=os.getenv('DATABASE_URL')
 try:
     psycopg2.connect(
-        "${DATABASE_URL}"
+        DATABASE_URL
     )
 except psycopg2.OperationalError as e:
-    print("Error: Failed to connect to the postgresql database at DATABASE_URL")
+    print(f"Error: Failed to connect to the postgresql database at {DATABASE_URL}")
     print("Please see the error below for more details:")
     print(e)
     sys.exit(-1)

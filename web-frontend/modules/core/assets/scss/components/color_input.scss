@@ -1,0 +1,19 @@
+.color-input {
+  display: flex;
+  align-items: center;
+}
+
+.color-input__preview {
+  width: 40px;
+  height: 20px;
+  border-radius: 2px;
+  box-shadow: 0 0 1px 0 rgba($black, 0.16);
+
+  &:hover {
+    box-shadow: 0 0 2px 0 rgba($black, 0.16);
+  }
+}
+
+.color-input__label {
+  margin-left: 10px;
+}

@@ -4,7 +4,7 @@ from django.db import models
 from baserow.contrib.database.views.models import View
 from baserow.core.formula.field import FormulaField
 from baserow.core.integrations.models import Integration
-from baserow.core.services.models import Service
+from baserow.core.services.models import SearchableServiceMixin, Service
 
 User = get_user_model()
 
@@ -25,13 +25,13 @@ class LocalBaserowViewService(Service):
         abstract = True
 
 
-class LocalBaserowListRows(LocalBaserowViewService):
+class LocalBaserowListRows(LocalBaserowViewService, SearchableServiceMixin):
     """
     A model for the local baserow list rows service configuration data.
     """
 
 
-class LocalBaserowGetRow(LocalBaserowViewService):
+class LocalBaserowGetRow(LocalBaserowViewService, SearchableServiceMixin):
     """
     A model for the local baserow get row service configuration data.
     """

@@ -96,7 +96,7 @@ export class TestApp {
     this._app = {
       $realtime: this._realtime,
       $cookies: {
-        set(name, id, value) {
+        set(name, value) {
           cookieStorage[name] = value
         },
         get(name) {
@@ -134,6 +134,7 @@ export class TestApp {
       this._vueContext,
       extraPluginSetupFunc
     )
+    this.store.$cookies = this._app.$cookies
     this._initialCleanStoreState = _.cloneDeep(this.store.state)
     Papa.arrayToString = (array) => {
       return Papa.unparse([array])

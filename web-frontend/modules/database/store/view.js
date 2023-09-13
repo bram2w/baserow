@@ -1,5 +1,6 @@
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
-import { uuid } from '@baserow/modules/core/utils/string'
+import { uuid, isSecureURL } from '@baserow/modules/core/utils/string'
+import { fitInCookie } from '@baserow/modules/database/utils/view'
 import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
 import DecorationService from '@baserow/modules/database/services/decoration'
@@ -69,6 +70,7 @@ export const state = () => ({
   loading: false,
   items: [],
   selected: {},
+  defaultViewId: null,
 })
 
 export const mutations = {
@@ -209,6 +211,21 @@ export const mutations = {
   SET_SORT_LOADING(state, { sort, value }) {
     sort._.loading = value
   },
+  /**
+   * Data for defaultViewId for $cookies:
+   * [
+   *   {table_id: table1Id, id: view1Id},
+   *   {table_id: table2Id, id: view2Id},
+   *   . . .
+   * ]
+   * Data for defaultViewId for Vuex store:
+   * {
+   *   defaultViewId: view1Id,
+   * }
+   */
+  SET_DEFAULT_VIEW(state, data) {
+    state.defaultViewId = data
+  },
 }
 
 export const actions = {
@@ -238,6 +255,9 @@ export const actions = {
       })
       commit('SET_ITEMS', data)
       commit('SET_LOADING', false)
+
+      // Get the default view for the table.
+      dispatch('getDefaultView', { tableId: table.id })
     } catch (error) {
       commit('SET_ITEMS', [])
       commit('SET_LOADING', false)
@@ -413,6 +433,10 @@ export const actions = {
    */
   select({ commit, dispatch }, view) {
     commit('SET_SELECTED', view)
+
+    // Set the default view for the table.
+    dispatch('setDefaultView', { view })
+
     dispatch(
       'undoRedo/updateCurrentScopeSet',
       DATABASE_ACTION_SCOPES.view(view.id),
@@ -446,6 +470,74 @@ export const actions = {
       throw new StoreItemLookupError(`View with id ${id} is not found.`)
     }
     return dispatch('select', view)
+  },
+  /**
+   * Gets the default view from cookies (if it exists) OR the first view
+   * otherwise, sets it in Vuex store
+   */
+  getDefaultView({ commit, getters }, { tableId }) {
+    try {
+      const defaultViewIdData = this.$cookies.get('defaultViewId') || []
+      const foundView = defaultViewIdData.find(
+        (view) => view.table_id === tableId
+      )
+
+      if (foundView) {
+        const view = getters.get(foundView.id)
+        commit('SET_DEFAULT_VIEW', view?.id)
+      } else {
+        commit('SET_DEFAULT_VIEW', null)
+      }
+    } catch (error) {
+      // in case of any exception, set default view to null, this should load the
+      // first view:
+      commit('SET_DEFAULT_VIEW', null)
+    }
+  },
+  /**
+   * Updates the default view for table in cookies and in Vuex store
+   */
+  setDefaultView({ commit }, { view }) {
+    const defaultViewIdData = this.$cookies.get('defaultViewId') || []
+
+    try {
+      // Find the existing object with the same table_id, if it exists
+      const existingViewIndex = defaultViewIdData.findIndex(
+        (obj) => obj.table_id === view.table_id
+      )
+
+      if (existingViewIndex !== -1) {
+        // If existingView is found, remove it from the array
+        const existingView = defaultViewIdData.splice(existingViewIndex, 1)[0]
+        // Update the id of the existing object
+        existingView.id = view.id
+        // Add the existingView back to the end of the array
+        defaultViewIdData.push(existingView)
+      } else {
+        if (view.id === view.slug) {
+          // we are viewing a public view so ignore for the purposes of setting
+          // a default view
+          return
+        }
+        // Add a new object for the table_id
+        defaultViewIdData.push({ table_id: view.table_id, id: view.id })
+      }
+    } catch (error) {
+      const defaultViewIdData = []
+      // in case of any exception, set default view to the current view:
+      defaultViewIdData.push({ table_id: view.table_id, id: view.id })
+    } finally {
+      // Limit the number of views to remember (based on the max. cookie size)
+      const fittedList = fitInCookie('defaultViewId', defaultViewIdData)
+      const secure = isSecureURL(this.$config.PUBLIC_WEB_FRONTEND_URL)
+      this.$cookies.set('defaultViewId', fittedList, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+        sameSite: 'lax',
+        secure,
+      })
+      commit('SET_DEFAULT_VIEW', view.id)
+    }
   },
   /**
    * Changes the loading state of a specific filter.
@@ -902,6 +994,13 @@ export const getters = {
       .map((item) => item)
       .sort((a, b) => a.order - b.order)
     return items.length > 0 ? items[0] : null
+  },
+  // currently only used during unit tests:
+  defaultId: (state) => {
+    return state.defaultViewId
+  },
+  defaultOrFirst: (state, getters) => {
+    return getters.get(state.defaultViewId) || getters.first
   },
   getAll(state) {
     return state.items

@@ -26,6 +26,22 @@
         />
       </div>
     </div>
+    <div class="row">
+      <div class="col col-12">
+        <Tabs>
+          <Tab :title="$t('localBaserowListRowsForm.searchTabTitle')">
+            <FormInput
+              v-model="values.search_query"
+              type="text"
+              small-label
+              :placeholder="
+                $t('localBaserowListRowsForm.searchFieldPlaceHolder')
+              "
+            />
+          </Tab>
+        </Tabs>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -45,10 +61,11 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['view_id', 'row_id'],
+      allowedValues: ['view_id', 'row_id', 'search_query'],
       values: {
         view_id: null,
         row_id: '',
+        search_query: '',
       },
     }
   },

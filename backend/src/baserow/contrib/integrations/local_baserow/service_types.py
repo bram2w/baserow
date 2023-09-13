@@ -1,8 +1,7 @@
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Type
+from typing import Any, Dict, Optional
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db.models.expressions import OrderBy
 
 from rest_framework import serializers
 
@@ -11,10 +10,16 @@ from baserow.contrib.database.api.rows.serializers import (
     get_row_serializer_class,
 )
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
+from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
+)
+from baserow.contrib.integrations.local_baserow.mixins import (
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+    LocalBaserowSortableViewServiceMixin,
 )
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
@@ -27,15 +32,16 @@ from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.registries import ListServiceType, ServiceType
+from baserow.core.services.registries import ServiceType
 from baserow.core.services.types import ServiceDict
 
-if TYPE_CHECKING:
-    from baserow.contrib.database.fields.field_filters import FilterBuilder
-    from baserow.contrib.database.table.models import GeneratedTableModel
 
-
-class LocalBaserowListRowsUserServiceType(ListServiceType):
+class LocalBaserowListRowsUserServiceType(
+    ServiceType,
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSortableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+):
     """
     This service gives access to a list of rows from the same Baserow instance as the
     one hosting the application.
@@ -48,9 +54,10 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
 
     class SerializedDict(ServiceDict):
         view_id: int
+        search_query: str
 
-    serializer_field_names = ["view_id"]
-    allowed_fields = ["view"]
+    serializer_field_names = ["view_id", "search_query"]
+    allowed_fields = ["view", "search_query"]
 
     serializer_field_overrides = {
         "view_id": serializers.IntegerField(
@@ -58,56 +65,17 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
             allow_null=True,
             help_text="The id of the Baserow view we want the data for.",
         ),
+        "search_query": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            help_text="Any search terms to apply to the service when it is dispatched.",
+        ),
     }
 
     def enhance_queryset(self, queryset):
         return queryset.select_related("view__table").prefetch_related(
             "view__viewfilter_set", "view__viewsort_set"
         )
-
-    def get_dispatch_list_filters(
-        self,
-        service: LocalBaserowListRows,
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> "FilterBuilder":
-        """
-        Responsible for defining how the `LocalBaserowListRows` service should be
-        filtered. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewFilter` records related to it. We'll use the
-        `FilterBuilder` to return a set of filters we can apply to the base queryset.
-
-        :param service: The `LocalBaserow` service we're dispatching.
-        :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A `FilterBuilder` applicable to the service's view.
-        """
-
-        view = service.view
-        if model is None:
-            model = view.table.get_model()
-        return ViewHandler().get_filter_builder(view, model)
-
-    def get_dispatch_list_sorts(
-        self,
-        service: LocalBaserowListRows,
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> List[OrderBy]:
-        """
-        Responsible for defining how `LocalBaserowIntegration` services should be
-        sorted. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewSort` records related to it. We'll use the
-        `ViewHandler.extract_view_sorts` method to return a set of `OrderBy` and
-         field name string which we can apply to the base queryset.
-
-        :param service: The `LocalBaserow` service we're dispatching.
-        :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A list of `OrderBy` expressions.
-        """
-
-        view = service.view
-        if model is None:
-            model = view.table.get_model()
-        service_sorts, _ = ViewHandler().extract_view_sorts(view, model)
-        return service_sorts
 
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
@@ -131,16 +99,16 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
         Get the view Id from the mapping if it exists.
         """
 
-        if prop_name == "view_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
+        if prop_name == "view_id" and "database_views" in id_mapping:
+            return id_mapping["database_views"].get(value, None)
 
         return value
 
-    def dispatch(
+    def dispatch_data(
         self,
         service: LocalBaserowListRows,
-        runtime_formula_context: RuntimeFormulaContext,
-    ):
+        runtime_formula_context: Optional[RuntimeFormulaContext] = None,
+    ) -> Dict[str, Any]:
         """
         Returns a list of rows from the table stored in the service instance.
 
@@ -166,26 +134,51 @@ class LocalBaserowListRowsUserServiceType(ListServiceType):
         model = table.get_model()
         queryset = model.objects.all().enhance_by_fields()
 
-        filter_builder = self.get_dispatch_list_filters(service, model)
+        # Apply the search query to this Service's View.
+        search_query = self.get_dispatch_search(service)
+        if search_query:
+            search_mode = SearchHandler.get_default_search_mode_for_table(table)
+            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
+
+        # Find the `ViewFilter` applicable to this Service's View.
+        filter_builder = self.get_dispatch_filters(service, model)
         queryset = filter_builder.apply_to_queryset(queryset)
 
-        service_sorts = self.get_dispatch_list_sorts(service, model)
+        # Find the `ViewSort` applicable to this Service's `View`.
+        service_sorts = self.get_dispatch_sorts(service, model)
         queryset = queryset.order_by(*service_sorts)
 
         rows = queryset[: self.default_result_limit]
 
+        return {"data": rows, "baserow_table_model": model}
+
+    def dispatch_transform(
+        self,
+        dispatch_data: Dict[str, Any],
+        **kwargs,
+    ) -> Any:
+        """
+        Given the rows found in `dispatch_data`, serializes them.
+
+        :param dispatch_data: The data generated by `dispatch_data`.
+        :raise ServiceImproperlyConfigured: if the table property is missing.
+        :return: The list of rows.
+        """
+
         serializer = get_row_serializer_class(
-            model,
+            dispatch_data["baserow_table_model"],
             RowSerializer,
             is_response=True,
             user_field_names=True,
         )
-        serialized_rows = serializer(rows, many=True).data
-
-        return serialized_rows
+        return serializer(dispatch_data["data"], many=True).data
 
 
-class LocalBaserowGetRowUserServiceType(ServiceType):
+class LocalBaserowGetRowUserServiceType(
+    ServiceType,
+    LocalBaserowFilterableViewServiceMixin,
+    LocalBaserowSearchableViewServiceMixin,
+):
     """
     This service gives access to one specific row from a given table from the same
     Baserow instance as the one hosting the application.
@@ -198,9 +191,10 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
     class SerializedDict(ServiceDict):
         view_id: int
         row_id: str
+        search_query: str
 
-    serializer_field_names = ["view_id", "row_id"]
-    allowed_fields = ["view", "row_id"]
+    serializer_field_names = ["view_id", "row_id", "search_query"]
+    allowed_fields = ["view", "row_id", "search_query"]
 
     serializer_field_overrides = {
         "view_id": serializers.IntegerField(
@@ -212,6 +206,12 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
             required=False,
             allow_blank=True,
             help_text="A formula for defining the intended row.",
+        ),
+        "search_query": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            help_text="Any search queries to apply to the "
+            "service when it is dispatched.",
         ),
     }
 
@@ -247,11 +247,32 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
 
         return value
 
-    def dispatch(
+    def dispatch_transform(
+        self,
+        dispatch_data: Dict[str, Any],
+    ) -> Any:
+        """
+        Responsible for serializing the `dispatch_data` row.
+
+        :param dispatch_data: The `dispatch_data` result.
+        :return:
+        """
+
+        serializer = get_row_serializer_class(
+            dispatch_data["baserow_table_model"],
+            RowSerializer,
+            is_response=True,
+            user_field_names=True,
+        )
+        serialized_row = serializer(dispatch_data["data"]).data
+
+        return serialized_row
+
+    def dispatch_data(
         self,
         service: LocalBaserowGetRow,
         runtime_formula_context: RuntimeFormulaContext,
-    ):
+    ) -> Dict[str, Any]:
         """
         Returns the row targeted by the `row_id` formula from the table stored in the
         service instance.
@@ -296,17 +317,20 @@ class LocalBaserowGetRowUserServiceType(ServiceType):
         )
 
         model = table.get_model()
+        queryset = model.objects.all()
+
+        # Apply the search query to this Service's View.
+        search_query = self.get_dispatch_search(service)
+        if search_query:
+            search_mode = SearchHandler.get_default_search_mode_for_table(table)
+            queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
+
+        # Find the `ViewFilter` applicable to this Service's View.
+        filter_builder = self.get_dispatch_filters(service, model)
+        queryset = filter_builder.apply_to_queryset(queryset)
+
         try:
-            row = model.objects.get(pk=row_id)
+            row = queryset.get(pk=row_id)
+            return {"data": row, "baserow_table_model": model}
         except model.DoesNotExist:
             raise DoesNotExist()
-
-        serializer = get_row_serializer_class(
-            model,
-            RowSerializer,
-            is_response=True,
-            user_field_names=True,
-        )
-        serialized_row = serializer(row).data
-
-        return serialized_row

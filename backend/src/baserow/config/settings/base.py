@@ -226,6 +226,10 @@ else:
             "PORT": os.getenv("DATABASE_PORT", "5432"),
         }
     }
+    if "DATABASE_OPTIONS" in os.environ:
+        DATABASES["default"]["OPTIONS"] = json.loads(
+            os.getenv("DATABASE_OPTIONS", "{}")
+        )
 
 GENERATED_MODEL_CACHE_NAME = "generated-models"
 CACHES = {
@@ -480,7 +484,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.20.0",
+    "VERSION": "1.20.1",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},

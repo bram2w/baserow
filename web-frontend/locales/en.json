@@ -337,6 +337,7 @@
     "formulaFunctions": {
         "upperDescription": "Returns its argument in upper case.",
         "lowerDescription": "Returns its argument in lower case.",
+        "splitPartDescription": "Extracts a segment from a delimited string based on a delimiter and index (numeric indicator indicating which element from string should be returned)",
         "concatDescription": "Returns its arguments joined together as a single piece of text.",
         "addDescription": "Returns its two arguments added together.",
         "minusDescription": "Returns its two arguments subtracted.",

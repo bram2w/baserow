@@ -358,6 +358,15 @@ VALID_FORMULA_TESTS = [
         "http://example.com/wiki/Se%c3%b1or",
     ),
     ("encode_uri_component('Hello World')", "Hello%20World"),
+    ("split_part('John, Jane, Matthew', ', ', 2)", "Jane"),
+    ("split_part('John, Jane, Matthew', 'xxx', 2)", ""),
+    ("split_part('John, Jane, Matthew', ', ', -1.5)", ""),
+    ("split_part('John, Jane, Matthew', ', ', -1)", ""),
+    ("split_part('John, Jane, Matthew', ', ', 0)", ""),
+    ("split_part('John, Jane, Matthew', ', ', 1.5)", "John"),
+    ("split_part('John, Jane, Matthew', ', ', 3.5)", "Matthew"),
+    ("split_part('John, Jane, Matthew', ', ', 4.5)", ""),
+    ("split_part('John, Jane, Matthew', ', ', 9999)", ""),
 ]
 
 

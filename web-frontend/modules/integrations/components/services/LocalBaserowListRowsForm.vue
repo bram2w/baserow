@@ -7,6 +7,16 @@
       :label="$t('localBaserowListRowsForm.viewFieldLabel')"
       :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
     />
+    <Tabs>
+      <Tab :title="$t('localBaserowListRowsForm.searchTabTitle')">
+        <FormInput
+          v-model="values.search_query"
+          type="text"
+          small-label
+          :placeholder="$t('localBaserowListRowsForm.searchFieldPlaceHolder')"
+        />
+      </Tab>
+    </Tabs>
   </form>
 </template>
 
@@ -23,9 +33,10 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['view_id'],
+      allowedValues: ['view_id', 'search_query'],
       values: {
         view_id: null,
+        search_query: '',
       },
     }
   },

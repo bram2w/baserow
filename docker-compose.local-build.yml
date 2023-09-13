@@ -23,6 +23,7 @@ x-backend-variables: &backend-variables
   DATABASE_NAME: ${DATABASE_NAME:-baserow}
   DATABASE_HOST:
   DATABASE_PORT:
+  DATABASE_OPTIONS:
   DATABASE_URL:
 
   # Set these if you want to use an external redis instead of the redis service below.

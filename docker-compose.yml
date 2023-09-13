@@ -39,6 +39,7 @@ x-backend-variables: &backend-variables
   DATABASE_NAME: ${DATABASE_NAME:-baserow}
   DATABASE_HOST:
   DATABASE_PORT:
+  DATABASE_OPTIONS:
   DATABASE_URL:
 
   # Set these if you want to use an external redis instead of the redis service below.
@@ -181,7 +182,7 @@ services:
       local:
 
   backend:
-    image: baserow/backend:1.20.0
+    image: baserow/backend:1.20.1
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -194,7 +195,7 @@ services:
       local:
 
   web-frontend:
-    image: baserow/web-frontend:1.20.0
+    image: baserow/web-frontend:1.20.1
     restart: unless-stopped
     environment:
       BASEROW_PUBLIC_URL: ${BASEROW_PUBLIC_URL-http://localhost}
@@ -225,7 +226,7 @@ services:
       local:
 
   celery:
-    image: baserow/backend:1.20.0
+    image: baserow/backend:1.20.1
     restart: unless-stopped
     environment:
       <<: *backend-variables
@@ -242,7 +243,7 @@ services:
       local:
 
   celery-export-worker:
-    image: baserow/backend:1.20.0
+    image: baserow/backend:1.20.1
     restart: unless-stopped
     command: celery-exportworker
     environment:
@@ -259,7 +260,7 @@ services:
       local:
 
   celery-beat-worker:
-    image: baserow/backend:1.20.0
+    image: baserow/backend:1.20.1
     restart: unless-stopped
     command: celery-beat
     environment:

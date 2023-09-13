@@ -1,5 +1,11 @@
 <template>
-  <Modal left-sidebar left-sidebar-scrollable>
+  <Modal
+    left-sidebar
+    left-sidebar-scrollable
+    :content-padding="
+      settingSelected == null ? true : settingSelected.componentPadding
+    "
+  >
     <template #sidebar>
       <div class="modal-sidebar__head">
         <div class="modal-sidebar__head-name">

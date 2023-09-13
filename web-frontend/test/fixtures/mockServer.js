@@ -43,8 +43,20 @@ export class MockServer {
     return { application, workspace }
   }
 
-  createTable() {
-    return { id: 1, name: 'Test Table 1' }
+  async createAppAndWorkspaceWithMultipleTables(tables) {
+    const workspace = createWorkspace(this.mock, {})
+    this.loadPermissions(workspace)
+    const application = createApplication(this.mock, {
+      workspaceId: workspace.id,
+      tables,
+    })
+    await this.store.dispatch('workspace/fetchAll')
+    await this.store.dispatch('application/fetchAll')
+    return { application, workspace }
+  }
+
+  createTable(id = 1, name = 'Test Table 1') {
+    return { id, name }
   }
 
   createGridView(
