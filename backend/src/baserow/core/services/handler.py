@@ -181,7 +181,9 @@ class ServiceHandler:
         service.delete()
 
     def dispatch_service(
-        self, service: Service, runtime_formula_context: RuntimeFormulaContext
+        self,
+        service: Service,
+        runtime_formula_context: RuntimeFormulaContext,
     ) -> Any:
         """
         Dispatch the given service.

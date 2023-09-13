@@ -21,7 +21,9 @@
     },
     "localBaserowListRowsForm": {
         "viewFieldLabel": "View",
-        "viewFieldPlaceHolder": "Select a view"
+        "viewFieldPlaceHolder": "Select a view",
+        "searchTabTitle": "Search",
+        "searchFieldPlaceHolder": "Enter a search term..."
     },
     "dataProviderType": {
         "dataSource": "Data source",

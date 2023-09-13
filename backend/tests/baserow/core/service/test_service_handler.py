@@ -71,9 +71,13 @@ def test_update_service(data_fixture):
 
     service_type = service_type_registry.get("local_baserow_get_row")
 
-    service_updated = ServiceHandler().update_service(service_type, service, view=view)
+    search_query = "cheese"
+    service_updated = ServiceHandler().update_service(
+        service_type, service, view=view, search_query=search_query
+    )
 
     assert service_updated.view.id == view.id
+    assert service_updated.search_query == search_query
 
 
 @pytest.mark.django_db
