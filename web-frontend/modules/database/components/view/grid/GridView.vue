@@ -1255,7 +1255,8 @@ export default {
           {
             table: this.table,
             view: this.view,
-            fields: this.allVisibleFields,
+            allVisibleFields: this.allVisibleFields,
+            allFieldsInTable: this.fields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
             textData,
             jsonData,
@@ -1307,7 +1308,8 @@ export default {
           {
             table: this.table,
             view: this.view,
-            fields: this.allVisibleFields,
+            allVisibleFields: this.allVisibleFields,
+            allFieldsInTable: this.fields,
             getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
           }
         )

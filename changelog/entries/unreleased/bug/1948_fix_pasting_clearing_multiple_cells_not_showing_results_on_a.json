@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix pasting clearing multiple cells not showing results on a grid view with a hidden filtered",
+    "issue_number": 1948,
+    "bullet_points": [],
+    "created_at": "2023-09-13"
+}
