@@ -226,6 +226,10 @@ else:
             "PORT": os.getenv("DATABASE_PORT", "5432"),
         }
     }
+    if "DATABASE_OPTIONS" in os.environ:
+        DATABASES["default"]["OPTIONS"] = json.loads(
+            os.getenv("DATABASE_OPTIONS", "{}")
+        )
 
 GENERATED_MODEL_CACHE_NAME = "generated-models"
 CACHES = {
