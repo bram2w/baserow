@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "introduce DATABASE_OPTIONS json string env var for setting additional database_options.",
+    "issue_number": 1949,
+    "bullet_points": [],
+    "created_at": "2023-09-07"
+}
