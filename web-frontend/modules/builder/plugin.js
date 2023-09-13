@@ -18,6 +18,7 @@ import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
 import dataSourceStore from '@baserow/modules/builder/store/dataSource'
 import pageParameterStore from '@baserow/modules/builder/store/pageParameter'
 import dataSourceContentStore from '@baserow/modules/builder/store/dataSourceContent'
+import themeStore from '@baserow/modules/builder/store/theme'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
@@ -65,6 +66,8 @@ import {
   DataSourceDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
+import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
+
 export default (context) => {
   const { store, app, isDev } = context
 
@@ -89,6 +92,7 @@ export default (context) => {
   store.registerModule('dataSource', dataSourceStore)
   store.registerModule('pageParameter', pageParameterStore)
   store.registerModule('dataSourceContent', dataSourceContentStore)
+  store.registerModule('theme', themeStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -98,6 +102,7 @@ export default (context) => {
   app.$registry.registerNamespace('pageSettings')
   app.$registry.registerNamespace('pathParamType')
   app.$registry.registerNamespace('builderDataProvider')
+  app.$registry.registerNamespace('themeConfigBlock')
 
   app.$registry.register('application', new BuilderApplicationType(context))
   app.$registry.register('job', new DuplicatePageJobType(context))
@@ -170,4 +175,6 @@ export default (context) => {
     'builderDataProvider',
     new PageParameterDataProviderType(context)
   )
+
+  app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
 }

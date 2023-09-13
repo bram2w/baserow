@@ -19,6 +19,10 @@ class BuilderSettingType extends Registerable {
   get component() {
     return null
   }
+
+  get componentPadding() {
+    return true
+  }
 }
 
 export class IntegrationsBuilderSettingsType extends BuilderSettingType {
@@ -62,6 +66,10 @@ export class ThemeBuilderSettingsType extends BuilderSettingType {
 
   get component() {
     return ThemeSettings
+  }
+
+  get componentPadding() {
+    return false
   }
 }
 

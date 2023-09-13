@@ -26,7 +26,10 @@
         </div>
         <div
           class="modal__box-content"
-          :class="{ 'modal__box-content--scrollable': contentScrollable }"
+          :class="{
+            'modal__box-content--scrollable': contentScrollable,
+            'modal__box-content-no-padding': !contentPadding,
+          }"
         >
           <slot name="content"></slot>
           <a
@@ -129,6 +132,11 @@ export default {
     contentScrollable: {
       type: Boolean,
       default: false,
+      required: false,
+    },
+    contentPadding: {
+      type: Boolean,
+      default: true,
       required: false,
     },
     rightSidebarScrollable: {
