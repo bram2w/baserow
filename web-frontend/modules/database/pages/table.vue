@@ -131,16 +131,17 @@ export default {
     data.view = undefined
 
     // Because we do not have a dashboard for the table yet we're going to redirect to
-    // the first available view.
-    const firstView = store.getters['view/first']
-    if (viewId === null && firstView !== null) {
-      const firstViewType = app.$registry.get('view', firstView.type)
+    // the last visited or the first available view.
+    const viewToUse = store.getters['view/defaultOrFirst']
+
+    if (viewId === null && viewToUse !== null) {
+      const firstViewType = app.$registry.get('view', viewToUse.type)
       // If the view is deactivated, it's not possible to open the view because it will
       // put the user in an unrecoverable state. Therefore, it's better to not select a
       // view, so that the user can choose which they want to select in the top left
       // corner.
       if (!firstViewType.isDeactivated(data.database.workspace.id)) {
-        viewId = firstView.id
+        viewId = viewToUse.id
       }
     }
 

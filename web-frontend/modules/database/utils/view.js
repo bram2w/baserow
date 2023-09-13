@@ -300,3 +300,45 @@ export function getFilters(rootGetters, viewId) {
 
   return filters
 }
+
+/**
+ * Calculates the size of a UTF-8 encoded string in bytes - computes the size
+ * of a string in UTF-8 encoding and utilizes the TextEncoder API if available.
+ *
+ * Using TextEncoder is preferred in Modern Browsers and Node.js Supported
+ * environments because it provides a more efficient and accurate way to encode
+ * strings into UTF-8 bytes and directly calculate the byte size of the encoded
+ * string.
+ *
+ * In some older web browsers or environments where TextEncoder may not be available
+ * (such as SSR where certain browser APIs are absent), it falls back to a less
+ * accurate method and simply returns the length of the string.
+ */
+export function utf8ByteSize(str) {
+  // Use TextEncoder if available (modern browsers and Node.js)
+  if (typeof TextEncoder !== 'undefined') {
+    const encoder = new TextEncoder()
+    const data = encoder.encode(str)
+    return data.length
+  } else {
+    // Fallback for older browsers (may not be as accurate)
+    return str.length
+  }
+}
+
+/**
+ * Limit the size of a cookie's value by removing elements from an array
+ * until it fits within the maximum allowed cookie size.
+ */
+export function fitInCookie(name, list) {
+  const result = []
+  for (let i = list.length - 1; i >= 0; i--) {
+    result.unshift(list[i])
+    const serialized = encodeURIComponent(JSON.stringify(result))
+    if (utf8ByteSize(serialized) > 4096) {
+      result.shift() // Remove the last added item as it caused the size to exceed the limit
+      break
+    }
+  }
+  return result
+}
