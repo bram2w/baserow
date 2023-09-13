@@ -51,3 +51,19 @@ class Service(
         from .registries import service_type_registry
 
         return service_type_registry
+
+
+class SearchableServiceMixin(models.Model):
+    """
+    A mixin which can be applied to Services to denote that they're searchable,
+    and to add a `search_query` field to it.
+    """
+
+    search_query = models.TextField(
+        default="",
+        max_length=225,
+        help_text="The query to apply to the service to narrow the results down.",
+    )
+
+    class Meta:
+        abstract = True

@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import Any, Dict, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
@@ -67,18 +67,49 @@ class ServiceType(
 
         return values
 
-    @abstractmethod
-    def dispatch(
-        self, service: ServiceSubClass, runtime_formula_context: RuntimeFormulaContext
+    def dispatch_transform(
+        self,
+        data: Any,
     ) -> Any:
         """
-        Executes what the service is done for and returns the expected result.
+        Responsible for taking the `dispatch_data` result and transforming its value
+        for API consumer's consumption.
+
+        :param data: The `dispatch_data` result.
+        :return: The transformed `dispatch_transform` result if any.
+        """
+
+    def dispatch_data(
+        self,
+        service: ServiceSubClass,
+        runtime_formula_context: RuntimeFormulaContext,
+    ) -> Any:
+        """
+        Responsible for executing the service's principle task.
+
+        :param service: The service instance to dispatch with.
+        :param runtime_formula_context: The runtime_formula_context instance used to
+            resolve formulas (if any).
+        :return: The service `dispatch_data` result if any.
+        """
+
+    def dispatch(
+        self,
+        service: ServiceSubClass,
+        runtime_formula_context: RuntimeFormulaContext,
+    ) -> Any:
+        """
+        Responsible for calling `dispatch_data` and `dispatch_transform` to execute
+        the service's task, and generating the dispatch's response, respectively.
 
         :param service: The service instance to dispatch with.
         :param runtime_formula_context: The runtime_formula_context instance used to
             resolve formulas (if any).
         :return: The service dispatch result if any.
         """
+
+        data = self.dispatch_data(service, runtime_formula_context)
+        return self.dispatch_transform(data)
 
     def get_property_for_serialization(self, service: Service, prop_name: str):
         """

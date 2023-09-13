@@ -76,6 +76,13 @@ class SearchHandler(
         return settings.PG_SEARCH_CONFIG
 
     @classmethod
+    def get_default_search_mode_for_table(cls, table: "Table") -> str:
+        search_mode = SearchModes.MODE_COMPAT
+        if table.tsvectors_are_supported:
+            search_mode = SearchModes.MODE_FT_WITH_COUNT
+        return search_mode
+
+    @classmethod
     def special_char_tokenizer(cls, expression: Expression) -> Func:
         """
         Due to the fact that we can't create custom postgres full text search

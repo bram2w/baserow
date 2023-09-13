@@ -1,9 +1,11 @@
+from unittest.mock import Mock
+
 from django.db import connection
 
 import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.search.handler import SearchHandler, SearchModes
 from baserow.core.trash.handler import TrashHandler
 
 
@@ -16,6 +18,22 @@ def test_escape_query():
     assert SearchHandler.escape_query("Base<&(|)!>row") == "Base row"
     # Leading or trailing spaces trimmed.
     assert SearchHandler.escape_query("  Full text search  ") == "Full text search"
+
+
+def test_get_default_search_mode_for_table_with_tsvectors_supported():
+    mock_table = Mock(tsvectors_are_supported=True)
+    assert (
+        SearchHandler.get_default_search_mode_for_table(mock_table)
+        == SearchModes.MODE_FT_WITH_COUNT
+    )
+
+
+def test_get_default_search_mode_for_table_with_tsvectors_unsupported():
+    mock_table = Mock(tsvectors_are_supported=False)
+    assert (
+        SearchHandler.get_default_search_mode_for_table(mock_table)
+        == SearchModes.MODE_COMPAT
+    )
 
 
 def test_escape_postgres_query_with_per_token_wildcard():

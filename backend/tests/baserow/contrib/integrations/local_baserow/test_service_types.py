@@ -1,10 +1,13 @@
 from unittest.mock import Mock, patch
 
+from django.db import transaction
+
 import pytest
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.service_types import (
+    LocalBaserowGetRowUserServiceType,
     LocalBaserowListRowsUserServiceType,
 )
 from baserow.core.exceptions import PermissionException
@@ -61,7 +64,7 @@ def test_update_local_baserow_list_rows_service(data_fixture):
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_list_rows_service(data_fixture):
+def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -85,9 +88,9 @@ def test_dispatch_local_baserow_list_rows_service(data_fixture):
         view=view,
     )
 
-    runtime_formula_context = {}
-
-    result = ServiceHandler().dispatch_service(service, runtime_formula_context)
+    service_type = LocalBaserowListRowsUserServiceType()
+    dispatch_data = service_type.dispatch_data(service)
+    result = service_type.dispatch_transform(dispatch_data)
 
     assert [dict(r) for r in result] == [
         {
@@ -106,7 +109,7 @@ def test_dispatch_local_baserow_list_rows_service(data_fixture):
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_list_rows_service_permission_denied(
+def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
     data_fixture, stub_check_permissions
 ):
     user = data_fixture.create_user()
@@ -132,41 +135,25 @@ def test_dispatch_local_baserow_list_rows_service_permission_denied(
         view=view,
     )
 
-    runtime_formula_context = {}
-
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        LocalBaserowListRowsUserServiceType().dispatch_data(service)
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_list_rows_service_validation_error(data_fixture):
+def test_local_baserow_list_rows_service_dispatch_data_validation_error(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    _ = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Name", "text"),
-            ("My Color", "text"),
-        ],
-        rows=[
-            ["BMW", "Blue"],
-            ["Audi", "Orange"],
-        ],
-    )
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
-
     service = data_fixture.create_local_baserow_list_rows_service(
         integration=integration, view=None
     )
 
-    runtime_formula_context = {}
-
     with pytest.raises(ServiceImproperlyConfigured):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        LocalBaserowListRowsUserServiceType().dispatch_data(service)
 
 
 @pytest.mark.django_db
@@ -178,12 +165,10 @@ def test_create_local_baserow_get_row_service(data_fixture):
         application=page.builder, user=user
     )
 
-    service_type = service_type_registry.get("local_baserow_get_row")
-
+    service_type = LocalBaserowGetRowUserServiceType()
     values = service_type.prepare_values(
         {"view_id": view.id, "integration_id": integration.id, "row_id": "1"}, user
     )
-
     service = ServiceHandler().create_service(service_type, **values)
 
     assert service.view.id == view.id
@@ -203,8 +188,7 @@ def test_update_local_baserow_get_row_service(data_fixture):
         view=view,
     )
 
-    service_type = service.get_type()
-
+    service_type = LocalBaserowGetRowUserServiceType()
     values = service_type.prepare_values(
         {"view_id": None, "integration_id": None}, user
     )
@@ -218,7 +202,7 @@ def test_update_local_baserow_get_row_service(data_fixture):
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_get_row_service(data_fixture):
+def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -240,10 +224,13 @@ def test_dispatch_local_baserow_get_row_service(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, view=view, row_id="get('test')"
     )
+    service_type = LocalBaserowGetRowUserServiceType()
 
     runtime_formula_context = {"test": 2}
-
-    result = ServiceHandler().dispatch_service(service, runtime_formula_context)
+    dispatch_data = service_type.dispatch_data(
+        service, runtime_formula_context  # type: ignore
+    )
+    result = service_type.dispatch_transform(dispatch_data)
 
     assert result == {
         "id": rows[1].id,
@@ -254,7 +241,74 @@ def test_dispatch_local_baserow_get_row_service(data_fixture):
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_get_row_service_permission_denied(
+def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixture):
+    # Demonstrates that you can fetch a specific row (1) and filter for a specific
+    # value to exclude it from the `dispatch_data` result.
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+            ["Audi"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_view_filter(
+        view=view, field=fields[0], type="contains", value="Au"
+    )
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, view=view, row_id="1"
+    )
+
+    runtime_formula_context = {}
+    with pytest.raises(DoesNotExist):
+        LocalBaserowGetRowUserServiceType().dispatch_data(
+            service, runtime_formula_context  # type: ignore
+        )
+
+
+@pytest.mark.django_db
+def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fixture):
+    # Demonstrates that you can fetch a specific row (1) and search for a specific
+    # value to exclude it from the `dispatch_data` result.
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+            ["Audi"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, view=view, row_id="1", search_query="Au"
+    )
+
+    runtime_formula_context = {}
+    with pytest.raises(DoesNotExist):
+        LocalBaserowGetRowUserServiceType().dispatch_data(
+            service, runtime_formula_context  # type: ignore
+        )
+
+
+@pytest.mark.django_db
+def test_local_baserow_get_row_service_dispatch_data_permission_denied(
     data_fixture, stub_check_permissions
 ):
     user = data_fixture.create_user()
@@ -284,11 +338,13 @@ def test_dispatch_local_baserow_get_row_service_permission_denied(
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        LocalBaserowGetRowUserServiceType().dispatch_data(
+            service, runtime_formula_context  # type: ignore
+        )
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_get_row_service_validation_error(data_fixture):
+def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -310,11 +366,12 @@ def test_dispatch_local_baserow_get_row_service_validation_error(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, view=None, row_id="1"
     )
+    service_type = LocalBaserowGetRowUserServiceType()
 
     runtime_formula_context = {"test": "1"}
 
     with pytest.raises(ServiceImproperlyConfigured):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, view=view, row_id="get('test')"
@@ -323,18 +380,18 @@ def test_dispatch_local_baserow_get_row_service_validation_error(data_fixture):
     runtime_formula_context = {"test": ""}
 
     with pytest.raises(ServiceImproperlyConfigured):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, view=view, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
 
 
 @pytest.mark.django_db
-def test_dispatch_local_baserow_get_row_service_row_not_exist(data_fixture):
+def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table, fields, rows = data_fixture.build_table(
@@ -360,11 +417,13 @@ def test_dispatch_local_baserow_get_row_service_row_not_exist(data_fixture):
     runtime_formula_context = {"test": "999"}
 
     with pytest.raises(DoesNotExist):
-        ServiceHandler().dispatch_service(service, runtime_formula_context)
+        LocalBaserowGetRowUserServiceType().dispatch_data(
+            service, runtime_formula_context  # type: ignore
+        )
 
 
 @patch("baserow.contrib.integrations.local_baserow.mixins.ViewHandler")
-def test_local_baserow_list_rows_service_get_dispatch_list_filters_without_model(
+def test_local_baserow_filterable_view_service_mixin_without_model(
     mock_view_handler,
 ):
     mock_model = Mock()
@@ -379,9 +438,14 @@ def test_local_baserow_list_rows_service_get_dispatch_list_filters_without_model
 
 
 @pytest.mark.django_db
-def test_local_baserow_list_rows_service_get_service_list_filters(data_fixture):
+def test_local_baserow_list_rows_service_dispatch_data_with_view_filter(
+    data_fixture,
+):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
     database = data_fixture.create_database_application(workspace=builder.workspace)
     table = TableHandler().create_table_and_fields(
         user=user,
@@ -404,20 +468,18 @@ def test_local_baserow_list_rows_service_get_service_list_filters(data_fixture):
     view = data_fixture.create_grid_view(user, table=table, created_by=user)
     data_fixture.create_view_filter(view=view, field=field, type="contains", value="Ch")
 
-    service_type: LocalBaserowListRowsUserServiceType = service_type_registry.get(
-        LocalBaserowListRowsUserServiceType.type
+    service_type = LocalBaserowListRowsUserServiceType()
+    service = data_fixture.create_local_baserow_list_rows_service(
+        view=view, integration=integration
     )
-    service = data_fixture.create_local_baserow_list_rows_service(view=view)
-    filter_builder = service_type.get_dispatch_filters(service)
 
-    model = table.get_model()
-    queryset = filter_builder.apply_to_queryset(model.objects.all())
-    queryset_pks = list(queryset.values_list("id", flat=True))
-    assert queryset_pks == [row_1.id, row_2.id]
+    dispatch_data = service_type.dispatch_data(service)
+    queryset = dispatch_data["data"]
+    assert list(queryset.values_list("id", flat=True)) == [row_1.id, row_2.id]
 
 
 @patch("baserow.contrib.integrations.local_baserow.mixins.ViewHandler")
-def test_local_baserow_list_rows_service_get_dispatch_list_sorts_without_model(
+def test_local_baserow_sortable_view_service_mixin_without_model(
     mock_view_handler,
 ):
     mock_model = Mock()
@@ -432,9 +494,12 @@ def test_local_baserow_list_rows_service_get_dispatch_list_sorts_without_model(
 
 
 @pytest.mark.django_db
-def test_local_baserow_list_rows_service_get_service_list_sorts(data_fixture):
+def test_local_baserow_list_rows_service_dispatch_data_with_view_sort(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
     database = data_fixture.create_database_application(workspace=builder.workspace)
     table = TableHandler().create_table_and_fields(
         user=user,
@@ -457,13 +522,52 @@ def test_local_baserow_list_rows_service_get_service_list_sorts(data_fixture):
     view = data_fixture.create_grid_view(user, table=table, created_by=user)
     data_fixture.create_view_sort(view=view, field=field, order="ASC")
 
-    service_type: LocalBaserowListRowsUserServiceType = service_type_registry.get(
-        LocalBaserowListRowsUserServiceType.type
+    service_type = LocalBaserowListRowsUserServiceType()
+    service = data_fixture.create_local_baserow_list_rows_service(
+        view=view, integration=integration
     )
-    service = data_fixture.create_local_baserow_list_rows_service(view=view)
 
-    model = table.get_model()
-    service_sorts = service_type.get_dispatch_sorts(service, model)
-    queryset = model.objects.all().order_by(*service_sorts)
-    queryset_pks = list(queryset.values_list("id", flat=True))
-    assert queryset_pks == [row_3.id, row_1.id, row_2.id]
+    dispatch_data = service_type.dispatch_data(service)
+    queryset = dispatch_data["data"]
+    assert list(queryset.values_list("id", flat=True)) == [row_3.id, row_1.id, row_2.id]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_local_baserow_list_rows_service_dispatch_data_with_service_search(
+    data_fixture,
+):
+    with transaction.atomic():
+        user = data_fixture.create_user()
+        builder = data_fixture.create_builder_application(user=user)
+        integration = data_fixture.create_local_baserow_integration(
+            application=builder, user=user
+        )
+        database = data_fixture.create_database_application(workspace=builder.workspace)
+        table = TableHandler().create_table_and_fields(
+            user=user,
+            database=database,
+            name=data_fixture.fake.name(),
+            fields=[
+                ("Ingredient", "text", {}),
+            ],
+        )
+        view = data_fixture.create_grid_view(user, table=table, created_by=user)
+        field = table.field_set.get(name="Ingredient")
+        [row_1, row_2, _] = RowHandler().create_rows(
+            user,
+            table,
+            rows_values=[
+                {f"field_{field.id}": "Cheese"},
+                {f"field_{field.id}": "Chicken"},
+                {f"field_{field.id}": "Beef"},
+            ],
+        )
+
+    service_type = LocalBaserowListRowsUserServiceType()
+    service = data_fixture.create_local_baserow_list_rows_service(
+        view=view, integration=integration, search_query="ch"
+    )
+
+    dispatch_data = service_type.dispatch_data(service)
+    queryset = dispatch_data["data"]
+    assert list(queryset.values_list("id", flat=True)) == [row_1.id, row_2.id]

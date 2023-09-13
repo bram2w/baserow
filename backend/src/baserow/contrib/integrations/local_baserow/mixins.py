@@ -7,7 +7,7 @@ from baserow.contrib.database.views.handler import ViewHandler
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.field_filters import FilterBuilder
     from baserow.contrib.database.table.models import GeneratedTableModel
-    from baserow.contrib.integrations.local_baserow.models import LocalBaserowListRows
+    from baserow.core.services.types import ServiceSubClass
 
 
 class LocalBaserowFilterableViewServiceMixin:
@@ -18,7 +18,7 @@ class LocalBaserowFilterableViewServiceMixin:
 
     def get_dispatch_filters(
         self,
-        service: "LocalBaserowListRows",
+        service: "ServiceSubClass",
         model: Optional[Type["GeneratedTableModel"]] = None,
     ) -> "FilterBuilder":
         """
@@ -46,7 +46,7 @@ class LocalBaserowSortableViewServiceMixin:
 
     def get_dispatch_sorts(
         self,
-        service: "LocalBaserowListRows",
+        service: "ServiceSubClass",
         model: Optional[Type["GeneratedTableModel"]] = None,
     ) -> List[OrderBy]:
         """
@@ -73,3 +73,14 @@ class LocalBaserowSearchableViewServiceMixin:
     A mixin for LocalBaserow service types so that when they dispatch, search
     queries applied to their service's view are applied to the queryset.
     """
+
+    def get_dispatch_search(self, service: "ServiceSubClass") -> str:
+        """
+        Returns this service's search query, which can be applied to the dispatch
+        queryset.
+
+        :param service: The `LocalBaserow` service we're dispatching.
+        :return: string
+        """
+
+        return service.search_query
