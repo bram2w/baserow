@@ -1483,7 +1483,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             field_annotation = field_annotated_order_by.annotation
             field_order_by = field_annotated_order_by.order
 
-            if queryset and field_annotation is not None:
+            if queryset is not None and field_annotation is not None:
                 queryset = queryset.annotate(**field_annotation)
 
             order_by.append(field_order_by)
