@@ -252,7 +252,7 @@ export default {
      */
     _beforeUnSelect() {
       this.beforeUnSelect()
-      this.$emit('unselected', {})
+      this.$emit('unselected', { component: this })
     },
     /**
      * Method that is called when the column is selected. For example when clicked

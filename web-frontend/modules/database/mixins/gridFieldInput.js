@@ -218,6 +218,9 @@ export default {
     canEmpty() {
       return !this.editing
     },
+    canKeyDown() {
+      return !this.editing
+    },
     getError() {
       return this.getValidationError(this.editing ? this.copy : this.value)
     },
