@@ -192,7 +192,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
         >
           <div
             class="scrollbars"
-            style="left: 70px;"
+            style="left: 72px;"
           >
             <!---->
              
@@ -201,18 +201,18 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__left"
-            style="width: 70px;"
+            style="width: 72px;"
           >
             <div
               class="grid-view__inner"
-              style="min-width: 70px;"
+              style="min-width: 72px;"
             >
               <div
                 class="grid-view__head"
               >
                 <div
                   class="grid-view__column"
-                  style="width: 70px;"
+                  style="width: 72px;"
                 >
                   <!---->
                 </div>
@@ -228,7 +228,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 >
                   <div
                     class="grid-view__placeholder"
-                    style="height: 33px; width: 70px;"
+                    style="height: 33px; width: 72px;"
                   />
                    
                   <div
@@ -242,7 +242,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                        
                       <div
                         class="grid-view__column"
-                        style="width: 70px;"
+                        style="width: 72px;"
                       >
                         <div
                           class="grid-view__row-info"
@@ -309,14 +309,14 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
            
           <div
             class="grid-view__divider"
-            style="left: 70px;"
+            style="left: 72px;"
           />
            
           <!---->
            
           <div
             class="grid-view__right"
-            style="left: 70px;"
+            style="left: 72px;"
           >
             <div
               class="grid-view__inner"
@@ -580,12 +580,12 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
           >
             <div
               class="grid-view__row-dragging"
-              style="width: 870px; top: 0px;"
+              style="width: 872px; top: 0px;"
             />
              
             <div
               class="grid-view__row-target"
-              style="width: 870px; top: 0px;"
+              style="width: 872px; top: 0px;"
             />
           </div>
            
