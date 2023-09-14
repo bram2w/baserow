@@ -77,7 +77,7 @@ class SearchHandler(
 
     @classmethod
     def get_default_search_mode_for_table(cls, table: "Table") -> str:
-        search_mode = SearchModes.MODE_COMPAT
+        search_mode = settings.DEFAULT_SEARCH_MODE
         if table.tsvectors_are_supported:
             search_mode = SearchModes.MODE_FT_WITH_COUNT
         return search_mode
