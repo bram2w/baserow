@@ -46,10 +46,11 @@
     </FormElement>
     <div v-if="forcedType === null" class="control">
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           ref="fieldTypesDropdown"
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
+          :fixed-items="true"
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem
@@ -60,7 +61,7 @@
             :value="fieldType.type"
             :disabled="primary && !fieldType.canBePrimaryField"
           ></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
         <div v-if="$v.values.type.$error" class="error">
           {{ $t('error.requiredField') }}
         </div>
@@ -92,12 +93,10 @@ import {
   RESERVED_BASEROW_FIELD_NAMES,
   MAX_FIELD_NAME_LENGTH,
 } from '@baserow/modules/database/utils/constants'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 // @TODO focus form on open
 export default {
   name: 'FieldForm',
-  components: { FixedItemsDropdown },
   mixins: [form],
   props: {
     table: {

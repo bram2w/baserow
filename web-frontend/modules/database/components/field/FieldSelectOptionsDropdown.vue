@@ -24,7 +24,14 @@
       </div>
       <i v-if="!disabled" class="dropdown__toggle-icon fas fa-caret-down"></i>
     </a>
-    <div class="dropdown__items" :class="{ hidden: !open }">
+    <div
+      ref="itemsContainer"
+      class="dropdown__items"
+      :class="{
+        hidden: !open,
+        'dropdown__items--fixed': fixedItemsImmutable,
+      }"
+    >
       <div v-if="showSearch" class="select__search">
         <i class="select__search-icon fas fa-search"></i>
         <input
@@ -43,6 +50,7 @@
         v-prevent-parent-scroll
         v-auto-overflow-scroll
         class="select__items"
+        :class="{ 'select__items--no-max-height': fixedItemsImmutable }"
         tabindex=""
       >
         <FieldSelectOptionsDropdownItem

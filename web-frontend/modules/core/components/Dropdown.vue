@@ -35,7 +35,10 @@
     <div
       ref="itemsContainer"
       class="dropdown__items"
-      :class="[{ hidden: !open }, itemsContainerAdditionalClass]"
+      :class="{
+        hidden: !open,
+        'dropdown__items--fixed': fixedItemsImmutable,
+      }"
     >
       <div v-if="showSearch" class="select__search">
         <i class="select__search-icon fas fa-search"></i>
@@ -53,7 +56,8 @@
         v-show="hasDropdownItem"
         ref="items"
         v-auto-overflow-scroll
-        :class="['select__items', selectItemsAdditionalClass]"
+        class="select__items"
+        :class="{ 'select__items--no-max-height': fixedItemsImmutable }"
         tabindex=""
       >
         <slot></slot>
@@ -76,11 +80,5 @@ import dropdown from '@baserow/modules/core/mixins/dropdown'
 export default {
   name: 'Dropdown',
   mixins: [dropdown],
-  data() {
-    return {
-      itemsContainerAdditionalClass: '',
-      selectItemsAdditionalClass: '',
-    }
-  },
 }
 </script>

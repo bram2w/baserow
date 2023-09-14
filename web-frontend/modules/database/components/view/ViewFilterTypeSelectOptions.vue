@@ -3,6 +3,7 @@
     :value="copy"
     :options="field.select_options"
     :disabled="disabled"
+    :fixed-items="true"
     class="dropdown--floating filters__value-dropdown dropdown--tiny"
     @input="input"
   ></FieldSelectOptionsDropdown>

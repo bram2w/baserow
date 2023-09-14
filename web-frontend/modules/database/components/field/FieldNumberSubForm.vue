@@ -5,9 +5,10 @@
         $t('fieldNumberSubForm.decimalPlacesLabel')
       }}</label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.number_decimal_places"
           :class="{ 'dropdown--error': $v.values.number_decimal_places.$error }"
+          :fixed-items="true"
           @hide="$v.values.number_decimal_places.$touch()"
         >
           <DropdownItem name="0 (1)" :value="0"></DropdownItem>
@@ -21,7 +22,7 @@
           <DropdownItem name="8 (1.00000000)" :value="8"></DropdownItem>
           <DropdownItem name="9 (1.000000000)" :value="9"></DropdownItem>
           <DropdownItem name="10 (1.0000000000)" :value="10"></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
       </div>
     </div>
     <div v-if="allowSetNumberNegative" class="control">
@@ -39,11 +40,9 @@ import { required } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'FieldNumberSubForm',
-  components: { FixedItemsDropdown },
   mixins: [form, fieldSubForm],
   props: {
     allowSetNumberNegative: {
