@@ -19,10 +19,11 @@
         $t('fieldRatingSubForm.style')
       }}</label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.style"
           class="dropdown--floating rating-field-form__dropdown-style"
           :class="{ 'dropdown--error': $v.values.style.$error }"
+          :fixed-items="true"
           :show-search="false"
           @hide="$v.values.style.$touch()"
         >
@@ -33,7 +34,7 @@
             :value="style"
             :icon="style"
           />
-        </FixedItemsDropdown>
+        </Dropdown>
       </div>
     </div>
     <div class="control">
@@ -41,11 +42,12 @@
         $t('fieldRatingSubForm.maxValue')
       }}</label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.max_value"
           class="dropdown--floating"
           :class="{ 'dropdown--error': $v.values.max_value.$error }"
           :show-search="false"
+          :fixed-items="true"
           @hide="$v.values.max_value.$touch()"
         >
           <DropdownItem
@@ -54,7 +56,7 @@
             :name="`${index}`"
             :value="index"
           ></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
       </div>
     </div>
     <ColorSelectContext
@@ -71,13 +73,12 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import ColorSelectContext from '@baserow/modules/core/components/ColorSelectContext'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 const colors = [['dark-blue', 'dark-green', 'dark-orange', 'dark-red']]
 
 export default {
   name: 'FieldRatingSubForm',
-  components: { FixedItemsDropdown, ColorSelectContext },
+  components: { ColorSelectContext },
   mixins: [form, fieldSubForm],
   data() {
     return {

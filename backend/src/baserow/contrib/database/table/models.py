@@ -191,7 +191,7 @@ class TableModelQuerySet(models.QuerySet):
         """
 
         if not search_mode:
-            search_mode = SearchModes.MODE_COMPAT
+            search_mode = settings.DEFAULT_SEARCH_MODE
 
         # If we are searching with Postgres full text search (whether with
         # or without a COUNT)...

@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fixed that the dropdowns in the filters context are being cut off",
+  "issue_number": 1965,
+  "bullet_points": [],
+  "created_at": "2023-09-14"
+}

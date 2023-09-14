@@ -11,9 +11,10 @@
         {{ label }}
       </label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.target_field_id"
           :class="{ 'dropdown--error': $v.values.target_field_id.$error }"
+          :fixed-items="true"
           @hide="$v.values.target_field_id.$touch()"
           @input="targetFieldChanged($event)"
         >
@@ -24,7 +25,7 @@
             :value="field.id"
             :icon="field.icon"
           ></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
       </div>
       <div v-if="$v.values.target_field_id.$error" class="error">
         {{ $t('error.requiredField') }}
@@ -39,11 +40,9 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import FieldService from '@baserow/modules/database/services/field'
 import { notifyIf } from '@baserow/modules/core/utils/error'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown.vue'
 
 export default {
   name: 'FieldSelectTargetFieldSubForm',
-  components: { FixedItemsDropdown },
   mixins: [form],
   props: {
     database: {

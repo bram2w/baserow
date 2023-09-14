@@ -6,9 +6,10 @@
           {{ $t('fieldLinkRowSubForm.selectTableLabel') }}
         </label>
         <div class="control__elements">
-          <FixedItemsDropdown
+          <Dropdown
             v-model="values.link_row_table_id"
             :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
+            :fixed-items="true"
             :disabled="!isSelectedFieldAccessible"
             @hide="$v.values.link_row_table_id.$touch()"
           >
@@ -18,7 +19,7 @@
               :name="table.name"
               :value="table.id"
             ></DropdownItem>
-          </FixedItemsDropdown>
+          </Dropdown>
           <div v-if="$v.values.link_row_table_id.$error" class="error">
             {{ $t('error.requiredField') }}
           </div>
@@ -41,11 +42,9 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'FieldLinkRowSubForm',
-  components: { FixedItemsDropdown },
   mixins: [form, fieldSubForm],
   data() {
     return {

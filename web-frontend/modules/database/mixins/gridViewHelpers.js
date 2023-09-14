@@ -9,7 +9,7 @@ export default {
   },
   data() {
     return {
-      gridViewRowDetailsWidth: 70,
+      gridViewRowDetailsWidth: 72,
     }
   },
   beforeCreate() {

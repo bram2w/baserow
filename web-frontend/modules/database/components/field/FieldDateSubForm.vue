@@ -5,9 +5,10 @@
         $t('fieldDateSubForm.dateFormatLabel')
       }}</label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.date_format"
           :class="{ 'dropdown--error': $v.values.date_format.$error }"
+          :fixed-items="true"
           @hide="$v.values.date_format.$touch()"
         >
           <DropdownItem
@@ -22,7 +23,7 @@
             :name="$t('fieldDateSubForm.dateFormatISO') + ' (2020-02-20)'"
             value="ISO"
           ></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
       </div>
     </div>
     <div class="control">
@@ -35,8 +36,9 @@
             $t('fieldDateSubForm.timeFormatLabel')
           }}</label>
           <div class="control__elements">
-            <FixedItemsDropdown
+            <Dropdown
               v-model="values.date_time_format"
+              :fixed-items="true"
               @hide="$v.values.date_time_format.$touch()"
             >
               <DropdownItem
@@ -47,7 +49,7 @@
                 :name="$t('fieldDateSubForm.12Hour') + ' (11:00 PM)'"
                 value="12"
               ></DropdownItem>
-            </FixedItemsDropdown>
+            </Dropdown>
           </div>
         </div>
         <Checkbox
@@ -73,6 +75,7 @@
               :initial-display-name="defaultValues.date_force_timezone"
               :fetch-on-open="true"
               :debounce-time="100"
+              :fixed-items="true"
               @input="(timezone) => (values.date_force_timezone = timezone)"
             ></PaginatedDropdown>
           </div>
@@ -110,12 +113,10 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import fieldSubForm from '@baserow/modules/database/mixins/fieldSubForm'
 import PaginatedDropdown from '@baserow/modules/core/components/PaginatedDropdown'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown.vue'
 
 export default {
   name: 'FieldDateSubForm',
   components: {
-    FixedItemsDropdown,
     PaginatedDropdown,
   },
   mixins: [form, fieldSubForm],

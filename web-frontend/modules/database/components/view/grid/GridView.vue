@@ -356,6 +356,11 @@ export default {
       // not, the primary field is not sticky, so it's easier to view all data on for
       // example a smartphone.
       canFitInTwoColumns: true,
+      // When a cell is selected, the component will be propagated and stored into this
+      // array until it's unselected. Having these components here can be useful if a
+      // global keyboard shortcut must be blocked if a single line text field cell is
+      // in an editing state for example.
+      selectedCellComponents: [],
     }
   },
   computed: {
@@ -895,6 +900,13 @@ export default {
      * we might need to scroll a little bit.
      */
     selectedCell({ component, row, field }) {
+      // Put the selected cell component in an array, so that we can check whether it's
+      // allowed to hit keyboard shortcuts, click outside, etc when a global keyboard
+      // short is called.
+      if (!this.selectedCellComponents.includes(component)) {
+        this.selectedCellComponents.push(component)
+      }
+
       const element = component.$el
       this.scrollToCellElement(element, 'both', field)
 
@@ -906,7 +918,14 @@ export default {
     /**
      * When a cell is unselected need to change the selected state of the row.
      */
-    unselectedCell({ row, field }) {
+    unselectedCell({ component, row, field }) {
+      // Remove the selected cell component in an array because we don't have to check
+      // if keyboard shortcuts are allowed, click outside, etc is allowed anymore.
+      if (this.selectedCellComponents.includes(component)) {
+        const index = this.selectedCellComponents.indexOf(component)
+        this.selectedCellComponents.splice(index, 1)
+      }
+
       // We want to change selected state of the row on the next tick because if another
       // cell within a row is selected, we want to wait for that selected state tot
       // change. This will make sure that the row is stays selected.
@@ -1084,7 +1103,22 @@ export default {
         ArrowDown: 'below',
       }
       const { key, shiftKey } = event
-      if (arrowKeys.includes(key) && shiftKey) {
+      if (
+        arrowKeys.includes(key) &&
+        shiftKey &&
+        // Only allow this event if there is an active single cell selection, or
+        // multiple selection.
+        (this.$store.getters[this.storePrefix + 'view/grid/hasSelectedCell'] ||
+          this.$store.getters[
+            this.storePrefix + 'view/grid/isMultiSelectActive'
+          ]) &&
+        // And there is no selected cell component blocking the select next events. A
+        // single line text field can for example block this while it's in an editing
+        // state.
+        this.selectedCellComponents.every((component) => {
+          return component.canSelectNext(event)
+        })
+      ) {
         event.preventDefault()
 
         const { position, fieldIndex, rowIndex } = await this.$store.dispatch(

@@ -4,6 +4,7 @@
     :disabled="disabled"
     :value="copy"
     :show-empty-value="false"
+    :fixed-items="true"
     class="dropdown--floating filters__value-dropdown dropdown--tiny"
     @input="input"
   ></FieldCollaboratorDropdown>

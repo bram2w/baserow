@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.shortcuts import reverse
+from django.test.utils import override_settings
 
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
@@ -271,7 +272,9 @@ def test_can_create_and_index_and_search_interesting_test_table(
 
 
 @pytest.mark.django_db
-def test_search_grid_defaults_to_compat_mode(api_client, data_fixture):
+def test_search_grid_defaults_to_compat_mode_when_env_var_not_set(
+    api_client, data_fixture
+):
     user, jwt_token = data_fixture.create_user_and_token()
 
     table = data_fixture.create_database_table(user=user)
@@ -308,4 +311,40 @@ def test_search_grid_defaults_to_compat_mode(api_client, data_fixture):
                 text_field.db_column: "econ#$%omy",
             }
         ],
+    }
+
+
+@pytest.mark.django_db
+@override_settings(DEFAULT_SEARCH_MODE=SearchModes.MODE_FT_WITH_COUNT)
+def test_search_grid_defaults_to_mode_set_via_env_var(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field", order=0)
+    view = data_fixture.create_grid_view(user=user, table=table)
+
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            text_field.id: "econ#$%omy",
+        },
+    )
+
+    response = api_client.get(
+        reverse(
+            "api:database:views:grid:list",
+            kwargs={"view_id": view.id},
+        ),
+        data={"search": "#$%"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    response_json = response.json()
+    assert response_json == {
+        "count": 0,
+        "next": None,
+        "previous": None,
+        "results": [],
     }

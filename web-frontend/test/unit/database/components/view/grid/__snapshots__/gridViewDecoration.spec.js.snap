@@ -6,7 +6,7 @@ exports[`GridView component with decoration Default component with first_cell de
 >
   <div
     class="scrollbars"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <!---->
      
@@ -15,18 +15,18 @@ exports[`GridView component with decoration Default component with first_cell de
    
   <div
     class="grid-view__left"
-    style="width: 70px;"
+    style="width: 72px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 70px;"
+      style="min-width: 72px;"
     >
       <div
         class="grid-view__head"
       >
         <div
           class="grid-view__column"
-          style="width: 70px;"
+          style="width: 72px;"
         >
           <div>
             <a
@@ -51,7 +51,7 @@ exports[`GridView component with decoration Default component with first_cell de
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 70px;"
+            style="height: 66px; width: 72px;"
           />
            
           <div
@@ -65,7 +65,7 @@ exports[`GridView component with decoration Default component with first_cell de
                
               <div
                 class="grid-view__column"
-                style="width: 70px;"
+                style="width: 72px;"
               >
                 <div
                   class="grid-view__row-info"
@@ -105,11 +105,11 @@ exports[`GridView component with decoration Default component with first_cell de
            
           <div
             class="grid-view__row"
-            style="width: 70px;"
+            style="width: 72px;"
           >
             <div
               class="grid-view__column"
-              style="width: 70px;"
+              style="width: 72px;"
             >
               <a
                 class="grid-view__add-row"
@@ -155,14 +155,14 @@ exports[`GridView component with decoration Default component with first_cell de
    
   <div
     class="grid-view__divider"
-    style="left: 70px;"
+    style="left: 72px;"
   />
    
   <!---->
    
   <div
     class="grid-view__right"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <div
       class="grid-view__inner"
@@ -455,12 +455,12 @@ exports[`GridView component with decoration Default component with first_cell de
   >
     <div
       class="grid-view__row-dragging"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
      
     <div
       class="grid-view__row-target"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
   </div>
    
@@ -474,7 +474,7 @@ exports[`GridView component with decoration Default component with row wrapper d
 >
   <div
     class="scrollbars"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <!---->
      
@@ -483,18 +483,18 @@ exports[`GridView component with decoration Default component with row wrapper d
    
   <div
     class="grid-view__left"
-    style="width: 70px;"
+    style="width: 72px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 70px;"
+      style="min-width: 72px;"
     >
       <div
         class="grid-view__head"
       >
         <div
           class="grid-view__column"
-          style="width: 70px;"
+          style="width: 72px;"
         >
           <div>
             <a
@@ -519,7 +519,7 @@ exports[`GridView component with decoration Default component with row wrapper d
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 70px;"
+            style="height: 66px; width: 72px;"
           />
            
           <div
@@ -533,11 +533,11 @@ exports[`GridView component with decoration Default component with row wrapper d
            
           <div
             class="grid-view__row"
-            style="width: 70px;"
+            style="width: 72px;"
           >
             <div
               class="grid-view__column"
-              style="width: 70px;"
+              style="width: 72px;"
             >
               <a
                 class="grid-view__add-row"
@@ -583,14 +583,14 @@ exports[`GridView component with decoration Default component with row wrapper d
    
   <div
     class="grid-view__divider"
-    style="left: 70px;"
+    style="left: 72px;"
   />
    
   <!---->
    
   <div
     class="grid-view__right"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <div
       class="grid-view__inner"
@@ -852,12 +852,12 @@ exports[`GridView component with decoration Default component with row wrapper d
   >
     <div
       class="grid-view__row-dragging"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
      
     <div
       class="grid-view__row-target"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
   </div>
    
@@ -871,7 +871,7 @@ exports[`GridView component with decoration Default component with unavailable d
 >
   <div
     class="scrollbars"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <!---->
      
@@ -880,18 +880,18 @@ exports[`GridView component with decoration Default component with unavailable d
    
   <div
     class="grid-view__left"
-    style="width: 70px;"
+    style="width: 72px;"
   >
     <div
       class="grid-view__inner"
-      style="min-width: 70px;"
+      style="min-width: 72px;"
     >
       <div
         class="grid-view__head"
       >
         <div
           class="grid-view__column"
-          style="width: 70px;"
+          style="width: 72px;"
         >
           <div>
             <a
@@ -916,7 +916,7 @@ exports[`GridView component with decoration Default component with unavailable d
         >
           <div
             class="grid-view__placeholder"
-            style="height: 66px; width: 70px;"
+            style="height: 66px; width: 72px;"
           />
            
           <div
@@ -930,7 +930,7 @@ exports[`GridView component with decoration Default component with unavailable d
                
               <div
                 class="grid-view__column"
-                style="width: 70px;"
+                style="width: 72px;"
               >
                 <div
                   class="grid-view__row-info"
@@ -964,11 +964,11 @@ exports[`GridView component with decoration Default component with unavailable d
            
           <div
             class="grid-view__row"
-            style="width: 70px;"
+            style="width: 72px;"
           >
             <div
               class="grid-view__column"
-              style="width: 70px;"
+              style="width: 72px;"
             >
               <a
                 class="grid-view__add-row"
@@ -1014,14 +1014,14 @@ exports[`GridView component with decoration Default component with unavailable d
    
   <div
     class="grid-view__divider"
-    style="left: 70px;"
+    style="left: 72px;"
   />
    
   <!---->
    
   <div
     class="grid-view__right"
-    style="left: 70px;"
+    style="left: 72px;"
   >
     <div
       class="grid-view__inner"
@@ -1314,12 +1314,12 @@ exports[`GridView component with decoration Default component with unavailable d
   >
     <div
       class="grid-view__row-dragging"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
      
     <div
       class="grid-view__row-target"
-      style="width: 670px; top: 0px;"
+      style="width: 672px; top: 0px;"
     />
   </div>
    

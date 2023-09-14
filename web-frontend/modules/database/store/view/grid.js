@@ -2806,6 +2806,11 @@ export const getters = {
   getAllFieldAggregationData(state) {
     return state.fieldAggregationData
   },
+  hasSelectedCell(state) {
+    return state.rows.some((row) => {
+      return row._.selected && row._.selectedFieldId !== -1
+    })
+  },
 }
 
 export default {

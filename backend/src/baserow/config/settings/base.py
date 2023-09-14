@@ -484,7 +484,7 @@ SPECTACULAR_SETTINGS = {
         "name": "MIT",
         "url": "https://gitlab.com/baserow/baserow/-/blob/master/LICENSE",
     },
-    "VERSION": "1.20.1",
+    "VERSION": "1.20.2",
     "SERVE_INCLUDE_SCHEMA": False,
     "TAGS": [
         {"name": "Settings"},
@@ -1158,6 +1158,7 @@ LICENSE_AUTHORITY_CHECK_TIMEOUT_SECONDS = 10
 MAX_NUMBER_CALENDAR_DAYS = 45
 
 MIGRATION_LOCK_ID = os.getenv("BASEROW_MIGRATION_LOCK_ID", 123456)
+DEFAULT_SEARCH_MODE = os.getenv("BASEROW_DEFAULT_SEARCH_MODE", "compat")
 
 
 # Search specific configuration settings.

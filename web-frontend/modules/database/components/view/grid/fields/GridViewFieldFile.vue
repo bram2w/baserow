@@ -211,6 +211,9 @@ export default {
      * While the modal is open, all key combinations related to the field must be
      * ignored.
      */
+    canSelectNext() {
+      return !this.modalOpen
+    },
     canKeyDown() {
       return !this.modalOpen
     },
