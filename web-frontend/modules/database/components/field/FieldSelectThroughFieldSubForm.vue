@@ -8,9 +8,10 @@
         {{ $t('fieldSelectThroughFieldSubForm.selectThroughFieldLabel') }}
       </label>
       <div class="control__elements">
-        <FixedItemsDropdown
+        <Dropdown
           v-model="values.through_field_id"
           :class="{ 'dropdown--error': $v.values.through_field_id.$error }"
+          :fixed-items="true"
           @hide="$v.values.through_field_id.$touch()"
           @input="throughFieldChanged($event)"
         >
@@ -22,7 +23,7 @@
             :value="field.id"
             :icon="field.icon"
           ></DropdownItem>
-        </FixedItemsDropdown>
+        </Dropdown>
         <div v-if="$v.values.through_field_id.$error" class="error">
           {{ $t('error.requiredField') }}
         </div>
@@ -37,11 +38,9 @@ import { required } from 'vuelidate/lib/validators'
 import form from '@baserow/modules/core/mixins/form'
 import { LinkRowFieldType } from '@baserow/modules/database/fieldTypes'
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'FieldSelectThroughFieldSubForm',
-  components: { FixedItemsDropdown },
   mixins: [form],
   props: {
     database: {

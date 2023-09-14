@@ -2,6 +2,7 @@
   <Dropdown
     :value="filter.value"
     :show-search="false"
+    :fixed-items="true"
     class="filters__value-dropdown dropdown--tiny"
     @input="$emit('input', $event)"
   >

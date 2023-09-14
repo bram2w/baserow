@@ -39,9 +39,10 @@
           }}</template>
         </div>
         <div class="sortings__field">
-          <FixedItemsDropdown
+          <Dropdown
             :value="sort.field"
             :disabled="disableSort"
+            :fixed-items="true"
             class="dropdown--floating dropdown--tiny"
             @input="updateSort(sort, { field: $event })"
           >
@@ -52,7 +53,7 @@
               :value="field.id"
               :disabled="sort.field !== field.id && !isFieldAvailable(field)"
             ></DropdownItem>
-          </FixedItemsDropdown>
+          </Dropdown>
         </div>
         <div
           class="sortings__order"
@@ -161,11 +162,9 @@
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import context from '@baserow/modules/core/mixins/context'
-import FixedItemsDropdown from '@baserow/modules/core/components/FixedItemsDropdown'
 
 export default {
   name: 'ViewSortContext',
-  components: { FixedItemsDropdown },
   mixins: [context],
   props: {
     fields: {
