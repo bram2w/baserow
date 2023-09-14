@@ -1,5 +1,13 @@
 # Changelog
 
+## Released 1.20.2
+
+### Bug fixes
+* Fixed that the dropdowns in the filters context are being cut off [#1965](https://gitlab.com/baserow/baserow/-/issues/1965)
+* Fix row ID being truncated in the grid view with 4 digit numbers in some browsers
+* Respect the canKeyDown method when starting the multiple selection via keyboard shortcut
+
+
 ## Released 1.20.1
 
 ### New features
