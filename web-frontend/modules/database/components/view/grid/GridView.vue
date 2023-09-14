@@ -1112,10 +1112,11 @@ export default {
           this.$store.getters[
             this.storePrefix + 'view/grid/isMultiSelectActive'
           ]) &&
-        // And there is no selected cell component blocking the keydown events. A single
-        // line text field can for example block this while it's in an editing state.
+        // And there is no selected cell component blocking the select next events. A
+        // single line text field can for example block this while it's in an editing
+        // state.
         this.selectedCellComponents.every((component) => {
-          return component.canKeyDown()
+          return component.canSelectNext(event)
         })
       ) {
         event.preventDefault()
