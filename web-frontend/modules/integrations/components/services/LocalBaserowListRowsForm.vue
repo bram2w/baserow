@@ -1,22 +1,45 @@
 <template>
   <form @submit.prevent>
-    <FormInput
-      v-model="values.view_id"
-      type="number"
-      small-label
-      :label="$t('localBaserowListRowsForm.viewFieldLabel')"
-      :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
-    />
-    <Tabs>
-      <Tab :title="$t('localBaserowListRowsForm.searchTabTitle')">
+    <div class="row">
+      <div class="col col-6">
         <FormInput
-          v-model="values.search_query"
-          type="text"
+          v-model="values.table_id"
+          type="number"
           small-label
-          :placeholder="$t('localBaserowListRowsForm.searchFieldPlaceHolder')"
+          :label="$t('localBaserowListRowsForm.tableFieldLabel')"
+          :placeholder="$t('localBaserowListRowsForm.tableFieldPlaceHolder')"
+          :from-value="(value) => (value ? value : '')"
+          :to-value="(value) => (value ? value : null)"
         />
-      </Tab>
-    </Tabs>
+      </div>
+      <div class="col col-6">
+        <FormInput
+          v-model="values.view_id"
+          type="number"
+          small-label
+          :label="$t('localBaserowListRowsForm.viewFieldLabel')"
+          :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
+          :from-value="(value) => (value ? value : '')"
+          :to-value="(value) => (value ? value : null)"
+        />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col col-12">
+        <Tabs>
+          <Tab :title="$t('localBaserowListRowsForm.searchTabTitle')">
+            <FormInput
+              v-model="values.search_query"
+              type="text"
+              small-label
+              :placeholder="
+                $t('localBaserowListRowsForm.searchFieldPlaceHolder')
+              "
+            />
+          </Tab>
+        </Tabs>
+      </div>
+    </div>
   </form>
 </template>
 
@@ -33,8 +56,9 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['view_id', 'search_query'],
+      allowedValues: ['table_id', 'view_id', 'search_query'],
       values: {
+        table_id: null,
         view_id: null,
         search_query: '',
       },

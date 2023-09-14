@@ -47,6 +47,7 @@ def test_update_local_baserow_list_rows_service(data_fixture):
     service = data_fixture.create_local_baserow_list_rows_service(
         integration=integration,
         view=view,
+        table=view.table,
     )
 
     service_type = service_type_registry.get("local_baserow_list_rows")
@@ -86,6 +87,7 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
     service = data_fixture.create_local_baserow_list_rows_service(
         integration=integration,
         view=view,
+        table=table,
     )
 
     service_type = LocalBaserowListRowsUserServiceType()
@@ -133,6 +135,7 @@ def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
     service = data_fixture.create_local_baserow_list_rows_service(
         integration=integration,
         view=view,
+        table=table,
     )
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
@@ -149,7 +152,7 @@ def test_local_baserow_list_rows_service_dispatch_data_validation_error(data_fix
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_list_rows_service(
-        integration=integration, view=None
+        integration=integration, table=None
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
@@ -179,25 +182,25 @@ def test_create_local_baserow_get_row_service(data_fixture):
 def test_update_local_baserow_get_row_service(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    view = data_fixture.create_grid_view(user)
+    table = data_fixture.create_database_table(user=user)
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration,
-        view=view,
+        table=table,
     )
 
     service_type = LocalBaserowGetRowUserServiceType()
     values = service_type.prepare_values(
-        {"view_id": None, "integration_id": None}, user
+        {"table_id": None, "integration_id": None}, user
     )
 
     ServiceHandler().update_service(service_type, service, **values)
 
     service.refresh_from_db()
 
-    assert service.specific.view is None
+    assert service.specific.table is None
     assert service.specific.integration is None
 
 
@@ -222,7 +225,7 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="get('test')"
+        integration=integration, view=view, table=table, row_id="get('test')"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
@@ -265,7 +268,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixtu
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="1"
+        integration=integration, view=view, table=table, row_id="1"
     )
 
     runtime_formula_context = {}
@@ -297,7 +300,7 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fi
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="1", search_query="Au"
+        integration=integration, view=view, table=table, row_id="1", search_query="Au"
     )
 
     runtime_formula_context = {}
@@ -330,7 +333,7 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="get('test')"
+        integration=integration, view=view, table=table, row_id="get('test')"
     )
 
     runtime_formula_context = {"test": "1"}
@@ -347,24 +350,13 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
 def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    table, fields, rows = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Name", "text"),
-            ("My Color", "text"),
-        ],
-        rows=[
-            ["BMW", "Blue"],
-            ["Audi", "Orange"],
-        ],
-    )
-    view = data_fixture.create_grid_view(user, table=table)
+    table = data_fixture.create_database_table(user=user)
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=None, row_id="1"
+        integration=integration, table=None, row_id="1"
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
@@ -374,7 +366,7 @@ def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixtu
         service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="get('test')"
+        integration=integration, table=table, row_id="get('test')"
     )
 
     runtime_formula_context = {"test": ""}
@@ -383,7 +375,7 @@ def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixtu
         service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="wrong formula"
+        integration=integration, table=table, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
@@ -394,24 +386,13 @@ def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixtu
 def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
-    table, fields, rows = data_fixture.build_table(
-        user=user,
-        columns=[
-            ("Name", "text"),
-            ("My Color", "text"),
-        ],
-        rows=[
-            ["BMW", "Blue"],
-            ["Audi", "Orange"],
-        ],
-    )
-    view = data_fixture.create_grid_view(user, table=table)
+    table = data_fixture.create_database_table(user=user)
     integration = data_fixture.create_local_baserow_integration(
         application=page.builder, user=user
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, view=view, row_id="get('test')"
+        integration=integration, table=table, row_id="get('test')"
     )
 
     runtime_formula_context = {"test": "999"}
@@ -470,7 +451,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_filter(
 
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
-        view=view, integration=integration
+        view=view, table=table, integration=integration
     )
 
     dispatch_data = service_type.dispatch_data(service)
@@ -524,7 +505,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_sort(data_fixtu
 
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
-        view=view, integration=integration
+        view=view, table=table, integration=integration
     )
 
     dispatch_data = service_type.dispatch_data(service)
@@ -565,7 +546,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_service_search(
 
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
-        view=view, integration=integration, search_query="ch"
+        view=view, table=table, integration=integration, search_query="ch"
     )
 
     dispatch_data = service_type.dispatch_data(service)

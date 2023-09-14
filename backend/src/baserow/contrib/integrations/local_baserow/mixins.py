@@ -20,9 +20,9 @@ class LocalBaserowFilterableViewServiceMixin:
         self,
         service: "ServiceSubClass",
         model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> "FilterBuilder":
+    ) -> Optional["FilterBuilder"]:
         """
-        Responsible for defining how the `LocalBaserowViewService` services should be
+        Responsible for defining how the `LocalBaserowTableService` services should be
         filtered. All the integration's services point to a Baserow `View`, which
         can have zero or more `ViewFilter` records related to it. We'll use the
         `FilterBuilder` to return a set of filters we can apply to the base queryset.
@@ -33,6 +33,9 @@ class LocalBaserowFilterableViewServiceMixin:
         """
 
         view = service.view
+        if view is None:
+            # TODO: this will be changed soon to support `LocalBaserowServiceFilter`.
+            return None
         if model is None:
             model = view.table.get_model()
         return ViewHandler().get_filter_builder(view, model)
@@ -48,9 +51,9 @@ class LocalBaserowSortableViewServiceMixin:
         self,
         service: "ServiceSubClass",
         model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> List[OrderBy]:
+    ) -> Optional[List[OrderBy]]:
         """
-        Responsible for defining how `LocalBaserowViewService` services should be
+        Responsible for defining how `LocalBaserowTableService` services should be
         sorted. All the integration's services point to a Baserow `View`, which
         can have zero or more `ViewSort` records related to it. We'll use the
         `ViewHandler.get_view_sorts` method to return a set of `OrderBy` and
@@ -62,6 +65,9 @@ class LocalBaserowSortableViewServiceMixin:
         """
 
         view = service.view
+        if view is None:
+            # TODO: this will be changed soon to support `LocalBaserowServiceSort`.
+            return None
         if model is None:
             model = view.table.get_model()
         service_sorts, _ = ViewHandler().get_view_sorts(view, model)

@@ -61,6 +61,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id="2",
         name="Item",
     )
@@ -113,6 +114,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id="get('page_parameter.id')",
         name="Item",
     )
@@ -182,6 +184,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         page=page,
         integration=integration,
         view=view2,
+        table=table2,
         row_id="get('page_parameter.id')",
         name="Id source",
     )
@@ -190,6 +193,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id=f"get('data_source.{data_source2.id}.Id')",
         name="Item",
     )
@@ -259,6 +263,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id="get('data_source.99999.Id')",
         name="Item",
     )
@@ -326,6 +331,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id="",
         name="Item",
     )
@@ -396,6 +402,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         page=page,
         integration=integration,
         view=view,
+        table=table,
         row_id="",
         name="Item",
     )
@@ -404,6 +411,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         page=page,
         integration=integration,
         view=view2,
+        table=table2,
         row_id=f"get('data_source.{data_source.id}.Id')",
         name="Id source",
     )
