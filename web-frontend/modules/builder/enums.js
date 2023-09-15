@@ -51,3 +51,8 @@ export const VERTICAL_ALIGNMENTS = {
     value: 'bottom',
   },
 }
+
+export const WIDTHS = {
+  AUTO: { value: 'auto', name: 'widthSelector.widthAuto' },
+  FULL: { value: 'full', name: 'widthSelector.widthFull' },
+}

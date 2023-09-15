@@ -10,6 +10,8 @@ from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
+    WIDTHS,
+    ButtonElement,
     ColumnElement,
     ContainerElement,
     Element,
@@ -351,7 +353,7 @@ class LinkElementType(ElementType):
                 required=False,
             ),
             "width": serializers.ChoiceField(
-                choices=LinkElement.WIDTHS.choices,
+                choices=WIDTHS.choices,
                 help_text=LinkElement._meta.get_field("width").help_text,
                 required=False,
             ),
@@ -546,3 +548,41 @@ class InputTextElementType(InputElementType):
             "placeholder": "",
             "default_value": "Corporis perspiciatis",
         }
+
+
+class ButtonElementType(ElementType):
+    type = "button"
+    model_class = ButtonElement
+    allowed_fields = ["value", "alignment", "width"]
+    serializer_field_names = ["value", "alignment", "width"]
+
+    class SerializedDict(ElementDict):
+        value: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "value": FormulaSerializerField(
+                help_text=ButtonElement._meta.get_field("value").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "width": serializers.ChoiceField(
+                choices=WIDTHS.choices,
+                help_text=ButtonElement._meta.get_field("width").help_text,
+                required=False,
+            ),
+            "alignment": serializers.ChoiceField(
+                choices=HorizontalAlignments.choices,
+                help_text=ButtonElement._meta.get_field("alignment").help_text,
+                required=False,
+            ),
+        }
+
+        return overrides
+
+    def get_sample_params(self) -> Dict[str, Any]:
+        return {"value": "Some value"}

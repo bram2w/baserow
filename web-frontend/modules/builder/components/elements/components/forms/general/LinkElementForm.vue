@@ -124,17 +124,7 @@
       </div>
     </FormElement>
     <FormElement v-if="values.variant === 'button'" class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.width') }}
-      </label>
-      <div class="control__elements">
-        <RadioButton v-model="values.width" value="auto">
-          {{ $t('linkElementForm.widthAuto') }}
-        </RadioButton>
-        <RadioButton v-model="values.width" value="full">
-          {{ $t('linkElementForm.widthFull') }}
-        </RadioButton>
-      </div>
+      <WidthSelector v-model="values.width" />
     </FormElement>
   </form>
 </template>
@@ -143,13 +133,14 @@
 import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
+import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
 import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
 import { isValidFormula } from '@baserow/modules/core/formula'
+import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
 
 export default {
   name: 'LinkElementForm',
-  components: { HorizontalAlignmentSelector, FormulaInputGroup },
+  components: { WidthSelector, HorizontalAlignmentSelector, FormulaInputGroup },
   mixins: [form],
   props: {
     builder: { type: Object, required: true },
@@ -173,7 +164,7 @@ export default {
         navigate_to_page_id: null,
         navigate_to_url: '',
         page_parameters: [],
-        width: 'auto',
+        width: WIDTHS.AUTO.value,
         target: 'self',
       },
       parametersInError: false,

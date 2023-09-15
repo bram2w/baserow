@@ -8,7 +8,7 @@ import LinkElementForm from '@baserow/modules/builder/components/elements/compon
 import ImageElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ImageElementForm'
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
 import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
-import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/InputTextElementForm.vue'
+import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/InputTextElementForm.vue'
 
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
@@ -16,6 +16,8 @@ import ColumnElementForm from '@baserow/modules/builder/components/elements/comp
 import _ from 'lodash'
 import DefaultStyleForm from '@baserow/modules/builder/components/elements/components/forms/style/DefaultStyleForm'
 import { compile } from 'path-to-regexp'
+import ButtonElement from '@baserow/modules/builder/components/elements/components/ButtonElement'
+import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
 
 export class ElementType extends Registerable {
   get name() {
@@ -331,7 +333,33 @@ export class InputTextElementType extends ElementType {
     return InputTextElement
   }
 
-  get formComponent() {
+  get generalFormComponent() {
     return InputTextElementForm
+  }
+}
+
+export class ButtonElementType extends ElementType {
+  getType() {
+    return 'button'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.button')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.buttonDescription')
+  }
+
+  get iconClass() {
+    return 'square'
+  }
+
+  get component() {
+    return ButtonElement
+  }
+
+  get generalFormComponent() {
+    return ButtonElementForm
   }
 }

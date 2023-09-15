@@ -3,9 +3,9 @@
     <a
       :class="{
         'link-element__link': element.variant !== 'button',
-        'link-element__button': element.variant === 'button',
-        'link-element__button--full-width':
-          element.variant === 'button' && element.width === 'full',
+        'link-button-element-button': element.variant === 'button',
+        'link-button-element-button--full-width':
+          element.variant === 'button' && element.width === WIDTHS.FULL.value,
       }"
       v-bind="extraAttr"
       :target="`_${element.target}`"
@@ -19,11 +19,13 @@
 <script>
 import element from '@baserow/modules/builder/mixins/element'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
+import { WIDTHS } from '@baserow/modules/builder/enums'
 
 /**
  * @typedef LinkElement
  * @property {string} value The text inside the button
  * @property {string} alignment left|center|right
+ * @property {string} width auto|full
  * @property {string} variant link|button
  * @property {string} navigation_type page|custom
  * @property {string} navigate_to_page_id The page id for `page` navigation type.
@@ -45,6 +47,7 @@ export default {
     },
   },
   computed: {
+    WIDTHS: () => WIDTHS,
     resolvedValue() {
       try {
         return this.resolveFormula(this.element.value)
