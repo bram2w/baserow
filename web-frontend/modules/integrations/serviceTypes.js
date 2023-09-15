@@ -22,7 +22,7 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   isValid(service) {
     return (
       super.isValid(service) &&
-      Boolean(service.view_id) &&
+      Boolean(service.table_id) &&
       Boolean(service.row_id)
     )
   }
@@ -57,7 +57,7 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
   }
 
   isValid(service) {
-    return super.isValid(service) && Boolean(service.view_id)
+    return super.isValid(service) && Boolean(service.table_id)
   }
 
   getOrder() {
