@@ -7,39 +7,3 @@
   color: $black;
   text-decoration: underline;
 }
-
-.link-element__button {
-  font-size: 14px;
-  cursor: pointer;
-  display: inline-block;
-  color: $white;
-  background-color: $black;
-  line-height: 28px;
-  padding: 0 12px;
-  border: none;
-  white-space: nowrap;
-  text-align: left;
-  text-decoration: none;
-  @include rounded($rounded);
-
-  &:hover {
-    background-color: lighten($black, 10%);
-    text-decoration: none;
-  }
-
-  &:focus {
-    background-color: lighten($black, 20%);
-  }
-
-  &--full-width {
-    width: 100%;
-  }
-
-  .element--alignment-horizontal-center & {
-    text-align: center;
-  }
-
-  .element--alignment-horizontal-right & {
-    text-align: right;
-  }
-}

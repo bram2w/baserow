@@ -30,6 +30,11 @@ class VerticalAlignments(models.TextChoices):
     BOTTOM = "bottom"
 
 
+class WIDTHS(models.TextChoices):
+    AUTO = "auto"
+    FULL = "full"
+
+
 def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
@@ -278,10 +283,6 @@ class LinkElement(Element):
         SELF = "self"
         BLANK = "blank"
 
-    class WIDTHS(models.TextChoices):
-        AUTO = "auto"
-        FULL = "full"
-
     value = FormulaField(default="")
     navigation_type = models.CharField(
         choices=NAVIGATION_TYPES.choices,
@@ -394,4 +395,22 @@ class InputTextElement(InputElement):
         default="",
         max_length=225,
         help_text="The placeholder text which should be applied to the element.",
+    )
+
+
+class ButtonElement(Element):
+    """
+    A button element
+    """
+
+    value = FormulaField(default="", help_text="The caption of the button.")
+    width = models.CharField(
+        choices=WIDTHS.choices,
+        max_length=10,
+        default=WIDTHS.AUTO,
+    )
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
     )
