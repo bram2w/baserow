@@ -13,7 +13,7 @@ def get_default_domain_content_type_id():
 class Migration(migrations.Migration):
     dependencies = [
         ("contenttypes", "0002_remove_content_type_name"),
-        ("builder", "0017_mainthemeconfigblock"),
+        ("builder", "0018_buttonelement"),
     ]
 
     operations = [
