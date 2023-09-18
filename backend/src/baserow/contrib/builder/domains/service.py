@@ -29,6 +29,7 @@ from baserow.core.utils import Progress, extract_allowed
 
 from .job_types import PublishDomainJobType
 from .operations import PublishDomainOperationType
+from .registries import DomainType
 
 
 class DomainService:
@@ -121,14 +122,19 @@ class DomainService:
         return builder
 
     def create_domain(
-        self, user: AbstractUser, builder: Builder, domain_name: str
+        self,
+        user: AbstractUser,
+        domain_type: DomainType,
+        builder: Builder,
+        **kwargs,
     ) -> Domain:
         """
         Creates a new domain
 
         :param user: The user trying to create the domain
+        :param domain_type: The type of domain that's being created
         :param builder: The builder the domain belongs to
-        :param domain_name: The name of the domain
+        :param kwargs: Additional attributes of the domain
         :return: The newly created domain instance
         """
 
@@ -139,7 +145,7 @@ class DomainService:
             context=builder,
         )
 
-        domain = self.handler.create_domain(builder, domain_name)
+        domain = self.handler.create_domain(domain_type, builder, **kwargs)
 
         domain_created.send(self, domain=domain, user=user)
 

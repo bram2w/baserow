@@ -1,3 +1,4 @@
+from django.test.utils import override_settings
 from django.urls import reverse
 
 import pytest
@@ -9,13 +10,15 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.builder.domains.domain_types import CustomDomainType, SubDomainType
+
 
 @pytest.mark.django_db
 def test_get_domains(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder)
-    domain_two = data_fixture.create_builder_domain(builder=builder)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder)
 
     url = reverse(
         "api:builder:builder_id:domains:list", kwargs={"builder_id": builder.id}
@@ -62,7 +65,7 @@ def test_create_domain(api_client, data_fixture):
     )
     response = api_client.post(
         url,
-        {"domain_name": domain_name},
+        {"type": CustomDomainType.type, "domain_name": domain_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -82,7 +85,7 @@ def test_create_domain_user_not_in_workspace(api_client, data_fixture):
     )
     response = api_client.post(
         url,
-        {"domain_name": "test.com"},
+        {"type": CustomDomainType.type, "domain_name": "test.com"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -98,7 +101,7 @@ def test_create_domain_application_does_not_exist(api_client, data_fixture):
     url = reverse("api:builder:builder_id:domains:list", kwargs={"builder_id": 9999})
     response = api_client.post(
         url,
-        {"domain_name": "test.com"},
+        {"type": CustomDomainType.type, "domain_name": "test.com"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -114,14 +117,14 @@ def test_create_domain_domain_already_exists(api_client, data_fixture):
 
     domain_name = "test.com"
 
-    data_fixture.create_builder_domain(builder=builder, domain_name=domain_name)
+    data_fixture.create_builder_custom_domain(builder=builder, domain_name=domain_name)
 
     url = reverse(
         "api:builder:builder_id:domains:list", kwargs={"builder_id": builder.id}
     )
     response = api_client.post(
         url,
-        {"domain_name": domain_name},
+        {"type": CustomDomainType.type, "domain_name": domain_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -142,7 +145,7 @@ def test_create_domain_invalid_domain_name(api_client, data_fixture):
     )
     response = api_client.post(
         url,
-        {"domain_name": domain_name},
+        {"type": CustomDomainType.type, "domain_name": domain_name},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -152,10 +155,35 @@ def test_create_domain_invalid_domain_name(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+@override_settings(BASEROW_BUILDER_DOMAINS=["test.com"])
+def test_create_invalid_sub_domain(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    builder = data_fixture.create_builder_application(user=user)
+
+    domain_name = "hello.nottest.com"
+
+    url = reverse(
+        "api:builder:builder_id:domains:list", kwargs={"builder_id": builder.id}
+    )
+    response = api_client.post(
+        url,
+        {"type": SubDomainType.type, "domain_name": domain_name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_SUB_DOMAIN_HAS_INVALID_DOMAIN_NAME"
+    assert "test.com" in response_json["detail"]
+    assert "nottest.com" in response_json["detail"]
+
+
+@pytest.mark.django_db
 def test_update_domain(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         builder=builder, domain_name="something.com"
     )
 
@@ -188,11 +216,44 @@ def test_update_domain_domain_does_not_exist(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_domain_with_same_name(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    domain = data_fixture.create_builder_custom_domain(user=user)
+
+    url = reverse("api:builder:domains:item", kwargs={"domain_id": domain.id})
+    response = api_client.patch(
+        url,
+        {"domain_name": domain.domain_name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+def test_update_domain_name_uniqueness(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    domain = data_fixture.create_builder_custom_domain(user=user)
+    domain_2 = data_fixture.create_builder_custom_domain(user=user)
+
+    url = reverse("api:builder:domains:item", kwargs={"domain_id": domain.id})
+    response = api_client.patch(
+        url,
+        {"domain_name": domain_2.domain_name},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST, response.json()
+
+
+@pytest.mark.django_db
 def test_order_domains(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     url = reverse(
         "api:builder:builder_id:domains:order", kwargs={"builder_id": builder.id}
@@ -211,8 +272,8 @@ def test_order_domains(api_client, data_fixture):
 def test_order_domains_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     url = reverse(
         "api:builder:builder_id:domains:order", kwargs={"builder_id": builder.id}
@@ -232,8 +293,8 @@ def test_order_domains_user_not_in_workspace(api_client, data_fixture):
 def test_order_domains_domain_not_in_builder(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(order=2)
 
     url = reverse(
         "api:builder:builder_id:domains:order", kwargs={"builder_id": builder.id}
@@ -253,8 +314,8 @@ def test_order_domains_domain_not_in_builder(api_client, data_fixture):
 def test_order_domains_application_does_not_exist(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     url = reverse("api:builder:builder_id:domains:order", kwargs={"builder_id": 99999})
     response = api_client.post(
@@ -272,7 +333,7 @@ def test_order_domains_application_does_not_exist(api_client, data_fixture):
 def test_delete_domain(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application(user=user)
-    domain = data_fixture.create_builder_domain(builder=builder, order=1)
+    domain = data_fixture.create_builder_custom_domain(builder=builder, order=1)
 
     url = reverse("api:builder:domains:item", kwargs={"domain_id": domain.id})
     response = api_client.delete(
@@ -288,7 +349,7 @@ def test_delete_domain(api_client, data_fixture):
 def test_delete_domain_user_not_in_workspace(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     builder = data_fixture.create_builder_application()
-    domain = data_fixture.create_builder_domain(builder=builder, order=1)
+    domain = data_fixture.create_builder_custom_domain(builder=builder, order=1)
 
     url = reverse("api:builder:domains:item", kwargs={"domain_id": domain.id})
     response = api_client.delete(

@@ -1,5 +1,5 @@
 .form-input {
-  display: block;
+  display: flex;
   border: 1px solid $color-neutral-400;
   position: relative;
   @include rounded($rounded);
@@ -95,4 +95,15 @@
   .form-input--loading & {
     display: none;
   }
+}
+
+.form-input__suffix {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  border-left: 1px solid $color-neutral-400;
+  appearance: none;
+  padding: 0 12px;
+  outline: none;
+  line-height: 100%;
 }

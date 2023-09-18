@@ -151,6 +151,12 @@ class BuilderConfig(AppConfig):
         element_type_registry.register(InputTextElementType())
         element_type_registry.register(ColumnElementType())
 
+        from .domains.domain_types import CustomDomainType, SubDomainType
+        from .domains.registries import domain_type_registry
+
+        domain_type_registry.register(CustomDomainType())
+        domain_type_registry.register(SubDomainType())
+
         from .domains.trash_types import DomainTrashableItemType
 
         trash_item_type_registry.register(DomainTrashableItemType())

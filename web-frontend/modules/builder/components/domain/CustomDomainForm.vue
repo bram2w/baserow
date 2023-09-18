@@ -29,26 +29,25 @@
       </div>
       <template v-if="serverErrors.domain_name">
         <div v-if="serverErrors.domain_name.code === 'invalid'" class="error">
-          {{ $t('customDomainForm.invalidDomain') }}
+          {{ $t('domainForm.invalidDomain') }}
         </div>
         <div v-if="serverErrors.domain_name.code === 'unique'" class="error">
-          {{ $t('customDomainForm.notUniqueDomain') }}
-        </div></template
-      >
+          {{ $t('domainForm.notUniqueDomain') }}
+        </div>
+      </template>
     </FormElement>
   </form>
 </template>
 
 <script>
-import form from '@baserow/modules/core/mixins/form'
 import { required, maxLength } from 'vuelidate/lib/validators'
+import domainForm from '@baserow/modules/builder/mixins/domainForm'
 
 export default {
-  name: 'DomainForm',
-  mixins: [form],
+  name: 'CustomDomainForm',
+  mixins: [domainForm],
   data() {
     return {
-      serverErrors: { domain_name: null },
       values: {
         domain_name: '',
       },
@@ -63,23 +62,6 @@ export default {
         },
       },
     }
-  },
-  methods: {
-    handleServerError(error) {
-      if (error.handler.code !== 'ERROR_REQUEST_BODY_VALIDATION') return false
-
-      this.serverErrors = Object.fromEntries(
-        Object.entries(error.handler.detail || {}).map(([key, value]) => [
-          key,
-          value[0],
-        ])
-      )
-
-      return true
-    },
-    hasError() {
-      return !this.isFormValid() || this.serverErrors.domain_name !== null
-    },
   },
 }
 </script>

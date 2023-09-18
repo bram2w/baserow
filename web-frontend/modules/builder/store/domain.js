@@ -54,10 +54,10 @@ const actions = {
 
     commit('SET_ITEMS', { domains })
   },
-  async create({ commit }, { builderId, ...data }) {
+  async create({ commit }, { builderId, type, ...data }) {
     const { data: domain } = await DomainService(this.$client).create(
       builderId,
-      data
+      { type, ...data }
     )
 
     commit('ADD_ITEM', { domain })

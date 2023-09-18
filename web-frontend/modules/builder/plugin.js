@@ -49,7 +49,10 @@ import {
   VisibilityPageSidePanelType,
   StylePageSidePanelType,
 } from '@baserow/modules/builder/pageSidePanelTypes'
-import { CustomDomainType } from '@baserow/modules/builder/domainTypes'
+import {
+  CustomDomainType,
+  SubDomainType,
+} from '@baserow/modules/builder/domainTypes'
 import { PagePageSettingsType } from '@baserow/modules/builder/pageSettingsTypes'
 import {
   TextPathParamType,
@@ -158,6 +161,7 @@ export default (context) => {
   app.$registry.register('pageSidePanel', new EventsPageSidePanelType(context))
 
   app.$registry.register('domain', new CustomDomainType(context))
+  app.$registry.register('domain', new SubDomainType(context))
 
   app.$registry.register('pageSettings', new PagePageSettingsType(context))
 

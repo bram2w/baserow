@@ -9,7 +9,7 @@ from baserow.core.jobs.handler import JobHandler
 def test_publish_domain_job_type(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     publish_domain_job = JobHandler().create_and_start_job(
         user,

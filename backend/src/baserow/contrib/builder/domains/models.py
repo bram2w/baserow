@@ -1,16 +1,21 @@
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import CASCADE, SET_NULL
 
 import validators
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.domains.registries import domain_type_registry
 from baserow.core.jobs.mixins import JobWithUserIpAddress
 from baserow.core.jobs.models import Job
 from baserow.core.mixins import (
     HierarchicalModelMixin,
     OrderableMixin,
+    PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
+from baserow.core.registry import ModelRegistryMixin
 
 
 def validate_domain(value: str):
@@ -29,7 +34,24 @@ def validate_domain(value: str):
         raise ValidationError("Invalid domain syntax")
 
 
-class Domain(HierarchicalModelMixin, TrashableModelMixin, OrderableMixin, models.Model):
+def get_default_domain_content_type():
+    return ContentType.objects.get_for_model(CustomDomain)
+
+
+class Domain(
+    HierarchicalModelMixin,
+    TrashableModelMixin,
+    OrderableMixin,
+    WithRegistry,
+    PolymorphicContentTypeMixin,
+    models.Model,
+):
+    content_type = models.ForeignKey(
+        ContentType,
+        verbose_name="content type",
+        related_name="builder_domains",
+        on_delete=models.SET(get_default_domain_content_type),
+    )
     builder = models.ForeignKey(
         "builder.Builder",
         on_delete=CASCADE,
@@ -62,6 +84,18 @@ class Domain(HierarchicalModelMixin, TrashableModelMixin, OrderableMixin, models
     def get_last_order(cls, builder):
         queryset = Domain.objects.filter(builder=builder)
         return cls.get_highest_order_of_queryset(queryset) + 1
+
+    @staticmethod
+    def get_type_registry() -> ModelRegistryMixin:
+        return domain_type_registry
+
+
+class CustomDomain(Domain):
+    pass
+
+
+class SubDomain(Domain):
+    pass
 
 
 class PublishDomainJob(JobWithUserIpAddress, Job):
