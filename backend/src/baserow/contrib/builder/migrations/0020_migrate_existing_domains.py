@@ -27,7 +27,7 @@ def reverse(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-    dependencies = [("builder", "0018_sub_domains")]
+    dependencies = [("builder", "0019_sub_domains")]
 
     operations = [
         migrations.RunPython(forward, reverse),
