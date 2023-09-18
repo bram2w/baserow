@@ -4,7 +4,7 @@ from django.db import transaction
 from faker import Faker
 
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
-from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.domains.models import CustomDomain
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
@@ -38,12 +38,18 @@ def load_test_data():
             user, workspace, "builder", name="Back to local website"
         )
 
-    Domain.objects.filter(domain_name="test1.getbaserow.io").delete()
-    Domain.objects.filter(domain_name="test2.getbaserow.io").delete()
-    Domain.objects.filter(domain_name="test3.getbaserow.io").delete()
-    Domain.objects.create(builder=builder, domain_name="test1.getbaserow.io", order=1)
-    Domain.objects.create(builder=builder, domain_name="test2.getbaserow.io", order=2)
-    Domain.objects.create(builder=builder, domain_name="test3.getbaserow.io", order=3)
+    CustomDomain.objects.filter(domain_name="test1.getbaserow.io").delete()
+    CustomDomain.objects.filter(domain_name="test2.getbaserow.io").delete()
+    CustomDomain.objects.filter(domain_name="test3.getbaserow.io").delete()
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test1.getbaserow.io", order=1
+    )
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test2.getbaserow.io", order=2
+    )
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test3.getbaserow.io", order=3
+    )
 
     integration_type = integration_type_registry.get("local_baserow")
 

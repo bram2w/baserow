@@ -1,5 +1,6 @@
 import pytest
 
+from baserow.contrib.builder.domains.domain_types import CustomDomainType
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
     DomainNotInBuilder,
@@ -13,7 +14,7 @@ from baserow.core.utils import Progress
 
 @pytest.mark.django_db
 def test_get_domain(data_fixture):
-    domain = data_fixture.create_builder_domain()
+    domain = data_fixture.create_builder_custom_domain()
     assert DomainHandler().get_domain(domain.id).id == domain.id
 
 
@@ -25,7 +26,7 @@ def test_get_domain_domain_does_not_exist(data_fixture):
 
 @pytest.mark.django_db
 def test_get_domain_base_queryset(data_fixture, django_assert_num_queries):
-    domain = data_fixture.create_builder_domain()
+    domain = data_fixture.create_builder_custom_domain()
 
     # Without selecting related
     domain = DomainHandler().get_domain(domain.id)
@@ -42,8 +43,8 @@ def test_get_domain_base_queryset(data_fixture, django_assert_num_queries):
 @pytest.mark.django_db
 def test_get_domains(data_fixture):
     builder = data_fixture.create_builder_application()
-    domain_one = data_fixture.create_builder_domain(builder=builder)
-    domain_two = data_fixture.create_builder_domain(builder=builder)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder)
 
     domains = list(DomainHandler().get_domains(builder))
     domain_ids = [domain.id for domain in domains]
@@ -58,7 +59,9 @@ def test_create_domain(data_fixture):
     builder = data_fixture.create_builder_application()
     expected_order = Domain.get_last_order(builder)
 
-    domain = DomainHandler().create_domain(builder, "test.com")
+    domain = DomainHandler().create_domain(
+        CustomDomainType(), builder, domain_name="test.com"
+    )
 
     assert domain.order == expected_order
     assert domain.domain_name == "test.com"
@@ -66,7 +69,7 @@ def test_create_domain(data_fixture):
 
 @pytest.mark.django_db
 def test_delete_domain(data_fixture):
-    domain = data_fixture.create_builder_domain()
+    domain = data_fixture.create_builder_custom_domain()
 
     DomainHandler().delete_domain(domain)
 
@@ -75,7 +78,7 @@ def test_delete_domain(data_fixture):
 
 @pytest.mark.django_db
 def test_update_domain(data_fixture):
-    domain = data_fixture.create_builder_domain(domain_name="test.com")
+    domain = data_fixture.create_builder_custom_domain(domain_name="test.com")
 
     DomainHandler().update_domain(domain, domain_name="new.com")
 
@@ -87,8 +90,8 @@ def test_update_domain(data_fixture):
 @pytest.mark.django_db
 def test_order_domains(data_fixture):
     builder = data_fixture.create_builder_application()
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     assert DomainHandler().order_domains(builder, [domain_two.id, domain_one.id]) == [
         domain_two.id,
@@ -105,8 +108,8 @@ def test_order_domains(data_fixture):
 @pytest.mark.django_db
 def test_order_domains_domain_not_in_builder(data_fixture):
     builder = data_fixture.create_builder_application()
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     base_qs = Domain.objects.filter(id=domain_two.id)
 
@@ -120,7 +123,7 @@ def test_order_domains_domain_not_in_builder(data_fixture):
 def test_get_public_builder_by_name(data_fixture):
     builder = data_fixture.create_builder_application()
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 
@@ -132,7 +135,7 @@ def test_get_public_builder_by_name(data_fixture):
 @pytest.mark.django_db
 def test_get_published_builder_by_missing_domain_name(data_fixture):
     builder = data_fixture.create_builder_application()
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     with pytest.raises(BuilderDoesNotExist):
         DomainHandler().get_public_builder_by_domain_name(domain1.domain_name)
@@ -142,7 +145,7 @@ def test_get_published_builder_by_missing_domain_name(data_fixture):
 def test_get_published_builder_for_trashed_builder(data_fixture):
     builder = data_fixture.create_builder_application(trashed=True)
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 
@@ -151,7 +154,7 @@ def test_get_published_builder_for_trashed_builder(data_fixture):
 
     builder = data_fixture.create_builder_application()
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to, trashed=True
     )
 
@@ -163,7 +166,7 @@ def test_get_published_builder_for_trashed_builder(data_fixture):
 def test_domain_publishing(data_fixture):
     builder = data_fixture.create_builder_application()
 
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     page1 = data_fixture.create_builder_page(builder=builder)
     page2 = data_fixture.create_builder_page(builder=builder)

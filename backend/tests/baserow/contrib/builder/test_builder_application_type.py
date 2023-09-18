@@ -416,7 +416,7 @@ def test_builder_application_import(data_fixture):
 def test_delete_builder_application_with_published_builder(data_fixture):
     builder = data_fixture.create_builder_application()
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 

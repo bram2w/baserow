@@ -1,6 +1,10 @@
 .domain-settings__domain-type {
   display: inline-block;
-  width: 30%;
+  width: fit-content;
+
+  .dropdown__items {
+    width: min-content;
+  }
 }
 
 .domains-settings__loading {

@@ -158,6 +158,7 @@ x-backend-variables: &backend-variables
   BASEROW_DISABLE_LOCKED_MIGRATIONS:
   BASEROW_USE_PG_FULLTEXT_SEARCH:
   BASEROW_AUTO_VACUUM:
+  BASEROW_BUILDER_DOMAINS:
 
 services:
   backend:
@@ -201,6 +202,7 @@ services:
       BASEROW_USE_PG_FULLTEXT_SEARCH:
       BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
       BASEROW_ROW_PAGE_SIZE_LIMIT:
+      BASEROW_BUILDER_DOMAINS:
     depends_on:
       - backend
     networks:

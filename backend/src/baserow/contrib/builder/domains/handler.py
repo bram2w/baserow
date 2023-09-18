@@ -1,23 +1,30 @@
-from typing import List
+from typing import Iterable, List, cast
 
 from django.core.files.storage import default_storage
 from django.db.models import QuerySet
+from django.db.utils import IntegrityError
 from django.utils import timezone
 
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
+    DomainNameNotUniqueError,
     DomainNotInBuilder,
 )
 from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.domains.registries import DomainType
 from baserow.contrib.builder.exceptions import BuilderDoesNotExist
 from baserow.contrib.builder.models import Builder
+from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.core.trash.handler import TrashHandler
-from baserow.core.utils import Progress
+from baserow.core.utils import Progress, extract_allowed
 
 
 class DomainHandler:
+    allowed_fields_create = ["domain_name"]
+    allowed_fields_update = ["domain_name", "last_published"]
+
     def get_domain(self, domain_id: int, base_queryset: QuerySet = None) -> Domain:
         """
         Gets a domain by ID
@@ -39,20 +46,20 @@ class DomainHandler:
 
     def get_domains(
         self, builder: Builder, base_queryset: QuerySet = None
-    ) -> QuerySet[Domain]:
+    ) -> Iterable[Domain]:
         """
         Gets all the domains of a builder.
 
         :param builder: The builder we are trying to get all domains for
         :param base_queryset: Can be provided to already filter or apply performance
             improvements to the queryset when it's being executed
-        :return: A queryset with all the domains
+        :return: An iterable of all the specific domains
         """
 
         if base_queryset is None:
             base_queryset = Domain.objects
 
-        return base_queryset.filter(builder=builder)
+        return specific_iterator(base_queryset.filter(builder=builder))
 
     def get_public_builder_by_domain_name(self, domain_name: str) -> Builder:
         """
@@ -78,19 +85,30 @@ class DomainHandler:
 
         return domain.published_to
 
-    def create_domain(self, builder: Builder, domain_name: str) -> Domain:
+    def create_domain(
+        self, domain_type: DomainType, builder: Builder, **kwargs
+    ) -> Domain:
         """
         Creates a new domain
 
+        :param domain_type: The type of domain that's being created
         :param builder: The builder the domain belongs to
-        :param domain_name: The name of the domain
+        :param kwargs: Additional attributes of the domain
         :return: The newly created domain instance
         """
 
         last_order = Domain.get_last_order(builder)
-        domain = Domain.objects.create(
-            builder=builder, domain_name=domain_name, order=last_order
+
+        model_class = cast(Domain, domain_type.model_class)
+
+        allowed_values = extract_allowed(
+            kwargs, self.allowed_fields_create + domain_type.allowed_fields
         )
+
+        prepared_values = domain_type.prepare_values(allowed_values)
+
+        domain = model_class(builder=builder, order=last_order, **prepared_values)
+        domain.save()
 
         return domain
 
@@ -112,10 +130,23 @@ class DomainHandler:
         :return: The updated domain
         """
 
-        for key, value in kwargs.items():
+        domain_type = domain.get_type()
+
+        allowed_values = extract_allowed(
+            kwargs, self.allowed_fields_update + domain_type.allowed_fields
+        )
+
+        prepared_values = domain_type.prepare_values(allowed_values)
+
+        for key, value in prepared_values.items():
             setattr(domain, key, value)
 
-        domain.save()
+        try:
+            domain.save()
+        except IntegrityError as error:
+            if "unique" in str(error) and "domain_name" in prepared_values:
+                raise DomainNameNotUniqueError(prepared_values["domain_name"])
+            raise error
 
         return domain
 

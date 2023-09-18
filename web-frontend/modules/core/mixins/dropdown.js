@@ -5,6 +5,7 @@ import {
 } from '@baserow/modules/core/utils/dom'
 
 import dropdownHelpers from './dropdownHelpers'
+import _ from 'lodash'
 
 export default {
   mixins: [dropdownHelpers],
@@ -325,7 +326,7 @@ export default {
     getSelectedProperty(value, property) {
       for (const i in this.getDropdownItemComponents()) {
         const item = this.getDropdownItemComponents()[i]
-        if (item.value === value) {
+        if (_.isEqual(item.value, value)) {
           return item[property]
         }
       }
@@ -338,7 +339,7 @@ export default {
     hasValue() {
       for (const i in this.getDropdownItemComponents()) {
         const item = this.getDropdownItemComponents()[i]
-        if (item.value === this.value) {
+        if (_.isEqual(item.value, this.value)) {
           return true
         }
       }
@@ -366,7 +367,9 @@ export default {
       )
 
       const isArrowUp = event.key === 'ArrowUp'
-      let index = children.findIndex((item) => item.value === this.hover)
+      let index = children.findIndex((item) =>
+        _.isEqual(item.value, this.hover)
+      )
       index = isArrowUp ? index - 1 : index + 1
 
       // Check if the new index is within the allowed range.

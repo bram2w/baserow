@@ -157,17 +157,27 @@
         "hostHeader": "Host",
         "valueHeader": "Value"
     },
+    "domainForm": {
+      "invalidDomain": "The provided domain name is invalid",
+      "notUniqueDomain": "The provided domain is already used"
+    },
     "customDomainForm": {
-        "domainNameLabel": "Domain name",
-        "invalidDomain": "The provided domain name is invalid",
-        "notUniqueDomain": "The provided domain is already used"
+        "domainNameLabel": "Domain name"
+    },
+    "subDomainForm": {
+        "domainNameLabel": "Domain name"
+    },
+    "subDomainDetails": {
+      "text": "The DNS settings of the domain have already been configured and checked. It works without making any additional changes."
     },
     "domainCard": {
         "refresh": "Refresh settings",
         "detailLabel": "Show details"
     },
     "domainTypes": {
-        "customName": "Custom domain"
+        "customName": "Custom domain",
+        "subDomainName": "Subdomain",
+        "subDomain": "Subdomain of {domain}"
     },
     "linkElement": {
         "noValue": "Unnamed..."
