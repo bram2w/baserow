@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "fix webhook url validation not being disabled when baserow_webhooks_allow_private_address true",
+    "issue_number": 1959,
+    "bullet_points": [],
+    "created_at": "2023-09-13"
+}
