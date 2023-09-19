@@ -452,3 +452,58 @@ def test_trigger_test_call(api_client, data_fixture):
     assert response_json["response"] == ""
     assert response_json["status_code"] is None
     assert response_json["is_unreachable"] is True
+
+
+@pytest.mark.django_db
+@responses.activate
+@override_settings(
+    BASEROW_WEBHOOKS_ALLOW_PRIVATE_ADDRESS=True,
+)
+def test_can_query_private_http_addresses_when_env_var_on(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    user_2, jwt_token_2 = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+
+    url = "http://internal"
+    responses.add(responses.POST, url, json={}, status=200)
+
+    response = api_client.post(
+        reverse("api:database:webhooks:test", kwargs={"table_id": table.id}),
+        {
+            "url": url,
+            "event_type": "rows.created",
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert len(response_json["request"]) > 1
+    assert response_json["is_unreachable"] is False
+
+    response = api_client.post(
+        reverse("api:database:webhooks:list", kwargs={"table_id": table.id}),
+        {
+            "url": url,
+            "name": "My Webhook 2",
+            "include_all_events": False,
+            "events": ["rows.created"],
+            "headers": {"Baserow-add-1": "Value 1"},
+            "request_method": "PATCH",
+            "use_user_field_names": False,
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+
+    response = api_client.patch(
+        reverse(
+            "api:database:webhooks:item", kwargs={"webhook_id": response_json["id"]}
+        ),
+        {"url": url},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK, response_json
