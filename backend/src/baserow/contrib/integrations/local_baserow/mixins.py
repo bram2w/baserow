@@ -1,83 +1,102 @@
 from typing import TYPE_CHECKING, List, Optional, Type
 
-from django.db.models import OrderBy
+from django.db.models import OrderBy, Q
 
+from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.integrations.local_baserow.models import (
+    LocalBaserowTableServiceFilter,
+    LocalBaserowTableServiceSort,
+)
 
 if TYPE_CHECKING:
-    from baserow.contrib.database.fields.field_filters import FilterBuilder
     from baserow.contrib.database.table.models import GeneratedTableModel
     from baserow.core.services.types import ServiceSubClass
 
 
-class LocalBaserowFilterableViewServiceMixin:
+class LocalBaserowTableServiceFilterableMixin:
     """
-    A mixin for LocalBaserow service types so that when they dispatch, filters
-    applied to their service's view are applied to the queryset.
+    A mixin for LocalBaserowTableService services so that when they dispatch, filters
+    applied to their service's table, and possibly view, are applied to the queryset.
     """
 
     def get_dispatch_filters(
         self,
         service: "ServiceSubClass",
-        model: Optional[Type["GeneratedTableModel"]] = None,
-    ) -> Optional["FilterBuilder"]:
+        model: Type["GeneratedTableModel"],
+    ) -> FilterBuilder:
         """
-        Responsible for defining how the `LocalBaserowTableService` services should be
-        filtered. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewFilter` records related to it. We'll use the
-        `FilterBuilder` to return a set of filters we can apply to the base queryset.
+        Responsible for defining how the `LocalBaserow` services are filtered. To issue
+        a `dispatch`, a `LocalBaserow` service must be pointing to a table.
+
+        If we only have a `table` and no `view`, then we will query for, and apply,
+        any `LocalBaserowTableServiceFilter` found for this service.
+
+        If we also have a `view`, then we will query for, and apply, any `ViewFilter`
+        found for this view.
 
         :param service: The `LocalBaserow` service we're dispatching.
         :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A `FilterBuilder` applicable to the service's view.
+        :return: A `FilterBuilder` filtered with view and/or service filters.
         """
 
-        view = service.view
-        if view is None:
-            # TODO: this will be changed soon to support `LocalBaserowServiceFilter`.
-            return None
-        if model is None:
-            model = view.table.get_model()
-        return ViewHandler().get_filter_builder(view, model)
+        filter_builder = FilterBuilder(filter_type=FILTER_TYPE_AND)
+
+        if service.view:
+            view_filter_expressions = ViewHandler().get_view_filter_expressions(
+                service.view, model
+            )
+            for view_filter_expression in view_filter_expressions:
+                filter_builder.filter(view_filter_expression)
+
+        service_filters = LocalBaserowTableServiceFilter.objects.filter(service=service)
+        for service_filter in service_filters:
+            filter_builder.filter(
+                Q(**{service_filter.field.db_column: service_filter.value})
+            )
+
+        return filter_builder
 
 
-class LocalBaserowSortableViewServiceMixin:
+class LocalBaserowTableServiceSortableMixin:
     """
-    A mixin for LocalBaserow service types so that when they dispatch, sortings
-    applied to their service's view are applied to the queryset.
+    A mixin for LocalBaserowTableService services so that when they dispatch, sortings
+    applied to their service's table or view are applied to the queryset.
     """
 
     def get_dispatch_sorts(
         self,
         service: "ServiceSubClass",
-        model: Optional[Type["GeneratedTableModel"]] = None,
+        model: Type["GeneratedTableModel"],
     ) -> Optional[List[OrderBy]]:
         """
-        Responsible for defining how `LocalBaserowTableService` services should be
-        sorted. All the integration's services point to a Baserow `View`, which
-        can have zero or more `ViewSort` records related to it. We'll use the
-        `ViewHandler.get_view_sorts` method to return a set of `OrderBy` and
-         field name string which we can apply to the base queryset.
+        Responsible for defining how the `LocalBaserow` services are sorted. To issue
+        a `dispatch`, a `LocalBaserow` service must be pointing to a table.
+
+        If we find any `LocalBaserowTableServiceSort` applied to this service, we will
+        *only* sort on their `OrderBy` expressions.
+
+        If we find no `LocalBaserowTableServiceSort`, then we will attempt to find any
+        `ViewSort` applied to the view, and use that for sorting the queryset.
 
         :param service: The `LocalBaserow` service we're dispatching.
         :param model: The `service.view.table`'s `GeneratedTableModel`.
         :return: A list of `OrderBy` expressions.
         """
 
-        view = service.view
-        if view is None:
-            # TODO: this will be changed soon to support `LocalBaserowServiceSort`.
-            return None
-        if model is None:
-            model = view.table.get_model()
-        service_sorts, _ = ViewHandler().get_view_sorts(view, model)
-        return service_sorts
+        service_sorts = LocalBaserowTableServiceSort.objects.filter(service=service)
+        sort_ordering = [service_sort.get_order() for service_sort in service_sorts]
+
+        if not sort_ordering and service.view:
+            sort_ordering, _ = ViewHandler().get_view_sorts(service.view, model)
+
+        return sort_ordering
 
 
-class LocalBaserowSearchableViewServiceMixin:
+class LocalBaserowTableServiceSearchableMixin:
     """
     A mixin for LocalBaserow service types so that when they dispatch, search
-    queries applied to their service's view are applied to the queryset.
+    queries applied to their service's table are applied to the queryset.
     """
 
     def get_dispatch_search(self, service: "ServiceSubClass") -> str:

@@ -1164,8 +1164,35 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
+    def get_view_filter_expressions(self, view: View, model: Type[GeneratedTableModel]):
+        """
+        Responsible for gathering a View's filter expressions.
+
+        :param view: The view where to fetch the fields from.
+        :param model: The generated model containing all fields.
+        :return: FilterBuilder object with the view's filter applied.
+        """
+
+        expressions_for_view_filter_type = []
+        for view_filter in view.viewfilter_set.all():
+            if view_filter.field_id not in model._field_objects:
+                raise ValueError(
+                    f"The table model does not contain field "
+                    f"{view_filter.field_id}."
+                )
+            field_object = model._field_objects[view_filter.field_id]
+            field_name = field_object["name"]
+            model_field = model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(view_filter.type)
+            expressions_for_view_filter_type.append(
+                view_filter_type.get_filter(
+                    field_name, view_filter.value, model_field, field_object["field"]
+                )
+            )
+        return expressions_for_view_filter_type
+
     def get_filter_builder(
-        self, view: View, model: GeneratedTableModel
+        self, view: View, model: Type[GeneratedTableModel]
     ) -> FilterBuilder:
         """
         Constructs a FilterBuilder object based on the provided view's filter.
@@ -1180,21 +1207,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ValueError("A queryset of the table model is required.")
 
         filter_builder = FilterBuilder(filter_type=view.filter_type)
-        for view_filter in view.viewfilter_set.all():
-            if view_filter.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field "
-                    f"{view_filter.field_id}."
-                )
-            field_object = model._field_objects[view_filter.field_id]
-            field_name = field_object["name"]
-            model_field = model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(view_filter.type)
-            filter_builder.filter(
-                view_filter_type.get_filter(
-                    field_name, view_filter.value, model_field, field_object["field"]
-                )
-            )
+        filter_expressions = self.get_view_filter_expressions(view, model)
+        for filter_expression in filter_expressions:
+            filter_builder.filter(filter_expression)
 
         return filter_builder
 
