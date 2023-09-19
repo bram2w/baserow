@@ -226,6 +226,29 @@ def test_staff_member_can_access_audit_log_for_their_own_workspace(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 @pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
+def test_staff_member_can_access_audit_log_for_any_workspace(
+    api_client,
+    enterprise_data_fixture,
+    url_name,
+):
+    enterprise_data_fixture.enable_enterprise()
+    admin_user, admin_token = enterprise_data_fixture.create_user_and_token(
+        email="admin@test.com", is_staff=True
+    )
+    other_user = enterprise_data_fixture.create_user()
+    workspace = enterprise_data_fixture.create_workspace(user=other_user)
+    response = api_client.get(
+        reverse(f"api:enterprise:audit_log:{url_name}")
+        + f"?workspace_id={workspace.id}",
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {admin_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+@pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
 def test_staff_member_cant_access_audit_log_for_own_workspace_without_license(
     api_client,
     enterprise_data_fixture,

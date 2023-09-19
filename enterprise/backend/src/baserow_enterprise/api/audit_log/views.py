@@ -61,12 +61,13 @@ def check_for_license_and_permissions_or_raise(
     if workspace_id is not None:
         workspace = CoreHandler().get_workspace(workspace_id)
         LicenseHandler.raise_if_user_doesnt_have_feature(AUDIT_LOG, user, workspace)
-        CoreHandler().check_permissions(
-            user,
-            ListWorkspaceAuditLogEntriesOperationType.type,
-            workspace=workspace,
-            context=workspace,
-        )
+        if not user.is_staff:
+            CoreHandler().check_permissions(
+                user,
+                ListWorkspaceAuditLogEntriesOperationType.type,
+                workspace=workspace,
+                context=workspace,
+            )
     else:
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(AUDIT_LOG, user)
         if not user.is_staff:
