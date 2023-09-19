@@ -18,9 +18,9 @@ from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
 )
 from baserow.contrib.integrations.local_baserow.mixins import (
-    LocalBaserowFilterableViewServiceMixin,
-    LocalBaserowSearchableViewServiceMixin,
-    LocalBaserowSortableViewServiceMixin,
+    LocalBaserowTableServiceFilterableMixin,
+    LocalBaserowTableServiceSearchableMixin,
+    LocalBaserowTableServiceSortableMixin,
 )
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
@@ -39,9 +39,9 @@ from baserow.core.services.types import ServiceDict
 
 class LocalBaserowListRowsUserServiceType(
     ServiceType,
-    LocalBaserowFilterableViewServiceMixin,
-    LocalBaserowSortableViewServiceMixin,
-    LocalBaserowSearchableViewServiceMixin,
+    LocalBaserowTableServiceFilterableMixin,
+    LocalBaserowTableServiceSortableMixin,
+    LocalBaserowTableServiceSearchableMixin,
 ):
     """
     This service gives access to a list of rows from the same Baserow instance as the
@@ -158,12 +158,12 @@ class LocalBaserowListRowsUserServiceType(
             search_mode = SearchHandler.get_default_search_mode_for_table(table)
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
-        # Find the `ViewFilter` applicable to this Service's View.
+        # Find filters applicable to this service.
         filter_builder = self.get_dispatch_filters(service, model)
         if filter_builder is not None:
             queryset = filter_builder.apply_to_queryset(queryset)
 
-        # Find the `ViewSort` applicable to this Service's `View`.
+        # Find sorts applicable to this service.
         view_sorts = self.get_dispatch_sorts(service, model)
         if view_sorts is not None:
             queryset = queryset.order_by(*view_sorts)
@@ -196,8 +196,8 @@ class LocalBaserowListRowsUserServiceType(
 
 class LocalBaserowGetRowUserServiceType(
     ServiceType,
-    LocalBaserowFilterableViewServiceMixin,
-    LocalBaserowSearchableViewServiceMixin,
+    LocalBaserowTableServiceFilterableMixin,
+    LocalBaserowTableServiceSearchableMixin,
 ):
     """
     This service gives access to one specific row from a given table from the same

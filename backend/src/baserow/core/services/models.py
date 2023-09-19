@@ -3,6 +3,7 @@ from django.db import models
 
 from baserow.core.integrations.models import Integration
 from baserow.core.mixins import (
+    HierarchicalModelMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
     WithRegistry,
@@ -67,3 +68,41 @@ class SearchableServiceMixin(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ServiceFilter(HierarchicalModelMixin):
+    """
+    An abstract Model which service subclass's filter model can inherit from.
+    """
+
+    service = models.ForeignKey(
+        Service,
+        related_name="service_filters",
+        help_text="The service which this filter belongs to.",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        abstract = True
+
+    def get_parent(self):
+        return self.service
+
+
+class ServiceSort(HierarchicalModelMixin):
+    """
+    An abstract Model which service subclass's sort model can inherit from.
+    """
+
+    service = models.ForeignKey(
+        Service,
+        related_name="service_sorts",
+        help_text="The service which this sort belongs to.",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        abstract = True
+
+    def get_parent(self):
+        return self.service
