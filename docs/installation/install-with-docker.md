@@ -95,8 +95,8 @@ docker stop baserow
 ```bash
 # We haven't yet deleted the old Baserow container so you need to start this new one
 # with a different name to prevent an error like:
-# `response from daemon: Conflict. The container name "/baserow" is already in use by 
-# container` 
+# `response from daemon: Conflict. The container name "/baserow" is already in use by
+# container`
 
 docker run \
   -d \
@@ -108,7 +108,7 @@ docker run \
 5. Baserow will automatically upgrade itself on startup, follow the logs to monitor it:
 
 ```bash
-docker logs -f baserow_version_REPLACE_WITH_NEW_VERSION 
+docker logs -f baserow_version_REPLACE_WITH_NEW_VERSION
 ```
 
 6. Once you see the following log line your Baserow upgraded and is now available again:
@@ -312,14 +312,14 @@ docker run \
 
 If you want to directly access the embedded Postgresql database then you can run:
 
-```bash 
+```bash
 docker run -it \
   --rm \
   --name baserow \
   -p 5432:5432 \
   -v baserow_data:/baserow/data \
   baserow/baserow:1.20.2 \
-  start-only-db 
+  start-only-db
 # Now get the password from
 docker exec -it baserow cat /baserow/data/.pgpass
 # Finally connect on your host machine to the Baserow postgres database at port 5432
@@ -331,7 +331,7 @@ docker exec -it baserow cat /baserow/data/.pgpass
 If you want to run a one off backend command against your Baserow data volume without
 starting Baserow normally you can do so with the `backend-cmd-with-db` argument like so:
 
-```bash 
+```bash
 docker run -it \
   --rm \
   --name baserow \
@@ -415,7 +415,7 @@ data so you do not lose it if you accidentally delete your Baserow container.
 
 ### Backup all of Baserow
 
-This will backup:
+Note, that this only works if you're not using an external PostgreSQL server. This will backup:
 
 1. Baserows postgres database (This will be a raw copy of the PGDATA dir and hence not
    easily portable, see the section below on how to backup just the postgres db in a
@@ -424,6 +424,7 @@ This will backup:
    have made to the caddy server and any SSL certificates/keys automatically setup by
    Caddy.
 3. The Redis servers state. This is not strictly needed.
+4. This will backup user-uploaded files as well, but only if you've not configured external file storage.
 
 Otherwise if you remove the Baserow container you will lose all of your data.
 
@@ -443,9 +444,9 @@ docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /ba
 # Ensure Baserow is stopped first before taking a backup.
 docker stop baserow
 docker run --rm -v baserow_data:/baserow/data -v $PWD:/backup ubuntu tar cvf /backup/backup.tar /baserow/data
-docker run --rm -v new_baserow_data_volume $PWD:/backup ubuntu bash -c "mkdir -p /baserow/data && cd /baserow/data && tar xvf /backup/backup.tar --strip 1"
+docker run --rm -v new_baserow_data_volume:/results -v $PWD:/backup ubuntu bash -c "mkdir -p /results/ && cd /results && tar xvf /backup/backup.tar --strip 2"
 # Now launch Baserow using the new data volume with your normal run command:
-docker run -v new_baserow_data_volume:/baserow/data ..... 
+docker run -v new_baserow_data_volume:/baserow/data .....
 ```
 
 ### Backup only Baserow's Postgres database
@@ -456,12 +457,15 @@ running Baserow instance or any other process which is making changes to the dat
 Baserow stores all of its own data in Postgres. To backup just this database you can run
 the command below.
 
-```bash 
+```bash
 # First read the help message for this command
 docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.20.2 \
-   backend-cmd-with-db backup
+   backend-cmd-with-db backup --help
 
-# By default backs up to the backups folder in the baserow_data volume.
+# Stop Baserow instance
+docker stop baserow
+
+# The command below backs up Baserow to the backups folder in the baserow_data volume:
 docker run -it --rm -v baserow_data:/baserow/data baserow/baserow:1.20.2 \
    backend-cmd-with-db backup -f /baserow/data/backups/backup.tar.gz
 
@@ -476,16 +480,20 @@ When restoring Baserow you must ensure you are restoring into a brand new Basero
 volume.
 
 ```bash
+# Stop Baserow instance
+docker stop baserow
+
+# Restore Baserow backup from a new volume containing the backup:
 docker run -it --rm \
   -v old_baserow_data_volume_containing_the_backup_tar_gz:/baserow/old_data \
   -v new_baserow_data_volume_to_restore_into:/baserow/data \
-  baserow backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz 
+  baserow/baserow:1.20.2 backend-cmd-with-db restore -f /baserow/old_data/backup.tar.gz
 
 # Or to restore from a file on your host instead run something like:
 docker run -it --rm \
   -v baserow_data:/baserow/data -v \
   $(pwd):/baserow/host \
-  baserow backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
+  baserow/baserow:1.20.2 backend-cmd-with-db restore -f /baserow/host/backup.tar.gz
 ```
 
 ## Running healthchecks on Baserow
@@ -497,7 +505,7 @@ container then you can run:
 ```bash
 docker exec baserow ./baserow.sh backend-cmd backend-healthcheck
 # Run the below to see all available healthchecks
-docker exec baserow ./baserow.sh backend-cmd help 
+docker exec baserow ./baserow.sh backend-cmd help
 ```
 
 ## Running Baserow or Django management commands
@@ -506,7 +514,7 @@ You can run management commands on an existing Baserow container called baserow 
 running the following to see the available commands:
 
 ```bash
-docker exec baserow ./baserow.sh backend-cmd manage 
+docker exec baserow ./baserow.sh backend-cmd manage
 # For example you could migrate the database of a running Baserow using:
 docker exec baserow ./baserow.sh backend-cmd manage migrate
 ```
@@ -551,13 +559,13 @@ FROM baserow/baserow:1.20.2
 # useful for storing your own environment variable overrides.
 COPY custom_env.sh /baserow/supervisor/env/custom_env.sh
 
-# Set the DATA_DIR environment variable to change where Baserow stores its persistent 
+# Set the DATA_DIR environment variable to change where Baserow stores its persistent
 # data. At startup Baserow will attempt to chown and setup this folder correctly.
 ENV DATA_DIR=/baserow/data
 
 # This image bakes in its own default user with UID/GID of 9999:9999 by default. To
-# Set this to change the user Baserow will run its Caddy, backend, Celery and 
-# web-frontend services as. However be warned, the default entrypoint needs to be run 
+# Set this to change the user Baserow will run its Caddy, backend, Celery and
+# web-frontend services as. However be warned, the default entrypoint needs to be run
 # as root so using USER may break things.
 ENV DOCKER_USER=baserow_docker_user
 ```
