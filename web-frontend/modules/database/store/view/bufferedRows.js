@@ -745,12 +745,28 @@ export default ({ service, customPopulateRow }) => {
       const newRowMatches = newMatchesFilters && newRow._.matchSearch
 
       if (oldRowMatches && !newRowMatches) {
+        // If the old row exists in the buffer, we must update that one with the
+        // values, even though it's going to be deleted, because the row object
+        // could be used by the row edit modal, who needs to have the latest change
+        // to it, to keep it in sync.
+        const { index: oldIndex, isCertain: oldIsCertain } = await dispatch(
+          'findIndexOfExistingRow',
+          {
+            view,
+            fields,
+            row: oldRow,
+          }
+        )
+        if (oldIsCertain) {
+          commit('UPDATE_ROW_AT_INDEX', { index: oldIndex, values })
+        }
+
         // If the old row did match the filters, but after the update it does not
         // anymore, we can safely remove it from the store.
         await dispatch('afterExistingRowDeleted', {
           view,
           fields,
-          row,
+          row: oldRow,
         })
       } else if (!oldRowMatches && newRowMatches) {
         // If the old row didn't match filters, but the updated one does, we need to
@@ -761,7 +777,7 @@ export default ({ service, customPopulateRow }) => {
           values: newRow,
         })
       } else if (oldRowMatches && newRowMatches) {
-        // If the old and updated row already exists in the store, we need to update is.
+        // If the old and updated row already exists in the store, we need to update it.
         const { index: oldIndex, isCertain: oldIsCertain } = await dispatch(
           'findIndexOfExistingRow',
           {
@@ -837,7 +853,9 @@ export default ({ service, customPopulateRow }) => {
         fields,
         row,
       })
-      commit('DELETE_ROW_AT_INDEX', { index })
+      if (index > -1) {
+        commit('DELETE_ROW_AT_INDEX', { index })
+      }
     },
     /**
      * Brings the provided row in a dragging state so that it can freely moved to
