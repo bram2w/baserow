@@ -43,7 +43,7 @@
           class="form-input__icon fas"
           :class="[`fa-${icon}`]"
         />
-        <div class="form-input__suffix disabled">
+        <div v-if="$slots.suffix" class="form-input__suffix disabled">
           <div>
             <slot name="suffix"></slot>
           </div>
