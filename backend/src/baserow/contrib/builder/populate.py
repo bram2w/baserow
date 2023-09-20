@@ -197,6 +197,7 @@ def load_test_data():
             "Product",
             service_type=service_type,
             view=view,
+            table=table,
             integration=integration,
             row_id='get("page_parameter.id")',
         )
@@ -233,6 +234,7 @@ def load_test_data():
             "Products",
             service_type=service_type,
             view=view,
+            table=table,
             integration=integration,
         )
 

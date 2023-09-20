@@ -1460,7 +1460,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         self,
         view: View,
         model: GeneratedTableModel,
-        queryset: Optional[QuerySet] = None,
+        queryset: QuerySet,
         restrict_to_field_ids: Optional[Iterable[int]] = None,
     ) -> Tuple[List[OrderBy], Optional[QuerySet]]:
         """
@@ -1498,7 +1498,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             field_annotation = field_annotated_order_by.annotation
             field_order_by = field_annotated_order_by.order
 
-            if queryset is not None and field_annotation is not None:
+            if field_annotation is not None:
                 queryset = queryset.annotate(**field_annotation)
 
             order_by.append(field_order_by)
