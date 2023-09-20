@@ -7,6 +7,7 @@ from django.db.models import (
     Avg,
     Case,
     Count,
+    DecimalField,
     Expression,
     ExpressionWrapper,
     F,
@@ -589,7 +590,13 @@ class BaserowRound(TwoArgumentBaserowFunction):
             when_nan=Value(Decimal("NaN")),
             when_not_nan=(
                 Func(
-                    arg1,
+                    Cast(
+                        arg1,
+                        output_field=DecimalField(
+                            max_digits=BaserowFormulaNumberType.MAX_DIGITS,
+                            decimal_places=NUMBER_MAX_DECIMAL_PLACES,
+                        ),
+                    ),
                     # The round function requires an integer input.
                     trunc_numeric_to_int(arg2),
                     function="round",

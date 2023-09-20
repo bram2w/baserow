@@ -218,6 +218,7 @@ VALID_FORMULA_TESTS = [
     ("round(1234.5678, tonumber('invalid'))", "NaN"),
     ("round(1/0, 1/0)", "NaN"),
     ("round(1/0, 2)", "NaN"),
+    ("round(trunc(10), 5)", "10.00000"),
     ("round(tonumber('invalid'), 2)", "NaN"),
     ("trunc(1.1234)", "1"),
     ("trunc(1.56)", "1"),
