@@ -164,7 +164,7 @@ class LocalBaserowListRowsUserServiceType(
             queryset = filter_builder.apply_to_queryset(queryset)
 
         # Find sorts applicable to this service.
-        view_sorts = self.get_dispatch_sorts(service, model)
+        view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
         if view_sorts is not None:
             queryset = queryset.order_by(*view_sorts)
 

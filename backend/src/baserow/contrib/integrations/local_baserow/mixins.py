@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING, List, Optional, Type
+from typing import TYPE_CHECKING, List, Tuple, Type
 
-from django.db.models import OrderBy, Q
+from django.db.models import OrderBy, Q, QuerySet
 
 from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
 from baserow.contrib.database.views.handler import ViewHandler
@@ -67,8 +67,9 @@ class LocalBaserowTableServiceSortableMixin:
     def get_dispatch_sorts(
         self,
         service: "ServiceSubClass",
+        queryset: QuerySet,
         model: Type["GeneratedTableModel"],
-    ) -> Optional[List[OrderBy]]:
+    ) -> Tuple[List[OrderBy], QuerySet]:
         """
         Responsible for defining how the `LocalBaserow` services are sorted. To issue
         a `dispatch`, a `LocalBaserow` service must be pointing to a table.
@@ -80,6 +81,7 @@ class LocalBaserowTableServiceSortableMixin:
         `ViewSort` applied to the view, and use that for sorting the queryset.
 
         :param service: The `LocalBaserow` service we're dispatching.
+        :param queryset: The Django queryset we want to apply our sort annotations to.
         :param model: The `service.view.table`'s `GeneratedTableModel`.
         :return: A list of `OrderBy` expressions.
         """
@@ -88,9 +90,11 @@ class LocalBaserowTableServiceSortableMixin:
         sort_ordering = [service_sort.get_order() for service_sort in service_sorts]
 
         if not sort_ordering and service.view:
-            sort_ordering, _ = ViewHandler().get_view_sorts(service.view, model)
+            sort_ordering, queryset = ViewHandler().get_view_sorts(
+                service.view, model, queryset
+            )
 
-        return sort_ordering
+        return sort_ordering, queryset
 
 
 class LocalBaserowTableServiceSearchableMixin:
