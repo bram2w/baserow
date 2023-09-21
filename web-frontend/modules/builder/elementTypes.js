@@ -18,6 +18,7 @@ import DefaultStyleForm from '@baserow/modules/builder/components/elements/compo
 import { compile } from 'path-to-regexp'
 import ButtonElement from '@baserow/modules/builder/components/elements/components/ButtonElement'
 import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
+import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 
 export class ElementType extends Registerable {
   get name() {
@@ -54,6 +55,14 @@ export class ElementType extends Registerable {
 
   get styles() {
     return this.stylesAll
+  }
+
+  get events() {
+    return []
+  }
+
+  getEvents() {
+    return this.events.map((EventType) => new EventType(this.app))
   }
 
   /**
@@ -361,5 +370,9 @@ export class ButtonElementType extends ElementType {
 
   get generalFormComponent() {
     return ButtonElementForm
+  }
+
+  get events() {
+    return [ClickEvent]
   }
 }

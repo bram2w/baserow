@@ -6,6 +6,7 @@
         'link-button-element-button--full-width':
           element.width === WIDTHS.FULL.value,
       }"
+      @click="fireClickEvent"
     >
       {{ resolvedValue || $t('buttonElement.noValue') }}
     </button>

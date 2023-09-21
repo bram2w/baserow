@@ -1,0 +1,13 @@
+.event__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.event__label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.event__toggle {
+  color: $color-primary-900;
+}
