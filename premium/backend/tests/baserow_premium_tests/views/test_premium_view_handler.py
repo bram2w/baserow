@@ -273,10 +273,12 @@ def test_list_views_personal_ownership_type(
         ownership_type="personal",
     )
 
-    user_views = handler.list_views(user, table, "grid", None, None, None, 10)
+    user_views = handler.list_views(user, table, "grid", False, False, False, False, 10)
     assert len(user_views) == 2
 
-    user2_views = handler.list_views(user2, table, "grid", None, None, None, 10)
+    user2_views = handler.list_views(
+        user2, table, "grid", False, False, False, False, 10
+    )
     assert len(user2_views) == 1
     assert user2_views[0].id == view.id
 

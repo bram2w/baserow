@@ -62,6 +62,7 @@ class GridViewType(ViewType):
     can_share = True
     can_decorate = True
     has_public_info = True
+    can_group_by = True
     when_shared_publicly_requires_realtime_events = True
     allowed_fields = ["row_identifier_type"]
     field_options_allowed_fields = [

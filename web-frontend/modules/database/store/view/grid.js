@@ -1762,7 +1762,8 @@ export const actions = {
     const sortFunction = getRowSortFunction(
       this.$registry,
       view.sortings,
-      fields
+      fields,
+      view.group_bys
     )
     allRowsCopy.sort(sortFunction)
     const index = allRowsCopy.findIndex((r) => r.id === row.id)
@@ -2221,7 +2222,8 @@ export const actions = {
       const sortFunction = getRowSortFunction(
         this.$registry,
         view.sortings,
-        fields
+        fields,
+        view.group_bys
       )
       const allRows = getters.getAllRows
       const index = allRows.findIndex((r) => r.id === row.id)
@@ -2413,7 +2415,8 @@ export const actions = {
     const sortFunction = getRowSortFunction(
       this.$registry,
       view.sortings,
-      fields
+      fields,
+      view.group_bys
     )
     allRowsCopy.sort(sortFunction)
     const index = allRowsCopy.findIndex((r) => r.id === row.id)
@@ -2523,7 +2526,9 @@ export const actions = {
     const currentIndex = getters.getAllRows.findIndex((r) => r.id === row.id)
     const sortedRows = clone(allRows)
     sortedRows[currentIndex] = values
-    sortedRows.sort(getRowSortFunction(this.$registry, view.sortings, fields))
+    sortedRows.sort(
+      getRowSortFunction(this.$registry, view.sortings, fields, view.group_bys)
+    )
     const newIndex = sortedRows.findIndex((r) => r.id === row.id)
 
     commit('SET_ROW_MATCH_SORTINGS', { row, value: currentIndex === newIndex })

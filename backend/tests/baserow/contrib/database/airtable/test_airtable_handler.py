@@ -272,6 +272,7 @@ def test_to_baserow_database_export():
             "filters": [],
             "sortings": [],
             "decorations": [],
+            "group_bys": [],
             "ownership_type": "collaborative",
             "public": False,
             "field_options": [],

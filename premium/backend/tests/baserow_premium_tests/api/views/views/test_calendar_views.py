@@ -979,6 +979,7 @@ def test_get_public_calendar_view_with_single_select_and_cover(
             "public": True,
             "slug": calendar_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,

@@ -137,10 +137,12 @@ class DatabaseConfig(AppConfig):
             CreateDecorationActionType,
             CreateViewActionType,
             CreateViewFilterActionType,
+            CreateViewGroupByActionType,
             CreateViewSortActionType,
             DeleteDecorationActionType,
             DeleteViewActionType,
             DeleteViewFilterActionType,
+            DeleteViewGroupByActionType,
             DeleteViewSortActionType,
             DuplicateViewActionType,
             OrderViewsActionType,
@@ -149,6 +151,7 @@ class DatabaseConfig(AppConfig):
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
             UpdateViewFilterActionType,
+            UpdateViewGroupByActionType,
             UpdateViewSortActionType,
         )
 
@@ -163,6 +166,9 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateViewSortActionType())
         action_type_registry.register(UpdateViewSortActionType())
         action_type_registry.register(DeleteViewSortActionType())
+        action_type_registry.register(CreateViewGroupByActionType())
+        action_type_registry.register(UpdateViewGroupByActionType())
+        action_type_registry.register(DeleteViewGroupByActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
         action_type_registry.register(CreateDecorationActionType())
@@ -516,6 +522,7 @@ class DatabaseConfig(AppConfig):
         from .views.object_scopes import (
             DatabaseViewDecorationObjectScopeType,
             DatabaseViewFilterObjectScopeType,
+            DatabaseViewGroupByObjectScopeType,
             DatabaseViewObjectScopeType,
             DatabaseViewSortObjectScopeType,
         )
@@ -526,6 +533,7 @@ class DatabaseConfig(AppConfig):
         object_scope_type_registry.register(DatabaseViewObjectScopeType())
         object_scope_type_registry.register(DatabaseViewDecorationObjectScopeType())
         object_scope_type_registry.register(DatabaseViewSortObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewGroupByObjectScopeType())
         object_scope_type_registry.register(DatabaseViewFilterObjectScopeType())
         object_scope_type_registry.register(TokenObjectScopeType())
 
@@ -582,16 +590,19 @@ class DatabaseConfig(AppConfig):
             CreatePublicViewOperationType,
             CreateViewDecorationOperationType,
             CreateViewFilterOperationType,
+            CreateViewGroupByOperationType,
             CreateViewOperationType,
             CreateViewSortOperationType,
             DeleteViewDecorationOperationType,
             DeleteViewFilterOperationType,
+            DeleteViewGroupByOperationType,
             DeleteViewOperationType,
             DeleteViewSortOperationType,
             DuplicateViewOperationType,
             ListAggregationsViewOperationType,
             ListViewDecorationOperationType,
             ListViewFilterOperationType,
+            ListViewGroupByOperationType,
             ListViewsOperationType,
             ListViewSortOperationType,
             OrderViewsOperationType,
@@ -599,12 +610,14 @@ class DatabaseConfig(AppConfig):
             ReadViewDecorationOperationType,
             ReadViewFieldOptionsOperationType,
             ReadViewFilterOperationType,
+            ReadViewGroupByOperationType,
             ReadViewOperationType,
             ReadViewsOrderOperationType,
             ReadViewSortOperationType,
             RestoreViewOperationType,
             UpdateViewDecorationOperationType,
             UpdateViewFilterOperationType,
+            UpdateViewGroupByOperationType,
             UpdateViewOperationType,
             UpdateViewPublicOperationType,
             UpdateViewSlugOperationType,
@@ -635,6 +648,9 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(CreateViewSortOperationType())
         operation_type_registry.register(ReadViewSortOperationType())
         operation_type_registry.register(UpdateViewSortOperationType())
+        operation_type_registry.register(CreateViewGroupByOperationType())
+        operation_type_registry.register(ReadViewGroupByOperationType())
+        operation_type_registry.register(UpdateViewGroupByOperationType())
         operation_type_registry.register(CreateFieldOperationType())
         operation_type_registry.register(ReadFieldOperationType())
         operation_type_registry.register(UpdateFieldOperationType())
@@ -643,6 +659,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(DuplicateFieldOperationType())
         operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
+        operation_type_registry.register(DeleteViewGroupByOperationType())
         operation_type_registry.register(UpdateViewSlugOperationType())
         operation_type_registry.register(UpdateViewPublicOperationType())
         operation_type_registry.register(ReadViewsOrderOperationType())
@@ -685,6 +702,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadViewDecorationOperationType())
         operation_type_registry.register(UpdateViewDecorationOperationType())
         operation_type_registry.register(ListViewSortOperationType())
+        operation_type_registry.register(ListViewGroupByOperationType())
         operation_type_registry.register(ReadViewFieldOptionsOperationType())
         operation_type_registry.register(MoveRowDatabaseRowOperationType())
         operation_type_registry.register(CreateTokenOperationType())

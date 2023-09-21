@@ -463,6 +463,16 @@
         "DisablePassword": "Access is password-protected",
         "ChangePassword": "Change"
     },
+    "viewGroupByContext": {
+        "noGroupByTitle": "You have not yet created any groupings",
+        "noGroupByText": "Group rows together by a field.",
+        "groupBy": "Group by",
+        "thenBy": "Then by",
+        "addGroupBy": "choose a field to group by"
+    },
+    "viewGroupBy": {
+        "groupBy": "Group | Group by 1 fields | Group by {count} fields"
+    },
     "viewSortContext": {
         "noSortTitle": "You have not yet created a sort",
         "noSortText": "Sorts allow you to sort rows by a field.",

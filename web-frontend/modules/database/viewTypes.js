@@ -53,6 +53,14 @@ export class ViewType extends Registerable {
   }
 
   /**
+   * Indicates whether it is possible to group the rows. If true the group by context
+   * menu is added to the header.
+   */
+  canGroupBy() {
+    return false
+  }
+
+  /**
    * Indicates whether it is possible to share this view via an url publically.
    */
   canShare() {
@@ -66,6 +74,7 @@ export class ViewType extends Registerable {
     this.colorClass = this.getColorClass()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
+    this.canGroupBy = this.canGroupBy()
     this.canShare = this.canShare()
 
     if (this.type === null) {
@@ -271,6 +280,7 @@ export class ViewType extends Registerable {
       canFilter: this.canFilter,
       canSort: this.canSort,
       canShare: this.canShare,
+      canGroupBy: this.canGroupBy,
     }
   }
 
@@ -324,6 +334,10 @@ export class GridViewType extends ViewType {
 
   getIconClass() {
     return 'bars'
+  }
+
+  canGroupBy() {
+    return true
   }
 
   getName() {

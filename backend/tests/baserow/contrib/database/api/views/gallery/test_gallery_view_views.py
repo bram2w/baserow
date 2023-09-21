@@ -386,6 +386,7 @@ def test_get_public_gallery_view(api_client, data_fixture):
                     "view": gallery_view.slug,
                 }
             ],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,

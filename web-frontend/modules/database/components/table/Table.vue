@@ -121,6 +121,28 @@
         <li
           v-if="
             hasSelectedView &&
+            view._.type.canGroupBy &&
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_group_by',
+                view,
+                database.workspace.id
+              )) &&
+            $featureFlagIsEnabled('group_by')
+          "
+          class="header__filter-item"
+        >
+          <ViewGroupBy
+            :view="view"
+            :fields="fields"
+            :read-only="readOnly"
+            :disable-group-by="disableGroupBy"
+            @changed="refresh()"
+          ></ViewGroupBy>
+        </li>
+        <li
+          v-if="
+            hasSelectedView &&
             view._.type.canShare &&
             !readOnly &&
             $hasPermission(
@@ -211,6 +233,7 @@ import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import ViewGroupBy from '@baserow/modules/database/components/view/ViewGroupBy.vue'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -218,6 +241,7 @@ import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
  */
 export default {
   components: {
+    ViewGroupBy,
     BaserowLogo,
     ShareViewLink,
     EditableViewName,
@@ -272,6 +296,11 @@ export default {
       default: false,
     },
     disableSort: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableGroupBy: {
       type: Boolean,
       required: false,
       default: false,

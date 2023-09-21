@@ -75,6 +75,7 @@ def test_create_form_view(api_client, data_fixture):
     assert form.submit_action_redirect_url == ""
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "group_bys" not in response_json
     assert "decorations" not in response_json
 
     response = api_client.post(

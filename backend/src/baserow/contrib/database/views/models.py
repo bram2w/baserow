@@ -1,4 +1,6 @@
+import itertools
 import secrets
+from typing import Iterable, Optional, Union
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
@@ -185,6 +187,33 @@ class View(
 
     class Meta:
         ordering = ("order",)
+
+    def get_all_sorts(
+        self, restrict_to_field_ids: Optional[Iterable[int]] = None
+    ) -> Iterable["Union[ViewGroupBy, ViewSort]"]:
+        """
+        Returns any applied ViewGroupBys and ViewSorts on this view. A view should
+        be sorted first by the ViewGroupBys, and then it's ViewSorts.
+
+        :param restrict_to_field_ids: If provided only view group bys and sorts will be
+            returned for fields with an id in this iterable.
+        """
+
+        can_group_by = view_type_registry.get_by_model(self.specific_class).can_group_by
+        viewsorts_qs = self.viewsort_set
+        if restrict_to_field_ids is not None:
+            viewsorts_qs = viewsorts_qs.filter(field_id__in=restrict_to_field_ids)
+
+        if can_group_by:
+            viewgroupbys_qs = self.viewgroupby_set
+            if restrict_to_field_ids is not None:
+                viewgroupbys_qs = viewgroupbys_qs.filter(
+                    field_id__in=restrict_to_field_ids
+                )
+                # GroupBy's have higher priority and must be sorted by first.
+            return itertools.chain(viewgroupbys_qs.all(), viewsorts_qs.all())
+        else:
+            return viewsorts_qs.all()
 
     @classmethod
     def get_last_order(cls, table):
@@ -411,6 +440,41 @@ class ViewSort(HierarchicalModelMixin, models.Model):
         "database.Field",
         on_delete=models.CASCADE,
         help_text="The field that must be sorted on.",
+    )
+    order = models.CharField(
+        max_length=4,
+        choices=SORT_ORDER_CHOICES,
+        help_text="Indicates the sort order direction. ASC (Ascending) is from A to Z "
+        "and DESC (Descending) is from Z to A.",
+        default=SORT_ORDER_ASC,
+    )
+
+    def get_parent(self):
+        return self.view
+
+    class Meta:
+        ordering = ("id",)
+
+
+class ViewGroupByManager(models.Manager):
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewGroupBy(HierarchicalModelMixin, models.Model):
+    objects = ViewGroupByManager()
+
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text="The view to which the group by applies. Each view can have his own "
+        "group bys.",
+    )
+    field = models.ForeignKey(
+        "database.Field",
+        on_delete=models.CASCADE,
+        help_text="The field that must be grouped by.",
     )
     order = models.CharField(
         max_length=4,

@@ -1092,6 +1092,7 @@ def test_get_public_kanban_without_with_single_select_and_cover(
             "public": True,
             "slug": kanban_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
@@ -1190,6 +1191,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
             "public": True,
             "slug": kanban_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,

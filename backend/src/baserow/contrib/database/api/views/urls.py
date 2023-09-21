@@ -14,6 +14,8 @@ from .views import (
     ViewFieldOptionsView,
     ViewFiltersView,
     ViewFilterView,
+    ViewGroupBysView,
+    ViewGroupByView,
     ViewSortingsView,
     ViewSortView,
     ViewsView,
@@ -41,6 +43,11 @@ urlpatterns = view_type_registry.api_urls + [
         r"sort/(?P<view_sort_id>[0-9]+)/$", ViewSortView.as_view(), name="sort_item"
     ),
     re_path(
+        r"group_by/(?P<view_group_by_id>[0-9]+)/$",
+        ViewGroupByView.as_view(),
+        name="group_by_item",
+    ),
+    re_path(
         r"decoration/(?P<view_decoration_id>[0-9]+)/$",
         ViewDecorationView.as_view(),
         name="decoration_item",
@@ -58,6 +65,11 @@ urlpatterns = view_type_registry.api_urls + [
         r"(?P<view_id>[0-9]+)/sortings/$",
         ViewSortingsView.as_view(),
         name="list_sortings",
+    ),
+    re_path(
+        r"(?P<view_id>[0-9]+)/group_bys/$",
+        ViewGroupBysView.as_view(),
+        name="list_group_bys",
     ),
     re_path(
         r"(?P<view_id>[0-9]+)/decorations/$",

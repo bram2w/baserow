@@ -1,0 +1,141 @@
+.group-bys {
+  padding: 12px;
+
+  .dropdown__selected {
+    @extend %ellipsis;
+  }
+}
+
+.group-bys__none {
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+.group-bys__none-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.group-bys__none-description {
+  font-size: 13px;
+}
+
+.group-bys__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  @include rounded($rounded);
+
+  &:not(:last-child) {
+    margin-bottom: 6px;
+  }
+
+  &.group-bys__item--loading {
+    padding-left: 32px;
+
+    &::before {
+      content: '';
+      margin-top: -7px;
+
+      @include loading(14px);
+      @include absolute(50%, auto, 0, 10px);
+    }
+  }
+}
+
+.group-bys__remove {
+  flex: 0 0 32px;
+  width: 32px;
+  color: $color-primary-900;
+  line-height: 30px;
+  text-align: center;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-500;
+  }
+
+  .group-bys__item--loading & {
+    display: none;
+  }
+}
+
+.group-bys__description {
+  flex: 0 0 60px;
+  width: 60px;
+  margin-right: 10px;
+
+  span {
+    padding-left: 12px;
+  }
+}
+
+.group-bys__field {
+  margin-right: 10px;
+  flex: 0 0 120px;
+
+  .dropdown,
+  .dropdown__selected {
+    width: 120px;
+  }
+}
+
+.group-bys__order {
+  display: flex;
+}
+
+.group-bys__order-item {
+  display: flex;
+  justify-content: center;
+  flex-wrap: nowrap;
+  line-height: 32px;
+  color: $color-neutral-900;
+  width: 80px;
+  @include rounded($rounded);
+
+  &:not(:last-child) {
+    margin-right: 10px;
+  }
+
+  > div {
+    font-weight: 600;
+
+    &:not(:last-child) {
+      margin-right: 8px;
+    }
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+
+    .group-bys__order--disabled & {
+      cursor: inherit;
+      background-color: transparent;
+    }
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+
+    .group-bys__order--disabled & {
+      background-color: $color-neutral-100;
+    }
+  }
+}
+
+.group-bys__add {
+  display: inline-block;
+  margin: 12px 0 6px 4px;
+
+  &:hover {
+    text-decoration: none;
+    color: $color-primary-900;
+  }
+}
+
+.group-bys__add-context .context__menu-icon {
+  color: $color-primary-900;
+}

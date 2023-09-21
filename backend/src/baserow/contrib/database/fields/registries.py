@@ -106,6 +106,9 @@ class FieldType(
     `FieldHandler::get_unique_row_values` method.
     """
 
+    _can_group_by = False
+    """Indicates whether it is possible to group by by this field type."""
+
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
@@ -1436,6 +1439,20 @@ class FieldType(
         """
 
         return self._can_order_by
+
+    def check_can_group_by(self, field: Field) -> bool:
+        """
+        Override this method if this field type can sometimes be grouped or sometimes
+        cannot be grouped depending on the individual field state. By default will just
+        return the bool property _can_group_by so if your field type doesn't depend
+        on the field state and is always just True or False just set _can_group_by
+        to the desired value.
+
+        :param field: The field to check to see if it can be grouped by or not.
+        :return: True if a view can be grouped by this field, False otherwise.
+        """
+
+        return self._can_group_by
 
     def before_field_options_update(
         self,

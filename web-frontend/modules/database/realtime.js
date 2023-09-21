@@ -416,6 +416,58 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('view_group_by_created', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_group_by.view)
+    if (view !== undefined) {
+      store.dispatch('view/forceCreateGroupBy', {
+        view,
+        values: data.view_group_by,
+      })
+      if (store.getters['view/getSelectedId'] === view.id) {
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
+      }
+    }
+  })
+
+  realtime.registerEvent('view_group_by_updated', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_group_by.view)
+    if (view !== undefined) {
+      const groupBy = view.group_bys.find(
+        (groupBy) => groupBy.id === data.view_group_by_id
+      )
+      if (groupBy !== undefined) {
+        store.dispatch('view/forceUpdateGroupBy', {
+          groupBy,
+          values: data.view_group_by,
+        })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  })
+
+  realtime.registerEvent('view_group_by_deleted', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== undefined) {
+      const groupBy = view.group_bys.find(
+        (groupBy) => groupBy.id === data.view_group_by_id
+      )
+      if (groupBy !== undefined) {
+        store.dispatch('view/forceDeleteGroupBy', { view, groupBy })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  })
+
   realtime.registerEvent('view_decoration_created', ({ store, app }, data) => {
     const view = store.getters['view/get'](data.view_decoration.view)
     if (view !== undefined) {

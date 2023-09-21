@@ -5,6 +5,7 @@ import ViewService from '@baserow/modules/database/services/view'
 import FilterService from '@baserow/modules/database/services/filter'
 import DecorationService from '@baserow/modules/database/services/decoration'
 import SortService from '@baserow/modules/database/services/sort'
+import GroupByService from '@baserow/modules/database/services/groupBy'
 import { clone } from '@baserow/modules/core/utils/object'
 import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedoConstants'
 
@@ -22,6 +23,15 @@ export function populateSort(sort) {
     loading: false,
   }
   return sort
+}
+
+export function populateGroupBy(groupBy) {
+  groupBy._ = {
+    hover: false,
+    loading: false,
+    width: null,
+  }
+  return groupBy
 }
 
 export function populateDecoration(decoration) {
@@ -48,10 +58,25 @@ export function populateView(view, registry) {
 
   if (Object.prototype.hasOwnProperty.call(view, 'sortings')) {
     view.sortings.forEach((sort) => {
-      populateFilter(sort)
+      populateSort(sort)
     })
   } else {
     view.sortings = []
+  }
+  if (Object.prototype.hasOwnProperty.call(view, 'group_bys')) {
+    view.group_bys.forEach((groupBy) => {
+      populateGroupBy(groupBy)
+    })
+  } else {
+    view.group_bys = []
+  }
+
+  if (Object.prototype.hasOwnProperty.call(view, 'group_bys')) {
+    view.group_bys.forEach((groupBy) => {
+      populateGroupBy(groupBy)
+    })
+  } else {
+    view.group_bys = []
   }
 
   if (Object.prototype.hasOwnProperty.call(view, 'decorations')) {
@@ -211,6 +236,35 @@ export const mutations = {
   SET_SORT_LOADING(state, { sort, value }) {
     sort._.loading = value
   },
+  ADD_GROUP_BY(state, { view, groupBy }) {
+    view.group_bys.push(groupBy)
+  },
+  FINALIZE_GROUP_BY(state, { view, oldId, id }) {
+    const index = view.group_bys.findIndex((item) => item.id === oldId)
+    if (index !== -1) {
+      view.group_bys[index].id = id
+      view.group_bys[index]._.loading = false
+    }
+  },
+  DELETE_GROUP_BY(state, { view, id }) {
+    const index = view.group_bys.findIndex((item) => item.id === id)
+    if (index !== -1) {
+      view.group_bys.splice(index, 1)
+    }
+  },
+  DELETE_FIELD_GROUP_BYS(state, { view, fieldId }) {
+    for (let i = view.group_bys.length - 1; i >= 0; i--) {
+      if (view.group_bys[i].field === fieldId) {
+        view.group_bys.splice(i, 1)
+      }
+    }
+  },
+  UPDATE_GROUP_BY(state, { groupBy, values }) {
+    Object.assign(groupBy, groupBy, values)
+  },
+  SET_GROUP_BY_LOADING(state, { groupBy, value }) {
+    groupBy._.loading = value
+  },
   /**
    * Data for defaultViewId for $cookies:
    * [
@@ -246,6 +300,7 @@ export const actions = {
     try {
       const { data } = await ViewService(this.$client).fetchAll(
         table.id,
+        true,
         true,
         true,
         true
@@ -911,17 +966,137 @@ export const actions = {
     })
   },
   /**
+   * Changes the loading state of a specific groupBy.
+   */
+  setGroupByLoading({ commit }, { groupBy, value }) {
+    commit('SET_GROUP_BY_LOADING', { groupBy, value })
+  },
+  /**
+   * Creates a new groupBy and adds it to the store right away. If the API call succeeds
+   * the row ID will be added, but if it fails it will be removed from the store.
+   */
+  async createGroupBy({ getters, commit }, { view, values, readOnly = false }) {
+    // If the order is not provided we are going to choose the ascending order.
+    if (!Object.prototype.hasOwnProperty.call(values, 'order')) {
+      values.order = 'ASC'
+    }
+
+    const groupBy = Object.assign({}, values)
+    populateGroupBy(groupBy)
+    groupBy.id = uuid()
+    groupBy._.loading = !readOnly
+
+    commit('ADD_GROUP_BY', { view, groupBy })
+
+    if (!readOnly) {
+      try {
+        const { data } = await GroupByService(this.$client).create(
+          view.id,
+          values
+        )
+        commit('FINALIZE_GROUP_BY', { view, oldId: groupBy.id, id: data.id })
+      } catch (error) {
+        commit('DELETE_GROUP_BY', { view, id: groupBy.id })
+        throw error
+      }
+    }
+
+    return { groupBy }
+  },
+  /**
+   * Forcefully create a new  view group by without making a request to the backend.
+   */
+  forceCreateGroupBy({ commit }, { view, values }) {
+    const groupBy = Object.assign({}, values)
+    populateGroupBy(groupBy)
+    commit('ADD_GROUP_BY', { view, groupBy })
+  },
+  /**
+   * Updates the groupBy values in the store right away. If the API call fails the
+   * changes will be undone.
+   */
+  async updateGroupBy(
+    { dispatch, commit },
+    { groupBy, values, readOnly = false }
+  ) {
+    commit('SET_GROUP_BY_LOADING', { groupBy, value: true })
+
+    const oldValues = {}
+    const newValues = {}
+    Object.keys(values).forEach((name) => {
+      if (Object.prototype.hasOwnProperty.call(groupBy, name)) {
+        oldValues[name] = groupBy[name]
+        newValues[name] = values[name]
+      }
+    })
+
+    dispatch('forceUpdateGroupBy', { groupBy, values: newValues })
+
+    try {
+      if (!readOnly) {
+        await GroupByService(this.$client).update(groupBy.id, values)
+      }
+      commit('SET_GROUP_BY_LOADING', { groupBy, value: false })
+    } catch (error) {
+      dispatch('forceUpdateGroupBy', { groupBy, values: oldValues })
+      commit('SET_GROUP_BY_LOADING', { groupBy, value: false })
+      throw error
+    }
+  },
+  /**
+   * Forcefully update an existing view groupBy without making a request to the backend.
+   */
+  forceUpdateGroupBy({ commit }, { groupBy, values }) {
+    commit('UPDATE_GROUP_BY', { groupBy, values })
+  },
+  /**
+   * Deletes an existing groupBy. A request to the server will be made first and
+   * after that it will be deleted.
+   */
+  async deleteGroupBy(
+    { dispatch, commit },
+    { view, groupBy, readOnly = false }
+  ) {
+    commit('SET_GROUP_BY_LOADING', { groupBy, value: true })
+
+    try {
+      if (!readOnly) {
+        await GroupByService(this.$client).delete(groupBy.id)
+      }
+      dispatch('forceDeleteGroupBy', { view, groupBy })
+    } catch (error) {
+      commit('SET_GROUP_BY_LOADING', { groupBy, value: false })
+      throw error
+    }
+  },
+  /**
+   * Forcefully delete an existing view groupBy without making a request to the backend.
+   */
+  forceDeleteGroupBy({ commit }, { view, groupBy }) {
+    commit('DELETE_GROUP_BY', { view, id: groupBy.id })
+  },
+  /**
+   * When a field is deleted the related group bys are also automatically deleted in the
+   * backend so they need to be removed here.
+   */
+  deleteFieldGroupBys({ commit, getters }, { field }) {
+    getters.getAll.forEach((view) => {
+      commit('DELETE_FIELD_GROUP_BYS', { view, fieldId: field.id })
+    })
+  },
+
+  /**
    * Is called when a field is restored. Will force create all filters and sortings
    * provided along with the field.
    */
   fieldRestored({ dispatch, commit, getters }, { field, fieldType, view }) {
-    dispatch('resetFieldsFiltersAndSortsInView', { field, view })
+    dispatch('resetFieldsFiltersSortsAndGroupBysInView', { field, view })
   },
   /**
    * Called when a field is restored. Will force create all filters and sortings
    * provided along with the field.
    */
-  resetFieldsFiltersAndSortsInView(
+  resetFieldsFiltersSortsAndGroupBysInView(
     { dispatch, commit, getters },
     { field, view }
   ) {
@@ -939,6 +1114,14 @@ export const actions = {
         .filter((sorting) => sorting.view === view.id)
         .forEach((sorting) => {
           dispatch('forceCreateSort', { view, values: sorting })
+        })
+    }
+    if (field.group_bys != null) {
+      commit('DELETE_FIELD_GROUP_BYS', { view, fieldId: field.id })
+      field.group_bys
+        .filter((groupBy) => groupBy.view === view.id)
+        .forEach((groupBy) => {
+          dispatch('forceCreateSort', { view, values: groupBy })
         })
     }
   },
@@ -965,6 +1148,12 @@ export const actions = {
     if (!fieldType.getCanSortInView(field)) {
       dispatch('deleteFieldSortings', { field })
     }
+
+    // Remove all the field group bys because the new field does not support group bys
+    // at all.
+    if (!fieldType.getCanGroupByInView(field)) {
+      dispatch('deleteFieldGroupBys', { field })
+    }
   },
   /**
    * Is called when a field is deleted. It will remove all filters and sortings
@@ -973,6 +1162,7 @@ export const actions = {
   fieldDeleted({ dispatch }, { field }) {
     dispatch('deleteFieldFilters', { field })
     dispatch('deleteFieldSortings', { field })
+    dispatch('deleteFieldGroupBys', { field })
   },
 }
 

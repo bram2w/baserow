@@ -136,6 +136,10 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   canRepresentDate() {
     return false
   }
+
+  canGroupByInView() {
+    return false
+  }
 }
 
 export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
@@ -170,6 +174,10 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
   canBeSortedWhenInArray(field) {
     return true
   }
+
+  canGroupByInView() {
+    return true
+  }
 }
 
 export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
@@ -200,6 +208,10 @@ export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
   canBeSortedWhenInArray(field) {
     return true
   }
+
+  canGroupByInView() {
+    return true
+  }
 }
 
 export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
@@ -224,6 +236,10 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
   }
 
   canBeSortedWhenInArray(field) {
+    return true
+  }
+
+  canGroupByInView() {
     return true
   }
 }
@@ -254,6 +270,10 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
   }
 
   canBeSortedWhenInArray(field) {
+    return true
+  }
+
+  canGroupByInView() {
     return true
   }
 }
@@ -294,6 +314,10 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
   mapToSortableArray(element) {
     return element.value
   }
+
+  canGroupByInView() {
+    return true
+  }
 }
 
 export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition {
@@ -323,6 +347,10 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
 
   getSortOrder() {
     return 5
+  }
+
+  canGroupByInView() {
+    return true
   }
 }
 
@@ -529,6 +557,10 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
       })
       .join(', ')
   }
+
+  canGroupByInView() {
+    return true
+  }
 }
 
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
@@ -566,6 +598,10 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
 
   mapToSortableArray(element) {
     return element.value
+  }
+
+  canGroupByInView() {
+    return true
   }
 }
 
@@ -620,5 +656,9 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
 
   getCanSortInView(field) {
     return false
+  }
+
+  canGroupByInView() {
+    return true
   }
 }
