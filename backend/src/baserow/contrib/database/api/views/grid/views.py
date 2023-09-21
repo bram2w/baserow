@@ -254,7 +254,9 @@ class GridViewView(APIView):
             request.user,
             view_id,
             GridView,
-            base_queryset=GridView.objects.prefetch_related("viewsort_set"),
+            base_queryset=GridView.objects.prefetch_related(
+                "viewsort_set", "viewgroupby_set"
+            ),
         )
         view_type = view_type_registry.get_by_model(view)
 

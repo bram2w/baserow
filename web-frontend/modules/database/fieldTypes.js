@@ -255,6 +255,17 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * Indicates whether or not it is possible to group by this field in a view.
+   */
+  getCanGroupByInView(field) {
+    return false
+  }
+
+  getGroupByIndicator(field, registry) {
+    return this.getSortIndicator(field, registry)
+  }
+
+  /**
    * Indicates if is possible for the field type to be the primary field.
    */
   getCanBePrimaryField() {
@@ -717,6 +728,10 @@ export class TextFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -795,6 +810,10 @@ export class LongTextFieldType extends FieldType {
   }
 
   getCanImport() {
+    return true
+  }
+
+  getCanGroupByInView(field) {
     return true
   }
 }
@@ -1180,6 +1199,10 @@ export class NumberFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class RatingFieldType extends FieldType {
@@ -1310,6 +1333,10 @@ export class RatingFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -1400,6 +1427,10 @@ export class BooleanFieldType extends FieldType {
 
   toSearchableString(field, value, delimiter = ', ') {
     return value ? 'true' : 'false'
+  }
+
+  getCanGroupByInView(field) {
+    return true
   }
 }
 
@@ -1595,6 +1626,10 @@ class BaseDateFieldType extends FieldType {
   }
 
   canRepresentDate(field) {
+    return true
+  }
+
+  getCanGroupByInView(field) {
     return true
   }
 }
@@ -1832,6 +1867,10 @@ export class URLFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -1924,6 +1963,10 @@ export class EmailFieldType extends FieldType {
   }
 
   getCanImport() {
+    return true
+  }
+
+  getCanGroupByInView(field) {
     return true
   }
 }
@@ -2292,6 +2335,10 @@ export class SingleSelectFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -2528,6 +2575,10 @@ export class MultipleSelectFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class PhoneNumberFieldType extends FieldType {
@@ -2621,6 +2672,10 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getCanImport() {
+    return true
+  }
+
+  getCanGroupByInView(field) {
     return true
   }
 }
@@ -2776,6 +2831,11 @@ export class FormulaFieldType extends FieldType {
   canRepresentDate(field) {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canRepresentDate(field)
+  }
+
+  getCanGroupByInView(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.canGroupByInView(field)
   }
 }
 

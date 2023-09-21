@@ -281,6 +281,8 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
           altering a column to being an email type.
     """
 
+    _can_group_by = True
+
     @property
     @abstractmethod
     def max_length(self):
@@ -309,6 +311,7 @@ class TextFieldType(CollationSortMixin, FieldType):
     model_class = TextField
     allowed_fields = ["text_default"]
     serializer_field_names = ["text_default"]
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -352,6 +355,7 @@ class TextFieldType(CollationSortMixin, FieldType):
 class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -392,6 +396,7 @@ class LongTextFieldType(CollationSortMixin, FieldType):
 class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
     type = "url"
     model_class = URLField
+    _can_group_by = True
 
     @property
     def regex(self):
@@ -423,6 +428,7 @@ class NumberFieldType(FieldType):
         ),
         "_spectacular_annotation": {"exclude_fields": ["number_type"]},
     }
+    _can_group_by = True
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
@@ -564,6 +570,7 @@ class RatingFieldType(FieldType):
     model_class = RatingField
     allowed_fields = ["max_value", "color", "style"]
     serializer_field_names = ["max_value", "color", "style"]
+    _can_group_by = True
 
     def prepare_value_for_db(self, instance, value):
         if not value:
@@ -682,6 +689,7 @@ class RatingFieldType(FieldType):
 class BooleanFieldType(FieldType):
     type = "boolean"
     model_class = BooleanField
+    _can_group_by = True
 
     # lowercase serializers.BooleanField.TRUE_VALUES + "checked" keyword
     # WARNING: these values are prone to SQL injection
@@ -765,6 +773,7 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
+    _can_group_by = True
 
     def can_represent_date(self, field):
         return True
@@ -2572,6 +2581,7 @@ class SelectOptionBaseFieldType(FieldType):
     serializer_field_overrides = {
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
+    _can_group_by = True
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -2899,6 +2909,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     model_class = MultipleSelectField
     can_get_unique_values = False
     is_many_to_many_field = True
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -3762,6 +3773,9 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def check_can_order_by(self, field):
         return self.to_baserow_formula_type(field.specific).can_order_by
+
+    def check_can_group_by(self, field):
+        return self.to_baserow_formula_type(field.specific).can_group_by
 
     def get_order(
         self, field, field_name, order_direction

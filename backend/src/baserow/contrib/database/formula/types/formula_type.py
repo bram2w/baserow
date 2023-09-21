@@ -172,6 +172,15 @@ class BaserowFormulaType(abc.ABC):
 
         pass
 
+    @property
+    @abc.abstractmethod
+    def can_group_by(self) -> bool:
+        """
+        Return True if a formula field of this type can be grouped or False if not.
+        """
+
+        pass
+
     def get_order(
         self, field, field_name, order_direction
     ) -> OptionallyAnnotatedOrderBy:
@@ -430,6 +439,7 @@ class BaserowFormulaType(abc.ABC):
 class BaserowFormulaInvalidType(BaserowFormulaType):
     is_valid = False
     can_order_by = False
+    can_group_by = False
     comparable_types = []
     limit_comparable_types = []
     type = "invalid"

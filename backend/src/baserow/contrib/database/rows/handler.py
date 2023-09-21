@@ -501,20 +501,20 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         previous_fields = {}
         # Append view sorting
         if view:
-            for view_sort in view.viewsort_set.all():
-                field = view_sort.field
+            for view_sort_or_group_by in view.get_all_sorts():
+                field = view_sort_or_group_by.field
                 field_name = field.db_column
                 field_type = field_type_registry.get_by_model(
-                    view_sort.field.specific_class
+                    view_sort_or_group_by.field.specific_class
                 )
 
                 if previous:
-                    if view_sort.order == "DESC":
+                    if view_sort_or_group_by.order == "DESC":
                         order_direction = "ASC"
                     else:
                         order_direction = "DESC"
                 else:
-                    order_direction = view_sort.order
+                    order_direction = view_sort_or_group_by.order
 
                 order_direction_suffix = "__gt" if order_direction == "ASC" else "__lt"
 

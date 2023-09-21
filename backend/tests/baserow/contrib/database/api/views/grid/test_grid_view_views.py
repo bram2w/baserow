@@ -1635,7 +1635,7 @@ def test_create_grid_view(api_client, data_fixture):
     assert "decorations" not in response_json
 
     response = api_client.post(
-        "{}?include=filters,sortings,decorations".format(
+        "{}?include=filters,sortings,decorations,group_bys".format(
             reverse("api:database:views:list", kwargs={"table_id": table.id})
         ),
         {
@@ -1656,6 +1656,7 @@ def test_create_grid_view(api_client, data_fixture):
     assert response_json["filters"] == []
     assert response_json["sortings"] == []
     assert response_json["decorations"] == []
+    assert response_json["group_bys"] == []
 
     response = api_client.post(
         "{}".format(reverse("api:database:views:list", kwargs={"table_id": table.id})),
@@ -1672,6 +1673,7 @@ def test_create_grid_view(api_client, data_fixture):
     assert "filters" not in response_json
     assert "sortings" not in response_json
     assert "decorations" not in response_json
+    assert "group_bys" not in response_json
 
 
 @pytest.mark.django_db
@@ -1742,6 +1744,7 @@ def test_update_grid_view(api_client, data_fixture):
     assert "filters" not in response_json
     assert "sortings" not in response_json
     assert "decorations" not in response_json
+    assert "group_bys" not in response_json
 
     view.refresh_from_db()
     assert view.filter_type == "OR"
@@ -1750,7 +1753,7 @@ def test_update_grid_view(api_client, data_fixture):
     filter_1 = data_fixture.create_view_filter(view=view)
     url = reverse("api:database:views:item", kwargs={"view_id": view.id})
     response = api_client.patch(
-        "{}?include=filters,sortings,decorations".format(url),
+        "{}?include=filters,sortings,decorations,group_bys".format(url),
         {"filter_type": "AND"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -1763,6 +1766,7 @@ def test_update_grid_view(api_client, data_fixture):
     assert response_json["filters"][0]["id"] == filter_1.id
     assert response_json["sortings"] == []
     assert response_json["decorations"] == []
+    assert response_json["group_bys"] == []
 
 
 @pytest.mark.django_db
@@ -1784,6 +1788,12 @@ def test_get_public_grid_view(api_client, data_fixture):
     # This view sort shouldn't be exposed as it is for a hidden field
     data_fixture.create_view_sort(view=grid_view, field=hidden_field, order="ASC")
     visible_sort = data_fixture.create_view_sort(
+        view=grid_view, field=public_field, order="DESC"
+    )
+
+    # This group by shouldn't be exposed as it is for a hidden field
+    data_fixture.create_view_group_by(view=grid_view, field=hidden_field, order="ASC")
+    visible_group_by = data_fixture.create_view_group_by(
         view=grid_view, field=public_field, order="DESC"
     )
 
@@ -1826,6 +1836,15 @@ def test_get_public_grid_view(api_client, data_fixture):
                 {
                     "field": visible_sort.field.id,
                     "id": visible_sort.id,
+                    "order": "DESC",
+                    "view": grid_view.slug,
+                }
+            ],
+            "group_bys": [
+                # Note the group by for the hidden field is not returned
+                {
+                    "field": visible_group_by.field.id,
+                    "id": visible_group_by.id,
                     "order": "DESC",
                     "view": grid_view.slug,
                 }

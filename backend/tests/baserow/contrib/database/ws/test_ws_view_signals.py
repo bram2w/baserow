@@ -23,6 +23,7 @@ def test_view_created(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["view"]["id"] == view.id
     assert "filters" in args[0][1]["view"]
     assert "sortings" in args[0][1]["view"]
+    assert "group_bys" in args[0][1]["view"]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -40,6 +41,7 @@ def test_view_updated(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["view"]["id"] == view.id
     assert "filters" not in args[0][1]["view"]
     assert "sortings" not in args[0][1]["view"]
+    assert "group_bys" not in args[0][1]["view"]
 
 
 @pytest.mark.django_db(transaction=True)
@@ -259,3 +261,55 @@ def test_view_field_options_updated(mock_broadcast_to_channel_group, data_fixtur
     assert args[0][1]["type"] == "view_field_options_updated"
     assert args[0][1]["view_id"] == grid_view.id
     assert args[0][1]["field_options"][text_field.id]["width"] == 150
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_group_by_created(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    view = data_fixture.create_grid_view(user=user, table=table)
+    view_group_by = ViewHandler().create_group_by(
+        user=user, view=view, field=field, order="ASC"
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{table.id}"
+    assert args[0][1]["type"] == "view_group_by_created"
+    assert args[0][1]["view_group_by"]["id"] == view_group_by.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_group_by_updated(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    view_group_by = data_fixture.create_view_group_by(user=user)
+    view_group_by = ViewHandler().update_group_by(
+        user=user, view_group_by=view_group_by, order="DESC"
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_group_by.view.table.id}"
+    assert args[0][1]["type"] == "view_group_by_updated"
+    assert args[0][1]["view_group_by_id"] == view_group_by.id
+    assert args[0][1]["view_group_by"]["id"] == view_group_by.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_group_by_deleted(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    view_group_by = data_fixture.create_view_group_by(user=user)
+    view_id = view_group_by.view.id
+    view_group_by_id = view_group_by.id
+    ViewHandler().delete_group_by(user=user, view_group_by=view_group_by)
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_group_by.view.table.id}"
+    assert args[0][1]["type"] == "view_group_by_deleted"
+    assert args[0][1]["view_id"] == view_id
+    assert args[0][1]["view_group_by_id"] == view_group_by_id

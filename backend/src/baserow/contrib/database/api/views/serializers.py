@@ -13,6 +13,7 @@ from baserow.contrib.database.views.models import (
     View,
     ViewDecoration,
     ViewFilter,
+    ViewGroupBy,
     ViewSort,
 )
 from baserow.contrib.database.views.registries import (
@@ -176,6 +177,29 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
         extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
 
 
+class ViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewGroupBy
+        fields = ("id", "view", "field", "order")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
+class CreateViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewGroupBy
+        fields = ("field", "order")
+        extra_kwargs = {
+            "order": {"default": ViewGroupBy._meta.get_field("order").default},
+        }
+
+
+class UpdateViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta(CreateViewFilterSerializer.Meta):
+        model = ViewGroupBy
+        fields = ("field", "order")
+        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+
+
 class ViewDecorationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewDecoration
@@ -263,6 +287,9 @@ class ViewSerializer(serializers.ModelSerializer):
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
+    group_bys = ViewGroupBySerializer(
+        many=True, source="viewgroupby_set", required=False
+    )
     decorations = ViewDecorationSerializer(
         many=True, source="viewdecoration_set", required=False
     )
@@ -282,6 +309,7 @@ class ViewSerializer(serializers.ModelSerializer):
             "filter_type",
             "filters",
             "sortings",
+            "group_bys",
             "decorations",
             "filters_disabled",
             "public_view_has_password",
@@ -302,6 +330,7 @@ class ViewSerializer(serializers.ModelSerializer):
         context["include_filters"] = kwargs.pop("filters", False)
         context["include_sortings"] = kwargs.pop("sortings", False)
         context["include_decorations"] = kwargs.pop("decorations", False)
+        context["include_group_bys"] = kwargs.pop("group_bys", False)
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
@@ -318,6 +347,9 @@ class ViewSerializer(serializers.ModelSerializer):
 
         if not self.context["include_decorations"]:
             self.fields.pop("decorations", None)
+
+        if not self.context["include_group_bys"]:
+            self.fields.pop("group_bys", None)
 
         return super().to_representation(instance)
 
@@ -399,6 +431,15 @@ class PublicViewSortSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}}
 
 
+class PublicViewGroupBySerializer(serializers.ModelSerializer):
+    view = serializers.SlugField(source="view.slug")
+
+    class Meta:
+        model = ViewGroupBy
+        fields = ("id", "view", "field", "order")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
 class PublicViewTableSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
     database_id = serializers.SerializerMethodField()
@@ -417,6 +458,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
     table = PublicViewTableSerializer()
     type = serializers.SerializerMethodField()
     sortings = serializers.SerializerMethodField()
+    group_bys = serializers.SerializerMethodField()
     show_logo = serializers.BooleanField(required=False)
 
     @extend_schema_field(PublicViewSortSerializer(many=True))
@@ -426,6 +468,20 @@ class PublicViewSerializer(serializers.ModelSerializer):
             many=True,
         )
         return sortings.data
+
+    @extend_schema_field(PublicViewGroupBySerializer(many=True))
+    def get_group_bys(self, instance):
+        view_type = view_type_registry.get_by_model(instance.specific_class)
+        if view_type.can_group_by:
+            group_bys = PublicViewGroupBySerializer(
+                instance=instance.viewgroupby_set.filter(
+                    field__in=self.context["fields"]
+                ),
+                many=True,
+            )
+            return group_bys.data
+        else:
+            return []
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
@@ -440,6 +496,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
             "order",
             "type",
             "sortings",
+            "group_bys",
             "public",
             "slug",
             "show_logo",
@@ -487,9 +544,7 @@ class PublicViewInfoSerializer(serializers.Serializer):
 class FieldWithFiltersAndSortsSerializer(FieldSerializer):
     filters = ViewFilterSerializer(many=True, source="viewfilter_set")
     sortings = ViewSortSerializer(many=True, source="viewsort_set")
+    group_bys = ViewGroupBySerializer(many=True, source="viewgroupby_set")
 
     class Meta(FieldSerializer.Meta):
-        fields = FieldSerializer.Meta.fields + (
-            "filters",
-            "sortings",
-        )
+        fields = FieldSerializer.Meta.fields + ("filters", "sortings", "group_bys")

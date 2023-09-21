@@ -38,15 +38,18 @@ from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
     CreateViewFilterOperationType,
+    CreateViewGroupByOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
     DeleteViewFilterOperationType,
+    DeleteViewGroupByOperationType,
     DeleteViewOperationType,
     DeleteViewSortOperationType,
     DuplicateViewOperationType,
     ListAggregationsViewOperationType,
     ListViewDecorationOperationType,
     ListViewFilterOperationType,
+    ListViewGroupByOperationType,
     ListViewsOperationType,
     ListViewSortOperationType,
     OrderViewsOperationType,
@@ -54,12 +57,14 @@ from baserow.contrib.database.views.operations import (
     ReadViewDecorationOperationType,
     ReadViewFieldOptionsOperationType,
     ReadViewFilterOperationType,
+    ReadViewGroupByOperationType,
     ReadViewOperationType,
     ReadViewsOrderOperationType,
     ReadViewSortOperationType,
     UpdateViewDecorationOperationType,
     UpdateViewFieldOptionsOperationType,
     UpdateViewFilterOperationType,
+    UpdateViewGroupByOperationType,
     UpdateViewOperationType,
     UpdateViewPublicOperationType,
     UpdateViewSlugOperationType,
@@ -95,6 +100,10 @@ from .exceptions import (
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
+    ViewGroupByDoesNotExist,
+    ViewGroupByFieldAlreadyExist,
+    ViewGroupByFieldNotSupported,
+    ViewGroupByNotSupported,
     ViewNotInTable,
     ViewSortDoesNotExist,
     ViewSortFieldAlreadyExist,
@@ -106,6 +115,7 @@ from .models import (
     View,
     ViewDecoration,
     ViewFilter,
+    ViewGroupBy,
     ViewSort,
 )
 from .registries import (
@@ -125,6 +135,9 @@ from .signals import (
     view_filter_created,
     view_filter_deleted,
     view_filter_updated,
+    view_group_by_created,
+    view_group_by_deleted,
+    view_group_by_updated,
     view_sort_created,
     view_sort_deleted,
     view_sort_updated,
@@ -273,10 +286,10 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
 
         field_order_bys = []
 
-        for view_sort in view.viewsort_set.all():
-            field_object = model._field_objects[view_sort.field_id]
+        for view_sort_or_group_by in view.get_all_sorts():
+            field_object = model._field_objects[view_sort_or_group_by.field_id]
             annotated_order_by = field_object["type"].get_order(
-                field_object["field"], field_object["name"], view_sort.order
+                field_object["field"], field_object["name"], view_sort_or_group_by.order
             )
 
             # It's enough to have one field that cannot be indexed to make the DB
@@ -451,6 +464,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         filters: bool,
         sortings: bool,
         decorations: bool,
+        group_bys: bool,
         limit: int,
     ) -> Iterable[View]:
         """
@@ -491,6 +505,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         if decorations:
             views = views.prefetch_related("viewdecoration_set")
+
+        if group_bys:
+            views = views.prefetch_related("viewgroupby_set")
 
         if limit:
             views = views[:limit]
@@ -1113,6 +1130,13 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             if deleted_count > 0:
                 ViewIndexingHandler.after_field_changed_or_deleted(field)
 
+        # If the new field type does not support grouping then all group bys will be
+        # removed.
+        if not field_type.check_can_group_by(field):
+            deleted_count, _ = field.viewgroupby_set.all().delete()
+            if deleted_count > 0:
+                ViewIndexingHandler.after_field_changed_or_deleted(field)
+
         # Check which filters are not compatible anymore and remove those.
         for filter in field.viewfilter_set.all():
             filter_type = view_filter_type_registry.get(filter.type)
@@ -1456,7 +1480,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
 
-    def get_view_sorts(
+    def get_view_order_bys(
         self,
         view: View,
         model: GeneratedTableModel,
@@ -1477,23 +1501,21 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         order_by = []
-        qs = view.viewsort_set
-        if restrict_to_field_ids is not None:
-            qs = qs.filter(field_id__in=restrict_to_field_ids)
-        for view_sort in qs.all():
+        for view_sort_or_group_by in view.get_all_sorts(restrict_to_field_ids):
             # If the to be sort field is not present in the `_field_objects` we
             # cannot filter so we raise a ValueError.
-            if view_sort.field_id not in model._field_objects:
+            if view_sort_or_group_by.field_id not in model._field_objects:
                 raise ValueError(
-                    f"The table model does not contain field {view_sort.field_id}."
+                    f"The table model does not contain "
+                    f"field {view_sort_or_group_by.field_id}."
                 )
 
-            field = model._field_objects[view_sort.field_id]["field"]
-            field_name = model._field_objects[view_sort.field_id]["name"]
-            field_type = model._field_objects[view_sort.field_id]["type"]
+            field = model._field_objects[view_sort_or_group_by.field_id]["field"]
+            field_name = model._field_objects[view_sort_or_group_by.field_id]["name"]
+            field_type = model._field_objects[view_sort_or_group_by.field_id]["type"]
 
             field_annotated_order_by = field_type.get_order(
-                field, field_name, view_sort.order
+                field, field_name, view_sort_or_group_by.order
             )
             field_annotation = field_annotated_order_by.annotation
             field_order_by = field_annotated_order_by.order
@@ -1550,7 +1572,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if view.trashed:
             raise ViewSortDoesNotExist(f"The view {view.id} is trashed.")
 
-        order_by, queryset = self.get_view_sorts(
+        order_by, queryset = self.get_view_order_bys(
             view, model, queryset, restrict_to_field_ids
         )
 
@@ -1779,6 +1801,242 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         view_sort_deleted.send(
             self, view_sort_id=view_sort_id, view_sort=view_sort, user=user
+        )
+
+    def list_group_bys(self, user: AbstractUser, view_id: int) -> QuerySet[ViewGroupBy]:
+        """
+        Returns the ViewGroupBy queryset for provided view_id.
+
+        :param user: The user on whose behalf the group bys are requested.
+        :param view_id: The id of the view for which to return group bys.
+        :return: ViewGroupBy queryset of the view's group bys.
+        """
+
+        view = ViewHandler().get_view(view_id)
+        CoreHandler().check_permissions(
+            user,
+            ListViewGroupByOperationType.type,
+            workspace=view.table.database.workspace,
+            context=view,
+        )
+        groupings = ViewGroupBy.objects.filter(view=view)
+        return groupings
+
+    def get_group_by(self, user, view_group_by_id, base_queryset=None):
+        """
+        Returns an existing view group by with the given id.
+
+        :param user: The user on whose behalf the view group by is requested.
+        :type user: User
+        :param view_group_by_id: The id of the view group_by.
+        :type view_group_by_id: int
+        :param base_queryset: The base queryset from where to select the view group
+            object from. This can for example be used to do a `select_related`.
+        :type base_queryset: Queryset
+        :raises ViewGroupByDoesNotExist: The requested view does not exists.
+        :return: The requested view group by instance.
+        :type: ViewGroupBy
+        """
+
+        if base_queryset is None:
+            base_queryset = ViewGroupBy.objects
+
+        try:
+            view_group_by = base_queryset.select_related(
+                "view__table__database__workspace"
+            ).get(pk=view_group_by_id)
+        except ViewGroupBy.DoesNotExist:
+            raise ViewGroupByDoesNotExist(
+                f"The view group by with id {view_group_by_id} does not exist."
+            )
+
+        if TrashHandler.item_has_a_trashed_parent(
+            view_group_by.view, check_item_also=True
+        ):
+            raise ViewGroupByDoesNotExist(
+                f"The view group by with id {view_group_by_id} does not exist."
+            )
+
+        workspace = view_group_by.view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            ReadViewGroupByOperationType.type,
+            workspace=workspace,
+            context=view_group_by,
+        )
+
+        return view_group_by
+
+    def create_group_by(
+        self,
+        user: AbstractUser,
+        view: View,
+        field: Field,
+        order: str,
+        primary_key: Optional[int] = None,
+    ) -> ViewGroupBy:
+        """
+        Creates a new view group_by.
+
+        :param user: The user on whose behalf the view group by is created.
+        :param view: The view for which the group by needs to be created.
+        :param field: The field that needs to be grouped.
+        :param order: The desired order, can either be ascending (A to Z) or
+            descending (Z to A).
+        :param primary_key: An optional primary key to give to the new view group_by.
+        :raises ViewGroupByNotSupported: When the provided view does not support
+            grouping.
+        :raises FieldNotInTable:  When the provided field does not belong to the
+            provided view's table.
+        :return: The created view group by instance.
+        """
+
+        workspace = view.table.database.workspace
+        CoreHandler().check_permissions(
+            user, ReadFieldOperationType.type, workspace=workspace, context=field
+        )
+        CoreHandler().check_permissions(
+            user, CreateViewGroupByOperationType.type, workspace=workspace, context=view
+        )
+
+        # Check if view supports grouping.
+        view_type = view_type_registry.get_by_model(view.specific_class)
+        if not view_type.can_group_by:
+            raise ViewGroupByNotSupported(
+                f"Grouping is not supported for {view_type.type} views."
+            )
+
+        # Check if the field supports grouping.
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        if not field_type.check_can_group_by(field):
+            raise ViewGroupByFieldNotSupported(
+                f"The field {field.pk} does not support grouping."
+            )
+
+        # Check if field belongs to the grid views table
+        if not view.table.field_set.filter(id=field.pk).exists():
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table {view.table.id}."
+            )
+
+        # Check if the field already exists as group
+        if view.viewgroupby_set.filter(field_id=field.pk).exists():
+            raise ViewGroupByFieldAlreadyExist(
+                f"A group by for the field {field.pk} already exists."
+            )
+
+        view_group_by = ViewGroupBy.objects.create(
+            pk=primary_key, view=view, field=field, order=order
+        )
+
+        view_group_by_created.send(self, view_group_by=view_group_by, user=user)
+
+        return view_group_by
+
+    def update_group_by(
+        self,
+        user: AbstractUser,
+        view_group_by: ViewGroupBy,
+        field: Optional[Field] = None,
+        order: Optional[str] = None,
+    ) -> ViewGroupBy:
+        """
+        Updates the values of an existing view group_by.
+
+        :param user: The user on whose behalf the view group by is updated.
+        :param view_group_by: The view group by that needs to be updated.
+        :param field: The field that must be grouped on.
+        :param order: Indicates the group by order direction.
+        :raises ViewGroupByDoesNotExist: When the view used by the filter is trashed.
+        :raises ViewGroupByFieldNotSupported: When the field does not support grouping.
+        :raises FieldNotInTable:  When the provided field does not belong to the
+            provided view's table.
+        :return: The updated view group by instance.
+        """
+
+        if view_group_by.view.trashed:
+            raise ViewGroupByDoesNotExist(
+                f"The view {view_group_by.view.id} is trashed."
+            )
+
+        workspace = view_group_by.view.table.database.workspace
+        field = field if field is not None else view_group_by.field
+        order = order if order is not None else view_group_by.order
+
+        CoreHandler().check_permissions(
+            user, ReadFieldOperationType.type, workspace=workspace, context=field
+        )
+        CoreHandler().check_permissions(
+            user,
+            UpdateViewGroupByOperationType.type,
+            workspace=workspace,
+            context=view_group_by,
+        )
+
+        # If the field has changed we need to check if the field belongs to the table.
+        if (
+            field.id != view_group_by.field_id
+            and not view_group_by.view.table.field_set.filter(id=field.pk).exists()
+        ):
+            raise FieldNotInTable(
+                f"The field {field.pk} does not belong to table "
+                f"{view_group_by.view.table.id}."
+            )
+
+        # If the field has changed we need to check if the new field type supports
+        # grouping.
+        field_type = field_type_registry.get_by_model(field.specific_class)
+        if field.id != view_group_by.field_id and not field_type.check_can_order_by(
+            field
+        ):
+            raise ViewGroupByFieldNotSupported(
+                f"The field {field.pk} does not support grouping."
+            )
+
+        # If the field has changed we need to check if the new field doesn't already
+        # exist as group_by.
+        if (
+            field.id != view_group_by.field_id
+            and view_group_by.view.viewgroupby_set.filter(field_id=field.pk).exists()
+        ):
+            raise ViewGroupByFieldAlreadyExist(
+                f"A group by for the field {field.pk} already exists."
+            )
+
+        view_group_by.field = field
+        view_group_by.order = order
+        view_group_by.save()
+
+        view_group_by_updated.send(self, view_group_by=view_group_by, user=user)
+
+        return view_group_by
+
+    def delete_group_by(self, user, view_group_by):
+        """
+        Deletes an existing view group_by.
+
+        :param user: The user on whose behalf the view group by is deleted.
+        :type user: User
+        :param view_group_by: The view group by instance that needs to be deleted.
+        :type view_group_by: ViewGroupBy
+        """
+
+        workspace = view_group_by.view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            DeleteViewGroupByOperationType.type,
+            workspace=workspace,
+            context=view_group_by,
+        )
+
+        view_group_by_id = view_group_by.id
+        view_group_by.delete()
+
+        view_group_by_deleted.send(
+            self,
+            view_group_by_id=view_group_by_id,
+            view_group_by=view_group_by,
+            user=user,
         )
 
     def create_decoration(

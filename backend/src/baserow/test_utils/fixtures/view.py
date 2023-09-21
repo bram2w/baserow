@@ -13,6 +13,7 @@ from baserow.contrib.database.views.models import (
     GridViewFieldOptions,
     ViewDecoration,
     ViewFilter,
+    ViewGroupBy,
     ViewSort,
 )
 from baserow.contrib.database.views.registries import (
@@ -183,6 +184,18 @@ class ViewFixtures:
             kwargs["order"] = "ASC"
 
         return ViewSort.objects.create(**kwargs)
+
+    def create_view_group_by(self, user=None, **kwargs):
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        if "field" not in kwargs:
+            kwargs["field"] = self.create_text_field(table=kwargs["view"].table)
+
+        if "order" not in kwargs:
+            kwargs["order"] = "ASC"
+
+        return ViewGroupBy.objects.create(**kwargs)
 
     def register_temp_decorators_and_value_providers(self):
         try:

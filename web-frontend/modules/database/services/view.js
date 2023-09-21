@@ -7,6 +7,7 @@ export default (client) => {
       tableId,
       includeFilters = false,
       includeSortings = false,
+      includeGroupBys = false,
       includeDecorations = false,
       limit = null,
       type = null
@@ -22,6 +23,10 @@ export default (client) => {
 
       if (includeSortings) {
         include.push('sortings')
+      }
+
+      if (includeGroupBys) {
+        include.push('group_bys')
       }
 
       if (includeDecorations) {
@@ -53,7 +58,8 @@ export default (client) => {
       viewId,
       includeFilters = false,
       includeSortings = false,
-      includeDecorations = false
+      includeDecorations = false,
+      includeGroupBys = false
     ) {
       const config = {
         params: {},
@@ -69,6 +75,10 @@ export default (client) => {
 
       if (includeDecorations) {
         include.push('decorations')
+      }
+
+      if (includeGroupBys) {
+        include.push('group_bys')
       }
 
       if (include.length > 0) {

@@ -134,6 +134,27 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             </div>
           </li>
            
+          <li
+            class="header__filter-item"
+          >
+            <div>
+              <a
+                class="header__filter-link"
+              >
+                <i
+                  class="header__filter-icon fas fa-layer-group"
+                />
+                 
+                <span
+                  class="header__filter-name"
+                >
+                  viewGroupBy.groupBy - 0
+                </span>
+              </a>
+               
+            </div>
+          </li>
+           
           <!---->
            
           <!---->

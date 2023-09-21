@@ -43,7 +43,12 @@ from baserow.contrib.database.api.fields.errors import (
 )
 from baserow.contrib.database.api.fields.serializers import LinkRowValueSerializer
 from baserow.contrib.database.api.tables.errors import ERROR_TABLE_DOES_NOT_EXIST
-from baserow.contrib.database.api.views.serializers import PublicViewInfoSerializer
+from baserow.contrib.database.api.views.serializers import (
+    CreateViewGroupBySerializer,
+    PublicViewInfoSerializer,
+    UpdateViewGroupBySerializer,
+    ViewGroupBySerializer,
+)
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FieldNotInTable,
@@ -56,10 +61,12 @@ from baserow.contrib.database.views.actions import (
     CreateDecorationActionType,
     CreateViewActionType,
     CreateViewFilterActionType,
+    CreateViewGroupByActionType,
     CreateViewSortActionType,
     DeleteDecorationActionType,
     DeleteViewActionType,
     DeleteViewFilterActionType,
+    DeleteViewGroupByActionType,
     DeleteViewSortActionType,
     DuplicateViewActionType,
     OrderViewsActionType,
@@ -68,6 +75,7 @@ from baserow.contrib.database.views.actions import (
     UpdateViewActionType,
     UpdateViewFieldOptionsActionType,
     UpdateViewFilterActionType,
+    UpdateViewGroupByActionType,
     UpdateViewSortActionType,
 )
 from baserow.contrib.database.views.exceptions import (
@@ -82,6 +90,10 @@ from baserow.contrib.database.views.exceptions import (
     ViewFilterDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
+    ViewGroupByDoesNotExist,
+    ViewGroupByFieldAlreadyExist,
+    ViewGroupByFieldNotSupported,
+    ViewGroupByNotSupported,
     ViewNotInTable,
     ViewOwnershipTypeDoesNotExist,
     ViewSortDoesNotExist,
@@ -90,7 +102,12 @@ from baserow.contrib.database.views.exceptions import (
     ViewSortNotSupported,
 )
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.models import ViewDecoration, ViewFilter, ViewSort
+from baserow.contrib.database.views.models import (
+    ViewDecoration,
+    ViewFilter,
+    ViewGroupBy,
+    ViewSort,
+)
 from baserow.contrib.database.views.operations import (
     DeleteViewDecorationOperationType,
     ListViewsOperationType,
@@ -117,6 +134,10 @@ from .errors import (
     ERROR_VIEW_FILTER_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_NOT_SUPPORTED,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+    ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST,
+    ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS,
+    ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED,
+    ERROR_VIEW_GROUP_BY_NOT_SUPPORTED,
     ERROR_VIEW_NOT_IN_TABLE,
     ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_SORT_DOES_NOT_EXIST,
@@ -239,8 +260,10 @@ class ViewsView(APIView):
         }
     )
     @validate_query_parameters(ListQueryParamatersSerializer)
-    @allowed_includes("filters", "sortings", "decorations")
-    def get(self, request, table_id, query_params, filters, sortings, decorations):
+    @allowed_includes("filters", "sortings", "decorations", "group_bys")
+    def get(
+        self, request, table_id, query_params, filters, sortings, decorations, group_bys
+    ):
         """
         Responds with a list of serialized views that belong to the table if the user
         has access to that workspace.
@@ -262,6 +285,7 @@ class ViewsView(APIView):
             filters,
             sortings,
             decorations,
+            group_bys,
             query_params["limit"],
         )
 
@@ -277,6 +301,7 @@ class ViewsView(APIView):
                 filters=filters,
                 sortings=sortings,
                 decorations=decorations,
+                group_bys=group_bys,
                 many=True,
             ).data
         return Response(serialized_views)
@@ -342,9 +367,16 @@ class ViewsView(APIView):
             ViewOwnershipTypeDoesNotExist: ERROR_VIEW_OWNERSHIP_TYPE_DOES_NOT_EXIST,
         }
     )
-    @allowed_includes("filters", "sortings", "decorations")
+    @allowed_includes("filters", "sortings", "decorations", "group_bys")
     def post(
-        self, request: Request, data, table_id: int, filters, sortings, decorations
+        self,
+        request: Request,
+        data,
+        table_id: int,
+        filters,
+        sortings,
+        decorations,
+        group_bys,
     ):
         """Creates a new view for a user."""
 
@@ -363,6 +395,7 @@ class ViewsView(APIView):
             filters=filters,
             sortings=sortings,
             decorations=decorations,
+            group_bys=group_bys,
         )
         return Response(serializer.data)
 
@@ -413,8 +446,8 @@ class ViewView(APIView):
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings", "decorations")
-    def get(self, request, view_id, filters, sortings, decorations):
+    @allowed_includes("filters", "sortings", "decorations", "group_bys")
+    def get(self, request, view_id, filters, sortings, decorations, group_bys):
         """Selects a single view and responds with a serialized version."""
 
         view = ViewHandler().get_view_as_user(request.user, view_id)
@@ -425,6 +458,7 @@ class ViewView(APIView):
             filters=filters,
             sortings=sortings,
             decorations=decorations,
+            group_bys=group_bys,
         )
         return Response(serializer.data)
 
@@ -483,7 +517,7 @@ class ViewView(APIView):
             UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
         }
     )
-    @allowed_includes("filters", "sortings", "decorations")
+    @allowed_includes("filters", "sortings", "decorations", "group_bys")
     def patch(
         self,
         request: Request,
@@ -491,6 +525,7 @@ class ViewView(APIView):
         filters: bool,
         sortings: bool,
         decorations: bool,
+        group_bys: bool,
     ) -> Response:
         """Updates the view if the user belongs to the workspace."""
 
@@ -515,6 +550,7 @@ class ViewView(APIView):
             filters=filters,
             sortings=sortings,
             decorations=decorations,
+            group_bys=group_bys,
         )
         return Response(serializer.data)
 
@@ -618,6 +654,7 @@ class DuplicateViewView(APIView):
             filters=True,
             sortings=True,
             decorations=True,
+            group_bys=True,
         )
         return Response(serializer.data)
 
@@ -1881,3 +1918,252 @@ class PublicViewInfoView(APIView):
                 fields=fields,
             ).data
         )
+
+
+class ViewGroupBysView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns only groupings of the view related to the "
+                "provided value.",
+            )
+        ],
+        tags=["Database table view groupings"],
+        operation_id="list_database_table_view_groupings",
+        description=(
+            "Lists all groupings of the view related to the provided `view_id` if the "
+            "user has access to the related database's workspace. A view can have "
+            "multiple groupings."
+        ),
+        responses={
+            200: ViewGroupBySerializer(many=True),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def get(self, request, view_id):
+        """
+        Responds with a list of serialized groupings that belong to the view if the user
+        has access to that workspace.
+        """
+
+        groupings = ViewHandler().list_group_bys(request.user, view_id)
+        serializer = ViewGroupBySerializer(groupings, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Creates a group by for the view related to the provided "
+                "value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table view groupings"],
+        operation_id="create_database_table_view_group",
+        description=(
+            "Creates a new group by for the view related to the provided `view_id` "
+            "parameter if the authorized user has access to the related database's "
+            "workspace."
+        ),
+        request=CreateViewGroupBySerializer(),
+        responses={
+            200: ViewGroupBySerializer(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_VIEW_GROUP_BY_NOT_SUPPORTED",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                    "ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS",
+                    "ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @validate_body(CreateViewGroupBySerializer)
+    @map_exceptions(
+        {
+            ViewDoesNotExist: ERROR_VIEW_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+            ViewGroupByNotSupported: ERROR_VIEW_GROUP_BY_NOT_SUPPORTED,
+            ViewGroupByFieldAlreadyExist: ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS,
+            ViewGroupByFieldNotSupported: ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED,
+        }
+    )
+    def post(self, request, data, view_id):
+        """Creates a new group by for the provided view."""
+
+        view = ViewHandler().get_view(view_id)
+        field = FieldHandler().get_field(data["field"])
+
+        view_group_by = action_type_registry.get_by_type(
+            CreateViewGroupByActionType
+        ).do(request.user, view, field, data["order"])
+
+        serializer = ViewGroupBySerializer(view_group_by)
+        return Response(serializer.data)
+
+
+class ViewGroupByView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_group_by_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Returns the view group by related to the provided value.",
+            )
+        ],
+        tags=["Database table view groupings"],
+        operation_id="get_database_table_view_group",
+        description=(
+            "Returns the existing view group by if the authorized user has access to "
+            "the related database's workspace."
+        ),
+        responses={
+            200: ViewGroupBySerializer(),
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST"]),
+        },
+    )
+    @map_exceptions(
+        {
+            ViewGroupByDoesNotExist: ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def get(self, request, view_group_by_id):
+        """Selects a single group by and responds with a serialized version."""
+
+        view_group_by = ViewHandler().get_group_by(request.user, view_group_by_id)
+        serializer = ViewGroupBySerializer(view_group_by)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_group_by_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Updates the view group by related to the provided value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table view groupings"],
+        operation_id="update_database_table_view_group",
+        description=(
+            "Updates the existing group by if the authorized user has access to the "
+            "related database's workspace."
+        ),
+        request=UpdateViewGroupBySerializer(),
+        responses={
+            200: ViewGroupBySerializer(),
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_FIELD_NOT_IN_TABLE",
+                    "ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS",
+                ]
+            ),
+            404: get_error_schema(["ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @validate_body(UpdateViewGroupBySerializer)
+    @map_exceptions(
+        {
+            ViewGroupByDoesNotExist: ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+            FieldNotInTable: ERROR_FIELD_NOT_IN_TABLE,
+            ViewGroupByFieldAlreadyExist: ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS,
+            ViewGroupByFieldNotSupported: ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED,
+        }
+    )
+    def patch(self, request, data, view_group_by_id):
+        """Updates the view group by if the user belongs to the workspace."""
+
+        handler = ViewHandler()
+        view_group_by = handler.get_group_by(
+            request.user,
+            view_group_by_id,
+            base_queryset=ViewGroupBy.objects.select_for_update(of=("self",)),
+        )
+
+        if "field" in data:
+            # We can safely assume the field exists because the
+            # UpdateViewGroupBySerializer has already checked that.
+            data["field"] = Field.objects.get(pk=data["field"])
+
+        view_group_by = action_type_registry.get_by_type(
+            UpdateViewGroupByActionType
+        ).do(
+            request.user,
+            view_group_by,
+            data.get("field"),
+            data.get("order"),
+        )
+
+        serializer = ViewGroupBySerializer(view_group_by)
+        return Response(serializer.data)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="view_group_by_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="Deletes the group by related to the provided value.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+            CLIENT_UNDO_REDO_ACTION_GROUP_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Database table view groupings"],
+        operation_id="delete_database_table_view_group",
+        description=(
+            "Deletes the existing group by if the authorized user has access to the "
+            "related database's workspace."
+        ),
+        responses={
+            204: None,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(["ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST"]),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            ViewGroupByDoesNotExist: ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    def delete(self, request, view_group_by_id):
+        """Deletes an existing group by if the user belongs to the workspace."""
+
+        view_group_by = ViewHandler().get_group_by(request.user, view_group_by_id)
+        action_type_registry.get_by_type(DeleteViewGroupByActionType).do(
+            request.user, view_group_by
+        )
+
+        return Response(status=204)

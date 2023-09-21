@@ -85,6 +85,22 @@ class ViewSortFieldNotSupported(Exception):
     """Raised when a field does not support sorting in a view."""
 
 
+class ViewGroupByDoesNotExist(Exception):
+    """Raised when trying to get a view group by that does not exist."""
+
+
+class ViewGroupByNotSupported(Exception):
+    """Raised when the view type does not support grouping."""
+
+
+class ViewGroupByFieldAlreadyExist(Exception):
+    """Raised when a view group by with the field type already exists."""
+
+
+class ViewGroupByFieldNotSupported(Exception):
+    """Raised when a field does not support grouping in a view."""
+
+
 class ViewDoesNotSupportFieldOptions(Exception):
     """Raised when a view type does not support field options."""
 

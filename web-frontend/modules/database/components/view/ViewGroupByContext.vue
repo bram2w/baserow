@@ -1,140 +1,140 @@
 <template>
   <Context
     ref="context"
-    class="sortings"
+    class="group-bys"
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
   >
     <div>
-      <div v-if="view.sortings.length === 0" class="sortings__none">
-        <div class="sortings__none-title">
-          {{ $t('viewSortContext.noSortTitle') }}
+      <div v-if="view.group_bys.length === 0" class="group_bys__none">
+        <div class="group-bys__none-title">
+          {{ $t('viewGroupByContext.noGroupByTitle') }}
         </div>
-        <div class="sortings__none-description">
-          {{ $t('viewSortContext.noSortText') }}
+        <div class="group-bys__none-description">
+          {{ $t('viewGroupByContext.noGroupByText') }}
         </div>
       </div>
       <div
-        v-for="(sort, index) in view.sortings"
-        :key="sort.id"
-        class="sortings__item"
+        v-for="(groupBy, index) in view.group_bys"
+        :key="groupBy.id"
+        class="group-bys__item"
         :class="{
-          'sortings__item--loading': sort._.loading,
+          'group-bys__item--loading': groupBy._.loading,
         }"
-        :set="(field = getField(sort.field))"
+        :set="(field = getField(groupBy.field))"
       >
         <a
-          v-if="!disableSort"
-          class="sortings__remove"
-          @click.stop="deleteSort(sort)"
+          v-if="!disableGroupBy"
+          class="group-bys__remove"
+          @click.stop="deleteGroupBy(groupBy)"
         >
           <i class="fas fa-times"></i>
         </a>
-        <div class="sortings__description">
+        <div class="group-bys__description">
           <template v-if="index === 0">{{
-            $t('viewSortContext.sortBy')
+            $t('viewGroupByContext.groupBy')
           }}</template>
           <template v-if="index > 0">{{
-            $t('viewSortContext.thenBy')
+            $t('viewGroupByContext.thenBy')
           }}</template>
         </div>
-        <div class="sortings__field">
+        <div class="group-bys__field">
           <Dropdown
-            :value="sort.field"
-            :disabled="disableSort"
+            :value="groupBy.field"
+            :disabled="disableGroupBy"
             :fixed-items="true"
             class="dropdown--floating dropdown--tiny"
-            @input="updateSort(sort, { field: $event })"
+            @input="updateGroupBy(groupBy, { field: $event })"
           >
             <DropdownItem
               v-for="field in fields"
-              :key="'sort-field-' + sort.id + '-' + field.id"
+              :key="'groupBy-field-' + groupBy.id + '-' + field.id"
               :name="field.name"
               :value="field.id"
-              :disabled="sort.field !== field.id && !isFieldAvailable(field)"
+              :disabled="groupBy.field !== field.id && !isFieldAvailable(field)"
             ></DropdownItem>
           </Dropdown>
         </div>
         <div
-          class="sortings__order"
-          :class="{ 'sortings__order--disabled': disableSort }"
+          class="group-bys__order"
+          :class="{ 'group-bys__order--disabled': disableGroupBy }"
         >
           <a
-            class="sortings__order-item"
-            :class="{ active: sort.order === 'ASC' }"
-            @click="updateSort(sort, { order: 'ASC' })"
+            class="group-bys__order-item"
+            :class="{ active: groupBy.order === 'ASC' }"
+            @click="updateGroupBy(groupBy, { order: 'ASC' })"
           >
             <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 1)
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 1)
               }}</template>
               <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + getSortIndicator(field, 1)"
+                :class="'fa-' + getGroupByIndicator(field, 1)"
               ></i>
             </div>
             <div>
               <i class="fas fa-long-arrow-alt-right"></i>
             </div>
             <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 2)
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 2)
               }}</template>
               <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + getSortIndicator(field, 2)"
+                :class="'fa-' + getGroupByIndicator(field, 2)"
               ></i>
             </div>
           </a>
           <a
-            class="sortings__order-item"
-            :class="{ active: sort.order === 'DESC' }"
-            @click="updateSort(sort, { order: 'DESC' })"
+            class="group-bys__order-item"
+            :class="{ active: groupBy.order === 'DESC' }"
+            @click="updateGroupBy(groupBy, { order: 'DESC' })"
           >
             <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 2)
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 2)
               }}</template>
               <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + getSortIndicator(field, 2)"
+                :class="'fa-' + getGroupByIndicator(field, 2)"
               ></i>
             </div>
             <div>
               <i class="fas fa-long-arrow-alt-right"></i>
             </div>
             <div>
-              <template v-if="getSortIndicator(field, 0) === 'text'">{{
-                getSortIndicator(field, 1)
+              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+                getGroupByIndicator(field, 1)
               }}</template>
               <i
-                v-if="getSortIndicator(field, 0) === 'icon'"
+                v-if="getGroupByIndicator(field, 0) === 'icon'"
                 class="fa"
-                :class="'fa-' + getSortIndicator(field, 1)"
+                :class="'fa-' + getGroupByIndicator(field, 1)"
               ></i>
             </div>
           </a>
         </div>
       </div>
       <template
-        v-if="view.sortings.length < availableFieldsLength && !disableSort"
+        v-if="view.group_bys.length < availableFieldsLength && !disableGroupBy"
       >
         <a
           ref="addContextToggle"
-          class="sortings__add"
+          class="group-bys__add"
           @click="
             $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
           "
         >
           <i class="fas fa-plus"></i>
-          {{ $t('viewSortContext.addSort') }}
+          {{ $t('viewGroupByContext.addGroupBy') }}
         </a>
         <Context
           ref="addContext"
-          class="sortings__add-context"
+          class="group-bys__add-context"
           :overflow-scroll="true"
           :max-height-if-outside-viewport="true"
         >
@@ -144,7 +144,7 @@
               v-show="isFieldAvailable(field)"
               :key="field.id"
             >
-              <a @click="addSort(field)">
+              <a @click="addGroupBy(field)">
                 <i
                   class="context__menu-icon fas fa-fw"
                   :class="'fa-' + field._.type.iconClass"
@@ -164,7 +164,7 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import context from '@baserow/modules/core/mixins/context'
 
 export default {
-  name: 'ViewSortContext',
+  name: 'ViewGroupByContext',
   mixins: [context],
   props: {
     fields: {
@@ -179,7 +179,7 @@ export default {
       type: Boolean,
       required: true,
     },
-    disableSort: {
+    disableGroupBy: {
       type: Boolean,
       required: true,
     },
@@ -189,12 +189,12 @@ export default {
      * Calculates the total amount of available fields.
      */
     availableFieldsLength() {
-      return this.fields.filter(this.getCanSortInView).length
+      return this.fields.filter(this.getCanGroupByInView).length
     },
   },
   methods: {
-    getCanSortInView(field) {
-      return this.$registry.get('field', field.type).getCanSortInView(field)
+    getCanGroupByInView(field) {
+      return this.$registry.get('field', field.type).getCanGroupByInView(field)
     },
     getField(fieldId) {
       for (const i in this.fields) {
@@ -205,14 +205,14 @@ export default {
       return undefined
     },
     isFieldAvailable(field) {
-      const allFieldIds = this.view.sortings.map((sort) => sort.field)
-      return this.getCanSortInView(field) && !allFieldIds.includes(field.id)
+      const allFieldIds = this.view.group_bys.map((groupBy) => groupBy.field)
+      return this.getCanGroupByInView(field) && !allFieldIds.includes(field.id)
     },
-    async addSort(field) {
+    async addGroupBy(field) {
       this.$refs.addContext.hide()
 
       try {
-        await this.$store.dispatch('view/createSort', {
+        await this.$store.dispatch('view/createGroupBy', {
           view: this.view,
           values: {
             field: field.id,
@@ -225,11 +225,11 @@ export default {
         notifyIf(error, 'view')
       }
     },
-    async deleteSort(sort) {
+    async deleteGroupBy(groupBy) {
       try {
-        await this.$store.dispatch('view/deleteSort', {
+        await this.$store.dispatch('view/deleteGroupBy', {
           view: this.view,
-          sort,
+          groupBy,
           readOnly: this.readOnly,
         })
         this.$emit('changed')
@@ -237,14 +237,14 @@ export default {
         notifyIf(error, 'view')
       }
     },
-    async updateSort(sort, values) {
-      if (this.disableSort) {
+    async updateGroupBy(groupBy, values) {
+      if (this.disableGroupBy) {
         return
       }
 
       try {
-        await this.$store.dispatch('view/updateSort', {
-          sort,
+        await this.$store.dispatch('view/updateGroupBy', {
+          groupBy,
           values,
           readOnly: this.readOnly,
         })
@@ -253,10 +253,10 @@ export default {
         notifyIf(error, 'view')
       }
     },
-    getSortIndicator(field, index) {
+    getGroupByIndicator(field, index) {
       return this.$registry
         .get('field', field.type)
-        .getSortIndicator(field, this.$registry)[index]
+        .getGroupByIndicator(field, this.$registry)[index]
     },
   },
 }

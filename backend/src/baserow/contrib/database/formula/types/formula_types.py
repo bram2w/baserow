@@ -40,6 +40,8 @@ from baserow.core.utils import list_to_comma_separated_string
 
 
 class BaserowFormulaBaseTextType(BaserowFormulaTypeHasEmptyBaserowExpression):
+    can_group_by = True
+
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [
@@ -110,6 +112,7 @@ class BaserowFormulaCharType(BaserowFormulaTextType, BaserowFormulaValidType):
     type = "char"
     baserow_field_type = "text"
     can_order_by_in_array = True
+    can_group_by = True
 
     def get_order_by_in_array_expr(self, field, field_name, order_direction):
         return JSONBSingleKeyArrayExpression(
@@ -126,6 +129,7 @@ class BaserowFormulaLinkType(BaserowFormulaValidType):
     type = "link"
     baserow_field_type = None
     can_order_by = False
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -254,6 +258,7 @@ class BaserowFormulaNumberType(
     user_overridable_formatting_option_fields = ["number_decimal_places"]
     MAX_DIGITS = 50
     can_order_by_in_array = True
+    can_group_by = True
 
     def __init__(self, number_decimal_places: int, **kwargs):
         super().__init__(**kwargs)
@@ -340,6 +345,7 @@ class BaserowFormulaBooleanType(
     type = "boolean"
     baserow_field_type = "boolean"
     can_order_by_in_array = True
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -404,6 +410,7 @@ class BaserowFormulaDateIntervalType(
 ):
     type = "date_interval"
     baserow_field_type = None
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -516,6 +523,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
     nullable_option_fields = ["date_force_timezone"]
     can_represent_date = True
     can_order_by_in_array = True
+    can_group_by = True
 
     def __init__(
         self,
@@ -656,6 +664,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     user_overridable_formatting_option_fields = [
         "array_formula_type",
     ]
+    can_group_by = True
 
     def __init__(self, sub_type: BaserowFormulaValidType, **kwargs):
         super().__init__(**kwargs)
@@ -872,6 +881,7 @@ class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
     baserow_field_type = "single_select"
     can_order_by = True
     can_order_by_in_array = True
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:

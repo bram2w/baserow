@@ -8,10 +8,10 @@ import { convertStringToMatchBackendTsvectorData } from '@baserow/modules/databa
 /**
  * Generates a sort function based on the provided sortings.
  */
-export function getRowSortFunction($registry, sortings, fields) {
+export function getRowSortFunction($registry, sortings, fields, groupBys = []) {
   let sortFunction = firstBy()
-
-  sortings.forEach((sort) => {
+  const combined = [...groupBys, ...sortings]
+  combined.forEach((sort) => {
     // Find the field that is related to the sort.
     const field = fields.find((f) => f.id === sort.field)
 

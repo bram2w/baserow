@@ -335,7 +335,7 @@ def test_list_views_doesnt_include_personal_views_the_user_used_to_have(data_fix
         ownership_type=OWNERSHIP_TYPE_COLLABORATIVE,
     )
 
-    user_views = handler.list_views(user, table, "grid", None, None, None, 10)
+    user_views = handler.list_views(user, table, "grid", False, False, False, False, 10)
     assert {v.id for v in user_views} == {
         personal_view.id,
         collab_view.id,
@@ -345,7 +345,7 @@ def test_list_views_doesnt_include_personal_views_the_user_used_to_have(data_fix
     RoleAssignmentHandler().assign_role(
         user, table.database.workspace, role=editor, scope=table
     )
-    user_views = handler.list_views(user, table, "grid", None, None, None, 10)
+    user_views = handler.list_views(user, table, "grid", False, False, False, False, 10)
     assert {v.id for v in user_views} == {
         collab_view.id,
     }
