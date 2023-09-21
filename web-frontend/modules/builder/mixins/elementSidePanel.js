@@ -3,6 +3,7 @@ import _ from 'lodash'
 
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import BigNumber from 'bignumber.js'
 
 export default {
   inject: ['builder', 'page'],
@@ -35,6 +36,8 @@ export default {
     }),
     async onChange(newValues) {
       const oldValues = this.element
+
+      newValues.order = new BigNumber(newValues.order)
 
       if (!this.$refs.panelForm.isFormValid()) {
         return

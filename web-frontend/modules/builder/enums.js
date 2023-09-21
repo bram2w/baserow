@@ -2,6 +2,10 @@ import {
   ensureInteger,
   ensureString,
 } from '@baserow/modules/core/utils/validator'
+import {
+  DataSourceDataProviderType,
+  PageParameterDataProviderType,
+} from '@baserow/modules/builder/dataProviderTypes'
 
 export const PLACEMENTS = {
   BEFORE: 'before',
@@ -56,3 +60,23 @@ export const WIDTHS = {
   AUTO: { value: 'auto', name: 'widthSelector.widthAuto' },
   FULL: { value: 'full', name: 'widthSelector.widthFull' },
 }
+
+/**
+ * A list of all the data providers that can be used in the formula field on the right
+ * sidebar in the application builder.
+ *
+ * @type {String[]}
+ */
+export const DATA_PROVIDERS_ALLOWED_SIDEBAR = [
+  new DataSourceDataProviderType().getType(),
+  new PageParameterDataProviderType().getType(),
+]
+
+/**
+ * A list of all the data provider that can be used to configure data sources.
+ *
+ * @type {String[]}
+ */
+export const DATA_PROVIDERS_ALLOWED_DATA_SOURCES = [
+  new PageParameterDataProviderType().getType(),
+]

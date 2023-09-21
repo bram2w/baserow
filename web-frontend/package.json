@@ -47,6 +47,7 @@
     "cookie-universal-nuxt": "2.2.2",
     "cross-env": "^7.0.2",
     "flush-promises": "^1.0.2",
+    "generate-schema": "^2.6.0",
     "jwt-decode": "^3.1.2",
     "lodash": "^4.17.21",
     "markdown-it": "13.0.1",

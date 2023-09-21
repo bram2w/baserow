@@ -27,6 +27,9 @@ const mutations = {
   CLEAR_CONTENTS(state, { page }) {
     page.contents = {}
   },
+  SET_LOADING(state, { page, value }) {
+    page._.dataSourceContentLoading = value
+  },
 }
 
 const actions = {
@@ -45,6 +48,7 @@ const actions = {
 
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
+    commit('SET_LOADING', { page, value: true })
     try {
       if (serviceType.isValid(dataSource)) {
         const { data } = await DataSourceService(this.app.$client).dispatch(
@@ -66,12 +70,14 @@ const actions = {
     } catch (e) {
       commit('SET_CONTENT', { page, dataSourceId: dataSource.id, value: null })
     }
+    commit('SET_LOADING', { page, value: false })
   },
 
   /**
    * Fetch the content for every data sources of the given page.
    */
   async fetchPageDataSourceContent({ commit }, { page, data: queryData }) {
+    commit('SET_LOADING', { page, value: true })
     try {
       const { data } = await DataSourceService(this.app.$client).dispatchAll(
         page.id,
@@ -90,6 +96,7 @@ const actions = {
       commit('CLEAR_CONTENTS', { page })
       throw e
     }
+    commit('SET_LOADING', { page, value: false })
   },
 
   debouncedFetchPageDataSourceContent({ dispatch }, { page, data: queryData }) {
@@ -110,6 +117,9 @@ const actions = {
 const getters = {
   getDataSourceContents: (state) => (page) => {
     return page.contents || {}
+  },
+  getLoading: (state) => (page) => {
+    return page._.dataSourceContentLoading
   },
 }
 

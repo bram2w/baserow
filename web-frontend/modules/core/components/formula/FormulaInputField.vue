@@ -12,12 +12,23 @@
       {{ $t('action.reset') }}
     </Button>
   </Alert>
-  <EditorContent
-    v-else
-    class="input formula-input-field"
-    :class="classes"
-    :editor="editor"
-  />
+  <div v-else>
+    <EditorContent
+      ref="editor"
+      class="input formula-input-field"
+      :class="classes"
+      :editor="editor"
+      @data-component-clicked="dataComponentClicked"
+    />
+    <DataExplorer
+      ref="dataExplorer"
+      :nodes="nodes"
+      :node-selected="nodeSelected"
+      :loading="dataExplorerLoading"
+      @node-selected="dataExplorerItemSelected"
+      @node-toggled="editor.commands.focus()"
+    ></DataExplorer>
+  </div>
 </template>
 
 <script>
@@ -32,11 +43,19 @@ import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollect
 import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipTapVisitor'
 import { mergeAttributes } from '@tiptap/core'
 import { HardBreak } from '@tiptap/extension-hard-break'
+import DataExplorer from '@baserow/modules/core/components/dataExplorer/DataExplorer'
+import { onClickOutside } from '@baserow/modules/core/utils/dom'
+import { RuntimeGet } from '@baserow/modules/core/runtimeFormulaTypes'
 
 export default {
   name: 'FormulaInputField',
   components: {
+    DataExplorer,
     EditorContent,
+  },
+  provide() {
+    // Provide the application context to all formula components
+    return { applicationContext: this.applicationContext }
   },
   props: {
     value: {
@@ -47,6 +66,20 @@ export default {
       type: String,
       default: null,
     },
+    dataProviders: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
+    dataExplorerLoading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    applicationContext: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
@@ -54,6 +87,7 @@ export default {
       content: null,
       isFocused: false,
       isFormulaInvalid: false,
+      dataNodeSelected: null,
     }
   },
   computed: {
@@ -113,6 +147,14 @@ export default {
     wrapperContent() {
       return this.editor.getJSON().content[0].content
     },
+    nodes() {
+      return this.dataProviders
+        .map((dataProvider) => dataProvider.getNodes(this.applicationContext))
+        .filter((dataProviderNodes) => dataProviderNodes.nodes?.length > 0)
+    },
+    nodeSelected() {
+      return this.dataNodeSelected?.attrs?.path || null
+    },
   },
   watch: {
     value(value) {
@@ -142,12 +184,17 @@ export default {
       editable: true,
       onUpdate: this.onUpdate,
       onFocus: this.onFocus,
-      onBlur: this.onBlur,
       extensions: this.extensions,
       parseOptions: {
         preserveWhitespace: 'full',
       },
+      editorProps: {
+        handleClick: this.unSelectNode,
+      },
     })
+
+    const clickOutsideEventCancel = onClickOutside(this.$el, this.onBlur)
+    this.$once('hook:beforeDestroy', clickOutsideEventCancel)
   },
   beforeDestroy() {
     this.editor?.destroy()
@@ -157,18 +204,38 @@ export default {
       this.isFormulaInvalid = false
       this.$emit('input', '')
     },
-    onUpdate() {
-      this.fixMultipleWrappers()
-
+    emitChange() {
       if (!this.isFormulaInvalid) {
         this.$emit('input', this.toFormula(this.wrapperContent))
       }
     },
-    onFocus() {
-      this.isFocused = true
+    onUpdate() {
+      this.fixMultipleWrappers()
+      this.unSelectNode()
+      this.emitChange()
     },
-    onBlur() {
-      this.isFocused = false
+    onFocus() {
+      if (!this.isFocused) {
+        this.isFocused = true
+        this.unSelectNode()
+        this.$refs.dataExplorer.show(
+          this.$refs.editor.$el,
+          'bottom',
+          'left',
+          -100,
+          -330
+        )
+      }
+    },
+    onBlur(target) {
+      if (
+        !this.$refs.dataExplorer.$el.contains(target) &&
+        !this.$refs.editor.$el.contains(target)
+      ) {
+        this.isFocused = false
+        this.$refs.dataExplorer.hide()
+        this.unSelectNode()
+      }
     },
     toContent(formula) {
       if (_.isEmpty(formula)) {
@@ -213,6 +280,34 @@ export default {
     fixMultipleWrappers() {
       if (this.editor.getJSON().content.length > 1) {
         this.editor.commands.joinForward()
+      }
+    },
+    dataComponentClicked(node) {
+      this.selectNode(node)
+      this.editor.commands.blur()
+    },
+    dataExplorerItemSelected({ path }) {
+      const isInEditingMode = this.dataNodeSelected !== null
+      if (isInEditingMode) {
+        this.dataNodeSelected.attrs.path = path
+        this.emitChange()
+      } else {
+        const getNode = new RuntimeGet().toNode([{ text: path }])
+        this.editor.commands.insertContent(getNode)
+      }
+      this.editor.commands.focus()
+    },
+    selectNode(node) {
+      if (node) {
+        this.unSelectNode()
+        this.dataNodeSelected = node
+        this.dataNodeSelected.attrs.isSelected = true
+      }
+    },
+    unSelectNode() {
+      if (this.dataNodeSelected) {
+        this.dataNodeSelected.attrs.isSelected = false
+        this.dataNodeSelected = null
       }
     },
   },

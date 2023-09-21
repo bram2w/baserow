@@ -8,27 +8,23 @@
       {{ label }}
     </label>
     <div class="control__elements">
-      <textarea
+      <FormulaInputField
         :value="value"
-        :rows="nbRows"
         :placeholder="placeholder"
-        class="input paragraph-element-form__value"
-        :class="{
-          'input--error': hasError,
-        }"
-        @input="$emit('input', $event.target.value)"
-        @keydown.enter.stop
-        @blur="$emit('blur', $event)"
+        :data-providers="dataProviders"
+        :data-explorer-loading="dataExplorerLoading"
+        :application-context="{ page, builder, mode }"
+        @input="$emit('input', $event)"
       />
-    </div>
-    <div v-if="hasError" class="error">
-      {{ error }}
     </div>
   </FormElement>
 </template>
 
 <script>
+import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
 export default {
+  components: { FormulaInputField },
+  inject: ['page', 'builder', 'mode'],
   props: {
     value: {
       type: String,
@@ -54,18 +50,15 @@ export default {
       required: false,
       default: false,
     },
-    error: {
-      type: String,
+    dataProviders: {
+      type: Array,
       required: false,
-      default: '',
+      default: () => [],
     },
-  },
-  computed: {
-    hasError() {
-      return Boolean(this.error)
-    },
-    nbRows() {
-      return this.value.split(/\n/).length > 1 ? 12 : 1
+    dataExplorerLoading: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
 }

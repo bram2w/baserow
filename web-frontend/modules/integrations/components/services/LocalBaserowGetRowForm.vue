@@ -24,16 +24,12 @@
         />
       </div>
       <div class="col col-4">
-        <FormulaInputGroup
+        <ApplicationBuilderFormulaInputGroup
           v-model="values.row_id"
           small-label
           :label="$t('localBaserowGetRowForm.rowFieldLabel')"
           :placeholder="$t('localBaserowGetRowForm.rowFieldPlaceHolder')"
-          :error="
-            !$v.values.row_id.validFormula
-              ? $t('localBaserowGetRowForm.invalidFormula')
-              : ''
-          "
+          :data-providers-allowed="DATA_PROVIDERS_ALLOWED_DATA_SOURCES"
         />
       </div>
     </div>
@@ -58,11 +54,11 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
-import { isValidFormula } from '@baserow/modules/core/formula'
+import { DATA_PROVIDERS_ALLOWED_DATA_SOURCES } from '@baserow/modules/builder/enums'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
-  components: { FormulaInputGroup },
+  components: { ApplicationBuilderFormulaInputGroup },
   mixins: [form],
   props: {
     builder: {
@@ -81,12 +77,9 @@ export default {
       },
     }
   },
-  validations() {
-    return {
-      values: {
-        row_id: { validFormula: isValidFormula },
-      },
-    }
+  computed: {
+    DATA_PROVIDERS_ALLOWED_DATA_SOURCES: () =>
+      DATA_PROVIDERS_ALLOWED_DATA_SOURCES,
   },
 }
 </script>
