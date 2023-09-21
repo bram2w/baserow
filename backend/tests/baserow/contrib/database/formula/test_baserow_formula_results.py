@@ -353,6 +353,7 @@ VALID_FORMULA_TESTS = [
     ("get_link_url(link('https://www.google.com'))", "https://www.google.com"),
     ("get_link_label(button('1', 'l'))", "l"),
     ("get_link_url(button('a' + 'b', 'l' + 'a'))", "ab"),
+    ("lower(tovarchar('AB'))", "ab"),
     (
         "encode_uri('http://example.com/wiki/Señor')",
         "http://example.com/wiki/Se%c3%b1or",
@@ -483,6 +484,17 @@ def test_can_compare_a_datetime_field_and_text_with_eu_formatting(data_fixture):
         given_field_has_rows=["2020-02-01T00:10:00Z", "2020-02-01T02:00:00Z", None],
         when_created_formula_is="field('date')='01/02/2020 00:10'",
         then_formula_values_are=[True, False, False],
+    )
+
+
+@pytest.mark.django_db
+def test_can_upper_an_email_field(data_fixture):
+    assert_formula_results_are_case(
+        data_fixture,
+        given_field_in_table=data_fixture.create_email_field(name="email"),
+        given_field_has_rows=["test@test.com", "other@das.c", None],
+        when_created_formula_is="upper(field('email'))",
+        then_formula_values_are=["TEST@TEST.COM", "OTHER@DAS.C", ""],
     )
 
 
