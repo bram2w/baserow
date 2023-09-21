@@ -23,29 +23,6 @@ export class RuntimeFormulaContext {
     this.applicationContext = applicationContext
   }
 
-  async initAll() {
-    // First we initialize providers that doesn't need a backend context
-    await Promise.all(
-      Object.values(this.dataProviders)
-        .filter((provider) => !provider.needBackendContext)
-        .map((dataProvider) => dataProvider.init(this))
-    )
-    // Then we initialize those that need the backend context
-    await Promise.all(
-      Object.values(this.dataProviders)
-        .filter((provider) => provider.needBackendContext)
-        .map((dataProvider) => dataProvider.init(this))
-    )
-  }
-
-  getAllBackendContext() {
-    return Object.fromEntries(
-      Object.values(this.dataProviders).map((dataProvider) => {
-        return [dataProvider.type, dataProvider.getBackendContext(this)]
-      })
-    )
-  }
-
   /**
    * Returns the value for the given path. The first part of the path is
    * the data provider type, then the remaining parts are given to the data provider.
@@ -62,7 +39,7 @@ export class RuntimeFormulaContext {
     }
 
     try {
-      return dataProviderType.getDataChunk(this, rest)
+      return dataProviderType.getDataChunk(this.applicationContext, rest)
     } catch (e) {
       throw new UnresolvablePathError(dataProviderType.type, rest.join('.'))
     }

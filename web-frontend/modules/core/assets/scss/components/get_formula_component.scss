@@ -1,12 +1,22 @@
 .get-formula-component {
+  cursor: pointer;
   display: inline-block;
   padding: 2px 8px;
   background-color: $color-neutral-100;
   font-size: 12px;
   margin: 1px 0;
-  user-select: all;
+  border-radius: 3px;
+  user-select: none;
   line-height: 18px;
   @include rounded($rounded);
+}
+
+.get-formula-component--error {
+  background-color: $color-error-100;
+}
+
+.get-formula-component--selected {
+  background-color: $color-primary-100;
 }
 
 .get-formula-component__caret {

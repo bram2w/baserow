@@ -52,6 +52,9 @@ const mutations = {
   CLEAR_ITEMS(state, { page }) {
     page.dataSources = []
   },
+  SET_LOADING(state, { page, value }) {
+    page._.dataSourceLoading = value
+  },
 }
 
 const actions = {
@@ -82,7 +85,8 @@ const actions = {
       commit('MOVE_ITEM', { page, index, oldIndex })
     }
   },
-  async create({ dispatch }, { page, values, beforeId }) {
+  async create({ commit, dispatch }, { page, values, beforeId }) {
+    commit('SET_LOADING', { page, value: true })
     const { data: dataSource } = await DataSourceService(this.$client).create(
       page.id,
       values,
@@ -90,8 +94,9 @@ const actions = {
     )
 
     await dispatch('forceCreate', { page, dataSource, beforeId })
+    commit('SET_LOADING', { page, value: false })
   },
-  async update({ dispatch }, { page, dataSourceId, values }) {
+  async update({ commit, dispatch }, { page, dataSourceId, values }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSource = dataSourcesOfPage.find(
       (dataSource) => dataSource.id === dataSourceId
@@ -107,12 +112,14 @@ const actions = {
 
     await dispatch('forceUpdate', { page, dataSource, values: newValues })
 
+    commit('SET_LOADING', { page, value: true })
     try {
       await DataSourceService(this.$client).update(dataSource.id, values)
     } catch (error) {
       await dispatch('forceUpdate', { page, dataSource, values: oldValues })
       throw error
     }
+    commit('SET_LOADING', { page, value: false })
   },
 
   async debouncedUpdate(
@@ -143,6 +150,7 @@ const actions = {
       const fire = async () => {
         const toUpdate = updateContext.valuesToUpdate
         updateContext.valuesToUpdate = {}
+        commit('SET_LOADING', { page, value: true })
         try {
           const { data } = await DataSourceService(this.$client).update(
             dataSource.id,
@@ -161,6 +169,7 @@ const actions = {
           updateContext.lastUpdatedValues = null
           reject(error)
         }
+        commit('SET_LOADING', { page, value: false })
       }
 
       if (updateContext.promiseResolve) {
@@ -178,7 +187,7 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async delete({ dispatch, getters }, { page, dataSourceId }) {
+  async delete({ commit, dispatch, getters }, { page, dataSourceId }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSourceIndex = dataSourcesOfPage.findIndex(
       (dataSource) => dataSource.id === dataSourceId
@@ -191,6 +200,7 @@ const actions = {
 
     await dispatch('forceDelete', { page, dataSourceId })
 
+    commit('SET_LOADING', { page, value: true })
     try {
       await DataSourceService(this.$client).delete(dataSourceId)
     } catch (error) {
@@ -201,8 +211,10 @@ const actions = {
       })
       throw error
     }
+    commit('SET_LOADING', { page, value: false })
   },
   async fetch({ dispatch, commit }, { page }) {
+    commit('SET_LOADING', { page, value: true })
     dispatch(
       'dataSourceContent/clearDataSourceContents',
       { page },
@@ -218,10 +230,12 @@ const actions = {
         dispatch('forceCreate', { page, dataSource })
       )
     )
+    commit('SET_LOADING', { page, value: false })
 
     return dataSources
   },
   async fetchPublished({ dispatch, commit }, { page }) {
+    commit('SET_LOADING', { page, value: true })
     dispatch(
       'dataSourceContent/clearDataSourceContents',
       { page },
@@ -238,6 +252,7 @@ const actions = {
         dispatch('forceCreate', { page, dataSource })
       )
     )
+    commit('SET_LOADING', { page, value: false })
 
     return dataSources
   },
@@ -258,20 +273,28 @@ const actions = {
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { page, dataSourceId }) {
+  async duplicate({ commit, getters, dispatch }, { page, dataSourceId }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSource = dataSourcesOfPage.find((e) => e.id === dataSourceId)
+    commit('SET_LOADING', { page, value: true })
     await dispatch('create', {
       page,
       dataSourceType: dataSource.type,
       beforeId: dataSource.id,
     })
+    commit('SET_LOADING', { page, value: false })
   },
 }
 
 const getters = {
   getPageDataSources: (state) => (page) => {
     return page.dataSources
+  },
+  getPageDataSourceById: (state) => (page, id) => {
+    return page.dataSources.find((dataSource) => dataSource.id === id)
+  },
+  getLoading: (state) => (page) => {
+    return page._.dataSourceLoading
   },
 }
 

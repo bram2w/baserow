@@ -453,7 +453,7 @@ export default {
         targetRect.right - contextRect.width - horizontalOffset > 0
       const canLeft =
         window.innerWidth -
-          targetRect.right -
+          targetRect.left -
           contextRect.width -
           horizontalOffset >
         0

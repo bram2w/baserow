@@ -4,6 +4,10 @@ export class PathParamType extends Registerable {
   get name() {
     return null
   }
+
+  get icon() {
+    return null
+  }
 }
 
 export class TextPathParamType extends PathParamType {
@@ -18,6 +22,10 @@ export class TextPathParamType extends PathParamType {
   get name() {
     return this.app.i18n.t('pathParamTypes.textName')
   }
+
+  get icon() {
+    return 'font'
+  }
 }
 
 export class NumericPathParamType extends PathParamType {
@@ -31,5 +39,9 @@ export class NumericPathParamType extends PathParamType {
 
   get name() {
     return this.app.i18n.t('pathParamTypes.numericName')
+  }
+
+  get icon() {
+    return 'hashtag'
   }
 }

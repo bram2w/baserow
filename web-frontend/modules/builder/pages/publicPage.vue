@@ -10,7 +10,8 @@
 <script>
 import PageContent from '@baserow/modules/builder/components/page/PageContent'
 import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
-import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+
+import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
 export default {
   components: { PageContent },
@@ -83,18 +84,12 @@ export default {
       store.dispatch('element/fetchPublished', { page }),
     ])
 
-    const runtimeFormulaContext = new RuntimeFormulaContext(
-      $registry.getAll('builderDataProvider'),
-      {
-        builder,
-        page,
-        pageParamsValue,
-        mode,
-      }
-    )
-
-    // Initialize all data provider contents
-    await runtimeFormulaContext.initAll()
+    await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
+      builder,
+      page,
+      pageParamsValue,
+      mode,
+    })
 
     // And finally select the page to display it
     await store.dispatch('page/selectById', {
@@ -123,19 +118,19 @@ export default {
     elements() {
       return this.$store.getters['element/getRootElements'](this.page)
     },
-    runtimeFormulaContext() {
-      return new RuntimeFormulaContext(
-        this.$registry.getAll('builderDataProvider'),
-        {
-          builder: this.builder,
-          page: this.page,
-          pageParamsValue: this.params,
-          mode: this.mode,
-        }
-      )
+    applicationContext() {
+      return {
+        builder: this.builder,
+        page: this.page,
+        pageParamsValue: this.params,
+        mode: this.mode,
+      }
     },
     backendContext() {
-      return this.runtimeFormulaContext.getAllBackendContext()
+      return DataProviderType.getAllBackendContext(
+        this.$registry.getAll('builderDataProvider'),
+        this.applicationContext
+      )
     },
   },
   watch: {

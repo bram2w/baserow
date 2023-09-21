@@ -24,6 +24,11 @@ export default {
     }
     el.tooltipMouseEnterEvent = () => {
       const position = el.getAttribute('tooltip-position') || 'bottom'
+      const hide = el.getAttribute('hide-tooltip')
+
+      if (hide) {
+        return
+      }
 
       if (el.tooltipElement) {
         this.terminate(el)

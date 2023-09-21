@@ -180,6 +180,9 @@ export class RuntimeGet extends RuntimeFormulaFunction {
           path: {
             default: '',
           },
+          isSelected: {
+            default: false,
+          },
         }
       },
       parseHTML() {
@@ -205,6 +208,7 @@ export class RuntimeGet extends RuntimeFormulaFunction {
     const specificConfiguration = {
       attrs: {
         path: textNode.text,
+        isSelected: false,
       },
     }
     return _.merge(specificConfiguration, defaultConfiguration)
