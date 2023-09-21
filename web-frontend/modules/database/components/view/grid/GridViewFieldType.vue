@@ -200,7 +200,6 @@
         <li
           v-if="
             !field.primary &&
-            canFilter &&
             $hasPermission(
               'database.table.view.update_field_options',
               view,

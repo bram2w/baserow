@@ -478,11 +478,23 @@ class BaserowAdd(TwoArgumentBaserowFunction):
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
         # date + interval = date
         # non date/interval types + non date/interval types = first arg type always
-        output_field = arg1.output_field
-        if isinstance(arg1.output_field, fields.DurationField):
+
+        first_arg_is_duration = isinstance(arg1.output_field, fields.DurationField)
+        second_arg_is_duration = isinstance(arg2.output_field, fields.DurationField)
+        first_arg_is_date = isinstance(arg1.output_field, fields.DateField)
+        second_arg_is_date = isinstance(arg2.output_field, fields.DateField)
+        if (first_arg_is_duration or second_arg_is_duration) and (
+            first_arg_is_date or second_arg_is_date
+        ):
+            # interval + date = datetime
+            # date + interval = datetime
+            output_field = fields.DateTimeField()
+        elif first_arg_is_duration:
             # interval + interval = interval
-            # interval + date = date
+            # interval + datetime = datetime
             output_field = arg2.output_field
+        else:
+            output_field = arg1.output_field
         return ExpressionWrapper(arg1 + arg2, output_field=output_field)
 
 
@@ -533,11 +545,22 @@ class BaserowMinus(TwoArgumentBaserowFunction):
         return arg1.expression_type.minus(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        output_field = arg1.output_field
-        if isinstance(arg1.output_field, fields.DateField) and isinstance(
-            arg2.output_field, fields.DateField
-        ):
+        first_arg_is_duration = isinstance(arg1.output_field, fields.DurationField)
+        second_arg_is_duration = isinstance(arg2.output_field, fields.DurationField)
+        first_arg_is_date = isinstance(arg1.output_field, fields.DateField)
+        second_arg_is_date = isinstance(arg2.output_field, fields.DateField)
+        if first_arg_is_duration and second_arg_is_duration:
+            # interval - interval = interval
             output_field = fields.DurationField()
+        elif first_arg_is_date and second_arg_is_duration:
+            # date/datetime - interval = datetime
+            output_field = fields.DateTimeField()
+        elif first_arg_is_date and second_arg_is_date:
+            # date - date = interval (django does this magic)
+            output_field = fields.DurationField()
+        else:
+            output_field = arg1.output_field
+
         return ExpressionWrapper(arg1 - arg2, output_field=output_field)
 
 

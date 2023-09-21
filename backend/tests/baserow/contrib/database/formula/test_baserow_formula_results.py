@@ -1168,6 +1168,52 @@ def test_can_make_joining_nested_aggregation(
     ]
 
 
+@pytest.mark.django_db
+def test_date_formulas(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_date_field(table=table)
+
+    formula_field_1 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{date_field.name}") + date_interval("1 day")',
+    )
+
+    assert formula_field_1.error is None
+
+    formula_field_2 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{formula_field_1.name}") - field("{date_field.name}")',
+    )
+
+    assert formula_field_2.error is None
+
+
+@pytest.mark.django_db
+def test_date_formulas_unwrapping_works(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_date_field(table=table)
+
+    formula_field_1 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{date_field.name}") - date_interval("1 day")',
+    )
+
+    assert formula_field_1.error is None
+
+    formula_field_2 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{formula_field_1.name}") - field("{date_field.name}")',
+    )
+
+    assert formula_field_2.error is None
+
+
 NULLABLE_FORMULA_TESTS = [
     # text
     ([], "'a'", False),

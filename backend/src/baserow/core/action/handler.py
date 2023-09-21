@@ -86,7 +86,9 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
             action.save()
         except Exception as exc:
             tb = traceback.format_exc()
-            logger.warning("Undoing %s failed because of: \n%s", action, tb)
+            logger.warning(
+                "Undoing {action} failed because of: \n" + str(tb), action=action.type
+            )
             raise exc
 
     @classmethod
@@ -137,7 +139,10 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
             # if any single action fails, rollback and set the same error for all.
             tb = traceback.format_exc()
             if action.action_group is not None:
-                logger.warning("Rolling back action group %s:", action.action_group)
+                logger.warning(
+                    "Rolling back action group {action_group}:",
+                    action_group=action.action_group,
+                )
             Action.objects.filter(pk__in=action_being_undone_ids).update(
                 error=tb, undone_at=undone_at
             )
@@ -163,7 +168,9 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
             action.save()
         except Exception as exc:
             tb = traceback.format_exc()
-            logger.warning("Redoing %s failed because of: \n%s", action, tb)
+            logger.warning(
+                "Redoing {action} failed because of: \n" + str(tb), action=action
+            )
             raise exc
 
     @classmethod
@@ -243,8 +250,8 @@ class ActionHandler(metaclass=baserow_trace_methods(tracer)):
                 tb = traceback.format_exc()
                 if latest_undone_action.action_group is not None:
                     logger.warning(
-                        "Rolling back action group %s:",
-                        latest_undone_action.action_group,
+                        "Rolling back action group {action_group}:",
+                        action_group=latest_undone_action.action_group,
                     )
                 Action.objects.filter(pk__in=actions_being_redone_ids).update(
                     error=tb, undone_at=None
