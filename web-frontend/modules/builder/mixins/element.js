@@ -1,5 +1,6 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
+import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -51,6 +52,14 @@ export default {
         this.formulaFunctions,
         this.runtimeFormulaContext
       )
+    },
+    fireEvent(EventType) {
+      if (this.mode !== 'editing') {
+        new EventType(this).fire({ element: this.element })
+      }
+    },
+    fireClickEvent() {
+      this.fireEvent(ClickEvent)
     },
   },
 }

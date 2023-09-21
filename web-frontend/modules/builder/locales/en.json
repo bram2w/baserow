@@ -285,5 +285,8 @@
     },
     "buttonElement": {
         "noValue": "Unnamed..."
+    },
+    "eventTypes": {
+        "clickLabel": "On click"
     }
 }

@@ -1,12 +1,25 @@
 <template>
   <div
-    class="expandable-card"
-    :class="{ ['expandable-card--expanded']: expanded }"
+    class="expandable"
+    :class="{
+      'expandable--expanded': expanded,
+    }"
   >
-    <div class="expandable-card__header">
+    <div
+      class="expandable__header"
+      :class="{
+        'expandable__header--card': card,
+        'expandable--toggle-on-click': toggleOnClick,
+      }"
+      @click="toggleOnClick && toggle()"
+    >
       <slot name="header" :toggle="toggle" :expanded="expanded" />
     </div>
-    <div v-if="expanded" class="expandable-card__content">
+    <div
+      v-if="expanded"
+      class="expandable__content"
+      :class="{ 'expandable__content--card': card }"
+    >
       <slot :toggle="toggle" :expanded="expanded" />
     </div>
   </div>
@@ -14,7 +27,7 @@
 
 <script>
 export default {
-  name: 'ExpandableCard',
+  name: 'Expandable',
   props: {
     defaultExpanded: {
       type: Boolean,
@@ -25,6 +38,19 @@ export default {
       type: Boolean,
       required: false,
       default: null,
+    },
+    card: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    /**
+     * If true, then clicking on any part of the heading will toggle the content
+     */
+    toggleOnClick: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {

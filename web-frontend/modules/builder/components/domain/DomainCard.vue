@@ -1,5 +1,5 @@
 <template>
-  <ExpandableCard :default-expanded="isOnlyDomain">
+  <Expandable card :default-expanded="isOnlyDomain">
     <template #header="{ toggle, expanded }">
       <div class="domain-card__header">
         <div>
@@ -30,7 +30,7 @@
       :domain="domain"
       @delete="$emit('delete')"
     />
-  </ExpandableCard>
+  </Expandable>
 </template>
 
 <script>

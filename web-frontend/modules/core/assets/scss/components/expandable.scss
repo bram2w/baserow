@@ -1,17 +1,21 @@
-.expandable-card__header {
+.expandable__header--card {
+  padding: 20px;
   border: 1px solid $color-neutral-200;
   background-color: $color-neutral-100;
-  padding: 20px;
   @include rounded($rounded-md);
 
-  .expandable-card--expanded & {
+  .expandable--expanded & {
     border-radius: 6px 6px 0 0;
   }
 }
 
-.expandable-card__content {
+.expandable__content--card {
   padding: 20px;
   border: 1px solid $color-neutral-200;
   border-top: none;
   border-radius: 0 0 6px 6px;
+}
+
+.expandable--toggle-on-click {
+  cursor: pointer;
 }
