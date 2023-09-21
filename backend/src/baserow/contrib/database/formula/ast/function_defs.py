@@ -127,6 +127,7 @@ def register_formula_functions(registry):
     registry.register(BaserowLower())
     registry.register(BaserowConcat())
     registry.register(BaserowToText())
+    registry.register(BaserowToVarchar())
     registry.register(BaserowT())
     registry.register(BaserowReplace())
     registry.register(BaserowSearch())
@@ -376,6 +377,30 @@ class BaserowToText(OneArgumentBaserowFunction):
             Value(""),
             output_field=fields.TextField(),
         )
+
+
+class BaserowToVarchar(OneArgumentBaserowFunction):
+    """
+    Internal function not registered in the frontend intentionally as we don't want
+    users making char types. Used purely for working with our BaserowFormulaCharType
+    on internal operations.
+    """
+
+    type = "tovarchar"
+    arg_type = [BaserowFormulaTextType]
+    try_coerce_nullable_args_to_not_null = False
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return arg.with_valid_type(
+            BaserowFormulaCharType(nullable=arg.expression_type.nullable)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Cast(arg, output_field=fields.CharField())
 
 
 class BaserowT(OneArgumentBaserowFunction):
