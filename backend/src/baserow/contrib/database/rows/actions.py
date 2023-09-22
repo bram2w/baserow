@@ -687,7 +687,7 @@ class UpdateRowsActionType(UndoableActionType):
     privacy_sensitive_params = [
         "row_values",
         "original_rows_values_by_id",
-        "updated_rows_fields_metadata_by_id",
+        "updated_fields_metadata_by_row_id",
     ]
 
     @dataclasses.dataclass
@@ -702,7 +702,7 @@ class UpdateRowsActionType(UndoableActionType):
         # !!! WARNING !!!
         row_values: List[Dict[str, Any]]  # TODO: rename to rows_values
         original_rows_values_by_id: Dict[int, Dict[str, Any]]
-        updated_rows_fields_metadata_by_id: Dict[int, Dict[str, Any]]
+        updated_fields_metadata_by_row_id: Dict[int, Dict[str, Any]]
 
     @classmethod
     def do(
@@ -742,7 +742,7 @@ class UpdateRowsActionType(UndoableActionType):
             [row.id for row in updated_rows],
             rows_values,
             result.original_rows_values_by_id,
-            result.updated_row_fields_metadata_by_row_id,
+            result.updated_fields_metadata_by_row_id,
         )
         cls.register_action(user, params, cls.scope(table.id), workspace=workspace)
 
@@ -764,10 +764,10 @@ class UpdateRowsActionType(UndoableActionType):
             ].items()
         }
 
-        serialized_params["updated_rows_fields_metadata_by_id"] = {
+        serialized_params["updated_fields_metadata_by_row_id"] = {
             int(row_id): row_values
             for row_id, row_values in serialized_params[
-                "updated_rows_fields_metadata_by_id"
+                "updated_fields_metadata_by_row_id"
             ].items()
         }
 

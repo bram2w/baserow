@@ -670,7 +670,7 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
             f"field_{price_field.id}": None,
         },
     }
-    assert result.updated_row_fields_metadata_by_row_id == {
+    assert result.updated_fields_metadata_by_row_id == {
         rows[0].id: {
             "id": rows[0].id,
             f"field_{name_field.id}": {

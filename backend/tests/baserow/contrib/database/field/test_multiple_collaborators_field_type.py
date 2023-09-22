@@ -6,11 +6,13 @@ import pytest
 from faker import Faker
 
 from baserow.contrib.database.fields.field_types import MultipleCollaboratorsFieldType
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import MultipleCollaboratorsField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -450,3 +452,88 @@ def test_multiple_collaborators_field_adjacent_row(data_fixture):
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+@pytest.mark.row_history
+def test_multiple_collaborators_serialize_metadata_for_row_history(
+    data_fixture, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_collaborators",
+        name="Multiple collaborators",
+    )
+    model = table.get_model()
+    row_handler = RowHandler()
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{field.id}": [
+                {"id": user.id},
+                {"id": user2.id},
+            ],
+        },
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleCollaboratorsFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        )
+
+    getattr(original_row, f"field_{field.id}").set([user2.id, user3.id], clear=True)
+    updated_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleCollaboratorsFieldType().serialize_metadata_for_row_history(
+            field, updated_row, metadata
+        )
+
+        assert metadata == {
+            "id": AnyInt(),
+            "collaborators": {
+                user.id: {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                user2.id: {
+                    "id": user2.id,
+                    "name": user2.first_name,
+                },
+                user3.id: {
+                    "id": user3.id,
+                    "name": user3.first_name,
+                },
+            },
+            "type": "multiple_collaborators",
+        }
+
+    # empty values
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": []},
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        assert MultipleCollaboratorsFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        ) == {
+            "id": AnyInt(),
+            "collaborators": {},
+            "type": "multiple_collaborators",
+        }
