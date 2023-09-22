@@ -52,6 +52,7 @@ class LocalBaserowListRowsUserServiceType(
     type = "local_baserow_list_rows"
     model_class = LocalBaserowListRows
     max_result_limit = 200
+    returns_list = True
 
     class SerializedDict(ServiceDict):
         table_id: int

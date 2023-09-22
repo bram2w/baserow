@@ -8,10 +8,12 @@ from django.db.models.functions import Cast
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
+    CollectionElementField,
     ColumnElement,
     ContainerElement,
     Element,
@@ -21,6 +23,7 @@ from baserow.contrib.builder.elements.models import (
     InputTextElement,
     LinkElement,
     ParagraphElement,
+    TableElement,
     VerticalAlignments,
 )
 from baserow.contrib.builder.elements.registries import ElementType
@@ -99,6 +102,110 @@ class ContainerElementType(ElementType, ABC):
         """
 
         pass
+
+
+class CollectionElementType(ElementType, ABC):
+    allowed_fields = ["data_source", "data_source_id"]
+    serializer_field_names = ["data_source_id", "fields"]
+
+    class SerializedDict(ElementDict):
+        data_source_id: int
+        fields: List[Dict]
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.contrib.builder.api.elements.serializers import (
+            CollectionElementFieldSerializer,
+        )
+
+        overrides = {
+            "data_source_id": serializers.IntegerField(
+                allow_null=True,
+                default=None,
+                help_text=TableElement._meta.get_field("data_source").help_text,
+                required=False,
+            ),
+            "fields": CollectionElementFieldSerializer(
+                many=True, required=False, help_text="The fields to show in the table."
+            ),
+        }
+
+        return overrides
+
+    def prepare_value_for_db(
+        self, values: Dict, instance: Optional[LinkElement] = None
+    ):
+        if "data_source_id" in values:
+            data_source_id = values.pop("data_source_id")
+            if data_source_id is not None:
+                data_source = DataSourceHandler().get_data_source(data_source_id)
+                if (
+                    not data_source.service
+                    or not data_source.service.specific.get_type().returns_list
+                ):
+                    raise ValidationError(
+                        f"The data source with ID {data_source_id} doesn't return a "
+                        "list."
+                    )
+                values["data_source"] = data_source
+            else:
+                values["data_source"] = None
+
+        return super().prepare_value_for_db(values, instance)
+
+    def after_create(self, instance, values):
+        if "fields" in values:
+            created_fields = CollectionElementField.objects.bulk_create(
+                [
+                    CollectionElementField(**field, order=index)
+                    for index, field in enumerate(values["fields"])
+                ]
+            )
+            instance.fields.add(*created_fields)
+
+    def after_update(self, instance, values):
+        if "fields" in values:
+            # Remove previous fields
+            instance.fields.clear()
+
+            self.after_create(instance, values)
+
+    def before_delete(self, instance):
+        instance.fields.all().delete()
+
+    def get_property_for_serialization(self, element: Element, prop_name: str):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "fields":
+            return [{"name": f.name, "value": f.value} for f in element.fields.all()]
+
+        return super().get_property_for_serialization(element, prop_name)
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["data_source_id"]:
+            serialized_copy["data_source_id"] = id_mapping["builder_data_sources"][
+                serialized_copy["data_source_id"]
+            ]
+
+        fields = serialized_copy.pop("fields", [])
+
+        instance = super().import_serialized(page, serialized_copy, id_mapping)
+
+        # Create fields
+        created_fields = CollectionElementField.objects.bulk_create(
+            [
+                CollectionElementField(**field, order=index)
+                for index, field in enumerate(fields)
+            ]
+        )
+
+        instance.fields.add(*created_fields)
+
+        return instance
 
 
 class ColumnElementType(ContainerElementType):
@@ -290,7 +397,7 @@ class LinkElementType(ElementType):
     class SerializedDict(ElementDict):
         value: BaserowFormula
         navigation_type: str
-        navigate_to_page_id: Page
+        navigate_to_page_id: int
         page_parameters: List
         navigate_to_url: BaserowFormula
         variant: str
@@ -586,3 +693,11 @@ class ButtonElementType(ElementType):
 
     def get_sample_params(self) -> Dict[str, Any]:
         return {"value": "Some value"}
+
+
+class TableElementType(CollectionElementType):
+    type = "table"
+    model_class = TableElement
+
+    def get_sample_params(self) -> Dict[str, Any]:
+        return {"data_source_id": None}

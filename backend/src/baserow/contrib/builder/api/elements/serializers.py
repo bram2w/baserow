@@ -4,7 +4,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
-from baserow.contrib.builder.elements.models import Element
+from baserow.contrib.builder.elements.models import CollectionElementField, Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.core.formula.serializers import FormulaSerializerField
 
@@ -112,3 +112,15 @@ class MoveElementSerializer(serializers.Serializer):
 class PageParameterValueSerializer(serializers.Serializer):
     name = serializers.CharField()
     value = FormulaSerializerField(allow_blank=True)
+
+
+class CollectionElementFieldSerializer(serializers.ModelSerializer):
+    value = FormulaSerializerField(allow_blank=True)
+
+    class Meta:
+        model = CollectionElementField
+        fields = (
+            "id",
+            "name",
+            "value",
+        )

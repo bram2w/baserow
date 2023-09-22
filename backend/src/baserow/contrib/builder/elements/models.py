@@ -3,7 +3,7 @@ from typing import Optional
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import QuerySet
+from django.db.models import SET_NULL, QuerySet
 
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
@@ -414,3 +414,42 @@ class ButtonElement(Element):
         max_length=10,
         default=HorizontalAlignments.LEFT,
     )
+
+
+class CollectionElementField(models.Model):
+    """
+    A field of a Collection element
+    """
+
+    order = models.PositiveIntegerField()
+    name = models.CharField(
+        max_length=225,
+        help_text="The name of the field.",
+    )
+    value = FormulaField(default="", help_text="The value of the field.")
+
+    class Meta:
+        ordering = ("order", "id")
+
+
+class CollectionElement(Element):
+    data_source = models.ForeignKey(
+        "builder.DataSource",
+        null=True,
+        on_delete=SET_NULL,
+        help_text="The data source we want to show in the element for. "
+        "Only data_sources that return list are allowed.",
+    )
+
+    fields = models.ManyToManyField(
+        CollectionElementField, help_text="Fields of the collection element."
+    )
+
+    class Meta:
+        abstract = True
+
+
+class TableElement(CollectionElement):
+    """
+    A table element
+    """
