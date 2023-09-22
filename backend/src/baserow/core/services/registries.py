@@ -41,6 +41,9 @@ class ServiceType(
     # unless instructed otherwise by a user.
     default_result_limit = max_result_limit
 
+    # Does this service return a list of record?
+    returns_list = False
+
     def prepare_values(
         self, values: Dict[str, Any], user: AbstractUser
     ) -> Dict[str, Any]:

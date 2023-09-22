@@ -1,9 +1,13 @@
+from copy import deepcopy
+
 from baserow.contrib.builder.elements.models import (
+    CollectionElementField,
     ColumnElement,
     HeadingElement,
     ImageElement,
     LinkElement,
     ParagraphElement,
+    TableElement,
 )
 
 
@@ -26,6 +30,36 @@ class ElementFixtures:
 
     def create_builder_link_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(LinkElement, user, page, **kwargs)
+        return element
+
+    def create_builder_table_element(self, user=None, page=None, **kwargs):
+        fields = kwargs.pop(
+            "fields",
+            deepcopy(
+                [
+                    {"name": "Field 1", "value": "get('test1')"},
+                    {"name": "Field 2", "value": "get('test2')"},
+                    {"name": "Field 3", "value": "get('test3')"},
+                ]
+            ),
+        )
+
+        if "data_source" not in kwargs:
+            kwargs[
+                "data_source"
+            ] = self.create_builder_local_baserow_list_rows_data_source(page=page)
+
+        element = self.create_builder_element(TableElement, user, page, **kwargs)
+
+        if fields:
+            created_fields = CollectionElementField.objects.bulk_create(
+                [
+                    CollectionElementField(**field, order=index)
+                    for index, field in enumerate(fields)
+                ]
+            )
+            element.fields.add(*created_fields)
+
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):

@@ -287,6 +287,9 @@ class BuilderApplicationType(ApplicationType):
         if "builder_page_elements" not in id_mapping:
             id_mapping["builder_page_elements"] = {}
 
+        if "builder_data_sources" not in id_mapping:
+            id_mapping["builder_data_sources"] = {}
+
         if "workspace_id" not in id_mapping and builder.workspace is not None:
             id_mapping["workspace_id"] = builder.workspace.id
 
@@ -308,17 +311,6 @@ class BuilderApplicationType(ApplicationType):
             serialized_page["_data_source_objects"] = []
             imported_pages.append(page_instance)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
-
-        # Then we create all the element instances.
-        for serialized_page in serialized_pages:
-            for serialized_element in serialized_page["elements"]:
-                self.import_element(
-                    serialized_element,
-                    serialized_page,
-                    id_mapping,
-                )
-
-                progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         # Then we create all the datasource instances.
         for serialized_page in serialized_pages:
@@ -349,7 +341,22 @@ class BuilderApplicationType(ApplicationType):
                     name=serialized_data_source["name"],
                 )
 
+                id_mapping["builder_data_sources"][
+                    serialized_data_source["id"]
+                ] = data_source.id
+
                 serialized_page["_data_source_objects"].append(data_source)
+
+                progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        # Then we create all the element instances.
+        for serialized_page in serialized_pages:
+            for serialized_element in serialized_page["elements"]:
+                self.import_element(
+                    serialized_element,
+                    serialized_page,
+                    id_mapping,
+                )
 
                 progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 

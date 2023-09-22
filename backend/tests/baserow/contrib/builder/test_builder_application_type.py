@@ -6,6 +6,7 @@ from baserow.contrib.builder.elements.models import (
     Element,
     HeadingElement,
     ParagraphElement,
+    TableElement,
 )
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
@@ -61,11 +62,15 @@ def test_builder_application_export(data_fixture):
         page=page2, user=user, name="source 3", integration=integration
     )
 
+    element4 = data_fixture.create_builder_table_element(
+        page=page2, data_source=datasource3
+    )
+
     serialized = BuilderApplicationType().export_serialized(
         builder, ImportExportConfig(include_permission_data=True)
     )
 
-    assert serialized == {
+    reference = {
         "pages": [
             {
                 "id": page1.id,
@@ -182,6 +187,20 @@ def test_builder_application_export(data_fixture):
                         "value": element3.value,
                         "level": element3.level,
                     },
+                    {
+                        "id": element4.id,
+                        "type": "table",
+                        "order": str(element4.order),
+                        "parent_element_id": None,
+                        "place_in_container": None,
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
+                        "data_source_id": element4.data_source.id,
+                        "fields": [
+                            {"name": f.name, "value": f.value}
+                            for f in element4.fields.all()
+                        ],
+                    },
                 ],
             },
         ],
@@ -210,6 +229,8 @@ def test_builder_application_export(data_fixture):
         "type": "builder",
     }
 
+    assert serialized == reference
+
 
 IMPORT_REFERENCE = {
     "pages": [
@@ -236,6 +257,18 @@ IMPORT_REFERENCE = {
                     "place_in_container": None,
                     "order": 2,
                     "value": "",
+                },
+                {
+                    "id": 1000,
+                    "type": "table",
+                    "parent_element_id": None,
+                    "place_in_container": None,
+                    "order": 2.5,
+                    "data_source_id": 5,
+                    "fields": [
+                        {"name": "F 1", "value": "get('test1')"},
+                        {"name": "F 2", "value": "get('test2')"},
+                    ],
                 },
                 {
                     "id": 500,
@@ -375,7 +408,7 @@ def test_builder_application_import(data_fixture):
 
     [page1, page2] = builder.page_set.all()
 
-    assert page1.element_set.count() == 4
+    assert page1.element_set.count() == 5
     assert page2.element_set.count() == 1
 
     assert page1.datasource_set.count() == 2
@@ -399,12 +432,16 @@ def test_builder_application_import(data_fixture):
         element1,
         element_inside_container,
         element2,
+        table_element,
         container_element,
     ] = specific_iterator(page1.element_set.all())
 
     assert isinstance(element1, HeadingElement)
     assert isinstance(element2, ParagraphElement)
     assert isinstance(container_element, ColumnElement)
+    assert isinstance(table_element, TableElement)
+
+    assert table_element.fields.count() == 2
 
     assert element1.order == 1
     assert element1.level == 2

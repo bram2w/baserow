@@ -18,6 +18,8 @@ lint-python: lint
 format:
 	black . ../premium/backend ../enterprise/backend --extend-exclude='/generated/' || exit;
 
+fix: sort format
+
 sort:
 	isort --skip generated  src tests ../premium/backend ../enterprise/backend || exit;
 

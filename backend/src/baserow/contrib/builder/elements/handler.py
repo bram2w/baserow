@@ -150,6 +150,8 @@ class ElementHandler:
         element = model_class(page=page, order=order, **allowed_values)
         element.save()
 
+        element_type.after_create(element, kwargs)
+
         return element
 
     def delete_element(self, element: Element):
@@ -158,6 +160,8 @@ class ElementHandler:
 
         :param element: The to-be-deleted element.
         """
+
+        element.get_type().before_delete(element)
 
         element.delete()
 
@@ -183,6 +187,8 @@ class ElementHandler:
             setattr(element, key, value)
 
         element.save()
+
+        element.get_type().after_update(element, kwargs)
 
         return element
 
