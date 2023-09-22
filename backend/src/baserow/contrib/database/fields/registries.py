@@ -19,6 +19,7 @@ from django.db.models.functions import Cast
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
+from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.core.registries import ImportExportConfig
 from baserow.core.registry import (
     APIUrlsInstanceMixin,
@@ -755,6 +756,19 @@ class FieldType(
         """
 
         return False
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        """
+        Converts the field's value to input value. For example, we can use this method
+        to convert the result of random_value() to provide values to row actions
+        such as UpdateRowsActionType.
+
+        :param field: The field instance for which the provided value is intended.
+        :param value: The field's value that we want to represent as input value.
+        :return: Value represented as input value.
+        """
+
+        return value
 
     def export_serialized(
         self, field: Field, include_allowed_fields: bool = True
@@ -1551,8 +1565,11 @@ class FieldType(
         return PermissionError(user)
 
     def serialize_metadata_for_row_history(
-        self, field: Field, new_value: Any, old_value: Any
-    ) -> Dict[str, Any]:
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
         """
         Returns a dictionary of metadata that should be stored in the row history
         table for this field type. This is necessary for fields that have a
@@ -1560,8 +1577,11 @@ class FieldType(
         the history table.
 
         :param field: The field instance that the value belongs to.
-        :param new_value: The new value of the field.
-        :param old_value: The old value of the field.
+        :param row: The row which the metadata are for.
+        :param metadata: When provided, the new metadata will be merged with
+            the provided ones. That way this method can be called twice for old
+            and new values of the row while keeping single metadata representing
+            both.
         :return: A dictionary of metadata that should be stored in the row history
             table for this field type.
         """

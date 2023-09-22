@@ -100,10 +100,16 @@ def record_row_history(table, row, user):
     row_random_values["id"] = row.id
 
     for _, field_object in model._field_objects.items():
-        random_value = field_object["type"].random_value(
-            field_object["field"], fake, cache
-        )
-        row_random_values[f"field_{field_object['field'].id}"] = random_value
+        if not field_object["type"].read_only:
+            random_value = field_object["type"].random_value(
+                field_object["field"], fake, cache
+            )
+            serialized_random_value = field_object["type"].serialize_to_input_value(
+                field_object["field"], random_value
+            )
+            row_random_values[
+                f"field_{field_object['field'].id}"
+            ] = serialized_random_value
 
     rows_values = [row_random_values]
     UpdateRowsActionType.do(user, table, rows_values, model)

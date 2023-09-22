@@ -30,6 +30,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -2263,3 +2264,97 @@ def test_multiple_select_adjacent_row(data_fixture):
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.row_history
+def test_multiple_select_serialize_metadata_for_row_history(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+            {"value": "Option 3", "color": "white"},
+            {"value": "Option 4", "color": "green"},
+        ],
+    )
+    model = table.get_model()
+    row_handler = RowHandler()
+    select_options = field.select_options.all()
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+            ],
+        },
+    )
+    select_option_1_id = select_options[0].id
+    select_option_2_id = select_options[1].id
+    select_option_3_id = select_options[2].id
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        )
+
+    getattr(original_row, f"field_{field.id}").set([select_options[2].id], clear=True)
+    updated_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, updated_row, metadata
+        )
+
+        assert metadata == {
+            "id": AnyInt(),
+            "select_options": {
+                select_option_1_id: {
+                    "color": "blue",
+                    "id": select_option_1_id,
+                    "value": "Option 1",
+                },
+                select_option_2_id: {
+                    "color": "red",
+                    "id": select_option_2_id,
+                    "value": "Option 2",
+                },
+                select_option_3_id: {
+                    "color": "white",
+                    "id": select_option_3_id,
+                    "value": "Option 3",
+                },
+            },
+            "type": "multiple_select",
+        }
+
+    # empty values
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": []},
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        assert MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        ) == {
+            "id": AnyInt(),
+            "select_options": {},
+            "type": "multiple_select",
+        }

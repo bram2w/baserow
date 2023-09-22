@@ -61,8 +61,10 @@ class RowHistoryHandler:
         )
 
     @classmethod
-    def _extract_fields_diff(
-        cls, before_values: Dict[str, Any], after_values: Dict[str, Any]
+    def _extract_row_diff(
+        cls,
+        before_values: Dict[str, Any],
+        after_values: Dict[str, Any],
     ) -> Optional[RowChangeDiff]:
         """
         Extracts the fields that have changed between the before and after values of a
@@ -123,10 +125,10 @@ class RowHistoryHandler:
         row_history_entries = []
         for i, after in enumerate(after_values):
             before = before_values[i]
-            fields_metadata = params.updated_rows_fields_metadata_by_id[after["id"]]
+            fields_metadata = params.updated_fields_metadata_by_row_id[after["id"]]
             cls._raise_if_ids_mismatch(before, after, fields_metadata)
 
-            diff = cls._extract_fields_diff(before, after)
+            diff = cls._extract_row_diff(before, after)
             if diff is None:
                 continue
 

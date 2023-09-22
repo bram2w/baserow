@@ -78,6 +78,7 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
 )
 from baserow.contrib.database.models import Table
+from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.db import collate_expression
 from baserow.core.fields import SyncedDateTimeField
@@ -551,13 +552,12 @@ class NumberFieldType(FieldType):
         )
 
     def serialize_metadata_for_row_history(
-        self, field: Field, new_value: Any, old_value: Any
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata,
     ) -> Dict[str, Any]:
-        """
-        Serializes the metadata for the row history.
-        """
-
-        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
             **base,
@@ -2247,6 +2247,34 @@ class LinkRowFieldType(FieldType):
             via_path_to_starting_table,
         )
 
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_linked_rows = {}
+        if metadata and metadata.get("linked_rows"):
+            already_serialized_linked_rows = metadata["linked_rows"]
+
+        new_serialized_linked_rows = getattr(row, field.db_column).all()
+        new_serialized_linked_rows = {
+            linked_row.id: {
+                "value": str(linked_row),
+            }
+            for linked_row in new_serialized_linked_rows
+        }
+
+        return {
+            **base,
+            "linked_rows": {
+                **already_serialized_linked_rows,
+                **new_serialized_linked_rows,
+            },
+        }
+
 
 class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     type = "email"
@@ -2697,8 +2725,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         invalid_values_by_index.update(invalid_values_by_index)
 
         # Query database with all these gathered values
-        select_options = SelectOption.objects.filter(field=instance).filter(
-            Q(id__in=unique_ids) | Q(value__in=unique_names)
+        select_options = list(
+            SelectOption.objects.filter(field=instance).filter(
+                Q(id__in=unique_ids) | Q(value__in=unique_names)
+            )
         )
 
         # Create a map {id|value -> option}
@@ -2734,6 +2764,38 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 values_by_row[row_index] = option_map[value]
 
         return values_by_row
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return value.id
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_option = {}
+        if metadata and metadata.get("select_options"):
+            already_serialized_option = metadata["select_options"]
+
+        select_option = getattr(row, field.db_column)
+        new_serialized_option = {}
+        if select_option is not None:
+            new_serialized_option[select_option.id] = {
+                "id": select_option.id,
+                "value": select_option.value,
+                "color": select_option.color,
+            }
+
+        return {
+            **base,
+            "select_options": {
+                **already_serialized_option,
+                **new_serialized_option,
+            },
+        }
 
     def get_serializer_help_text(self, instance):
         return (
@@ -3254,6 +3316,36 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         through_model_fields = through_model._meta.get_fields()
         option_field_name = through_model_fields[2].name
         through_model.objects.filter(**{f"{option_field_name}__in": to_delete}).delete()
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_options = {}
+        if metadata and metadata.get("select_options"):
+            already_serialized_options = metadata["select_options"]
+
+        new_select_options = getattr(row, field.db_column).all()
+        new_serialized_options = {
+            option.id: {
+                "id": option.id,
+                "value": option.value,
+                "color": option.color,
+            }
+            for option in new_select_options
+        }
+
+        return {
+            **base,
+            "select_options": {
+                **already_serialized_options,
+                **new_serialized_options,
+            },
+        }
 
 
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
@@ -4446,6 +4538,47 @@ class MultipleCollaboratorsFieldType(FieldType):
         if len(export_value) == 0:
             return ""
         return ", ".join(export_value)
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_collaborators = {}
+        if metadata and metadata.get("collaborators"):
+            already_serialized_collaborators = metadata["collaborators"]
+
+        new_collaborators = getattr(row, field.db_column).all()
+        new_serialized_collaborators = {
+            collaborator.id: {
+                "id": collaborator.id,
+                "name": collaborator.first_name,
+            }
+            for collaborator in new_collaborators
+        }
+
+        return {
+            **base,
+            "collaborators": {
+                **already_serialized_collaborators,
+                **new_serialized_collaborators,
+            },
+        }
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        if value is None or len(value) == 0:
+            return []
+
+        serialized = [
+            {
+                "id": user_id,
+            }
+            for user_id in value
+        ]
+        return serialized
 
     def get_model_field(self, instance, **kwargs):
         return None

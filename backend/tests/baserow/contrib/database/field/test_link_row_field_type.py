@@ -16,6 +16,7 @@ from baserow.contrib.database.fields.exceptions import (
     LinkRowTableNotProvided,
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
+from baserow.contrib.database.fields.field_types import LinkRowFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field, LinkRowField, TextField
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -25,6 +26,7 @@ from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -1668,3 +1670,81 @@ def test_two_linked_tables_both_publically_shared_can_have_related_linked_field_
         link_a_and_b,
         has_related_field=False,
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+@pytest.mark.row_history
+def test_link_row_serialize_metadata_for_row_history(
+    data_fixture, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    database = data_fixture.create_database_application(workspace=workspace)
+    user = data_fixture.create_user(workspace=workspace)
+    table = data_fixture.create_database_table(user=user, database=database)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    field = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    table2_model = table2.get_model()
+    table2_row1 = table2_model.objects.create()
+    table2_row2 = table2_model.objects.create()
+    table2_row3 = table2_model.objects.create()
+    model = table.get_model()
+    row_handler = RowHandler()
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{field.id}": [table2_row1.id, table2_row2.id],
+        },
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = LinkRowFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        )
+
+    getattr(original_row, f"field_{field.id}").set(
+        [table2_row1.id, table2_row2.id, table2_row3.id], clear=True
+    )
+    updated_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = LinkRowFieldType().serialize_metadata_for_row_history(
+            field, updated_row, metadata
+        )
+
+        assert metadata == {
+            "id": AnyInt(),
+            "linked_rows": {
+                table2_row1.id: {"value": f"unnamed row {table2_row1.id}"},
+                table2_row2.id: {"value": f"unnamed row {table2_row2.id}"},
+                table2_row3.id: {"value": f"unnamed row {table2_row3.id}"},
+            },
+            "type": "link_row",
+        }
+
+    # empty values
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": []},
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        assert LinkRowFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        ) == {
+            "id": AnyInt(),
+            "linked_rows": {},
+            "type": "link_row",
+        }
