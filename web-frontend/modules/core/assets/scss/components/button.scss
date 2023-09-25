@@ -57,7 +57,7 @@
 }
 
 .button--light {
-  @include button-style(transparent, $color-neutral-100, $color-primary-900);
+  @include button-style(transparent, $color-neutral-100, $color-neutral-900);
 
   &:hover,
   &:focus,
