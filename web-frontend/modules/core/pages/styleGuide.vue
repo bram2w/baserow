@@ -7,6 +7,7 @@
           <h1>&lt;h1&gt;Heading 1&lt;/h1&gt;</h1>
           <h2>&lt;h2&gt;Heading 2&lt;/h2&gt;</h2>
           <h3>&lt;h3&gt;Heading 3&lt;/h3&gt;</h3>
+          <h4>&lt;h4&gt;Heading 4&lt;/h4&gt;</h4>
         </div>
         <div class="margin-bottom-3">
           <p>
