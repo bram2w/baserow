@@ -77,7 +77,8 @@ export default {
     this.$priorityBus.$off('start-search', this.searchStarted)
   },
   methods: {
-    searchStarted() {
+    searchStarted({ event }) {
+      event.preventDefault()
       this.$refs.searchInput.focus()
     },
   },

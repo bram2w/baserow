@@ -67,7 +67,8 @@ export default {
     searchChanged(newSearch) {
       this.headerSearchTerm = newSearch
     },
-    searchStarted() {
+    searchStarted({ event }) {
+      event.preventDefault()
       this.$bus.$emit('close-modals')
       this.$refs.contextLink.click()
     },

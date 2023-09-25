@@ -155,7 +155,7 @@ export default {
 
     // Focus the search field so the user may begin typing immediately.
     this.$nextTick(() => {
-      this.focusSearch()
+      this.focusSearch({})
     })
 
     this.$priorityBus.$on(
@@ -292,7 +292,8 @@ export default {
     /**
      * Focuses the search field when the component mounts.
      */
-    focusSearch() {
+    focusSearch({ event }) {
+      event?.preventDefault()
       this.$refs.search?.focus()
     },
     async createRow({ row, callback }) {

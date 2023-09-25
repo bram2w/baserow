@@ -103,7 +103,8 @@ export default {
         this.membersSelected = this.membersSelected.concat(membersToAdd)
       }
     },
-    searchStarted() {
+    searchStarted({ event }) {
+      event.preventDefault()
       this.$refs.searchInput.focus()
     },
     search(value) {
