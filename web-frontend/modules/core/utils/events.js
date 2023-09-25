@@ -27,3 +27,13 @@ export const isOsSpecificModifierPressed = (event) => {
   const isMac = navigator.platform.toUpperCase().includes('MAC')
   return isMac ? event.metaKey : event.ctrlKey
 }
+
+export const keyboardShortcutsToPriorityEventBus = (event, priorityBus) => {
+  if (
+    isOsSpecificModifierPressed(event) &&
+    event.shiftKey &&
+    event.key.toLowerCase() === 's'
+  ) {
+    priorityBus.$emit('start-search', { event })
+  }
+}

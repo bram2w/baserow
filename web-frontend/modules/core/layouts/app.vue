@@ -24,7 +24,10 @@ import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 import Sidebar from '@baserow/modules/core/components/sidebar/Sidebar'
 import undoRedo from '@baserow/modules/core/mixins/undoRedo'
 import { CORE_ACTION_SCOPES } from '@baserow/modules/core/utils/undoRedoConstants'
-import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
+import {
+  isOsSpecificModifierPressed,
+  keyboardShortcutsToPriorityEventBus,
+} from '@baserow/modules/core/utils/events'
 
 export default {
   components: {
@@ -111,13 +114,7 @@ export default {
           event.preventDefault()
         }
       }
-      if (
-        isOsSpecificModifierPressed(event) &&
-        event.key.toLowerCase() === 'f'
-      ) {
-        event.preventDefault()
-        this.$priorityBus.$emit('start-search')
-      }
+      keyboardShortcutsToPriorityEventBus(event, this.$priorityBus)
     },
   },
 }
