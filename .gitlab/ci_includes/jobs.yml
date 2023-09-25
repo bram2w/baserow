@@ -171,6 +171,12 @@
       - pipelines
       # When a pipeline is triggered by a git commit tag we don't want to rebuild.
       - tags
+  only:
+    variables:
+      - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
+      - $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME
+      - $BUILD_ALL_IN_ONE == "true"
+      - $CI_COMMIT_MESSAGE =~ /\[build-all]/
   services:
     - name: $CI_DIND_IMAGE
       alias: docker
