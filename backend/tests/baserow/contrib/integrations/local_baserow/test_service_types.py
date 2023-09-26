@@ -462,6 +462,81 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
 
 
 @pytest.mark.django_db
+def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
+    database = data_fixture.create_database_application(workspace=builder.workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Ingredient", "text", {}),
+            ("Cost", "number", {}),
+        ],
+    )
+    ingredient = table.field_set.get(name="Ingredient")
+    cost = table.field_set.get(name="Cost")
+    [row_1, row_2, row_3, _] = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{ingredient.id}": "Duck", f"field_{cost.id}": 50},
+            {f"field_{ingredient.id}": "Duckling", f"field_{cost.id}": 25},
+            {f"field_{ingredient.id}": "Goose", f"field_{cost.id}": 150},
+            {f"field_{ingredient.id}": "Beef", f"field_{cost.id}": 250},
+        ],
+    )
+
+    view = data_fixture.create_grid_view(
+        user, table=table, created_by=user, filter_type="OR"
+    )
+    service_type = LocalBaserowListRowsUserServiceType()
+    service = data_fixture.create_local_baserow_list_rows_service(
+        view=view, table=table, integration=integration, filter_type="OR"
+    )
+
+    # (ingredient=Duck OR ingredient=Goose) AND (cost=150).
+    equals_duck = data_fixture.create_view_filter(
+        view=view, field=ingredient, type="equal", value="Duck"
+    )
+    equals_goose = data_fixture.create_view_filter(
+        view=view, field=ingredient, type="equal", value="Goose"
+    )
+    cost_150 = data_fixture.create_local_baserow_table_service_filter(
+        service=service, field=cost, value="150"
+    )
+    dispatch_data = service_type.dispatch_data(service)
+    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+        row_3.id,  # Only Goose has a cost of 150.
+    ]
+    cost_150.delete()
+    equals_duck.delete()
+    equals_goose.delete()
+
+    # (ingredient contains Duck) AND (cost=25 OR cost=50).
+    data_fixture.create_view_filter(
+        view=view, field=ingredient, type="contains", value="Duck"
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service, field=cost, value="25"
+    )
+    data_fixture.create_local_baserow_table_service_filter(
+        service=service, field=cost, value="50"
+    )
+    dispatch_data = service_type.dispatch_data(service)
+    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+        row_1.id,  # Duck
+        row_2.id,  # Duckling
+    ]
+
+
+@pytest.mark.django_db
 def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sorts(
     data_fixture,
 ):

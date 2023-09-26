@@ -1,9 +1,10 @@
 from typing import TYPE_CHECKING, List, Tuple, Type
 
-from django.db.models import OrderBy, Q, QuerySet
+from django.db.models import OrderBy, QuerySet
 
-from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
+from baserow.contrib.database.fields.field_filters import FilterBuilder
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
@@ -23,8 +24,9 @@ class LocalBaserowTableServiceFilterableMixin:
     def get_dispatch_filters(
         self,
         service: "ServiceSubClass",
+        queryset: QuerySet,
         model: Type["GeneratedTableModel"],
-    ) -> FilterBuilder:
+    ) -> QuerySet:
         """
         Responsible for defining how the `LocalBaserow` services are filtered. To issue
         a `dispatch`, a `LocalBaserow` service must be pointing to a table.
@@ -36,26 +38,34 @@ class LocalBaserowTableServiceFilterableMixin:
         found for this view.
 
         :param service: The `LocalBaserow` service we're dispatching.
+        :param queryset: The queryset we want to filter upon.
         :param model: The `service.view.table`'s `GeneratedTableModel`.
-        :return: A `FilterBuilder` filtered with view and/or service filters.
+        :return: A queryset with any applicable view/service filters applied to it.
         """
 
-        filter_builder = FilterBuilder(filter_type=FILTER_TYPE_AND)
-
         if service.view:
+            view_filter_builder = FilterBuilder(filter_type=service.view.filter_type)
             view_filter_expressions = ViewHandler().get_view_filter_expressions(
                 service.view, model
             )
             for view_filter_expression in view_filter_expressions:
-                filter_builder.filter(view_filter_expression)
+                view_filter_builder.filter(view_filter_expression)
+            queryset = view_filter_builder.apply_to_queryset(queryset)
 
+        service_filter_builder = FilterBuilder(filter_type=service.filter_type)
         service_filters = LocalBaserowTableServiceFilter.objects.filter(service=service)
         for service_filter in service_filters:
-            filter_builder.filter(
-                Q(**{service_filter.field.db_column: service_filter.value})
+            field_object = model._field_objects[service_filter.field_id]
+            field_name = field_object["name"]
+            model_field = model._meta.get_field(field_name)
+            view_filter_type = view_filter_type_registry.get(service_filter.type)
+            service_filter_builder.filter(
+                view_filter_type.get_filter(
+                    field_name, service_filter.value, model_field, field_object["field"]
+                )
             )
 
-        return filter_builder
+        return service_filter_builder.apply_to_queryset(queryset)
 
 
 class LocalBaserowTableServiceSortableMixin:

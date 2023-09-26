@@ -160,9 +160,7 @@ class LocalBaserowListRowsUserServiceType(
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
         # Find filters applicable to this service.
-        filter_builder = self.get_dispatch_filters(service, model)
-        if filter_builder is not None:
-            queryset = filter_builder.apply_to_queryset(queryset)
+        queryset = self.get_dispatch_filters(service, queryset, model)
 
         # Find sorts applicable to this service.
         view_sorts, queryset = self.get_dispatch_sorts(service, queryset, model)
@@ -364,9 +362,7 @@ class LocalBaserowGetRowUserServiceType(
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
         # Find the `ViewFilter` applicable to this Service's View.
-        filter_builder = self.get_dispatch_filters(service, model)
-        if filter_builder is not None:
-            queryset = filter_builder.apply_to_queryset(queryset)
+        queryset = self.get_dispatch_filters(service, queryset, model)
 
         try:
             row = queryset.get(pk=row_id)
