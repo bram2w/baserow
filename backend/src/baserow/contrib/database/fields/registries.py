@@ -240,6 +240,29 @@ class FieldType(
 
         return queryset
 
+    def enhance_queryset_in_bulk(
+        self, queryset: QuerySet, field_objects: List[dict]
+    ) -> QuerySet:
+        """
+        This hook is similar to the `enhance_queryset` method, but combined for all
+        the fields of the same type. This can for example be used to efficiently
+        fetch all select options of N number of single select fields.
+
+        :param queryset: The queryset that can be enhanced.
+        :param field_objects: All field objects of the same type in the table that
+            must be enhanced.
+        :return: The enhanced queryset.
+        """
+
+        # By default, the `enhance_queryset` of the field type is called for all the
+        # fields. Typically, this will be overridden if the queryset is enhanced in
+        # bulk.
+        for field_object in field_objects:
+            queryset = self.enhance_queryset(
+                queryset, field_object["field"], field_object["name"]
+            )
+        return queryset
+
     def empty_query(
         self,
         field_name: str,

@@ -80,7 +80,10 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
-from baserow.core.db import collate_expression
+from baserow.core.db import (
+    CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
+    collate_expression,
+)
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.formula import BaserowFormulaException
 from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
@@ -2641,6 +2644,37 @@ class SelectOptionBaseFieldType(FieldType):
         # If there are any deleted options we need to backup
         return old_field.select_options.exclude(id__in=updated_ids).exists()
 
+    def enhance_queryset_in_bulk(self, queryset, field_objects):
+        existing_multi_field_prefetches = queryset.get_multi_field_prefetches()
+        select_model_prefetch = None
+
+        # Check if the queryset already contains a multi field prefetch for the same
+        # target, and use that one if so. This can happen if the `single_select` or
+        # `multiple_select` field has already called this method.
+        for prefetch in existing_multi_field_prefetches:
+            if (
+                isinstance(
+                    prefetch, CombinedForeignKeyAndManyToManyMultipleFieldPrefetch
+                )
+                and prefetch.target_model == SelectOption
+            ):
+                select_model_prefetch = prefetch
+                break
+
+        if not select_model_prefetch:
+            select_model_prefetch = CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                SelectOption,
+                # Must skip because the multiple_select works with dynamically
+                # generated models.
+                skip_target_check=True,
+            )
+            queryset = queryset.multi_field_prefetch(select_model_prefetch)
+
+        field_names = [field_object["name"] for field_object in field_objects]
+        select_model_prefetch.add_field_names(field_names)
+
+        return queryset
+
 
 class SingleSelectFieldType(SelectOptionBaseFieldType):
     type = "single_select"
@@ -2669,9 +2703,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
-        return queryset.prefetch_related(
-            models.Prefetch(name, queryset=SelectOption.objects.using("default").all())
-        )
+        # It's important that this individual enhance_queryset method exists, even
+        # though the enhance queryset in bulk exists, because the link_row field can
+        # prefetch the data individually.
+        return queryset.select_related(name)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> int:
         value = getattr(row, field.db_column)
@@ -3010,6 +3045,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
+        # It's important that this individual enhance_queryset method exists, even
+        # though the enhance queryset in bulk exists, because the link_row field can
+        # prefetch the data individually.
         return queryset.prefetch_related(name)
 
     def get_search_expression(self, field: MultipleSelectField, queryset) -> Expression:

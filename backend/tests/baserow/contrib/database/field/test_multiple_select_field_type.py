@@ -2,6 +2,8 @@ from datetime import date
 from io import BytesIO
 
 from django.apps.registry import apps
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
@@ -2264,6 +2266,69 @@ def test_multiple_select_adjacent_row(data_fixture):
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+def test_num_queries_n_number_of_multiple_select_field_get_rows_query(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red", order=1
+    )
+
+    handler = RowHandler()
+    handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{multiple_select_field.id}": [option_a.id],
+            },
+            {
+                f"field_{multiple_select_field.id}": [option_b.id],
+            },
+        ],
+    )
+
+    model = table.get_model()
+
+    with CaptureQueriesContext(connection) as query_1:
+        result = list(model.objects.all().enhance_by_fields())
+        list(getattr(result[0], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field.id}").all())
+
+    multiple_select_field_2 = data_fixture.create_multiple_select_field(
+        table=table, name="option_field_2", order=2, primary=True
+    )
+    option_1 = data_fixture.create_select_option(
+        field=multiple_select_field_2, value="1", color="blue", order=0
+    )
+    option_2 = data_fixture.create_select_option(
+        field=multiple_select_field_2, value="2", color="red", order=1
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    print(rows)
+    getattr(rows[0], f"field_{multiple_select_field_2.id}").set([option_1.id])
+    rows[0].save()
+    getattr(rows[1], f"field_{multiple_select_field_2.id}").set([option_2.id])
+    rows[1].save()
+
+    with CaptureQueriesContext(connection) as query_2:
+        result = list(model.objects.all().enhance_by_fields())
+        list(getattr(result[0], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[0], f"field_{multiple_select_field_2.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field_2.id}").all())
+
+    assert len(query_1.captured_queries) == len(query_2.captured_queries)
 
 
 @pytest.mark.django_db
