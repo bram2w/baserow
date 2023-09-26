@@ -1757,21 +1757,27 @@
           <br /><br />
           <a
             ref="colorPickerLink"
-            href="#"
             @click="$refs.colorPicker.toggle($refs.colorPickerLink)"
             >Open color picker context</a
           >
           <ColorPickerContext
             ref="colorPicker"
             v-model="color"
+            :variables="colorVariables"
           ></ColorPickerContext>
           <br /><br />
-          {{ color }}
-          <br /><br />
+          {{ color }} - {{ resolveColor(color, colorVariables) }} <br /><br />
           <div
-            :style="`width: 40px; height: 20px; background-color: ${color};`"
+            :style="{
+              width: '40px',
+              height: '20px',
+              'background-color': resolveColor(color, colorVariables),
+            }"
           ></div>
         </div>
+        <br /><br /><br />
+        <br /><br /><br />
+        <br /><br /><br />
       </div>
     </div>
   </div>
@@ -1783,6 +1789,7 @@ import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/Aut
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext.vue'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
 
 export default {
   components: {
@@ -1804,7 +1811,11 @@ export default {
       formula: 'concat(field("Text"), field("Text"))',
       image: BaserowIcon,
       input: '',
-      color: '#ffffffff',
+      color: 'primary',
+      colorVariables: [
+        { name: 'Primary', value: 'primary', color: '#985353ff' },
+        { name: 'Secondary', value: 'secondary', color: '#545398ff' },
+      ],
     }
   },
   head() {
@@ -1813,6 +1824,7 @@ export default {
     }
   },
   methods: {
+    resolveColor,
     alert(message) {
       alert(message)
     },
