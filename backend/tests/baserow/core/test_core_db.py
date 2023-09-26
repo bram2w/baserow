@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import CharField, Value
@@ -8,10 +10,22 @@ from django.test.utils import override_settings
 import pytest
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import Field, LongTextField, TextField
+from baserow.contrib.database.fields.models import (
+    Field,
+    LongTextField,
+    SelectOption,
+    TextField,
+)
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.models import GalleryView, GridView, View
-from baserow.core.db import LockedAtomicTransaction, specific_iterator
-from baserow.core.models import Settings
+from baserow.core.db import (
+    CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
+    LockedAtomicTransaction,
+    MultiFieldPrefetchQuerysetMixin,
+    QuerySet,
+    specific_iterator,
+)
+from baserow.core.models import Settings, Workspace
 
 
 @pytest.mark.django_db
@@ -274,3 +288,161 @@ def test_specific_iterator_per_content_type_with_nested_prefetch(
         list(specific_objects[1].table.field_set.all())
         list(specific_objects[2].table.field_set.all())
         list(specific_objects[3].table.field_set.all())
+
+
+@pytest.mark.django_db
+def test_multi_field_prefetch(data_fixture):
+    data_fixture.create_workspace()
+    data_fixture.create_workspace()
+
+    class TemporaryWorkspaceQueryset(MultiFieldPrefetchQuerysetMixin, QuerySet):
+        pass
+
+    class TemporaryWorkspace(Workspace):
+        temporary_multi_field_objects = TemporaryWorkspaceQueryset.as_manager()
+
+        class Meta:
+            proxy = True
+            app_label = Workspace._meta.app_label
+
+    prefetch_function = MagicMock()
+    prefetch_function_2 = MagicMock()
+
+    queryset = (
+        TemporaryWorkspace.temporary_multi_field_objects.all().multi_field_prefetch(
+            prefetch_function
+        )
+    )
+    list(queryset)
+
+    prefetch_function.assert_called_once()
+    assert isinstance(prefetch_function.call_args[0][0], TemporaryWorkspaceQueryset)
+
+    queryset = queryset.multi_field_prefetch(prefetch_function_2)
+    list(queryset)
+
+    assert prefetch_function.call_count == 2
+    prefetch_function_2.assert_called_once()
+
+
+# CombinedForeignKeyAndManyToManyMultipleFieldPrefetch
+@pytest.mark.django_db
+def test_combined_foreign_key_and_many_to_many_multiple_field_prefetch(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red", order=1
+    )
+    data_fixture.create_select_option(
+        field=single_select_field, value="C", color="red", order=2
+    )
+
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_1 = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+    option_2 = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red", order=1
+    )
+    data_fixture.create_select_option(
+        field=multiple_select_field, value="C", color="red", order=2
+    )
+
+    handler = RowHandler()
+    handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{single_select_field.id}": option_a.id,
+                f"field_{multiple_select_field.id}": [option_1.id],
+            },
+            {
+                f"field_{single_select_field.id}": option_b.id,
+                f"field_{multiple_select_field.id}": [option_2.id, option_1.id],
+            },
+            {
+                f"field_{single_select_field.id}": None,
+                f"field_{multiple_select_field.id}": [],
+            },
+        ],
+    )
+
+    model = table.get_model()
+    queryset = model.objects.all().multi_field_prefetch(
+        CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+            SelectOption, [f"field_{single_select_field.id}"], skip_target_check=True
+        ).add_field_names([f"field_{multiple_select_field.id}"])
+    )
+
+    # We expect three queries. One to fetch the rows, one to fetch the manytomany
+    # relations, and one to fetch the select options.
+    with django_assert_num_queries(3):
+        rows = list(queryset)
+        assert getattr(rows[0], f"field_{single_select_field.id}").id == option_a.id
+        assert [
+            v.id for v in getattr(rows[0], f"field_{multiple_select_field.id}").all()
+        ] == [option_1.id]
+        assert getattr(rows[1], f"field_{single_select_field.id}").id == option_b.id
+        assert [
+            v.id for v in getattr(rows[1], f"field_{multiple_select_field.id}").all()
+        ] == [
+            option_2.id,
+            option_1.id,
+        ]
+        assert getattr(rows[2], f"field_{single_select_field.id}_id") is None
+        assert [
+            v.id for v in getattr(rows[2], f"field_{multiple_select_field.id}").all()
+        ] == []
+
+
+@pytest.mark.django_db
+def test_combined_multiple_field_prefetch_different_foreign_key_target(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+
+    model = table.get_model()
+
+    with pytest.raises(ValueError):
+        list(
+            model.objects.all().multi_field_prefetch(
+                CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                    Workspace, [f"field_{single_select_field.id}"]
+                )
+            )
+        )
+
+
+@pytest.mark.django_db
+def test_multiple_field_prefetch_different_many_to_many_target(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+
+    model = table.get_model()
+
+    with pytest.raises(ValueError):
+        list(
+            model.objects.all().multi_field_prefetch(
+                CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                    Workspace, [f"field_{multiple_select_field.id}"]
+                )
+            )
+        )

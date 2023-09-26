@@ -219,7 +219,7 @@ def test_enhance_by_fields_queryset(data_fixture):
     model._field_objects[field.id]["type"] = mocked_type
     model.objects.all().enhance_by_fields()
 
-    mocked_type.enhance_queryset.assert_called()
+    mocked_type.enhance_queryset_in_bulk.assert_called()
 
 
 @pytest.mark.django_db

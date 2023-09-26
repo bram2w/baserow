@@ -1,7 +1,9 @@
 from io import BytesIO
 
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
@@ -863,7 +865,7 @@ def test_primary_single_select_field_with_link_row_field(
     queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(model, RowSerializer, is_response=True)
 
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(2):
         serializer = serializer_class(queryset, many=True)
         serializer.data
 
@@ -1106,6 +1108,68 @@ def test_single_select_adjacent_row(data_fixture):
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+def test_num_queries_n_number_of_single_select_field_get_rows_query(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red", order=1
+    )
+
+    handler = RowHandler()
+    handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{single_select_field.id}": option_a.id,
+            },
+            {
+                f"field_{single_select_field.id}": option_b.id,
+            },
+        ],
+    )
+
+    model = table.get_model()
+
+    with CaptureQueriesContext(connection) as query_1:
+        result = list(model.objects.all().enhance_by_fields())
+        getattr(result[0], f"field_{single_select_field.id}").id
+        getattr(result[1], f"field_{single_select_field.id}").id
+
+    single_select_field_2 = data_fixture.create_single_select_field(
+        table=table, name="option_field_2", order=2, primary=True
+    )
+    option_1 = data_fixture.create_select_option(
+        field=single_select_field_2, value="1", color="blue", order=0
+    )
+    option_2 = data_fixture.create_select_option(
+        field=single_select_field_2, value="2", color="red", order=1
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    setattr(rows[0], f"field_{single_select_field_2.id}_id", option_1.id)
+    rows[0].save()
+    setattr(rows[1], f"field_{single_select_field_2.id}_id", option_2.id)
+    rows[1].save()
+
+    with CaptureQueriesContext(connection) as query_2:
+        result = list(model.objects.all().enhance_by_fields())
+        print(getattr(result[0], f"field_{single_select_field.id}").id)
+        print(getattr(result[0], f"field_{single_select_field_2.id}").id)
+        print(getattr(result[1], f"field_{single_select_field.id}").id)
+        print(getattr(result[1], f"field_{single_select_field_2.id}").id)
+
+    assert len(query_1.captured_queries) == len(query_2.captured_queries)
 
 
 @pytest.mark.django_db
