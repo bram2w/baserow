@@ -9,6 +9,8 @@ import ImageElementForm from '@baserow/modules/builder/components/elements/compo
 import ImageElement from '@baserow/modules/builder/components/elements/components/ImageElement'
 import InputTextElement from '@baserow/modules/builder/components/elements/components/InputTextElement.vue'
 import InputTextElementForm from '@baserow/modules/builder/components/elements/components/forms/general/InputTextElementForm.vue'
+import TableElement from '@baserow/modules/builder/components/elements/components/TableElement.vue'
+import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm.vue'
 
 import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
@@ -374,5 +376,31 @@ export class ButtonElementType extends ElementType {
 
   get events() {
     return [ClickEvent]
+  }
+}
+
+export class TableElementType extends ElementType {
+  getType() {
+    return 'table'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.table')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.tableDescription')
+  }
+
+  get iconClass() {
+    return 'table'
+  }
+
+  get component() {
+    return TableElement
+  }
+
+  get generalFormComponent() {
+    return TableElementForm
   }
 }

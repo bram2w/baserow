@@ -60,6 +60,10 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
     return super.isValid(service) && Boolean(service.table_id)
   }
 
+  get isCollection() {
+    return true
+  }
+
   getOrder() {
     return 20
   }

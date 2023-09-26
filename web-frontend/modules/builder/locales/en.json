@@ -68,7 +68,9 @@
         "column": "Columns",
         "columnDescription": "Columns container",
         "button": "Button",
-        "buttonDescription": "A button element"
+        "buttonDescription": "A button element",
+        "table": "Table",
+        "tableDescription": "A table element"
     },
     "addElementButton": {
         "label": "Element"
@@ -291,5 +293,8 @@
     },
     "getFormulaComponent": {
         "errorTooltip": "Invalid reference"
+    },
+    "tableElementForm": {
+      "dataSource": "Data source"
     }
 }

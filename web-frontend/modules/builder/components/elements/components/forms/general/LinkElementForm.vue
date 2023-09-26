@@ -125,7 +125,6 @@ import {
   HORIZONTAL_ALIGNMENTS,
   WIDTHS,
 } from '@baserow/modules/builder/enums'
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
 import { PageParameterDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
@@ -134,7 +133,6 @@ export default {
   name: 'LinkElementForm',
   components: {
     WidthSelector,
-    FormulaInputGroup,
     ApplicationBuilderFormulaInputGroup,
     HorizontalAlignmentSelector,
   },
