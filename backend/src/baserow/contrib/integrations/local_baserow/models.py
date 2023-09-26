@@ -2,8 +2,10 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models import F, OrderBy
 
+from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import (
+    FILTER_TYPES,
     SORT_ORDER_ASC,
     SORT_ORDER_CHOICES,
     View,
@@ -32,6 +34,13 @@ class LocalBaserowIntegration(Integration):
 class LocalBaserowTableService(Service):
     view = models.ForeignKey(View, null=True, default=None, on_delete=models.SET_NULL)
     table = models.ForeignKey(Table, null=True, default=None, on_delete=models.SET_NULL)
+    filter_type = models.CharField(
+        max_length=3,
+        choices=FILTER_TYPES,
+        default=FILTER_TYPE_AND,
+        help_text="Indicates whether all the rows should apply to all filters (AND) "
+        "or to any filter (OR).",
+    )
 
     class Meta:
         abstract = True
