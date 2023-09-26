@@ -1,4 +1,20 @@
-from django.db.models import Avg, Count, Max, Min, StdDev, Sum, Variance
+from typing import Dict
+
+from django.db.models import (
+    Avg,
+    Case,
+    Count,
+    Exists,
+    Field,
+    ManyToManyField,
+    Max,
+    Min,
+    OuterRef,
+    StdDev,
+    Sum,
+    Variance,
+    When,
+)
 
 from baserow.contrib.database.db.aggregations import Percentile
 from baserow.contrib.database.fields.field_types import (
@@ -29,9 +45,22 @@ from baserow.contrib.database.formula import (
 )
 
 from .registries import ViewAggregationType
+from .utils import AnnotatedAggregation
 
 # See official django documentation for list of aggregator:
 # https://docs.djangoproject.com/en/4.0/ref/models/querysets/#aggregation-functions
+
+
+def get_has_relations_annotation(field_name: str, model_field: Field) -> Dict:
+    """
+    Generates an annotation dict that can be applied to a queryset. This can be used
+    to check whether a row has many to many relationships in a performant way.
+    """
+
+    through_model = model_field.remote_field.through
+    reversed_field = through_model._meta.get_fields()[1].name
+    subquery = through_model.objects.filter(**{f"{reversed_field}_id": OuterRef("pk")})
+    return {f"has_relations_{field_name}": Exists(subquery)}
 
 
 class EmptyCountViewAggregationType(ViewAggregationType):
@@ -69,11 +98,23 @@ class EmptyCountViewAggregationType(ViewAggregationType):
 
     def get_aggregation(self, field_name, model_field, field):
         field_type = field_type_registry.get_by_model(field)
-        return Count(
-            "id",
-            distinct=True,
-            filter=field_type.empty_query(field_name, model_field, field),
-        )
+
+        if isinstance(model_field, ManyToManyField):
+            # Using the normal `Count` aggregation for multiple manytomany fields
+            # results makes the response time exponentially slower for each field.
+            # This alternative way keeps it performant.
+            return AnnotatedAggregation(
+                annotations=get_has_relations_annotation(field_name, model_field),
+                aggregation=Count(
+                    Case(When(then=1, **{f"has_relations_{field_name}": False}))
+                ),
+            )
+        else:
+            return Count(
+                "id",
+                distinct=True,
+                filter=field_type.empty_query(field_name, model_field, field),
+            )
 
 
 class NotEmptyCountViewAggregationType(EmptyCountViewAggregationType):
@@ -87,11 +128,22 @@ class NotEmptyCountViewAggregationType(EmptyCountViewAggregationType):
     def get_aggregation(self, field_name, model_field, field):
         field_type = field_type_registry.get_by_model(field)
 
-        return Count(
-            "id",
-            distinct=True,
-            filter=~field_type.empty_query(field_name, model_field, field),
-        )
+        if isinstance(model_field, ManyToManyField):
+            # Using the normal `Count` aggregation for multiple manytomany fields
+            # results makes the response time exponentially slower for each field.
+            # This alternative way keeps it performant.
+            return AnnotatedAggregation(
+                annotations=get_has_relations_annotation(field_name, model_field),
+                aggregation=Count(
+                    Case(When(then=1, **{f"has_relations_{field_name}": True}))
+                ),
+            )
+        else:
+            return Count(
+                "id",
+                distinct=True,
+                filter=~field_type.empty_query(field_name, model_field, field),
+            )
 
 
 class UniqueCountViewAggregationType(ViewAggregationType):
