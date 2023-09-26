@@ -144,6 +144,7 @@ from .signals import (
     view_updated,
     views_reordered,
 )
+from .utils import AnnotatedAggregation
 from .validators import value_is_empty_for_required_form_field
 
 FieldOptionsDict = Dict[int, Dict[str, Any]]
@@ -2628,6 +2629,15 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             aggregation_dict[field_name] = aggregation_type.get_aggregation(
                 field_name, model_field, field
             )
+
+        # Check if the returned aggregations contain a `AnnotatedAggregation`,
+        # and if so, apply the annotations and only keep the actual aggregation in
+        # the dict. This is needed because some aggregations require annotated values
+        # before they work.
+        for key, value in aggregation_dict.items():
+            if isinstance(value, AnnotatedAggregation):
+                queryset = queryset.annotate(**value.annotations)
+                aggregation_dict[key] = value.aggregation
 
         # Add total to allow further calculation on the client if required
         if with_total:
