@@ -4,6 +4,7 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -48,6 +49,7 @@ from baserow.contrib.database.fields.operations import (
 )
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.handler import ViewHandler
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.models import TrashEntry
 from baserow.core.telemetry.utils import baserow_trace_methods
@@ -185,6 +187,27 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             raise FieldDoesNotExist(f"The field with id {field_id} does not exist.")
 
         return field
+
+    def get_fields(
+        self,
+        table: Table,
+        base_queryset: Optional[QuerySet] = None,
+        specific: bool = True,
+    ) -> Union[QuerySet[Field], Iterable[Field]]:
+        """
+        Gets all fields, optionally their specific subclass, of a given table.
+
+        :param table: The table we want to query fields from.
+        :param specific: Whether we want each field's specific subclass.
+        :param base_queryset: The base queryset to use to build the query.
+        :return: An iterable of fields.
+        """
+
+        queryset = base_queryset if base_queryset is not None else table.field_set.all()
+
+        if specific:
+            queryset = specific_iterator(queryset.select_related("content_type"))
+        return queryset
 
     def get_specific_field_for_update(
         self,

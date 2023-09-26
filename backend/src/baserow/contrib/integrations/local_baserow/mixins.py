@@ -109,8 +109,8 @@ class LocalBaserowTableServiceSortableMixin:
 
 class LocalBaserowTableServiceSearchableMixin:
     """
-    A mixin for LocalBaserow service types so that when they dispatch, search
-    queries applied to their service's table are applied to the queryset.
+    A mixin for `LocalBaserowTable` service types so that when they dispatch,
+    search queries applied to their service's table are applied to the queryset.
     """
 
     def get_dispatch_search(self, service: "ServiceSubClass") -> str:
