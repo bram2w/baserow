@@ -9,6 +9,7 @@
         />
         <Dropdown
           v-model="values.type"
+          fixed-items
           class="data-source-form__type-dropdown"
           :placeholder="$t('dataSourceForm.servicePlaceholder')"
         >
