@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Optional, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -123,6 +123,28 @@ class ServiceType(
             return self.type
 
         return getattr(service, prop_name)
+
+    def get_schema_name(self, service: Service) -> str:
+        """
+        The default schema name added to the `title` in a JSON Schema object.
+
+        :param service: The service we want to generate a schema `title` with.
+        :return: A string.
+        """
+
+        return f"Service{service.id}Schema"
+
+    def generate_schema(self, service: Service) -> Optional[Dict[str, Any]]:
+        """
+        Responsible for generating the full JSON Schema response. Must be
+        overridden by child classes so that the can return their service's
+        schema.
+
+        :param service: The service we want to generate a schema for.
+        :return: None, or a dictionary representing the schema.
+        """
+
+        return None
 
     def export_serialized(
         self,

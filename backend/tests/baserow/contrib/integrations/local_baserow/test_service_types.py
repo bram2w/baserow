@@ -1,4 +1,16 @@
+from unittest.mock import Mock
+
 import pytest
+from rest_framework.fields import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    DecimalField,
+    FloatField,
+    IntegerField,
+    UUIDField,
+)
+from rest_framework.serializers import ListSerializer, Serializer
 
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
@@ -6,11 +18,13 @@ from baserow.contrib.database.views.models import SORT_ORDER_ASC, SORT_ORDER_DES
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowGetRowUserServiceType,
     LocalBaserowListRowsUserServiceType,
+    LocalBaserowServiceType,
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
+from baserow.test_utils.helpers import setup_interesting_test_table
 
 
 @pytest.mark.django_db
@@ -605,3 +619,514 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
         row_2.id,
         row_3.id,
     ]
+
+
+@pytest.mark.django_db
+def test_local_baserow_table_service_generate_schema_with_no_table(data_fixture):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
+
+    get_row_service_type = LocalBaserowGetRowUserServiceType()
+    get_row_service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration
+    )
+    assert get_row_service_type.generate_schema(get_row_service) is None
+
+    list_rows_service_type = LocalBaserowListRowsUserServiceType()
+    list_rows_service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration
+    )
+    assert list_rows_service_type.generate_schema(list_rows_service) is None
+
+
+@pytest.mark.django_db
+def test_local_baserow_table_service_generate_schema_with_interesting_test_table(
+    data_fixture,
+):
+    def reset_metadata(schema, field_name):
+        # Responsible for resetting a schema's `metadata`,
+        # it's simply a nested serialized field. Clearing it makes
+        # testing this much simpler.
+        for field_id, obj in schema[field_name].items():
+            obj["metadata"] = {}
+
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
+    table, _, _, _, context = setup_interesting_test_table(
+        data_fixture,
+        user,
+    )
+    field_id_by_name = {field.name: str(field.id) for field in table.field_set.all()}
+
+    expected_local_baserow_table_service_schema_fields = {
+        field_id_by_name["text"]: {
+            "title": "text",
+            "default": "",
+            "original_type": "text",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["long_text"]: {
+            "title": "long_text",
+            "default": None,
+            "original_type": "long_text",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["url"]: {
+            "title": "url",
+            "default": None,
+            "original_type": "url",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["email"]: {
+            "title": "email",
+            "default": None,
+            "original_type": "email",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["negative_int"]: {
+            "title": "negative_int",
+            "default": None,
+            "original_type": "number",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["positive_int"]: {
+            "title": "positive_int",
+            "default": None,
+            "original_type": "number",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["negative_decimal"]: {
+            "title": "negative_decimal",
+            "default": None,
+            "original_type": "number",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["positive_decimal"]: {
+            "title": "positive_decimal",
+            "default": None,
+            "original_type": "number",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["rating"]: {
+            "title": "rating",
+            "default": None,
+            "original_type": "rating",
+            "metadata": {},
+            "type": "number",
+        },
+        field_id_by_name["boolean"]: {
+            "title": "boolean",
+            "default": None,
+            "original_type": "boolean",
+            "metadata": {},
+            "type": "boolean",
+        },
+        field_id_by_name["datetime_us"]: {
+            "title": "datetime_us",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["date_us"]: {
+            "title": "date_us",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["datetime_eu"]: {
+            "title": "datetime_eu",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["date_eu"]: {
+            "title": "date_eu",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["datetime_eu_tzone_visible"]: {
+            "title": "datetime_eu_tzone_visible",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["datetime_eu_tzone_hidden"]: {
+            "title": "datetime_eu_tzone_hidden",
+            "default": None,
+            "original_type": "date",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["last_modified_datetime_us"]: {
+            "title": "last_modified_datetime_us",
+            "default": None,
+            "original_type": "last_modified",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["last_modified_date_us"]: {
+            "title": "last_modified_date_us",
+            "default": None,
+            "original_type": "last_modified",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["last_modified_datetime_eu"]: {
+            "title": "last_modified_datetime_eu",
+            "default": None,
+            "original_type": "last_modified",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["last_modified_date_eu"]: {
+            "title": "last_modified_date_eu",
+            "default": None,
+            "original_type": "last_modified",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["last_modified_datetime_eu_tzone"]: {
+            "title": "last_modified_datetime_eu_tzone",
+            "default": None,
+            "original_type": "last_modified",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["created_on_datetime_us"]: {
+            "title": "created_on_datetime_us",
+            "default": None,
+            "original_type": "created_on",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["created_on_date_us"]: {
+            "title": "created_on_date_us",
+            "default": None,
+            "original_type": "created_on",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["created_on_datetime_eu"]: {
+            "title": "created_on_datetime_eu",
+            "default": None,
+            "original_type": "created_on",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["created_on_date_eu"]: {
+            "title": "created_on_date_eu",
+            "default": None,
+            "original_type": "created_on",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["created_on_datetime_eu_tzone"]: {
+            "title": "created_on_datetime_eu_tzone",
+            "default": None,
+            "original_type": "created_on",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["link_row"]: {
+            "title": "link_row",
+            "default": None,
+            "original_type": "link_row",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["self_link_row"]: {
+            "title": "self_link_row",
+            "default": None,
+            "original_type": "link_row",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["link_row_without_related"]: {
+            "title": "link_row_without_related",
+            "default": None,
+            "original_type": "link_row",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["decimal_link_row"]: {
+            "title": "decimal_link_row",
+            "default": None,
+            "original_type": "link_row",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["file_link_row"]: {
+            "title": "file_link_row",
+            "default": None,
+            "original_type": "link_row",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["file"]: {
+            "title": "file",
+            "default": None,
+            "original_type": "file",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["single_select"]: {
+            "title": "single_select",
+            "default": None,
+            "original_type": "single_select",
+            "metadata": {},
+            "type": "object",
+        },
+        field_id_by_name["multiple_select"]: {
+            "title": "multiple_select",
+            "default": None,
+            "original_type": "multiple_select",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["multiple_collaborators"]: {
+            "title": "multiple_collaborators",
+            "default": None,
+            "original_type": "multiple_collaborators",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+        field_id_by_name["phone_number"]: {
+            "title": "phone_number",
+            "default": None,
+            "original_type": "phone_number",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_text"]: {
+            "title": "formula_text",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_int"]: {
+            "title": "formula_int",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_bool"]: {
+            "title": "formula_bool",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "boolean",
+        },
+        field_id_by_name["formula_decimal"]: {
+            "title": "formula_decimal",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_dateinterval"]: {
+            "title": "formula_dateinterval",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_date"]: {
+            "title": "formula_date",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_singleselect"]: {
+            "title": "formula_singleselect",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "object",
+        },
+        field_id_by_name["formula_email"]: {
+            "title": "formula_email",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["formula_link_with_label"]: {
+            "title": "formula_link_with_label",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "object",
+        },
+        field_id_by_name["formula_link_url_only"]: {
+            "title": "formula_link_url_only",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "object",
+        },
+        field_id_by_name["count"]: {
+            "title": "count",
+            "default": None,
+            "original_type": "count",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["rollup"]: {
+            "title": "rollup",
+            "default": None,
+            "original_type": "rollup",
+            "metadata": {},
+            "type": "string",
+        },
+        field_id_by_name["lookup"]: {
+            "title": "lookup",
+            "default": None,
+            "original_type": "lookup",
+            "metadata": {},
+            "type": "array",
+            "items": {"oneOf": [{"type": "object"}]},
+        },
+    }
+
+    get_row_service_type = LocalBaserowGetRowUserServiceType()
+    get_row_service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration, table=table
+    )
+    get_row_schema = get_row_service_type.generate_schema((get_row_service))
+    reset_metadata(get_row_schema, "properties")
+    assert get_row_schema["type"] == "object"
+    assert (
+        get_row_schema["properties"]
+        == expected_local_baserow_table_service_schema_fields
+    )
+
+    list_rows_service_type = LocalBaserowListRowsUserServiceType()
+    list_rows_service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration, table=table
+    )
+    list_rows_schema = list_rows_service_type.generate_schema(list_rows_service)
+    reset_metadata(list_rows_schema, "items")
+    assert list_rows_schema["type"] == "array"
+    assert (
+        list_rows_schema["items"] == expected_local_baserow_table_service_schema_fields
+    )
+
+
+def test_guess_type_for_response_serialize_field_permutations():
+    TYPE_NULL = {"type": None}
+    TYPE_OBJECT = {"type": "object"}
+    TYPE_STRING = {"type": "string"}
+    TYPE_NUMBER = {"type": "number"}
+    TYPE_BOOLEAN = {"type": "boolean"}
+    TYPE_ARRAY_CHILD_OBJECT = {
+        "type": "array",
+        "items": {"oneOf": [TYPE_OBJECT]},
+    }
+    cls = LocalBaserowServiceType
+    cls.model_class = Mock()
+    assert (
+        cls().guess_json_type_from_response_serialize_field(UUIDField()) == TYPE_STRING
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(CharField()) == TYPE_STRING
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(
+            DecimalField(decimal_places=2, max_digits=4)
+        )
+        == TYPE_STRING
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(FloatField()) == TYPE_STRING
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(
+            ChoiceField(choices=("a", "b"))
+        )
+        == TYPE_STRING
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(IntegerField())
+        == TYPE_NUMBER
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(BooleanField())
+        == TYPE_BOOLEAN
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(
+            ListSerializer(child=Serializer())
+        )
+        == TYPE_ARRAY_CHILD_OBJECT
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field(Serializer()) == TYPE_OBJECT
+    )
+    assert (
+        cls().guess_json_type_from_response_serialize_field("unknown")  # type: ignore
+        == TYPE_NULL
+    )
+
+
+def test_local_baserow_service_type_get_schema_for_return_type():
+    mock_service = Mock(id=123)
+    cls = LocalBaserowServiceType
+    cls.model_class = Mock()
+    properties = {"1": {"field": "value"}}
+
+    cls.returns_list = True
+    assert cls().get_schema_for_return_type(mock_service, properties) == {
+        "type": "array",
+        "items": properties,
+        "title": "Service123Schema",
+    }
+
+    cls.returns_list = False
+    assert cls().get_schema_for_return_type(mock_service, properties) == {
+        "type": "object",
+        "properties": properties,
+        "title": "Service123Schema",
+    }
+
+
+def test_local_baserow_table_service_type_schema_name():
+    mock_service = Mock(table_id=123)
+    assert (
+        LocalBaserowGetRowUserServiceType().get_schema_name(mock_service)
+        == "Table123Schema"
+    )
+    assert (
+        LocalBaserowListRowsUserServiceType().get_schema_name(mock_service)
+        == "Table123Schema"
+    )

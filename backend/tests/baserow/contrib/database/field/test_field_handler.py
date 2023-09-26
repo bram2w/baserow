@@ -180,6 +180,25 @@ def test_get_field(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_fields(data_fixture):
+    user = data_fixture.create_user()
+    data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text = data_fixture.create_text_field(table=table)
+    number = data_fixture.create_number_field(table=table)
+
+    handler = FieldHandler()
+    assert set(handler.get_fields(table, specific=True)) == {number, text}
+    assert set(handler.get_fields(table, specific=False)) == {
+        number.field_ptr,
+        text.field_ptr,
+    }
+    assert handler.get_fields(
+        table, table.field_set.filter(id=number.id), specific=True
+    ) == [number]
+
+
+@pytest.mark.django_db
 @patch("baserow.contrib.database.fields.signals.field_created.send")
 def test_create_field(send_mock, data_fixture):
     user = data_fixture.create_user()

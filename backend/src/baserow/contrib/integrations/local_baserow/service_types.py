@@ -1,14 +1,31 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
+from rest_framework.fields import (
+    BooleanField,
+    CharField,
+    ChoiceField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    Field,
+    FloatField,
+    IntegerField,
+    TimeField,
+    UUIDField,
+)
+from rest_framework.serializers import ListSerializer, Serializer
 
+from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
+from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
@@ -34,11 +51,143 @@ from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import ServiceType
-from baserow.core.services.types import ServiceDict
+from baserow.core.services.types import ServiceDict, ServiceSubClass
+
+LocalBaserowTableServiceSubClass = Union[LocalBaserowGetRow, LocalBaserowListRows]
+
+
+class LocalBaserowServiceType(ServiceType):
+    """
+    The `ServiceType` for all `LocalBaserow` integration services.
+    """
+
+    def get_schema_for_return_type(
+        self, service: ServiceSubClass, properties: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """
+        Responsible for returning the JSON Schema object based on the
+        `returns_list` attribute set on this service type.
+
+        :param service: The service we are generating a schema for.
+        :param properties: A dictionary of properties which describe this service.
+        :return: A JSON Schema formatted dictionary.
+        """
+
+        return_type = "array" if self.returns_list else "object"
+        properties_name = "items" if self.returns_list else "properties"
+
+        return {
+            properties_name: properties,
+            "title": self.get_schema_name(service),
+            "type": return_type,
+        }
+
+    def guess_json_type_from_response_serialize_field(
+        self, serializer_field: Union[Field, Serializer]
+    ) -> Dict[str, Any]:
+        """
+        Responsible for taking a serializer field, and guessing what its JSON
+        type will be. If the field is a ListSerializer, and it has a child serializer,
+        we add the child's type as well.
+
+        :param serializer_field: The serializer field.
+        :return: A dictionary to add to our schema.
+        """
+
+        if isinstance(
+            serializer_field, (UUIDField, CharField, DecimalField, FloatField)
+        ):
+            # DecimalField/FloatField values are returned as strings from the API.
+            base_type = "string"
+        elif isinstance(serializer_field, (DateTimeField, DateField, TimeField)):
+            base_type = "string"
+        elif isinstance(serializer_field, ChoiceField):
+            base_type = "string"
+        elif isinstance(serializer_field, IntegerField):
+            base_type = "number"
+        elif isinstance(serializer_field, BooleanField):
+            base_type = "boolean"
+        elif isinstance(serializer_field, ListSerializer):
+            base_type = "array"
+            # ListSerializer.child is required, so add its subtype.
+            sub_type = self.guess_json_type_from_response_serialize_field(
+                serializer_field.child
+            )
+            return {"type": base_type, "items": {"oneOf": [sub_type]}}
+        elif issubclass(serializer_field.__class__, Serializer):
+            base_type = "object"
+        else:
+            base_type = None
+
+        return {"type": base_type}
+
+
+class LocalBaserowTableServiceType(LocalBaserowServiceType):
+    """
+    The `ServiceType` for `LocalBaserowTableService` subclasses.
+    """
+
+    def generate_schema(
+        self, service: LocalBaserowTableServiceSubClass
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Responsible for generating a dictionary in the JSON Schema spec. This helps
+        inform the frontend data source form and data explorer about the type of
+        schema the service is interacting with.
+
+        :param service: A `LocalBaserowTableService` subclass.
+        :return: A schema dictionary, or None if no `Table` has been applied.
+        """
+
+        table = service.table
+        if not table:
+            return None
+
+        properties = {}
+        fields = FieldHandler().get_fields(table, specific=True)
+        for field in fields:
+            field_type = field_type_registry.get_by_model(field)
+            # Only `TextField` has a default value at the moment.
+            default_value = getattr(field, "text_default", None)
+            field_serializer = field_type.get_serializer(field, FieldSerializer)
+            properties[str(field.id)] = {
+                "title": field.name,
+                "default": default_value,
+                "original_type": field_type.type,
+                "metadata": field_serializer.data,
+            } | self.get_json_type_from_response_serializer_field(field, field_type)
+
+        return self.get_schema_for_return_type(service, properties)
+
+    def get_schema_name(self, service: LocalBaserowTableServiceSubClass) -> str:
+        """
+        The default `LocalBaserowTableService` schema name.
+
+        :param service: The service we want to generate a schema `title` with.
+        :return: A string.
+        """
+
+        return f"Table{service.table_id}Schema"
+
+    def get_json_type_from_response_serializer_field(
+        self, field, field_type
+    ) -> Dict[str, Any]:
+        """
+        Responsible for taking a `Field` and `FieldType`, getting the field type's
+        response serializer field, and passing it into our serializer to JSON type
+        mapping method, `guess_json_type_from_response_serialize_field`.
+
+        :param field: The Baserow Field we want a type for.
+        :param field_type: The Baserow FieldType we want a type for.
+        :return: A dictionary to add to our schema.
+        """
+
+        serializer_field = field_type.get_response_serializer_field(field)
+        return self.guess_json_type_from_response_serialize_field(serializer_field)
 
 
 class LocalBaserowListRowsUserServiceType(
-    ServiceType,
+    LocalBaserowTableServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
@@ -59,10 +208,15 @@ class LocalBaserowListRowsUserServiceType(
         view_id: int
         search_query: str
 
-    serializer_field_names = ["table_id", "view_id", "search_query"]
     allowed_fields = ["table", "view", "search_query"]
 
-    serializer_field_overrides = {
+    serializer_field_names = [
+        "table_id",
+        "view_id",
+        "search_query",
+    ]
+
+    request_serializer_field_overrides = {
         "table_id": serializers.IntegerField(
             required=False,
             allow_null=True,
@@ -81,8 +235,11 @@ class LocalBaserowListRowsUserServiceType(
     }
 
     def enhance_queryset(self, queryset):
-        return queryset.select_related("view__table").prefetch_related(
-            "view__viewfilter_set", "view__viewsort_set", "view__viewgroupby_set"
+        return queryset.select_related("view", "table").prefetch_related(
+            "view__viewfilter_set",
+            "view__viewsort_set",
+            "table__field_set",
+            "view__viewgroupby_set",
         )
 
     def prepare_values(
@@ -194,7 +351,7 @@ class LocalBaserowListRowsUserServiceType(
 
 
 class LocalBaserowGetRowUserServiceType(
-    ServiceType,
+    LocalBaserowTableServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSearchableMixin,
 ):
@@ -213,10 +370,16 @@ class LocalBaserowGetRowUserServiceType(
         row_id: str
         search_query: str
 
-    serializer_field_names = ["table_id", "view_id", "row_id", "search_query"]
     allowed_fields = ["table", "view", "row_id", "search_query"]
 
-    serializer_field_overrides = {
+    serializer_field_names = [
+        "table_id",
+        "view_id",
+        "row_id",
+        "search_query",
+    ]
+
+    request_serializer_field_overrides = {
         "table_id": serializers.IntegerField(
             required=False,
             allow_null=True,
@@ -242,7 +405,7 @@ class LocalBaserowGetRowUserServiceType(
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
-            "view", "view__table__database", "view__table__database__workspace"
+            "table", "table__database", "table__database__workspace", "view"
         )
 
     def prepare_values(
@@ -361,7 +524,7 @@ class LocalBaserowGetRowUserServiceType(
             search_mode = SearchHandler.get_default_search_mode_for_table(table)
             queryset = queryset.search_all_fields(search_query, search_mode=search_mode)
 
-        # Find the `ViewFilter` applicable to this Service's View.
+        # Find the `filters` applicable to this Service's View.
         queryset = self.get_dispatch_filters(service, queryset, model)
 
         try:
