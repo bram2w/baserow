@@ -8,6 +8,7 @@ from django.core.files.storage import FileSystemStorage
 
 import pytest
 
+from baserow.contrib.database.fields.field_types import FileFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.rows.handler import RowHandler
@@ -302,3 +303,48 @@ def test_import_export_file_field(data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", imported_user_file.name)
     assert file_path.isfile()
     assert file_path.open().read() == "Hello World"
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.row_history
+def test_file_field_are_row_values_equal(
+    data_fixture, tmpdir, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    file1 = handler.upload_user_file(
+        user, "test.txt", ContentFile(b"Hello World"), storage=storage
+    )
+    file2 = handler.upload_user_file(
+        user, "test2.txt", ContentFile(b"Hello World 2"), storage=storage
+    )
+
+    with django_assert_num_queries(0):
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}], [{"name": file1.name}]
+            )
+            is True
+        )
+
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}, {"name": file2.name}],
+                [{"name": file2.name}, {"name": file1.name}],
+            )
+            is True
+        )
+
+        assert FileFieldType().are_row_values_equal([], []) is True
+
+        assert FileFieldType().are_row_values_equal([], [{"name": file1.name}]) is False
+
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}, {"name": file2.name}], [{"name": file1.name}]
+            )
+            is False
+        )

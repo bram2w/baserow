@@ -1,13 +1,35 @@
 <template>
   <div class="row-history-entry__field-content">
-    <div v-if="entry.before[fieldIdentifier]">
-      <div class="row-history-entry__diff row-history-entry__diff--removed">
-        {{ selectOptionValue(entry.before[fieldIdentifier]) }}
+    <div>
+      <div
+        v-if="entry.before[fieldIdentifier]"
+        class="row-history-field-select-option__diff row-history-field-select-option__diff--removed"
+      >
+        <div
+          class="row-history-field-select-option__diff-inner"
+          :class="
+            'background-color--' +
+            selectOptionColor(entry.before[fieldIdentifier])
+          "
+        >
+          {{ selectOptionValue(entry.before[fieldIdentifier]) }}
+        </div>
       </div>
     </div>
-    <div v-if="entry.after[fieldIdentifier]">
-      <div class="row-history-entry__diff row-history-entry__diff--added">
-        {{ selectOptionValue(entry.after[fieldIdentifier]) }}
+    <div>
+      <div
+        v-if="entry.after[fieldIdentifier]"
+        class="row-history-field-select-option__diff row-history-field-select-option__diff--added"
+      >
+        <div
+          class="row-history-field-select-option__diff-inner"
+          :class="
+            'background-color--' +
+            selectOptionColor(entry.after[fieldIdentifier])
+          "
+        >
+          {{ selectOptionValue(entry.after[fieldIdentifier]) }}
+        </div>
       </div>
     </div>
   </div>
@@ -25,13 +47,20 @@ export default {
       type: String,
       required: true,
     },
+    field: {
+      type: Object,
+      required: false,
+      default: null,
+    },
   },
   methods: {
     selectOptionValue(id) {
-      const value =
-        this.entry.fields_metadata[this.fieldIdentifier].select_options[id]
-          ?.value
-      return value || id
+      return this.entry.fields_metadata[this.fieldIdentifier].select_options[id]
+        ?.value
+    },
+    selectOptionColor(id) {
+      return this.entry.fields_metadata[this.fieldIdentifier].select_options[id]
+        ?.color
     },
   },
 }

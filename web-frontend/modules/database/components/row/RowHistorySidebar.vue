@@ -30,7 +30,19 @@
                 >
                   <span>{{ formatDateSeparator(entry.timestamp) }}</span>
                 </div>
-                <RowHistoryEntry :entry="entry" :fields="fields">
+                <RowHistoryEntry
+                  :entry="entry"
+                  :fields="fields"
+                  :class="{
+                    'row-history-entry--first':
+                      index === 0 ||
+                      shouldDisplayDateSeparator(
+                        entriesWithContents,
+                        'timestamp',
+                        index - 1
+                      ),
+                  }"
+                >
                 </RowHistoryEntry>
               </div>
             </template>

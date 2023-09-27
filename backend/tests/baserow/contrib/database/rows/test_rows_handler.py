@@ -681,11 +681,13 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
                 "id": speed_field.id,
                 "type": "number",
                 "number_decimal_places": 0,
+                "number_negative": False,
             },
             f"field_{price_field.id}": {
                 "id": price_field.id,
                 "type": "number",
                 "number_decimal_places": 2,
+                "number_negative": False,
             },
         },
         rows[1].id: {
@@ -693,6 +695,18 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
             f"field_{name_field.id}": {
                 "id": name_field.id,
                 "type": "text",
+            },
+            f"field_{speed_field.id}": {
+                "id": speed_field.id,
+                "type": "number",
+                "number_decimal_places": 0,
+                "number_negative": False,
+            },
+            f"field_{price_field.id}": {
+                "id": price_field.id,
+                "type": "number",
+                "number_decimal_places": 2,
+                "number_negative": False,
             },
         },
     }

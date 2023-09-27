@@ -2423,3 +2423,50 @@ def test_multiple_select_serialize_metadata_for_row_history(
             "select_options": {},
             "type": "multiple_select",
         }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.row_history
+def test_multiple_select_are_row_values_equal(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+            {"value": "Option 3", "color": "white"},
+            {"value": "Option 4", "color": "green"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(field=field, value="A", color="blue")
+    option_b = data_fixture.create_select_option(field=field, value="B", color="red")
+
+    with django_assert_num_queries(0):
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([option_a.id], [option_a.id])
+            is True
+        )
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal(
+                [option_a.id, option_b.id], [option_b.id, option_a.id]
+            )
+            is True
+        )
+
+        assert MultipleSelectFieldType().are_row_values_equal([], []) is True
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([], [option_a.id]) is False
+        )
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([option_a.id], [option_b.id])
+            is False
+        )

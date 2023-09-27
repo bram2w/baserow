@@ -1,29 +1,36 @@
 <template>
   <div class="row-history-entry__field-content">
-    <div v-if="removedItems">
-      <div
-        v-for="item in removedItems"
+    <ul class="row-history-field-multiple-collaborators__items">
+      <li
+        v-for="item in allItems"
         :key="item.id"
-        class="row-history-entry__diff row-history-entry__diff--removed"
+        class="row-history-field-multiple-collaborators__item"
       >
-        {{ collaboratorName(item.id) }}
-      </div>
-    </div>
-    <div v-if="addedItems">
-      <div
-        v-for="item in addedItems"
-        :key="item.id"
-        class="row-history-entry__diff row-history-entry__diff--added"
-      >
-        {{ collaboratorName(item.id) }}
-      </div>
-    </div>
+        <div
+          class="row-history-field-multiple-collaborators__name"
+          :class="{
+            'row-history-field-multiple-collaborators__item--removed':
+              removedItems.includes(item),
+            'row-history-field-multiple-collaborators__item--added':
+              addedItems.includes(item),
+          }"
+        >
+          {{ name(item) }}
+        </div>
+        <div class="row-history-field-multiple-collaborators__initials">
+          {{ initials(name(item)) }}
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
 <script>
+import collaboratorName from '@baserow/modules/database/mixins/collaboratorName'
+
 export default {
   name: 'RowHistoryFieldMultipleCollaborators',
+  mixins: [collaboratorName],
   props: {
     entry: {
       type: Object,
@@ -33,8 +40,16 @@ export default {
       type: String,
       required: true,
     },
+    field: {
+      type: Object,
+      required: false,
+      default: null,
+    },
   },
   computed: {
+    allItems() {
+      return this.removedItems.concat(this.addedItems)
+    },
     removedItems() {
       return this.entry.before[this.fieldIdentifier].filter((before) => {
         return (
@@ -55,10 +70,11 @@ export default {
     },
   },
   methods: {
-    collaboratorName(id) {
-      const name =
-        this.entry.fields_metadata[this.fieldIdentifier].collaborators[id]?.name
-      return name || id
+    name(item) {
+      return this.getCollaboratorName(item, this.store)
+    },
+    initials(name) {
+      return name.slice(0, 1).toUpperCase()
     },
   },
 }

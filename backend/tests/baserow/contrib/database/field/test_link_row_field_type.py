@@ -1748,3 +1748,44 @@ def test_link_row_serialize_metadata_for_row_history(
             "linked_rows": {},
             "type": "link_row",
         }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+@pytest.mark.row_history
+def test_link_row_are_row_values_equal(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    field = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    table2_model = table2.get_model()
+    table2_row1 = table2_model.objects.create()
+    table2_row2 = table2_model.objects.create()
+
+    with django_assert_num_queries(0):
+        assert (
+            LinkRowFieldType().are_row_values_equal([table2_row1.id], [table2_row1.id])
+            is True
+        )
+
+        assert (
+            LinkRowFieldType().are_row_values_equal(
+                [table2_row1.id, table2_row2.id], [table2_row2.id, table2_row1.id]
+            )
+            is True
+        )
+
+        assert LinkRowFieldType().are_row_values_equal([], []) is True
+
+        assert LinkRowFieldType().are_row_values_equal([], [table2_row1.id]) is False
+
+        assert (
+            LinkRowFieldType().are_row_values_equal([table2_row1.id], [table2_row2.id])
+            is False
+        )

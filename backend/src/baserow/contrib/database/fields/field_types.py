@@ -565,6 +565,7 @@ class NumberFieldType(FieldType):
         return {
             **base,
             "number_decimal_places": field.number_decimal_places,
+            "number_negative": field.number_negative,
         }
 
 
@@ -1108,6 +1109,20 @@ class DateFieldType(FieldType):
             "date_include_time", old_field.date_include_time
         )
         return old_field.date_include_time and not new_date_include_time
+
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+
+        return {
+            **base,
+            "date_format": field.date_format,
+            "date_include_time": field.date_include_time,
+            "date_time_format": field.date_time_format,
+            "date_show_tzinfo": field.date_show_tzinfo,
+            "date_force_timezone": field.date_force_timezone,
+        }
 
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
@@ -2278,6 +2293,9 @@ class LinkRowFieldType(FieldType):
             },
         }
 
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return set(value1) == set(value2)
+
 
 class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     type = "email"
@@ -2603,6 +2621,9 @@ class FileFieldType(FieldType):
             files.append(value)
 
         setattr(row, field_name, files)
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return {v["name"] for v in value1} == {v["name"] for v in value2}
 
 
 class SelectOptionBaseFieldType(FieldType):
@@ -3384,6 +3405,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                 **new_serialized_options,
             },
         }
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return set(value1) == set(value2)
 
 
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
@@ -4605,6 +4629,9 @@ class MultipleCollaboratorsFieldType(FieldType):
                 **new_serialized_collaborators,
             },
         }
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return {v["id"] for v in value1} == {v["id"] for v in value2}
 
     def serialize_to_input_value(self, field: Field, value: any) -> any:
         if value is None or len(value) == 0:

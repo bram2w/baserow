@@ -537,3 +537,44 @@ def test_multiple_collaborators_serialize_metadata_for_row_history(
             "collaborators": {},
             "type": "multiple_collaborators",
         }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_collaborators
+@pytest.mark.row_history
+def test_multiple_collaborators_are_row_values_equal(
+    data_fixture, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
+
+    with django_assert_num_queries(0):
+        assert (
+            MultipleCollaboratorsFieldType().are_row_values_equal(
+                [{"id": user3.id}], [{"id": user3.id}]
+            )
+            is True
+        )
+
+        assert (
+            MultipleCollaboratorsFieldType().are_row_values_equal(
+                [{"id": user.id}, {"id": user2.id}], [{"id": user2.id}, {"id": user.id}]
+            )
+            is True
+        )
+
+        assert MultipleCollaboratorsFieldType().are_row_values_equal([], []) is True
+
+        assert (
+            MultipleCollaboratorsFieldType().are_row_values_equal([], [{"id": user.id}])
+            is False
+        )
+
+        assert (
+            MultipleCollaboratorsFieldType().are_row_values_equal(
+                [{"id": user.id}, {"id": user2.id}], [{"id": user.id}, {"id": user3.id}]
+            )
+            is False
+        )

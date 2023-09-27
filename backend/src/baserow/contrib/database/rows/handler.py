@@ -1447,7 +1447,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         fields_metadata = metadata or {}
         for field in updated_fields:
-            if getattr(row, field.db_column) is not None:
+            if hasattr(row, field.db_column):
                 field_type = field_type_registry.get_by_model(field)
                 field_metadata = field_type.serialize_metadata_for_row_history(
                     field, row, fields_metadata.get(f"field_{field.id}", None)
