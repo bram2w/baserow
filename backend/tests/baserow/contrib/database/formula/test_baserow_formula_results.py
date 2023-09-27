@@ -803,6 +803,11 @@ INVALID_FORMULA_TESTS = [
             "of type text but the only usable type for this argument is link."
         ),
     ),
+    (
+        "second(today())",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: cannot extract seconds from a date without time.",
+    ),
 ]
 
 
