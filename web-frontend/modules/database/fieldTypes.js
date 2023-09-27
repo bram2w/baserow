@@ -83,10 +83,14 @@ import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFi
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
+import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
+import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
 import RowHistoryFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators'
 import RowHistoryFieldFile from '@baserow/modules/database/components/row/RowHistoryFieldFile'
 import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect'
 import RowHistoryFieldSingleSelect from '@baserow/modules/database/components/row/RowHistoryFieldSingleSelect'
+import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/RowHistoryFieldBoolean'
+import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 
@@ -861,7 +865,7 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+    return RowHistoryFieldLinkRow
   }
 
   getEmptyValue(field) {
@@ -1055,7 +1059,7 @@ export class NumberFieldType extends FieldType {
   }
 
   getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+    return RowHistoryFieldNumber
   }
 
   getSortIndicator() {
@@ -1386,7 +1390,7 @@ export class BooleanFieldType extends FieldType {
   }
 
   getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+    return RowHistoryFieldBoolean
   }
 
   getEmptyValue(field) {
@@ -1472,7 +1476,7 @@ class BaseDateFieldType extends FieldType {
   }
 
   getRowHistoryEntryComponent() {
-    return RowHistoryFieldText
+    return RowHistoryFieldDate
   }
 
   getSort(name, order) {

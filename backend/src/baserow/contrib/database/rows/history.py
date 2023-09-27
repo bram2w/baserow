@@ -7,6 +7,7 @@ from django.dispatch import receiver
 
 from opentelemetry import trace
 
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.core.action.signals import ActionCommandType, action_done
 from baserow.core.telemetry.utils import baserow_trace
 
@@ -65,23 +66,24 @@ class RowHistoryHandler:
         cls,
         before_values: Dict[str, Any],
         after_values: Dict[str, Any],
+        fields_metadata,
     ) -> Optional[RowChangeDiff]:
         """
         Extracts the fields that have changed between the before and after values of a
         row. Returns None if no fields have changed.
         """
 
-        # TODO: fixme using some field_type compare method. This is already
-        # broken for m2m fields where a list can contain the same values in a
-        # different order, resulting in a false positive.
-
-        def are_equal(before_value, after_value):
-            return before_value == after_value
+        def are_equal(field_identifier, before_value, after_value) -> bool:
+            field_type = fields_metadata[field_identifier]["type"]
+            field_type = field_type_registry.get(field_type)
+            return field_type.are_row_values_equal(before_value, after_value)
 
         changed_fields = {
             k
             for k, v in after_values.items()
-            if k in before_values and not are_equal(v, before_values[k])
+            if k != "id"
+            and k in before_values
+            and not are_equal(k, v, before_values[k])
         }
         if not changed_fields:
             return None
@@ -128,7 +130,7 @@ class RowHistoryHandler:
             fields_metadata = params.updated_fields_metadata_by_row_id[after["id"]]
             cls._raise_if_ids_mismatch(before, after, fields_metadata)
 
-            diff = cls._extract_row_diff(before, after)
+            diff = cls._extract_row_diff(before, after, fields_metadata)
             if diff is None:
                 continue
 

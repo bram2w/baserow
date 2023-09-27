@@ -2,28 +2,21 @@
   <div class="row-history-entry__field-content">
     <div
       v-for="item in allItems"
-      :key="item.id"
-      class="row-history-field-select-option__diff"
+      :key="item"
       :class="{
-        'row-history-field-select-option__diff--removed':
-          removedItems.includes(item),
-        'row-history-field-select-option__diff--added':
-          addedItems.includes(item),
+        'row-history-entry__diff--removed': removedItems.includes(item),
+        'row-history-entry__diff--added': addedItems.includes(item),
       }"
+      class="row-history-entry__diff"
     >
-      <div
-        class="row-history-field-select-option__diff-inner"
-        :class="'background-color--' + selectOptionColor(item)"
-      >
-        {{ selectOptionValue(item) }}
-      </div>
+      {{ rowName(item) }}
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'RowHistoryFieldMultipleSelect',
+  name: 'RowHistoryFieldLinkRow',
   props: {
     entry: {
       type: Object,
@@ -63,13 +56,9 @@ export default {
     },
   },
   methods: {
-    selectOptionValue(id) {
-      return this.entry.fields_metadata[this.fieldIdentifier].select_options[id]
+    rowName(id) {
+      return this.entry.fields_metadata[this.fieldIdentifier].linked_rows[id]
         ?.value
-    },
-    selectOptionColor(id) {
-      return this.entry.fields_metadata[this.fieldIdentifier].select_options[id]
-        ?.color
     },
   },
 }

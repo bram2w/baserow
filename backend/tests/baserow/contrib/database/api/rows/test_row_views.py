@@ -2263,6 +2263,7 @@ def test_list_row_history_for_different_rows(data_fixture, api_client):
                         "id": number_field.id,
                         "type": "number",
                         "number_decimal_places": 2,
+                        "number_negative": False,
                     },
                 },
             },
@@ -2521,6 +2522,7 @@ def test_list_row_history_for_different_fields(data_fixture, api_client):
                     f"field_{number_field.id}": {
                         "id": number_field.id,
                         "number_decimal_places": 2,
+                        "number_negative": False,
                         "type": "number",
                     },
                     f"field_{email_field.id}": {
@@ -2546,10 +2548,20 @@ def test_list_row_history_for_different_fields(data_fixture, api_client):
                     f"field_{date_field.id}": {
                         "id": date_field.id,
                         "type": "date",
+                        "date_force_timezone": None,
+                        "date_format": "ISO",
+                        "date_include_time": False,
+                        "date_time_format": "24",
+                        "date_show_tzinfo": False,
                     },
                     f"field_{datetime_field.id}": {
                         "id": datetime_field.id,
                         "type": "date",
+                        "date_force_timezone": None,
+                        "date_format": "ISO",
+                        "date_include_time": True,
+                        "date_time_format": "24",
+                        "date_show_tzinfo": False,
                     },
                     f"field_{file_field.id}": {
                         "id": file_field.id,

@@ -1614,6 +1614,18 @@ class FieldType(
             "type": self.type,
         }
 
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        """
+        Determines if two field values are the same.
+
+        :param value1: The first field value to compare.
+        :param value2: The second field value to compare.
+        :return: Boolean indicating whether value1 and value2 are in
+            fact the same.
+        """
+
+        return value1 == value2
+
 
 class ReadOnlyFieldHasNoInternalDbValueError(Exception):
     """

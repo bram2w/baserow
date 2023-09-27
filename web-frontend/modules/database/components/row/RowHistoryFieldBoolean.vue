@@ -1,13 +1,17 @@
 <template>
   <div class="row-history-entry__field-content">
     <div v-if="entry.before[fieldIdentifier]">
-      <div class="row-history-entry__diff row-history-entry__diff--removed">
-        {{ entry.before[fieldIdentifier] }}
+      <div
+        class="row-history-entry__diff row-history-entry__diff--removed row-history-field-boolean__diff"
+      >
+        <i class="fas fa-check row-history-field-boolean__checkbox-icon"></i>
       </div>
     </div>
     <div v-if="entry.after[fieldIdentifier]">
-      <div class="row-history-entry__diff row-history-entry__diff--added">
-        {{ entry.after[fieldIdentifier] }}
+      <div
+        class="row-history-entry__diff row-history-entry__diff--added row-history-field-boolean__diff"
+      >
+        <i class="fas fa-check row-history-field-boolean__checkbox-icon"></i>
       </div>
     </div>
   </div>
@@ -15,7 +19,7 @@
 
 <script>
 export default {
-  name: 'RowHistoryFieldText',
+  name: 'RowHistoryFieldBoolean',
   props: {
     entry: {
       type: Object,
