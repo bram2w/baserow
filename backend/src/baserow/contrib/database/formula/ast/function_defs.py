@@ -2387,13 +2387,18 @@ class BaserowSecond(OneArgumentBaserowFunction):
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
-        arg: BaserowExpression[BaserowFormulaValidType],
+        arg: BaserowExpression[BaserowFormulaDateType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(
-            BaserowFormulaNumberType(
-                number_decimal_places=0, nullable=arg.expression_type.nullable
+        if not arg.expression_type.date_include_time:
+            return func_call.with_invalid_type(
+                "cannot extract seconds from a date without time"
             )
-        )
+        else:
+            return func_call.with_valid_type(
+                BaserowFormulaNumberType(
+                    number_decimal_places=0, nullable=arg.expression_type.nullable
+                )
+            )
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return BaserowExtract(
