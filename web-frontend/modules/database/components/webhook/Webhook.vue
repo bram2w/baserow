@@ -12,10 +12,10 @@
           <a href="#" class="webhook__head-toggle" @click="toggleExpand()">
             {{ $t('webhook.details') }}
             <i
-              class="fas webhook__head-toggle-icon"
+              class="webhook__head-toggle-icon"
               :class="{
-                'fa-chevron-down': !isExpanded,
-                'fa-chevron-up': isExpanded,
+                'iconoir-nav-arrow-down': !isExpanded,
+                'iconoir-nav-arrow-up': isExpanded,
               }"
             ></i>
           </a>

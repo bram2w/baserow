@@ -1,5 +1,6 @@
 <template>
   <div
+    v-tooltip="tooltipText"
     class="view-sharing__option"
     :class="{ 'view-sharing__option--disabled': !hasPremiumFeatures }"
     @click="click"
@@ -10,16 +11,13 @@
       :disabled="!hasPremiumFeatures"
       @input="update"
     ></SwitchInput>
-    <div v-tooltip="tooltipText" class="margin-left-2">
-      <img
-        src="@baserow/modules/core/static/img/baserow-icon.svg"
-        class="margin-right-1"
-      />
-      <span>
-        {{ $t('shareLinkOptions.baserowLogo.label') }}
-      </span>
-      <i v-if="!hasPremiumFeatures" class="deactivated-label fas fa-lock"></i>
-    </div>
+
+    <img src="@baserow/modules/core/static/img/baserow-icon.svg" />
+    <span>
+      {{ $t('shareLinkOptions.baserowLogo.label') }}
+    </span>
+    <i v-if="!hasPremiumFeatures" class="deactivated-label iconoir-lock"></i>
+
     <PremiumModal
       v-if="!hasPremiumFeatures"
       ref="premiumModal"

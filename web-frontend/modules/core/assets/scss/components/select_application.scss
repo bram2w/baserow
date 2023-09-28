@@ -51,14 +51,15 @@
 }
 
 .select-application__icon {
-  @include center-text(32px, 14px);
-
-  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
   background-color: $color-primary-500;
   color: $white;
   font-size: 14px;
   margin-right: 12px;
+  justify-content: center;
   @include rounded($rounded);
+  @include flex-align-items();
 }
 
 .select-application__name {

@@ -52,7 +52,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
         exportTableDropdown.exportEntireTable
        
                   <i
-                    class="dropdown__toggle-icon fas fa-caret-down"
+                    class="dropdown__toggle-icon iconoir-nav-arrow-down"
                   />
                 </a>
                  
@@ -63,7 +63,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                     class="select__search"
                   >
                     <i
-                      class="select__search-icon fas fa-search"
+                      class="select__search-icon iconoir-search"
                     />
                      
                     <input
@@ -100,6 +100,10 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                         </div>
                          
                         <!---->
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </a>
                     </li>
                      
@@ -113,7 +117,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           class="select__item-name"
                         >
                           <i
-                            class="select__item-icon fas fa-fw fa-bars"
+                            class="select__item-icon iconoir-menu"
                           />
                            
                           <!---->
@@ -125,6 +129,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                             mock_view_1
                           </span>
                         </div>
+                         
+                        <!---->
                          
                         <!---->
                       </a>
@@ -160,12 +166,18 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       class="choice-items__link active"
                     >
                       <i
-                        class="choice-items__icon fas fa-file-csv"
+                        class="choice-items__icon baserow-icon-file-csv"
                       />
-                      
-    exporterType.csv
-    
+                       
+                      <span>
+                        exporterType.csv
+                      </span>
+                       
                       <!---->
+                       
+                      <i
+                        class="choice-items__icon-active iconoir-check-circle"
+                      />
                     </a>
                      
                     <!---->
@@ -212,7 +224,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
         ,
        
                     <i
-                      class="dropdown__toggle-icon fas fa-caret-down"
+                      class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
                   </a>
                    
@@ -223,7 +235,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       class="select__search"
                     >
                       <i
-                        class="select__search-icon fas fa-search"
+                        class="select__search-icon iconoir-search"
                       />
                        
                       <input
@@ -260,6 +272,10 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <i
+                            class="select__item-active-icon iconoir-check-circle"
+                          />
                         </a>
                       </li>
                        
@@ -283,6 +299,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               ;
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -310,6 +328,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -333,6 +353,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               &lt;tab&gt;
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -360,6 +382,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -383,6 +407,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               tableCSVExporter.unitSeparator (31)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -427,7 +453,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
         Unicode (UTF-8)
        
                     <i
-                      class="dropdown__toggle-icon fas fa-caret-down"
+                      class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
                   </a>
                    
@@ -438,7 +464,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       class="select__search"
                     >
                       <i
-                        class="select__search-icon fas fa-search"
+                        class="select__search-icon iconoir-search"
                       />
                        
                       <input
@@ -475,6 +501,10 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <i
+                            class="select__item-active-icon iconoir-check-circle"
+                          />
                         </a>
                       </li>
                        
@@ -498,6 +528,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Arabic (ISO-8859-6)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -525,6 +557,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -548,6 +582,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Baltic (ISO-8859-4)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -575,6 +611,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -598,6 +636,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Celtic (ISO-8859-14)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -625,6 +665,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -648,6 +690,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Central European (Windows-1250)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -675,6 +719,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -698,6 +744,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Chinese (GB18030)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -725,6 +773,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -748,6 +798,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Cyrillic (KOI8-R)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -775,6 +827,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -798,6 +852,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Cyrillic (ISO-8859-5)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -825,6 +881,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -848,6 +906,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Cyrillic Mac OS (x-mac-cyrillic)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -875,6 +935,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -898,6 +960,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Greek (Windows-1253)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -925,6 +989,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -948,6 +1014,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Hebrew (Windows-1255)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -975,6 +1043,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -998,6 +1068,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Japanese (ISO-2022-JP)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1025,6 +1097,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1048,6 +1122,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Korean (EUC-KR)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1075,6 +1151,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1098,6 +1176,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Nordic (ISO-8859-10)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1125,6 +1205,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1148,6 +1230,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Thai (Windows-874)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1175,6 +1259,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1198,6 +1284,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Vietnamese (Windows-1258)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1225,6 +1313,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1250,6 +1340,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1273,6 +1365,8 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                               Latin 3 (ISO-8859-3)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1310,7 +1404,10 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                 <div
                   class="checkbox checkbox--has-content active"
                 >
-                  common.yes
+                  <i
+                    class="checkbox__checked-icon iconoir-check"
+                  />
+                   common.yes
                 </div>
               </div>
             </div>
@@ -1337,7 +1434,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
       class="modal__close"
     >
       <i
-        class="fas fa-times"
+        class="iconoir-cancel"
       />
     </a>
   </div>
@@ -1390,7 +1487,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                   class="dropdown__selected"
                 >
                   <i
-                    class="dropdown__selected-icon fas fa-bars"
+                    class="dropdown__selected-icon iconoir-menu"
                   />
                    
                   <!---->
@@ -1398,7 +1495,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
         mock_view_1
        
                   <i
-                    class="dropdown__toggle-icon fas fa-caret-down"
+                    class="dropdown__toggle-icon iconoir-nav-arrow-down"
                   />
                 </a>
                  
@@ -1409,7 +1506,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                     class="select__search"
                   >
                     <i
-                      class="select__search-icon fas fa-search"
+                      class="select__search-icon iconoir-search"
                     />
                      
                     <input
@@ -1446,6 +1543,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                         </div>
                          
                         <!---->
+                         
+                        <!---->
                       </a>
                     </li>
                      
@@ -1459,7 +1558,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           class="select__item-name"
                         >
                           <i
-                            class="select__item-icon fas fa-fw fa-bars"
+                            class="select__item-icon iconoir-menu"
                           />
                            
                           <!---->
@@ -1473,6 +1572,10 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                         </div>
                          
                         <!---->
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </a>
                     </li>
                   </ul>
@@ -1506,12 +1609,18 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       class="choice-items__link active"
                     >
                       <i
-                        class="choice-items__icon fas fa-file-csv"
+                        class="choice-items__icon baserow-icon-file-csv"
                       />
-                      
-    exporterType.csv
-    
+                       
+                      <span>
+                        exporterType.csv
+                      </span>
+                       
                       <!---->
+                       
+                      <i
+                        class="choice-items__icon-active iconoir-check-circle"
+                      />
                     </a>
                      
                     <!---->
@@ -1558,7 +1667,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
         ,
        
                     <i
-                      class="dropdown__toggle-icon fas fa-caret-down"
+                      class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
                   </a>
                    
@@ -1569,7 +1678,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       class="select__search"
                     >
                       <i
-                        class="select__search-icon fas fa-search"
+                        class="select__search-icon iconoir-search"
                       />
                        
                       <input
@@ -1606,6 +1715,10 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <i
+                            class="select__item-active-icon iconoir-check-circle"
+                          />
                         </a>
                       </li>
                        
@@ -1629,6 +1742,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               ;
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1656,6 +1771,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1679,6 +1796,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               &lt;tab&gt;
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1706,6 +1825,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1729,6 +1850,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               tableCSVExporter.unitSeparator (31)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1773,7 +1896,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
         Unicode (UTF-8)
        
                     <i
-                      class="dropdown__toggle-icon fas fa-caret-down"
+                      class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
                   </a>
                    
@@ -1784,7 +1907,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       class="select__search"
                     >
                       <i
-                        class="select__search-icon fas fa-search"
+                        class="select__search-icon iconoir-search"
                       />
                        
                       <input
@@ -1821,6 +1944,10 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <i
+                            class="select__item-active-icon iconoir-check-circle"
+                          />
                         </a>
                       </li>
                        
@@ -1844,6 +1971,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Arabic (ISO-8859-6)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1871,6 +2000,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1894,6 +2025,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Baltic (ISO-8859-4)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1921,6 +2054,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1944,6 +2079,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Celtic (ISO-8859-14)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -1971,6 +2108,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -1994,6 +2133,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Central European (Windows-1250)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2021,6 +2162,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2044,6 +2187,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Chinese (GB18030)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2071,6 +2216,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2094,6 +2241,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Cyrillic (KOI8-R)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2121,6 +2270,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2144,6 +2295,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Cyrillic (ISO-8859-5)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2171,6 +2324,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2194,6 +2349,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Cyrillic Mac OS (x-mac-cyrillic)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2221,6 +2378,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2244,6 +2403,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Greek (Windows-1253)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2271,6 +2432,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2294,6 +2457,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Hebrew (Windows-1255)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2321,6 +2486,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2344,6 +2511,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Japanese (ISO-2022-JP)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2371,6 +2540,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2394,6 +2565,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Korean (EUC-KR)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2421,6 +2594,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2444,6 +2619,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Nordic (ISO-8859-10)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2471,6 +2648,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2494,6 +2673,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Thai (Windows-874)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2521,6 +2702,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2544,6 +2727,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Vietnamese (Windows-1258)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2571,6 +2756,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2596,6 +2783,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
+                           
+                          <!---->
                         </a>
                       </li>
                        
@@ -2619,6 +2808,8 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                               Latin 3 (ISO-8859-3)
                             </span>
                           </div>
+                           
+                          <!---->
                            
                           <!---->
                         </a>
@@ -2656,7 +2847,10 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                 <div
                   class="checkbox checkbox--has-content active"
                 >
-                  common.yes
+                  <i
+                    class="checkbox__checked-icon iconoir-check"
+                  />
+                   common.yes
                 </div>
               </div>
             </div>
@@ -2683,7 +2877,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
       class="modal__close"
     >
       <i
-        class="fas fa-times"
+        class="iconoir-cancel"
       />
     </a>
   </div>

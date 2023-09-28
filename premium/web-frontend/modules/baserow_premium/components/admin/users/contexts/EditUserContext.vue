@@ -5,13 +5,13 @@
       <ul class="context__menu">
         <li>
           <a @click.prevent="showEditModal">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon iconoir-edit-pencil"></i>
             {{ $t('action.edit') }}
           </a>
         </li>
         <li>
           <a @click.prevent="showChangePasswordModal">
-            <i class="context__menu-icon fas fa-fw fa-key"></i>
+            <i class="context__menu-icon iconoir-key-alt"></i>
             {{ $t('editUserContext.changePassword') }}
           </a>
         </li>
@@ -23,7 +23,7 @@
             }"
             @click.prevent="deactivate"
           >
-            <i class="context__menu-icon fas fa-fw fa-times"></i>
+            <i class="context__menu-icon iconoir-cancel"></i>
             {{ $t('action.deactivate') }}
           </a>
           <a
@@ -33,7 +33,7 @@
             }"
             @click.prevent="activate"
           >
-            <i class="context__menu-icon fas fa-fw fa-check"></i>
+            <i class="context__menu-icon iconoir-check"></i>
             {{ $t('action.activate') }}
           </a>
         </li>
@@ -44,13 +44,13 @@
             }"
             @click.prevent="impersonate"
           >
-            <i class="context__menu-icon fas fa-fw fa-user-friends"></i>
+            <i class="context__menu-icon iconoir-group"></i>
             {{ $t('editUserContext.impersonate') }}
           </a>
         </li>
         <li>
           <a @click.prevent="showDeleteModal">
-            <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('editUserContext.delete') }}
           </a>
         </li>

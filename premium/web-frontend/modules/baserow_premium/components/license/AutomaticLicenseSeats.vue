@@ -18,7 +18,7 @@
     >
       <div class="delete-section__label">
         <div class="delete-section__label-icon">
-          <i class="fas fa-exclamation"></i>
+          <i class="iconoir-warning-triangle"></i>
         </div>
         {{ $t('license.moreSeatsNeededTitle') }}
       </div>

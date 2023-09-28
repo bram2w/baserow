@@ -9,7 +9,7 @@
           class="dashboard__sidebar-link"
           @click="$emit('workspace-selected', workspace)"
         >
-          <i class="fas fa-fw fa-layer-group"></i>
+          <i class="iconoir-book-stack"></i>
           {{ workspace.name }}
         </a>
       </li>
@@ -19,7 +19,7 @@
           class="dashboard__sidebar-link dashboard__sidebar-link--light"
           @click="$emit('create-workspace-clicked')"
         >
-          <i class="fas fa-fw fa-plus"></i>
+          <i class="iconoir-plus"></i>
           {{ $t('dashboard.createWorkspace') }}
         </a>
       </li>
@@ -39,7 +39,7 @@
           href="https://baserow.io/user-docs"
           target="_blank"
         >
-          <i class="fas fa-fw fa-question-circle"></i>
+          <i class="iconoir-chat-bubble-question"></i>
           {{ $t('dashboardSidebar.knowledgeBase') }}
         </a>
       </li>
@@ -49,25 +49,25 @@
           href="https://baserow.io/blog/category/tutorials"
           target="_blank"
         >
-          <i class="fas fa-fw fa-graduation-cap"></i>
+          <i class="iconoir-graduation-cap"></i>
           {{ $t('dashboardSidebar.tutorials') }}
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="$refs.settingsModal.show()">
-          <i class="fas fa-fw fa-cogs"></i>
+          <i class="iconoir-settings"></i>
           {{ $t('dashboardSidebar.userSettings') }}
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="$refs.trashModal.show()">
-          <i class="fas fa-fw fa-trash"></i>
+          <i class="iconoir-bin"></i>
           {{ $t('dashboardSidebar.trash') }}
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="logoff()">
-          <i class="fas fa-fw fa-sign-out-alt"></i>
+          <i class="iconoir-log-out"></i>
           {{ $t('dashboardSidebar.logoff') }}
         </a>
       </li>

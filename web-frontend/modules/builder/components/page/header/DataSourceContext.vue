@@ -35,7 +35,7 @@
 
       <Button
         type="link"
-        prepend-icon="plus"
+        prepend-icon="iconoir-plus"
         :loading="creationInProgress"
         @click="createDataSource()"
       >

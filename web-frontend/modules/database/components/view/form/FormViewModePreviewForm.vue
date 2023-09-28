@@ -19,7 +19,7 @@
           class="form_view__file-delete"
           @click="updateForm({ cover_image: null })"
         >
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
           {{ $t('action.remove') }}
         </a>
       </template>
@@ -53,6 +53,8 @@
             class="form-view__edit"
             :class="{ 'form-view__edit--hidden': editingTitle }"
             @click="$refs.title.edit()"
+          >
+            <i class="form-view__edit-icon iconoir-edit-pencil"></i
           ></a>
         </h1>
         <p v-if="!readOnly || view.description" class="form-view__description">
@@ -69,6 +71,8 @@
             class="form-view__edit"
             :class="{ 'form-view__edit--hidden': editingDescription }"
             @click="$refs.description.edit()"
+          >
+            <i class="form-view__edit-icon iconoir-edit-pencil"></i
           ></a>
         </p>
         <div v-if="fields.length === 0" class="form-view__no-fields">
@@ -118,6 +122,8 @@
             class="form-view__edit"
             :class="{ 'form-view__edit--hidden': editingSubmitText }"
             @click="$refs.submit_text.edit()"
+          >
+            <i class="form-view__edit-icon iconoir-edit-pencil"></i
           ></a>
         </div>
       </div>

@@ -13,11 +13,11 @@
         >
           {{ $t('mainThemeConfigBlock.colorsLabel') }}
           <i
-            class="fas fa-chevron-down theme_settings__section-title-icon"
+            class="iconoir-nav-arrow-down theme_settings__section-title-icon"
             :class="{
-              'fas theme_settings__section-title-icon': true,
-              'fa-chevron-down': !isClosed('colors'),
-              'fa-chevron-right': isClosed('colors'),
+              'theme_settings__section-title-icon': true,
+              'iconoir-nav-arrow-down': !isClosed('colors'),
+              'iconoir-nav-arrow-right': isClosed('colors'),
             }"
           ></i>
         </a>
@@ -66,11 +66,11 @@
           >
             {{ $t('mainThemeConfigBlock.typography') }}
             <i
-              class="fas fa-chevron-down theme_settings__section-title-icon"
+              class="iconoir-nav-arrow-down theme_settings__section-title-icon"
               :class="{
-                'fas theme_settings__section-title-icon': true,
-                'fa-chevron-down': !isClosed('typography'),
-                'fa-chevron-right': isClosed('typography'),
+                'theme_settings__section-title-icon': true,
+                'iconoir-nav-arrow-down': !isClosed('typography'),
+                'iconoir-nav-arrow-right': isClosed('typography'),
               }"
             ></i>
           </a>

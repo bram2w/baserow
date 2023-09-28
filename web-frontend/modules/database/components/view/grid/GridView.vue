@@ -139,7 +139,7 @@
       <ul v-show="isMultiSelectActive" class="context__menu">
         <li>
           <a @click=";[copySelection(), $refs.rowContext.hide()]">
-            <i class="context__menu-icon fas fa-fw fa-copy"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridView.copyCells') }}
           </a>
         </li>
@@ -157,7 +157,7 @@
             :class="{ 'context__menu-item--loading': deletingRow }"
             @click.stop="deleteRowsFromMultipleCellSelection()"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRows') }}
           </a>
         </li>
@@ -167,7 +167,7 @@
           <a
             @click=";[selectRow($event, selectedRow), $refs.rowContext.hide()]"
           >
-            <i class="context__menu-icon fas fa-fw fa-check-square"></i>
+            <i class="context__menu-icon iconoir-check-circle"></i>
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
@@ -182,7 +182,7 @@
           "
         >
           <a @click="addRowAboveSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
+            <i class="context__menu-icon iconoir-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
@@ -197,7 +197,7 @@
           "
         >
           <a @click="addRowBelowSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
+            <i class="context__menu-icon iconoir-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
@@ -212,13 +212,13 @@
           "
         >
           <a @click="duplicateSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
         <li v-if="!readOnly">
           <a @click="copyLinkToSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-link"></i>
+            <i class="context__menu-icon iconoir-link"></i>
             {{ $t('gridView.copyRowURL') }}
           </a>
         </li>
@@ -228,7 +228,7 @@
               ;[openRowEditModal(selectedRow.id), $refs.rowContext.hide()]
             "
           >
-            <i class="context__menu-icon fas fa-fw fa-expand"></i>
+            <i class="context__menu-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
@@ -243,7 +243,7 @@
           "
         >
           <a @click="deleteRow(selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRow') }}
           </a>
         </li>

@@ -13,7 +13,7 @@
           )
         "
       >
-        <i class="header__filter-icon fas fa-cog"></i>
+        <i class="header__filter-icon iconoir-settings"></i>
         <span class="header__filter-name">{{
           $t('galleryViewHeader.customizeCards')
         }}</span>

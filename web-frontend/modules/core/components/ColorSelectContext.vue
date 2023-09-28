@@ -15,7 +15,12 @@
             color === active ? 'active' : '',
           ]"
           @click="select(color)"
-        ></a>
+        >
+          <i
+            v-if="color === active"
+            class="color-select-context__active-icon iconoir-check"
+          ></i>
+        </a>
       </div>
     </div>
   </Context>

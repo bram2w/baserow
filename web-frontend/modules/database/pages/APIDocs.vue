@@ -15,7 +15,7 @@
       </div>
       <APIDocsSelectDatabase />
       <nuxt-link :to="{ name: 'dashboard' }" class="select-application__back">
-        <i class="fas fa-arrow-left"></i>
+        <i class="iconoir-arrow-left"></i>
         {{ $t('apiDocsComponent.back') }}
       </nuxt-link>
       <SettingsModal ref="settingsModal"></SettingsModal>

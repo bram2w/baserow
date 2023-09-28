@@ -133,7 +133,7 @@ export class ColumnElementType extends ContainerElementType {
   }
 
   get iconClass() {
-    return 'columns'
+    return 'iconoir-view-columns-3'
   }
 
   get component() {
@@ -169,7 +169,7 @@ export class HeadingElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'heading'
+    return 'iconoir-text'
   }
 
   get component() {
@@ -195,7 +195,7 @@ export class ParagraphElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'paragraph'
+    return 'iconoir-text-box'
   }
 
   get component() {
@@ -221,7 +221,7 @@ export class LinkElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'link'
+    return 'iconoir-link'
   }
 
   get component() {
@@ -311,7 +311,7 @@ export class ImageElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'image'
+    return 'iconoir-media-image'
   }
 
   get component() {
@@ -337,7 +337,7 @@ export class InputTextElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'keyboard'
+    return 'iconoir-input-field'
   }
 
   get component() {
@@ -363,7 +363,7 @@ export class ButtonElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'square'
+    return 'iconoir-square-cursor'
   }
 
   get component() {

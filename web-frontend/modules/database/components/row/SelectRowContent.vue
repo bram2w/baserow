@@ -3,7 +3,7 @@
     <div v-if="!loaded" class="select-row-modal__initial-loading"></div>
     <div v-if="loaded" :class="{ 'select-row-modal__loading': loading }">
       <div class="select-row-modal__search">
-        <i class="fas fa-search select-row-modal__search-icon"></i>
+        <i class="iconoir-search select-row-modal__search-icon"></i>
         <input
           ref="search"
           v-model="visibleSearch"

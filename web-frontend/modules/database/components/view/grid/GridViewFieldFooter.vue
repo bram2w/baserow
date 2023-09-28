@@ -29,8 +29,12 @@
           :class="{ active: !viewAggregationType }"
         >
           <a class="select__item-link" @click="selectAggregation('none')"
-            ><div class="select__item-name">{{ $t('common.none') }}</div></a
-          >
+            ><div class="select__item-name">{{ $t('common.none') }}</div>
+            <i
+              v-if="!viewAggregationType"
+              class="select__item-active-icon iconoir-check-circle"
+            ></i
+          ></a>
         </li>
         <li
           v-for="viewAggregation in viewAggregationTypes"
@@ -45,8 +49,12 @@
             @click="selectAggregation(viewAggregation.getType())"
             ><div class="select__item-name">
               {{ viewAggregation.getName() }}
-            </div></a
-          >
+            </div>
+            <i
+              v-if="viewAggregation === viewAggregationType"
+              class="select__item-active-icon iconoir-check-circle"
+            ></i
+          ></a>
         </li>
       </ul>
     </Context>

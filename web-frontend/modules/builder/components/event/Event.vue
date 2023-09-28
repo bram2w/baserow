@@ -4,7 +4,7 @@
       <div class="event__header">
         <div class="event__label">{{ event.label }}</div>
         <a class="event__toggle" @click.stop="toggle">
-          <i class="fas" :class="getIcon(expanded)"></i>
+          <i :class="getIcon(expanded)"></i>
         </a>
       </div>
     </template>
@@ -27,7 +27,7 @@ export default {
   },
   methods: {
     getIcon(expanded) {
-      return expanded ? 'fa-chevron-down' : 'fa-chevron-right'
+      return expanded ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
     },
   },
 }

@@ -18,8 +18,8 @@
           <i
             v-if="icon"
             v-tooltip="iconTooltip"
-            class="select__item-icon fas fa-fw"
-            :class="'fa-' + icon"
+            class="select__item-icon"
+            :class="icon"
           />
           <img v-if="image" class="select__item-image" :src="image" />
           <span class="select__item-name-text" :title="name">{{ name }}</span>
@@ -28,6 +28,10 @@
       <div v-if="description !== null" class="select__item-description">
         {{ description }}
       </div>
+      <i
+        v-if="isActive(value)"
+        class="select__item-active-icon iconoir-check-circle"
+      ></i>
     </a>
   </li>
 </template>

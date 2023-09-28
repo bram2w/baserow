@@ -26,7 +26,7 @@
                 ;[copyDomainUrl(domain), $refs.domainCopied[index].show()]
               "
             >
-              <i class="fas fa-fw fa-copy" />
+              <i class="iconoir-copy" />
               <Copied ref="domainCopied" />
             </a>
             <a
@@ -37,7 +37,7 @@
               target="_blank"
               @click.stop=""
             >
-              <i class="fas fa-fw fa-external-link-alt" />
+              <i class="iconoir-link" />
             </a>
           </Radio>
           <LastPublishedDomainDate

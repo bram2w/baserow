@@ -3,7 +3,7 @@
     shadow
     simple
     type="error"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('failedConnectingToast.title')"
     >{{ $t('failedConnectingToast.content') }}
     <a

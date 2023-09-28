@@ -8,7 +8,7 @@
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
-      <i class="header__filter-icon fas fa-eye-slash"></i>
+      <i class="header__filter-icon iconoir-eye-off"></i>
       <span class="header__filter-name">{{
         $tc('gridViewHide.hideField', hiddenFields.length, {
           count: hiddenFields.length,

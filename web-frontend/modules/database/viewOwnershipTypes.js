@@ -85,7 +85,7 @@ export class CollaborativeViewOwnershipType extends ViewOwnershipType {
   }
 
   getIconClass() {
-    return 'fas fa-users'
+    return 'iconoir-community'
   }
 
   isDeactivated(workspaceId) {

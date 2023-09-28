@@ -54,10 +54,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: $color-neutral-200;
+  color: $color-neutral-400;
   background-color: $white;
   text-decoration: none;
   visibility: hidden;
+  font-size: 16px;
 
   @include rounded($rounded);
   @include add-elevation($elevation-low);

@@ -36,7 +36,7 @@
                 class="dashboard__create-link"
                 @click="$refs.createWorkspaceModal.show()"
               >
-                <i class="fas fa-plus"></i>
+                <i class="dashboard__create-link-icon iconoir-plus"></i>
                 {{ $t('dashboard.createWorkspace') }}
               </a>
             </div>

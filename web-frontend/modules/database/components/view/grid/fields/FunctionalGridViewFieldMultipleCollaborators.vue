@@ -10,7 +10,9 @@
           <div
             class="field-multiple-collaborators__name background-color--light-gray"
           >
-            {{ $options.methods.getCollaboratorName(item, parent.$store) }}
+            <span class="field-multiple-collaborators__name-text">{{
+              $options.methods.getCollaboratorName(item, parent.$store)
+            }}</span>
           </div>
           <div class="field-multiple-collaborators__initials">
             {{

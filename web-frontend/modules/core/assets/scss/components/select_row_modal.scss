@@ -61,20 +61,18 @@
   position: relative;
   z-index: 1;
   border-bottom: solid 2px $color-neutral-200;
+  padding: 0 0 0 15px;
+  @include flex-align-items(15px);
 }
 
 .select-row-modal__search-icon {
   color: $color-neutral-300;
-  z-index: 2;
-
-  @include absolute(auto, auto, auto, 16px);
-  @include fixed-height(44px, 13px);
+  font-size: 16px;
 }
 
 .select-row-modal__search-input {
   position: relative;
   z-index: 1;
-  padding-left: 44px;
   border: 0;
 
   @include fixed-height(44px, 14px);

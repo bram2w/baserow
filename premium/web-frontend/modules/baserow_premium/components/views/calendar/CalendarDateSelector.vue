@@ -1,10 +1,10 @@
 <template>
   <div class="calendar-date-selector">
     <a class="calendar-date-selector__prev" @click="selectPrevious">
-      <i class="fas fa-chevron-left fa-1x"></i>
+      <i class="iconoir-nav-arrow-left"></i>
     </a>
     <a class="calendar-date-selector__next" @click="selectNext">
-      <i class="fas fa-chevron-right fa-1x"></i>
+      <i class="iconoir-nav-arrow-right"></i>
     </a>
     <button class="button button--large button--ghost" @click="selectCurrent">
       {{ $t('calendarDateSelector.today') }}

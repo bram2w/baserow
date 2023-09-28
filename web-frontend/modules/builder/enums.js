@@ -27,32 +27,32 @@ export const HORIZONTAL_ALIGNMENTS = {
   LEFT: {
     name: 'horizontalAlignmentSelector.alignmentLeft',
     value: 'left',
-    icon: 'align-left',
+    icon: 'iconoir-align-left',
   },
   CENTER: {
     name: 'horizontalAlignmentSelector.alignmentCenter',
     value: 'center',
-    icon: 'align-center',
+    icon: 'iconoir-align-center',
   },
   RIGHT: {
     name: 'horizontalAlignmentSelector.alignmentRight',
     value: 'right',
-    icon: 'align-right',
+    icon: 'iconoir-align-right',
   },
 }
 
 export const VERTICAL_ALIGNMENTS = {
   TOP: {
     name: 'verticalAlignmentSelector.alignmentTop',
-    value: 'top',
+    value: 'iconoir-align-top-box',
   },
   CENTER: {
     name: 'verticalAlignmentSelector.alignmentCenter',
-    value: 'center',
+    value: 'iconoir-center-align',
   },
   BOTTOM: {
     name: 'verticalAlignmentSelector.alignmentBottom',
-    value: 'bottom',
+    value: 'iconoir-align-bottom-box',
   },
 }
 

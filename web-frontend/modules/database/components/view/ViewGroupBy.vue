@@ -8,7 +8,7 @@
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
-      <i class="header__filter-icon fas fa-layer-group"></i>
+      <i class="header__filter-icon iconoir-book-stack"></i>
       <span class="header__filter-name">{{
         $tc('viewGroupBy.groupBy', view.group_bys.length, {
           count: view.group_bys.length,

@@ -36,11 +36,14 @@
   @extend %ellipsis;
 
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
   padding: 0 48px 0 20px;
   line-height: 44px;
   font-size: 14px;
-  color: $color-neutral-600;
+  color: $color-neutral-800;
+  gap: 5px;
+
   @include rounded($rounded);
 
   &:hover {
@@ -61,24 +64,20 @@
   }
 
   &.active {
-    color: $color-neutral-900;
-    background-color: $color-primary-100;
-
-    &::after {
-      @extend .fas;
-
-      content: fa-content($fa-var-check-circle);
-      width: 32px;
-      line-height: 20px;
-      text-align: center;
-      color: $color-success-500;
-      margin-top: -10px;
-
-      @include absolute(50%, 10px, auto, auto);
-    }
+    color: $palette-neutral-1100;
+    background-color: $palette-blue-50;
   }
 }
 
 .choice-items__icon {
-  margin-right: 10px;
+  font-size: 16px;
+}
+
+.choice-items__icon-active {
+  position: absolute;
+  color: $palette-green-600;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
 }

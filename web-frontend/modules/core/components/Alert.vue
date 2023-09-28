@@ -10,7 +10,7 @@
     }"
   >
     <a v-if="closeButton" class="alert__close" @click="$emit('close')">
-      <i class="fas fa-times"></i>
+      <i class="iconoir-cancel"></i>
     </a>
 
     <div v-if="loading" class="alert__icon">
@@ -18,7 +18,7 @@
     </div>
 
     <div v-if="icon && !loading" class="alert__icon">
-      <i v-if="icon" class="fas" :class="`fa-${icon}`" />
+      <i v-if="icon" :class="icon" />
     </div>
 
     <div v-if="!minimal && title" class="alert__title">{{ title }}</div>

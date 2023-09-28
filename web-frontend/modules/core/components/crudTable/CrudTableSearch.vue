@@ -12,7 +12,7 @@
         class="input input--large"
         @keyup="searchIfChanged(headerSearchTerm, false)"
       />
-      <i class="fas fa-search"></i>
+      <i class="iconoir-search"></i>
     </div>
   </form>
 </template>

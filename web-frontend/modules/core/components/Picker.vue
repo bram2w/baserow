@@ -5,9 +5,9 @@
       class="dropdown__selected"
       @click="$refs.pickerContext.toggle($refs.pickerLink, 'bottom', 'left', 2)"
     >
-      <i class="dropdown__selected-icon fas" :class="'fa-' + icon" />
+      <i class="dropdown__selected-icon" :class="icon" />
       {{ name }}
-      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
+      <i class="dropdown__toggle-icon iconoir-nav-arrow-down"></i>
     </a>
     <Context
       ref="pickerContext"

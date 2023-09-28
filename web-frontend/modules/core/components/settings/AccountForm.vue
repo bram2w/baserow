@@ -28,7 +28,7 @@
     </FormElement>
     <FormElement class="control">
       <label class="control__label">
-        <i class="fas fa-globe"></i> {{ $t('accountForm.languageLabel') }}
+        <i class="iconoir-globe"></i> {{ $t('accountForm.languageLabel') }}
       </label>
       <div class="control__elements">
         <Dropdown v-model="values.language" :show-search="false">

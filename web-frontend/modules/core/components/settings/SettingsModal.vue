@@ -16,10 +16,7 @@
             :class="{ active: page === setting.type }"
             @click="setPage(setting.type)"
           >
-            <i
-              class="fas modal-sidebar__nav-icon"
-              :class="'fa-' + setting.iconClass"
-            ></i>
+            <i class="modal-sidebar__nav-icon" :class="setting.iconClass"></i>
             {{ setting.getName() }}
           </a>
         </li>

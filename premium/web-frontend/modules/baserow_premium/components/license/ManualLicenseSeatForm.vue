@@ -41,7 +41,7 @@
           class="license-detail__user-delete"
           @click="removeUser(licenseUser)"
         >
-          <i class="fas fa-trash"></i>
+          <i class="iconoir-bin"></i>
         </a>
       </div>
     </div>

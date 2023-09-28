@@ -8,7 +8,7 @@
           </div>
           <a class="button button--primary" @click="$refs.premiumModal.show()">
             {{ $t('formViewModePreviewSurvey.more') }}
-            <i class="fas fa-unlock"></i>
+            <i class="iconoir-no-lock"></i>
           </a>
         </div>
         <PremiumModal
@@ -70,6 +70,8 @@
                     class="form-view__edit"
                     :class="{ 'form-view__edit--hidden': editingSubmitText }"
                     @click="$refs.submitText[0].edit()"
+                  >
+                    <i class="form-view__edit-icon iconoir-edit-pencil"></i
                   ></a>
                 </template>
               </div>
@@ -134,7 +136,7 @@
               }"
               @click="previous"
             >
-              <i class="fas fa-chevron-up"></i>
+              <i class="iconoir-nav-arrow-up"></i>
             </a>
             <a
               class="form-view-survey__pagination-button"
@@ -143,7 +145,7 @@
               }"
               @click="next"
             >
-              <i class="fas fa-chevron-down"></i>
+              <i class="iconoir-nav-arrow-down"></i>
             </a>
           </div>
         </div>

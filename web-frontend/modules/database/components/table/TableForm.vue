@@ -6,7 +6,7 @@
       class="control"
     >
       <label class="control__label">
-        <i class="fas fa-font"></i>
+        <i class="iconoir-text"></i>
         {{ $t('tableForm.name') }}
       </label>
       <div class="control__elements">

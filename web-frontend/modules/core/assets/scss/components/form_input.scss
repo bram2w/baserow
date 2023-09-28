@@ -77,10 +77,9 @@
   position: absolute;
   right: 12px;
   top: 50%;
-  font-size: 12px;
-  line-height: 12px;
-  margin-top: -6px;
+  transform: translateY(-50%);
   color: $color-neutral-300;
+  font-size: 16px;
 
   .form-input--large & {
     font-size: 16px;

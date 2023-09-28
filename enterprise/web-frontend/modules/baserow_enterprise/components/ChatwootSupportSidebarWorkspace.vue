@@ -2,7 +2,7 @@
   <li class="tree__item" :class="{ 'tree__item--loading': loading }">
     <div class="tree__action">
       <a class="tree__link" @click="open">
-        <i class="tree__icon tree__icon--type fas fa-question-circle"></i>
+        <i class="tree__icon tree__icon--type iconoir-chat-bubble-question"></i>
         {{ $t('chatwootSupportSidebarWorkspace.directSupport') }}
       </a>
     </div>

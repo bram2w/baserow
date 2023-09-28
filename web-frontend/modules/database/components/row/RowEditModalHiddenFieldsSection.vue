@@ -14,8 +14,11 @@
           )
         }}
         <i
-          class="fas"
-          :class="[showHiddenFields ? 'fa-caret-up' : 'fa-caret-down']"
+          :class="[
+            showHiddenFields
+              ? 'iconoir-nav-arrow-up'
+              : 'iconoir-nav-arrow-down',
+          ]"
         ></i>
       </a>
       <div class="row-modal__hidden-separator-line"></div>

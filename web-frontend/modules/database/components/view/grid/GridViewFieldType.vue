@@ -15,16 +15,15 @@
       class="grid-view__description"
       :class="{ 'grid-view__description--loading': field._.loading }"
     >
-      <div class="grid-view__description-icon">
-        <i class="fas" :class="'fa-' + field._.type.iconClass"></i>
-      </div>
+      <i :class="`grid-view__description-icon ${field._.type.iconClass}`"></i>
+
       <div class="grid-view__description-name">
         <span ref="quickEditLink" @dblclick="handleQuickEdit()">
           {{ field.name }}
         </span>
       </div>
       <div v-if="field.error" class="grid-view__description-icon-error">
-        <i v-tooltip="field.error" class="fas fa-exclamation-triangle"></i>
+        <i v-tooltip="field.error" class="iconoir-warning-triangle"></i>
       </div>
       <a
         v-if="!readOnly && showFieldContext"
@@ -33,8 +32,9 @@
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         @mousedown.stop
       >
-        <i class="fas fa-caret-down"></i>
+        <i class="iconoir-nav-arrow-down"></i>
       </a>
+
       <FieldContext
         v-if="!readOnly"
         ref="context"
@@ -61,7 +61,7 @@
               $refs.insertFieldContext.toggle($refs.insertLeftLink, 'left')
             "
           >
-            <i class="context__menu-icon fas fa-fw fa-arrow-left"></i>
+            <i class="context__menu-icon iconoir-arrow-left"></i>
             {{ $t('gridViewFieldType.insertLeft') }}
           </a>
         </li>
@@ -82,7 +82,7 @@
               $refs.insertFieldContext.toggle($refs.insertRightLink, 'right')
             "
           >
-            <i class="context__menu-icon fas fa-fw fa-arrow-right"></i>
+            <i class="context__menu-icon iconoir-arrow-right"></i>
             {{ $t('gridViewFieldType.insertRight') }}
           </a>
           <InsertFieldContext
@@ -106,7 +106,7 @@
           <a
             @click=";[$refs.duplicateFieldModal.toggle(), $refs.context.hide()]"
           >
-            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridViewFieldType.duplicate') }}
           </a>
           <DuplicateFieldModal
@@ -129,7 +129,7 @@
           "
         >
           <a @click="createFilter($event, view, field)">
-            <i class="context__menu-icon fas fa-fw fa-filter"></i>
+            <i class="context__menu-icon iconoir-filter"></i>
             {{ $t('gridViewFieldType.createFilter') }}
           </a>
         </li>
@@ -144,24 +144,22 @@
           "
         >
           <a @click="createSort($event, view, field, 'ASC')">
-            <i class="context__menu-icon fas fa-fw fa-sort-amount-down-alt"></i>
+            <i class="context__menu-icon iconoir-sort-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 1)
             }}</template>
             <i
               v-if="getSortIndicator(field, 0) === 'icon'"
-              class="fa"
-              :class="'fa-' + getSortIndicator(field, 1)"
+              :class="getSortIndicator(field, 1)"
             ></i>
-            <i class="fas fa-long-arrow-alt-right"></i>
+            <i class="iconoir-arrow-right"></i>
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 2)
             }}</template>
             <i
               v-if="getSortIndicator(field, 0) === 'icon'"
-              class="fa"
-              :class="'fa-' + getSortIndicator(field, 2)"
+              :class="getSortIndicator(field, 2)"
             ></i>
           </a>
         </li>
@@ -176,24 +174,22 @@
           "
         >
           <a @click="createSort($event, view, field, 'DESC')">
-            <i class="context__menu-icon fas fa-fw fa-sort-amount-down"></i>
+            <i class="context__menu-icon iconoir-sort-down"></i>
             {{ $t('gridViewFieldType.sortField') }}
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 2)
             }}</template>
             <i
               v-if="getSortIndicator(field, 0) === 'icon'"
-              class="fa"
-              :class="'fa-' + getSortIndicator(field, 2)"
+              :class="getSortIndicator(field, 2)"
             ></i>
-            <i class="fas fa-long-arrow-alt-right"></i>
+            <i class="iconoir-arrow-right"></i>
             <template v-if="getSortIndicator(field, 0) === 'text'">{{
               getSortIndicator(field, 1)
             }}</template>
             <i
               v-if="getSortIndicator(field, 0) === 'icon'"
-              class="fa"
-              :class="'fa-' + getSortIndicator(field, 1)"
+              :class="getSortIndicator(field, 1)"
             ></i>
           </a>
         </li>
@@ -208,7 +204,7 @@
           "
         >
           <a @click="hide($event, view, field)">
-            <i class="context__menu-icon fas fa-fw fa-eye-slash"></i>
+            <i class="context__menu-icon iconoir-eye-off"></i>
             {{ $t('gridViewFieldType.hideField') }}
           </a>
         </li>

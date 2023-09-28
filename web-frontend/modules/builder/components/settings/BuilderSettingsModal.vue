@@ -19,10 +19,7 @@
             :class="{ active: setting === settingSelected }"
             @click="settingSelected = setting"
           >
-            <i
-              class="fas modal-sidebar__nav-icon"
-              :class="'fa-' + setting.icon"
-            ></i>
+            <i class="modal-sidebar__nav-icon" :class="setting.icon"></i>
             {{ setting.name }}
           </a>
         </li>

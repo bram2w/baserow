@@ -120,10 +120,10 @@
             </div>
             <div class="license-detail__item-value">
               <i
-                class="fas fa-check"
+                class="iconoir-check"
                 :class="{
-                  'fa-check license-yes': feature.enabled,
-                  'fa-times license-no': !feature.enabled,
+                  'iconoir-check license-yes': feature.enabled,
+                  'iconoir-cancel license-no': !feature.enabled,
                 }"
               ></i>
             </div>
@@ -163,7 +163,7 @@
           <div class="delete-section">
             <div class="delete-section__label">
               <div class="delete-section__label-icon">
-                <i class="fas fa-exclamation"></i>
+                <i class="iconoir-warning-triangle"></i>
               </div>
               {{ $t('license.disconnectLicense') }}
             </div>

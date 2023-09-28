@@ -35,7 +35,7 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
       class="filters__add"
     >
       <i
-        class="fas fa-plus"
+        class="filters__add-icon iconoir-plus"
       />
       
       viewFilterContext.addFilter
@@ -60,7 +60,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__remove"
       >
         <i
-          class="fas fa-times"
+          class="iconoir-cancel"
         />
       </a>
        
@@ -93,7 +93,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         Name
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -104,7 +104,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -141,6 +141,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -165,6 +169,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -187,6 +193,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       Flag
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -217,7 +225,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         viewFilter.is
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -228,7 +236,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -265,6 +273,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -287,6 +299,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilter.isNot
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -313,6 +327,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -335,6 +351,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilter.containsNot
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -361,6 +379,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -383,6 +403,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilter.doesntContainWord
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -409,6 +431,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -433,6 +457,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -455,6 +481,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilter.isNotEmpty
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -484,7 +512,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         class="filters__remove"
       >
         <i
-          class="fas fa-times"
+          class="iconoir-cancel"
         />
       </a>
        
@@ -507,7 +535,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         viewFilterContext.and
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -542,6 +570,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
                
@@ -565,6 +597,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilterContext.or
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -597,7 +631,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         Stars
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -608,7 +642,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -645,6 +679,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -669,6 +705,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -691,6 +731,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       Flag
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -721,7 +763,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
         viewFilter.is
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -732,7 +774,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -769,6 +811,10 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -791,6 +837,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                       viewFilter.isNot
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -817,6 +865,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -841,6 +891,8 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
             </ul>
@@ -862,19 +914,19 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             class="rating color--dark-orange editing"
           >
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
           </div>
         </div>
@@ -889,7 +941,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       class="filters__add"
     >
       <i
-        class="fas fa-plus"
+        class="filters__add-icon iconoir-plus"
       />
       
       viewFilterContext.addFilter
@@ -920,7 +972,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
         class="filters__remove"
       >
         <i
-          class="fas fa-times"
+          class="iconoir-cancel"
         />
       </a>
        
@@ -953,7 +1005,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
         Stars
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -964,7 +1016,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -1001,6 +1053,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -1025,6 +1079,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -1047,6 +1105,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                       Flag
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -1077,7 +1137,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
         viewFilter.is
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -1089,7 +1149,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -1126,6 +1186,10 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -1148,6 +1212,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                       viewFilter.isNot
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -1174,6 +1240,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -1198,6 +1266,8 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
             </ul>
@@ -1219,19 +1289,19 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             class="rating color--dark-orange editing"
           >
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
             <i
-              class="fas rating__star fa-star"
+              class="rating__star baserow-icon-star"
             />
           </div>
         </div>
@@ -1246,7 +1316,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       class="filters__add"
     >
       <i
-        class="fas fa-plus"
+        class="filters__add-icon iconoir-plus"
       />
       
       viewFilterContext.addFilter
@@ -1277,7 +1347,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
         class="filters__remove"
       >
         <i
-          class="fas fa-times"
+          class="iconoir-cancel"
         />
       </a>
        
@@ -1310,7 +1380,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
         Stars
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -1321,7 +1391,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -1358,6 +1428,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -1382,6 +1454,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -1404,6 +1480,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                       Flag
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -1434,7 +1512,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
         viewFilter.is
        
             <i
-              class="dropdown__toggle-icon fas fa-caret-down"
+              class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
           </a>
            
@@ -1446,7 +1524,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               class="select__search"
             >
               <i
-                class="select__search-icon fas fa-search"
+                class="select__search-icon iconoir-search"
               />
                
               <input
@@ -1483,6 +1561,10 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
                 </a>
               </li>
               <li
@@ -1505,6 +1587,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                       viewFilter.isNot
                     </span>
                   </div>
+                   
+                  <!---->
                    
                   <!---->
                 </a>
@@ -1531,6 +1615,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
               <li
@@ -1555,6 +1641,8 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
+                   
+                  <!---->
                 </a>
               </li>
             </ul>
@@ -1576,19 +1664,19 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             class="rating color--dark-orange editing"
           >
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
             <i
-              class="fas rating__star fa-star rating__star--selected"
+              class="rating__star baserow-icon-star rating__star--selected"
             />
           </div>
         </div>
@@ -1603,7 +1691,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       class="filters__add"
     >
       <i
-        class="fas fa-plus"
+        class="filters__add-icon iconoir-plus"
       />
       
       viewFilterContext.addFilter

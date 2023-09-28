@@ -19,8 +19,8 @@
       >
         <i
           v-if="actionType.icon"
-          class="header__filter-icon fas"
-          :class="`fa-${actionType.icon}`"
+          class="header__filter-icon"
+          :class="actionType.icon"
         ></i>
         <span class="header__filter-name">{{ actionType.label }}</span>
       </a>

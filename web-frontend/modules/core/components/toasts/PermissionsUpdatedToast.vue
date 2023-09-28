@@ -4,7 +4,7 @@
     shadow
     simple
     type="warning"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('permissionsUpdatedToast.title')"
     @close="close"
     >{{ $t('permissionsUpdatedToast.content') }}

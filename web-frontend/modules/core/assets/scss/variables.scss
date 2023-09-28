@@ -27,8 +27,6 @@ $z-index-toasts: 9 !default;
 
 // normalize overrides
 $base-font-family: $text-font-stack !default;
-$font-awesome-font-family: 'Font Awesome 5 Free', sans-serif !default;
-$font-awesome-font-weight: 900 !default;
 
 $radius-none: 0 !default;
 $rounded: 4px !default;
@@ -59,3 +57,17 @@ $file-field-modal-foot-height: 108px !default;
 $dashboard-breakpoint: 1100px;
 
 $builder-page-max-width: 1280px;
+
+// Baserow icons variables
+$baserow-icon-prefix: 'baserow-icon-';
+
+// This list must contain all the svg icons in the `modules/core/assets/icons` that must
+// automatically become under `baserow-icon-$icon`. All the icons must be designed on a
+// 24px by 24px grid.
+$baserow-icons: 'circle-empty', 'circle-checked', 'formula', 'hashtag',
+  'more-horizontal', 'more-vertical', 'reddit', 'single-select', 'twitter',
+  'lock-open', 'flag', 'heart', 'star', 'thumbs-up', 'history', 'facebook',
+  'linkedin', 'gitlab', 'file-csv', 'file-pdf', 'file-image', 'file-audio',
+  'file-video', 'file-code', 'tablet', 'form', 'file-excel', 'kanban',
+  'file-word', 'file-archive', 'gallery', 'file-powerpoint', 'calendar', 'smile',
+  'smartphone';

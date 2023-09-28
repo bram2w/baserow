@@ -52,7 +52,7 @@
         class="grid-view__add-column"
         @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
       >
-        <i class="fas fa-plus"></i>
+        <i class="grid-view__add-column-icon iconoir-plus"></i>
       </a>
       <CreateFieldContext
         ref="createFieldContext"

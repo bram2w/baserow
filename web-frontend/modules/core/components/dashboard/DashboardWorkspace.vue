@@ -15,7 +15,7 @@
           class="dashboard__group-title-options"
           @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         >
-          <i class="dashboard__group-title-icon fas fa-caret-down"></i>
+          <i class="dashboard__group-title-icon iconoir-nav-arrow-down"></i>
         </a>
       </div>
       <WorkspaceContext
@@ -52,7 +52,7 @@
           @click="selectApplication(application)"
         >
           <div class="dashboard__group-item-icon">
-            <i class="fas" :class="'fa-' + application._.type.iconClass"></i>
+            <i :class="application._.type.iconClass"></i>
           </div>
           <div class="dashboard__group-item-name">
             {{ application.name }}
@@ -72,7 +72,7 @@
           <div
             class="dashboard__group-item-icon dashboard__group-item-icon--add"
           >
-            <i class="fas fa-plus"></i>
+            <i class="iconoir-plus"></i>
           </div>
 
           <div class="dashboard__group-item-name">

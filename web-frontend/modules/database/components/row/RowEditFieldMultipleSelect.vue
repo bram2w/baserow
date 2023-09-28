@@ -15,7 +15,7 @@
           class="field-multiple-select__remove"
           @click.prevent="removeValue($event, value, item.id)"
         >
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </li>
     </ul>
@@ -25,7 +25,7 @@
       class="add"
       @click.prevent="toggleDropdown()"
     >
-      <i class="fas fa-plus add__icon"></i>
+      <i class="iconoir-plus add__icon"></i>
       {{ $t('rowEditFieldMultipleSelect.addOption') }}
     </a>
     <FieldSelectOptionsDropdown

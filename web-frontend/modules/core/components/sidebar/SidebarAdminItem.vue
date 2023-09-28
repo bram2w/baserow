@@ -18,7 +18,7 @@
         :to="{ name: adminType.routeName }"
         class="tree__link"
       >
-        <i class="tree__icon fas" :class="'fa-' + adminType.iconClass"></i>
+        <i class="tree__icon" :class="adminType.iconClass"></i>
         <span class="sidebar__item-name">{{ adminType.getName() }}</span>
       </nuxt-link>
     </div>

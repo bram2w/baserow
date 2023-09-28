@@ -13,7 +13,7 @@ export class AuthProvidersType extends EnterpriseAdminType {
   }
 
   getIconClass() {
-    return 'sign-in-alt'
+    return 'iconoir-log-in'
   }
 
   getName() {
@@ -40,7 +40,7 @@ export class AuditLogType extends EnterpriseAdminType {
   }
 
   getIconClass() {
-    return 'history'
+    return 'baserow-icon-history'
   }
 
   getName() {

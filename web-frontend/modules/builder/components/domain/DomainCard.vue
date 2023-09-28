@@ -9,8 +9,10 @@
           <a class="domain-card__detail-button-link" @click="toggle">
             {{ $t('domainCard.detailLabel')
             }}<i
-              class="fas domain-card__detail-button-icon"
-              :class="expanded ? 'fa-chevron-down' : 'fa-chevron-right'"
+              class="domain-card__detail-button-icon"
+              :class="
+                expanded ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
+              "
             />
           </a>
         </div>

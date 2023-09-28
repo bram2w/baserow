@@ -15,7 +15,7 @@
     <ul v-else class="context__menu">
       <li v-if="$hasPermission('workspace.update', workspace, workspace.id)">
         <a @click="$emit('rename')">
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon iconoir-edit-pencil"></i>
           {{ $t('workspaceContext.renameWorkspace') }}
         </a>
       </li>
@@ -31,7 +31,7 @@
             hide()
           "
         >
-          <i class="context__menu-icon fas fa-fw fa-users"></i>
+          <i class="context__menu-icon iconoir-community"></i>
           {{ $t('workspaceContext.members') }}
         </a>
       </li>
@@ -39,13 +39,13 @@
         v-if="$hasPermission('workspace.read_trash', workspace, workspace.id)"
       >
         <a @click="showWorkspaceTrashModal">
-          <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+          <i class="context__menu-icon iconoir-refresh-double"></i>
           {{ $t('workspaceContext.viewTrash') }}
         </a>
       </li>
       <li>
         <a @click="$refs.leaveWorkspaceModal.show()">
-          <i class="context__menu-icon fas fa-fw fa-door-open"></i>
+          <i class="context__menu-icon iconoir-log-out"></i>
           {{ $t('workspaceContext.leaveWorkspace') }}
         </a>
       </li>
@@ -54,7 +54,7 @@
           :class="{ 'context__menu-item--loading': loading }"
           @click="deleteWorkspace"
         >
-          <i class="context__menu-icon fas fa-fw fa-trash"></i>
+          <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('workspaceContext.deleteWorkspace') }}
         </a>
       </li>

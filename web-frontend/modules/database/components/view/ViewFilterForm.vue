@@ -24,7 +24,7 @@
     />
     <div v-if="!disableFilter" class="filters_footer">
       <a class="filters__add" @click.prevent="addFilter()">
-        <i class="fas fa-plus"></i>
+        <i class="filters__add-icon iconoir-plus"></i>
         {{ $t('viewFilterContext.addFilter') }}</a
       >
       <div v-if="view.filters.length > 0">

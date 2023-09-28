@@ -12,9 +12,12 @@
           class="form-view__field-head-handle"
           data-field-handle
         ></a>
-        <div class="form-view__field-head-icon">
-          <i class="fas fa-fw" :class="'fa-' + field._.type.iconClass"></i>
-        </div>
+
+        <i
+          class="form-view__field-head-icon"
+          :class="field._.type.iconClass"
+        ></i>
+
         <div class="form-view__field-head-name">{{ field.name }}</div>
         <a
           v-if="!readOnly"
@@ -22,7 +25,7 @@
           class="form-view__field-head-hide"
           @click="$emit('hide', field)"
         >
-          <i class="fas fa-eye-slash"></i>
+          <i class="iconoir-eye-off"></i>
         </a>
       </div>
       <div class="form-view__field-inner">
@@ -38,7 +41,9 @@
             class="form-view__edit form-view-field-edit"
             :class="{ 'form-view__edit--hidden': editingName }"
             @click="$refs.name.edit()"
-          ></a>
+          >
+            <i class="form-view__edit-icon iconoir-edit-pencil"></i>
+          </a>
         </div>
         <div class="form-view__field-description">
           <Editable
@@ -56,6 +61,8 @@
             class="form-view__edit form-view-field-edit"
             :class="{ 'form-view__edit--hidden': editingDescription }"
             @click="$refs.description.edit()"
+          >
+            <i class="form-view__edit-icon iconoir-edit-pencil"></i
           ></a>
         </div>
         <component
@@ -109,7 +116,7 @@
               class="form-view__add-condition"
               @click="addCondition(fieldOptions.conditions)"
             >
-              <i class="fas fa-plus"></i>
+              <i class="iconoir-plus"></i>
               {{ $t('formViewField.addCondition') }}
             </a>
           </div>

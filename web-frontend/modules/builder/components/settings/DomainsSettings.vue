@@ -24,7 +24,7 @@
     </p>
     <div class="actions actions--right">
       <button class="button button--primary" @click="showForm = true">
-        <i class="fas fa-plus margin-right-1"></i>
+        <i class="iconoir-plus margin-right-1"></i>
         <span>{{ $t('domainSettings.addDomain') }}</span>
       </button>
     </div>

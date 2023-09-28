@@ -30,6 +30,7 @@
   font-size: 13px;
   font-weight: 600;
   margin-bottom: 8px;
+  @include flex-align-items(3px);
 
   & + :not(.control__description) {
     margin-top: 16px;
@@ -52,11 +53,10 @@
 }
 
 .control__label-icon {
-  margin-right: 6px;
+  font-size: 16px;
 }
 
 .control__label-right-icon {
-  margin-left: 6px;
   height: 16px;
   top: 3px;
   position: relative;
@@ -69,8 +69,9 @@
 }
 
 .control__context {
+  cursor: pointer;
   color: $color-neutral-900;
-  margin-left: 6px;
+  font-size: 16px;
 
   &:hover {
     text-decoration: none;
@@ -135,10 +136,9 @@
     position: absolute;
     right: 12px;
     top: 50%;
-    font-size: 12px;
-    line-height: 12px;
-    margin-top: -6px;
-    color: $color-neutral-300;
+    transform: translateY(-50%);
+    color: $color-neutral-500;
+    font-size: 16px;
   }
 
   &.input__with-icon--left {
@@ -193,8 +193,6 @@
     @include absolute(5px, auto, 0, 0);
 
     content: '';
-    font-family: $font-awesome-font-family;
-    font-weight: $font-awesome-font-weight;
     border: 1px solid $color-neutral-400;
     width: 18px;
     height: 18px;
@@ -203,10 +201,6 @@
     background-color: $white;
     color: $color-success-600;
     @include rounded($rounded);
-  }
-
-  &.active::before {
-    content: fa-content($fa-var-check);
   }
 
   &.checkbox--disabled {
@@ -229,6 +223,15 @@
   }
 }
 
+.checkbox__checked-icon {
+  position: absolute;
+  top: 50%;
+  left: 2px;
+  transform: translateY(-50%);
+  color: $color-success-600;
+  font-size: 14px;
+}
+
 .radio {
   position: relative;
   height: 28px;
@@ -236,17 +239,20 @@
   padding-left: 18px;
   cursor: pointer;
   user-select: none;
+  @include flex-align-items(4px);
 
   &.radio--has-content {
     padding-left: 24px;
+
+    i {
+      font-size: 16px;
+    }
   }
 
   &::before {
     @include absolute(5px, auto, 0, 0);
 
     content: '';
-    font-family: $font-awesome-font-family;
-    font-weight: $font-awesome-font-weight;
     font-size: 10px;
     border: 1px solid $color-neutral-400;
     border-radius: 100%;
@@ -259,7 +265,6 @@
   }
 
   &.selected::before {
-    content: fa-content($fa-var-check);
     background-color: $color-primary-500;
     border-color: $color-primary-500;
   }
@@ -276,6 +281,15 @@
       background-color: $color-neutral-500;
       border-color: $color-neutral-500;
     }
+  }
+
+  .radio__checked-icon {
+    position: absolute;
+    top: 50%;
+    left: 1px;
+    transform: translateY(-50%);
+    color: $white;
+    font-size: 16px;
   }
 
   &.radio--loading {
@@ -301,6 +315,8 @@
   padding-left: 22px;
   cursor: pointer;
   user-select: none;
+
+  @include flex-align-items(4px);
 
   &.switch--static {
     cursor: initial;
@@ -396,11 +412,13 @@
 .switch__icon {
   margin-right: 4px;
   color: $color-neutral-600;
+  font-size: 16px;
 }
 
 .error {
   margin-top: 6px;
   color: $color-error-500;
+  @include flex-align-items(4px);
 }
 
 .warning {

@@ -17,6 +17,7 @@
 // Teams which do not fit in the records cell will wrap down into new hidden rows below
 .expand-overflow-list__item {
   @include fixed-height(28px, 12px);
+  @include flex-align-items(4px);
 
   flex: 0 1 auto;
   padding: 0 10px;

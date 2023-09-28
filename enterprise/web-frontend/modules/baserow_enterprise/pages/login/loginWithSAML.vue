@@ -31,11 +31,11 @@
             />
             <div class="auth__control-error">
               <div v-if="fieldHasErrors('email')" class="error">
-                <i class="fas fa-fw fa-exclamation-triangle"></i>
+                <i class="iconoir-warning-triangle"></i>
                 {{ $t('error.invalidEmail') }}
               </div>
               <div v-else-if="loginRequestError" class="error">
-                <i class="fas fa-fw fa-exclamation-triangle"></i>
+                <i class="iconoir-warning-triangle"></i>
                 {{ $t('loginWithSaml.requestError') }}
               </div>
             </div>

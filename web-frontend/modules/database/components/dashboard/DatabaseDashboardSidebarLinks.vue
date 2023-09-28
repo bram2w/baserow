@@ -4,7 +4,7 @@
       :to="{ name: 'database-api-docs' }"
       class="dashboard__sidebar-link"
     >
-      <i class="fas fa-fw fa-book"></i>
+      <i class="iconoir-book"></i>
       {{ $t('databaseDashboardSidebarLinks.apiDocumentation') }}
     </nuxt-link>
   </li>

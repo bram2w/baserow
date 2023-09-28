@@ -52,35 +52,29 @@
   padding: 6px 0;
 }
 
+.form-view__sidebar-fields-hover-arrow {
+  color: $color-neutral-900;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 5px;
+  display: none !important;
+}
+
 .form-view__sidebar-fields-item {
   position: relative;
-  display: flex;
   border: solid 1px $color-neutral-300;
   background-color: $white;
   padding: 0 30px 0 12px;
+
   @include rounded($rounded);
-
-  &::after {
-    @extend .fas;
-
-    content: fa-content($fa-var-arrow-right);
-    width: 24px;
-    line-height: 14px;
-    text-align: center;
-    color: $color-neutral-900;
-    margin-top: -7px;
-    display: none;
-
-    @include absolute(50%, 0, auto, auto);
-  }
+  @include flex-align-items();
 
   &:hover {
     text-decoration: none;
 
-    &::after {
-      @extend .fas;
-
-      display: block;
+    .form-view__sidebar-fields-hover-arrow {
+      display: block !important;
     }
   }
 
@@ -96,19 +90,19 @@
   &.form-view__sidebar-fields-item--incompatible {
     cursor: inherit;
     background-color: $color-neutral-50;
-
-    &::after {
-      display: block;
-      content: fa-content($fa-var-exclamation-triangle);
-    }
   }
+}
+
+.form-view__sidebar-fields-incompatible-icon {
+  color: $color-warning-500;
+  font-size: 16px;
 }
 
 .form-view__sidebar-fields-icon {
   flex: 0 0 20px;
   line-height: 36px;
-  font-size: 13px;
-  color: $color-neutral-700;
+  font-size: 14px;
+  color: $color-neutral-900;
 }
 
 .form-view__sidebar-fields-name {
@@ -252,20 +246,20 @@
   @include absolute(auto, auto, -40px, auto);
 }
 
-.form-view__edit {
-  font-size: 14px;
-  line-height: 14px;
+.form-view__edit-icon {
   color: $color-neutral-500;
+  font-size: 18px;
+}
+
+.form-view__edit {
+  line-height: 14px;
+  color: $color-neutral-700;
   padding-left: 8px;
 
   &:hover {
-    color: $color-neutral-900;
-  }
-
-  &::after {
-    @extend .fas;
-
-    content: fa-content($fa-var-pencil-alt);
+    .form-view__edit-icon {
+      color: $color-neutral-900;
+    }
   }
 
   &.form-view__edit--hidden {
@@ -304,12 +298,16 @@
   font-size: 22px;
   font-weight: 600;
   margin: 0 0 20px 0;
+
+  @include flex-align-items(5px);
 }
 
 .form-view__description {
   font-size: 16px;
   margin: 0;
   display: inline-block;
+
+  @include flex-align-items(5px);
 }
 
 .form-view__no-fields {
@@ -363,7 +361,8 @@
 }
 
 .form-view__field-head {
-  display: none;
+  @include flex-align-items(5px);
+
   background-color: $color-neutral-100;
   line-height: 40px;
   padding: 0 20px;
@@ -371,6 +370,7 @@
   justify-content: left;
   border-top-left-radius: 13px;
   border-top-right-radius: 13px;
+  display: none;
 
   .form-view__field--selected & {
     display: flex;
@@ -383,7 +383,6 @@
   background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
   background-size: 4px 4px;
   background-repeat: repeat;
-  margin: 10px 10px 0 0;
 
   &:hover {
     background-image: radial-gradient($color-neutral-500 40%, transparent 40%);
@@ -391,8 +390,7 @@
 }
 
 .form-view__field-head-icon {
-  flex: 0 0 22px;
-  font-size: 13px;
+  font-size: 16px;
   color: $color-neutral-600;
 }
 
@@ -416,6 +414,7 @@
 .form-view__field-head-hide {
   margin-left: auto;
   color: $color-neutral-600;
+  font-size: 16px;
 
   &:hover {
     color: $color-neutral-900;
@@ -482,6 +481,10 @@
 .form-view__powered-by {
   display: flex;
   justify-content: center;
+}
+
+.form-view__submit {
+  @include flex-align-items(5px);
 }
 
 .form-view__submit-button-editing {
@@ -553,4 +556,20 @@
   align-items: center;
   justify-content: flex-end;
   font-size: 13px;
+}
+
+.form-view__add-field {
+  display: inline-block;
+  margin: 12px 0 6px 4px;
+
+  @include flex-align-items(4px);
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-900;
+  }
+}
+
+.form-view__add-field-icon {
+  font-size: 20px;
 }

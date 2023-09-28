@@ -6,7 +6,7 @@
       @click="$refs.dropdown.toggle($refs.dropdownLink)"
     >
       {{ visibleLanguageName }}
-      <i class="fa fa-caret-down lang-picker__icon"></i>
+      <i class="iconoir-nav-arrow-down lang-picker__icon"></i>
     </a>
     <LanguageSwitcherDropdown
       ref="dropdown"

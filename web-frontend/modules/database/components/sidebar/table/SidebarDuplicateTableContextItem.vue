@@ -6,7 +6,7 @@
     }"
     @click="duplicateTable()"
   >
-    <i class="context__menu-icon fas fa-fw fa-copy"></i>
+    <i class="context__menu-icon iconoir-copy"></i>
     {{ $t('action.duplicate') }}
   </a>
 </template>

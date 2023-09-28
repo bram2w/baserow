@@ -43,20 +43,14 @@ modules/core/validators.js
         v-if="validationState.$error && !validationState.required"
         class="error"
       >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
+        <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{ $t('error.inputRequired') }}
       </div>
       <div
         v-if="validationState.$error && !validationState.maxLength"
         class="error"
       >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
+        <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.maxLength', {
             max: validationState.$params.maxLength.max,
@@ -67,10 +61,7 @@ modules/core/validators.js
         v-if="validationState.$error && !validationState.minLength"
         class="error"
       >
-        <i
-          v-if="showErrorIcon"
-          class="fas fa-warning fa-exclamation-triangle"
-        ></i>
+        <i v-if="showErrorIcon" class="iconoir-warning-triangle"></i>
         {{
           $t('error.minLength', {
             min: validationState.$params.minLength.min,

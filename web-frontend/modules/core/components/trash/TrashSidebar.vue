@@ -2,7 +2,7 @@
   <div>
     <div class="modal-sidebar__head">
       <div class="modal-sidebar__head-icon-and-name">
-        <i class="modal-sidebar__head-icon-and-name-icon fas fa-trash"></i>
+        <i class="modal-sidebar__head-icon-and-name-icon iconoir-bin"></i>
         {{ $t('trashSidebar.title') }}
       </div>
     </div>
@@ -22,6 +22,12 @@
           class="trash-sidebar__group-link"
           @click="emitIfNotAlreadySelectedTrashWorkspace(workspace)"
         >
+          <i
+            class="trash-sidebar__group-link-caret-right iconoir-nav-arrow-right"
+          ></i>
+          <i
+            class="trash-sidebar__group-link-caret-down iconoir-nav-arrow-down"
+          ></i>
           {{
             workspace.name ||
             $t('trashSidebar.unnamedWorkspace', { id: workspace.id })

@@ -13,15 +13,15 @@
         @change="renameTable(database, table, $event)"
       ></Editable>
     </a>
-    <a
-      v-show="!database._.loading"
+
+    <i
       v-if="showOptions"
-      class="tree__options"
+      v-show="!database._.loading"
+      class="tree__options baserow-icon-more-vertical"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
       @mousedown.stop
-    >
-      <i class="fas fa-ellipsis-v"></i>
-    </a>
+    ></i>
+
     <Context
       ref="context"
       :overflow-scroll="true"
@@ -50,7 +50,7 @@
           "
         >
           <a @click="exportTable()">
-            <i class="context__menu-icon fas fa-fw fa-file-export"></i>
+            <i class="context__menu-icon iconoir-share-ios"></i>
             {{ $t('sidebarItem.exportTable') }}
           </a>
         </li>
@@ -64,7 +64,7 @@
           "
         >
           <a @click="openWebhookModal()">
-            <i class="context__menu-icon fas fa-fw fa-globe"></i>
+            <i class="context__menu-icon iconoir-globe"></i>
             Webhooks
           </a>
         </li>
@@ -78,7 +78,7 @@
           "
         >
           <a @click="enableRename()">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon iconoir-edit-pencil"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
@@ -111,7 +111,7 @@
             :class="{ 'context__menu-item--loading': deleteLoading }"
             @click="deleteTable()"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('action.delete') }}
           </a>
         </li>

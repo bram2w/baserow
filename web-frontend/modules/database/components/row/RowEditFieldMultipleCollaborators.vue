@@ -10,13 +10,15 @@
           <div
             class="field-multiple-collaborators__name background-color--light-gray"
           >
-            {{ getCollaboratorName(item) }}
+            <span class="field-multiple-collaborators__name-text">{{
+              getCollaboratorName(item)
+            }}</span>
             <a
               v-if="!readOnly"
               class="field-multiple-collaborators__remove"
               @click.prevent="removeValue($event, value, item.id)"
             >
-              <i class="fas fa-times"></i>
+              <i class="iconoir-cancel"></i>
             </a>
           </div>
           <div class="field-multiple-collaborators__initials">
@@ -31,7 +33,7 @@
       class="add"
       @click.prevent="toggleDropdown()"
     >
-      <i class="fas fa-plus add__icon"></i>
+      <i class="iconoir-plus add__icon"></i>
       {{ $t('rowEditFieldMultipleCollaborators.addCollaborator') }}
     </a>
     <FieldCollaboratorDropdown

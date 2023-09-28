@@ -44,6 +44,16 @@
   }
 }
 
+.card__cover-empty-image {
+  position: absolute;
+  font-size: 40px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  color: $color-neutral-300;
+}
+
 .card__cover {
   position: relative;
   height: 160px;
@@ -51,18 +61,6 @@
   border-top-right-radius: 3px;
   overflow: hidden;
   background-color: $color-neutral-100;
-
-  &::before {
-    @extend .fas;
-
-    content: fa-content($fa-var-image);
-    color: $color-neutral-300;
-    margin: -20px auto auto -20px;
-    z-index: 0;
-
-    @include center-text(40px, 32px);
-    @include absolute(50%, auto, auto, 50%);
-  }
 }
 
 .card__cover-image {

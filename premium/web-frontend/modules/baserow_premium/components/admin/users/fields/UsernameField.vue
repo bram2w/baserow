@@ -9,7 +9,7 @@
     <i
       v-if="props.row.is_staff"
       v-tooltip="parent.$t('premium.user.isStaff')"
-      class="user-admin-username__icon fas fa-users"
+      class="user-admin-username__icon iconoir-user-crown"
     ></i>
   </div>
 </template>

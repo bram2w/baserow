@@ -10,7 +10,7 @@
         ref="editMenuContextLink"
         @click="openContext()"
       >
-        <i class="fas fa-ellipsis-v"></i>
+        <i class="baserow-icon-more-vertical"></i>
       </a>
       <EditAuthProviderMenuContext
         v-if="hasContextMenu(authProvider.type)"

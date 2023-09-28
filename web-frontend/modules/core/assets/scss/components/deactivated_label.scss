@@ -2,8 +2,12 @@
   display: inline-block;
   background-color: $color-primary-200;
   color: $color-primary-500;
-  margin: 0 4px;
+  padding: 2px;
+  font-size: 14px;
+  width: 17px;
+  height: 17px;
+  justify-content: center;
 
-  @include center-text(14px, 9px);
+  @include flex-align-items();
   @include rounded($rounded);
 }

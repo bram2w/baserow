@@ -9,7 +9,7 @@
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
       {{ value.name }}
-      <i class="fas fa-chevron-down"></i>
+      <i class="iconoir-nav-arrow-down"></i>
     </a>
     <EditRoleContext
       ref="editRoleContext"

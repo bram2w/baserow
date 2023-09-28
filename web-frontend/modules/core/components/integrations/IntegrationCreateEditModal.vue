@@ -10,7 +10,7 @@
     <div>
       <Alert
         v-if="actualIntegrationType.warning"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
         type="warning"
         :title="$t('integrationCreateEditModal.warningTitle')"
         simple

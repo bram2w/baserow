@@ -4,7 +4,7 @@
     :max-height-if-outside-viewport="true"
   >
     <div class="select__search">
-      <i class="select__search-icon fas fa-search"></i>
+      <i class="select__search-icon iconoir-search"></i>
       <input
         v-model="search"
         type="text"

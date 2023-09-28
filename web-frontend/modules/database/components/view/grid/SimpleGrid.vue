@@ -23,8 +23,8 @@
           class="simple-grid__field"
         >
           <i
-            class="fas simple-grid__field-icon"
-            :class="'fa-' + fieldTypes[field.type].iconClass"
+            class="simple-grid__field-icon"
+            :class="fieldTypes[field.type].iconClass"
           ></i>
           {{ field.name }}
         </div>
@@ -68,7 +68,7 @@
           <a
             class="simple-grid__cell simple-grid__cell--single simple-grid__add-row"
           >
-            <i class="fas fa-plus" />
+            <i class="iconoir-plus" />
           </a>
         </div>
         <div v-if="withFooter" class="simple-grid__foot">
@@ -91,8 +91,8 @@
               class="simple-grid__field"
             >
               <i
-                class="fas simple-grid__field-icon"
-                :class="'fa-' + fieldTypes[field.type].iconClass"
+                class="simple-grid__field-icon"
+                :class="fieldTypes[field.type].iconClass"
               ></i>
               {{ field.name }}
             </div>

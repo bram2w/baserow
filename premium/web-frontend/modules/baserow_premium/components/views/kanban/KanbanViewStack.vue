@@ -46,7 +46,7 @@
             )
           "
         >
-          <i class="fas fa-ellipsis-h"></i>
+          <i class="baserow-icon-more-horizontal"></i>
         </a>
         <KanbanViewStackContext
           v-if="!readOnly && showStackContextMenu"
@@ -98,7 +98,7 @@
           <div v-if="error" class="margin-top-2">
             <a @click="fetch('click')">
               {{ $t('kanbanViewStack.tryAgain') }}
-              <i class="fas fa-refresh"></i>
+              <i class="iconoir-refresh-double"></i>
             </a>
           </div>
         </template>
@@ -117,7 +117,7 @@
           :disabled="draggingRow !== null"
           @click="!readOnly && $emit('create-row', { option })"
         >
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
           {{ $t('kanbanViewStack.new') }}
         </a>
       </div>

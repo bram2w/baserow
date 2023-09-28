@@ -1,5 +1,5 @@
 <template>
-  <i v-tooltip="tooltip" class="help-icon fas" :class="iconClass"> </i>
+  <i v-tooltip="tooltip" class="help-icon" :class="iconClass"> </i>
 </template>
 
 <script>
@@ -19,7 +19,9 @@ export default {
   },
   computed: {
     iconClass() {
-      return this.isWarning ? 'fa-exclamation-circle' : 'fa-question-circle'
+      return this.isWarning
+        ? 'iconoir-warning-triangle'
+        : 'iconoir-chat-bubble-question'
     },
   },
 }

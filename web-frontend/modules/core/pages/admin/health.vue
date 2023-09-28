@@ -24,11 +24,10 @@
               :class="status !== 'working' ? 'warning' : ''"
             >
               <i
-                class="fas"
                 :class="
                   status === 'working'
-                    ? 'fa-check admin-health__icon--success'
-                    : 'fa-times admin-health__icon--fail'
+                    ? 'iconoir-check admin-health__icon--success'
+                    : 'iconoir-cancel admin-health__icon--fail'
                 "
               ></i>
               <div

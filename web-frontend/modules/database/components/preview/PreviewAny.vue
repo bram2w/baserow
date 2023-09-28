@@ -28,7 +28,7 @@
         >
           <i
             v-if="preview.isExternal()"
-            class="button__icon fas fa-lock-open"
+            class="button__icon iconoir-lock-open"
           ></i>
           {{ preview.getName() }}
         </button>

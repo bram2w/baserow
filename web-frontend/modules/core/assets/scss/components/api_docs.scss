@@ -48,6 +48,7 @@
 
   @include fixed-height(32px, 13px);
   @include rounded($rounded);
+  @include flex-align-items(6px);
 
   &:hover {
     text-decoration: none;

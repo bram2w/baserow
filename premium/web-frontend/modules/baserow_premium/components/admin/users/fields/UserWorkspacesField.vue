@@ -9,7 +9,7 @@
       <i
         v-if="record.permissions === 'ADMIN'"
         v-tooltip="$t('premium.user.isWorkspaceAdmin')"
-        class="user-admin-group__icon fas fa-users-cog"
+        class="user-admin-group__icon iconoir-user-crown"
       ></i>
     </template>
   </ExpandOnOverflowList>

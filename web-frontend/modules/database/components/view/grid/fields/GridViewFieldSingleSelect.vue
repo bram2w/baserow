@@ -15,7 +15,7 @@
       </div>
       <i
         v-if="!readOnly"
-        class="fa fa-caret-down grid-field-single-select__icon"
+        class="iconoir-nav-arrow-down grid-field-single-select__icon"
       ></i>
     </div>
     <FieldSelectOptionsDropdown

@@ -39,6 +39,11 @@
       :element-types-allowed="elementTypesAllowed"
       :page="page"
     />
+
+    <i
+      v-if="inError"
+      class="element-preview__error-icon iconoir-warning-circle"
+    ></i>
   </div>
 </template>
 

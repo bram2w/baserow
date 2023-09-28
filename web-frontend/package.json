@@ -26,7 +26,6 @@
     "test-coverage": "yarn test-core-coverage && yarn test-premium-coverage && yarn test-enterprise-coverage"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^5.15.3",
     "@nuxtjs/i18n": "7.3.1",
     "@tiptap/core": "^2.0.3",
     "@tiptap/extension-document": "^2.0.3",
@@ -66,7 +65,8 @@
     "uuid": "9.0.0",
     "vue-chartjs": "4.1.2",
     "vuejs-datepicker": "1.6.2",
-    "vuelidate": "0.7.7"
+    "vuelidate": "0.7.7",
+    "iconoir": "^6.11.0"
   },
   "devDependencies": {
     "@babel/core": "7.21.4",

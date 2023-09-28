@@ -1,5 +1,9 @@
 <template>
   <div class="radio" :class="classNames" @click="select(value)">
+    <i
+      v-if="modelValue === value"
+      class="radio__checked-icon iconoir-check"
+    ></i>
     <slot></slot>
   </div>
 </template>

@@ -106,13 +106,13 @@ describe('Dropdown component', () => {
     expect(wrapper.element).toMatchSnapshot()
 
     await wrapper
-      .find('.select__items :nth-child(2)')
+      .find('.select__items :nth-child(1)')
       .find('.select__item-link')
       .trigger('click')
 
     await wrapper.vm.$nextTick()
 
-    expect(onInput).toHaveBeenCalledWith('b')
+    expect(onInput).toHaveBeenCalledWith('a')
 
     expect(wrapper.element).toMatchSnapshot()
   })

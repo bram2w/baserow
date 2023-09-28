@@ -3,7 +3,7 @@
     <div class="control">
       <label class="control__label">When the form is submitted</label>
       <div class="control__elements">
-        <ul class="choice-items choice-items--inline" z>
+        <ul class="choice-items choice-items--inline">
           <li>
             <a
               class="choice-items__link"
@@ -16,8 +16,12 @@
                   view.submit_action !== 'MESSAGE' &&
                   $emit('updated-form', { submit_action: 'MESSAGE' })
               "
-              >Show a message</a
-            >
+              ><span>Show a message</span>
+              <i
+                v-if="view.submit_action === 'MESSAGE'"
+                class="choice-items__icon-active iconoir-check-circle"
+              ></i
+            ></a>
           </li>
           <li>
             <a
@@ -31,8 +35,12 @@
                   view.submit_action !== 'REDIRECT' &&
                   $emit('updated-form', { submit_action: 'REDIRECT' })
               "
-              >Redirect to URL</a
-            >
+              ><span>Redirect to URL</span>
+              <i
+                v-if="view.submit_action === 'REDIRECT'"
+                class="choice-items__icon-active iconoir-check-circle"
+              ></i
+            ></a>
           </li>
         </ul>
       </div>

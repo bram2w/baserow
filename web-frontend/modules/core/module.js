@@ -12,6 +12,7 @@ import es from './locales/es.json'
 import it from './locales/it.json'
 import pl from './locales/pl.json'
 import { setDefaultResultOrder } from 'dns'
+const { readFileSync } = require('fs')
 
 export default function CoreModule(options) {
   /**
@@ -190,6 +191,17 @@ export default function CoreModule(options) {
   // Add a default authentication middleware. In order to add a new middleware the
   // middleware.js file has to be changed.
   this.options.router.middleware.push('authentication')
+
+  // This template will output the contents of the original Iconoir scss file, but
+  // it changes increases the default stroke with for all icons.
+  const iconoirCSS = readFileSync(
+    require.resolve('iconoir/css/iconoir.css')
+  ).toString()
+  this.addTemplate({
+    fileName: 'baserow/iconoir.css',
+    src: path.resolve(__dirname, 'templates/iconoir.js'),
+    options: { iconoirCSS },
+  })
 
   // Add the main scss file which contains all the generic scss code.
   this.options.css.push(path.resolve(__dirname, 'assets/scss/default.scss'))

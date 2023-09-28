@@ -30,13 +30,13 @@ export default {
       switch (this.state) {
         case UNDO_REDO_STATES.UNDONE:
           return base({
-            icon: 'check',
+            icon: 'iconoir-check',
             title: this.$t('undoRedoToast.undoneTitle'),
             content: this.$t('undoRedoToast.undoneText'),
           })
         case UNDO_REDO_STATES.REDONE:
           return base({
-            icon: 'check',
+            icon: 'iconoir-check',
             title: this.$t('undoRedoToast.redoneTitle'),
             content: this.$t('undoRedoToast.redoneText'),
           })
@@ -54,25 +54,25 @@ export default {
           })
         case UNDO_REDO_STATES.NO_MORE_UNDO:
           return base({
-            icon: 'times',
+            icon: 'iconoir-cancel',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreUndo'),
           })
         case UNDO_REDO_STATES.NO_MORE_REDO:
           return base({
-            icon: 'times',
+            icon: 'iconoir-cancel',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreRedo'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_UNDO:
           return base({
-            icon: 'exclamation',
+            icon: 'iconoir-warning-triangle',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.skippingUndoDueToError'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_REDO:
           return base({
-            icon: 'exclamation',
+            icon: 'iconoir-warning-triangle',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.skippingRedoDueToError'),
           })

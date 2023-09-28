@@ -46,7 +46,7 @@
       margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(50%, auto, 0, -2px);
+      @include absolute(50%, auto, 0, 3px);
     }
   }
 }
@@ -54,6 +54,9 @@
 .filters__remove {
   color: $color-neutral-900;
   line-height: 30px;
+  font-size: 18px;
+  position: relative;
+  top: 3px;
 
   &:hover {
     text-decoration: none;
@@ -165,8 +168,14 @@
   display: inline-block;
   margin: 12px 0 6px 4px;
 
+  @include flex-align-items(4px);
+
   &:hover {
     text-decoration: none;
     color: $color-neutral-900;
   }
+}
+
+.filters__add-icon {
+  font-size: 20px;
 }

@@ -5,7 +5,7 @@
       class="loading element-preview__menu-duplicate-loading"
     ></div>
     <a v-else class="element-preview__menu-item" @click="$emit('duplicate')">
-      <i class="fas fa-copy"></i>
+      <i class="iconoir-copy"></i>
       <span class="element-preview__menu-item-description">
         {{ $t('action.duplicate') }}
       </span>
@@ -18,7 +18,7 @@
         !isPlacementDisabled(PLACEMENTS.LEFT) && $emit('move', PLACEMENTS.LEFT)
       "
     >
-      <i class="fas fa-arrow-left"></i>
+      <i class="iconoir-nav-arrow-left"></i>
       <span
         v-if="!isPlacementDisabled(PLACEMENTS.LEFT)"
         class="element-preview__menu-item-description"
@@ -35,7 +35,7 @@
           $emit('move', PLACEMENTS.RIGHT)
       "
     >
-      <i class="fas fa-arrow-right"></i>
+      <i class="iconoir-nav-arrow-right"></i>
       <span
         v-if="!isPlacementDisabled(PLACEMENTS.RIGHT)"
         class="element-preview__menu-item-description"
@@ -52,7 +52,7 @@
           $emit('move', PLACEMENTS.BEFORE)
       "
     >
-      <i class="fas fa-arrow-up"></i>
+      <i class="iconoir-nav-arrow-up"></i>
       <span
         v-if="!isPlacementDisabled(PLACEMENTS.BEFORE)"
         class="element-preview__menu-item-description"
@@ -69,7 +69,7 @@
           $emit('move', PLACEMENTS.AFTER)
       "
     >
-      <i class="fas fa-arrow-down"></i>
+      <i class="iconoir-nav-arrow-down"></i>
       <span
         v-if="!isPlacementDisabled(PLACEMENTS.AFTER)"
         class="element-preview__menu-item-description"
@@ -78,7 +78,7 @@
       </span>
     </a>
     <a class="element-preview__menu-item" @click="$emit('delete')">
-      <i class="fas fa-trash"></i>
+      <i class="iconoir-bin"></i>
       <span class="element-preview__menu-item-description">
         {{ $t('action.delete') }}
       </span>

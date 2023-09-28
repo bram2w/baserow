@@ -17,7 +17,7 @@
         "
       >
         <a @click="exportView()">
-          <i class="context__menu-icon fas fa-fw fa-file-export"></i>
+          <i class="context__menu-icon iconoir-share-ios"></i>
           {{ $t('viewContext.exportView') }}
         </a>
       </li>
@@ -31,7 +31,7 @@
         "
       >
         <a @click="importFile()">
-          <i class="context__menu-icon fas fa-fw fa-file-import"></i>
+          <i class="context__menu-icon iconoir-import"></i>
           {{ $t('viewContext.importFile') }}
         </a>
       </li>
@@ -45,7 +45,7 @@
         "
       >
         <a @click="duplicateView()">
-          <i class="context__menu-icon fas fa-fw fa-clone"></i>
+          <i class="context__menu-icon iconoir-copy"></i>
           {{ $t('viewContext.duplicateView') }}
         </a>
       </li>
@@ -59,7 +59,7 @@
         "
       >
         <a @click="openWebhookModal()">
-          <i class="context__menu-icon fas fa-fw fa-globe"></i>
+          <i class="context__menu-icon iconoir-globe"></i>
           {{ $t('viewContext.webhooks') }}
         </a>
       </li>
@@ -73,7 +73,7 @@
         "
       >
         <a @click="enableRename()">
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon iconoir-edit-pencil"></i>
           {{ $t('viewContext.renameView') }}
         </a>
       </li>
@@ -87,7 +87,7 @@
         "
       >
         <a @click="deleteView()">
-          <i class="context__menu-icon fas fa-fw fa-trash"></i>
+          <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('viewContext.deleteView') }}
         </a>
       </li>

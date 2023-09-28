@@ -21,3 +21,11 @@
   font-size: 11px;
   color: $color-neutral-400;
 }
+
+.add-element-card__element-type {
+  @include flex-align-items(4px);
+}
+
+.add-element-card__element-type-icon {
+  font-size: 16px;
+}

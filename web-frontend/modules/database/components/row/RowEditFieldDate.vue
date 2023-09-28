@@ -15,7 +15,7 @@
           @focus="focus($refs.dateContext, $event)"
           @blur="blur($refs.dateContext, $event)"
         />
-        <i class="fas fa-calendar-check"></i>
+        <i class="iconoir-calendar"></i>
         <Context
           ref="dateContext"
           :hide-on-click-outside="false"
@@ -52,7 +52,7 @@
           @focus="focus($refs.timeContext, $event)"
           @blur="blur($refs.timeContext, $event)"
         />
-        <i class="fas fa-clock"></i>
+        <i class="iconoir-clock"></i>
         <TimeSelectContext
           v-if="!readOnly"
           ref="timeContext"

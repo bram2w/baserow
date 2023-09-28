@@ -3,7 +3,7 @@
     simple
     shadow
     type="error"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('authorizationErrorToast.title')"
   >
     {{ $t('authorizationErrorToast.content') }}

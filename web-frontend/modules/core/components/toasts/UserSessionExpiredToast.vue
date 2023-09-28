@@ -3,7 +3,7 @@
     simple
     shadow
     type="info"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('userSessionExpiredToast.title')"
   >
     {{ $t('userSessionExpiredToast.content') }}

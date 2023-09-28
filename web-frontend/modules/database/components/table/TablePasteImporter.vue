@@ -31,7 +31,7 @@
     <Alert
       v-if="error !== ''"
       type="error"
-      icon="exclamation"
+      icon="iconoir-warning-triangle"
       :title="$t('common.wrong')"
     >
       {{ error }}

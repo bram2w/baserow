@@ -9,7 +9,7 @@
         class="api-docs__switch"
         @click.prevent="databasesOpen = !databasesOpen"
       >
-        <i class="api-docs__switch-icon fas fa-database"></i>
+        <i class="api-docs__switch-icon iconoir-db"></i>
         {{ $t('apiDocsDatabase.pageTitle', database) }}
       </a>
       <div class="api-docs__open">
@@ -31,7 +31,7 @@
       <div class="api-docs__databases-inner">
         <APIDocsSelectDatabase :selected="database.id" />
         <nuxt-link :to="{ name: 'dashboard' }" class="select-application__back">
-          <i class="fas fa-arrow-left"></i>
+          <i class="iconoir-arrow-left"></i>
           {{ $t('apiDocsDatabase.back') }}
         </nuxt-link>
       </div>

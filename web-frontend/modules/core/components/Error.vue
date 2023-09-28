@@ -2,7 +2,7 @@
   <Alert
     v-if="error.visible"
     type="error"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="error.title"
     >{{ error.message }}</Alert
   >

@@ -69,7 +69,7 @@
               }"
               @click="previous"
             >
-              <i class="fas fa-chevron-up"></i>
+              <i class="iconoir-nav-arrow-up"></i>
             </a>
             <a
               class="form-view-survey__pagination-button"
@@ -78,7 +78,7 @@
               }"
               @click="next"
             >
-              <i class="fas fa-chevron-down"></i>
+              <i class="iconoir-nav-arrow-down"></i>
             </a>
           </div>
         </div>

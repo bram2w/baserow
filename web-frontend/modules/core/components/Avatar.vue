@@ -10,7 +10,7 @@
       [`avatar--${color}`]: color,
     }"
   >
-    <i v-if="icon" class="fas" :class="`fa-${icon}`" />
+    <i v-if="icon" :class="`${icon}`" />
     <img v-if="image" :src="image" class="avatar__image" />
     <span v-if="initials">{{ initials }}</span>
   </div>
