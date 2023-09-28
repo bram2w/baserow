@@ -446,3 +446,27 @@ def test_multiple_field_prefetch_different_many_to_many_target(data_fixture):
                 )
             )
         )
+
+
+@pytest.mark.django_db
+def test_multiple_field_prefetch__many_to_many_no_results(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+
+    model = table.get_model()
+
+    assert (
+        list(
+            model.objects.all().multi_field_prefetch(
+                CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                    SelectOption,
+                    [f"field_{multiple_select_field.id}"],
+                    skip_target_check=True,
+                )
+            )
+        )
+        == []
+    )

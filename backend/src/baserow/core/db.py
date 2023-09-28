@@ -692,7 +692,7 @@ class CombinedForeignKeyAndManyToManyMultipleFieldPrefetch:
             )
             sub_queries.append(subquery)
 
-        if len(sub_queries) > 0:
+        if len(sub_queries) > 0 and len(result_set) > 0:
             union_query = sql.SQL(" UNION ").join(sub_queries)
             union_sql = sql.SQL(
                 """
