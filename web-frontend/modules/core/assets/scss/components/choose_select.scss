@@ -1,4 +1,12 @@
-.choose-select-field__link:hover {
-  text-decoration: none;
-  color: $color-neutral-900;
+.choose-select-field__link {
+  @include flex-align-items(4px);
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-900;
+  }
+}
+
+.choose-select-field__link-icon {
+  font-size: 20px;
 }

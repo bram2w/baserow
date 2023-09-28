@@ -27,7 +27,7 @@
             )
           "
         >
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon iconoir-edit-pencil"></i>
           {{ $t('fieldContext.editField') }}
         </a>
         <UpdateFieldContext
@@ -53,7 +53,7 @@
           :class="{ 'context__menu-item--loading': deleteLoading }"
           @click="deleteField()"
         >
-          <i class="context__menu-icon fas fa-fw fa-trash"></i>
+          <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('fieldContext.deleteField') }}
         </a>
       </li>

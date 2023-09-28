@@ -35,7 +35,6 @@
 
 %tree__size {
   line-height: 32px;
-  height: 32px;
 }
 
 .tree__action {
@@ -43,6 +42,12 @@
 
   padding: 0 6px;
   @include rounded($rounded);
+
+  .layout--collapsed & {
+    height: 32px;
+    justify-content: center;
+    @include flex-align-items();
+  }
 
   &.tree__action--disabled {
     opacity: 0.6;
@@ -78,7 +83,7 @@
 
   color: $color-neutral-900;
   font-size: 14px;
-  display: block;
+  @include flex-align-items(4px);
 
   .tree__action--deactivated & {
     color: $color-neutral-500;
@@ -108,13 +113,10 @@
   @extend %tree__size;
 
   text-align: center;
-  width: $fa-fw-width;
-  color: $color-neutral-700;
-  margin-right: 4px;
-  font-size: 11px;
+  color: $color-neutral-900;
 
   &.tree__icon--type {
-    color: $color-neutral-300;
+    color: $color-neutral-500;
   }
 }
 
@@ -221,12 +223,13 @@
   position: absolute;
   z-index: 1;
   right: 0;
-  top: 0;
+  top: 8px;
   text-align: center;
   width: 32px;
   color: $color-neutral-700;
   height: inherit;
   line-height: inherit;
+  font-size: 16px;
 
   :hover > & {
     display: block;
@@ -240,10 +243,11 @@
 .tree__options {
   @extend .tree__right-icon;
 
-  color: $color-neutral-300;
+  color: $color-neutral-500;
+  cursor: pointer;
 
   &:hover {
-    color: $color-neutral-700;
+    color: $color-neutral-900;
   }
 }
 

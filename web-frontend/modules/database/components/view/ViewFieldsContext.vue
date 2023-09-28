@@ -40,7 +40,7 @@
         </div>
       </div>
       <div class="hidings__search">
-        <i class="hidings__search-icon fas fa-search"></i>
+        <i class="hidings__search-icon iconoir-search"></i>
         <input
           ref="search"
           v-model="query"
@@ -68,17 +68,11 @@
             :value="!isHidden(field.id)"
             @input="updateFieldOptionsOfField(field, { hidden: !$event })"
           >
-            <i
-              class="fas fa-fw switch__icon"
-              :class="'fa-' + field._.type.iconClass"
-            ></i>
+            <i class="switch__icon" :class="field._.type.iconClass"></i>
             <span>{{ field.name }}</span>
           </SwitchInput>
           <div v-else class="hidings__item-name">
-            <i
-              class="fas fa-fw switch__icon"
-              :class="'fa-' + field._.type.iconClass"
-            ></i>
+            <i class="switch__icon" :class="field._.type.iconClass"></i>
             <span>{{ field.name }}</span>
           </div>
         </li>

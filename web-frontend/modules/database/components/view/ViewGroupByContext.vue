@@ -28,7 +28,7 @@
           class="group-bys__remove"
           @click.stop="deleteGroupBy(groupBy)"
         >
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
         <div class="group-bys__description">
           <template v-if="index === 0">{{
@@ -64,58 +64,47 @@
             :class="{ active: groupBy.order === 'ASC' }"
             @click="updateGroupBy(groupBy, { order: 'ASC' })"
           >
-            <div>
-              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-                getGroupByIndicator(field, 1)
-              }}</template>
-              <i
-                v-if="getGroupByIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getGroupByIndicator(field, 1)"
-              ></i>
-            </div>
-            <div>
-              <i class="fas fa-long-arrow-alt-right"></i>
-            </div>
-            <div>
-              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-                getGroupByIndicator(field, 2)
-              }}</template>
-              <i
-                v-if="getGroupByIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getGroupByIndicator(field, 2)"
-              ></i>
-            </div>
+            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+              getGroupByIndicator(field, 1)
+            }}</template>
+            <i
+              v-if="getGroupByIndicator(field, 0) === 'icon'"
+              :class="getGroupByIndicator(field, 1)"
+            ></i>
+
+            <i class="iconoir-arrow-right"></i>
+
+            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+              getGroupByIndicator(field, 2)
+            }}</template>
+            <i
+              v-if="getGroupByIndicator(field, 0) === 'icon'"
+              class="fa"
+              :class="getGroupByIndicator(field, 2)"
+            ></i>
           </a>
           <a
             class="group-bys__order-item"
             :class="{ active: groupBy.order === 'DESC' }"
             @click="updateGroupBy(groupBy, { order: 'DESC' })"
           >
-            <div>
-              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-                getGroupByIndicator(field, 2)
-              }}</template>
-              <i
-                v-if="getGroupByIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getGroupByIndicator(field, 2)"
-              ></i>
-            </div>
-            <div>
-              <i class="fas fa-long-arrow-alt-right"></i>
-            </div>
-            <div>
-              <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
-                getGroupByIndicator(field, 1)
-              }}</template>
-              <i
-                v-if="getGroupByIndicator(field, 0) === 'icon'"
-                class="fa"
-                :class="'fa-' + getGroupByIndicator(field, 1)"
-              ></i>
-            </div>
+            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+              getGroupByIndicator(field, 2)
+            }}</template>
+            <i
+              v-if="getGroupByIndicator(field, 0) === 'icon'"
+              :class="getGroupByIndicator(field, 2)"
+            ></i>
+
+            <i class="iconoir-arrow-right"></i>
+
+            <template v-if="getGroupByIndicator(field, 0) === 'text'">{{
+              getGroupByIndicator(field, 1)
+            }}</template>
+            <i
+              v-if="getGroupByIndicator(field, 0) === 'icon'"
+              :class="getGroupByIndicator(field, 1)"
+            ></i>
           </a>
         </div>
       </div>
@@ -129,7 +118,7 @@
             $refs.addContext.toggle($refs.addContextToggle, 'bottom', 'left', 4)
           "
         >
-          <i class="fas fa-plus"></i>
+          <i class="group-bys__add-icon iconoir-plus"></i>
           {{ $t('viewGroupByContext.addGroupBy') }}
         </a>
         <Context
@@ -146,8 +135,8 @@
             >
               <a @click="addGroupBy(field)">
                 <i
-                  class="context__menu-icon fas fa-fw"
-                  :class="'fa-' + field._.type.iconClass"
+                  class="context__menu-icon"
+                  :class="field._.type.iconClass"
                 ></i>
                 {{ field.name }}
               </a>

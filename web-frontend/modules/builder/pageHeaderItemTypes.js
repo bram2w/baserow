@@ -44,7 +44,7 @@ export class ElementsPageHeaderItemType extends PageHeaderItemType {
   }
 
   get icon() {
-    return 'stream'
+    return 'iconoir-selection'
   }
 
   get component() {
@@ -66,7 +66,7 @@ export class DataSourcesPageHeaderItemType extends PageHeaderItemType {
   }
 
   get icon() {
-    return 'table'
+    return 'iconoir-table'
   }
 
   get component() {
@@ -88,7 +88,7 @@ export class VariablesPageHeaderItemType extends PageHeaderItemType {
   }
 
   get icon() {
-    return 'square-root-alt'
+    return 'baserow-icon-formula'
   }
 
   get component() {
@@ -110,7 +110,7 @@ export class SettingsPageHeaderItemType extends PageHeaderItemType {
   }
 
   get icon() {
-    return 'cogs'
+    return 'iconoir-settings'
   }
 
   get component() {

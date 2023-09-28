@@ -3,7 +3,7 @@
 }
 
 .value-provider-item__title {
-  @extend %ellipsis;
+  @include flex-align-items(4px);
 
   font-weight: 600;
   font-size: 14px;
@@ -11,8 +11,13 @@
   line-height: 140%;
 }
 
+.value-provider-item__title-text {
+  @extend %ellipsis;
+}
+
 .value-provider-item__icon {
   margin-right: 4px;
+  font-size: 16px;
 }
 
 .value-provider-item__description {

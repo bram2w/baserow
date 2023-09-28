@@ -20,7 +20,7 @@
       <Alert
         simple
         type="error"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
         :title="$t('signup.disabled')"
         >{{ $t('signup.disabledMessage') }}</Alert
       >

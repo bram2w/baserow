@@ -26,7 +26,7 @@
     />
     <div class="actions">
       <a @click="hideForm">
-        <i class="fas fa-chevron-left margin-right-1"></i>
+        <i class="iconoir-nav-arrow-left margin-right-1"></i>
         {{ $t('action.back') }}
       </a>
       <button

@@ -1,10 +1,7 @@
 <template>
   <div class="formula-field__description">
     <div class="formula-field__description-heading-1">
-      <i
-        class="fas formula-field__description-icon"
-        :class="[selectedItem.icon]"
-      />
+      <i class="formula-field__description-icon" :class="[selectedItem.icon]" />
       {{ makeHeader(selectedItem.value) }}
     </div>
     <div class="formula-field__description-text">

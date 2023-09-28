@@ -7,13 +7,13 @@
     <ul class="context__menu">
       <li v-if="canBeEdited(authProvider.type)">
         <a @click="$emit('edit', authProvider.id)">
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon iconoir-edit-pencil"></i>
           {{ $t('editAuthProviderMenuContext.edit') }}
         </a>
       </li>
       <li v-if="canBeDeleted(authProvider.type)">
         <a @click="$emit('delete', authProvider.id)">
-          <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
+          <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('editAuthProviderMenuContext.delete') }}
         </a>
       </li>

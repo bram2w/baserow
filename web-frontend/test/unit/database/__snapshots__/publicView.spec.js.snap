@@ -71,7 +71,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
               class="header__filter-link header__filter-link--disabled"
             >
               <i
-                class="header__filter-icon header-filter-icon--view fas fa-fw color-primary fa-bars"
+                class="header__filter-icon header-filter-icon--view color-primary iconoir-menu"
               />
                
               <span
@@ -100,7 +100,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="header__filter-link"
               >
                 <i
-                  class="header__filter-icon fas fa-filter"
+                  class="header__filter-icon iconoir-filter"
                 />
                  
                 <span
@@ -121,7 +121,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="header__filter-link"
               >
                 <i
-                  class="header__filter-icon fas fa-sort"
+                  class="header__filter-icon iconoir-sort"
                 />
                  
                 <span
@@ -142,7 +142,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="header__filter-link"
               >
                 <i
-                  class="header__filter-icon fas fa-layer-group"
+                  class="header__filter-icon iconoir-book-stack"
                 />
                  
                 <span
@@ -172,7 +172,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="header__filter-link"
               >
                 <i
-                  class="header__filter-icon fas fa-eye-slash"
+                  class="header__filter-icon iconoir-eye-off"
                 />
                  
                 <span
@@ -193,7 +193,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                 class="header__filter-link"
               >
                 <i
-                  class="header__search-icon fas fa-search"
+                  class="header__search-icon iconoir-search"
                 />
                 
     
@@ -283,7 +283,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                             class="grid-view__row-more"
                           >
                             <i
-                              class="fas fa-expand"
+                              class="iconoir-expand"
                             />
                           </a>
                            
@@ -356,13 +356,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <div
-                      class="grid-view__description-icon"
-                    >
-                      <i
-                        class="fas fa-font"
-                      />
-                    </div>
+                    <i
+                      class="grid-view__description-icon iconoir-text"
+                    />
                      
                     <div
                       class="grid-view__description-name"
@@ -393,13 +389,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <div
-                      class="grid-view__description-icon"
-                    >
-                      <i
-                        class="fas fa-align-left"
-                      />
-                    </div>
+                    <i
+                      class="grid-view__description-icon iconoir-align-left"
+                    />
                      
                     <div
                       class="grid-view__description-name"
@@ -430,13 +422,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <div
-                      class="grid-view__description-icon"
-                    >
-                      <i
-                        class="fas fa-check-square"
-                      />
-                    </div>
+                    <i
+                      class="grid-view__description-icon baserow-icon-circle-checked"
+                    />
                      
                     <div
                       class="grid-view__description-name"
@@ -467,13 +455,9 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                   <div
                     class="grid-view__description"
                   >
-                    <div
-                      class="grid-view__description-icon"
-                    >
-                      <i
-                        class="fas fa-font"
-                      />
-                    </div>
+                    <i
+                      class="grid-view__description-icon iconoir-text"
+                    />
                      
                     <div
                       class="grid-view__description-name"

@@ -20,7 +20,7 @@
           }}
         </h2>
         <a v-if="isTableCreation" class="modal__close" @click="hide()">
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </div>
 
@@ -36,8 +36,12 @@
                 :class="{ active: importer === '' }"
                 @click=";[(importer = ''), reset()]"
               >
-                <i class="choice-items__icon fas fa-clone"></i>
-                {{ $t('importFileModal.newTable') }}
+                <i class="choice-items__icon iconoir-copy"></i>
+                <span>{{ $t('importFileModal.newTable') }}</span>
+                <i
+                  v-if="importer === ''"
+                  class="choice-items__icon-active iconoir-check-circle"
+                ></i>
               </a>
             </li>
             <li v-for="importerType in importerTypes" :key="importerType.type">
@@ -47,10 +51,14 @@
                 @click=";[(importer = importerType.type), reset()]"
               >
                 <i
-                  class="choice-items__icon fas"
-                  :class="'fa-' + importerType.iconClass"
+                  class="choice-items__icon"
+                  :class="importerType.iconClass"
                 ></i>
-                {{ importerType.getName() }}
+                <span> {{ importerType.getName() }}</span>
+                <i
+                  v-if="importer === importerType.type"
+                  class="choice-items__icon-active iconoir-check-circle"
+                ></i>
               </a>
             </li>
           </ul>
@@ -78,7 +86,7 @@
         v-if="errorReport.length > 0 && error.visible"
         :title="$t('importFileModal.reportTitleFailure')"
         type="warning"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
       >
         {{ $t('importFileModal.reportMessage') }}
         {{ errorReport.join(', ') }}
@@ -87,7 +95,7 @@
         v-if="errorReport.length > 0 && !error.visible"
         :title="$t('importFileModal.reportTitleSuccess')"
         type="warning"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
       >
         {{ $t('importFileModal.reportMessage') }}
         {{ errorReport.join(', ') }}
@@ -128,7 +136,7 @@
             class="button button--large button--ghost"
             @click=";[(importer = ''), reset()]"
           >
-            <i class="button__icon fas fa-arrow-left"></i>
+            <i class="button__icon iconoir-arrow-left"></i>
             {{ $t('action.back') }}
           </button>
           <button
@@ -192,14 +200,14 @@
           </div>
         </div>
         <div v-else class="import-modal__field-mapping--empty">
-          <i class="import-modal__field-mapping-empty-icon fas fa-random" />
+          <i class="import-modal__field-mapping-empty-icon iconoir-shuffle" />
           <div class="import-modal__field-mapping-empty-text">
             {{ $t('importFileModal.selectImportMessage') }}
           </div>
         </div>
       </div>
       <a class="modal__close" @click="hide()">
-        <i class="fas fa-times"></i>
+        <i class="iconoir-cancel"></i>
       </a>
     </template>
   </Modal>

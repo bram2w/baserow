@@ -15,12 +15,15 @@
     >
       {{ pathParts.dataProvider }}
       <template v-for="(part, index) in pathParts.parts">
-        <i :key="index" class="get-formula-component__caret fas fa-angle-right">
+        <i
+          :key="index"
+          class="get-formula-component__caret iconoir-nav-arrow-right"
+        >
         </i>
         {{ part }}
       </template>
       <a class="get-formula-component__remove" @click="deleteNode">
-        <i class="fas fa-times"></i>
+        <i class="iconoir-cancel"></i>
       </a>
     </div>
   </NodeViewWrapper>

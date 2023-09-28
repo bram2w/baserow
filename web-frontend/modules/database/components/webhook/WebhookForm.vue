@@ -5,7 +5,7 @@
         v-if="!values.active"
         simple
         type="primary"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
         :title="$t('webhookForm.deactivated.title')"
       >
         {{ $t('webhookForm.deactivated.content') }}
@@ -180,7 +180,7 @@
                 class="button button--error webhook__header-delete"
                 @click="removeHeader(index)"
               >
-                <i class="fas fa-trash button__icon"></i>
+                <i class="iconoir-bin button__icon"></i>
               </a>
             </div>
           </div>
@@ -225,7 +225,7 @@
     <div v-else>
       <div class="alert alert--error alert--has-icon">
         <div class="alert__icon">
-          <i class="fas fa-exclamation"></i>
+          <i class="iconoir-warning-triangle"></i>
         </div>
         <div class="alert__title">
           {{ $t('webhookForm.deprecatedEventType.title') }}

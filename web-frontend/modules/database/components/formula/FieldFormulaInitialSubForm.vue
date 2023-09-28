@@ -27,7 +27,7 @@
               href="#"
               @click.stop="$emit('refresh-formula-type')"
             >
-              <i class="fas fa-sync-alt"></i>
+              <i class="iconoir-refresh-double"></i>
               {{ $t('fieldFormulaInitialSubForm.refreshFormulaOptions') }}
             </a>
           </div>

@@ -8,7 +8,7 @@
     <i :class="viewOwnershipType.getIconClass()"></i>
     {{ viewOwnershipType.getName() }}
     <div v-if="isDeactivated" class="deactivated-label">
-      <i class="fas fa-lock"></i>
+      <i class="iconoir-lock"></i>
     </div>
     <component
       :is="viewOwnershipType.getDeactivatedModal()"

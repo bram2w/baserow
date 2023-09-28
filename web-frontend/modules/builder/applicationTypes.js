@@ -9,7 +9,7 @@ export class BuilderApplicationType extends ApplicationType {
   }
 
   getIconClass() {
-    return 'desktop'
+    return 'iconoir-apple-imac-2021'
   }
 
   getName() {

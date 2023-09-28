@@ -2,7 +2,7 @@
   <div class="templates__header">
     <template v-if="template !== null">
       <div class="templates__icon">
-        <i class="fas" :class="'fa-' + template.icon"></i>
+        <i :class="template.icon"></i>
       </div>
       <div class="templates__header-title">
         {{ template.name }}

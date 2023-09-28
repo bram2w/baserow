@@ -6,7 +6,7 @@
         :class="!canChooseDateField ? 'header__filter-link--disabled' : ''"
         @click="showChooseDateFieldModal"
       >
-        <i class="header__filter-icon fas fa-calendar-alt"></i>
+        <i class="header__filter-icon iconoir-calendar"></i>
         <span class="header__filter-name">
           {{ selectDateFieldLinkText }}
         </span>
@@ -35,7 +35,7 @@
           )
         "
       >
-        <i class="header__filter-icon fas fa-list-ul"></i>
+        <i class="header__filter-icon iconoir-list"></i>
         <span class="header__filter-name">{{
           $t('calendarViewHeader.labels')
         }}</span>

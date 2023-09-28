@@ -40,7 +40,7 @@
             :class="{ 'button--loading': state !== null }"
             @click.prevent="$refs.file.click($event)"
           >
-            <i class="fas fa-cloud-upload-alt"></i>
+            <i class="iconoir-cloud-upload"></i>
             {{ $t('tableXMLImporter.chooseButton') }}
           </a>
           <div v-if="state === null" class="file-upload__file">
@@ -65,7 +65,7 @@
       v-if="error !== ''"
       :title="$t('common.wrong')"
       type="error"
-      icon="exclamation"
+      icon="iconoir-warning-triangle"
     >
       {{ error }}
     </Alert>

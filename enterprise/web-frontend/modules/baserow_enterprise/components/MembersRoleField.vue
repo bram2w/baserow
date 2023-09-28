@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="members-role-field">
     <span
       v-if="
         userId === row.user_id ||
@@ -18,7 +18,7 @@
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
       {{ roleName(roles, row) }}
-      <i class="fas fa-chevron-down"></i>
+      <i class="iconoir-nav-arrow-down"></i>
     </a>
     <EditRoleContext
       ref="editRoleContext"
@@ -30,12 +30,10 @@
     <HelpIcon
       v-if="roleUidSelected === 'NO_ACCESS'"
       :tooltip="$t('membersRoleField.noAccessHelpText')"
-      class="margin-left-1"
     />
     <HelpIcon
       v-if="roleUidSelected === 'ADMIN'"
       :tooltip="$t('membersRoleField.adminHelpText')"
-      class="margin-left-1"
       is-warning
     />
   </div>

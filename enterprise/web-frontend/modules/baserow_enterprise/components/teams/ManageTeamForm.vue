@@ -92,7 +92,7 @@
             <div class="margin-right-1">
               {{ item.email }}
               <a class="color-error" @click="$emit('remove-subject', item)"
-                ><i class="fas fa-fw fa-trash"></i
+                ><i class="iconoir-bin"></i
               ></a>
             </div>
           </template>

@@ -9,10 +9,10 @@ import EmailNotifications from '@baserow/modules/core/components/settings/EmailN
  */
 export class SettingsType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize setting types. The icon will for example be displayed in the modal
    * setting sidebar. If you for example want the database icon, you must return
-   * 'database' here. This will result in the classname 'fas fa-database'.
+   * 'database' here. This will result in the classname 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -76,7 +76,7 @@ export class AccountSettingsType extends SettingsType {
   }
 
   getIconClass() {
-    return 'user'
+    return 'iconoir-user'
   }
 
   getName() {
@@ -95,7 +95,7 @@ export class PasswordSettingsType extends SettingsType {
   }
 
   getIconClass() {
-    return 'lock'
+    return 'iconoir-lock'
   }
 
   getName() {
@@ -121,7 +121,7 @@ export class EmailNotificationsSettingsType extends SettingsType {
   }
 
   getIconClass() {
-    return 'envelope'
+    return 'iconoir-mail'
   }
 
   getName() {
@@ -140,7 +140,7 @@ export class DeleteAccountSettingsType extends SettingsType {
   }
 
   getIconClass() {
-    return 'user-slash'
+    return 'iconoir-cancel'
   }
 
   getName() {

@@ -11,7 +11,7 @@
         "
       >
         <a @click=";[$emit('create-row'), hide()]">
-          <i class="context__menu-icon fas fa-fw fa-plus"></i>
+          <i class="context__menu-icon iconoir-plus"></i>
           {{ $t('kanbanViewStackContext.createCard') }}
         </a>
       </li>
@@ -29,7 +29,7 @@
           ref="updateContextLink"
           @click="$refs.updateContext.toggle($refs.updateContextLink)"
         >
-          <i class="context__menu-icon fas fa-fw fa-pen"></i>
+          <i class="context__menu-icon iconoir-edit-pencil"></i>
           {{ $t('kanbanViewStackContext.editStack') }}
         </a>
         <KanbanViewUpdateStackContext
@@ -51,7 +51,7 @@
         "
       >
         <a @click="$refs.deleteModal.show()">
-          <i class="context__menu-icon fas fa-fw fa-trash-alt"></i>
+          <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('kanbanViewStackContext.deleteStack') }}
         </a>
       </li>

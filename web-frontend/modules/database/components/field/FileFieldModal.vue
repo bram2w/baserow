@@ -27,12 +27,12 @@
               class="file-field-modal__rename"
               @click="$refs.rename.edit()"
             >
-              <i class="fa fa-pen"></i>
+              <i class="iconoir-edit-pencil"></i>
             </a>
           </template>
         </div>
         <a class="file-field-modal__close" @click="hide()">
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </div>
       <div class="file-field-modal__body">
@@ -40,13 +40,13 @@
           class="file-field-modal__body-nav file-field-modal__body-nav--previous"
           @click="previous()"
         >
-          <i class="fas fa-chevron-left"></i>
+          <i class="iconoir-nav-arrow-left"></i>
         </a>
         <a
           class="file-field-modal__body-nav file-field-modal__body-nav--next"
           @click="next()"
         >
-          <i class="fas fa-chevron-right"></i>
+          <i class="iconoir-nav-arrow-right"></i>
         </a>
         <div v-if="preview !== null" class="file-field-modal__preview">
           <PreviewAny
@@ -56,7 +56,7 @@
           >
             <template #fallback>
               <div class="file-field-modal__preview-icon">
-                <i class="fas" :class="getIconClass(preview.mime_type)"></i>
+                <i :class="getIconClass(preview.mime_type)"></i>
               </div>
             </template>
           </PreviewAny>
@@ -81,7 +81,7 @@
               />
               <i
                 v-else
-                class="fas file-field-modal__nav-icon"
+                class="file-field-modal__nav-icon"
                 :class="getIconClass(file.mime_type)"
               ></i>
             </a>
@@ -94,14 +94,14 @@
             :filename="preview.visible_name"
             :loading-class="'file-field-modal__action--loading'"
           >
-            <i class="fas fa-download" />
+            <i class="iconoir-download" />
           </DownloadLink>
           <a
             v-if="!readOnly"
             class="file-field-modal__action"
             @click="remove(selected)"
           >
-            <i class="fas fa-trash"></i>
+            <i class="iconoir-bin"></i>
           </a>
         </ul>
       </div>
@@ -111,7 +111,7 @@
 
 <script>
 import baseModal from '@baserow/modules/core/mixins/baseModal'
-import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
+import { mimetype2icon } from '@baserow/modules/core/utils/fileTypeToIcon'
 import PreviewAny from '@baserow/modules/database/components/preview/PreviewAny'
 import {
   isElement,
@@ -155,7 +155,7 @@ export default {
       return baseModal.methods.show.call(this)
     },
     getIconClass(mimeType) {
-      return 'fa-' + mimetype2fa(mimeType)
+      return mimetype2icon(mimeType)
     },
     next() {
       this.selected =

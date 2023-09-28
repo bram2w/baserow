@@ -22,21 +22,11 @@
     background-color: $color-neutral-100;
   }
 
-  &--selected {
+  &.active {
     background-color: $color-primary-100;
 
     &:hover {
       background-color: $color-primary-100;
-    }
-
-    &::after {
-      @extend .fas;
-
-      content: fa-content($fa-var-check-circle);
-      text-align: center;
-      color: $color-success-500;
-
-      @include absolute(8px, 8px, auto, auto);
     }
   }
 
@@ -56,4 +46,12 @@
     cursor: default;
     background-color: transparent;
   }
+}
+
+.value-provider-list__item-active-icon {
+  text-align: center;
+  color: $palette-green-500;
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }

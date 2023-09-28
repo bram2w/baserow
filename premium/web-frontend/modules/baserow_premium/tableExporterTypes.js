@@ -25,7 +25,7 @@ export class JSONTableExporter extends PremiumTableExporterType {
   }
 
   getIconClass() {
-    return 'file-code'
+    return 'baserow-icon-file-code'
   }
 
   getName() {
@@ -52,7 +52,7 @@ export class XMLTableExporter extends PremiumTableExporterType {
   }
 
   getIconClass() {
-    return 'file-code'
+    return 'baserow-icon-file-code'
   }
 
   getName() {

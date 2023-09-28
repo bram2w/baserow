@@ -363,8 +363,7 @@ class Template(GroupToWorkspaceCompatModelMixin, models.Model):
     )
     icon = models.CharField(
         max_length=32,
-        help_text="The font awesome class name that can be used for displaying "
-        "purposes.",
+        help_text="The icon class name that can be used for displaying purposes.",
     )
     categories = models.ManyToManyField(TemplateCategory, related_name="templates")
     workspace = models.ForeignKey(

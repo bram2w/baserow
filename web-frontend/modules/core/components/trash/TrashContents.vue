@@ -22,7 +22,7 @@
       v-else-if="totalServerSideTrashContentsCount === 0"
       class="trash__empty"
     >
-      <i class="trash__empty-icon fas fa-recycle"></i>
+      <i class="trash__empty-icon iconoir-refresh-double"></i>
       <div class="trash__empty-text">
         {{ $t('trashContents.empty') }}
       </div>

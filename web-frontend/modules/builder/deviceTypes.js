@@ -24,7 +24,7 @@ export class DesktopDeviceType extends DeviceType {
   }
 
   get iconClass() {
-    return 'desktop'
+    return 'iconoir-apple-imac-2021'
   }
 
   getOrder() {
@@ -46,7 +46,7 @@ export class TabletDeviceType extends DeviceType {
   }
 
   get iconClass() {
-    return 'tablet'
+    return 'baserow-icon-tablet'
   }
 
   getOrder() {
@@ -68,7 +68,7 @@ export class SmartphoneDeviceType extends DeviceType {
   }
 
   get iconClass() {
-    return 'mobile'
+    return 'baserow-icon-smartphone'
   }
 
   getOrder() {

@@ -25,9 +25,7 @@
         <div class="sidebar__user-info">
           <div class="sidebar__user-info-top">
             <div class="sidebar__user-name">{{ name }}</div>
-            <div class="sidebar__user-icon">
-              <i class="fas fa-caret-down"></i>
-            </div>
+            <i class="sidebar__user-icon iconoir-nav-arrow-down"></i>
           </div>
           <div class="sidebar__user-email">{{ email }}</div>
         </div>
@@ -41,7 +39,7 @@
         <ul class="context__menu">
           <li>
             <a @click=";[$refs.settingsModal.show(), $refs.userContext.hide()]">
-              <i class="context__menu-icon fas fa-fw fa-cogs"></i>
+              <i class="context__menu-icon iconoir-settings"></i>
               {{ $t('sidebar.settings') }}
             </a>
             <SettingsModal ref="settingsModal"></SettingsModal>
@@ -51,7 +49,7 @@
               :class="{ 'context__menu-item--loading': logoffLoading }"
               @click="logoff()"
             >
-              <i class="context__menu-icon fas fa-fw fa-sign-out-alt"></i>
+              <i class="context__menu-icon iconoir-log-out"></i>
               {{ $t('sidebar.logoff') }}
             </a>
           </li>
@@ -67,12 +65,10 @@
           >
             <div class="tree__action sidebar__action">
               <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
-                <div>
-                  <i class="tree__icon fas fa-tachometer-alt"></i>
-                  <span class="sidebar__item-name">{{
-                    $t('sidebar.dashboard')
-                  }}</span>
-                </div>
+                <i class="tree__icon iconoir-dashboard-dots"></i>
+                <span class="sidebar__item-name">{{
+                  $t('sidebar.dashboard')
+                }}</span>
               </nuxt-link>
             </div>
           </li>
@@ -84,12 +80,10 @@
           <li class="tree__item">
             <div class="tree__action sidebar__action">
               <a class="tree__link" @click="$refs.trashModal.show()">
-                <div>
-                  <i class="tree__icon fas fa-trash"></i>
-                  <span class="sidebar__item-name">{{
-                    $t('sidebar.trash')
-                  }}</span>
-                </div>
+                <i class="tree__icon iconoir-bin"></i>
+                <span class="sidebar__item-name">{{
+                  $t('sidebar.trash')
+                }}</span>
               </a>
               <TrashModal ref="trashModal"></TrashModal>
             </div>
@@ -100,7 +94,7 @@
               :class="{ 'tree__action--disabled': isAdminPage }"
             >
               <a class="tree__link" @click.prevent="admin()">
-                <i class="tree__icon fas fa-users-cog"></i>
+                <i class="tree__icon iconoir-settings"></i>
                 <span class="sidebar__item-name">{{
                   $t('sidebar.admin')
                 }}</span>
@@ -147,9 +141,10 @@
                   v-if="unreadNotificationsInOtherWorkspaces"
                   class="sidebar__unread-notifications-icon"
                 ></span>
-                <a
+
+                <i
                   ref="contextLink"
-                  class="tree__options"
+                  class="tree__options baserow-icon-more-vertical"
                   @click="
                     $refs.context.toggle(
                       $refs.contextLink,
@@ -158,9 +153,8 @@
                       0
                     )
                   "
-                >
-                  <i class="fas fa-ellipsis-v"></i>
-                </a>
+                ></i>
+
                 <WorkspacesContext ref="workspaceSelect"></WorkspacesContext>
                 <WorkspaceContext
                   ref="context"
@@ -175,7 +169,7 @@
                   class="tree__link"
                   @click="$refs.notificationPanel.toggle($event.currentTarget)"
                 >
-                  <i class="tree__icon tree__icon--type fas fa-bell"></i>
+                  <i class="tree__icon tree__icon--type iconoir-bell"></i>
                   {{ $t('sidebar.notifications') }}
                 </a>
                 <span v-show="unreadNotificationCount" class="tree__counter">{{
@@ -196,7 +190,7 @@
             >
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.inviteModal.show()">
-                  <i class="tree__icon tree__icon--type fas fa-user-plus"></i>
+                  <i class="tree__icon tree__icon--type iconoir-add-user"></i>
 
                   {{ $t('sidebar.inviteOthers') }}
                 </a>
@@ -226,7 +220,9 @@
               <li class="tree__item" :class="{ active: isExactActive }">
                 <div class="tree__action">
                   <a :href="href" class="tree__link" @click="navigate">
-                    <i class="tree__icon tree__icon--type fas fa-users"></i>
+                    <i
+                      class="tree__icon tree__icon--type iconoir-community"
+                    ></i>
                     {{ $t('sidebar.members') }}
                   </a>
                 </div>
@@ -284,7 +280,7 @@
                   )
                 "
               >
-                <i class="fas fa-plus"></i>
+                <i class="sidebar__new-icon iconoir-plus"></i>
                 {{ $t('action.createNew') }}
               </a>
             </li>
@@ -318,7 +314,7 @@
                   v-if="hasUnreadNotifications(workspace.id)"
                   class="sidebar__unread-notifications-icon"
                 ></span>
-                <i class="tree__right-icon fas fa-arrow-right"></i>
+                <i class="tree__right-icon iconoir-arrow-right"></i>
               </div>
             </li>
             <li class="sidebar__new-wrapper">
@@ -327,7 +323,7 @@
                 class="sidebar__new"
                 @click="$refs.createWorkspaceModal.show()"
               >
-                <i class="fas fa-plus"></i>
+                <i class="iconoir-plus"></i>
                 {{ $t('sidebar.createWorkspace') }}
               </a>
             </li>
@@ -349,7 +345,7 @@
             }"
             @click="undo(false)"
           >
-            <i class="fas fa-undo-alt"></i>
+            <i class="sidebar__foot-link-icon iconoir-undo"></i>
           </a>
           <a
             class="sidebar__foot-link"
@@ -358,17 +354,17 @@
             }"
             @click="redo(false)"
           >
-            <i class="fas fa-redo-alt"></i>
+            <i class="sidebar__foot-link-icon iconoir-redo"></i>
           </a>
           <a
             class="sidebar__foot-link"
             @click="$store.dispatch('sidebar/toggleCollapsed')"
           >
             <i
-              class="fas"
+              class="sidebar__foot-link-icon"
               :class="{
-                'fa-angle-double-right': isCollapsed,
-                'fa-angle-double-left': !isCollapsed,
+                'iconoir-fast-arrow-right': isCollapsed,
+                'iconoir-fast-arrow-left': !isCollapsed,
               }"
             ></i>
           </a>

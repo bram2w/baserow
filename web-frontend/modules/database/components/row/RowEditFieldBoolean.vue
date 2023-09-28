@@ -5,7 +5,7 @@
       :class="{ active: value, 'field-boolean__checkbox--disabled': readOnly }"
       @click="toggle(value)"
     >
-      <i class="fas fa-check check"></i>
+      <i class="iconoir-check check"></i>
     </div>
     <div v-show="touched && !valid" class="error">
       {{ error }}

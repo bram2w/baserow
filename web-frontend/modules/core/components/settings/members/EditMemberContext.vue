@@ -15,7 +15,7 @@
           "
         >
           <a class="color-error" @click.prevent="showRemoveModal">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('membersSettings.membersTable.actions.remove') }}
           </a>
         </li>

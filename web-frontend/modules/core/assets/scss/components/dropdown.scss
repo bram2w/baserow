@@ -10,11 +10,12 @@
   display: block;
   width: 100%;
   border: 1px solid $color-neutral-400;
-  padding: 0 32px 0 12px;
+  padding: 0 12px;
   color: $color-neutral-900;
 
   @include fixed-height(36px, 13px);
   @include rounded($rounded);
+  @include flex-align-items(4px);
 
   &:hover {
     text-decoration: none;
@@ -44,6 +45,7 @@
 .dropdown__selected-icon {
   margin-right: 4px;
   color: $color-neutral-600;
+  font-size: 14px;
 }
 
 .dropdown__selected-image {
@@ -53,8 +55,7 @@
 }
 
 .dropdown__toggle-icon {
-  @include absolute(0, 0, 0, auto);
-  @include center-text(32px, 14px);
+  margin-left: auto;
 }
 
 .dropdown__items {

@@ -2,7 +2,7 @@
   <Alert
     simple
     type="primary"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('workspaceInvitation.title')"
   >
     {{

@@ -18,7 +18,7 @@ export class PersonalViewOwnershipType extends ViewOwnershipType {
   }
 
   getIconClass() {
-    return 'fas fa-lock'
+    return 'iconoir-lock'
   }
 
   isDeactivated(workspaceId) {

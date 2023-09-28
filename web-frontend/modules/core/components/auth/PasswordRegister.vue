@@ -4,7 +4,7 @@
       v-if="invitation !== null"
       simple
       type="primary"
-      icon="exclamation"
+      icon="iconoir-warning-triangle"
       :title="$t('invitationTitle')"
     >
       <i18n path="invitationMessage" tag="p">
@@ -44,7 +44,7 @@
           />
           <div class="auth__control-error">
             <div v-if="$v.account.email.$error" class="error">
-              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              <i class="iconoir-warning-triangle"></i>
               {{ $t('error.invalidEmail') }}
             </div>
           </div>
@@ -63,7 +63,7 @@
           />
           <div class="auth__control-error">
             <div v-if="$v.account.name.$error" class="error">
-              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              <i class="iconoir-warning-triangle"></i>
               {{ $t('error.minMaxLength', { min: 2, max: 150 }) }}
             </div>
           </div>
@@ -96,7 +96,7 @@
           />
           <div class="auth__control-error">
             <div v-if="$v.account.passwordConfirm.$error" class="error">
-              <i class="fas fa-warning fa-exclamation-triangle"></i>
+              <i class="iconoir-warning-triangle"></i>
               {{ $t('error.notMatchingPassword') }}
             </div>
           </div>

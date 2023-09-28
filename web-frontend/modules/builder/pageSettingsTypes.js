@@ -29,7 +29,7 @@ export class PagePageSettingsType extends PageSettingType {
   }
 
   get icon() {
-    return 'cogs'
+    return 'iconoir-settings'
   }
 
   get component() {

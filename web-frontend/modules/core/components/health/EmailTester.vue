@@ -6,7 +6,7 @@
       <a
         href="https://baserow.io/docs/installation%2Fconfiguration#email-configuration"
         target="_blank"
-        ><i class="fas fa-question-circle"
+        ><i class="iconoir-chat-bubble-question"
       /></a>
     </h2>
     <Error :error="error" />

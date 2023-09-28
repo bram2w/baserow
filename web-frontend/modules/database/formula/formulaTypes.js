@@ -152,7 +152,7 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'font'
+    return 'iconoir-text'
   }
 
   getRowEditFieldComponent() {
@@ -190,7 +190,7 @@ export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'font'
+    return 'iconoir-text'
   }
 
   getRowEditFieldComponent() {
@@ -224,7 +224,7 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'hashtag'
+    return 'baserow-icon-hashtag'
   }
 
   getRowEditFieldComponent() {
@@ -254,7 +254,7 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'check-square'
+    return 'baserow-icon-circle-checked'
   }
 
   getRowEditFieldComponent() {
@@ -288,7 +288,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'calendar-alt'
+    return 'iconoir-calendar'
   }
 
   getRowEditFieldComponent() {
@@ -330,7 +330,7 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
   }
 
   getIconClass() {
-    return 'history'
+    return 'baserow-icon-history'
   }
 
   getRowEditFieldComponent() {
@@ -366,7 +366,7 @@ export class BaserowFormulaSpecialType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'square-root-alt'
+    return 'baserow-icon-formula'
   }
 
   getRowEditFieldComponent() {
@@ -392,7 +392,7 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'fa-exclamation-triangle'
+    return 'iconoir-warning-triangle'
   }
 
   getCardComponent() {
@@ -426,7 +426,7 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'list'
+    return 'iconoir-list'
   }
 
   getCardComponent() {
@@ -573,7 +573,7 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
   }
 
   getIconClass() {
-    return 'chevron-circle-down '
+    return 'baserow-icon-single-select'
   }
 
   getRowEditFieldComponent() {
@@ -615,7 +615,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
   }
 
   getIconClass() {
-    return 'link'
+    return 'iconoir-link'
   }
 
   getRowEditFieldComponent() {

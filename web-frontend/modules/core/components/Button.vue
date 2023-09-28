@@ -8,16 +8,12 @@
     v-bind.prop="customBind"
     v-on="$listeners"
   >
-    <i
-      v-if="prependIcon"
-      class="button__icon fas"
-      :class="`fa-${prependIcon}`"
-    />
+    <i v-if="prependIcon" class="button__icon" :class="prependIcon" />
     <slot />
     <i
       v-if="appendIcon || icon"
-      class="button__icon fas"
-      :class="appendIcon ? `fa-${appendIcon}` : `fa-${icon}`"
+      class="button__icon"
+      :class="appendIcon ? appendIcon : icon"
     />
   </component>
 </template>

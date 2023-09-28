@@ -14,7 +14,7 @@
       <div class="node__content-name">
         <i
           class="node__icon"
-          :class="`fas fa-${$options.methods.getIcon(
+          :class="`${$options.methods.getIcon(
             props.node,
             props.openNodes.has(props.path)
           )}`"
@@ -23,7 +23,7 @@
       </div>
       <i
         v-if="props.nodeSelected === props.path"
-        class="node__selected fas fa-check-circle"
+        class="node__selected iconoir-check-circle"
       ></i>
     </div>
 
@@ -87,7 +87,7 @@ export default {
         return node.icon
       }
 
-      return isOpen ? 'caret-down' : 'caret-right'
+      return isOpen ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
     },
   },
 }

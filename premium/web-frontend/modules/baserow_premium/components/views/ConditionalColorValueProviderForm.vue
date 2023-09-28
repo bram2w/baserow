@@ -23,7 +23,7 @@
             :class="`background-color--${color.color}`"
             @click="openColor(color)"
           >
-            <i class="fas fa-caret-down"></i>
+            <i class="iconoir-nav-arrow-down"></i>
           </a>
           <div :style="{ flex: 1 }" />
           <a
@@ -31,7 +31,7 @@
             class="conditional-color-value-provider-form__color-trash-link"
             @click="deleteColor(color)"
           >
-            <i class="fa fa-trash" />
+            <i class="iconoir-bin" />
           </a>
         </div>
         <div
@@ -57,7 +57,7 @@
           class="conditional-color-value-provider-form__color-filter-add"
           @click.prevent="addFilter(color)"
         >
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
           {{ $t('conditionalColorValueProviderForm.addCondition') }}</a
         >
         <ColorSelectContext
@@ -67,7 +67,7 @@
       </div>
     </div>
     <a class="colors__add" @click.prevent="addColor()">
-      <i class="fas fa-plus"></i>
+      <i class="iconoir-plus"></i>
       {{ $t('conditionalColorValueProviderForm.addColor') }}</a
     >
   </div>

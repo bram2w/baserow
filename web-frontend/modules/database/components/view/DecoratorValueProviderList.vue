@@ -11,12 +11,15 @@
       :key="valueProviderType.getType()"
       class="value-provider-list__item"
       :class="{
-        'value-provider-list__item--selected':
-          valueProviderType.getType() === decoration.value_provider_type,
+        active: valueProviderType.getType() === decoration.value_provider_type,
       }"
       @click="!readOnly && $emit('select', valueProviderType.getType())"
     >
       <DecoratorValueProviderItem :value-provider-type="valueProviderType" />
+      <i
+        v-if="valueProviderType.getType() === decoration.value_provider_type"
+        class="value-provider-list__item-active-icon iconoir-check-circle"
+      ></i>
     </div>
   </div>
 </template>

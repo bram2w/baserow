@@ -24,10 +24,15 @@
 
 .user-admin-username__icon {
   margin-left: 5px;
+  font-size: 16px;
+}
+
+.user-admin-active {
+  @include flex-align-items(5px);
 }
 
 .user-admin-active__icon {
-  margin-right: 5px;
+  font-size: 18px;
 
   &.user-admin-active__icon--activated {
     color: $color-success-500;
@@ -39,8 +44,8 @@
 }
 
 .user-admin-group__icon {
-  width: $fa-fw-width;
   color: $color-neutral-700;
+  font-size: 16px;
 }
 
 .user-admin-delete__strong {

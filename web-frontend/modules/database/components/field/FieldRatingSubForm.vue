@@ -10,7 +10,7 @@
           :class="'rating-field__color' + ' background-color--' + values.color"
           @click="openColor()"
         >
-          <i class="fas fa-caret-down"></i>
+          <i class="iconoir-nav-arrow-down"></i>
         </a>
       </div>
     </div>
@@ -32,7 +32,7 @@
             :key="style"
             name=""
             :value="style"
-            :icon="style"
+            :icon="`baserow-icon-${style}`"
           />
         </Dropdown>
       </div>

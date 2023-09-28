@@ -20,6 +20,10 @@
           class="sidebar__unread-notifications-icon"
         ></span>
       </div>
+      <i
+        v-if="workspace._.selected"
+        class="select__item-active-icon iconoir-check-circle"
+      ></i>
     </a>
     <a
       ref="contextLink"
@@ -27,7 +31,7 @@
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
       @mousedown.stop
     >
-      <i class="fas fa-ellipsis-v"></i>
+      <i class="baserow-icon-more-vertical"></i>
     </a>
     <WorkspaceContext
       ref="context"

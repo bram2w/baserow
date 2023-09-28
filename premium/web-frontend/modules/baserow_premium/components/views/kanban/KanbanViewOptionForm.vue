@@ -21,7 +21,7 @@
                 )
               "
             >
-              <i class="fas fa-caret-down"></i>
+              <i class="iconoir-nav-arrow-down"></i>
             </a>
             <input
               v-model="values.value"

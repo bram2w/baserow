@@ -43,12 +43,12 @@
 
 .modal-sidebar__nav-link {
   @extend %ellipsis;
+  @include flex-align-items(10px);
 
   position: relative;
-  display: block;
   height: 42px;
   line-height: 42px;
-  padding: 0 20px 0 50px;
+  padding: 0 20px;
   border-left: solid 4px transparent;
   color: $color-neutral-900;
   user-select: none;
@@ -66,11 +66,5 @@
 }
 
 .modal-sidebar__nav-icon {
-  position: absolute;
-  left: 19px;
-  top: 50%;
-  line-height: 14px;
-  margin-top: -7px;
-  text-align: center;
-  width: $fa-fw-width;
+  font-size: 16px;
 }

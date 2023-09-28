@@ -3,7 +3,7 @@
     <div class="field-file__preview">
       <a class="field-file__icon">
         <img v-if="file.is_image" :src="file.thumbnails.small.url" />
-        <i v-else class="fas" :class="`fa-${iconClass}`"></i>
+        <i v-else :class="iconClass"></i>
       </a>
     </div>
     <div class="field-file__description">
@@ -25,7 +25,7 @@
         class="field-file__action upload-files__state-failed"
         @click="$emit('delete')"
       >
-        <i class="fas fa-times"></i>
+        <i class="iconoir-cancel"></i>
       </a>
     </div>
   </div>

@@ -10,7 +10,7 @@
       <div class="calendar-month-day-expanded__title">
         {{ label }}
         <div class="calendar-month-day-expanded__close" @click="hide">
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </div>
       </div>
       <InfiniteScroll
@@ -44,7 +44,7 @@
           <div v-if="error" class="calendar-month-day-expanded__try-again">
             <a @click="fetch('click')">
               {{ $t('calendarMonthDayExpanded.tryAgain') }}
-              <i class="fas fa-refresh"></i>
+              <i class="iconoir-refresh-double"></i>
             </a>
           </div>
         </template>

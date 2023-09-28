@@ -18,7 +18,7 @@
       <div v-if="loading" class="loading-absolute-center"></div>
       <div v-else-if="workspaces.length === 0" class="placeholder">
         <div class="placeholder__icon">
-          <i class="fas fa-layer-group"></i>
+          <i class="iconoir-book-stack"></i>
         </div>
         <h1 class="placeholder__title">{{ $t('trashModal.emptyTitle') }}</h1>
         <p

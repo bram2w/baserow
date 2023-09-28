@@ -14,8 +14,8 @@
         <slot name="value">
           <i
             v-if="selectedIcon"
-            class="dropdown__selected-icon fas"
-            :class="'fa-' + selectedIcon"
+            class="dropdown__selected-icon"
+            :class="selectedIcon"
           />
           <img
             v-if="selectedImage"
@@ -30,7 +30,7 @@
           {{ placeholder ? placeholder : $t('action.makeChoice') }}
         </slot>
       </template>
-      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
+      <i class="dropdown__toggle-icon iconoir-nav-arrow-down"></i>
     </a>
     <div
       ref="itemsContainer"
@@ -41,7 +41,7 @@
       }"
     >
       <div v-if="showSearch" class="select__search">
-        <i class="select__search-icon fas fa-search"></i>
+        <i class="select__search-icon iconoir-search"></i>
         <input
           ref="search"
           v-model="query"

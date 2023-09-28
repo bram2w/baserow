@@ -63,7 +63,7 @@
         class="kanban-view__add-stack"
         @click="$refs.addOptionContext.toggle($refs.addOptionContextLink)"
       >
-        <i class="fas fa-plus"></i>
+        <i class="iconoir-plus"></i>
       </a>
       <KanbanViewCreateStackContext
         ref="addOptionContext"

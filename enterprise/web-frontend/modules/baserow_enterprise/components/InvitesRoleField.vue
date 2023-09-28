@@ -2,10 +2,11 @@
   <div>
     <a
       ref="editRoleContextLink"
+      class="member-role-field__link"
       @click="$refs.editRoleContext.toggle($refs.editRoleContextLink)"
     >
-      {{ roleName(roles, rowSanitised) }}
-      <i class="fas fa-chevron-down"></i>
+      <span>{{ roleName(roles, rowSanitised) }}</span>
+      <i class="iconoir-nav-arrow-down"></i>
     </a>
     <EditRoleContext
       ref="editRoleContext"

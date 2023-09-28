@@ -9,7 +9,7 @@
         }"
         @click="changePage(page - 1)"
       >
-        <i class="fas fa-caret-left"></i>
+        <i class="iconoir-nav-arrow-left"></i>
       </a>
       <input
         v-model.number="textInputPage"
@@ -27,7 +27,7 @@
         }"
         @click="changePage(page + 1)"
       >
-        <i class="fas fa-caret-right"></i>
+        <i class="iconoir-nav-arrow-right"></i>
       </a>
     </div>
   </div>

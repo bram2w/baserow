@@ -93,11 +93,12 @@
 }
 
 .element-preview__menu-item {
-  @include center-text(24px, 9px);
-
   position: relative;
   background-color: $white;
   color: $color-neutral-900;
+  justify-content: center;
+
+  @include center-text(28px, 16px);
 
   &:hover {
     background-color: $color-neutral-100;
@@ -131,19 +132,11 @@
   margin: 5px;
 }
 
-.element-preview--in-error::after {
-  @extend .fas;
-
-  @include fa-icon;
-  @include absolute(0, 0, auto, auto);
-
-  content: fa-content($fa-var-exclamation-circle);
-  pointer-events: none;
-  width: 20px;
-  height: 20px;
-  line-height: 20px;
+.element-preview__error-icon {
   font-size: 20px;
-  margin-right: 5px;
-  margin-top: 5px;
   color: $color-error-300;
+  pointer-events: none;
+  position: absolute;
+  top: 5px;
+  right: 5px;
 }

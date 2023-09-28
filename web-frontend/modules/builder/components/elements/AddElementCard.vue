@@ -6,9 +6,12 @@
   >
     <div v-if="loading" class="loading"></div>
     <template v-else>
-      <div>
-        <i :class="`fas fa-${elementType.iconClass}`"></i>
-        <span class="margin-left-1">{{ elementType.name }}</span>
+      <div class="add-element-card__element-type">
+        <i
+          class="add-element-card__element-type-icon"
+          :class="elementType.iconClass"
+        ></i>
+        <span>{{ elementType.name }}</span>
       </div>
       <div class="margin-top-1 add-element-card__description">
         {{ elementType.description }}

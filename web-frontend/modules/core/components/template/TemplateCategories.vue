@@ -13,7 +13,7 @@
           class="input"
           :placeholder="$t('templateCategories.search')"
         />
-        <i class="fas fa-search"></i>
+        <i class="iconoir-search"></i>
       </div>
     </div>
     <ul class="templates__categories">
@@ -25,11 +25,16 @@
           'templates__category--open': category.id === selectedCategoryId,
         }"
       >
-        <a
-          class="templates__category-link"
-          @click="selectCategory(category.id)"
-          >{{ category.name }}</a
-        >
+        <a class="templates__category-link" @click="selectCategory(category.id)"
+          >{{ category.name }}
+          <i
+            class="templates__category-link-caret-right iconoir-nav-arrow-right"
+          ></i>
+          <i
+            class="templates__category-link-caret-down iconoir-nav-arrow-down"
+          ></i>
+        </a>
+
         <ul class="templates__templates">
           <li
             v-for="template in category.templates"
@@ -44,7 +49,7 @@
               class="templates__template-link"
               @click="$emit('selected', { template, category })"
             >
-              <i class="fas fa-fw" :class="'fa-' + template.icon"></i>
+              <i :class="template.icon"></i>
               {{ template.name }}
             </a>
           </li>

@@ -2,9 +2,11 @@
   <div class="value-provider-item">
     <div class="value-provider-item__title">
       <i
-        :class="`fa fa-fw fa-${props.valueProviderType.getIconClass()} value-provider-item__icon`"
+        :class="`${props.valueProviderType.getIconClass()} value-provider-item__icon`"
       />
-      {{ props.valueProviderType.getName() }}
+      <span class="value-provider-item__title-text">{{
+        props.valueProviderType.getName()
+      }}</span>
     </div>
     <div class="value-provider-item__description">
       {{ props.valueProviderType.getDescription() }}

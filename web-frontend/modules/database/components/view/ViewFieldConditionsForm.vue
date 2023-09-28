@@ -16,7 +16,7 @@
         class="filters__remove"
         @click="deleteFilter($event, filter)"
       >
-        <i class="fas fa-times"></i>
+        <i class="iconoir-cancel"></i>
       </a>
       <span v-else class="filters__remove"></span>
       <div class="filters__operator">
@@ -97,12 +97,12 @@
         <i
           v-else-if="!fieldIdExists(fields, filter.field)"
           v-tooltip="$t('viewFilterContext.relatedFieldNotFound')"
-          class="fas fa-exclamation-triangle color-error"
+          class="iconoir-warning-triangle color-error"
         ></i>
         <i
           v-else-if="!fieldIsCompatible(filter.type, filter.field)"
           v-tooltip="$t('viewFilterContext.filterTypeNotFound')"
-          class="fas fa-exclamation-triangle color-error"
+          class="iconoir-warning-triangle color-error"
         ></i>
       </div>
     </div>

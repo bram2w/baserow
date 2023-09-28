@@ -2,7 +2,7 @@
   <form @submit.prevent="submit">
     <FormElement :error="fieldHasErrors('name')" class="control">
       <label class="control__label">
-        <i class="fas fa-font"></i>
+        <i class="iconoir-text"></i>
         {{ $t('workspaceForm.nameLabel') }}
       </label>
       <div class="control__elements">

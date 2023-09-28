@@ -2,10 +2,7 @@
   <li class="tree__item tree__item--loading">
     <div class="tree__action tree__action--disabled">
       <a class="tree__link">
-        <i
-          class="tree__icon tree__icon--type fas"
-          :class="'fa-' + jobIconClass"
-        ></i>
+        <i class="tree__icon tree__icon--type" :class="jobIconClass"></i>
         {{ jobSidebarText }}
         <div class="tree__progress_percentage">
           {{ job.progress_percentage }} %

@@ -15,6 +15,7 @@
   </span>
   <a
     v-else
+    class="member-role-field__link"
     @click.prevent="
       listeners['edit-role-context'] &&
         listeners['edit-role-context']({
@@ -25,10 +26,12 @@
         })
     "
   >
-    {{
-      $options.methods.roleName(props.column.additionalProps.roles, props.row)
-    }}
-    <i class="fas fa-chevron-down"></i>
+    <span
+      >{{
+        $options.methods.roleName(props.column.additionalProps.roles, props.row)
+      }}
+    </span>
+    <i class="iconoir-nav-arrow-down"></i>
   </a>
 </template>
 

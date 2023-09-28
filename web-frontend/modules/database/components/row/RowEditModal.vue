@@ -16,13 +16,13 @@
             class="row-edit-modal__navigation__item"
             @click="$emit('navigate-previous', previousRow)"
           >
-            <i class="fa fa-lg fa-chevron-up"></i>
+            <i class="iconoir-nav-arrow-up"></i>
           </a>
           <a
             class="row-edit-modal__navigation__item"
             @click="$emit('navigate-next', nextRow)"
           >
-            <i class="fa fa-lg fa-chevron-down"></i>
+            <i class="iconoir-nav-arrow-down"></i>
           </a>
         </template>
       </div>
@@ -80,9 +80,10 @@
       >
         <a
           ref="createFieldContextLink"
+          class="row-modal__add-field"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
         >
-          <i class="fas fa-plus"></i>
+          <i class="row-modal__add-field-icon iconoir-plus"></i>
           {{ $t('rowEditModal.addField') }}
         </a>
         <CreateFieldContext

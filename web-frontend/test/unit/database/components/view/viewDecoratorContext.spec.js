@@ -62,7 +62,7 @@ export class FakeValueProviderType extends DecoratorValueProviderType {
   }
 
   getIconClass() {
-    return 'filter'
+    return 'iconoir-filter'
   }
 
   isCompatible() {

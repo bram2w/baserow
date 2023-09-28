@@ -124,7 +124,12 @@
   display: block;
   border: solid 3px transparent;
   overflow: hidden;
+  justify-content: center;
+  background-color: $color-neutral-600;
+
+  @include center-text(48px, 22px);
   @include rounded($rounded);
+  @include flex-align-items;
 
   &.active {
     border-color: $white;
@@ -142,11 +147,7 @@
 }
 
 .file-field-modal__nav-icon {
-  background-color: $color-neutral-600;
   color: $white;
-
-  @include center-text(48px, 22px);
-  @include rounded($rounded);
 
   .file-field-modal__nav-link.active & {
     border-radius: 0;
@@ -165,9 +166,12 @@
 .file-field-modal__action {
   position: relative;
   color: $white;
+  justify-content: center;
+  font-size: 20px;
+  width: 32px;
+  height: 32px;
   @include rounded($rounded);
-
-  @include center-text(32px, 14px);
+  @include flex-align-items();
 
   &:not(:last-child) {
     margin-right: 8px;
@@ -186,10 +190,6 @@
 
       @include loading(16px);
       @include absolute(8px, 8px, auto, auto);
-    }
-
-    & .fas {
-      visibility: hidden;
     }
   }
 }

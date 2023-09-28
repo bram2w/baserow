@@ -5,7 +5,7 @@
       v-model="search"
       class="margin-bottom-2"
       :placeholder="$t('addElementModal.searchPlaceholder')"
-      icon-right="search"
+      icon-right="iconoir-search"
     />
     <div class="add-element-modal__element-cards">
       <AddElementCard

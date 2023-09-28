@@ -58,8 +58,6 @@
 }
 
 .delete-section__list-icon {
-  @extend .fa-fw;
-
   position: relative;
   top: -1px;
   color: $color-neutral-300;

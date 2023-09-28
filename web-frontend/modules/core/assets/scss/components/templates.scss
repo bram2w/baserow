@@ -80,24 +80,6 @@
     text-decoration: none;
     color: $color-neutral-700;
   }
-
-  &::before {
-    @extend .fas;
-    @extend .fa-fw;
-
-    @include absolute(50%, auto, auto, 18px);
-
-    content: fa-content($fa-var-caret-right);
-    color: $color-neutral-500;
-    font-size: 14px;
-    line-height: 12px;
-    margin-top: -6px;
-
-    .templates__category--open & {
-      content: fa-content($fa-var-caret-down);
-      color: $color-neutral-900;
-    }
-  }
 }
 
 .templates__templates {
@@ -146,4 +128,33 @@
   overflow: hidden;
 
   @include absolute(72px, 240px, 0, 0);
+}
+
+.templates__category-link-caret-right {
+  position: absolute;
+  font-size: 14px;
+  color: $color-neutral-500;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+}
+
+.templates__category-link-caret-down {
+  display: none !important;
+  position: absolute;
+  font-size: 14px;
+  color: $color-neutral-900;
+  top: 50%;
+  left: 18px;
+  transform: translateY(-50%);
+}
+
+.templates__category--open {
+  .templates__category-link-caret-right {
+    display: none;
+  }
+
+  .templates__category-link-caret-down {
+    display: block !important;
+  }
 }

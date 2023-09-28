@@ -66,8 +66,8 @@
 }
 
 .sidebar__user-info-top {
-  display: flex;
-  width: 100%;
+  @include flex-align-items(4px);
+
   justify-items: center;
   margin-bottom: 4px;
 }
@@ -81,9 +81,6 @@
 }
 
 .sidebar__user-icon {
-  flex: 0 0 20px;
-  text-align: center;
-  font-size: 12px;
   color: $color-neutral-900;
 }
 
@@ -110,12 +107,17 @@
 .sidebar__new {
   font-size: 13px;
   color: $color-neutral-300;
-  margin-left: 6px;
+  padding-left: 6px;
+  @include flex-align-items(4px);
 
   &:hover {
     color: $color-neutral-500;
     text-decoration: none;
   }
+}
+
+.sidebar__new-icon {
+  font-size: 18px;
 }
 
 .sidebar__foot {
@@ -192,6 +194,10 @@
   }
 }
 
+.sidebar__foot-link-icon {
+  font-size: 18px;
+}
+
 .layout--collapsed {
   // Some minor changes regarding the tree items within the collapsed sidebar.
   .tree .sidebar__tree {
@@ -214,6 +220,7 @@
       white-space: nowrap;
       font-weight: 400;
       display: none;
+      flex: 1;
 
       @include absolute(6px, auto, auto, 36px);
       @include center-text(auto, 11px, 21px);

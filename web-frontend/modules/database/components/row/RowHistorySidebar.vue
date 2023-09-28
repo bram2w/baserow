@@ -49,7 +49,7 @@
           </InfiniteScroll>
         </div>
         <div v-else class="row-history__empty">
-          <i class="row-history__empty-icon fas fa-history"></i>
+          <i class="row-history__empty-icon baserow-icon-history"></i>
           <div class="row-history__empty-text">
             {{ $t('rowHistorySidebar.empty') }}
           </div>

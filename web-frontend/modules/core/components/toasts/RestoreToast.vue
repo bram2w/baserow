@@ -8,7 +8,7 @@
     }"
     @click="restore"
   >
-    <i class="button__icon fas fa-undo"></i>
+    <i class="button__icon iconoir-undo"></i>
     {{
       $t('restoreToast.restore', {
         type: $t('trashType.' + toast.data.trash_item_type),

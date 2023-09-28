@@ -12,7 +12,7 @@
           })
       "
     >
-      <i class="fas fa-ellipsis-h"></i>
+      <i class="data-table__more-icon baserow-icon-more-horizontal"></i>
     </a>
   </div>
 </template>

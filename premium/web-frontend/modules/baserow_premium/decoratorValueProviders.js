@@ -26,7 +26,7 @@ export class SingleSelectColorValueProviderType extends DecoratorValueProviderTy
   }
 
   getIconClass() {
-    return 'chevron-circle-down'
+    return 'baserow-icon-single-select'
   }
 
   getFormComponent() {
@@ -106,7 +106,7 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
   }
 
   getIconClass() {
-    return 'filter'
+    return 'iconoir-filter'
   }
 
   getValue({ options, fields, row }) {

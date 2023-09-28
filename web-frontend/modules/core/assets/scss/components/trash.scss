@@ -32,23 +32,6 @@
   .trash-sidebar__group--trashed & {
     text-decoration-line: line-through;
   }
-
-  &::before {
-    @extend .fas;
-    @extend .fa-fw;
-
-    @include absolute(50%, auto, auto, 10px);
-
-    content: fa-content($fa-var-caret-right);
-    color: $color-neutral-900;
-    font-size: 14px;
-    line-height: 12px;
-    margin-top: -6px;
-
-    .trash-sidebar__group--active & {
-      content: fa-content($fa-var-caret-down);
-    }
-  }
 }
 
 .trash-sidebar__applications {
@@ -151,4 +134,33 @@
 .trash__end-line {
   margin: 20px 27px 20px 41px;
   border-bottom: solid 1px #d9dbde;
+}
+
+.trash-sidebar__group-link-caret-right {
+  position: absolute;
+  font-size: 14px;
+  color: $color-neutral-500;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+}
+
+.trash-sidebar__group-link-caret-down {
+  display: none !important;
+  position: absolute;
+  font-size: 14px;
+  color: $color-neutral-900;
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%);
+}
+
+.trash-sidebar__group--active {
+  .trash-sidebar__group-link-caret-right {
+    display: none;
+  }
+
+  .trash-sidebar__group-link-caret-down {
+    display: block !important;
+  }
 }

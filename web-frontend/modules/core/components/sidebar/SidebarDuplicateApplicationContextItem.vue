@@ -6,7 +6,7 @@
     }"
     @click="duplicateApplication()"
   >
-    <i class="context__menu-icon fas fa-fw fa-copy"></i>
+    <i class="context__menu-icon iconoir-copy"></i>
     {{
       $t('sidebarApplication.duplicate', {
         type: application._.type.name.toLowerCase(),

@@ -5,19 +5,19 @@ exports[`Rating component Customized rating component 1`] = `
   class="rating color--dark-blue editing"
 >
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
   <i
-    class="fas rating__star fa-star"
+    class="rating__star baserow-icon-star"
   />
   <i
-    class="fas rating__star fa-star"
+    class="rating__star baserow-icon-star"
   />
 </div>
 `;
@@ -27,13 +27,13 @@ exports[`Rating component Default rating component 1`] = `
   class="rating color--dark-orange"
 >
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
   <i
-    class="fas rating__star fa-star rating__star--selected"
+    class="rating__star baserow-icon-star rating__star--selected"
   />
 </div>
 `;

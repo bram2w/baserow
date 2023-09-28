@@ -2,7 +2,7 @@
   <div class="layout__col-2-scroll layout__col-2-scroll--white-background">
     <div v-if="orderedLicenses.length === 0" class="placeholder">
       <div class="placeholder__icon">
-        <i class="fas fa-certificate"></i>
+        <i class="iconoir-shield-check"></i>
       </div>
       <h1 class="placeholder__title">
         {{ $t('licenses.titleNoLicenses') }}
@@ -24,7 +24,7 @@
       </div>
       <div class="placeholder__action">
         <a class="button button--large" @click="$refs.registerModal.show()">
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
           {{ $t('licenses.registerLicense') }}
         </a>
         <RedirectToBaserowModal
@@ -59,7 +59,7 @@
             class="button button--primary margin-right-1"
             @click="$refs.registerModal.show()"
           >
-            <i class="fas fa-plus"></i>
+            <i class="iconoir-plus"></i>
             {{ $t('licenses.registerLicense') }}
           </a>
           <RedirectToBaserowModal
@@ -90,6 +90,9 @@
           :to="{ name: 'admin-license', params: { id: license.id } }"
           class="licenses__item"
         >
+          <span class="licenses__item-icon-hover">
+            <i class="iconoir-arrow-right"></i>
+          </span>
           <div class="licenses__item-head">
             <div class="licenses__item-title">
               {{ $t('licenses.licenceId') }}
@@ -119,20 +122,22 @@
             }}
           </div>
           <ul class="licenses__item-details">
-            <li>
+            <li class="licenses__item-detail-item">
               {{ license.seats_taken }} / {{ license.seats }}
               {{ $t('licenses.seats') }}
             </li>
+
             <li
+              class="licenses__item-detail-item"
               v-for="(feature, index) in licenseFeatureDescription(license)"
               :key="index"
             >
               {{ feature.name }}
               <i
-                class="fas margin-left-1 fa-check"
+                class="iconoir-check licenses__item-detail-item-icon"
                 :class="{
-                  'fa-check license-yes': feature.enabled,
-                  'fa-times license-no': !feature.enabled,
+                  'iconoir-check license-yes': feature.enabled,
+                  'iconoir-cancel license-no': !feature.enabled,
                 }"
               ></i>
             </li>

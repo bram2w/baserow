@@ -3,7 +3,7 @@
     <div class="field-file__preview">
       <a class="field-file__icon" @click="$emit('click')">
         <img v-if="file.is_image" :src="file.thumbnails.small.url" />
-        <i v-else class="fas" :class="`fa-${iconClass}`"></i>
+        <i v-else :class="iconClass"></i>
       </a>
     </div>
     <div class="field-file__description">
@@ -28,7 +28,7 @@
         class="field-file__action"
         @click="$refs.nameEditable.edit()"
       >
-        <i class="fas fa-pen"></i>
+        <i class="iconoir-edit-pencil"></i>
       </a>
       <DownloadLink
         class="field-file__action"
@@ -36,7 +36,7 @@
         :filename="file.name"
         :url="file.url"
       >
-        <i class="fas fa-download"></i>
+        <i class="iconoir-download"></i>
       </DownloadLink>
       <a
         v-if="!readOnly"
@@ -44,7 +44,7 @@
         class="field-file__action"
         @click="$emit('delete')"
       >
-        <i class="fas fa-trash"></i>
+        <i class="iconoir-bin"></i>
       </a>
     </div>
   </div>

@@ -5,19 +5,14 @@
         :class="{ 'row-modal__field-item-handle': sortable }"
         data-field-handle
       ></a>
-      <i
-        class="fas control__label-icon"
-        :class="'fa-' + field._.type.iconClass"
-      ></i>
+      <i class="control__label-icon" :class="field._.type.iconClass"></i>
       {{ field.name }}
-      <a
+      <i
         v-if="!readOnly && canModifyFields"
         ref="contextLink"
-        class="control__context"
+        class="control__context baserow-icon-more-vertical"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 0)"
-      >
-        <i class="fas fa-caret-down"></i>
-      </a>
+      ></i>
     </label>
     <FieldContext
       ref="context"
@@ -30,8 +25,8 @@
       <li v-if="canBeHidden">
         <a @click="$emit('toggle-field-visibility', { field })">
           <i
-            class="context__menu-icon fas fa-fw"
-            :class="[hidden ? 'fa-eye' : 'fa-eye-slash']"
+            class="context__menu-icon"
+            :class="[hidden ? 'iconoir-eye-empty' : 'iconoir-eye-off']"
           ></i>
           {{ $t(hidden ? 'fieldContext.showField' : 'fieldContext.hideField') }}
         </a>

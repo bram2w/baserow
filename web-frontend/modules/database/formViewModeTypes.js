@@ -28,7 +28,7 @@ export class FormViewModeType extends Registerable {
   }
 
   /**
-   * Should return a font awesome class name related to the icon that must be displayed
+   * Should return a icon class name class name related to the icon that must be displayed
    * to the user.
    */
   getIconClass() {
@@ -87,7 +87,7 @@ export class FormViewFormModeType extends FormViewModeType {
   }
 
   getIconClass() {
-    return 'file-alt'
+    return 'iconoir-page'
   }
 
   getPreviewComponent() {

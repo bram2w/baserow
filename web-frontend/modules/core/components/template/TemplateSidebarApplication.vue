@@ -9,8 +9,8 @@
     <div class="tree__action">
       <a class="tree__link">
         <i
-          class="tree__icon tree__icon--type fas"
-          :class="'fa-' + application._.type.iconClass"
+          class="tree__icon tree__icon--type"
+          :class="application._.type.iconClass"
         ></i>
         {{ application.name }}
       </a>

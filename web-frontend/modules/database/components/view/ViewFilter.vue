@@ -8,7 +8,7 @@
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
-      <i class="header__filter-icon fas fa-filter"></i>
+      <i class="header__filter-icon iconoir-filter"></i>
       <span class="header__filter-name">{{
         $tc('viewFilter.filter', view.filters.length, {
           count: view.filters.length,

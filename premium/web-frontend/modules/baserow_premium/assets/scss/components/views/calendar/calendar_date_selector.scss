@@ -4,6 +4,7 @@
   margin-right: 24px;
   margin-top: 14px;
   margin-bottom: 14px;
+  font-size: 18px;
 }
 
 .calendar-date-selector__prev {
@@ -22,7 +23,7 @@
   line-height: 44px;
 }
 
-.calendar-date-selectoro > * {
+.calendar-date-selector > * {
   cursor: pointer;
   user-select: none;
 }

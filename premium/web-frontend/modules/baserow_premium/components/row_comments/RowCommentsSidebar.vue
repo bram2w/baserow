@@ -3,13 +3,13 @@
     <template v-if="!hasPremiumFeaturesEnabled">
       <div class="row-comments">
         <div class="row-comments__empty">
-          <i class="row-comments__empty-icon fas fa-comments"></i>
+          <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
           <div class="row-comments__empty-text">
             {{ $t('rowCommentSidebar.onlyPremium') }}
           </div>
           <a class="button button--primary" @click="$refs.premiumModal.show()">
             {{ $t('rowCommentSidebar.more') }}
-            <i class="fas fa-unlock"></i>
+            <i class="iconoir-no-lock"></i>
           </a>
         </div>
         <PremiumModal
@@ -24,7 +24,7 @@
       <div v-else>
         <div class="row-comments">
           <div v-if="totalCount === 0" class="row-comments__empty">
-            <i class="row-comments__empty-icon fas fa-comments"></i>
+            <i class="row-comments__empty-icon iconoir-multi-bubble"></i>
             <div class="row-comments__empty-text">
               <template
                 v-if="

@@ -22,7 +22,7 @@
     <template v-if="props.row._.metadata.row_comment_count < 100">
       {{ props.row._.metadata.row_comment_count }}
     </template>
-    <i v-else class="row-comments-expand-button__icon fas fa-comments"></i>
+    <i v-else class="row-comments-expand-button__icon iconoir-multi-bubble"></i>
   </a>
 </template>
 <script>

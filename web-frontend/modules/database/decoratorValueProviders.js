@@ -14,10 +14,10 @@ export class DecoratorValueProviderType extends Registerable {
   getDescription() {}
 
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize certain valueProvider types. If you for example want the filter
    * icon, you must return 'filter' here. This will result in the classname
-   * 'fas fa-filter'.
+   * 'iconoir-filter'.
    */
   getIconClass() {
     return null

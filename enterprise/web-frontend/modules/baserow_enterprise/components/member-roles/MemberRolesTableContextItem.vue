@@ -2,7 +2,7 @@
   <div>
     <div @click="() => $refs.modal.show()">
       <a>
-        <i class="context__menu-icon fas fa-fw fa-users"></i
+        <i class="context__menu-icon iconoir-community"></i
         >{{ $t('memberRolesTableContexItem.label') }}</a
       >
     </div>

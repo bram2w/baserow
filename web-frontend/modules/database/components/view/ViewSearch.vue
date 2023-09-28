@@ -8,7 +8,7 @@
       }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 4)"
     >
-      <i class="header__search-icon fas fa-search"></i>
+      <i class="header__search-icon iconoir-search"></i>
       {{ headerSearchTerm }}
     </a>
     <ViewSearchContext

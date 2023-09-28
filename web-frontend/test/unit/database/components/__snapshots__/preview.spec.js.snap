@@ -83,7 +83,7 @@ exports[`Preview component Office preview 1`] = `
         class="button button--ghost"
       >
         <i
-          class="button__icon fas fa-lock-open"
+          class="button__icon iconoir-lock-open"
         />
         
         previewType.googleDocs
@@ -148,7 +148,7 @@ exports[`Preview component PDF preview component 1`] = `
         class="button button--ghost"
       >
         <i
-          class="button__icon fas fa-lock-open"
+          class="button__icon iconoir-lock-open"
         />
         
         previewType.googleDocs
@@ -209,7 +209,7 @@ exports[`Preview component PDF preview component 3`] = `
         class="button button--ghost"
       >
         <i
-          class="button__icon fas fa-lock-open"
+          class="button__icon iconoir-lock-open"
         />
         
         previewType.googleDocs

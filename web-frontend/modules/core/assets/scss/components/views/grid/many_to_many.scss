@@ -30,8 +30,8 @@
   display: flex;
   color: $color-neutral-900;
 
-  @include fixed-height(22px, 13px);
   @include rounded($rounded);
+  @include fixed-height(22px, 13px);
 
   &:hover {
     text-decoration: none;
@@ -47,8 +47,11 @@
 
   &.grid-field-many-to-many__item--link {
     display: none;
-    font-size: 11px;
     color: $color-neutral-900;
+    width: 22px;
+    height: 22px;
+    justify-content: center;
+    @include flex-align-items();
 
     &:hover {
       background-color: $color-primary-200;
@@ -59,7 +62,7 @@
     }
 
     .grid-field-many-to-many__cell.active & {
-      display: block;
+      display: flex;
     }
   }
 }
@@ -79,15 +82,16 @@
 .grid-field-many-to-many__remove {
   display: none;
   color: $color-neutral-900;
-  margin-left: 5px;
-  font-size: 11px;
   padding: 0 2px;
+  justify-content: center;
+
+  @include flex-align-items();
 
   &:hover {
     color: $color-neutral-500;
   }
 
   .grid-field-many-to-many__cell.active & {
-    display: block;
+    display: flex;
   }
 }

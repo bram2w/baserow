@@ -63,7 +63,7 @@
           :disabled="loading"
         >
           {{ $t('passwordSettings.submitButton') }}
-          <i class="fas fa-pencil-alt"></i>
+          <i class="iconoir-edit-pencil"></i>
         </button>
       </div>
     </form>

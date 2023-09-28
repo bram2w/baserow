@@ -95,6 +95,7 @@
   line-height: 24px;
   color: $color-neutral-900;
   @include rounded($rounded);
+  @include flex-align-items(4px);
 
   &:hover {
     text-decoration: none;
@@ -103,9 +104,8 @@
 }
 
 .formula-field__item-icon {
-  font-size: 11px;
+  font-size: 14px;
   color: $color-neutral-600;
-  width: 14px;
 }
 
 .formula-field__description {
@@ -118,16 +118,14 @@
 
 .formula-field__description-icon {
   font-size: 18px;
-  width: 18px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  margin-right: 6px;
 }
 
 .formula-field__description-heading-1 {
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
+
+  @include flex-align-items(6px);
 }
 
 .formula-field__description-heading-2 {

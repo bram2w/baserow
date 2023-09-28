@@ -50,11 +50,11 @@
 }
 
 .dashboard__sidebar-link {
+  @include flex-align-items(4px);
   @extend %ellipsis;
 
   position: relative;
   z-index: 1;
-  display: block;
   line-height: 28px;
   color: $color-neutral-900;
 
@@ -69,6 +69,10 @@
     &:hover {
       color: $color-neutral-700;
     }
+  }
+
+  i {
+    font-size: 18px;
   }
 }
 
@@ -170,14 +174,17 @@
 }
 
 .dashboard__group-item-icon {
-  @include center-text(32px, 14px);
+  @include flex-align-items();
+  @include rounded($rounded);
 
-  flex: 0 0 32px;
   background-color: $color-primary-500;
   color: $white;
-  font-size: 14px;
+  font-size: 17px;
   margin-right: 12px;
-  @include rounded($rounded);
+  width: 32px;
+  height: 32px;
+  justify-content: center;
+  flex-shrink: 0;
 
   &.dashboard__group-item-icon--add {
     background-color: $color-success-500;
@@ -195,8 +202,14 @@
 .dashboard__create-link {
   color: $color-neutral-500;
 
+  @include flex-align-items(4px);
+
   &:hover {
     text-decoration: none;
     color: $color-neutral-900;
   }
+}
+
+.dashboard__create-link-icon {
+  font-size: 18px;
 }

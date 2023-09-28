@@ -1,7 +1,2 @@
 @import '~normalize-scss/sass/normalize/import-now';
-
-$fa-font-path: '~@fortawesome/fontawesome-free/webfonts';
-
-@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
-@import '~@fortawesome/fontawesome-free/scss/solid.scss';
-@import '~@fortawesome/fontawesome-free/scss/brands.scss';
+@import '~/.nuxt/baserow/iconoir';

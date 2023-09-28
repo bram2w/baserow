@@ -11,12 +11,14 @@
     <a class="select__item-link" @click="select(view)">
       <div class="select__item-name">
         <i
-          class="select__item-icon fas fa-fw"
-          :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
+          class="select__item-icon"
+          :class="`${view._.type.colorClass} ${view._.type.iconClass}`"
         ></i>
-        <EditableViewName ref="rename" :view="view"></EditableViewName>
+        <span class="select__item-name-text"
+          ><EditableViewName ref="rename" :view="view"></EditableViewName
+        ></span>
         <div v-if="deactivated" class="deactivated-label">
-          <i class="fas fa-lock"></i>
+          <i class="iconoir-lock"></i>
         </div>
       </div>
     </a>
@@ -34,7 +36,7 @@
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         @mousedown.stop
       >
-        <i class="fas fa-ellipsis-v"></i>
+        <i class="baserow-icon-more-vertical"></i>
       </a>
       <ViewContext
         ref="context"

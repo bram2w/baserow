@@ -5,7 +5,7 @@
       <div class="align-right">
         <a class="button button--primary" @click.prevent="page = 'create'">
           {{ $t('apiTokenSettings.createToken') }}
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
         </a>
       </div>
       <Error :error="error"></Error>
@@ -41,7 +41,7 @@
           <ul class="action__links">
             <li>
               <a @click.prevent="page = 'list'">
-                <i class="fas fa-arrow-left"></i>
+                <i class="iconoir-arrow-left"></i>
                 {{ $t('apiTokenSettings.backToOverview') }}
               </a>
             </li>

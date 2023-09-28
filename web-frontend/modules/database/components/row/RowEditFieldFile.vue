@@ -34,7 +34,7 @@
     </ul>
     <UploadFileDropzone v-if="!readOnly" @input="filesAdded($event)" />
     <a v-if="!readOnly" class="add" @click.prevent="showModal()">
-      <i class="fas fa-plus add__icon"></i>
+      <i class="iconoir-plus add__icon"></i>
       {{ $t('rowEditFieldFile.addFile') }}
     </a>
     <UserFilesModal

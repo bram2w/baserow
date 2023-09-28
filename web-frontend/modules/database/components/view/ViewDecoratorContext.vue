@@ -49,7 +49,7 @@
                 class="decorator-context__decorator-header-trash-link"
                 @click="removeDecoration(dec.decoration)"
               >
-                <i class="fa fa-trash" />
+                <i class="iconoir-bin" />
               </a>
             </div>
           </div>
@@ -95,7 +95,7 @@
             )
           "
         >
-          <i class="fas fa-plus" />
+          <i class="decorator-context__add-icon iconoir-plus" />
           {{ $t('viewDecoratorContext.addDecorator') }}
         </a>
         <SelectViewDecoratorContext

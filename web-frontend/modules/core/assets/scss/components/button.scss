@@ -1,6 +1,5 @@
 .button {
   cursor: pointer;
-  display: inline-block;
   margin-bottom: 0;
   white-space: nowrap;
   text-decoration: none;
@@ -11,10 +10,30 @@
   font-weight: 600;
   transition: padding 0.05s ease-in-out;
   vertical-align: middle;
+  justify-content: center;
 
   @include button-size(14px, 32px, 14px);
   @include button-style($color-primary-500, $color-primary-600);
   @include rounded($rounded-md);
+  @include flex-align-items(2px, inline-flex);
+
+  &.button--icon-only {
+    @include button-size(14px, 32px, 6px);
+
+    .button__icon {
+      margin: 0 2px;
+    }
+  }
+
+  &.button--large {
+    gap: 3px;
+
+    &.button--icon-only {
+      .button__icon {
+        margin: 0 3px;
+      }
+    }
+  }
 
   &:hover,
   &:focus {
@@ -27,10 +46,6 @@
     cursor: not-allowed;
     opacity: 0.65;
     box-shadow: none;
-  }
-
-  &.button--icon-only {
-    @include button-size(14px, 32px, 6px);
   }
 }
 
@@ -137,14 +152,6 @@
     height: auto;
     line-height: normal;
     padding: 4px 0;
-  }
-}
-
-.button__icon {
-  margin: 0 2px;
-
-  &.button--large {
-    margin: 0 3px;
   }
 }
 

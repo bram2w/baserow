@@ -48,8 +48,10 @@
   text-align: center;
   color: $color-primary-900;
   font-size: 14px;
+  justify-content: center;
 
   @include rounded($rounded);
+  @include flex-align-items();
 }
 
 .conditional-color-value-provider-form__color-filter--empty {

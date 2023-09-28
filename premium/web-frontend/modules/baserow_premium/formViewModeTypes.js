@@ -20,7 +20,7 @@ export class FormViewSurveyModeType extends FormViewModeType {
   }
 
   getIconClass() {
-    return 'poll-h'
+    return 'iconoir-reports'
   }
 
   getDeactivatedText() {

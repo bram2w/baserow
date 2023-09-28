@@ -1,6 +1,6 @@
 <template>
   <div class="empty-side-panel-state">
-    <i class="fas fa-mouse empty-side-panel-state__icon"></i>
+    <i class="iconoir-pc-mouse empty-side-panel-state__icon"></i>
     <p>{{ $t('emptySidePanelState.message') }}</p>
   </div>
 </template>

@@ -23,33 +23,35 @@
 
   @include rounded($rounded);
 
-  &::before {
-    display: none;
-    font-family: $font-awesome-font-family;
-    font-weight: $font-awesome-font-weight;
-    content: fa-content($fa-var-arrow-right);
+  .licenses__item-icon-hover {
     border-radius: 100%;
     background-color: $color-primary-500;
     color: $white;
-    margin-top: -15px;
-
-    @include center-text(30px, 14px);
-    @include absolute(50%, 5%, auto, auto);
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 5%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
   }
 
   &:hover {
     background-color: $color-neutral-100;
     text-decoration: none;
 
-    &::before {
-      display: block;
+    .licenses__item-icon-hover {
+      display: flex;
     }
   }
 
   @media screen and (min-width: 768px) {
     flex: 0 0 calc(50% - 15px);
 
-    &:not(:nth-child(2n+2)) {
+    &:not(:nth-child(2n + 2)) {
       margin-right: 30px;
     }
   }
@@ -82,12 +84,18 @@
   margin: 0;
   padding: 0;
   display: flex;
+}
 
-  li {
-    &:not(:last-child) {
-      margin-right: 20px;
-    }
+.licenses__item-detail-item {
+  @include flex-align-items(4px);
+
+  &:not(:last-child) {
+    margin-right: 20px;
   }
+}
+
+.licenses__item-detail-item-icon {
+  font-size: 16px;
 }
 
 .licenses__features {

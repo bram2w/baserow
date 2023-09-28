@@ -8,10 +8,10 @@ import UploadViaURLUserFileUpload from '@baserow/modules/core/components/files/U
  */
 export class UserFileUploadType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize user file upload types. The icon will for example be displayed in the
    * user files modal sidebar. If you for example want the database icon, you must
-   * return 'database' here. This will result in the classname 'fas fa-database'.
+   * return 'database' here. This will result in the classname 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -67,7 +67,7 @@ export class UploadFileUserFileUploadType extends UserFileUploadType {
   }
 
   getIconClass() {
-    return 'upload'
+    return 'iconoir-upload'
   }
 
   getName() {
@@ -86,7 +86,7 @@ export class UploadViaURLUserFileUploadType extends UserFileUploadType {
   }
 
   getIconClass() {
-    return 'link'
+    return 'iconoir-link'
   }
 
   getName() {

@@ -99,13 +99,16 @@
 .grid-field-file__item-add {
   color: $color-neutral-900;
   background-color: $color-primary-100;
+  width: 22px;
+  height: 22px;
+  justify-content: center;
   @include rounded($rounded);
 
   .grid-view__column--matches-search & {
     background-color: $color-primary-200;
   }
 
-  @include center-text(22px, 11px);
+  @include flex-align-items();
 
   &:hover {
     background-color: $color-primary-200;
