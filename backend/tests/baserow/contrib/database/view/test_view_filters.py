@@ -3618,6 +3618,76 @@ def test_has_file_type(data_fixture):
 
 
 @pytest.mark.django_db
+def test_files_lower_than(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(table=table)
+    file_field = data_fixture.create_file_field(table=table)
+
+    handler = ViewHandler()
+    model = table.get_model()
+
+    row_without_files = model.objects.create(**{f"field_{file_field.id}": []})
+    row_with_one_file = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test_file_1.txt", "is_image": False},
+            ],
+        }
+    )
+    row_with_two_files = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test_file_1.txt", "is_image": False},
+                {"visible_name": "test_file_2.txt", "is_image": False},
+            ],
+        },
+    )
+    row_with_three_files = model.objects.create(
+        **{
+            f"field_{file_field.id}": [
+                {"visible_name": "test_file_1.txt", "is_image": False},
+                {"visible_name": "test_file_2.txt", "is_image": False},
+                {"visible_name": "test_file_3.txt", "is_image": False},
+            ],
+        },
+    )
+
+    # There are no rows whose file column has less than 0 files
+    view_filter = data_fixture.create_view_filter(
+        view=grid_view,
+        field=file_field,
+        type="files_lower_than",
+        value="0",
+    )
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+    # There are two rows whose file column has less than 2 files
+    view_filter.value = 2
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 2
+    assert row_without_files.id in ids
+    assert row_with_one_file.id in ids
+
+    # There are three rows whose file column has less than 4 files
+    view_filter.value = 4
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 4
+    assert row_without_files.id in ids
+    assert row_with_one_file.id in ids
+    assert row_with_two_files.id in ids
+    assert row_with_three_files.id in ids
+
+    view_filter.value = "-1"
+    view_filter.save()
+    ids = [r.id for r in handler.apply_filters(grid_view, model.objects.all()).all()]
+    assert len(ids) == 0
+
+
+@pytest.mark.django_db
 def test_link_row_preload_values(data_fixture, django_assert_num_queries):
     user = data_fixture.create_user()
     database = data_fixture.create_database_application(user=user)

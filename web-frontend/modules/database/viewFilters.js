@@ -281,6 +281,33 @@ export class HasFileTypeViewFilterType extends ViewFilterType {
   }
 }
 
+export class FilesLowerThanViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'files_lower_than'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.filesLowerThan')
+  }
+
+  getExample() {
+    return '2'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return rowValue.length < parseInt(filterValue)
+  }
+}
+
 export class ContainsViewFilterType extends ViewFilterType {
   static getType() {
     return 'contains'

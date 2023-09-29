@@ -34,6 +34,7 @@ import {
   DateNotEqualViewFilterType,
   ContainsViewFilterType,
   FilenameContainsViewFilterType,
+  FilesLowerThanViewFilterType,
   HasFileTypeViewFilterType,
   ContainsNotViewFilterType,
   LengthIsLowerThanViewFilterType,
@@ -361,6 +362,10 @@ export default (context) => {
     new FilenameContainsViewFilterType(context)
   )
   app.$registry.register('viewFilter', new HasFileTypeViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new FilesLowerThanViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new LengthIsLowerThanViewFilterType(context)

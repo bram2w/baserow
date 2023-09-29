@@ -20,6 +20,7 @@ import {
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
+  FilesLowerThanViewFilterType,
   LengthIsLowerThanViewFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
@@ -1306,6 +1307,28 @@ describe('All Tests', () => {
         [{ is_image: true }, { is_image: false }],
         'document',
         {}
+      )
+    ).toBe(true)
+  })
+
+  test('FilesLowerThanFilterType', () => {
+    expect(new FilesLowerThanViewFilterType().matches([], 0)).toBe(false)
+    expect(
+      new FilesLowerThanViewFilterType().matches(
+        [
+          { visible_name: 'test_file_1.txt' },
+          { visible_name: 'test_file_2.txt' },
+        ],
+        2
+      )
+    ).toBe(false)
+    expect(
+      new FilesLowerThanViewFilterType().matches(
+        [
+          { visible_name: 'test_file_1.txt' },
+          { visible_name: 'test_file_2.txt' },
+        ],
+        3
       )
     ).toBe(true)
   })

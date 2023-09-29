@@ -306,6 +306,7 @@ class DatabaseConfig(AppConfig):
             EmptyViewFilterType,
             EqualViewFilterType,
             FilenameContainsViewFilterType,
+            FilesLowerThanViewFilterType,
             HasFileTypeViewFilterType,
             HigherThanViewFilterType,
             IsEvenAndWholeViewFilterType,
@@ -328,6 +329,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(EqualViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
         view_filter_type_registry.register(FilenameContainsViewFilterType())
+        view_filter_type_registry.register(FilesLowerThanViewFilterType()),
         view_filter_type_registry.register(HasFileTypeViewFilterType())
         view_filter_type_registry.register(ContainsViewFilterType())
         view_filter_type_registry.register(ContainsNotViewFilterType())
