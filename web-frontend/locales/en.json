@@ -175,7 +175,8 @@
         "lowerThan": "lower than",
         "isEvenAndWhole": "is even and whole",
         "lengthIsLowerThan": "length is lower than",
-        "hasFileType": "has file type"
+        "hasFileType": "has file type",
+        "filesLowerThan": "files lower than"
     },
     "viewType": {
         "grid": "Grid",

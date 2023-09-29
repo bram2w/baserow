@@ -5,7 +5,7 @@ from math import ceil, floor
 from typing import Any, Dict, Optional, Tuple, Union
 
 from django.db.models import DateField, DateTimeField, IntegerField, Q
-from django.db.models.expressions import F
+from django.db.models.expressions import F, Func
 from django.db.models.functions import Extract, Length, Mod, TruncDate
 
 import pytz
@@ -144,6 +144,39 @@ class HasFileTypeViewFilterType(ViewFilterType):
             return Q(**{f"{field_name}__contains": [{"is_image": is_image}]})
         else:
             return Q()
+
+
+class FilesLowerThanViewFilterType(ViewFilterType):
+    """
+    The files lower than filter checks if the number of file objects present
+    in a column of type file is smaller than a given value.
+
+    It is only compatible with fields.JSONField which contain a list of File
+    JSON Objects.
+    """
+
+    type = "files_lower_than"
+    compatible_field_types = [FileFieldType.type]
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+
+        # If a non numeric value has been provided we do not want to filter.
+        if not value.lstrip("-").isdigit():
+            return Q()
+
+        # Annotate the query with the length of the JSON array, using the
+        # proper PostgreSQL function
+        # See: https://www.postgresql.org/docs/current/functions-json.html
+        annotation_query = Func(
+            F(field_name),
+            function="jsonb_array_length",
+            output_field=IntegerField(),
+        )
+        return AnnotatedQ(
+            annotation={f"{field_name}_length": annotation_query},
+            q={f"{field_name}_length__lt": int(value)},
+        )
 
 
 class ContainsViewFilterType(ViewFilterType):

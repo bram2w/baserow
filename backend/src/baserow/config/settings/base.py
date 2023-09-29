@@ -565,6 +565,7 @@ SPECTACULAR_SETTINGS = {
             "not_equal",
             "filename_contains",
             "has_file_type",
+            "files_lower_than",
             "contains",
             "contains_not",
             "length_is_lower_than",

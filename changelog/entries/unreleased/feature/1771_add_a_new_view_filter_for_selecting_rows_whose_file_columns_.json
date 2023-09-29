@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add a new view filter for selecting rows whose file columns have less files than a given number",
+    "issue_number": 1771,
+    "bullet_points": [],
+    "created_at": "2023-09-16"
+}
