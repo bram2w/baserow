@@ -51,7 +51,7 @@
             }"
             @click="duplicatePage()"
           >
-            <i class="context__menu-icon iconoir-duplicate"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('action.duplicate') }}
           </a>
         </li>

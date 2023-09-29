@@ -393,7 +393,7 @@ export class TableElementType extends ElementType {
   }
 
   get iconClass() {
-    return 'table'
+    return 'iconoir-table'
   }
 
   get component() {
