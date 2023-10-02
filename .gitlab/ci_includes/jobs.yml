@@ -58,6 +58,8 @@
       # develop image.
       # Ensure we don't go over 128 char docker tag length limit
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
+      # Replace the "/" character with "-" in the branch name.
+      TRUNCATED_BRANCH_NAME=${TRUNCATED_BRANCH_NAME/\//-}
       CI_DEV_LATEST_BRANCH_TAG=$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
 
       LATEST_BRANCH_CI_IMAGE="$CI_IMAGE_REPO/$DEV_IMAGE_NAME:$CI_DEV_LATEST_BRANCH_TAG"
@@ -107,10 +109,10 @@
         EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --build-arg FROM_IMAGE=$BUILD_FROM_IMAGE";
         echo "Building from $BUILD_FROM_IMAGE."
       fi
-      
+
       docker context create multi-context
-      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
-      
+      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context
+
       if [[ -n "$BUILD_ARM" || "$CI_COMMIT_BRANCH" == "$BUILD_ARM_ON_BRANCH" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
@@ -121,7 +123,7 @@
         [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
         echo "Building multi-arch images for ARM also."
-        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET"
         DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
       else
         DOCKER_BUILD_PLATFORMS=linux/amd64
@@ -132,7 +134,7 @@
         # bother pushing.
         EXTRA_BUILD_ARGS="$EXTRA_BUILD_ARGS --tag $LATEST_BRANCH_CI_IMAGE";
       fi
-      
+
       # * Use `--build-arg BUILDKIT_INLINE_CACHE=1` to ensure this image's intermediate
       #    layers will be cached so builds caching from this image can use those layers.
       # * $CACHE_ARG is a --cache-from if we have an existing image that we can use
@@ -240,6 +242,7 @@
       fi
 
       TRUNCATED_BRANCH_NAME=${CI_COMMIT_REF_NAME:0:100}
+      TRUNCATED_BRANCH_NAME=${TRUNCATED_BRANCH_NAME/\//-}
       NON_DEV_CACHE_IMAGE=$CI_IMAGE_REPO/$IMAGE_NAME:$CLEANUP_JOB_CI_TAG_PREFIX$TRUNCATED_BRANCH_NAME
 
       TARGET_NON_DEV_IMAGE_PATH=$CI_IMAGE_REPO/$IMAGE_NAME:$TESTED_IMAGE_PREFIX$CI_COMMIT_SHORT_SHA
@@ -306,10 +309,10 @@
           fi
         fi
       }
-      
+
       docker context create multi-context
-      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context 
-      
+      docker buildx create --use --name multi --driver docker-container --platform linux/amd64 multi-context
+
       if [[ -n "$BUILD_ARM" || "$CI_COMMIT_BRANCH" == "$BUILD_ARM_ON_BRANCH" ]]; then
         which ssh-agent
         eval `ssh-agent -s`
@@ -320,12 +323,12 @@
         [[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
 
         echo "Building multi-arch images for ARM also."
-        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET" 
+        docker buildx create --append --name multi --driver docker-container --platform linux/arm64/v8 "$ARM_TARGET"
         DOCKER_BUILD_PLATFORMS=linux/amd64,linux/arm64/v8
       else
         DOCKER_BUILD_PLATFORMS=linux/amd64
       fi
-      
+
       setup_build_from_image ""
       setup_build_from_image BACKEND
       setup_build_from_image WEBFRONTEND
@@ -461,7 +464,7 @@
     - !reference [.skip-if-tag-not-on-branch, script]
     - !reference [.skip-if-not-latest-commit-on-branch, script]
     - |
-      
+
       # If that project registry isn't public then we must login first.
       if [[ "$CI_PROJECT_VISIBILITY" != "public" ]]; then
         echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
@@ -482,7 +485,7 @@
           echo "Must provide RUN_WHEN_CHANGES_MADE_IN as a job variable" 2>&1
           exit 1
       fi
-      
+
       # These jobs often pull from the projects CI_REGISTRY, but if that project registry isn't public then we must login first.
       if [[ "$CI_PROJECT_VISIBILITY" != "public" ]]; then
         echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" "$CI_REGISTRY" --password-stdin
