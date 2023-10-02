@@ -31,7 +31,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, application_type_registry
 from baserow.test_utils.helpers import AnyInt
 
 
@@ -749,6 +749,51 @@ def test_import_export_multiple_select_field(data_fixture):
     assert imported_select_option.value == select_option.value
     assert imported_select_option.color == select_option.color
     assert imported_select_option.order == select_option.order
+
+
+@pytest.mark.django_db
+def test_import_serialized_value_with_missing_select_options(data_fixture):
+    table = data_fixture.create_database_table()
+    database = table.database
+    workspace = database.workspace
+
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="field"
+    )
+    option_1 = data_fixture.create_select_option(
+        field=multiple_select_field, value="Option 1"
+    )
+    option_2 = data_fixture.create_select_option(
+        field=multiple_select_field, value="Option 2"
+    )
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.create()
+    row.field.set([option_1.id, option_2.id])
+
+    # The relationship between the row and the delete option will still exist.
+    option_2.delete()
+
+    config = ImportExportConfig(include_permission_data=False)
+    serialized = application_type_registry.get_by_model(database).export_serialized(
+        database, config, BytesIO()
+    )
+    imported_database = application_type_registry.get_by_model(
+        database
+    ).import_serialized(
+        workspace,
+        serialized,
+        config,
+        {},
+        DeferredFieldFkUpdater(),
+    )
+
+    imported_model = imported_database.table_set.all()[0].get_model(
+        attribute_names=True
+    )
+    imported_row = imported_model.objects.all()[0]
+
+    assert len(imported_row.field.all()) == 1
 
 
 @pytest.mark.django_db(transaction=True)
