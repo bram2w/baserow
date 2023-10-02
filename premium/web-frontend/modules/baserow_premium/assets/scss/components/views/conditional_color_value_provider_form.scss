@@ -29,7 +29,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   padding: 6px;
   margin-left: 4px;
 
@@ -46,7 +46,7 @@
 
   padding: 6px 9px;
   text-align: center;
-  color: $color-primary-900;
+  color: $color-neutral-900;
   font-size: 14px;
   justify-content: center;
 
@@ -65,5 +65,5 @@
 }
 
 .conditional-color-value-provider-form__color-filter-add {
-  color: $color-primary-900;
+  color: $color-neutral-900;
 }
