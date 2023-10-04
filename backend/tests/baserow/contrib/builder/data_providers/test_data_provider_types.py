@@ -81,7 +81,7 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -136,7 +136,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -194,7 +194,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         integration=integration,
         view=view,
         table=table,
-        row_id=f"get('data_source.{data_source2.id}.Id')",
+        row_id=f"get('data_source.{data_source2.id}.{fields2[0].db_column}')",
         name="Item",
     )
 
@@ -215,7 +215,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -285,7 +285,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )
 
 
@@ -356,7 +356,7 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )
 
 
@@ -436,5 +436,5 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, "My Color"]
+            runtime_formula_context, [data_source.id, fields[1].db_column]
         )

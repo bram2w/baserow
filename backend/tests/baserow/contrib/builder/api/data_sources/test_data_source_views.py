@@ -479,8 +479,8 @@ def test_dispatch_data_source(api_client, data_fixture):
     assert response.json() == {
         "id": 2,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
 
@@ -570,8 +570,8 @@ def test_dispatch_data_source_using_formula(api_client, data_fixture):
     assert response.json() == {
         "id": 2,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
 
@@ -775,20 +775,20 @@ def test_dispatch_data_sources(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response.json() == {
         str(data_source.id): {
-            "My Color": "Orange",
-            "Name": "Audi",
+            fields[1].db_column: "Orange",
+            fields[0].db_column: "Audi",
             "id": rows[1].id,
             "order": "1.00000000000000000000",
         },
         str(data_source1.id): {
-            "My Color": "Green",
-            "Name": "2Cv",
+            fields[1].db_column: "Green",
+            fields[0].db_column: "2Cv",
             "id": rows[2].id,
             "order": "1.00000000000000000000",
         },
         str(data_source2.id): {
-            "My Color": "Dark",
-            "Name": "Tesla",
+            fields[1].db_column: "Dark",
+            fields[0].db_column: "Tesla",
             "id": rows[3].id,
             "order": "1.00000000000000000000",
         },

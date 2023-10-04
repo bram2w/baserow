@@ -13,13 +13,13 @@
       :hide-tooltip="!isInvalid"
       @click="emitToEditor('data-component-clicked', node)"
     >
-      {{ pathParts.dataProvider }}
-      <template v-for="(part, index) in pathParts.parts">
+      <template v-for="(part, index) in pathParts">
         <i
+          v-if="index > 0"
           :key="index"
           class="get-formula-component__caret iconoir-nav-arrow-right"
-        >
-        </i>
+        />
+
         {{ part }}
       </template>
       <a class="get-formula-component__remove" @click="deleteNode">
@@ -57,22 +57,22 @@ export default {
       return this.node.attrs.isSelected
     },
     pathParts() {
-      const [dataProvider, ...parts] = _.toPath(this.path)
+      const pathParts = _.toPath(this.path)
+
       const dataProviderType = this.$registry.get(
         'builderDataProvider',
-        dataProvider
+        pathParts[0]
       )
 
-      return {
-        dataProvider: dataProviderType.name,
-        parts: parts.map((part, index) =>
-          dataProviderType.pathPartToDisplay(
-            this.applicationContext,
-            part,
-            index + 1
-          )
-        ),
-      }
+      const translatedPathPart = pathParts.map((_, index) =>
+        dataProviderType.getPathTitle(
+          this.applicationContext,
+          pathParts.slice(0, index + 1)
+        )
+      )
+
+      translatedPathPart[0] = dataProviderType.name
+      return translatedPathPart
     },
   },
   methods: {

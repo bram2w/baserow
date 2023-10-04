@@ -371,8 +371,8 @@ def test_dispatch_data_source(data_fixture):
     assert result == {
         "id": rows[1].id,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
 
@@ -431,15 +431,15 @@ def test_dispatch_page_data_sources(data_fixture):
     assert result[data_source.id] == {
         "id": rows[1].id,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
     assert result[data_source2.id] == {
         "id": rows[2].id,
         "order": "1.00000000000000000000",
-        "Name": "Volkswagen",
-        "My Color": "White",
+        fields[0].db_column: "Volkswagen",
+        fields[1].db_column: "White",
     }
 
     assert isinstance(result[data_source3.id], Exception)

@@ -57,10 +57,10 @@ export class DataSourceDataProviderType extends DataProviderType {
     return dataSourceContents[dataSource.id]
   }
 
-  getDataSourceSchema(applicationContext, dataSource) {
+  getDataSourceSchema(dataSource) {
     if (dataSource?.type) {
       const serviceType = this.app.$registry.get('service', dataSource.type)
-      return serviceType.getDataSchema(applicationContext, dataSource)
+      return serviceType.getDataSchema(dataSource)
     }
     return null
   }
@@ -87,10 +87,7 @@ export class DataSourceDataProviderType extends DataProviderType {
 
     const dataSourcesSchema = Object.fromEntries(
       dataSources.map((dataSource) => {
-        const dsSchema = this.getDataSourceSchema(
-          applicationContext,
-          dataSource
-        )
+        const dsSchema = this.getDataSourceSchema(dataSource)
         if (dsSchema) {
           delete dsSchema.$schema
         }
@@ -101,16 +98,18 @@ export class DataSourceDataProviderType extends DataProviderType {
     return { type: 'object', properties: dataSourcesSchema }
   }
 
-  pathPartToDisplay(applicationContext, part, position) {
-    if (position === 1) {
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 2) {
       const page = applicationContext?.page
-      return this.app.store.getters['dataSource/getPageDataSourceById'](
-        page,
-        parseInt(part)
-      )?.name
+      const dataSourceId = parseInt(pathParts[1])
+      return (
+        this.app.store.getters['dataSource/getPageDataSourceById'](
+          page,
+          dataSourceId
+        )?.name || `data_source_${dataSourceId}`
+      )
     }
-
-    return super.pathPartToDisplay(applicationContext, part, position)
+    return super.getPathTitle(applicationContext, pathParts)
   }
 }
 
@@ -175,7 +174,7 @@ export class PageParameterDataProviderType extends DataProviderType {
         (page?.path_params || []).map(({ name, type }) => [
           name,
           {
-            name,
+            title: name,
             type: toJSONType[type],
           },
         ])
@@ -235,10 +234,10 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return row
   }
 
-  getDataSourceSchema(applicationContext, dataSource) {
+  getDataSourceSchema(dataSource) {
     if (dataSource?.type) {
       const serviceType = this.app.$registry.get('service', dataSource.type)
-      return serviceType.getDataSchema(applicationContext, dataSource)
+      return serviceType.getDataSchema(dataSource)
     }
     return null
   }
@@ -255,23 +254,23 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       'dataSource/getPageDataSourceById'
     ](page, dataSourceId)
 
-    const schema = this.getDataSourceSchema(applicationContext, dataSource)
+    const schema = this.getDataSourceSchema(dataSource)
+    const rowSchema = schema?.items?.properties || {}
 
     // Here we add the index property schema
     const properties = {
       [this.indexKey]: {
         type: 'number',
-        name: this.app.i18n.t('currentRecordDataProviderType.index'),
+        title: this.app.i18n.t('currentRecordDataProviderType.index'),
       },
-      ...(schema?.items?.properties || {}),
+      ...rowSchema,
     }
 
     return { type: 'object', properties }
   }
 
-  pathPartToDisplay(applicationContext, part, position) {
-    // The name of the first part is dynamic as it contains the name of the data source
-    if (position === 0) {
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 1) {
       const { page, element: { data_source_id: dataSourceId } = {} } =
         applicationContext
 
@@ -280,7 +279,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       ](page, dataSourceId)
 
       if (!dataSource) {
-        return part
+        return pathParts[0]
       }
 
       return this.app.i18n.t('currentRecordDataProviderType.firstPartName', {
@@ -288,10 +287,6 @@ export class CurrentRecordDataProviderType extends DataProviderType {
       })
     }
 
-    if (position === 1 && part === this.indexKey) {
-      return this.app.i18n.t('currentRecordDataProviderType.index')
-    }
-
-    return part
+    return super.getPathTitle(applicationContext, pathParts)
   }
 }

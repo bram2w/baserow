@@ -117,22 +117,26 @@ export class DataProviderType extends Registerable {
       return {}
     }
 
-    return this._toNode(applicationContext, this.type, content, schema)
+    const result = this._toNode(
+      applicationContext,
+      [this.type],
+      content,
+      schema
+    )
+    return result
   }
 
   /**
    * Recursive method to deeply compute the node tree for this data providers.
    * @param {Object} applicationContext the application context.
-   * @param {string} identifier the identifier for the current node.
+   * @param {Array<String>} pathParts the path to get to the current node.
    * @param {*} content the current node content.
    * @param {$schema: string} schema the current node schema.
-   * @param {int} level the level of the current node in the data hierarchy.
    * @returns {{identifier: string, name: string, nodes: []}}
    */
-  _toNode(applicationContext, identifier, content, schema, level = 0) {
-    const name =
-      schema?.name ||
-      this.pathPartToDisplay(applicationContext, identifier, level)
+  _toNode(applicationContext, pathParts, content, schema) {
+    const identifier = pathParts.at(-1)
+    const name = this.getPathTitle(applicationContext, pathParts)
 
     if (schema === null) {
       return {
@@ -151,10 +155,9 @@ export class DataProviderType extends Registerable {
         nodes: (content || []).map((item, index) =>
           this._toNode(
             applicationContext,
-            `${index}`,
+            [...pathParts, `${index}`],
             item,
-            schema.items,
-            level + 1
+            schema.items
           )
         ),
       }
@@ -169,10 +172,9 @@ export class DataProviderType extends Registerable {
           ([identifier, subSchema]) =>
             this._toNode(
               applicationContext,
-              identifier,
+              [...pathParts, identifier],
               (content || {})[identifier],
-              subSchema,
-              level + 1
+              subSchema
             )
         ),
       }
@@ -198,6 +200,32 @@ export class DataProviderType extends Registerable {
   }
 
   /**
+   * Returns the schema matching the given path
+   * @param {Object} schemaNode
+   * @param {Array<String>} pathParts
+   * @returns the schema at the given path.
+   */
+  getSchemaNode(schemaNode, pathParts) {
+    if (pathParts.length === 0) {
+      return schemaNode
+    }
+
+    if (!schemaNode) {
+      return null
+    }
+
+    const [first, ...rest] = pathParts
+
+    if (schemaNode.type === 'array') {
+      return this.getSchemaNode(schemaNode.items, rest)
+    }
+
+    if (schemaNode.type === 'object') {
+      return this.getSchemaNode(schemaNode.properties[first], rest)
+    }
+  }
+
+  /**
    * This function lets you hook into the path translation. Sometimes the path uses an
    * ID to reference an item, but we want to show the name of the item to the user
    * instead.
@@ -206,11 +234,17 @@ export class DataProviderType extends Registerable {
    * @param {String} position - index of the part in the path
    * @returns {Array<String>} - modified path part as it should be displayed to the user
    */
-  pathPartToDisplay(applicationContext, part, position) {
-    if (position === 0) {
+  getPathTitle(applicationContext, pathParts) {
+    if (pathParts.length === 1) {
       return this.name
     }
-    return part
+
+    const [, ...rest] = pathParts
+
+    const schema = this.getDataSchema(applicationContext)
+    const schemaNode = this.getSchemaNode(schema, rest)
+
+    return schemaNode?.title ? schemaNode.title : pathParts.at(-1)
   }
 
   getOrder() {

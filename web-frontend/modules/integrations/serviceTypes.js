@@ -2,7 +2,6 @@ import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
 import LocalBaserowGetRowForm from '@baserow/modules/integrations/components/services/LocalBaserowGetRowForm'
 import LocalBaserowListRowsForm from '@baserow/modules/integrations/components/services/LocalBaserowListRowsForm'
-import GenerateSchema from 'generate-schema'
 
 export class LocalBaserowGetRowServiceType extends ServiceType {
   static getType() {
@@ -32,12 +31,8 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     return LocalBaserowGetRowForm
   }
 
-  getDataSchema(applicationContext, service) {
-    const page = applicationContext.page
-    const dataSourceContents =
-      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)
-
-    return GenerateSchema.json(dataSourceContents[service.id])
+  getDataSchema(service) {
+    return service.schema
   }
 
   getOrder() {
@@ -73,12 +68,8 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
     return true
   }
 
-  getDataSchema(applicationContext, service) {
-    const page = applicationContext.page
-    const dataSourceContents =
-      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)
-
-    return GenerateSchema.json(dataSourceContents[service.id])
+  getDataSchema(service) {
+    return service.schema
   }
 
   getOrder() {
