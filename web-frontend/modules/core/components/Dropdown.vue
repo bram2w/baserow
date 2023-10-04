@@ -22,7 +22,7 @@
             class="dropdown__selected-image"
             :src="selectedImage"
           />
-          {{ selectedName }}
+          <span class="dropdown__selected-text">{{ selectedName }}</span>
         </slot>
       </template>
       <template v-else>

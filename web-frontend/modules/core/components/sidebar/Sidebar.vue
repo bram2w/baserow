@@ -66,9 +66,11 @@
             <div class="tree__action sidebar__action">
               <nuxt-link :to="{ name: 'dashboard' }" class="tree__link">
                 <i class="tree__icon iconoir-dashboard-dots"></i>
-                <span class="sidebar__item-name">{{
-                  $t('sidebar.dashboard')
-                }}</span>
+                <span class="tree__link-text">
+                  <span class="sidebar__item-name">{{
+                    $t('sidebar.dashboard')
+                  }}</span>
+                </span>
               </nuxt-link>
             </div>
           </li>
@@ -81,9 +83,11 @@
             <div class="tree__action sidebar__action">
               <a class="tree__link" @click="$refs.trashModal.show()">
                 <i class="tree__icon iconoir-bin"></i>
-                <span class="sidebar__item-name">{{
-                  $t('sidebar.trash')
-                }}</span>
+                <span class="tree__link-text">
+                  <span class="sidebar__item-name">{{
+                    $t('sidebar.trash')
+                  }}</span>
+                </span>
               </a>
               <TrashModal ref="trashModal"></TrashModal>
             </div>
@@ -95,9 +99,11 @@
             >
               <a class="tree__link" @click.prevent="admin()">
                 <i class="tree__icon iconoir-settings"></i>
-                <span class="sidebar__item-name">{{
-                  $t('sidebar.admin')
-                }}</span>
+                <span class="tree__link-text">
+                  <span class="sidebar__item-name">{{
+                    $t('sidebar.admin')
+                  }}</span>
+                </span>
               </a>
             </div>
             <ul v-show="isAdminPage" class="tree sidebar__tree">
@@ -131,20 +137,22 @@
                     )
                   "
                 >
-                  <Editable
-                    ref="rename"
-                    :value="selectedWorkspace.name"
-                    @change="renameWorkspace(selectedWorkspace, $event)"
-                  ></Editable>
+                  <span class="tree__link-text">
+                    <Editable
+                      ref="rename"
+                      :value="selectedWorkspace.name"
+                      @change="renameWorkspace(selectedWorkspace, $event)"
+                    ></Editable>
+                  </span>
                 </a>
                 <span
                   v-if="unreadNotificationsInOtherWorkspaces"
                   class="sidebar__unread-notifications-icon"
                 ></span>
 
-                <i
+                <a
                   ref="contextLink"
-                  class="tree__options baserow-icon-more-vertical"
+                  class="tree__options"
                   @click="
                     $refs.context.toggle(
                       $refs.contextLink,
@@ -153,7 +161,9 @@
                       0
                     )
                   "
-                ></i>
+                >
+                  <i class="baserow-icon-more-vertical"></i>
+                </a>
 
                 <WorkspacesContext ref="workspaceSelect"></WorkspacesContext>
                 <WorkspaceContext
@@ -170,7 +180,9 @@
                   @click="$refs.notificationPanel.toggle($event.currentTarget)"
                 >
                   <i class="tree__icon tree__icon--type iconoir-bell"></i>
-                  {{ $t('sidebar.notifications') }}
+                  <span class="tree__link-text">{{
+                    $t('sidebar.notifications')
+                  }}</span>
                 </a>
                 <span v-show="unreadNotificationCount" class="tree__counter">{{
                   unreadNotificationCount >= 10 ? '9+' : unreadNotificationCount
@@ -191,8 +203,9 @@
               <div class="tree__action">
                 <a class="tree__link" @click="$refs.inviteModal.show()">
                   <i class="tree__icon tree__icon--type iconoir-add-user"></i>
-
-                  {{ $t('sidebar.inviteOthers') }}
+                  <span class="tree__link-text">{{
+                    $t('sidebar.inviteOthers')
+                  }}</span>
                 </a>
               </div>
               <WorkspaceMemberInviteModal
@@ -223,7 +236,9 @@
                     <i
                       class="tree__icon tree__icon--type iconoir-community"
                     ></i>
-                    {{ $t('sidebar.members') }}
+                    <span class="tree__link-text">{{
+                      $t('sidebar.members')
+                    }}</span>
                   </a>
                 </div>
               </li>
@@ -308,13 +323,15 @@
                 <a
                   class="tree__link tree__link--group"
                   @click="$store.dispatch('workspace/select', workspace)"
-                  >{{ workspace.name }}</a
+                  ><span class="tree__link-text">{{ workspace.name }}</span></a
                 >
                 <span
                   v-if="hasUnreadNotifications(workspace.id)"
                   class="sidebar__unread-notifications-icon"
                 ></span>
-                <i class="tree__right-icon iconoir-arrow-right"></i>
+                <span class="tree__right-icon">
+                  <i class="iconoir-arrow-right"></i>
+                </span>
               </div>
             </li>
             <li class="sidebar__new-wrapper">

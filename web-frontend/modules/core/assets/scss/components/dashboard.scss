@@ -51,7 +51,6 @@
 
 .dashboard__sidebar-link {
   @include flex-align-items(4px);
-  @extend %ellipsis;
 
   position: relative;
   z-index: 1;
@@ -70,10 +69,16 @@
       color: $color-neutral-700;
     }
   }
+}
 
-  i {
-    font-size: 18px;
-  }
+.dashboard__sidebar-link-icon {
+  font-size: 18px;
+}
+
+.dashboard__sidebar-link-text {
+  @extend %ellipsis;
+
+  min-width: 0;
 }
 
 .dashboard__content {

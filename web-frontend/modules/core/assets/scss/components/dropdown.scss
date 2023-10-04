@@ -4,8 +4,6 @@
 }
 
 .dropdown__selected {
-  @extend %ellipsis;
-
   position: relative;
   display: block;
   width: 100%;
@@ -40,6 +38,12 @@
       border-color: $color-neutral-400;
     }
   }
+}
+
+.dropdown__selected-text {
+  @extend %ellipsis;
+
+  min-width: 0;
 }
 
 .dropdown__selected-icon {

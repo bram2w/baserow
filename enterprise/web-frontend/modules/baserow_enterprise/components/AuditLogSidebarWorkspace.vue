@@ -20,7 +20,9 @@
         }"
       >
         <i class="tree__icon tree__icon--type baserow-icon-history"></i>
-        {{ $t('auditLogSidebarWorkspace.title') }}
+        <span class="tree__link-text">{{
+          $t('auditLogSidebarWorkspace.title')
+        }}</span>
       </nuxt-link>
     </div>
   </li>

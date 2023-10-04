@@ -11,7 +11,7 @@
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="displayName !== null">
-        {{ displayName }}
+        <span class="dropdown__selected-text">{{ displayName }}</span>
       </template>
       <template v-else>{{
         notSelectedText === null ? $t('action.makeChoice') : notSelectedText

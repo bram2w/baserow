@@ -40,7 +40,7 @@ exports[`Dropdown component Test slots 1`] = `
       tabindex=""
     >
       <li
-        class="select__item active"
+        class="select__item select__item--no-options active"
       >
         <a
           class="select__item-link"
@@ -52,11 +52,11 @@ exports[`Dropdown component Test slots 1`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -106,7 +106,7 @@ exports[`Dropdown component With items 1`] = `
       tabindex=""
     >
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -127,9 +127,11 @@ exports[`Dropdown component With items 1`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -151,9 +153,13 @@ exports[`Dropdown component With items 2`] = `
     <!---->
      
     <!---->
-    
-        A
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      A
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -182,7 +188,7 @@ exports[`Dropdown component With items 2`] = `
       tabindex=""
     >
       <li
-        class="select__item active"
+        class="select__item select__item--no-options active"
       >
         <a
           class="select__item-link"
@@ -203,15 +209,15 @@ exports[`Dropdown component With items 2`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -232,13 +238,15 @@ exports[`Dropdown component With items 2`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item disabled"
+        class="select__item select__item--no-options disabled"
       >
         <a
           class="select__item-link"
@@ -259,13 +267,15 @@ exports[`Dropdown component With items 2`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -288,13 +298,15 @@ exports[`Dropdown component With items 2`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -321,9 +333,11 @@ exports[`Dropdown component With items 2`] = `
       My description
     
           </div>
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -364,7 +378,7 @@ exports[`Dropdown component With items 3`] = `
       tabindex=""
     >
       <li
-        class="select__item active"
+        class="select__item select__item--no-options active"
       >
         <a
           class="select__item-link"
@@ -385,15 +399,15 @@ exports[`Dropdown component With items 3`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -414,9 +428,11 @@ exports[`Dropdown component With items 3`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -563,9 +579,13 @@ exports[`Dropdown component change value prop 1`] = `
     <!---->
      
     <!---->
-    
-        B
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      B
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -594,7 +614,7 @@ exports[`Dropdown component change value prop 1`] = `
       tabindex=""
     >
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -615,13 +635,15 @@ exports[`Dropdown component change value prop 1`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item active"
+        class="select__item select__item--no-options active"
       >
         <a
           class="select__item-link"
@@ -642,11 +664,11 @@ exports[`Dropdown component change value prop 1`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -668,9 +690,13 @@ exports[`Dropdown component test focus 1`] = `
     <!---->
      
     <!---->
-    
-        A
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      A
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -699,7 +725,7 @@ exports[`Dropdown component test focus 1`] = `
       tabindex=""
     >
       <li
-        class="select__item active hover"
+        class="select__item select__item--no-options active hover"
       >
         <a
           class="select__item-link"
@@ -720,11 +746,11 @@ exports[`Dropdown component test focus 1`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -746,9 +772,13 @@ exports[`Dropdown component test focus 2`] = `
     <!---->
      
     <!---->
-    
-        A
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      A
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -777,7 +807,7 @@ exports[`Dropdown component test focus 2`] = `
       tabindex=""
     >
       <li
-        class="select__item active hover"
+        class="select__item select__item--no-options active hover"
       >
         <a
           class="select__item-link"
@@ -798,11 +828,11 @@ exports[`Dropdown component test focus 2`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -824,9 +854,13 @@ exports[`Dropdown component test interactions 1`] = `
     <!---->
      
     <!---->
-    
-        A
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      A
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -855,7 +889,7 @@ exports[`Dropdown component test interactions 1`] = `
       tabindex=""
     >
       <li
-        class="select__item active hover"
+        class="select__item select__item--no-options active hover"
       >
         <a
           class="select__item-link"
@@ -876,15 +910,15 @@ exports[`Dropdown component test interactions 1`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -905,9 +939,11 @@ exports[`Dropdown component test interactions 1`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      
@@ -929,9 +965,13 @@ exports[`Dropdown component test interactions 2`] = `
     <!---->
      
     <!---->
-    
-        A
-       
+     
+    <span
+      class="dropdown__selected-text"
+    >
+      A
+    </span>
+     
     <i
       class="dropdown__toggle-icon iconoir-nav-arrow-down"
     />
@@ -960,7 +1000,7 @@ exports[`Dropdown component test interactions 2`] = `
       tabindex=""
     >
       <li
-        class="select__item active hover"
+        class="select__item select__item--no-options active hover"
       >
         <a
           class="select__item-link"
@@ -981,15 +1021,15 @@ exports[`Dropdown component test interactions 2`] = `
           </div>
            
           <!---->
-           
-          <i
-            class="select__item-active-icon iconoir-check-circle"
-          />
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
        
       <li
-        class="select__item"
+        class="select__item select__item--no-options"
       >
         <a
           class="select__item-link"
@@ -1010,9 +1050,11 @@ exports[`Dropdown component test interactions 2`] = `
           </div>
            
           <!---->
-           
-          <!---->
         </a>
+         
+        <i
+          class="select__item-active-icon iconoir-check-circle"
+        />
       </li>
     </ul>
      

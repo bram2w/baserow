@@ -1,6 +1,6 @@
 <template>
   <li
-    class="select__item"
+    class="select__item select__item--no-options"
     :class="{
       hidden: !isVisible(query),
       active: isActive(value),
@@ -28,11 +28,8 @@
       <div v-if="description !== null" class="select__item-description">
         {{ description }}
       </div>
-      <i
-        v-if="isActive(value)"
-        class="select__item-active-icon iconoir-check-circle"
-      ></i>
     </a>
+    <i class="select__item-active-icon iconoir-check-circle"></i>
   </li>
 </template>
 

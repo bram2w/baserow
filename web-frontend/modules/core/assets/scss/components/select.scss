@@ -104,6 +104,7 @@
   top: 8px;
   right: 5px;
   font-size: 17px;
+  display: none;
 }
 
 .select__item {
@@ -142,6 +143,10 @@
 
   &.active {
     background-color: $color-primary-100;
+
+    .select__item-active-icon {
+      display: block;
+    }
 
     &:not(.select__item--no-options):hover {
       .select__item-active-icon {

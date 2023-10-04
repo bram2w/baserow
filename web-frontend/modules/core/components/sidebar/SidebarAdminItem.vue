@@ -19,7 +19,9 @@
         class="tree__link"
       >
         <i class="tree__icon" :class="adminType.iconClass"></i>
-        <span class="sidebar__item-name">{{ adminType.getName() }}</span>
+        <span class="tree__link-text">
+          <span class="sidebar__item-name">{{ adminType.getName() }}</span>
+        </span>
       </nuxt-link>
     </div>
   </li>

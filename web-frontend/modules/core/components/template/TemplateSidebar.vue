@@ -4,7 +4,7 @@
       <ul class="tree">
         <li class="tree__item margin-top-2">
           <div class="tree__link tree__link--group">
-            {{ template.name }}
+            <span class="tree__link-text">{{ template.name }}</span>
           </div>
         </li>
         <component

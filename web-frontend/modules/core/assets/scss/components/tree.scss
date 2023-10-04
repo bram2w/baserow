@@ -79,10 +79,10 @@
 
 .tree__link {
   @extend %tree__size;
-  @extend %ellipsis;
 
   color: $color-neutral-900;
   font-size: 14px;
+
   @include flex-align-items(4px);
 
   .tree__action--deactivated & {
@@ -100,6 +100,12 @@
   .tree__action--disabled &:hover {
     cursor: inherit;
   }
+}
+
+.tree__link-text {
+  @extend %ellipsis;
+
+  min-width: 0;
 }
 
 .tree__progress_percentage {
@@ -219,20 +225,21 @@
 }
 
 .tree__right-icon {
-  display: none;
   position: absolute;
   z-index: 1;
   right: 0;
-  top: 8px;
-  text-align: center;
+  top: 0;
+  bottom: 0;
+  max-height: 32px;
   width: 32px;
   color: $color-neutral-700;
-  height: inherit;
-  line-height: inherit;
   font-size: 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
 
   :hover > & {
-    display: block;
+    display: flex;
   }
 
   .tree__item--loading > .tree__action > & {
