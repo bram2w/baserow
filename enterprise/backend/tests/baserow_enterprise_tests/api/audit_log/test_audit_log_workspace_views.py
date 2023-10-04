@@ -54,7 +54,7 @@ def test_workspace_admins_cannot_export_workspace_audit_log_without_an_enterpris
 @pytest.mark.parametrize("url_name", ["users", "action_types", "list"])
 @override_settings(DEBUG=True)
 def test_non_admins_cannot_access_workspace_audit_log_endpoints(
-    api_client, enterprise_data_fixture, url_name
+    api_client, enterprise_data_fixture, synced_roles, url_name
 ):
     enterprise_data_fixture.enable_enterprise()
 
@@ -76,7 +76,7 @@ def test_non_admins_cannot_access_workspace_audit_log_endpoints(
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
 def test_non_admins_cannot_export_workspace_audit_log_to_csv(
-    api_client, enterprise_data_fixture
+    api_client, enterprise_data_fixture, synced_roles
 ):
     enterprise_data_fixture.enable_enterprise()
 
