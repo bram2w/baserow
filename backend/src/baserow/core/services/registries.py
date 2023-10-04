@@ -45,7 +45,10 @@ class ServiceType(
     returns_list = False
 
     def prepare_values(
-        self, values: Dict[str, Any], user: AbstractUser
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: Optional[ServiceSubClass] = None,
     ) -> Dict[str, Any]:
         """
         The prepare_values hook gives the possibility to change the provided values
@@ -56,6 +59,7 @@ class ServiceType(
 
         :param values: The provided values.
         :param user: The user on whose behalf the change is made.
+        :param instance: The current instance if it exists.
         :return: The updated values.
         """
 

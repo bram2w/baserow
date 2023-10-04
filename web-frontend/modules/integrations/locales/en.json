@@ -28,9 +28,5 @@
         "viewFieldPlaceHolder": "Select a view",
         "searchTabTitle": "Search",
         "searchFieldPlaceHolder": "Enter a search term..."
-    },
-    "dataProviderType": {
-        "dataSource": "Data source",
-        "pageParameter": "Parameter"
     }
 }

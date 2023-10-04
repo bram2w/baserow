@@ -98,17 +98,18 @@ const actions = {
     { dispatch },
     {
       page,
-      elementType,
+      elementType: elementTypeName,
       beforeId = null,
       configuration = null,
       forceCreate = true,
     }
   ) {
+    const elementType = this.$registry.get('element', elementTypeName)
     const { data: element } = await ElementService(this.$client).create(
       page.id,
-      elementType,
+      elementTypeName,
       beforeId,
-      configuration
+      elementType.prepareValuesForRequest(configuration)
     )
 
     if (forceCreate) {
@@ -282,6 +283,14 @@ const actions = {
     )
 
     return elementsCreated
+  },
+  emitElementEvent({ getters }, { event, page, ...rest }) {
+    const elements = getters.getElements(page)
+
+    elements.forEach((element) => {
+      const elementType = this.$registry.get('element', element.type)
+      elementType.onElementEvent(event, { page, element, ...rest })
+    })
   },
 }
 

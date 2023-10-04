@@ -21,14 +21,14 @@
       v-model="values.value"
       :label="$t('headingElementForm.textTitle')"
       :placeholder="$t('elementForms.textInputPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_SIDEBAR"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
   </form>
 </template>
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import { DATA_PROVIDERS_ALLOWED_SIDEBAR } from '@baserow/modules/builder/enums'
+import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
@@ -49,7 +49,7 @@ export default {
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_SIDEBAR: () => DATA_PROVIDERS_ALLOWED_SIDEBAR,
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
 }
 </script>

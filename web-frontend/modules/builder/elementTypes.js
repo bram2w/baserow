@@ -12,7 +12,10 @@ import InputTextElementForm from '@baserow/modules/builder/components/elements/c
 import TableElement from '@baserow/modules/builder/components/elements/components/TableElement.vue'
 import TableElementForm from '@baserow/modules/builder/components/elements/components/forms/general/TableElementForm.vue'
 
-import { PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS } from '@baserow/modules/builder/enums'
+import {
+  ELEMENT_EVENTS,
+  PAGE_PARAM_TYPE_VALIDATION_FUNCTIONS,
+} from '@baserow/modules/builder/enums'
 import ColumnElement from '@baserow/modules/builder/components/elements/components/ColumnElement'
 import ColumnElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ColumnElementForm'
 import _ from 'lodash'
@@ -86,6 +89,8 @@ export class ElementType extends Registerable {
   prepareValuesForRequest(values) {
     return values
   }
+
+  onElementEvent(event, params) {}
 }
 
 export class ContainerElementType extends ElementType {
@@ -402,5 +407,41 @@ export class TableElementType extends ElementType {
 
   get generalFormComponent() {
     return TableElementForm
+  }
+
+  prepareValuesForRequest(values) {
+    const prepared = { ...values }
+
+    if (!prepared?.fields?.length || prepared.fields.length === 0) {
+      prepared.fields = [
+        {
+          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 1`,
+          value: '',
+        },
+        {
+          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 2`,
+          value: '',
+        },
+        {
+          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 3`,
+          value: '',
+        },
+      ]
+    }
+
+    return prepared
+  }
+
+  onElementEvent(event, { page, element, dataSourceId }) {
+    if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
+      if (element.data_source_id === dataSourceId) {
+        // Remove the data_source_id
+        this.app.store.dispatch('element/forceUpdate', {
+          page,
+          element,
+          values: { data_source_id: null },
+        })
+      }
+    }
   }
 }

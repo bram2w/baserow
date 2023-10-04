@@ -12,7 +12,7 @@ const mutations = {
       Vue.set(page, 'contents', {})
     }
 
-    if (!page.contents[dataSourceId]) {
+    if (!_.isEqual(page.contents[dataSourceId], value)) {
       // Here we need to change the reference of the dataSourceContents object to
       // trigger computed values that use it in some situation (before the key exists
       // for instance)
@@ -20,12 +20,10 @@ const mutations = {
         ...page.contents,
         [dataSourceId]: value,
       }
-    } else if (!_.isEqual(page.contents[dataSourceId], value)) {
-      page.contents[dataSourceId] = value
     }
   },
   CLEAR_CONTENTS(state, { page }) {
-    page.contents = {}
+    Vue.set(page, 'contents', {})
   },
   SET_LOADING(state, { page, value }) {
     page._.dataSourceContentLoading = value
@@ -107,6 +105,10 @@ const actions = {
         data: queryData,
       })
     }, 500)
+  },
+
+  clearDataSourceContent({ commit }, { page, dataSourceId }) {
+    commit('SET_CONTENT', { page, dataSourceId, value: null })
   },
 
   clearDataSourceContents({ commit }, { page }) {

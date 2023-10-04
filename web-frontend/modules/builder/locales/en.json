@@ -1,4 +1,9 @@
 {
+    "dataProviderType": {
+        "dataSource": "Data",
+        "pageParameter": "Parameter",
+        "currentRecord": "Data source"
+    },
     "builderForm": {
         "submit": "Add application"
     },
@@ -44,6 +49,7 @@
         "publishFailedTitle": "Site publishing failed",
         "publishFailedDescription": "The site publishing has failed. Please try again later.",
         "openInNewTab": "Open in a new tab",
+        "importingState": "Importing",
         "noDomain": "You need to have at least one domain in order to publish your application."
     },
     "lastPublishedDomainDate": {
@@ -261,7 +267,7 @@
         "errorUniqueName": "Data source name must be unique."
     },
     "dataSourceContext": {
-        "addDataSource": "Add new data source",
+        "addDataSource": "add new data source",
         "noDataSourceTitle": "You have not yet added a data",
         "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
     },
@@ -295,6 +301,18 @@
         "errorTooltip": "Invalid reference"
     },
     "tableElementForm": {
-      "dataSource": "Data source"
+      "dataSource": "Data source",
+      "fields": "Fields",
+      "fieldValueLabel": "Value",
+      "addField": "add field",
+      "fieldValuePlaceholder": "Enter value...",
+      "fieldDefaultName": "Column"
+    },
+    "tableElement": {
+      "empty": "No items have been found."
+    },
+    "currentRecordDataProviderType": {
+      "index": "index",
+      "firstPartName": "Data source: {name}"
     }
 }

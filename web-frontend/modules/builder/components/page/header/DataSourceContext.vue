@@ -35,7 +35,8 @@
 
       <Button
         type="link"
-        prepend-icon="iconoir-plus"
+        prepend-icon="baserow-icon-plus"
+        size="tiny"
         :loading="creationInProgress"
         @click="createDataSource()"
       >

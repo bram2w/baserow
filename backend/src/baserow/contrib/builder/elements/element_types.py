@@ -186,6 +186,7 @@ class CollectionElementType(ElementType, ABC):
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
+
         if serialized_copy["data_source_id"]:
             serialized_copy["data_source_id"] = id_mapping["builder_data_sources"][
                 serialized_copy["data_source_id"]
@@ -408,9 +409,10 @@ class LinkElementType(ElementType):
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
         if serialized_copy["navigate_to_page_id"]:
-            serialized_copy["navigate_to_page_id"] = id_mapping["builder_pages"][
-                serialized_copy["navigate_to_page_id"]
-            ]
+            serialized_copy["navigate_to_page_id"] = id_mapping["builder_pages"].get(
+                serialized_copy["navigate_to_page_id"],
+                serialized_copy["navigate_to_page_id"],
+            )
         return super().import_serialized(page, serialized_copy, id_mapping)
 
     @property
@@ -665,6 +667,8 @@ class ButtonElementType(ElementType):
 
     class SerializedDict(ElementDict):
         value: BaserowFormula
+        width: str
+        alignment: str
 
     @property
     def serializer_field_overrides(self):

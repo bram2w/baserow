@@ -1,10 +1,11 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormulaInputGroup
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
       :label="$t('buttonElementForm.valueLabel')"
       :placeholder="$t('buttonElementForm.valuePlaceholder')"
-    ></FormulaInputGroup>
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    />
     <FormElement class="control">
       <HorizontalAlignmentsSelector v-model="values.alignment" />
     </FormElement>
@@ -15,17 +16,22 @@
 </template>
 
 <script>
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 import form from '@baserow/modules/core/mixins/form'
+import {
+  DATA_PROVIDERS_ALLOWED_ELEMENTS,
+  HORIZONTAL_ALIGNMENTS,
+  WIDTHS,
+} from '@baserow/modules/builder/enums'
 import HorizontalAlignmentsSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { HORIZONTAL_ALIGNMENTS, WIDTHS } from '@baserow/modules/builder/enums'
+
 import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
 
 export default {
   name: 'ButtonElementForm',
   components: {
     WidthSelector,
-    FormulaInputGroup,
+    ApplicationBuilderFormulaInputGroup,
     HorizontalAlignmentsSelector,
   },
   mixins: [form],
@@ -37,6 +43,9 @@ export default {
         width: WIDTHS.AUTO.value,
       },
     }
+  },
+  computed: {
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
 }
 </script>

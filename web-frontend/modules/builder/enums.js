@@ -5,6 +5,7 @@ import {
 import {
   DataSourceDataProviderType,
   PageParameterDataProviderType,
+  CurrentRecordDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 export const PLACEMENTS = {
@@ -67,9 +68,10 @@ export const WIDTHS = {
  *
  * @type {String[]}
  */
-export const DATA_PROVIDERS_ALLOWED_SIDEBAR = [
-  new DataSourceDataProviderType().getType(),
-  new PageParameterDataProviderType().getType(),
+export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
+  CurrentRecordDataProviderType.getType(),
+  PageParameterDataProviderType.getType(),
+  DataSourceDataProviderType.getType(),
 ]
 
 /**
@@ -78,5 +80,9 @@ export const DATA_PROVIDERS_ALLOWED_SIDEBAR = [
  * @type {String[]}
  */
 export const DATA_PROVIDERS_ALLOWED_DATA_SOURCES = [
-  new PageParameterDataProviderType().getType(),
+  PageParameterDataProviderType.getType(),
 ]
+
+export const ELEMENT_EVENTS = {
+  DATA_SOURCE_REMOVED: 'DATA_SOURCE_REMOVED',
+}

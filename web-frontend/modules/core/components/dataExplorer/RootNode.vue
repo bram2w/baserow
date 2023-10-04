@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="root-node">
     <div class="root-node__name">
       {{ node.name }}
     </div>
