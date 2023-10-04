@@ -267,7 +267,6 @@ export function resolveColor(value, variables) {
   if (isColorVariable(value)) {
     const variable = variables.find((v) => v.value === value)
     if (variable !== undefined) {
-      console.log(variable.color)
       return variable.color
     }
   }

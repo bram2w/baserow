@@ -114,14 +114,14 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
     assert [dict(r) for r in result] == [
         {
             "id": rows[0].id,
-            "Name": "BMW",
-            "My Color": "Blue",
+            fields[0].db_column: "BMW",
+            fields[1].db_column: "Blue",
             "order": "1.00000000000000000000",
         },
         {
             "id": rows[1].id,
-            "Name": "Audi",
-            "My Color": "Orange",
+            fields[0].db_column: "Audi",
+            fields[1].db_column: "Orange",
             "order": "1.00000000000000000000",
         },
     ]
@@ -261,8 +261,8 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
 
     assert result == {
         "id": rows[1].id,
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
         "order": "1.00000000000000000000",
     }
 
@@ -662,361 +662,429 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
         data_fixture,
         user,
     )
-    field_id_by_name = {field.name: str(field.id) for field in table.field_set.all()}
-
+    field_db_column_by_name = {
+        field.name: field.db_column for field in table.field_set.all()
+    }
     expected_local_baserow_table_service_schema_fields = {
-        field_id_by_name["text"]: {
+        field_db_column_by_name["text"]: {
             "title": "text",
             "default": "",
             "original_type": "text",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["long_text"]: {
+        field_db_column_by_name["long_text"]: {
             "title": "long_text",
             "default": None,
             "original_type": "long_text",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["url"]: {
+        field_db_column_by_name["url"]: {
             "title": "url",
             "default": None,
             "original_type": "url",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["email"]: {
+        field_db_column_by_name["email"]: {
             "title": "email",
             "default": None,
             "original_type": "email",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["negative_int"]: {
+        field_db_column_by_name["negative_int"]: {
             "title": "negative_int",
             "default": None,
             "original_type": "number",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["positive_int"]: {
+        field_db_column_by_name["positive_int"]: {
             "title": "positive_int",
             "default": None,
             "original_type": "number",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["negative_decimal"]: {
+        field_db_column_by_name["negative_decimal"]: {
             "title": "negative_decimal",
             "default": None,
             "original_type": "number",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["positive_decimal"]: {
+        field_db_column_by_name["positive_decimal"]: {
             "title": "positive_decimal",
             "default": None,
             "original_type": "number",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["rating"]: {
+        field_db_column_by_name["rating"]: {
             "title": "rating",
             "default": None,
             "original_type": "rating",
             "metadata": {},
             "type": "number",
         },
-        field_id_by_name["boolean"]: {
+        field_db_column_by_name["boolean"]: {
             "title": "boolean",
             "default": None,
             "original_type": "boolean",
             "metadata": {},
             "type": "boolean",
         },
-        field_id_by_name["datetime_us"]: {
+        field_db_column_by_name["datetime_us"]: {
             "title": "datetime_us",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["date_us"]: {
+        field_db_column_by_name["date_us"]: {
             "title": "date_us",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["datetime_eu"]: {
+        field_db_column_by_name["datetime_eu"]: {
             "title": "datetime_eu",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["date_eu"]: {
+        field_db_column_by_name["date_eu"]: {
             "title": "date_eu",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["datetime_eu_tzone_visible"]: {
+        field_db_column_by_name["datetime_eu_tzone_visible"]: {
             "title": "datetime_eu_tzone_visible",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["datetime_eu_tzone_hidden"]: {
+        field_db_column_by_name["datetime_eu_tzone_hidden"]: {
             "title": "datetime_eu_tzone_hidden",
             "default": None,
             "original_type": "date",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["last_modified_datetime_us"]: {
+        field_db_column_by_name["last_modified_datetime_us"]: {
             "title": "last_modified_datetime_us",
             "default": None,
             "original_type": "last_modified",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["last_modified_date_us"]: {
+        field_db_column_by_name["last_modified_date_us"]: {
             "title": "last_modified_date_us",
             "default": None,
             "original_type": "last_modified",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["last_modified_datetime_eu"]: {
+        field_db_column_by_name["last_modified_datetime_eu"]: {
             "title": "last_modified_datetime_eu",
             "default": None,
             "original_type": "last_modified",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["last_modified_date_eu"]: {
+        field_db_column_by_name["last_modified_date_eu"]: {
             "title": "last_modified_date_eu",
             "default": None,
             "original_type": "last_modified",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["last_modified_datetime_eu_tzone"]: {
+        field_db_column_by_name["last_modified_datetime_eu_tzone"]: {
             "title": "last_modified_datetime_eu_tzone",
             "default": None,
             "original_type": "last_modified",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["created_on_datetime_us"]: {
+        field_db_column_by_name["created_on_datetime_us"]: {
             "title": "created_on_datetime_us",
             "default": None,
             "original_type": "created_on",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["created_on_date_us"]: {
+        field_db_column_by_name["created_on_date_us"]: {
             "title": "created_on_date_us",
             "default": None,
             "original_type": "created_on",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["created_on_datetime_eu"]: {
+        field_db_column_by_name["created_on_datetime_eu"]: {
             "title": "created_on_datetime_eu",
             "default": None,
             "original_type": "created_on",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["created_on_date_eu"]: {
+        field_db_column_by_name["created_on_date_eu"]: {
             "title": "created_on_date_eu",
             "default": None,
             "original_type": "created_on",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["created_on_datetime_eu_tzone"]: {
+        field_db_column_by_name["created_on_datetime_eu_tzone"]: {
             "title": "created_on_datetime_eu_tzone",
             "default": None,
             "original_type": "created_on",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["link_row"]: {
+        field_db_column_by_name["link_row"]: {
             "title": "link_row",
             "default": None,
             "original_type": "link_row",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {"id": {"title": "id", "type": "number"}},
+            },
         },
-        field_id_by_name["self_link_row"]: {
+        field_db_column_by_name["self_link_row"]: {
             "title": "self_link_row",
             "default": None,
             "original_type": "link_row",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {"id": {"title": "id", "type": "number"}},
+            },
         },
-        field_id_by_name["link_row_without_related"]: {
+        field_db_column_by_name["link_row_without_related"]: {
             "title": "link_row_without_related",
             "default": None,
             "original_type": "link_row",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {"id": {"title": "id", "type": "number"}},
+            },
         },
-        field_id_by_name["decimal_link_row"]: {
+        field_db_column_by_name["decimal_link_row"]: {
             "title": "decimal_link_row",
             "default": None,
             "original_type": "link_row",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {"id": {"title": "id", "type": "number"}},
+            },
         },
-        field_id_by_name["file_link_row"]: {
+        field_db_column_by_name["file_link_row"]: {
             "title": "file_link_row",
             "default": None,
             "original_type": "link_row",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {"id": {"title": "id", "type": "number"}},
+            },
         },
-        field_id_by_name["file"]: {
+        field_db_column_by_name["file"]: {
             "title": "file",
             "default": None,
             "original_type": "file",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "url": {"title": "url", "type": None},
+                    "thumbnails": {"title": "thumbnails", "type": None},
+                    "visible_name": {"title": "visible_name", "type": "string"},
+                    "name": {"title": "name", "type": "string"},
+                    "size": {"title": "size", "type": "number"},
+                    "mime_type": {"title": "mime_type", "type": "string"},
+                    "is_image": {"title": "is_image", "type": "boolean"},
+                    "image_width": {"title": "image_width", "type": "number"},
+                    "image_height": {"title": "image_height", "type": "number"},
+                    "uploaded_at": {"title": "uploaded_at", "type": "string"},
+                },
+            },
         },
-        field_id_by_name["single_select"]: {
+        field_db_column_by_name["single_select"]: {
             "title": "single_select",
             "default": None,
             "original_type": "single_select",
             "metadata": {},
             "type": "object",
+            "properties": {
+                "id": {"title": "id", "type": "number"},
+                "value": {"title": "value", "type": "string"},
+                "color": {"title": "color", "type": "string"},
+            },
         },
-        field_id_by_name["multiple_select"]: {
+        field_db_column_by_name["multiple_select"]: {
             "title": "multiple_select",
             "default": None,
             "original_type": "multiple_select",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                    "color": {"title": "color", "type": "string"},
+                },
+            },
         },
-        field_id_by_name["multiple_collaborators"]: {
+        field_db_column_by_name["multiple_collaborators"]: {
             "title": "multiple_collaborators",
             "default": None,
             "original_type": "multiple_collaborators",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "name": {"title": "name", "type": "string"},
+                },
+            },
         },
-        field_id_by_name["phone_number"]: {
+        field_db_column_by_name["phone_number"]: {
             "title": "phone_number",
             "default": None,
             "original_type": "phone_number",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_text"]: {
+        field_db_column_by_name["formula_text"]: {
             "title": "formula_text",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_int"]: {
+        field_db_column_by_name["formula_int"]: {
             "title": "formula_int",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_bool"]: {
+        field_db_column_by_name["formula_bool"]: {
             "title": "formula_bool",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "boolean",
         },
-        field_id_by_name["formula_decimal"]: {
+        field_db_column_by_name["formula_decimal"]: {
             "title": "formula_decimal",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_dateinterval"]: {
+        field_db_column_by_name["formula_dateinterval"]: {
             "title": "formula_dateinterval",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_date"]: {
+        field_db_column_by_name["formula_date"]: {
             "title": "formula_date",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_singleselect"]: {
+        field_db_column_by_name["formula_singleselect"]: {
             "title": "formula_singleselect",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "object",
+            "properties": {
+                "id": {"title": "id", "type": "number"},
+                "value": {"title": "value", "type": "string"},
+                "color": {"title": "color", "type": "string"},
+            },
         },
-        field_id_by_name["formula_email"]: {
+        field_db_column_by_name["formula_email"]: {
             "title": "formula_email",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["formula_link_with_label"]: {
+        field_db_column_by_name["formula_link_with_label"]: {
             "title": "formula_link_with_label",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "object",
+            "properties": {
+                "url": {"title": "url", "type": "string"},
+                "label": {"title": "label", "type": "string"},
+            },
         },
-        field_id_by_name["formula_link_url_only"]: {
+        field_db_column_by_name["formula_link_url_only"]: {
             "title": "formula_link_url_only",
             "default": None,
             "original_type": "formula",
             "metadata": {},
             "type": "object",
+            "properties": {
+                "url": {"title": "url", "type": "string"},
+                "label": {"title": "label", "type": "string"},
+            },
         },
-        field_id_by_name["count"]: {
+        field_db_column_by_name["count"]: {
             "title": "count",
             "default": None,
             "original_type": "count",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["rollup"]: {
+        field_db_column_by_name["rollup"]: {
             "title": "rollup",
             "default": None,
             "original_type": "rollup",
             "metadata": {},
             "type": "string",
         },
-        field_id_by_name["lookup"]: {
+        field_db_column_by_name["lookup"]: {
             "title": "lookup",
             "default": None,
             "original_type": "lookup",
             "metadata": {},
             "type": "array",
-            "items": {"oneOf": [{"type": "object"}]},
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "ids": {"title": "ids", "type": None},
+                },
+            },
         },
+        "id": {"metadata": {}, "type": "number", "title": "ID"},
     }
 
     get_row_service_type = LocalBaserowGetRowUserServiceType()
@@ -1025,6 +1093,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
     )
     get_row_schema = get_row_service_type.generate_schema((get_row_service))
     reset_metadata(get_row_schema, "properties")
+
     assert get_row_schema["type"] == "object"
     assert (
         get_row_schema["properties"]
@@ -1036,22 +1105,24 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
         integration=integration, table=table
     )
     list_rows_schema = list_rows_service_type.generate_schema(list_rows_service)
-    reset_metadata(list_rows_schema, "items")
+    reset_metadata(list_rows_schema["items"], "properties")
+
     assert list_rows_schema["type"] == "array"
     assert (
-        list_rows_schema["items"] == expected_local_baserow_table_service_schema_fields
+        list_rows_schema["items"]["properties"]
+        == expected_local_baserow_table_service_schema_fields
     )
 
 
 def test_guess_type_for_response_serialize_field_permutations():
     TYPE_NULL = {"type": None}
-    TYPE_OBJECT = {"type": "object"}
+    TYPE_OBJECT = {"type": "object", "properties": {}}
     TYPE_STRING = {"type": "string"}
     TYPE_NUMBER = {"type": "number"}
     TYPE_BOOLEAN = {"type": "boolean"}
     TYPE_ARRAY_CHILD_OBJECT = {
         "type": "array",
-        "items": {"oneOf": [TYPE_OBJECT]},
+        "items": TYPE_OBJECT,
     }
     cls = LocalBaserowServiceType
     cls.model_class = Mock()
@@ -1108,7 +1179,7 @@ def test_local_baserow_service_type_get_schema_for_return_type():
     cls.returns_list = True
     assert cls().get_schema_for_return_type(mock_service, properties) == {
         "type": "array",
-        "items": properties,
+        "items": {"properties": properties, "type": "object"},
         "title": "Service123Schema",
     }
 
