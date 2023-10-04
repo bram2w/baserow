@@ -4,6 +4,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from rest_framework.fields import (
     BooleanField,
     CharField,
@@ -127,6 +128,64 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     The `ServiceType` for `LocalBaserowTableService` subclasses.
     """
 
+    def prepare_values(
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: Optional[ServiceSubClass] = None,
+    ) -> Dict[str, Any]:
+        """Load the table & view instance instead of the ID."""
+
+        if "table_id" in values:
+            table_id = values.pop("table_id")
+            if table_id is not None:
+                table = TableHandler().get_table(table_id)
+                values["table"] = table
+
+                # Reset the view if the table has changed
+                if (
+                    "view_id" not in values
+                    and instance
+                    and instance.view_id
+                    and instance.view.table_id != table_id
+                ):
+                    values["view"] = None
+            else:
+                values["table"] = None
+
+        if "view_id" in values:
+            view_id = values.pop("view_id")
+            if view_id is not None:
+                view = ViewHandler().get_view(view_id)
+
+                # Check that the view table_id match the given table
+                if "table" in values and view.table_id != values["table"].id:
+                    raise DRFValidationError(
+                        detail=f"The view with ID {view_id} is not related to the "
+                        "given table.",
+                        code="invalid_view",
+                    )
+
+                # Check that the view table_id match the existing table
+                elif (
+                    instance
+                    and instance.table_id
+                    and view.table_id != instance.table_id
+                ):
+                    raise DRFValidationError(
+                        detail=f"The view with ID {view_id} is not related to the "
+                        "given table.",
+                        code="invalid_view",
+                    )
+                else:
+                    # Add the missing table
+                    values["table"] = view.table
+                values["view"] = view
+            else:
+                values["view"] = None
+
+        return super().prepare_values(values, user)
+
     def generate_schema(
         self, service: LocalBaserowTableServiceSubClass
     ) -> Optional[Dict[str, Any]]:
@@ -241,29 +300,6 @@ class LocalBaserowListRowsUserServiceType(
             "table__field_set",
             "view__viewgroupby_set",
         )
-
-    def prepare_values(
-        self, values: Dict[str, Any], user: AbstractUser
-    ) -> Dict[str, Any]:
-        """Load the table & view instance instead of the ID."""
-
-        if "table_id" in values:
-            table_id = values.pop("table_id")
-            if table_id is not None:
-                table = TableHandler().get_table(table_id)
-                values["table"] = table
-            else:
-                values["table"] = None
-
-        if "view_id" in values:
-            view_id = values.pop("view_id")
-            if view_id is not None:
-                view = ViewHandler().get_view(view_id)
-                values["view"] = view
-            else:
-                values["view"] = None
-
-        return super().prepare_values(values, user)
 
     def transform_serialized_value(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
@@ -407,29 +443,6 @@ class LocalBaserowGetRowUserServiceType(
         return queryset.select_related(
             "table", "table__database", "table__database__workspace", "view"
         )
-
-    def prepare_values(
-        self, values: Dict[str, Any], user: AbstractUser
-    ) -> Dict[str, Any]:
-        """Load the table & view instance instead of the ID."""
-
-        if "table_id" in values:
-            table_id = values.pop("table_id")
-            if table_id is not None:
-                table = TableHandler().get_table(table_id)
-                values["table"] = table
-            else:
-                values["table"] = None
-
-        if "view_id" in values:
-            view_id = values.pop("view_id")
-            if view_id is not None:
-                view = ViewHandler().get_view(view_id)
-                values["view"] = view
-            else:
-                values["view"] = None
-
-        return super().prepare_values(values, user)
 
     def transform_serialized_value(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]

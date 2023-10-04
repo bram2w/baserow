@@ -1,5 +1,6 @@
 .form-input {
   display: flex;
+  flex: 1;
   border: 1px solid $color-neutral-400;
   position: relative;
   @include rounded($rounded);
@@ -105,4 +106,8 @@
   padding: 0 12px;
   outline: none;
   line-height: 100%;
+}
+
+.form-input__input-wrapper {
+  display: flex;
 }

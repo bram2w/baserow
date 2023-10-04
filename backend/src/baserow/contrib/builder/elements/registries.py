@@ -135,8 +135,8 @@ class ElementType(
         :return: The created element.
         """
 
-        if "builder_elements" not in id_mapping:
-            id_mapping["builder_elements"] = {}
+        if "builder_page_elements" not in id_mapping:
+            id_mapping["builder_page_elements"] = {}
 
         serialized_copy = serialized_values.copy()
 
@@ -144,10 +144,15 @@ class ElementType(
         element_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
 
+        if serialized_copy.get("parent_element_id", None):
+            serialized_copy["parent_element_id"] = id_mapping["builder_page_elements"][
+                serialized_copy["parent_element_id"]
+            ]
+
         element = self.model_class(page=page, **serialized_copy)
         element.save()
 
-        id_mapping["builder_elements"][element_id] = element.id
+        id_mapping["builder_page_elements"][element_id] = element.id
 
         return element
 

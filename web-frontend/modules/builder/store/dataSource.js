@@ -1,5 +1,6 @@
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import { ELEMENT_EVENTS } from '../enums'
 
 const state = {}
 
@@ -64,7 +65,19 @@ const actions = {
   forceUpdate({ commit }, { page, dataSource, values }) {
     commit('UPDATE_ITEM', { page, dataSource, values })
   },
-  forceDelete({ commit }, { page, dataSourceId }) {
+  forceDelete({ commit, dispatch }, { page, dataSourceId }) {
+    // Remove related content first
+    dispatch(
+      'dataSourceContent/clearDataSourceContent',
+      { page, dataSourceId },
+      { root: true }
+    )
+    //
+    dispatch(
+      'element/emitElementEvent',
+      { event: ELEMENT_EVENTS.DATA_SOURCE_REMOVED, page, dataSourceId },
+      { root: true }
+    )
     commit('DELETE_ITEM', { page, dataSourceId })
   },
   forceMove({ commit, getters }, { page, dataSourceId, beforeDataSourceId }) {

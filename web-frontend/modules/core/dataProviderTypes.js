@@ -6,12 +6,12 @@ import { Registerable } from '@baserow/modules/core/registry'
  */
 export class DataProviderType extends Registerable {
   DATA_TYPE_TO_ICON_MAP = {
-    string: 'font',
-    number: 'hashtag',
-    boolean: 'check-square',
+    string: 'iconoir-text',
+    number: 'baserow-icon-hashtag',
+    boolean: 'baserow-icon-circle-checked',
   }
 
-  UNKNOWN_DATA_TYPE_ICON = 'question'
+  UNKNOWN_DATA_TYPE_ICON = 'iconoir-question-mark'
 
   get name() {
     throw new Error('`name` must be set on the dataProviderType.')
@@ -113,6 +113,10 @@ export class DataProviderType extends Registerable {
     const content = this.getDataContent(applicationContext)
     const schema = this.getDataSchema(applicationContext)
 
+    if (schema === null) {
+      return {}
+    }
+
     return this._toNode(applicationContext, this.type, content, schema)
   }
 
@@ -126,13 +130,25 @@ export class DataProviderType extends Registerable {
    * @returns {{identifier: string, name: string, nodes: []}}
    */
   _toNode(applicationContext, identifier, content, schema, level = 0) {
-    const name = this.pathPartToDisplay(applicationContext, identifier, level)
+    const name =
+      schema?.name ||
+      this.pathPartToDisplay(applicationContext, identifier, level)
+
+    if (schema === null) {
+      return {
+        name,
+        type: null,
+        icon: this.UNKNOWN_DATA_TYPE_ICON,
+        identifier,
+      }
+    }
+
     if (schema.type === 'array') {
       return {
         name,
         identifier,
         icon: this.getIconForType(schema.type),
-        nodes: content.map((item, index) =>
+        nodes: (content || []).map((item, index) =>
           this._toNode(
             applicationContext,
             `${index}`,
@@ -154,7 +170,7 @@ export class DataProviderType extends Registerable {
             this._toNode(
               applicationContext,
               identifier,
-              content[identifier],
+              (content || {})[identifier],
               subSchema,
               level + 1
             )

@@ -3,6 +3,12 @@
     v-bind="$attrs"
     :data-explorer-loading="dataExplorerLoading"
     :data-providers="dataProviders"
+    :application-context="{
+      page,
+      builder,
+      mode,
+      ...applicationContextAdditions,
+    }"
     v-on="$listeners"
   ></FormulaInputGroup>
 </template>
@@ -13,12 +19,17 @@ import { DataSourceDataProviderType } from '@baserow/modules/builder/dataProvide
 export default {
   name: 'ApplicationBuilderFormulaInputGroup',
   components: { FormulaInputGroup },
-  inject: ['page'],
+  inject: ['page', 'builder', 'mode'],
   props: {
     dataProvidersAllowed: {
       type: Array,
       required: false,
       default: () => [],
+    },
+    applicationContextAdditions: {
+      type: Object,
+      required: false,
+      default: () => {},
     },
   },
   computed: {
@@ -29,9 +40,8 @@ export default {
       return this.$store.getters['dataSourceContent/getLoading'](this.page)
     },
     dataProviders() {
-      return Object.values(this.$registry.getAll('builderDataProvider')).filter(
-        (dataProvider) =>
-          this.dataProvidersAllowed.includes(dataProvider.getType())
+      return this.dataProvidersAllowed.map((dataProviderName) =>
+        this.$registry.get('builderDataProvider', dataProviderName)
       )
     },
     dataExplorerLoading() {
@@ -47,7 +57,7 @@ export default {
      */
     dataProviderLoadingMap() {
       return {
-        [new DataSourceDataProviderType().getType()]:
+        [DataSourceDataProviderType.getType()]:
           this.dataSourceLoading || this.dataSourceContentLoading,
       }
     },

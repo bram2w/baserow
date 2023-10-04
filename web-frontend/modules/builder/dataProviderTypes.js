@@ -1,5 +1,4 @@
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
-import GenerateSchema from 'generate-schema'
 
 import _ from 'lodash'
 
@@ -41,23 +40,29 @@ export class DataSourceDataProviderType extends DataProviderType {
   }
 
   getDataChunk(applicationContext, [dataSourceId, ...rest]) {
-    const content = this.getDataSourceContent(applicationContext, dataSourceId)
+    const dataSource = this.app.store.getters[
+      'dataSource/getPageDataSourceById'
+    ](applicationContext.page, parseInt(dataSourceId))
+
+    const content = this.getDataSourceContent(applicationContext, dataSource)
 
     return content ? _.get(content, rest.join('.')) : null
   }
 
-  getDataSourceContent(applicationContext, dataSourceId) {
-    const page = applicationContext.page
-    const dataSourceContents =
-      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)
+  getDataSourceContent(applicationContext, dataSource) {
+    const dataSourceContents = this.app.store.getters[
+      'dataSourceContent/getDataSourceContents'
+    ](applicationContext.page)
 
-    return dataSourceContents[dataSourceId]
+    return dataSourceContents[dataSource.id]
   }
 
-  getDataSourceSchema(applicationContext, dataSourceId) {
-    return GenerateSchema.json(
-      this.getDataSourceContent(applicationContext, dataSourceId)
-    )
+  getDataSourceSchema(applicationContext, dataSource) {
+    if (dataSource?.type) {
+      const serviceType = this.app.$registry.get('service', dataSource.type)
+      return serviceType.getDataSchema(applicationContext, dataSource)
+    }
+    return null
   }
 
   getDataContent(applicationContext) {
@@ -69,7 +74,7 @@ export class DataSourceDataProviderType extends DataProviderType {
       dataSources.map((dataSource) => {
         return [
           dataSource.id,
-          this.getDataSourceContent(applicationContext, dataSource.id),
+          this.getDataSourceContent(applicationContext, dataSource),
         ]
       })
     )
@@ -84,9 +89,11 @@ export class DataSourceDataProviderType extends DataProviderType {
       dataSources.map((dataSource) => {
         const dsSchema = this.getDataSourceSchema(
           applicationContext,
-          dataSource.id
+          dataSource
         )
-        delete dsSchema.$schema
+        if (dsSchema) {
+          delete dsSchema.$schema
+        }
         return [dataSource.id, dsSchema]
       })
     )
@@ -144,20 +151,8 @@ export class PageParameterDataProviderType extends DataProviderType {
   }
 
   getDataChunk(applicationContext, path) {
-    if (path.length !== 1) {
-      return null
-    }
-
-    const [prop] = path
-    const parameters = this.app.store.getters['pageParameter/getParameters'](
-      applicationContext.page
-    )
-
-    if (parameters[prop] === undefined) {
-      return null
-    }
-
-    return parameters[prop]
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('.'))
   }
 
   getBackendContext(applicationContext) {
@@ -186,5 +181,117 @@ export class PageParameterDataProviderType extends DataProviderType {
         ])
       ),
     }
+  }
+}
+
+export class CurrentRecordDataProviderType extends DataProviderType {
+  static getType() {
+    return 'current_record'
+  }
+
+  get name() {
+    return this.app.i18n.t('dataProviderType.currentRecord')
+  }
+
+  get indexKey() {
+    // Prevent collision with user data
+    return '__idx__'
+  }
+
+  getDataChunk(applicationContext, path) {
+    const content = this.getDataContent(applicationContext)
+    return _.get(content, path.join('.'))
+  }
+
+  getDataContent(applicationContext) {
+    const {
+      page,
+      element: { data_source_id: dataSourceId } = {},
+      recordIndex = 0,
+    } = applicationContext
+
+    if (!dataSourceId) {
+      return null
+    }
+
+    const dataSource = this.app.store.getters[
+      'dataSource/getPageDataSourceById'
+    ](applicationContext.page, dataSourceId)
+
+    if (!dataSource) {
+      return null
+    }
+
+    const rows =
+      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)[
+        dataSource.id
+      ] || []
+
+    const row = { [this.indexKey]: recordIndex, ...(rows[recordIndex] || {}) }
+
+    // Add the index value
+    row[this.indexKey] = recordIndex
+
+    return row
+  }
+
+  getDataSourceSchema(applicationContext, dataSource) {
+    if (dataSource?.type) {
+      const serviceType = this.app.$registry.get('service', dataSource.type)
+      return serviceType.getDataSchema(applicationContext, dataSource)
+    }
+    return null
+  }
+
+  getDataSchema(applicationContext) {
+    const { page, element: { data_source_id: dataSourceId } = {} } =
+      applicationContext
+
+    if (!dataSourceId) {
+      return null
+    }
+
+    const dataSource = this.app.store.getters[
+      'dataSource/getPageDataSourceById'
+    ](page, dataSourceId)
+
+    const schema = this.getDataSourceSchema(applicationContext, dataSource)
+
+    // Here we add the index property schema
+    const properties = {
+      [this.indexKey]: {
+        type: 'number',
+        name: this.app.i18n.t('currentRecordDataProviderType.index'),
+      },
+      ...(schema?.items?.properties || {}),
+    }
+
+    return { type: 'object', properties }
+  }
+
+  pathPartToDisplay(applicationContext, part, position) {
+    // The name of the first part is dynamic as it contains the name of the data source
+    if (position === 0) {
+      const { page, element: { data_source_id: dataSourceId } = {} } =
+        applicationContext
+
+      const dataSource = this.app.store.getters[
+        'dataSource/getPageDataSourceById'
+      ](page, dataSourceId)
+
+      if (!dataSource) {
+        return part
+      }
+
+      return this.app.i18n.t('currentRecordDataProviderType.firstPartName', {
+        name: dataSource.name,
+      })
+    }
+
+    if (position === 1 && part === this.indexKey) {
+      return this.app.i18n.t('currentRecordDataProviderType.index')
+    }
+
+    return part
   }
 }

@@ -30,6 +30,13 @@ export class ServiceType extends Registerable {
     return false
   }
 
+  /**
+   * Should return a JSON schema of the data returned by this data source.
+   */
+  getDataSchema(applicationContext, dataSource) {
+    throw new Error('Must be set on the type.')
+  }
+
   getOrder() {
     return 0
   }

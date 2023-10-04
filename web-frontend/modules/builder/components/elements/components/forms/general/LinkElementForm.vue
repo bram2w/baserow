@@ -4,7 +4,7 @@
       v-model="values.value"
       :label="$t('linkElementForm.text')"
       :placeholder="$t('linkElementForm.textPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_SIDEBAR"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
     <FormElement class="control">
       <label class="control__label">
@@ -45,7 +45,7 @@
         :page="page"
         :label="$t('linkElementForm.url')"
         :placeholder="$t('linkElementForm.urlPlaceholder')"
-        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_SIDEBAR"
+        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormElement>
     <FormElement v-if="destinationPage" class="control">
@@ -121,7 +121,7 @@ import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
 import {
-  DATA_PROVIDERS_ALLOWED_SIDEBAR,
+  DATA_PROVIDERS_ALLOWED_ELEMENTS,
   HORIZONTAL_ALIGNMENTS,
   WIDTHS,
 } from '@baserow/modules/builder/enums'
@@ -167,12 +167,12 @@ export default {
     }
   },
   computed: {
-    DATA_PROVIDERS_ALLOWED_SIDEBAR: () => DATA_PROVIDERS_ALLOWED_SIDEBAR,
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
     DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS() {
       const PROVIDERS_TO_REMOVE = [
         new PageParameterDataProviderType().getType(),
       ]
-      return this.DATA_PROVIDERS_ALLOWED_SIDEBAR.filter(
+      return this.DATA_PROVIDERS_ALLOWED_ELEMENTS.filter(
         (dataProvider) => !PROVIDERS_TO_REMOVE.includes(dataProvider)
       )
     },

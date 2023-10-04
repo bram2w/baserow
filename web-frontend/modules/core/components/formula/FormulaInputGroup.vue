@@ -13,7 +13,7 @@
         :placeholder="placeholder"
         :data-providers="dataProviders"
         :data-explorer-loading="dataExplorerLoading"
-        :application-context="{ page, builder, mode }"
+        :application-context="applicationContext"
         @input="$emit('input', $event)"
       />
     </div>
@@ -24,7 +24,6 @@
 import FormulaInputField from '@baserow/modules/core/components/formula/FormulaInputField'
 export default {
   components: { FormulaInputField },
-  inject: ['page', 'builder', 'mode'],
   props: {
     value: {
       type: String,
@@ -59,6 +58,10 @@ export default {
       type: Boolean,
       required: false,
       default: false,
+    },
+    applicationContext: {
+      type: Object,
+      required: true,
     },
   },
 }

@@ -1,5 +1,5 @@
 .node {
-  margin: 4px 0 4px 10px;
+  margin: 3px 0 3px 10px;
 
   &.node--first-indentation {
     margin-left: 6px;
@@ -27,6 +27,9 @@
 
 .node__content-name {
   @extend %ellipsis;
+
+  display: flex;
+  align-items: center;
 }
 
 .node__selected {
@@ -36,11 +39,6 @@
 }
 
 .node__icon {
-  color: $color-neutral-500;
-  width: 15px;
-
-  &::before {
-    display: flex;
-    justify-content: center;
-  }
+  color: $color-neutral-600;
+  margin-right: 6px;
 }

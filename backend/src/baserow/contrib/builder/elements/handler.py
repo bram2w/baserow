@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Iterable, List, Optional, Union, cast
 
 from django.db.models import QuerySet
@@ -14,7 +15,7 @@ from baserow.contrib.builder.elements.registries import (
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
-from baserow.core.utils import extract_allowed
+from baserow.core.utils import MirrorDict, extract_allowed
 
 from .types import ElementForUpdate
 
@@ -332,10 +333,14 @@ class ElementHandler:
         :return: All the elements that were created in the process
         """
 
-        return self._duplicate_element_recursive(element)
+        # We are just creating new elements here so other data id should remain
+        id_mapping = defaultdict(lambda: MirrorDict())
+        id_mapping["builder_elements"] = {}
+
+        return self._duplicate_element_recursive(element, id_mapping)
 
     def _duplicate_element_recursive(
-        self, element: Element, elements_duplicated=None, overwrites=None
+        self, element: Element, id_mapping
     ) -> List[Element]:
         """
         Duplicates an element and all of its children.
@@ -344,36 +349,23 @@ class ElementHandler:
         only required for the recursive calls.
 
         :param element: The element being duplicated
-        :param elements_duplicated: The elements that have already been duplicated
-        :param overwrites: Any overwrites of the attributes of an element
+        :param id_mapping: The id_mapping dict used for export/import process
         :return: A list of duplicated elements
         """
 
-        if elements_duplicated is None:
-            elements_duplicated = []
-
-        if overwrites is None:
-            overwrites = {}
-
         element_type = element_type_registry.get_by_model(element)
 
-        other_properties = {
-            key: getattr(element, key)
-            for key in self.allowed_fields_create + element_type.allowed_fields
-        }
-        other_properties = {**other_properties, **overwrites}
-
-        element_duplicated = self.create_element(
-            element_type, element.page, before=element, **other_properties
+        serialized = element_type.export_serialized(element)
+        element_duplicated = element_type.import_serialized(
+            element.page, serialized, id_mapping
         )
 
-        elements_duplicated.append(element_duplicated)
+        elements_duplicated = [element_duplicated]
 
         for child in element.children.all():
-            elements_duplicated = self._duplicate_element_recursive(
-                child.specific,
-                elements_duplicated,
-                overwrites={"parent_element_id": element_duplicated.id},
+            children_duplicated = self._duplicate_element_recursive(
+                child.specific, id_mapping
             )
+            elements_duplicated += children_duplicated
 
         return elements_duplicated

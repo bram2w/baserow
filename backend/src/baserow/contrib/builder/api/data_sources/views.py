@@ -456,6 +456,7 @@ class DispatchDataSourcesView(APIView):
                         PermissionException: ERROR_PERMISSION_DENIED,
                     },
                     content,
+                    with_fallback=True,
                 )
                 responses[service_id] = {"_error": error, "detail": detail}
             else:

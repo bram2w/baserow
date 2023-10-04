@@ -167,6 +167,12 @@ export default {
     copyDomainUrl(domain) {
       copyToClipboard(this.getDomainUrl(domain))
     },
+    getCustomHumanReadableJobState(state) {
+      if (state === 'importing') {
+        return this.$t('publishActionModal.importingState')
+      }
+      return ''
+    },
   },
 }
 </script>

@@ -181,7 +181,10 @@ class DataSourceService:
         )
 
         if service_type:
-            prepared_values = service_type.prepare_values(kwargs, user)
+            service = data_source.service.specific if data_source.service_id else None
+            prepared_values = service_type.prepare_values(
+                kwargs, user, instance=service
+            )
             prepared_values["service_type"] = service_type
         else:
             prepared_values = kwargs

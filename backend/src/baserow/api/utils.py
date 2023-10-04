@@ -42,7 +42,7 @@ ExceptionMappingType = Dict[
 ]
 
 
-def apply_exception_mapping(mapping, exc):
+def apply_exception_mapping(mapping, exc, with_fallback=False):
     value = _search_up_class_hierarchy_for_mapping(exc, mapping)
     status_code = status.HTTP_400_BAD_REQUEST
     detail = ""
@@ -53,12 +53,16 @@ def apply_exception_mapping(mapping, exc):
             return None
     if isinstance(value, str):
         error = value
-    if isinstance(value, tuple):
+    elif isinstance(value, tuple):
         error = value[0]
         if len(value) > 1 and value[1] is not None:
             status_code = value[1]
         if len(value) > 2 and value[2] is not None:
             detail = value[2].format(e=exc)
+    elif value is None and with_fallback:
+        error = "UNKNOWN_ERROR"
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        detail = f"{exc}"
 
     return status_code, error, detail
 
