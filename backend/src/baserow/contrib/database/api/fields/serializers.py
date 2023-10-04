@@ -139,6 +139,13 @@ class FileFieldRequestSerializer(serializers.Serializer):
         help_text="Accepts the name of the already uploaded user file.",
     )
 
+    def validate(self, data):
+        if "name" not in data:
+            raise serializers.ValidationError(
+                {"name": "This field is required."}, code="required"
+            )
+        return data
+
 
 class FileFieldResponseSerializer(
     UserFileURLAndThumbnailsSerializerMixin, serializers.Serializer
