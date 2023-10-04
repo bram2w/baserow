@@ -14,13 +14,15 @@
       ></Editable>
     </a>
 
-    <i
+    <a
       v-if="showOptions"
       v-show="!database._.loading"
-      class="tree__options baserow-icon-more-vertical"
+      class="tree__options"
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
       @mousedown.stop
-    ></i>
+    >
+      <i class="baserow-icon-more-vertical"></i>
+    </a>
 
     <Context
       ref="context"

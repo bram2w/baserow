@@ -67,7 +67,9 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       <div
         class="filters__operator"
       >
-        <span>
+        <span
+          class="filters__operator-text"
+        >
           viewFilterContext.where
         </span>
          
@@ -89,9 +91,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <!---->
-            
-        Name
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              Name
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -120,7 +126,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               tabindex=""
             >
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -141,14 +147,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -169,12 +175,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -195,9 +203,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -221,9 +231,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <!---->
-            
-        viewFilter.is
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              viewFilter.is
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -252,7 +266,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               tabindex=""
             >
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -273,14 +287,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -301,12 +315,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -327,12 +343,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -353,12 +371,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -379,12 +399,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -405,12 +427,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -431,12 +455,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -457,12 +483,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -483,9 +511,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -531,9 +561,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <!---->
-            
-        viewFilterContext.and
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              viewFilterContext.and
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -549,7 +583,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               tabindex=""
             >
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -570,15 +604,15 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
                
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -599,9 +633,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -627,9 +663,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <!---->
-            
-        Stars
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              Stars
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -658,7 +698,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               tabindex=""
             >
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -679,12 +719,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -705,14 +747,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -733,9 +775,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -759,9 +803,13 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             <!---->
              
             <!---->
-            
-        viewFilter.is
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              viewFilter.is
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -790,7 +838,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
               tabindex=""
             >
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -811,14 +859,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -839,12 +887,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -865,12 +915,14 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -891,9 +943,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -979,7 +1033,9 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       <div
         class="filters__operator"
       >
-        <span>
+        <span
+          class="filters__operator-text"
+        >
           viewFilterContext.where
         </span>
          
@@ -1001,9 +1057,13 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             <!---->
              
             <!---->
-            
-        Stars
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              Stars
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -1032,7 +1092,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               tabindex=""
             >
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1053,12 +1113,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -1079,14 +1141,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1107,9 +1169,11 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -1133,9 +1197,13 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
             <!---->
              
             <!---->
-            
-        viewFilter.is
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              viewFilter.is
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -1165,7 +1233,7 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
               tabindex=""
             >
               <li
-                class="select__item active hover"
+                class="select__item select__item--no-options active hover"
               >
                 <a
                   class="select__item-link"
@@ -1186,14 +1254,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1214,12 +1282,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1240,12 +1310,14 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1266,9 +1338,11 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -1354,7 +1428,9 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       <div
         class="filters__operator"
       >
-        <span>
+        <span
+          class="filters__operator-text"
+        >
           viewFilterContext.where
         </span>
          
@@ -1376,9 +1452,13 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             <!---->
              
             <!---->
-            
-        Stars
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              Stars
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -1407,7 +1487,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               tabindex=""
             >
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1428,12 +1508,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item active"
+                class="select__item select__item--no-options active"
               >
                 <a
                   class="select__item-link"
@@ -1454,14 +1536,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1482,9 +1564,11 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              
@@ -1508,9 +1592,13 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
             <!---->
              
             <!---->
-            
-        viewFilter.is
-       
+             
+            <span
+              class="dropdown__selected-text"
+            >
+              viewFilter.is
+            </span>
+             
             <i
               class="dropdown__toggle-icon iconoir-nav-arrow-down"
             />
@@ -1540,7 +1628,7 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
               tabindex=""
             >
               <li
-                class="select__item active hover"
+                class="select__item select__item--no-options active hover"
               >
                 <a
                   class="select__item-link"
@@ -1561,14 +1649,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <i
-                    class="select__item-active-icon iconoir-check-circle"
-                  />
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1589,12 +1677,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1615,12 +1705,14 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
               <li
-                class="select__item"
+                class="select__item select__item--no-options"
               >
                 <a
                   class="select__item-link"
@@ -1641,9 +1733,11 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
                   </div>
                    
                   <!---->
-                   
-                  <!---->
                 </a>
+                 
+                <i
+                  class="select__item-active-icon iconoir-check-circle"
+                />
               </li>
             </ul>
              

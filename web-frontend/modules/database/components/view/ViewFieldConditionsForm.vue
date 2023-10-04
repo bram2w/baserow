@@ -20,7 +20,9 @@
       </a>
       <span v-else class="filters__remove"></span>
       <div class="filters__operator">
-        <span v-if="index === 0">{{ $t('viewFilterContext.where') }}</span>
+        <span v-if="index === 0" class="filters__operator-text">{{
+          $t('viewFilterContext.where')
+        }}</span>
         <Dropdown
           v-if="index === 1 && !disableFilter"
           :value="filterType"

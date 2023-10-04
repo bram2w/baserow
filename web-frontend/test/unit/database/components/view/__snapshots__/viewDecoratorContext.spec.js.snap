@@ -234,9 +234,13 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 <i
                   class="dropdown__selected-icon iconoir-filter"
                 />
-                
-    Fake value provider
-    
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Fake value provider
+                </span>
+                 
                 <i
                   class="dropdown__toggle-icon iconoir-nav-arrow-down"
                 />

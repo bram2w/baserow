@@ -58,7 +58,7 @@
             :value="a"
             @input="rgbaChanged($event, 'a')"
           />
-          <i class="form-input__icon iconoir-percent"></i>
+          <i class="form-input__icon iconoir-percentage"></i>
         </div>
       </div>
     </div>

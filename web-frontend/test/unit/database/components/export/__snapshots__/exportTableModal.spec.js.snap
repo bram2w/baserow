@@ -48,9 +48,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                   <!---->
                    
                   <!---->
-                  
-        exportTableDropdown.exportEntireTable
-       
+                   
+                  <span
+                    class="dropdown__selected-text"
+                  >
+                    exportTableDropdown.exportEntireTable
+                  </span>
+                   
                   <i
                     class="dropdown__toggle-icon iconoir-nav-arrow-down"
                   />
@@ -79,7 +83,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                     tabindex=""
                   >
                     <li
-                      class="select__item active hover"
+                      class="select__item select__item--no-options active hover"
                     >
                       <a
                         class="select__item-link"
@@ -100,15 +104,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                         </div>
                          
                         <!---->
-                         
-                        <i
-                          class="select__item-active-icon iconoir-check-circle"
-                        />
                       </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check-circle"
+                      />
                     </li>
                      
                     <li
-                      class="select__item"
+                      class="select__item select__item--no-options"
                     >
                       <a
                         class="select__item-link"
@@ -131,9 +135,11 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                         </div>
                          
                         <!---->
-                         
-                        <!---->
                       </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check-circle"
+                      />
                     </li>
                   </ul>
                    
@@ -220,9 +226,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                     <!---->
                      
                     <!---->
-                    
-        ,
-       
+                     
+                    <span
+                      class="dropdown__selected-text"
+                    >
+                      ,
+                    </span>
+                     
                     <i
                       class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
@@ -251,7 +261,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       tabindex=""
                     >
                       <li
-                        class="select__item active"
+                        class="select__item select__item--no-options active"
                       >
                         <a
                           class="select__item-link"
@@ -272,15 +282,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <i
-                            class="select__item-active-icon iconoir-check-circle"
-                          />
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -301,13 +311,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -328,13 +340,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -355,13 +369,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -382,13 +398,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -409,9 +427,11 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                     </ul>
                      
@@ -449,9 +469,13 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                     <!---->
                      
                     <!---->
-                    
-        Unicode (UTF-8)
-       
+                     
+                    <span
+                      class="dropdown__selected-text"
+                    >
+                      Unicode (UTF-8)
+                    </span>
+                     
                     <i
                       class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
@@ -480,7 +504,7 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                       tabindex=""
                     >
                       <li
-                        class="select__item active"
+                        class="select__item select__item--no-options active"
                       >
                         <a
                           class="select__item-link"
@@ -501,15 +525,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <i
-                            class="select__item-active-icon iconoir-check-circle"
-                          />
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -530,13 +554,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -557,13 +583,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -584,13 +612,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -611,13 +641,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -638,13 +670,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -665,13 +699,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -692,13 +728,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -719,13 +757,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -746,13 +786,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -773,13 +815,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -800,13 +844,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -827,13 +873,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -854,13 +902,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -881,13 +931,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -908,13 +960,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -935,13 +989,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -962,13 +1018,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -989,13 +1047,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1016,13 +1076,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1043,13 +1105,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1070,13 +1134,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1097,13 +1163,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1124,13 +1192,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1151,13 +1221,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1178,13 +1250,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1205,13 +1279,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1232,13 +1308,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1259,13 +1337,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1286,13 +1366,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1313,13 +1395,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1340,13 +1424,15 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1367,9 +1453,11 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                     </ul>
                      
@@ -1491,9 +1579,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                   />
                    
                   <!---->
-                  
-        mock_view_1
-       
+                   
+                  <span
+                    class="dropdown__selected-text"
+                  >
+                    mock_view_1
+                  </span>
+                   
                   <i
                     class="dropdown__toggle-icon iconoir-nav-arrow-down"
                   />
@@ -1522,7 +1614,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                     tabindex=""
                   >
                     <li
-                      class="select__item hover"
+                      class="select__item select__item--no-options hover"
                     >
                       <a
                         class="select__item-link"
@@ -1543,13 +1635,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                         </div>
                          
                         <!---->
-                         
-                        <!---->
                       </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check-circle"
+                      />
                     </li>
                      
                     <li
-                      class="select__item active"
+                      class="select__item select__item--no-options active"
                     >
                       <a
                         class="select__item-link"
@@ -1572,11 +1666,11 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                         </div>
                          
                         <!---->
-                         
-                        <i
-                          class="select__item-active-icon iconoir-check-circle"
-                        />
                       </a>
+                       
+                      <i
+                        class="select__item-active-icon iconoir-check-circle"
+                      />
                     </li>
                   </ul>
                    
@@ -1663,9 +1757,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                     <!---->
                      
                     <!---->
-                    
-        ,
-       
+                     
+                    <span
+                      class="dropdown__selected-text"
+                    >
+                      ,
+                    </span>
+                     
                     <i
                       class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
@@ -1694,7 +1792,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       tabindex=""
                     >
                       <li
-                        class="select__item active"
+                        class="select__item select__item--no-options active"
                       >
                         <a
                           class="select__item-link"
@@ -1715,15 +1813,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <i
-                            class="select__item-active-icon iconoir-check-circle"
-                          />
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1744,13 +1842,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1771,13 +1871,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1798,13 +1900,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1825,13 +1929,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1852,9 +1958,11 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                     </ul>
                      
@@ -1892,9 +2000,13 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                     <!---->
                      
                     <!---->
-                    
-        Unicode (UTF-8)
-       
+                     
+                    <span
+                      class="dropdown__selected-text"
+                    >
+                      Unicode (UTF-8)
+                    </span>
+                     
                     <i
                       class="dropdown__toggle-icon iconoir-nav-arrow-down"
                     />
@@ -1923,7 +2035,7 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                       tabindex=""
                     >
                       <li
-                        class="select__item active"
+                        class="select__item select__item--no-options active"
                       >
                         <a
                           class="select__item-link"
@@ -1944,15 +2056,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <i
-                            class="select__item-active-icon iconoir-check-circle"
-                          />
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -1973,13 +2085,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2000,13 +2114,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2027,13 +2143,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2054,13 +2172,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2081,13 +2201,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2108,13 +2230,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2135,13 +2259,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2162,13 +2288,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2189,13 +2317,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2216,13 +2346,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2243,13 +2375,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2270,13 +2404,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2297,13 +2433,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2324,13 +2462,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2351,13 +2491,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2378,13 +2520,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2405,13 +2549,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2432,13 +2578,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2459,13 +2607,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2486,13 +2636,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2513,13 +2665,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2540,13 +2694,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2567,13 +2723,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2594,13 +2752,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2621,13 +2781,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2648,13 +2810,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2675,13 +2839,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2702,13 +2868,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2729,13 +2897,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2756,13 +2926,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2783,13 +2955,15 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                        
                       <li
-                        class="select__item"
+                        class="select__item select__item--no-options"
                       >
                         <a
                           class="select__item-link"
@@ -2810,9 +2984,11 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                           </div>
                            
                           <!---->
-                           
-                          <!---->
                         </a>
+                         
+                        <i
+                          class="select__item-active-icon iconoir-check-circle"
+                        />
                       </li>
                     </ul>
                      

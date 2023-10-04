@@ -12,7 +12,7 @@
           class="tree__icon tree__icon--type"
           :class="application._.type.iconClass"
         ></i>
-        {{ application.name }}
+        <span class="tree__link-text">{{ application.name }}</span>
       </a>
     </div>
     <template

@@ -1,9 +1,8 @@
 <template>
   <div class="element-preview__menu">
-    <div
-      v-if="isDuplicating"
-      class="loading element-preview__menu-duplicate-loading"
-    ></div>
+    <span v-if="isDuplicating" class="element-preview__menu-item disabled">
+      <div class="loading"></div>
+    </span>
     <a v-else class="element-preview__menu-item" @click="$emit('duplicate')">
       <i class="iconoir-copy"></i>
       <span class="element-preview__menu-item-description">

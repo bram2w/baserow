@@ -6,7 +6,7 @@
       @click="$refs.pickerContext.toggle($refs.pickerLink, 'bottom', 'left', 2)"
     >
       <i class="dropdown__selected-icon" :class="icon" />
-      {{ name }}
+      <span class="dropdown__selected-text">{{ name }}</span>
       <i class="dropdown__toggle-icon iconoir-nav-arrow-down"></i>
     </a>
     <Context

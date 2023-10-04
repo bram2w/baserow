@@ -93,12 +93,15 @@
 }
 
 .element-preview__menu-item {
+  display: flex;
   position: relative;
   background-color: $white;
   color: $color-neutral-900;
   justify-content: center;
-
-  @include center-text(28px, 16px);
+  align-items: center;
+  height: 28px;
+  width: 28px;
+  font-size: 16px;
 
   &:hover {
     background-color: $color-neutral-100;
@@ -126,10 +129,6 @@
       background-color: $white;
     }
   }
-}
-
-.element-preview__menu-duplicate-loading {
-  margin: 5px;
 }
 
 .element-preview__error-icon {

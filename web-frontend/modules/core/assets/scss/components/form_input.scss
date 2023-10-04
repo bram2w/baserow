@@ -3,7 +3,8 @@
   flex: 1;
   border: 1px solid $color-neutral-400;
   position: relative;
-  @include rounded($rounded);
+
+  @include rounded($rounded-md);
 
   &:active,
   &:focus {
@@ -54,6 +55,7 @@
   background: none;
   padding: 8px 12px;
   background-color: $white;
+
   @include rounded($rounded-md);
 
   .form-input--large & {

@@ -16,19 +16,23 @@
           class="tree__icon tree__icon--type"
           :class="application._.type.iconClass"
         ></i>
-        <Editable
-          ref="rename"
-          :value="application.name"
-          @change="renameApplication(application, $event)"
-        ></Editable>
+        <span class="tree__link-text">
+          <Editable
+            ref="rename"
+            :value="application.name"
+            @change="renameApplication(application, $event)"
+          ></Editable>
+        </span>
       </a>
 
-      <i
+      <a
         ref="contextLink"
-        class="tree__options baserow-icon-more-vertical"
+        class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         @mousedown.stop
-      ></i>
+      >
+        <i class="baserow-icon-more-vertical"></i>
+      </a>
 
       <Context
         ref="context"
