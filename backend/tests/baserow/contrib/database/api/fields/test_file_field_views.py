@@ -92,6 +92,48 @@ def test_batch_create_rows_file_field(api_client, data_fixture):
 @pytest.mark.django_db
 @pytest.mark.field_file
 @pytest.mark.api_rows
+def test_batch_create_rows_file_field_without_name_property(api_client, data_fixture):
+    user, jwt_token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    url = reverse("api:database:rows:batch", kwargs={"table_id": table.id})
+    request_body = {
+        "items": [
+            {
+                f"field_{file_field.id}": [{"visible_name": "test"}],
+            },
+        ]
+    }
+    response = api_client.post(
+        url,
+        request_body,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json == {
+        "error": "ERROR_REQUEST_BODY_VALIDATION",
+        "detail": {
+            "items": {
+                "0": {
+                    f"field_{file_field.id}": [
+                        {
+                            "name": [
+                                {"error": "This field is required.", "code": "required"}
+                            ]
+                        }
+                    ]
+                }
+            }
+        },
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.api_rows
 def test_batch_update_rows_file_field(api_client, data_fixture):
     user, jwt_token = data_fixture.create_user_and_token()
     table = data_fixture.create_database_table(user=user)
