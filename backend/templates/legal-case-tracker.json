@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Legal Case Tracker",
-  "icon": "file-contract",
+  "icon": "iconoir-locked-book",
   "keywords": [
     "legal case tracker",
     "legal tracker",

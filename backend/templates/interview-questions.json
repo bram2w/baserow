@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Interview Questions",
-  "icon": "file-signature",
+  "icon": "iconoir-chat-bubble-question",
   "keywords": [
     "interviews",
     "interview questions",

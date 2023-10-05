@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Emergency Triage Log",
-    "icon": "truck-medical",
+    "icon": "iconoir-hospital",
     "keywords": [
         "emergencies",
         "urgent care",

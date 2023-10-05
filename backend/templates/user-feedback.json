@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "User Feedback",
-  "icon": "comments",
+  "icon": "iconoir-chat-lines",
   "keywords": [
     "user feedback",
     "reviews",

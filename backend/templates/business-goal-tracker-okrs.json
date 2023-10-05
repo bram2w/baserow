@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Business Goal Tracker (OKRs)",
-    "icon": "square-poll-horizontal",
+    "icon": "iconoir-okrs",
     "keywords": [
         "OKR",
         "objectives and key results",

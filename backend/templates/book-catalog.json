@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Book Catalog",
-  "icon": "book",
+  "icon": "iconoir-book",
   "keywords": [
     "book catalog",
     "catalog",

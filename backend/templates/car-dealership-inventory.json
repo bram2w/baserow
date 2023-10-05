@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Car Dealership Inventory",
-    "icon": "car-side",
+    "icon": "iconoir-car",
     "keywords": [
         "inventory",
         "car dealership",
