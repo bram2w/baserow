@@ -97,7 +97,9 @@ class IntegrationHandler:
                 integration_type = integration_type_registry.get_by_model(model)
                 return integration_type.enhance_queryset(queryset)
 
-            queryset = queryset.select_related("content_type")
+            queryset = queryset.select_related(
+                "content_type", "application", "application__workspace"
+            )
 
             return specific_iterator(
                 queryset, per_content_type_queryset_hook=per_content_type_queryset_hook

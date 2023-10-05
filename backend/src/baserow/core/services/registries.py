@@ -31,6 +31,8 @@ class ServiceType(
     A service type describe a specific service of an external integration.
     """
 
+    integration_type = None
+
     SerializedDict: Type[ServiceDictSubClass]
 
     # The maximum number of records this service is able to return.

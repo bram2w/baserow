@@ -22,7 +22,6 @@ from baserow.api.utils import (
     type_from_data_or_registry,
     validate_data_custom_fields,
 )
-from baserow.contrib.builder.api.data_sources.serializers import DataSourceSerializer
 from baserow.contrib.builder.api.domains.errors import (
     ERROR_DOMAIN_DOES_NOT_EXIST,
     ERROR_DOMAIN_NAME_NOT_UNIQUE,
@@ -516,7 +515,7 @@ class PublicDataSourcesView(APIView):
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
-                service_type_registry, DataSourceSerializer, many=True
+                service_type_registry, PublicDataSourceSerializer, many=True
             ),
             404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
         },

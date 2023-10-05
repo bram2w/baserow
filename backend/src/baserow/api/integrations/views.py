@@ -97,6 +97,7 @@ class IntegrationsView(APIView):
             ).data
             for integration in integrations
         ]
+
         return Response(data)
 
     @extend_schema(

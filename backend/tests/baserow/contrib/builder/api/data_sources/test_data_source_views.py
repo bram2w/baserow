@@ -203,6 +203,32 @@ def test_update_data_source_change_type(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_compatible_integration_is_persisted(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"type": "local_baserow_list_rows"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["integration_id"] == data_source1.service.integration_id
+
+
+@pytest.mark.django_db
 def test_update_data_source_bad_request(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)

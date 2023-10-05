@@ -15,7 +15,10 @@ from baserow.core.integrations.models import Integration
 @pytest.mark.django_db
 def test_get_integrations(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    application = data_fixture.create_builder_application(user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
     integration1 = data_fixture.create_local_baserow_integration(
         application=application
     )
@@ -25,6 +28,7 @@ def test_get_integrations(api_client, data_fixture):
     integration3 = data_fixture.create_local_baserow_integration(
         application=application
     )
+    data_fixture.create_local_baserow_integration()
 
     url = reverse("api:integrations:list", kwargs={"application_id": application.id})
     response = api_client.get(
@@ -38,17 +42,23 @@ def test_get_integrations(api_client, data_fixture):
     assert len(response_json) == 3
     assert response_json[0]["id"] == integration1.id
     assert response_json[0]["type"] == "local_baserow"
+    assert response_json[0]["context_data"]["databases"][0]["id"] == database.id
     assert "authorized_user" in response_json[0]
     assert response_json[1]["id"] == integration2.id
     assert response_json[1]["type"] == "local_baserow"
+    assert response_json[1]["context_data"]["databases"][0]["id"] == database.id
     assert response_json[2]["id"] == integration3.id
     assert response_json[2]["type"] == "local_baserow"
+    assert response_json[2]["context_data"]["databases"][0]["id"] == database.id
 
 
 @pytest.mark.django_db
 def test_create_integration(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    application = data_fixture.create_builder_application(user=user)
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
 
     url = reverse("api:integrations:list", kwargs={"application_id": application.id})
     response = api_client.post(
@@ -62,6 +72,7 @@ def test_create_integration(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "local_baserow"
     assert response_json["authorized_user"]["username"] == user.username
+    assert response_json["context_data"]["databases"][0]["id"] == database.id
 
     response = api_client.post(
         url,

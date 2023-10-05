@@ -49,6 +49,7 @@ def apply_exception_mapping(mapping, exc, with_fallback=False):
 
     if callable(value):
         value = value(exc)
+        error = value
         if value is None:
             return None
     if isinstance(value, str):
