@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Office Guest Log",
-  "icon": "user-shield",
+  "icon": "iconoir-system-restart",
   "keywords": [
     "office guest",
     "guest log",

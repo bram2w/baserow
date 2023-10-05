@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Public Library Inventory",
-  "icon": "book",
+  "icon": "iconoir-book-stack",
   "keywords": [
     "library",
     "public library",

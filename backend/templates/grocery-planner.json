@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Grocery Planner",
-    "icon": "carrot",
+    "icon": "iconoir-apple",
     "keywords": [
         "groceries",
         "grocery list",

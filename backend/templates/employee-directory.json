@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Employee Directory",
-    "icon": "address-card",
+    "icon": "iconoir-user-square",
     "keywords": [
         "employees",
         "staff directory",

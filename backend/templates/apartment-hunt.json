@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Apartment Hunt",
-    "icon": "search-location",
+    "icon": "iconoir-neighbourhood",
     "keywords": [
         "apartment",
         "apartments",

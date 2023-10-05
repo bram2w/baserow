@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Performance Reviews",
-    "icon": "people-arrows-left-right",
+    "icon": "iconoir-profile-circle",
     "keywords": [
         "employee review",
         "performance review",

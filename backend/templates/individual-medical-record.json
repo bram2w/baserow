@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Individual Medical Record",
-  "icon": "stethoscope",
+  "icon": "iconoir-pharmacy-cross-circle",
   "keywords": [
     "health",
     "records",

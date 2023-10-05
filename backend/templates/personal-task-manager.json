@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Personal Task Manager",
-  "icon": "clipboard-list",
+  "icon": "iconoir-paste-clipboard",
   "keywords": [
     "todo",
     "to-do",

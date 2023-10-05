@@ -98,13 +98,12 @@
 }
 
 .templates__template-link {
-  @extend %ellipsis;
-
-  display: block;
   line-height: 33px;
   font-size: 13px;
   padding: 0 20px 0 28px;
   color: $color-neutral-900;
+
+  @include flex-align-items(4px);
 
   &:hover {
     background-color: $color-neutral-200;
@@ -115,6 +114,12 @@
     background-color: $color-neutral-200;
     border-right: solid 3px $color-primary-500;
   }
+}
+
+.templates__template-link-text {
+  @extend %ellipsis;
+
+  min-width: 0;
 }
 
 .templates__template-icon {

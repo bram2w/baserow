@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Elementary School Management",
-    "icon": "school",
+    "icon": "iconoir-graduation-cap",
     "keywords": [
         "school",
         "management",

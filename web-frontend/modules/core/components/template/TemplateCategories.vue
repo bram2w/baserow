@@ -50,7 +50,9 @@
               @click="$emit('selected', { template, category })"
             >
               <i :class="template.icon"></i>
-              {{ template.name }}
+              <span class="templates__template-link-text">{{
+                template.name
+              }}</span>
             </a>
           </li>
         </ul>
