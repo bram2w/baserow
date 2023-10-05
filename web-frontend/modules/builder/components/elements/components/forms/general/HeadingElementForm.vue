@@ -23,6 +23,11 @@
       :placeholder="$t('elementForms.textInputPlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
+    <FontSelector
+      :default-values="defaultValues"
+      :color-variables="headingColorVariables"
+      @values-changed="$emit('values-changed', $event)"
+    ></FontSelector>
   </form>
 </template>
 
@@ -30,17 +35,20 @@
 import form from '@baserow/modules/core/mixins/form'
 import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
 import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
+import headingElement from '@baserow/modules/builder/mixins/headingElement'
+import FontSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/FontSelector'
 
 export default {
   name: 'HeaderElementForm',
-  components: { ApplicationBuilderFormulaInputGroup },
-  mixins: [form],
-  props: {},
+  components: { FontSelector, ApplicationBuilderFormulaInputGroup },
+  mixins: [form, headingElement],
+  inject: ['builder'],
   data() {
     return {
       values: {
         value: '',
         level: 1,
+        font_color: 'default',
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),

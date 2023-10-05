@@ -137,10 +137,7 @@ export default {
     HorizontalAlignmentSelector,
   },
   mixins: [form],
-  props: {
-    builder: { type: Object, required: true },
-    page: { type: Object, required: true },
-  },
+  inject: ['builder', 'page'],
   data() {
     let navigateTo = ''
     if (this.defaultValues.navigation_type === 'page') {

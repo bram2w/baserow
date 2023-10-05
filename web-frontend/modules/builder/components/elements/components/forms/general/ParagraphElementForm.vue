@@ -19,7 +19,6 @@ export default {
   name: 'ParagraphElementForm',
   components: { ApplicationBuilderFormulaInputGroup },
   mixins: [form],
-  props: {},
   data() {
     return {
       values: {
