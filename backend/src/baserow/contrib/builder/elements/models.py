@@ -256,6 +256,12 @@ class HeadingElement(Element):
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
+    font_color = models.CharField(
+        max_length=20,
+        default="default",
+        blank=True,
+        help_text="The font color of the heading",
+    )
 
 
 class ParagraphElement(Element):

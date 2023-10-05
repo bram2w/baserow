@@ -292,8 +292,8 @@ class HeadingElementType(ElementType):
 
     type = "heading"
     model_class = HeadingElement
-    serializer_field_names = ["value", "level"]
-    allowed_fields = ["value", "level"]
+    serializer_field_names = ["value", "level", "font_color"]
+    allowed_fields = ["value", "level", "font_color"]
 
     class SerializedDict(ElementDict):
         value: BaserowFormula

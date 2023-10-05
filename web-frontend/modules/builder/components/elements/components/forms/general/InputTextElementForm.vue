@@ -34,7 +34,6 @@ import { maxLength } from 'vuelidate/lib/validators'
 export default {
   name: 'InputTextElementForm',
   mixins: [form],
-  props: {},
   data() {
     return {
       values: {

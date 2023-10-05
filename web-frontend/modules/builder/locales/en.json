@@ -301,6 +301,10 @@
         "errorTooltip": "Invalid reference"
     },
     "tableElementForm": {
+      "dataSource": "Data source"
+    },
+    "fontSidePanelForm": {
+      "label": "Font",
       "dataSource": "Data source",
       "fields": "Fields",
       "fieldValueLabel": "Value",
