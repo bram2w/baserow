@@ -15,13 +15,13 @@
     "localBaserowGetRowForm": {
         "tableFieldLabel": "Table",
         "tableFieldPlaceHolder": "Select a table",
-        "viewFieldLabel": "View",
-        "viewFieldPlaceHolder": "Select a view",
+        "databaseFieldLabel": "Database",
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
         "rowFieldPlaceHolder": "Select a row ID"
     },
     "localBaserowListRowsForm": {
+        "databaseFieldLabel": "Database",
         "tableFieldLabel": "Table",
         "tableFieldPlaceHolder": "Select a table",
         "viewFieldLabel": "View",

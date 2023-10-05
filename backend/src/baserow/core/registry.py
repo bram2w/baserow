@@ -19,6 +19,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 from rest_framework import serializers
+from rest_framework.serializers import Serializer
 
 from baserow.api.utils import (
     ExceptionMappingType,
@@ -141,7 +142,12 @@ class CustomFieldsInstanceMixin:
             )
 
     def get_serializer_class(
-        self, *args, request_serializer: bool = False, meta_ref_name=None, **kwargs
+        self,
+        *args,
+        request_serializer: bool = False,
+        meta_ref_name=None,
+        base_class: Serializer = None,
+        **kwargs,
     ) -> serializers.ModelSerializer:
         """
         Returns a model serializer class based on this type field names and overrides.
@@ -176,6 +182,7 @@ class CustomFieldsInstanceMixin:
             base_mixins=mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
             meta_ref_name=meta_ref_name,
+            base_class=base_class,
             *args,
             **kwargs,
         )

@@ -1,29 +1,10 @@
 <template>
   <form @submit.prevent>
-    <div class="row">
-      <div class="col col-6">
-        <FormInput
-          v-model="values.table_id"
-          type="number"
-          small-label
-          :label="$t('localBaserowListRowsForm.tableFieldLabel')"
-          :placeholder="$t('localBaserowListRowsForm.tableFieldPlaceHolder')"
-          :from-value="(value) => (value ? value : '')"
-          :to-value="(value) => (value ? value : null)"
-        />
-      </div>
-      <div class="col col-6">
-        <FormInput
-          v-model="values.view_id"
-          type="number"
-          small-label
-          :label="$t('localBaserowListRowsForm.viewFieldLabel')"
-          :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
-          :from-value="(value) => (value ? value : '')"
-          :to-value="(value) => (value ? value : null)"
-        />
-      </div>
-    </div>
+    <LocalBaserowTableSelector
+      v-model="values.table_id"
+      :databases="databases"
+      :view-id.sync="values.view_id"
+    ></LocalBaserowTableSelector>
     <div class="row">
       <div class="col col-12">
         <Tabs>
@@ -45,11 +26,17 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
+import LocalBaserowTableSelector from '@baserow/modules/integrations/components/services/LocalBaserowTableSelector'
 
 export default {
+  components: { LocalBaserowTableSelector },
   mixins: [form],
   props: {
     builder: {
+      type: Object,
+      required: true,
+    },
+    contextData: {
       type: Object,
       required: true,
     },
@@ -63,6 +50,11 @@ export default {
         search_query: '',
       },
     }
+  },
+  computed: {
+    databases() {
+      return this.contextData?.databases || []
+    },
   },
 }
 </script>

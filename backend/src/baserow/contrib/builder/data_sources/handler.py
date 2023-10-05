@@ -9,6 +9,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
+from baserow.core.integrations.registries import integration_type_registry
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType
@@ -94,6 +95,9 @@ class DataSourceHandler:
             "page",
             "page__builder",
             "page__builder__workspace",
+            "service",
+            "service__integration",
+            "service__integration__application",
         )
 
         if specific:
@@ -201,13 +205,27 @@ class DataSourceHandler:
         if "new_service_type" in kwargs:
             new_service_type = kwargs.pop("new_service_type")
 
+            integration = None
+            integration_type = None
             if data_source.service:
+                integration = data_source.service.integration
                 ServiceHandler().delete_service(data_source.service)
                 data_source.service = None
 
+            if integration:
+                integration_type = integration_type_registry.get_by_model(
+                    integration.specific
+                ).type
+
             if new_service_type:
+                # Check if the new service type can reuse the previous integration
+                if new_service_type.integration_type != integration_type:
+                    integration = None
+
                 service = self.service_handler.create_service(
-                    service_type=new_service_type, **kwargs
+                    service_type=new_service_type,
+                    integration=integration,
+                    **kwargs,
                 )
                 data_source.service = service
 

@@ -17,6 +17,7 @@
           :page="page"
           :default-values="dataSource"
           :integrations="integrations"
+          :loading="dataSourcesLoading.includes(dataSource.id)"
           @delete="deleteDataSource(dataSource)"
           @values-changed="updateDataSource(dataSource, $event)"
         />
@@ -66,7 +67,12 @@ export default {
     },
   },
   data() {
-    return { state: null, creationInProgress: false, onGoingUpdate: {} }
+    return {
+      state: null,
+      creationInProgress: false,
+      onGoingUpdate: {},
+      dataSourcesLoading: [],
+    }
   },
   computed: {
     ...mapGetters({
@@ -82,11 +88,17 @@ export default {
       actionCreateDataSource: 'dataSource/create',
       actionUpdateDataSource: 'dataSource/debouncedUpdate',
       actionDeleteDataSource: 'dataSource/delete',
+      actionFetchDataSources: 'dataSource/fetch',
     }),
     async shown() {
       this.state = 'loading'
       try {
-        await this.actionFetchIntegrations({ applicationId: this.builder.id })
+        await Promise.all([
+          this.actionFetchIntegrations({
+            applicationId: this.builder.id,
+          }),
+          this.actionFetchDataSources({ page: this.page }),
+        ])
       } catch (error) {
         notifyIf(error)
       }
@@ -105,6 +117,14 @@ export default {
       this.creationInProgress = false
     },
     async updateDataSource(dataSource, newValues) {
+      // We only need to set the loading state if the integration is updated
+      if (
+        newValues.integration_id !== null &&
+        newValues.integration_id !== undefined
+      ) {
+        this.dataSourcesLoading.push(dataSource.id)
+      }
+
       const differences = Object.fromEntries(
         Object.entries(newValues).filter(
           ([key, value]) => !_.isEqual(value, dataSource[key])
@@ -127,6 +147,10 @@ export default {
           notifyIf(error)
         }
       }
+
+      this.dataSourcesLoading = this.dataSourcesLoading.filter(
+        (id) => id !== dataSource.id
+      )
     },
     async deleteDataSource(dataSource) {
       try {
