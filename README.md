@@ -15,6 +15,7 @@ tool gives you the powers of a developer without leaving your browser.
   [Vue.js](https://vuejs.org/) and [PostgreSQL](https://www.postgresql.org/).
 
 [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/bram2w/baserow/tree/master)
+[![Deploy](https://pub-da36157c854648669813f3f76c526c2b.r2.dev/deploy-on-elestio-black.png)](https://elest.io/open-source/baserow)
 
 ```bash
 docker run -v baserow_data:/baserow/data -p 80:80 -p 443:443 baserow/baserow:1.20.2
