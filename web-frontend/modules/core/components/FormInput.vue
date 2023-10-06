@@ -26,6 +26,7 @@
             'form-input--monospace': monospace,
             'form-input--loading': loading,
             'form-input--disabled': disabled,
+            'form-input--focus': focus,
           }"
         >
           <input
@@ -37,6 +38,8 @@
             :placeholder="placeholder"
             @blur="$emit('blur', $event)"
             @input="$emit('input', toValue($event.target.value))"
+            @focusin="focus = true"
+            @focusout="focus = false"
           />
 
           <i v-if="hasIcon" class="form-input__icon" :class="icon" />
@@ -133,6 +136,11 @@ export default {
       required: false,
       default: null,
     },
+  },
+  data() {
+    return {
+      focus: false,
+    }
   },
   computed: {
     hasError() {
