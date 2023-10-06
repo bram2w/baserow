@@ -544,7 +544,14 @@ class CombinedForeignKeyAndManyToManyMultipleFieldPrefetch:
                     attr = getattr(result, field_name)
                     qs = attr.get_queryset()
                     qs._result_cache = (
-                        [target_instances.get(target_id) for target_id in target_ids]
+                        [
+                            target_instances.get(target_id)
+                            for target_id in target_ids
+                            # It could be that the target doesn't exist, but the
+                            # relationship does. In that case, we don't want the
+                            # result set contain `None` values.
+                            if target_id in target_instances
+                        ]
                         if target_ids
                         else []
                     )

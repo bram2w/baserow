@@ -470,3 +470,36 @@ def test_multiple_field_prefetch__many_to_many_no_results(data_fixture):
         )
         == []
     )
+
+
+@pytest.mark.django_db
+def test_multiple_field_prefetch__many_to_many_missing_source(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red", order=1
+    )
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.create()
+    row.field.add(option_a.id, option_b.id)
+
+    option_a.delete()
+
+    assert len(row.field.all()) == 1
+
+    rows = list(
+        model.objects.all().multi_field_prefetch(
+            CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                SelectOption, ["field"], skip_target_check=True
+            )
+        )
+    )
+    row = rows[0]
+    assert len(row.field.all()) == 1
