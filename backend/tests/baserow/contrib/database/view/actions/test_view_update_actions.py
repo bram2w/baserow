@@ -102,7 +102,7 @@ def test_can_undo_update_view_field_options(data_fixture):
         },
     )
 
-    new_options = grid_view.get_field_options()
+    new_options = grid_view.get_field_options().order_by("field_id")
     assert len(new_options) == 3
     new_field_1_options, new_field_2_options, new_field_3_options = new_options
 
@@ -251,7 +251,7 @@ def test_can_undo_redo_update_view_field_options(data_fixture):
         },
     )
 
-    new_options = grid_view.get_field_options()
+    new_options = grid_view.get_field_options().order_by("field_id")
     assert len(new_options) == 3
     new_field_1_options, new_field_2_options, new_field_3_options = new_options
 
@@ -282,7 +282,7 @@ def test_can_undo_redo_update_view_field_options(data_fixture):
         action_redone, [UpdateViewFieldOptionsActionType]
     )
 
-    redo_options = grid_view.get_field_options()
+    redo_options = grid_view.get_field_options().order_by("field_id")
     assert len(redo_options) == 3
     field_1_options, field_2_options, field_3_options = redo_options
 

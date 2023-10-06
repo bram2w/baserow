@@ -85,9 +85,10 @@ class ViewFixtures:
         ]
 
     def create_grid_view_field_option(self, grid_view, field, **kwargs):
-        return GridViewFieldOptions.objects.create(
-            grid_view=grid_view, field=field, **kwargs
+        field_options, _ = GridViewFieldOptions.objects.update_or_create(
+            grid_view=grid_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_gallery_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
@@ -111,9 +112,10 @@ class ViewFixtures:
         ]
 
     def create_gallery_view_field_option(self, gallery_view, field, **kwargs):
-        return GalleryViewFieldOptions.objects.create(
-            gallery_view=gallery_view, field=field, **kwargs
+        field_options, _ = GalleryViewFieldOptions.objects.update_or_create(
+            gallery_view=gallery_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_form_view(self, user=None, **kwargs):
         if "table" not in kwargs:
@@ -136,9 +138,10 @@ class ViewFixtures:
         ]
 
     def create_form_view_field_option(self, form_view, field, **kwargs):
-        return FormViewFieldOptions.objects.create(
-            form_view=form_view, field=field, **kwargs
+        field_options, _ = FormViewFieldOptions.objects.update_or_create(
+            form_view=form_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_form_view_field_options_condition(self, user=None, **kwargs):
         if "field" not in kwargs:

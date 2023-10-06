@@ -1,3 +1,5 @@
+from django.db import IntegrityError
+
 import pytest
 
 from baserow.contrib.database.views.models import (
@@ -292,3 +294,76 @@ def test_view_hierarchy(data_fixture):
     )
     assert form_view_field_options.get_parent() == form_view
     assert form_view_field_options.get_root() == workspace
+
+
+@pytest.mark.once_per_day_in_ci
+def test_migration_remove_duplicate_fieldoptions(
+    data_fixture, migrator, teardown_table_metadata
+):
+    migrate_from = [
+        ("database", "0127_viewgroupby"),
+    ]
+    migrate_to = [("database", "0129_add_unique_constraint_viewfieldoptions")]
+
+    migrator.migrate(migrate_from)
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    app = data_fixture.create_database_application(workspace=workspace, name="Test 1")
+    table = data_fixture.create_database_table(name="Cars", database=app)
+    field = data_fixture.create_text_field(table=table)
+
+    # create_grid_view already create a GridViewFieldOption for every field
+    grid_view = data_fixture.create_grid_view(table=table)
+    GridViewFieldOptions.objects.create(grid_view=grid_view, field=field)
+
+    assert (
+        GridViewFieldOptions.objects.filter(field=field, grid_view=grid_view).count()
+        == 2
+    )
+
+    form_view = data_fixture.create_form_view(table=table)
+    FormViewFieldOptions.objects.create(form_view=form_view, field=field)
+    FormViewFieldOptions.objects.create(form_view=form_view, field=field)
+
+    assert (
+        FormViewFieldOptions.objects.filter(field=field, form_view=form_view).count()
+        == 3
+    )
+
+    gallery_view = data_fixture.create_gallery_view(table=table)
+    GalleryViewFieldOptions.objects.create(gallery_view=gallery_view, field=field)
+
+    assert (
+        GalleryViewFieldOptions.objects.filter(
+            field=field, gallery_view=gallery_view
+        ).count()
+        == 2
+    )
+
+    # The migrations will remove duplicates and add a unique constraint.
+    migrator.migrate(migrate_to)
+
+    assert (
+        GridViewFieldOptions.objects.filter(field=field, grid_view=grid_view).count()
+        == 1
+    )
+    assert (
+        FormViewFieldOptions.objects.filter(field=field, form_view=form_view).count()
+        == 1
+    )
+    assert (
+        GalleryViewFieldOptions.objects.filter(
+            field=field, gallery_view=gallery_view
+        ).count()
+        == 1
+    )
+
+    with pytest.raises(IntegrityError):
+        GridViewFieldOptions.objects.create(grid_view=grid_view, field=field)
+
+    with pytest.raises(IntegrityError):
+        FormViewFieldOptions.objects.create(form_view=form_view, field=field)
+
+    with pytest.raises(IntegrityError):
+        GalleryViewFieldOptions.objects.create(gallery_view=gallery_view, field=field)
