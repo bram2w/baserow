@@ -5,7 +5,7 @@ from typing import Iterable, Optional, Union
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Q
 from django.utils.functional import lazy
 
@@ -277,28 +277,18 @@ class View(
                 if fields is None:
                     fields = fields_queryset
 
-                with transaction.atomic():
-                    # Lock the view so concurrent calls to this method wont create
-                    # duplicate field options.
-                    View.objects.filter(id=self.id).select_for_update(
-                        of=("self",)
-                    ).first()
-
-                    # Invalidate the field options because they could have been
-                    # changed concurrently.
-                    field_options = get_queryset()
-
-                    # In the case when field options are missing, we can be more
-                    # in-efficient because this rarely happens. The most important part
-                    # is that the check is fast.
-                    existing_field_ids = [options.field_id for options in field_options]
-                    through_model.objects.bulk_create(
-                        [
-                            through_model(**{field_name: self, "field": field})
-                            for field in fields
-                            if field.id not in existing_field_ids
-                        ]
-                    )
+                # In the case when field options are missing, we can be more
+                # in-efficient because this rarely happens. The most important part
+                # is that the check is fast.
+                existing_field_ids = [options.field_id for options in field_options]
+                through_model.objects.bulk_create(
+                    [
+                        through_model(**{field_name: self, "field": field})
+                        for field in fields
+                        if field.id not in existing_field_ids
+                    ],
+                    ignore_conflicts=True,
+                )
 
                 # Invalidate the field options because new ones have been created and
                 # we always want to return a queryset.
@@ -577,7 +567,8 @@ class GridViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.grid_view
 
     class Meta:
-        ordering = ("field_id",)
+        ordering = ("order", "field_id")
+        unique_together = ("grid_view", "field")
 
 
 class GalleryView(View):
@@ -625,10 +616,8 @@ class GalleryViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.gallery_view
 
     class Meta:
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("gallery_view", "field")
 
 
 class FormView(View):
@@ -754,10 +743,8 @@ class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.form_view
 
     class Meta:
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("form_view", "field")
 
     def is_required(self):
         return (

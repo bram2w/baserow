@@ -100,9 +100,10 @@ class PremiumFixtures:
         ]
 
     def create_kanban_view_field_option(self, kanban_view, field, **kwargs):
-        return KanbanViewFieldOptions.objects.create(
-            kanban_view=kanban_view, field=field, **kwargs
+        field_options, _ = KanbanViewFieldOptions.objects.update_or_create(
+            kanban_view=kanban_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_calendar_view(self, user=None, **kwargs):
         if "table" not in kwargs:
@@ -130,9 +131,10 @@ class PremiumFixtures:
         ]
 
     def create_calendar_view_field_option(self, calendar_view, field, **kwargs):
-        return CalendarViewFieldOptions.objects.create(
-            calendar_view=calendar_view, field=field, **kwargs
+        field_options, _ = CalendarViewFieldOptions.objects.update_or_create(
+            calendar_view=calendar_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_row_comment(self, user, row, comment):
         return RowComment.objects.create(

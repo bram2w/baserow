@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Remove duplicate field options and fix remaining race in update_field_options",
+    "issue_number": 725,
+    "bullet_points": [],
+    "created_at": "2023-09-19"
+}

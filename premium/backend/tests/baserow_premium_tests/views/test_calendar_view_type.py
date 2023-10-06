@@ -124,7 +124,7 @@ def test_calendar_view_import_export(premium_data_fixture, tmpdir):
     assert serialized["name"] == calendar_view.name
     assert serialized["order"] == 0
     assert serialized["date_field_id"] == date_field.id
-    assert len(serialized["field_options"]) == 2
+    assert len(serialized["field_options"]) == 1
     assert serialized["field_options"][0]["id"] == field_option.id
     assert serialized["field_options"][0]["field_id"] == field_option.field_id
     assert serialized["field_options"][0]["hidden"] is True
@@ -149,7 +149,7 @@ def test_calendar_view_import_export(premium_data_fixture, tmpdir):
     assert calendar_view.date_field_id != imported_calendar_view.date_field_id
 
     imported_field_options = imported_calendar_view.get_field_options()
-    assert len(imported_field_options) == 2
+    assert len(imported_field_options) == 1
     imported_field_option = imported_field_options[0]
     assert field_option.id != imported_field_option.id
     assert imported_date_field.id == imported_field_option.field_id

@@ -1097,7 +1097,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 field_options_to_create.append(field_options_object)
 
         if len(field_options_to_create) > 0:
-            model.objects_and_trash.bulk_create(field_options_to_create)
+            model.objects_and_trash.bulk_create(
+                field_options_to_create, ignore_conflicts=True
+            )
 
         if len(field_options_to_update) > 0 and len(option_names_to_update) > 0:
             model.objects_and_trash.bulk_update(
