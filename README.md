@@ -36,10 +36,8 @@ Join our forum on https://community.baserow.io/. See
 * [**Docker Compose** ](docs/installation/install-with-docker-compose.md)
 * [**
   Heroku**: Easily install and scale up Baserow on Heroku.](docs/installation/install-on-heroku.md)
-* [**
-  Render**: Easily install and scale up Baserow on Render.](docs/installation/install-on-render.md)
-* [**
-  Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
+* [**Render**: Easily install and scale up Baserow on Render.](docs/installation/install-on-render.md)
+* [**Cloudron**: Install and update Baserow on your own Cloudron server.](docs/installation/install-on-cloudron.md)
 
 ## Official documentation
 
