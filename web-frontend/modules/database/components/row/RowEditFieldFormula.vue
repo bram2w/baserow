@@ -29,7 +29,7 @@ export default {
   methods: {
     getComponent(field) {
       const formulaType = this.$registry.get('formula_type', field.formula_type)
-      return formulaType.getRowEditFieldComponent()
+      return formulaType.getRowEditFieldComponent(field)
     },
   },
 }

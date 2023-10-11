@@ -228,7 +228,7 @@ export default {
       return this.$registry.get('field', this.field.type)
     },
     getFieldComponent() {
-      return this.getFieldType().getFormViewFieldComponent()
+      return this.getFieldType().getFormViewFieldComponent(this.field)
     },
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)

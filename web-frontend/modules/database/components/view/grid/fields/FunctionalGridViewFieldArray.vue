@@ -7,7 +7,7 @@
     :field="props.field"
     :value="props.value"
     :selected="props.selected"
-    v-on="$listeners"
+    v-on="listeners"
   ></component>
 </template>
 

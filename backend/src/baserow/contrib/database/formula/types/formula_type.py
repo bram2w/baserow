@@ -235,6 +235,10 @@ class BaserowFormulaType(abc.ABC):
         return False
 
     @property
+    def item_is_in_nested_value_object_when_in_array(self) -> bool:
+        return True
+
+    @property
     @abc.abstractmethod
     def is_valid(self) -> bool:
         pass
@@ -482,7 +486,10 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
             formula_function_registry,
         )
 
-        func = formula_function_registry.get("array_agg")
+        if self.item_is_in_nested_value_object_when_in_array:
+            func = formula_function_registry.get("array_agg")
+        else:
+            func = formula_function_registry.get("array_agg_no_nesting")
         return func(expr)
 
     def raise_if_invalid(self):

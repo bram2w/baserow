@@ -174,7 +174,7 @@ export class FieldType extends Registerable {
    * will be used in the row edit modal, but can also be used in other forms. It is
    * responsible for editing the value.
    */
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
@@ -185,8 +185,8 @@ export class FieldType extends Registerable {
    * optionally be another component if needed. If null is returned, then the field
    * is marked as not compatible with the form view.
    */
-  getFormViewFieldComponent() {
-    return this.getRowEditFieldComponent()
+  getFormViewFieldComponent(field) {
+    return this.getRowEditFieldComponent(field)
   }
 
   /*
@@ -681,7 +681,7 @@ export class TextFieldType extends FieldType {
     return FunctionalGridViewFieldText
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldText
   }
 
@@ -764,7 +764,7 @@ export class LongTextFieldType extends FieldType {
     return FunctionalGridViewFieldLongText
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldLongText
   }
 
@@ -852,7 +852,7 @@ export class LinkRowFieldType extends FieldType {
     return FunctionalGridViewFieldLinkRow
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldLinkRow
   }
 
@@ -1050,7 +1050,7 @@ export class NumberFieldType extends FieldType {
     return FunctionalGridViewFieldNumber
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldNumber
   }
 
@@ -1251,7 +1251,7 @@ export class RatingFieldType extends FieldType {
     return FunctionalGridViewFieldRating
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldRating
   }
 
@@ -1381,7 +1381,7 @@ export class BooleanFieldType extends FieldType {
     return FunctionalGridViewFieldBoolean
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldBoolean
   }
 
@@ -1680,7 +1680,7 @@ export class DateFieldType extends BaseDateFieldType {
     return FunctionalGridViewFieldDate
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldDate
   }
 
@@ -1709,7 +1709,7 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return null
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldDateReadOnly
   }
 
@@ -1832,7 +1832,7 @@ export class URLFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldURL
   }
 
@@ -1927,7 +1927,7 @@ export class EmailFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldEmail
   }
 
@@ -2032,7 +2032,7 @@ export class FileFieldType extends FieldType {
     return FunctionalGridViewFieldFile
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldFile
   }
 
@@ -2189,6 +2189,10 @@ export class FileFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -2217,7 +2221,7 @@ export class SingleSelectFieldType extends FieldType {
     return FunctionalGridViewFieldSingleSelect
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldSingleSelect
   }
 
@@ -2411,7 +2415,7 @@ export class MultipleSelectFieldType extends FieldType {
     return FunctionalGridViewFieldMultipleSelect
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldMultipleSelect
   }
 
@@ -2651,7 +2655,7 @@ export class PhoneNumberFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldPhoneNumber
   }
 
@@ -2772,7 +2776,7 @@ export class FormulaFieldType extends FieldType {
     return FunctionalGridViewFieldFormula
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldFormula
   }
 
@@ -2998,7 +3002,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     return FunctionalGridViewFieldMultipleCollaborators
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldMultipleCollaborators
   }
 

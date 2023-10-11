@@ -420,7 +420,15 @@
         "ceilDescription": "Returns the smallest integer that is greater than or equal the argument number provided.",
         "floorDescription": "Returns the largest integer that is less than or equal the argument number provided.",
         "encodeUriDescription": "Returns a encoded URI string from the argument provided.",
-        "encodeUriComponentDescription": "Returns a encoded URI string component from the argument provided."
+        "encodeUriComponentDescription": "Returns a encoded URI string component from the argument provided.",
+        "getFileVisibleNameDescription": "Returns the visible file name from a single file returned from the index function.",
+        "getFileMimeTypeDescription": "Returns the file mime type from a single file returned from the index function.",
+        "getFileCountDescription": "Returns the number of files in the referenced file field",
+        "getFileSizeDescription": "Returns the file size from a single file returned from the index function.",
+        "getImageWidthDescription": "Returns the image width from a single file returned from the index function.",
+        "getImageHeightDescription": "Returns the image height from a single file returned from the index function.",
+        "getIsImageDescription": "Returns if the single file returned from the index function is an image or not.",
+        "indexDescription": "Returns the file from a file field at the position provided by the second argument."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

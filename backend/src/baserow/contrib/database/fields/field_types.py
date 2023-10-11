@@ -94,6 +94,10 @@ from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 
+from ..formula.types.formula_types import (
+    BaserowFormulaArrayType,
+    BaserowFormulaSingleFileType,
+)
 from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
@@ -2335,6 +2339,12 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = True
     can_get_unique_values = False
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaArrayType(BaserowFormulaSingleFileType(nullable=True))
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        return self.model_class()
 
     def get_search_expression(self, field: FileField, queryset: QuerySet) -> Expression:
         """
