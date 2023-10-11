@@ -6,29 +6,36 @@
     class="data-explorer"
     @shown="onShow"
   >
-    <div v-if="loading" class="context--loading">
-      <div class="loading"></div>
-    </div>
-    <template v-else>
-      <SelectSearch
-        v-model="search"
-        :placeholder="$t('action.search')"
-        class="margin-bottom-1"
-      ></SelectSearch>
-      <RootNode
-        v-for="node in matchingNodes"
-        :key="node.identifier"
-        :node="node"
-        :node-selected="nodeSelected"
-        :open-nodes="openNodes"
-        @node-selected="$emit('node-selected', $event)"
-        @toggle="toggleNode"
-      >
-      </RootNode>
-      <div v-if="matchingNodes.length === 0" class="context__description">
-        {{ $t('dataExplorer.emptyText') }}
+    <div
+      ref="wrapper"
+      tabindex="0"
+      @focusin="$emit('focusin')"
+      @focusout="$emit('focusout')"
+    >
+      <div v-if="loading" class="context--loading">
+        <div class="loading"></div>
       </div>
-    </template>
+      <template v-else>
+        <SelectSearch
+          v-model="search"
+          :placeholder="$t('action.search')"
+          class="margin-bottom-1"
+        ></SelectSearch>
+        <RootNode
+          v-for="node in matchingNodes"
+          :key="node.identifier"
+          :node="node"
+          :node-selected="nodeSelected"
+          :open-nodes="openNodes"
+          @node-selected="$emit('node-selected', $event)"
+          @toggle="toggleNode"
+        >
+        </RootNode>
+        <div v-if="matchingNodes.length === 0" class="context__description">
+          {{ $t('dataExplorer.emptyText') }}
+        </div>
+      </template>
+    </div>
   </Context>
 </template>
 
