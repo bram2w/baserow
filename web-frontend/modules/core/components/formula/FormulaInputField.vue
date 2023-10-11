@@ -27,6 +27,8 @@
       :loading="dataExplorerLoading"
       @node-selected="dataExplorerItemSelected"
       @node-toggled="editor.commands.focus()"
+      @focusin="dataExplorerFocused = true"
+      @focusout="dataExplorerFocused = false"
     ></DataExplorer>
   </div>
 </template>
@@ -44,7 +46,6 @@ import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipT
 import { mergeAttributes } from '@tiptap/core'
 import { HardBreak } from '@tiptap/extension-hard-break'
 import DataExplorer from '@baserow/modules/core/components/dataExplorer/DataExplorer'
-import { onClickOutside } from '@baserow/modules/core/utils/dom'
 import { RuntimeGet } from '@baserow/modules/core/runtimeFormulaTypes'
 
 export default {
@@ -85,12 +86,16 @@ export default {
     return {
       editor: null,
       content: null,
-      isFocused: false,
       isFormulaInvalid: false,
       dataNodeSelected: null,
+      dataExplorerFocused: false,
+      formulaInputFocused: false,
     }
   },
   computed: {
+    isFocused() {
+      return this.dataExplorerFocused || this.formulaInputFocused
+    },
     classes() {
       return {
         'formula-input-field--focused': this.isFocused,
@@ -157,6 +162,21 @@ export default {
     },
   },
   watch: {
+    isFocused(value) {
+      if (!value) {
+        this.$refs.dataExplorer.hide()
+        this.unSelectNode()
+      } else {
+        this.unSelectNode()
+        this.$refs.dataExplorer.show(
+          this.$refs.editor.$el,
+          'bottom',
+          'left',
+          -100,
+          -330
+        )
+      }
+    },
     value(value) {
       if (!_.isEqual(value, this.toFormula(this.wrapperContent))) {
         const content = this.toContent(value)
@@ -184,6 +204,7 @@ export default {
       editable: true,
       onUpdate: this.onUpdate,
       onFocus: this.onFocus,
+      onBlur: this.onBlur,
       extensions: this.extensions,
       parseOptions: {
         preserveWhitespace: 'full',
@@ -192,9 +213,6 @@ export default {
         handleClick: this.unSelectNode,
       },
     })
-
-    const clickOutsideEventCancel = onClickOutside(this.$el, this.onBlur)
-    this.$once('hook:beforeDestroy', clickOutsideEventCancel)
   },
   beforeDestroy() {
     this.editor?.destroy()
@@ -215,27 +233,17 @@ export default {
       this.emitChange()
     },
     onFocus() {
-      if (!this.isFocused) {
-        this.isFocused = true
-        this.unSelectNode()
-        this.$refs.dataExplorer.show(
-          this.$refs.editor.$el,
-          'bottom',
-          'left',
-          -100,
-          -330
-        )
-      }
+      this.formulaInputFocused = true
     },
-    onBlur(target) {
-      if (
-        !this.$refs.dataExplorer.$el.contains(target) &&
-        !this.$refs.editor.$el.contains(target)
-      ) {
-        this.isFocused = false
-        this.$refs.dataExplorer.hide()
-        this.unSelectNode()
-      }
+    onBlur() {
+      // We have to delay the browser here by just a bit, running the below will make
+      // sure the browser will execute all other events first, and then trigger this
+      // function. If we don't do this, the data explorer will be closed before the
+      // focus event can be fired which results in a closed data explorer once you lose
+      // focus on the input.
+      setTimeout(() => {
+        this.formulaInputFocused = false
+      }, 0)
     },
     toContent(formula) {
       if (_.isEmpty(formula)) {
@@ -284,7 +292,6 @@ export default {
     },
     dataComponentClicked(node) {
       this.selectNode(node)
-      this.editor.commands.blur()
     },
     dataExplorerItemSelected({ path }) {
       const isInEditingMode = this.dataNodeSelected !== null
