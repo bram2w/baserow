@@ -121,6 +121,9 @@ export class TestApp {
         resolve({ name, params }) {
           return new URL(`https://${name}`)
         },
+        replace({ name, params }) {
+          return new URL(`https://${name}`)
+        },
       },
       $route: {
         params: {},

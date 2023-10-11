@@ -34,10 +34,10 @@
                 <EditableViewName ref="rename" :view="view"></EditableViewName>
               </span>
             </template>
-            <span v-else-if="view !== null">
+            <template v-else-if="view !== null">
               <i class="header__filter-icon iconoir-nav-arrow-down"></i>
               {{ $t('table.chooseView') }}
-            </span>
+            </template>
           </a>
           <ViewsContext
             v-if="views !== null"

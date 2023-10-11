@@ -207,6 +207,22 @@ export default {
     this.$store.dispatch('table/setLoading', false)
   },
   mounted() {
+    // If no view route parameter is provided, then the `asyncData` function
+    // automatically selects the last viewed view, or the first one. This is however
+    // not updated in the URL path, so to make the history navigation work, we must
+    // replace the existing path.
+    if (
+      this.view !== undefined &&
+      parseInt(this.$route.params.viewId) !== this.view.id
+    ) {
+      this.$router.replace({
+        name: 'database-table',
+        params: {
+          viewId: this.view.id,
+        },
+      })
+    }
+
     this.$realtime.subscribe('table', { table_id: this.table.id })
   },
   beforeDestroy() {
@@ -218,7 +234,7 @@ export default {
         return
       }
 
-      this.$nuxt.$router.push({
+      this.$router.push({
         name: 'database-table',
         params: {
           viewId: view.id,
@@ -256,7 +272,7 @@ export default {
           rowId,
         },
       }
-      this.$nuxt.$router.push(location)
+      this.$router.push(location)
     },
     async fetchAdjacentRow(previous, activeSearchTerm = null) {
       const { row, status } = await this.$store.dispatch(
