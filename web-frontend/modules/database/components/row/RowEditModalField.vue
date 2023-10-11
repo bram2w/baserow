@@ -93,7 +93,9 @@ export default {
   },
   methods: {
     getFieldComponent(type) {
-      return this.$registry.get('field', type).getRowEditFieldComponent()
+      return this.$registry
+        .get('field', type)
+        .getRowEditFieldComponent(this.field)
     },
     update(value, oldValue) {
       this.$emit('update', {

@@ -520,6 +520,16 @@ class AnyInt(int):
         return isinstance(other, int)
 
 
+class AnyStr(str):
+    """
+    A class that can be used to check if a value is an str. Useful in tests when
+    you don't care about a string, but you want to check all other values.
+    """
+
+    def __eq__(self, other):
+        return isinstance(other, str)
+
+
 def load_test_cases(name: str) -> Union[List, Dict]:
     """
     Load test data from the global cases directory. These cases are used to run the

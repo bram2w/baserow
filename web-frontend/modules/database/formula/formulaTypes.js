@@ -25,6 +25,13 @@ import RowCardFieldBlank from '@baserow/modules/database/components/card/RowCard
 import RowCardFieldLink from '@baserow/modules/database/components/card/RowCardFieldLink'
 import GridViewFieldLinkURL from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLinkURL.vue'
 import GridViewFieldText from '@baserow/modules/database/components/view/grid/fields/GridViewFieldText.vue'
+import RowEditFieldFileReadOnly from '@baserow/modules/database/components/row/RowEditFieldFileReadOnly.vue'
+import FunctionalGridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewSingleFile.vue'
+import FunctionalFormulaFileArrayItem from '@baserow/modules/database/components/formula/array/FunctionalFormulaFileArrayItem.vue'
+import SingleFileArrayModal from '@baserow/modules/database/components/view/grid/fields/SingleFileArrayModal.vue'
+import GridViewSingleFile from '@baserow/modules/database/components/view/grid/fields/GridViewSingleFile.vue'
+import RowEditSingleFileReadOnly from '@baserow/modules/database/components/row/RowEditSingleFileReadOnly.vue'
+import RowCardFieldSingleFile from '@baserow/modules/database/components/card/RowCardFieldSingleFile.vue'
 
 export class BaserowFormulaTypeDefinition extends Registerable {
   getIconClass() {
@@ -33,10 +40,14 @@ export class BaserowFormulaTypeDefinition extends Registerable {
     )
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     throw new Error(
       'Not implemented error. This method should return the types row edit component.'
     )
+  }
+
+  getRowEditArrayFieldComponent() {
+    return null
   }
 
   getFunctionalGridViewFieldComponent() {
@@ -101,6 +112,14 @@ export class BaserowFormulaTypeDefinition extends Registerable {
     return false
   }
 
+  getItemIsInNestedValueObjectWhenInArray() {
+    return true
+  }
+
+  getExtraModal() {
+    return null
+  }
+
   getSort(name, order, field) {
     const underlyingFieldType = this.app.$registry.get(
       'field',
@@ -122,7 +141,9 @@ export class BaserowFormulaTypeDefinition extends Registerable {
   }
 
   mapToSortableArray(element) {
-    return element.value
+    return this.getItemIsInNestedValueObjectWhenInArray()
+      ? element.value
+      : element
   }
 
   toHumanReadableString(field, value) {
@@ -155,7 +176,7 @@ export class BaserowFormulaTextType extends BaserowFormulaTypeDefinition {
     return 'iconoir-text'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldLongText
   }
 
@@ -193,7 +214,7 @@ export class BaserowFormulaCharType extends BaserowFormulaTypeDefinition {
     return 'iconoir-text'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldText
   }
 
@@ -227,7 +248,7 @@ export class BaserowFormulaNumberType extends BaserowFormulaTypeDefinition {
     return 'baserow-icon-hashtag'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldNumber
   }
 
@@ -257,7 +278,7 @@ export class BaserowFormulaBooleanType extends BaserowFormulaTypeDefinition {
     return 'baserow-icon-circle-checked'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldBoolean
   }
 
@@ -291,7 +312,7 @@ export class BaserowFormulaDateType extends BaserowFormulaTypeDefinition {
     return 'iconoir-calendar'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldDateReadOnly
   }
 
@@ -333,7 +354,7 @@ export class BaserowFormulaDateIntervalType extends BaserowFormulaTypeDefinition
     return 'baserow-icon-history'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldText
   }
 
@@ -369,7 +390,7 @@ export class BaserowFormulaSpecialType extends BaserowFormulaTypeDefinition {
     return 'baserow-icon-formula'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldText
   }
 
@@ -399,7 +420,7 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return RowCardFieldBlank
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldBlank
   }
 
@@ -415,7 +436,6 @@ export class BaserowFormulaInvalidType extends BaserowFormulaTypeDefinition {
     return false
   }
 }
-
 export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   static getType() {
     return 'array'
@@ -433,8 +453,15 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     return RowCardFieldArray
   }
 
-  getRowEditFieldComponent() {
-    return RowEditFieldArray
+  getRowEditFieldComponent(field) {
+    const arrayOverride = this.app.$registry
+      .get('formula_type', field.array_formula_type)
+      ?.getRowEditArrayFieldComponent()
+    if (arrayOverride) {
+      return arrayOverride
+    } else {
+      return RowEditFieldArray
+    }
   }
 
   getFunctionalGridViewFieldComponent() {
@@ -456,17 +483,28 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     )
     return value
       .map((v) => {
-        return subType.prepareValueForCopy(field, v.value)
+        return subType.prepareValueForCopy(
+          field,
+          subType.getItemIsInNestedValueObjectWhenInArray() ? v.value : v
+        )
       })
       .join(', ')
   }
 
   getDocsResponseExample(field) {
     if (field.array_formula_type != null) {
+      const subType = this.app.$registry.get(
+        'formula_type',
+        field.array_formula_type
+      )
       const value = this.app.$registry
         .get('formula_type', field.array_formula_type)
         .getDocsResponseExample(field)
-      return [{ id: 0, value }]
+      if (subType.getItemIsInNestedValueObjectWhenInArray()) {
+        return [{ id: 0, value }]
+      } else {
+        return [value]
+      }
     } else {
       return null
     }
@@ -493,8 +531,8 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     const innerSortFunction = subType.getSort(name, order, field)
 
     return (a, b) => {
-      const valuesA = a[name].map(subType.mapToSortableArray)
-      const valuesB = b[name].map(subType.mapToSortableArray)
+      const valuesA = a[name].map(subType.mapToSortableArray.bind(subType))
+      const valuesB = b[name].map(subType.mapToSortableArray.bind(subType))
 
       for (let i = 0; i < Math.max(valuesA.length, valuesB.length); i++) {
         let compared = 0
@@ -553,7 +591,10 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
     )
     return value
       .map((v) => {
-        return subType.toHumanReadableString(field, v.value)
+        return subType.toHumanReadableString(
+          field,
+          subType.getItemIsInNestedValueObjectWhenInArray() ? v.value : v
+        )
       })
       .join(', ')
   }
@@ -563,6 +604,100 @@ export class BaserowFormulaArrayType extends BaserowFormulaTypeDefinition {
   }
 }
 
+export class BaserowFormulaFileType extends BaserowFormulaTypeDefinition {
+  static getType() {
+    return 'single_file'
+  }
+
+  getFieldType() {
+    return 'file'
+  }
+
+  getIconClass() {
+    return 'iconoir-empty-page'
+  }
+
+  getRowEditArrayFieldComponent() {
+    return RowEditFieldFileReadOnly
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditSingleFileReadOnly
+  }
+
+  getItemIsInNestedValueObjectWhenInArray() {
+    return false
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewSingleFile
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewSingleFile
+  }
+
+  getFunctionalGridViewFieldArrayComponent() {
+    return FunctionalFormulaFileArrayItem
+  }
+
+  getExtraModal() {
+    return SingleFileArrayModal
+  }
+
+  getSortOrder() {
+    return 11
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  canBeSortedWhenInArray(field) {
+    return false
+  }
+
+  getDocsResponseExample(field) {
+    return {
+      url: 'https://files.baserow.io/user_files/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+      thumbnails: {
+        tiny: {
+          url: 'https://files.baserow.io/media/thumbnails/tiny/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+          width: 21,
+          height: 21,
+        },
+        small: {
+          url: 'https://files.baserow.io/media/thumbnails/small/VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+          width: 48,
+          height: 48,
+        },
+      },
+      name: 'VXotniBOVm8tbstZkKsMKbj2Qg7KmPvn_39d354a76abe56baaf569ad87d0333f58ee4bf3eed368e3b9dc736fd18b09dfd.png',
+      size: 229940,
+      mime_type: 'image/png',
+      is_image: true,
+      image_width: 1280,
+      image_height: 585,
+      uploaded_at: '2020-11-17T12:16:10.035234+00:00',
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'single_file'
+  }
+
+  prepareValueForCopy(field, value) {
+    return `${value?.visible_name} (${value?.url})`
+  }
+
+  getCardComponent() {
+    return RowCardFieldSingleFile
+  }
+
+  toHumanReadableString(field, value) {
+    return value?.visible_name || ''
+  }
+}
 export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition {
   static getType() {
     return 'single_select'
@@ -576,7 +711,7 @@ export class BaserowFormulaSingleSelectType extends BaserowFormulaTypeDefinition
     return 'baserow-icon-single-select'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldSingleSelectReadOnly
   }
 
@@ -618,7 +753,7 @@ export class BaserowFormulaLinkType extends BaserowFormulaTypeDefinition {
     return 'iconoir-link'
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldFormulaLink
   }
 

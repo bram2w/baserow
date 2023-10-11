@@ -201,7 +201,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
     def _generate_insert_expression(self, db_column):
         model_field = self.model._meta.get_field(db_column)
         instance_attr_value = getattr(self.model_instance, db_column)
-        value = Value(instance_attr_value)
+        value = Value(instance_attr_value, output_field=model_field)
         from baserow.contrib.database.fields.fields import SingleSelectForeignKey
 
         if isinstance(model_field, SingleSelectForeignKey):

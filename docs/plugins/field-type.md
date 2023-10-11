@@ -137,7 +137,7 @@ export class IntegerFieldType extends FieldType {
         return GridViewIntegerField;
     }
 
-    getRowEditFieldComponent() {
+    getRowEditFieldComponent(field) {
         return RowEditIntegerField;
     }
 }

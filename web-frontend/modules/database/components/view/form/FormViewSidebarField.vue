@@ -47,7 +47,7 @@ export default {
   computed: {
     compatible() {
       const fieldType = this.$registry.get('field', this.field.type)
-      return fieldType.getFormViewFieldComponent() !== null
+      return fieldType.getFormViewFieldComponent(this.field) !== null
     },
   },
 }

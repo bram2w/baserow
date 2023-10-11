@@ -56,7 +56,7 @@
   cursor: initial;
 
   // The link is not clickable when the cell is not active.
-  .grid-field-file__cell.active & {
+  .active & {
     cursor: pointer;
   }
 }

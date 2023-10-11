@@ -51,7 +51,7 @@ export default {
     getFieldComponent() {
       return this.$registry
         .get('field', this.field.field.type)
-        .getFormViewFieldComponent()
+        .getFormViewFieldComponent(this.field.field)
     },
     getFieldComponentProperties() {
       return this.$registry

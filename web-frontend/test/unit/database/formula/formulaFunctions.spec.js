@@ -27,6 +27,12 @@ describe('Formula Functions Test', () => {
       'even',
       'odd',
       'floor',
+      'get_file_count',
+      'get_file_mime_type',
+      'get_file_size',
+      'get_file_visible_name',
+      'get_image_height',
+      'get_image_width',
       'ceil',
       'abs',
       'power',
@@ -94,6 +100,8 @@ describe('Formula Functions Test', () => {
       'get_link_label',
       'get_link_url',
       'split_part',
+      'index',
+      'is_image',
     ]
     const frontendFunctionTypes = Object.keys(
       testApp.store.$registry.getAll('formula_function')
