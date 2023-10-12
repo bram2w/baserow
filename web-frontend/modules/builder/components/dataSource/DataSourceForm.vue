@@ -28,6 +28,7 @@
         </Dropdown>
         <Dropdown
           v-model="values.integration_id"
+          fixed-items
           class="data-source-form__integration-dropdown"
           :disabled="!values.type"
           :placeholder="
