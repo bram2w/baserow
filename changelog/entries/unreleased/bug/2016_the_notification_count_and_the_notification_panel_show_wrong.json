@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix a bug not clearing the notification store when the user logs out.",
+    "issue_number": 2016,
+    "bullet_points": [],
+    "created_at": "2023-10-11"
+}

@@ -169,6 +169,7 @@ export const actions = {
     await dispatch('workspace/clearAll', {}, { root: true })
     await dispatch('workspace/unselect', {}, { root: true })
     await dispatch('job/clearAll', {}, { root: true })
+    await dispatch('notification/reset', {}, { root: true })
     commit('CLEAR_USER_DATA')
   },
   /**

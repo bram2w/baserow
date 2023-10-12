@@ -217,6 +217,10 @@ export const actions = {
       currentWorkspaceUnreadCount: 0,
     })
   },
+  reset({ commit, dispatch }) {
+    dispatch('forceClearAll')
+    commit('SET_LOADED', false)
+  },
   async markAsRead({ commit, state }, { notification }) {
     commit('SET_NOTIFICATIONS_READ', {
       notificationIds: [notification.id],
