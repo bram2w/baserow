@@ -24,14 +24,14 @@
           />
           <div class="integration_settings__integration-actions">
             <Button
-              icon="edit"
+              icon="iconoir-edit"
               type="light"
               @click="
                 $refs[`IntegrationCreateEditModal_${integration.id}`][0].show()
               "
             />
             <Button
-              icon="trash-alt"
+              icon="iconoir-trash"
               type="light"
               @click="deleteIntegration(integration)"
             />
