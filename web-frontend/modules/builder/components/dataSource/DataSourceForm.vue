@@ -71,7 +71,7 @@
       </div>
     </div>
     <div v-if="loading" class="loading margin-bottom-1"></div>
-    <template v-if="serviceType && values.integration_id && !loading">
+    <template v-if="serviceType && integration && !loading">
       <component
         :is="serviceType.formComponent"
         ref="subForm"
