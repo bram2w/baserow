@@ -5,7 +5,7 @@
     <Alert
       v-if="success"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('accountSettings.changedTitle')"
       >{{ $t('accountSettings.changedDescription') }}
     </Alert>

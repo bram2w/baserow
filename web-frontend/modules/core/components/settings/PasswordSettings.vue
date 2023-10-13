@@ -5,7 +5,7 @@
     <Alert
       v-if="success"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('passwordSettings.changedTitle')"
     >
       {{ $t('passwordSettings.changedDescription') }}

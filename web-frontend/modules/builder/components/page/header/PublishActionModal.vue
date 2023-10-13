@@ -52,7 +52,7 @@
     <Alert
       v-if="jobHasSucceeded"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('publishActionModal.publishSucceedTitle')"
     >
       {{ $t('publishActionModal.publishSucceedDescription') }}
