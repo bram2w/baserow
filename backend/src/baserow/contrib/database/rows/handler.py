@@ -773,6 +773,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         fields = []
         update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         field_ids = []
         for field_object in model._field_objects.values():
             field_type: FieldType = field_object["type"]
@@ -969,6 +970,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,
@@ -1142,6 +1144,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             table, starting_row_ids=[row.id for row in inserted_rows]
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         field_ids = []
         for field_object in model._field_objects.values():
             field_type = field_object["type"]
@@ -1709,6 +1712,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,
@@ -1842,6 +1846,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         updated_field_ids = []
         updated_fields = []
         for field_id, field_object in model._field_objects.items():
@@ -1950,6 +1955,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         updated_field_ids = []
         updated_fields = []
 
@@ -2054,6 +2060,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,
