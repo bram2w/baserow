@@ -128,7 +128,7 @@ A Row page expects the`table_id` and `row_id` parameters. Below you will find an
 {
   "page": "row",
   "table_id": 1,
-  "row_id": 1,
+  "row_id": 1
 }
 ```
 
@@ -141,7 +141,7 @@ are subscribed to the page.
     "page": "row",
     "parameters": {
         "table_id": 1,
-        "row_id": 1,
+        "row_id": 1
     }
 }
 ```
@@ -154,7 +154,7 @@ To stop receiving updates related to a page you are subscribed to, you will need
 {
   "remove_page": "row",
   "table_id": 1,
-  "row_id": 1,
+  "row_id": 1
 }
 ```
 
