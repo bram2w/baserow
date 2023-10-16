@@ -15,8 +15,8 @@
   list-style: none;
   padding: 0 15px;
   margin: 0;
-  gap: 15px;
-  border-bottom: solid 1px $color-neutral-200;
+  gap: 24px;
+  border-bottom: solid 1px $palette-neutral-200;
 
   .tabs--no-separation & {
     border-bottom: unset;
@@ -24,7 +24,6 @@
   }
 
   .tabs--large & {
-    gap: 24px;
     padding: 0 0 0 40px;
   }
 
@@ -50,8 +49,8 @@
 
   &.tabs__item--active::after {
     content: '';
-    height: 1px;
-    background-color: $color-primary-600;
+    height: 2px;
+    background-color: $palette-blue-500;
 
     @include absolute(auto, 0, -1px, 0);
   }
@@ -63,23 +62,27 @@
 }
 
 .tabs__link {
-  color: $color-neutral-900;
+  color: $palette-neutral-900;
   display: block;
-  font-size: 12px;
   padding: 12px 0;
+  font-weight: 500;
 
   .tabs--large & {
     font-size: 14px;
     padding: 18px 0;
   }
 
-  &:hover {
-    text-decoration: none;
+  .tabs__item--active & {
+    color: $palette-neutral-1200;
   }
 
-  &:hover,
-  .tabs__item--active & {
-    color: $color-primary-600;
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-1200;
+
+    .tabs__item--active & {
+      color: $palette-blue-500;
+    }
   }
 }
 
