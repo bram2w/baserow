@@ -56,14 +56,12 @@ export class HistoryRowModalSidebarType extends RowModalSidebarType {
   isDeactivated(database, table) {
     const featureFlags = getFeatureFlags(this.app.$config)
     const featureFlagEnabled = featureFlagIsEnabled(featureFlags, 'row_history')
-    return !featureFlagEnabled
-
-    // TODO:
-    // return this.app.$hasPermission(
-    //   'database.table.read_row_history',
-    //   table,
-    //   database.workspace.id
-    // )
+    const hasPermissions = this.app.$hasPermission(
+      'database.table.read_row_history',
+      table,
+      database.workspace.id
+    )
+    return !featureFlagEnabled || !hasPermissions
   }
 
   isSelectedByDefault(database) {

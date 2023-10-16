@@ -1,0 +1,7 @@
+{
+    "type": "feature",
+    "message": "Add ability to subscribe to multiple pages via websockets",
+    "issue_number": 2019,
+    "bullet_points": [],
+    "created_at": "2023-10-10"
+}

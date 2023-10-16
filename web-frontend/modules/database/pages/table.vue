@@ -226,7 +226,7 @@ export default {
     this.$realtime.subscribe('table', { table_id: this.table.id })
   },
   beforeDestroy() {
-    this.$realtime.subscribe(null)
+    this.$realtime.unsubscribe('table', { table_id: this.table.id })
   },
   methods: {
     selectedView(view) {

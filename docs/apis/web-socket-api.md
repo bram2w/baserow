@@ -88,14 +88,15 @@ WebSocketId: 934254ab-0c87-4dbc-9d71-7eeab029296c
 
 A user will receive all the core messages related to workspaces and application by default,
 but we also have messages related to certain pages, for example to the table page.
-Because we don't want to cause an overload of messages you can subscribe to a page. If
-successful you will only receive messages related to that page and you will
-automatically be unsubscribed as soon as you subscribe to another page.
+Because we don't want to cause an overload of messages you can subscribe to a page of your interest. It is also possible to be subscribed to multiple pages. If
+successful you will receive messages related to that page. You will need to manually unsubscribe from a page to stop receiving updates.
 
 ### Table page
 
-At the moment there is only one page, which is the table page and it expects a
-`table_id` parameter. Below you will find an example how to subscribe to that page.
+Subscribing to a table page will request updates related to a Baserow table that will
+give you information about new rows, row updates, and other relevant information. 
+
+A table page expects the`table_id` parameter. Below you will find an example how to subscribe to that page.
 
 ```json
 {
@@ -114,6 +115,46 @@ are subscribed to the page.
     "parameters": {
         "table_id": 1
     }
+}
+```
+
+### Row page
+
+Subscribing to a Row page will request additional updates related to a Baserow row of a particular table that will give you information like row history updates. Please note that to get updates such as row deletions and similar, you should use the table page described above.
+
+A Row page expects the`table_id` and `row_id` parameters. Below you will find an example how to subscribe to that page.
+
+```json
+{
+  "page": "row",
+  "table_id": 1,
+  "row_id": 1,
+}
+```
+
+Once successfully subscribed you will receive a confirmation message indicating that you
+are subscribed to the page.
+
+```json
+{
+    "type": "page_add",
+    "page": "row",
+    "parameters": {
+        "table_id": 1,
+        "row_id": 1,
+    }
+}
+```
+
+## Unsubscribing from a page
+
+To stop receiving updates related to a page you are subscribed to, you will need to send a `remove_page` message with the same page parameters that led to the subscription:
+
+```json
+{
+  "remove_page": "row",
+  "table_id": 1,
+  "row_id": 1,
 }
 ```
 
@@ -154,6 +195,7 @@ are subscribed to the page.
 * `rows_deleted`
 * `before_rows_update`
 * `before_rows_delete`
+* `row_history_updated`
 * `view_created`
 * `view_updated`
 * `view_deleted`

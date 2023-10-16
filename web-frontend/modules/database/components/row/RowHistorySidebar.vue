@@ -115,6 +115,11 @@ export default {
       return entriesToRender
     },
   },
+  watch: {
+    row(newRow, oldRow) {
+      this.initialLoad()
+    },
+  },
   async created() {
     await this.initialLoad()
   },

@@ -88,6 +88,7 @@ export class TestApp {
     this._realtime = {
       registerEvent(e, f) {},
       subscribe(e, f) {},
+      unsubscribe(e, f) {},
       connect(a, b) {},
       disconnect() {},
     }

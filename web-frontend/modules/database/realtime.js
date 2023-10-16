@@ -238,6 +238,15 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('row_history_updated', ({ store }, data) => {
+    const rowHistoryEntry = data.row_history_entry
+    store.dispatch('rowHistory/forceCreate', {
+      rowHistoryEntry,
+      rowId: data.row_id,
+      tableId: data.table_id,
+    })
+  })
+
   realtime.registerEvent('view_created', ({ store }, data) => {
     if (store.getters['table/getSelectedId'] === data.view.table_id) {
       store.dispatch('view/forceCreate', { data: data.view })
