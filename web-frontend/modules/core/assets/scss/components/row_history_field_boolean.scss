@@ -1,11 +1,3 @@
-.row-history-field-boolean__checkbox-icon {
-  margin: auto;
-  color: $color-success-600;
-
-  @include center-text(10px, 10px, 10px);
-  @include rounded($rounded);
-}
-
 .row-history-field-boolean__diff {
   padding: 5px;
   line-height: 10px;

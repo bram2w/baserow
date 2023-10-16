@@ -13,9 +13,9 @@ from baserow.ws.tasks import (
 )
 
 
-@pytest.mark.run(order=4)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_broadcast_to_users(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -59,9 +59,9 @@ async def test_broadcast_to_users(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=5)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_broadcast_to_channel_group(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -123,10 +123,7 @@ async def test_broadcast_to_channel_group(data_fixture):
     await communicator_2.receive_nothing(0.1)
 
     await communicator_1.send_json_to({"page": "table", "table_id": table_3.id})
-    response = await communicator_1.receive_json_from(0.1)
-    assert response["type"] == "page_discard"
-    assert response["page"] == "table"
-    assert response["parameters"]["table_id"] == table_1.id
+
     response = await communicator_1.receive_json_from(0.1)
     assert response["type"] == "page_add"
     assert response["page"] == "table"
@@ -166,9 +163,9 @@ async def test_broadcast_to_channel_group(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=6)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_broadcast_to_workspace(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -240,9 +237,9 @@ async def test_broadcast_to_workspace(data_fixture):
     await communicator_3.disconnect()
 
 
-@pytest.mark.run(order=6)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_broadcast_to_workspaces(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -328,9 +325,9 @@ async def test_broadcast_to_workspaces(data_fixture):
     await communicator_4.disconnect()
 
 
-@pytest.mark.run(order=7)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_can_broadcast_to_every_single_user(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -369,9 +366,9 @@ async def test_can_broadcast_to_every_single_user(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=8)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_can_still_ignore_when_sending_to_all_users(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()
@@ -411,9 +408,9 @@ async def test_can_still_ignore_when_sending_to_all_users(data_fixture):
     await communicator_2.disconnect()
 
 
-@pytest.mark.run(order=10)
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
 async def test_broadcast_to_users_individual_payloads(data_fixture):
     user_1, token_1 = data_fixture.create_user_and_token()
     user_2, token_2 = data_fixture.create_user_and_token()

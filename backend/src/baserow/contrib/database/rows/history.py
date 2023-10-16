@@ -8,11 +8,11 @@ from django.dispatch import receiver
 from opentelemetry import trace
 
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.actions import UpdateRowsActionType
+from baserow.contrib.database.rows.models import RowHistory
+from baserow.contrib.database.rows.signals import rows_history_updated
 from baserow.core.action.signals import ActionCommandType, action_done
 from baserow.core.telemetry.utils import baserow_trace
-
-from .actions import UpdateRowsActionType
-from .models import RowHistory
 
 tracer = trace.get_tracer(__name__)
 
@@ -155,7 +155,12 @@ class RowHistoryHandler:
             row_history_entries.append(entry)
 
         if row_history_entries:
-            RowHistory.objects.bulk_create(row_history_entries)
+            row_history_entries = RowHistory.objects.bulk_create(row_history_entries)
+            rows_history_updated.send(
+                RowHistoryHandler,
+                table_id=params.table_id,
+                row_history_entries=row_history_entries,
+            )
 
     @classmethod
     @baserow_trace(tracer)

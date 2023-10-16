@@ -411,10 +411,11 @@ class DatabaseConfig(AppConfig):
 
         application_type_registry.register(DatabaseApplicationType())
 
-        from .ws.pages import PublicViewPageType, TablePageType
+        from .ws.pages import PublicViewPageType, RowPageType, TablePageType
 
         page_registry.register(TablePageType())
         page_registry.register(PublicViewPageType())
+        page_registry.register(RowPageType())
 
         from .export.table_exporters.csv_table_exporter import CsvTableExporter
 

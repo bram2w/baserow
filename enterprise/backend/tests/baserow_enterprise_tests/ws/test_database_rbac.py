@@ -27,6 +27,7 @@ def use_async_event_loop_here(async_event_loop):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+@pytest.mark.websockets
 async def test_database_updated_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
@@ -57,6 +58,7 @@ async def test_database_updated_message_not_leaking(data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+@pytest.mark.websockets
 async def test_database_deleted_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
@@ -87,6 +89,7 @@ async def test_database_deleted_message_not_leaking(data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+@pytest.mark.websockets
 async def test_database_created_message_not_leaking(data_fixture):
     user = data_fixture.create_user()
     user_excluded, token = data_fixture.create_user_and_token()
@@ -121,6 +124,7 @@ async def test_database_created_message_not_leaking(data_fixture):
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
+@pytest.mark.websockets
 async def test_workspace_restored_applications_arent_leaked(data_fixture):
     user_excluded, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user_excluded)

@@ -76,7 +76,6 @@ def test_forwards_migration(data_fixture, migrator, teardown_table_metadata):
 
 
 # noinspection PyPep8Naming
-@pytest.mark.run(order=1)
 @pytest.mark.once_per_day_in_ci
 def test_backwards_migration(data_fixture, migrator, teardown_table_metadata):
     migrate_from = [

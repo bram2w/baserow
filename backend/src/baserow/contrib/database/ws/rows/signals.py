@@ -4,6 +4,7 @@ from django.db import transaction
 from django.dispatch import receiver
 
 from baserow.contrib.database.api.rows.serializers import (
+    RowHistorySerializer,
     RowSerializer,
     get_row_serializer_class,
 )
@@ -23,7 +24,7 @@ def rows_created(
     model,
     send_realtime_update=True,
     send_webhook_events=True,
-    **kwargs
+    **kwargs,
 ):
     if not send_realtime_update:
         return
@@ -57,7 +58,7 @@ def rows_updated(
     before_return,
     updated_field_ids,
     before_rows_values,
-    **kwargs
+    **kwargs,
 ):
     table_page_type = page_registry.get("table")
     transaction.on_commit(
@@ -109,6 +110,32 @@ def row_orders_recalculated(sender, table, **kwargs):
             table_id=table.id,
         )
     )
+
+
+@receiver(row_signals.rows_history_updated)
+def rows_history_updated(
+    sender,
+    table_id,
+    row_history_entries,
+    **kwargs,
+):
+    row_page_type = page_registry.get("row")
+
+    def send_by_row():
+        for row_history_entry in row_history_entries:
+            serialized_entry = RowHistorySerializer(row_history_entry).data
+            row_page_type.broadcast(
+                {
+                    "type": "row_history_updated",
+                    "row_history_entry": serialized_entry,
+                    "table_id": table_id,
+                    "row_id": row_history_entry.row_id,
+                },
+                table_id=table_id,
+                row_id=row_history_entry.row_id,
+            )
+
+    transaction.on_commit(send_by_row)
 
 
 class RealtimeRowMessages:

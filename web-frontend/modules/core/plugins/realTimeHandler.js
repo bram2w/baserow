@@ -10,9 +10,8 @@ export class RealTimeHandler {
     this.reconnectTimeout = null
     this.attempts = 0
     this.events = {}
-    this.page = null
-    this.pageParameters = {}
-    this.subscribedToPage = true
+    this.pages = []
+    this.subscribedToPages = true
     this.lastToken = null
     this.authenticationSuccess = true
     this.registerCoreEvents()
@@ -64,8 +63,8 @@ export class RealTimeHandler {
 
       // If the client needs to be subscribed to a page we can do that directly
       // after connecting.
-      if (!this.subscribedToPage) {
-        this.subscribeToPage()
+      if (!this.subscribedToPages) {
+        this.subscribeToPages()
       }
     }
 
@@ -99,7 +98,7 @@ export class RealTimeHandler {
       this.connected = false
       // By default the user not subscribed to a page a.k.a `null`, so if the current
       // page is already null we can mark it as subscribed.
-      this.subscribedToPage = this.page === null
+      this.subscribedToPages = this.pages.length === 0
       this.delayedReconnect()
     }
   }
@@ -131,28 +130,72 @@ export class RealTimeHandler {
    * opens a table page.
    */
   subscribe(page, parameters) {
-    this.page = page
-    this.pageParameters = parameters
-    this.subscribedToPage = false
+    const pageScope = {
+      page,
+      parameters,
+    }
 
-    // If the client is already connected we can directly subscribe to the page.
-    if (this.connected) {
-      this.subscribeToPage()
+    if (
+      !this.pages.some(
+        (elem) => JSON.stringify(elem) === JSON.stringify(pageScope)
+      )
+    ) {
+      this.pages.push(pageScope)
+      // If the client is already connected we can
+      // subscribe to updates for all pages.
+      if (this.connected) {
+        this.subscribeToPage(page, parameters)
+      } else {
+        this.subscribedToPages = false
+      }
     }
   }
 
   /**
-   * Sends a request to the real time server that updates for a certain page +
-   * parameters must be received.
+   * Unsubscribes the client from a given page. The client will
+   * stop receiving updates related to that page.
    */
-  subscribeToPage() {
+  unsubscribe(page, parameters) {
+    this.pages = this.pages.filter(
+      (item) => JSON.stringify(item) !== JSON.stringify({ page, parameters })
+    )
     this.socket.send(
       JSON.stringify({
-        page: this.page === null ? '' : this.page,
-        ...this.pageParameters,
+        remove_page: page,
+        ...parameters,
       })
     )
-    this.subscribedToPage = true
+  }
+
+  /*
+   * Subscribes the client to a new page if the client is
+   * connected.
+   */
+  subscribeToPage(page, parameters) {
+    if (this.connected) {
+      this.socket.send(
+        JSON.stringify({
+          page: page === null ? '' : page,
+          ...parameters,
+        })
+      )
+    }
+  }
+
+  /**
+   * Requests real time updates for the list of pages that
+   * have been collected by the subscribe() call.
+   */
+  subscribeToPages() {
+    if (this.subscribedToPages) {
+      return
+    }
+
+    for (const { page, parameters } of this.pages) {
+      this.subscribeToPage(page, parameters)
+    }
+
+    this.subscribedToPages = true
   }
 
   /**

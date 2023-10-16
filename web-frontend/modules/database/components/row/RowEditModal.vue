@@ -6,7 +6,7 @@
     :content-scrollable="hasRightSidebar"
     :right-sidebar-scrollable="false"
     :collapsible-right-sidebar="true"
-    @hidden="$emit('hidden', { row })"
+    @hidden="hidden"
   >
     <template #content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
@@ -220,6 +220,13 @@ export default {
       )
       return activeSidebarTypes.length > 0
     },
+    canSubscribeToRowUpdates() {
+      return this.$hasPermission(
+        'database.table.listen_to_all',
+        this.table,
+        this.database.workspace.id
+      )
+    },
   },
   watch: {
     /**
@@ -252,6 +259,22 @@ export default {
         })
       }
     },
+    rowId(newValue, oldValue) {
+      if (this.canSubscribeToRowUpdates) {
+        if (oldValue > 0) {
+          this.$realtime.unsubscribe('row', {
+            table_id: this.table.id,
+            row_id: oldValue,
+          })
+        }
+        if (newValue > 0) {
+          this.$realtime.subscribe('row', {
+            table_id: this.table.id,
+            row_id: newValue,
+          })
+        }
+      }
+    },
   },
   methods: {
     show(rowId, rowFallback = {}, ...args) {
@@ -263,11 +286,23 @@ export default {
         row: row || rowFallback,
         exists: !!row,
       })
+      if (this.canSubscribeToRowUpdates) {
+        this.$realtime.subscribe('row', {
+          table_id: this.table.id,
+          row_id: rowId,
+        })
+      }
       this.getRootModal().show(...args)
     },
-    hide(...args) {
+    hidden(...args) {
+      if (this.canSubscribeToRowUpdates) {
+        this.$realtime.unsubscribe('row', {
+          table_id: this.table.id,
+          row_id: this.rowId,
+        })
+      }
       this.$store.dispatch('rowModal/clear', { componentId: this._uid })
-      this.getRootModal().hide(...args)
+      this.$emit('hidden', { row: this.row })
     },
     /**
      * Because the modal can't update values by himself, an event will be called to

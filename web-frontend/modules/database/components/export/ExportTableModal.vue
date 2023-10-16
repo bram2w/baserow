@@ -1,5 +1,5 @@
 <template>
-  <Modal @hidden="stopPollIfRunning()">
+  <Modal @hidden="hidden">
     <div v-if="loadingViews" class="loading-overlay"></div>
     <h2 class="box__title">Export {{ table.name }}</h2>
     <Error :error="error"></Error>
@@ -89,9 +89,8 @@ export default {
       })
       return show
     },
-    hide(...args) {
+    hidden(...args) {
       this.stopPollIfRunning()
-      return modal.methods.hide.call(this, ...args)
     },
     async fetchViews() {
       if (this.table._.selected) {

@@ -8,7 +8,7 @@ from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.table.object_scopes import DatabaseTableObjectScopeType
 from baserow.contrib.database.table.operations import ReadDatabaseTableOperationType
 from baserow.contrib.database.table.tasks import (
-    unsubscribe_user_from_table_currently_subscribed_to,
+    unsubscribe_user_from_tables_when_removed_from_workspace,
 )
 from baserow.core import signals as core_signals
 from baserow.core.utils import generate_hash
@@ -92,11 +92,9 @@ def tables_reordered(sender, database, order, user, **kwargs):
 
 
 @receiver(core_signals.workspace_user_deleted)
-def user_deleted_unsubscribe_from_page(
-    sender, workspace_user_id, workspace_user, user, **kwargs
-):
+def workspace_user_deleted(sender, workspace_user_id, workspace_user, user, **kwargs):
     transaction.on_commit(
-        lambda: unsubscribe_user_from_table_currently_subscribed_to.delay(
+        lambda: unsubscribe_user_from_tables_when_removed_from_workspace.delay(
             workspace_user.user_id, workspace_user.workspace_id
         )
     )

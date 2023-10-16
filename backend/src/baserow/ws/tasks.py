@@ -3,14 +3,23 @@ from typing import Any, Dict, Iterable, List, Optional
 from baserow.config.celery import app
 
 
-async def closing_group_send(channel_layer, channel, message):
+async def send_message_to_channel_group(
+    channel_layer, channel_group_name: str, message: dict
+):
     """
+    Sends a message to a channel group.
+
     All channel_layer.*send* methods must have close_pools called after due to a
     bug in channels 4.0.0 as recommended on
     https://github.com/django/channels_redis/issues/332
+
+    :param channel_layer: The channel layer instance to use.
+    :param channel_group_name: The channel group name identifying the channel group
+        that should receive the message.
+    :param messsage: JSON to send.
     """
 
-    await channel_layer.group_send(channel, message)
+    await channel_layer.group_send(channel_group_name, message)
     if hasattr(channel_layer, "close_pools"):
         # The inmemory channel layer in tests does not have this function.
         await channel_layer.close_pools()
@@ -42,7 +51,7 @@ def broadcast_to_users(
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(closing_group_send)(
+    async_to_sync(send_message_to_channel_group)(
         channel_layer,
         "users",
         {
@@ -138,7 +147,7 @@ def broadcast_to_users_individual_payloads(
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(closing_group_send)(
+    async_to_sync(send_message_to_channel_group)(
         channel_layer,
         "users",
         {
@@ -170,7 +179,7 @@ def broadcast_to_channel_group(self, workspace, payload, ignore_web_socket_id=No
     from channels.layers import get_channel_layer
 
     channel_layer = get_channel_layer()
-    async_to_sync(closing_group_send)(
+    async_to_sync(send_message_to_channel_group)(
         channel_layer,
         workspace,
         {

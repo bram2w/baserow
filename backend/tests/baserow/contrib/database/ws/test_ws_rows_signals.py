@@ -1,16 +1,21 @@
+from collections import OrderedDict
 from typing import Any, Dict, List
-from unittest.mock import patch
+from unittest.mock import call, patch
+
+from django.db import transaction
 
 import pytest
+from freezegun import freeze_time
 from rest_framework import serializers
 from rest_framework.fields import Field
 
+from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.registries import (
     RowMetadataType,
     row_metadata_registry,
 )
-from baserow.test_utils.helpers import register_instance_temporarily
+from baserow.test_utils.helpers import AnyInt, register_instance_temporarily
 
 
 @pytest.mark.django_db(transaction=True)
@@ -191,3 +196,116 @@ def test_row_orders_recalculated(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][0] == f"table-{table.id}"
     assert args[0][1]["type"] == "row_orders_recalculated"
     assert args[0][1]["table_id"] == table.id
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_rows_history_updated(mock_broadcast_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    model = table.get_model()
+
+    row1 = model.objects.create(**{f"field_{field.id}": "row 1"})
+    row2 = model.objects.create(**{f"field_{field.id}": "row 2"})
+
+    rows_values = [
+        {
+            "id": row1.id,
+            f"field_{field.id}": "row 1 updated",
+        },
+        {
+            "id": row2.id,
+            f"field_{field.id}": "row 2 updated",
+        },
+    ]
+
+    with freeze_time("2023-03-30 00:00:00"), transaction.atomic():
+        UpdateRowsActionType.do(user, table, rows_values, model)
+
+    table_and_row_broadcast_calls = [
+        call.delay(
+            f"table-{table.id}",
+            {
+                "type": "rows_updated",
+                "table_id": table.id,
+                "rows_before_update": [
+                    OrderedDict(
+                        [
+                            ("id", row1.id),
+                            ("order", "1.00000000000000000000"),
+                            (f"field_{field.id}", "row 1"),
+                        ]
+                    ),
+                    OrderedDict(
+                        [
+                            ("id", row2.id),
+                            ("order", "1.00000000000000000000"),
+                            (f"field_{field.id}", "row 2"),
+                        ]
+                    ),
+                ],
+                "rows": [
+                    OrderedDict(
+                        [
+                            ("id", row1.id),
+                            ("order", "1.00000000000000000000"),
+                            (f"field_{field.id}", "row 1 updated"),
+                        ]
+                    ),
+                    OrderedDict(
+                        [
+                            ("id", row2.id),
+                            ("order", "1.00000000000000000000"),
+                            (f"field_{field.id}", "row 2 updated"),
+                        ]
+                    ),
+                ],
+                "metadata": {},
+            },
+            None,
+        ),
+        call.delay(
+            f"table-{table.id}-row-{row1.id}",
+            {
+                "type": "row_history_updated",
+                "row_history_entry": {
+                    "id": AnyInt(),
+                    "action_type": "update_rows",
+                    "user": OrderedDict([("id", user.id), ("name", user.first_name)]),
+                    "timestamp": "2023-03-30T00:00:00Z",
+                    "before": {f"field_{field.id}": "row 1"},
+                    "after": {f"field_{field.id}": "row 1 updated"},
+                    "fields_metadata": {
+                        f"field_{field.id}": {"id": field.id, "type": "text"}
+                    },
+                },
+                "table_id": table.id,
+                "row_id": row1.id,
+            },
+            None,
+        ),
+        call.delay(
+            f"table-{table.id}-row-{row2.id}",
+            {
+                "type": "row_history_updated",
+                "row_history_entry": {
+                    "id": AnyInt(),
+                    "action_type": "update_rows",
+                    "user": OrderedDict([("id", user.id), ("name", user.first_name)]),
+                    "timestamp": "2023-03-30T00:00:00Z",
+                    "before": {f"field_{field.id}": "row 2"},
+                    "after": {f"field_{field.id}": "row 2 updated"},
+                    "fields_metadata": {
+                        f"field_{field.id}": {"id": field.id, "type": "text"}
+                    },
+                },
+                "table_id": table.id,
+                "row_id": row2.id,
+            },
+            None,
+        ),
+    ]
+
+    assert mock_broadcast_channel_group.mock_calls == table_and_row_broadcast_calls
