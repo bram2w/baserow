@@ -59,4 +59,4 @@ class RowHistory(models.Model):
 
     class Meta:
         ordering = ("-action_timestamp", "-id")
-        indexes = [models.Index(fields=["table", "row_id", "-action_timestamp"])]
+        indexes = [models.Index(fields=["table", "row_id", "-action_timestamp", "-id"])]
