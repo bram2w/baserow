@@ -26,7 +26,7 @@
         icon="iconoir-warning-triangle"
         simple
         :title="$t(`memberRolesTab.${translationPrefix}.warningTitle`)"
-        >{{ $t(`memberRolesTab.${translationPrefix}.warningMessage`) }}
+        ><p>{{ $t(`memberRolesTab.${translationPrefix}.warningMessage`) }}</p>
       </Alert>
       <MemberRolesMembersList
         :role-assignments="roleAssignments"

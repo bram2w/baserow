@@ -51,11 +51,11 @@
     <FormElement v-if="destinationPage" class="control">
       <template v-if="parametersInError">
         <Alert type="error" minimal>
-          <div class="margin-bottom-1">
+          <p>
             {{ $t('linkElementForm.paramsInErrorDescription') }}
-          </div>
+          </p>
           <Button
-            class="link-element-form__reset-button"
+            class="link-element-form__reset-button margin-top-1"
             type="error"
             size="tiny"
             @click.prevent="updatePageParameters"

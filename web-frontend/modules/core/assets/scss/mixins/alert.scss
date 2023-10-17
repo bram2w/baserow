@@ -1,48 +1,54 @@
-@mixin alert-style($background, $border, $title, $text, $icon-border) {
+@mixin alert-style(
+  $background,
+  $border-color,
+  $title-color,
+  $text-color,
+  $icon-border,
+  $hover-color
+) {
   background-color: $background;
-  border-color: $border;
+  border-color: $border-color;
 
-  .alert__icon {
-    border-color: $icon-border;
-  }
-
-  .alert__title {
-    color: $title;
-  }
-
-  .alert__content {
-    color: $text;
-  }
-
-  .alert__close {
-    color: $title;
-
-    &:hover {
-      color: $text;
+  &:not(.alert--simple) {
+    .alert__icon {
+      color: $title-color;
     }
   }
 
-  &.alert--minimal {
-    white-space: normal;
-    margin: 16px 0;
-    padding: 14px;
-    width: inherit;
+  .alert__title {
+    color: $title-color;
+  }
+
+  .alert__content {
+    color: $text-color;
+
+    p {
+      color: inherit;
+    }
+  }
+
+  .alert__close {
+    color: $title-color;
+
+    &:hover {
+      color: $hover-color;
+    }
   }
 
   &.alert--simple {
     background-color: $white;
-    border-color: $color-neutral-200;
+    border-color: $palette-neutral-400;
 
     .alert__title {
-      color: $color-neutral-900;
+      color: $palette-neutral-1300;
     }
 
     .alert__content {
-      color: $color-neutral-700;
+      color: $palette-neutral-1000;
     }
 
     .alert__close {
-      color: $color-neutral-500;
+      color: $palette-neutral-700;
     }
   }
 }

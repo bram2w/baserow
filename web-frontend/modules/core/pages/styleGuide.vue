@@ -1,7 +1,7 @@
 <template>
   <div>
-    <Toasts></Toasts>
     <div class="style-guide__wrapper">
+      <Toasts></Toasts>
       <div class="style-guide">
         <div class="margin-bottom-3">
           <h1>&lt;h1&gt;Heading 1&lt;/h1&gt;</h1>
@@ -436,63 +436,91 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert title="Toast message" icon="iconoir-warning-triangle">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent lobortis feugiat erat, nec volutpat nulla tincidunt
-            vel. In hac habitasse platea dictumst. Aenean fringilla lacus nunc,
-            non pharetra mauris pulvinar lacinia. Aenean ut sem lacinia,
-            sagittis quam sed, pellentesque orci. Aenean non consequat mi. Nunc
-            laoreet ligula a nunc eleifend, nec accumsan felis euismod.
+          <Alert title="Toast message" close-button>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
+              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
+              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
+              lacinia, sagittis quam sed, pellentesque orci. Aenean non
+              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
+              felis euismod.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
             type="success"
             icon="iconoir-warning-triangle"
+            close-button
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
             type="warning"
             icon="iconoir-warning-triangle"
+            close-button
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
             type="error"
             icon="iconoir-warning-triangle"
+            close-button
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message" simple icon="iconoir-warning-triangle">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+
+          <Alert
+            title="Toast message"
+            simple
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert title="Toast message" simple>
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
@@ -500,10 +528,12 @@
             simple
             icon="iconoir-warning-triangle"
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
@@ -512,10 +542,12 @@
             shadow
             icon="iconoir-warning-triangle"
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
@@ -524,10 +556,28 @@
             shadow
             icon="iconoir-warning-triangle"
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </Alert>
+
+          <Alert
+            simple
+            type="primary"
+            icon="iconoir-warning-triangle"
+            title="Workspace invitation"
+          >
+            <p>Lorem ipsum dolor sit amet bla</p>
+            <p>Hello Mat, please join this workspace</p>
+            <div class="margin-top-1">
+              <a class="button button--error dashboard__alert-button">Reject</a>
+              <a class="button button--success dashboard__alert-button"
+                >Accept</a
+              >
+            </div>
           </Alert>
         </div>
         <div

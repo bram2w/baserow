@@ -15,7 +15,7 @@
         :title="$t('integrationCreateEditModal.warningTitle')"
         simple
       >
-        {{ actualIntegrationType.warning }}
+        <p>{{ actualIntegrationType.warning }}</p>
       </Alert>
       <IntegrationEditForm
         ref="form"

@@ -4,7 +4,7 @@
     type="error"
     icon="iconoir-warning-triangle"
     :title="error.title"
-    >{{ error.message }}</Alert
+    ><p>{{ error.message }}</p></Alert
   >
 </template>
 

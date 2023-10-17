@@ -7,7 +7,8 @@
     icon="iconoir-warning-triangle"
     :title="$t('permissionsUpdatedToast.title')"
     @close="close"
-    >{{ $t('permissionsUpdatedToast.content') }}
+  >
+    <p>{{ $t('permissionsUpdatedToast.content') }}</p>
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"

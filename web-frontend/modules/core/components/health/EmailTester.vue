@@ -16,7 +16,7 @@
         type="error"
         :title="testResult.error_type"
       >
-        <span>{{ testResult.error }}</span>
+        <p>{{ testResult.error }}</p>
         <pre class="email-tester__full-stack">{{ trimmedFullStack }}</pre>
       </Alert>
       <Alert v-else type="success" :title="$t('emailTester.success')"> </Alert>

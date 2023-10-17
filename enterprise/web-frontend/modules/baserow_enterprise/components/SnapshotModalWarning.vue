@@ -1,7 +1,7 @@
 <template>
-  <Alert type="warning" icon="iconoir-warning-triangle">{{
-    $t('snapshotModalWarning.message')
-  }}</Alert>
+  <Alert type="warning" icon="iconoir-warning-triangle">
+    <p>{{ $t('snapshotModalWarning.message') }}</p>
+  </Alert>
 </template>
 
 <script>

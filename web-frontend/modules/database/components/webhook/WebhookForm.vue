@@ -8,14 +8,12 @@
         icon="iconoir-warning-triangle"
         :title="$t('webhookForm.deactivated.title')"
       >
-        {{ $t('webhookForm.deactivated.content') }}
-        <p>
-          <a
-            class="button button--ghost margin-top-1"
-            @click="values.active = true"
-            >{{ $t('webhookForm.deactivated.activate') }}</a
-          >
-        </p>
+        <p>{{ $t('webhookForm.deactivated.content') }}</p>
+        <a
+          class="button button--ghost margin-top-1"
+          @click="values.active = true"
+          >{{ $t('webhookForm.deactivated.activate') }}</a
+        >
       </Alert>
       <div class="row">
         <div class="col col-12">
