@@ -53,6 +53,7 @@ export const actions = {
       const { data } = await RowHistoryService(this.$client).fetchAll({
         tableId,
         rowId,
+        limit: 30,
       })
       commit('ADD_ENTRIES', { entries: data.results })
       commit('SET_TOTAL_COUNT', data.count)
@@ -69,6 +70,7 @@ export const actions = {
         tableId,
         rowId,
         offset: getters.getCurrentCount,
+        limit: 30,
       })
       commit('ADD_ENTRIES', { entries: data.results })
       commit('SET_TOTAL_COUNT', data.count)
