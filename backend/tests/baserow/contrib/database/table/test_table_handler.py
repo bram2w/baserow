@@ -111,7 +111,7 @@ def test_create_database_minimum_table(send_mock, data_fixture):
     assert row.name == "Test"
 
     with pytest.raises(TypeError):
-        model.objects.create(does_not_exists=True)
+        model.objects.create(does_not_exist=True)
 
     assert model.objects.count() == 1
     row = model.objects.get(id=row.id)

@@ -25,3 +25,8 @@ ERROR_VIEW_HAS_NO_PUBLIC_FILE_FIELD = (
     HTTP_400_BAD_REQUEST,
     "The view has no public file field.",
 )
+ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST = (
+    "ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST",
+    HTTP_400_BAD_REQUEST,
+    "The provided form view field options condition group does not exists.",
+)

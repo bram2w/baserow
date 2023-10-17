@@ -10,20 +10,32 @@ from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    FormViewFieldOptionsConditionGroup,
 )
+
+
+class FormViewFieldOptionsConditionGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormViewFieldOptionsConditionGroup
+        fields = ("id", "filter_type")
+        extra_kwargs = {"id": {"read_only": False}}
 
 
 class FormViewFieldOptionsConditionSerializer(serializers.ModelSerializer):
     field = serializers.IntegerField(required=True, source="field_id")
+    group = serializers.IntegerField(required=False, allow_null=True, source="group_id")
 
     class Meta:
         model = FormViewFieldOptionsCondition
-        fields = ("id", "field", "type", "value")
+        fields = ("id", "field", "type", "value", "group")
         extra_kwargs = {"id": {"read_only": False}}
 
 
 class FormViewFieldOptionsSerializer(serializers.ModelSerializer):
     conditions = FormViewFieldOptionsConditionSerializer(many=True, required=False)
+    condition_groups = FormViewFieldOptionsConditionGroupSerializer(
+        many=True, required=False
+    )
 
     class Meta:
         model = FormViewFieldOptions
@@ -36,6 +48,7 @@ class FormViewFieldOptionsSerializer(serializers.ModelSerializer):
             "condition_type",
             "order",
             "conditions",
+            "condition_groups",
         )
 
 
@@ -58,6 +71,10 @@ class PublicFormViewFieldOptionsSerializer(FieldSerializer):
         help_text="If provided, then this value will be visible above the field input.",
     )
     conditions = FormViewFieldOptionsConditionSerializer(many=True, required=False)
+    condition_groups = FormViewFieldOptionsConditionGroupSerializer(
+        many=True, required=False
+    )
+    groups = FormViewFieldOptionsConditionGroupSerializer(many=True, required=False)
 
     class Meta:
         model = FormViewFieldOptions
@@ -70,6 +87,8 @@ class PublicFormViewFieldOptionsSerializer(FieldSerializer):
             "show_when_matching_conditions",
             "condition_type",
             "conditions",
+            "condition_groups",
+            "groups",
         )
 
     # @TODO show correct API docs discriminated by field type.

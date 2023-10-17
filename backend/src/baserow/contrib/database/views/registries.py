@@ -224,8 +224,17 @@ class ViewType(
                     "value": view_filter_type_registry.get(
                         view_filter.type
                     ).get_export_serialized_value(view_filter.value, cache),
+                    "group": view_filter.group_id,
                 }
                 for view_filter in view.viewfilter_set.all()
+            ]
+            serialized["filter_groups"] = [
+                {
+                    "id": filter_group.id,
+                    "filter_type": filter_group.filter_type,
+                    "parent_group": filter_group.parent_group_id,
+                }
+                for filter_group in view.filter_groups.all()
             ]
 
         if self.can_sort:
@@ -291,6 +300,7 @@ class ViewType(
             DEFAULT_OWNERSHIP_TYPE,
             ViewDecoration,
             ViewFilter,
+            ViewFilterGroup,
             ViewGroupBy,
             ViewSort,
         )
@@ -298,6 +308,7 @@ class ViewType(
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
             id_mapping["database_view_filters"] = {}
+            id_mapping["database_view_filter_groups"] = {}
             id_mapping["database_view_sortings"] = {}
             id_mapping["database_view_group_bys"] = {}
             id_mapping["database_view_decorations"] = {}
@@ -342,6 +353,9 @@ class ViewType(
         view_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
         filters = serialized_copy.pop("filters") if self.can_filter else []
+        filter_groups = (
+            serialized_copy.pop("filter_groups", []) if self.can_filter else []
+        )
         sortings = serialized_copy.pop("sortings") if self.can_sort else []
         group_bys = serialized_copy.pop("group_bys", []) if self.can_group_by else []
         decorations = (
@@ -351,6 +365,17 @@ class ViewType(
         id_mapping["database_views"][view_id] = view.id
 
         if self.can_filter:
+            for filter_group in filter_groups:
+                filter_group_copy = filter_group.copy()
+                filter_group_id = filter_group_copy.pop("id")
+                filter_group_copy["view_id"] = view.id
+                filter_group_object = ViewFilterGroup.objects.create(
+                    view=view, **filter_group_copy
+                )
+                id_mapping["database_view_filter_groups"][
+                    filter_group_id
+                ] = filter_group_object.id
+
             for view_filter in filters:
                 view_filter_type = view_filter_type_registry.get(view_filter["type"])
                 view_filter_copy = view_filter.copy()
@@ -363,6 +388,10 @@ class ViewType(
                 ] = view_filter_type.set_import_serialized_value(
                     view_filter_copy["value"], id_mapping
                 )
+                if view_filter.get("group", None):
+                    view_filter_copy["group_id"] = id_mapping[
+                        "database_view_filter_groups"
+                    ][view_filter_copy.pop("group")]
                 view_filter_object = ViewFilter.objects.create(
                     view=view, **view_filter_copy
                 )

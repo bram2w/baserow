@@ -3,6 +3,7 @@ import abc
 from baserow.contrib.database.table.operations import DatabaseTableOperationType
 from baserow.contrib.database.views.object_scopes import (
     DatabaseViewDecorationObjectScopeType,
+    DatabaseViewFilterGroupObjectScopeType,
     DatabaseViewFilterObjectScopeType,
     DatabaseViewGroupByObjectScopeType,
     DatabaseViewObjectScopeType,
@@ -17,6 +18,10 @@ class ViewOperationType(OperationType, abc.ABC):
 
 class ViewFilterOperationType(OperationType, abc.ABC):
     context_scope_name = DatabaseViewFilterObjectScopeType.type
+
+
+class ViewFilterGroupOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewFilterGroupObjectScopeType.type
 
 
 class ViewSortOperationType(OperationType, abc.ABC):
@@ -158,6 +163,22 @@ class UpdateViewFilterOperationType(ViewFilterOperationType):
 
 class DeleteViewFilterOperationType(ViewFilterOperationType):
     type = "database.table.view.filter.delete"
+
+
+class CreateViewFilterGroupOperationType(ViewOperationType):
+    type = "database.table.view.create_filter_group"
+
+
+class ReadViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.read"
+
+
+class UpdateViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.update"
+
+
+class DeleteViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.delete"
 
 
 class CreateViewDecorationOperationType(ViewOperationType):

@@ -26,7 +26,13 @@ from redis.exceptions import LockNotOwnedError
 from baserow.contrib.database.api.utils import get_include_exclude_field_ids
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.fields.exceptions import FieldNotInTable
-from baserow.contrib.database.fields.field_filters import FILTER_TYPE_AND, FilterBuilder
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    AdvancedFilterBuilder,
+    AnnotatedQ,
+    FilterBuilder,
+    GroupedFiltersAdapter,
+)
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.operations import ReadFieldOperationType
@@ -37,10 +43,12 @@ from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
+    CreateViewFilterGroupOperationType,
     CreateViewFilterOperationType,
     CreateViewGroupByOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
+    DeleteViewFilterGroupOperationType,
     DeleteViewFilterOperationType,
     DeleteViewGroupByOperationType,
     DeleteViewOperationType,
@@ -56,6 +64,7 @@ from baserow.contrib.database.views.operations import (
     ReadAggregationsViewOperationType,
     ReadViewDecorationOperationType,
     ReadViewFieldOptionsOperationType,
+    ReadViewFilterGroupOperationType,
     ReadViewFilterOperationType,
     ReadViewGroupByOperationType,
     ReadViewOperationType,
@@ -63,6 +72,7 @@ from baserow.contrib.database.views.operations import (
     ReadViewSortOperationType,
     UpdateViewDecorationOperationType,
     UpdateViewFieldOptionsOperationType,
+    UpdateViewFilterGroupOperationType,
     UpdateViewFilterOperationType,
     UpdateViewGroupByOperationType,
     UpdateViewOperationType,
@@ -98,6 +108,7 @@ from .exceptions import (
     ViewDoesNotExist,
     ViewDoesNotSupportFieldOptions,
     ViewFilterDoesNotExist,
+    ViewFilterGroupDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeNotAllowedForField,
     ViewGroupByDoesNotExist,
@@ -115,6 +126,7 @@ from .models import (
     View,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
     ViewGroupBy,
     ViewSort,
 )
@@ -165,6 +177,48 @@ class UpdatedViewWithChangedAttributes:
     updated_view_instance: View
     original_view_attributes: Dict[str, Any]
     new_view_attributes: Dict[str, Any]
+
+
+def get_q_from_view_filter(
+    view_filter: ViewFilter, table_model: "GeneratedTableModel"
+) -> Union[Q, AnnotatedQ]:
+    """
+    Returns a Q or an AnnotatedQ object based on the provided view filter.
+
+    :param view_filter: The view filter to convert to a Q object.
+    :param table_model: The table model for which the view filter should be
+        generated.
+    :return: A Q or AnnotatedQ object based on the provided view filter.
+    """
+
+    if view_filter.field_id not in table_model._field_objects:
+        raise ValueError(
+            f"The table model does not contain field {view_filter.field_id}."
+        )
+
+    field_object = table_model._field_objects[view_filter.field_id]
+    field_name = field_object["name"]
+    model_field = table_model._meta.get_field(field_name)
+    view_filter_type = view_filter_type_registry.get(view_filter.type)
+    return view_filter_type.get_filter(
+        field_name, view_filter.value, model_field, field_object["field"]
+    )
+
+
+class ViewGroupedFiltersAdapter(GroupedFiltersAdapter):
+    def __init__(self, instance: "View", model: "GeneratedTableModel", **kwargs):
+        super().__init__(instance, model)
+
+    @property
+    def filters(self):
+        return self.instance.viewfilter_set.all()
+
+    @property
+    def groups(self):
+        return self.instance.filter_groups.all()
+
+    def get_q_from_filter(self, _filter) -> Union[Q, AnnotatedQ]:
+        return get_q_from_view_filter(_filter, self.model)
 
 
 class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
@@ -499,7 +553,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             views = views.filter(content_type=content_type)
 
         if filters:
-            views = views.prefetch_related("viewfilter_set")
+            views = views.prefetch_related("viewfilter_set", "filter_groups")
 
         if sortings:
             views = views.prefetch_related("viewsort_set")
@@ -1191,33 +1245,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         for view_type in view_type_registry.get_all():
             view_type.after_field_update(updated_fields)
 
-    def get_view_filter_expressions(self, view: View, model: Type[GeneratedTableModel]):
-        """
-        Responsible for gathering a View's filter expressions.
-
-        :param view: The view where to fetch the fields from.
-        :param model: The generated model containing all fields.
-        :return: FilterBuilder object with the view's filter applied.
-        """
-
-        expressions_for_view_filter_type = []
-        for view_filter in view.viewfilter_set.all():
-            if view_filter.field_id not in model._field_objects:
-                raise ValueError(
-                    f"The table model does not contain field "
-                    f"{view_filter.field_id}."
-                )
-            field_object = model._field_objects[view_filter.field_id]
-            field_name = field_object["name"]
-            model_field = model._meta.get_field(field_name)
-            view_filter_type = view_filter_type_registry.get(view_filter.type)
-            expressions_for_view_filter_type.append(
-                view_filter_type.get_filter(
-                    field_name, view_filter.value, model_field, field_object["field"]
-                )
-            )
-        return expressions_for_view_filter_type
-
     def get_filter_builder(
         self, view: View, model: Type[GeneratedTableModel]
     ) -> FilterBuilder:
@@ -1233,12 +1260,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if not hasattr(model, "_field_objects"):
             raise ValueError("A queryset of the table model is required.")
 
-        filter_builder = FilterBuilder(filter_type=view.filter_type)
-        filter_expressions = self.get_view_filter_expressions(view, model)
-        for filter_expression in filter_expressions:
-            filter_builder.filter(filter_expression)
-
-        return filter_builder
+        adapter = ViewGroupedFiltersAdapter(view, model)
+        return AdvancedFilterBuilder(adapter).construct_filter_builder()
 
     def apply_filters(self, view: View, queryset: QuerySet) -> QuerySet:
         """
@@ -1329,6 +1352,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         field: Field,
         type_name: str,
         value: str,
+        filter_group_id: Optional[int] = None,
         primary_key: Optional[int] = None,
     ) -> ViewFilter:
         """
@@ -1341,6 +1365,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param type_name: The filter type, allowed values are the types in the
             view_filter_type_registry `equal`, `not_equal` etc.
         :param value: The value that the filter must apply to.
+        :param filter_group_id: An optional filter group id to add the filter to.
         :param primary_key: An optional primary key to give to the new view filter.
         :raises ViewFilterNotSupported: When the provided view does not support
             filtering.
@@ -1353,7 +1378,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         workspace = view.table.database.workspace
         CoreHandler().check_permissions(
-            user, CreateViewFilterOperationType.type, workspace=workspace, context=view
+            user,
+            CreateViewFilterOperationType.type,
+            workspace=workspace,
+            context=view,
         )
 
         # Check if view supports filtering
@@ -1376,12 +1404,16 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 f"The field {field.pk} does not belong to table {view.table.id}."
             )
 
+        if filter_group_id is not None:
+            self.get_filter_group(user, filter_group_id)
+
         view_filter = ViewFilter.objects.create(
             pk=primary_key,
             view=view,
             field=field,
             type=view_filter_type.type,
             value=value,
+            group_id=filter_group_id,
         )
 
         # Call view type hooks
@@ -1482,6 +1514,136 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_filter_deleted.send(
             self, view_filter_id=view_filter_id, view_filter=view_filter, user=user
         )
+
+    def get_filter_group(
+        self,
+        user: AbstractUser,
+        filter_group_id: int,
+        base_queryset: Optional[QuerySet] = None,
+    ) -> ViewFilterGroup:
+        """
+        Returns an existing view filter group by the given id.
+
+        :param user: The user on whose behalf the view filter is requested.
+        :param filter_group_id: The id of the view filter group to return.
+        :param base_queryset: The base queryset from where to select the view filter
+            object. This can for example be used to do a `select_related`.
+        :raises ViewFilterGroupDoesNotExist: The requested view does not exists.
+        :return: The requested view filter group instance.
+        """
+
+        if base_queryset is None:
+            base_queryset = ViewFilterGroup.objects
+
+        try:
+            filter_group = base_queryset.select_related(
+                "view__table__database__workspace"
+            ).get(pk=filter_group_id)
+        except ViewFilterGroup.DoesNotExist:
+            raise ViewFilterGroupDoesNotExist(
+                f"The view filter with id {filter_group_id} does not exist."
+            )
+
+        if TrashHandler.item_has_a_trashed_parent(
+            filter_group.view, check_item_also=True
+        ):
+            raise ViewFilterGroupDoesNotExist(
+                f"The view filter group with id {filter_group_id} does not exist."
+            )
+
+        workspace = filter_group.view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            ReadViewFilterGroupOperationType.type,
+            workspace=workspace,
+            context=filter_group,
+        )
+
+        return filter_group
+
+    def create_filter_group(
+        self, user: AbstractUser, view: View, filter_type: Optional[str] = None
+    ) -> ViewFilterGroup:
+        """
+        Creates a new view filter group.
+
+        :param user: The user on whose behalf the view filter group is created.
+        :param view: The view for which the filter group needs to be created.
+        :param filter_type: The filter type, allowed values are the types in the
+            view_group_type_registry `and`, `or`.
+        :return: The created view filter group instance.
+        """
+
+        workspace = view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            CreateViewFilterGroupOperationType.type,
+            workspace=workspace,
+            context=view,
+        )
+
+        attrs = {}
+        if filter_type is not None:
+            attrs["filter_type"] = filter_type
+
+        filter_group = ViewFilterGroup.objects.create(view=view, **attrs)
+
+        # view_group_created.send(self, view_group=view_group, user=user)
+
+        return filter_group
+
+    def update_filter_group(
+        self, user: AbstractUser, filter_group: ViewFilterGroup, filter_type: str
+    ) -> ViewFilterGroup:
+        """
+        Updates the values of an existing view filter group.
+
+        :param user: The user on whose behalf the view filter group is updated.
+        :param filter_group: The view filter group that needs to be updated.
+        :param filter_type: Indicates how filters in the group must be combined.
+        :return: The updated view filter group instance.
+        """
+
+        workspace = filter_group.view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            UpdateViewFilterGroupOperationType.type,
+            workspace=workspace,
+            context=filter_group,
+        )
+
+        filter_group.filter_type = filter_type
+        filter_group.save()
+
+        return filter_group
+
+    def delete_filter_group(self, user: AbstractUser, filter_group: ViewFilterGroup):
+        """
+        Deletes an existing view filter group.
+
+        :param user: The user on whose behalf the view filter is deleted.
+        :param filter_group: The view filter group instance that needs to
+            be deleted.
+        """
+
+        workspace = filter_group.view.table.database.workspace
+        CoreHandler().check_permissions(
+            user,
+            DeleteViewFilterGroupOperationType.type,
+            workspace=workspace,
+            context=filter_group,
+        )
+
+        # filter_group_id = view_group.id
+
+        filter_group.delete()
+
+        # view_group_deleted.send(
+        #     self,
+        #     filter_group_id=filter_group_id,
+        #     view_group=view_group,
+        #     user=user,
+        # )
 
     def get_view_order_bys(
         self,
@@ -3080,7 +3242,9 @@ class CachingPublicViewRowChecker:
         updated_field_ids: Optional[Iterable[int]] = None,
     ):
         self._public_views = (
-            table.view_set.filter(public=True).prefetch_related("viewfilter_set").all()
+            table.view_set.filter(public=True)
+            .prefetch_related("viewfilter_set", "filter_groups")
+            .all()
         )
         self._updated_field_ids = updated_field_ids
         self._views_with_filters = []

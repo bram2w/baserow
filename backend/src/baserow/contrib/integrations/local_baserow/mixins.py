@@ -44,12 +44,7 @@ class LocalBaserowTableServiceFilterableMixin:
         """
 
         if service.view:
-            view_filter_builder = FilterBuilder(filter_type=service.view.filter_type)
-            view_filter_expressions = ViewHandler().get_view_filter_expressions(
-                service.view, model
-            )
-            for view_filter_expression in view_filter_expressions:
-                view_filter_builder.filter(view_filter_expression)
+            view_filter_builder = ViewHandler().get_filter_builder(service.view, model)
             queryset = view_filter_builder.apply_to_queryset(queryset)
 
         service_filter_builder = FilterBuilder(filter_type=service.filter_type)

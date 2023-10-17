@@ -270,6 +270,7 @@ def test_to_baserow_database_export():
             "filter_type": "AND",
             "filters_disabled": False,
             "filters": [],
+            "filter_groups": [],
             "sortings": [],
             "decorations": [],
             "group_bys": [],

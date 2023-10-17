@@ -10,10 +10,12 @@ from baserow_premium.views.models import OWNERSHIP_TYPE_PERSONAL
 from baserow.contrib.database.views.operations import (
     CreateAndUsePersonalViewOperationType,
     CreateViewDecorationOperationType,
+    CreateViewFilterGroupOperationType,
     CreateViewFilterOperationType,
     CreateViewGroupByOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
+    DeleteViewFilterGroupOperationType,
     DeleteViewFilterOperationType,
     DeleteViewGroupByOperationType,
     DeleteViewOperationType,
@@ -28,6 +30,7 @@ from baserow.contrib.database.views.operations import (
     ReadAggregationsViewOperationType,
     ReadViewDecorationOperationType,
     ReadViewFieldOptionsOperationType,
+    ReadViewFilterGroupOperationType,
     ReadViewFilterOperationType,
     ReadViewGroupByOperationType,
     ReadViewOperationType,
@@ -35,6 +38,7 @@ from baserow.contrib.database.views.operations import (
     RestoreViewOperationType,
     UpdateViewDecorationOperationType,
     UpdateViewFieldOptionsOperationType,
+    UpdateViewFilterGroupOperationType,
     UpdateViewFilterOperationType,
     UpdateViewGroupByOperationType,
     UpdateViewOperationType,
@@ -103,6 +107,10 @@ class ViewOwnershipPermissionManagerType(PermissionManagerType):
             ListViewSortOperationType.type,
             ListViewGroupByOperationType.type,
             ReadViewFieldOptionsOperationType.type,
+            CreateViewFilterGroupOperationType.type,
+            ReadViewFilterGroupOperationType.type,
+            UpdateViewFilterGroupOperationType.type,
+            DeleteViewFilterGroupOperationType.type,
         ]
         # This list controls operations that for personal views, should only be allowed
         # to be performed by the creator of the personal view BUT should only be

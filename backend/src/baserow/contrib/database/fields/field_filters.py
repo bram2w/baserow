@@ -1,16 +1,26 @@
 import re
-from typing import Any, Dict, Union
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from django.db.models import BooleanField, Q
 from django.db.models.expressions import F, Value
 from django.db.models.functions import Mod
 
+from opentelemetry import trace
+
 from baserow.contrib.database.formula.expression_generator.django_expressions import (
     FileNameContainsExpr,
 )
+from baserow.core.telemetry.utils import baserow_trace_methods
+
+if TYPE_CHECKING:
+    from baserow.contrib.database.table.models import GeneratedTableModel
 
 FILTER_TYPE_AND = "AND"
 FILTER_TYPE_OR = "OR"
+
+
+tracer = trace.get_tracer(__name__)
 
 
 class AnnotatedQ:
@@ -62,23 +72,30 @@ class FilterBuilder:
         if filter_type not in [FILTER_TYPE_AND, FILTER_TYPE_OR]:
             raise ValueError(f"Unknown filter type {filter_type}.")
 
-        self._annotation = {}
+        self._annotation: Dict[str, Any] = {}
         self._q_filters = Q()
         self._filter_type = filter_type
 
-    def filter(self, q: OptionallyAnnotatedQ) -> "FilterBuilder":
+    def filter(
+        self, q: Union[Q, OptionallyAnnotatedQ, "FilterBuilder"]
+    ) -> "FilterBuilder":
         """
-        Adds a Q or AnnotatedQ filter into this builder to be joined together with
-        existing filters based on the builders `filter_type`.
+        Adds a Q, an AnnotatedQ or another FilterBuilder filter into this
+        builder to be joined together with existing filters based on the
+        builders `filter_type`.
 
-        Annotations on provided AnnotatedQ's are merged together with any previously
-        supplied annotations via dict unpacking and merging.
+        Annotations on provided AnnotatedQ's are merged together with any
+        previously supplied annotations via dict unpacking and merging.
 
-        :param q: A Q or Annotated Q
+        :param q: One of compatible object types that provide Q expressions to
+            be joined together.
         :return: The updated FilterBuilder with the provided filter applied.
         """
 
-        if isinstance(q, AnnotatedQ):
+        if isinstance(q, FilterBuilder):
+            self._annotate(q._annotation)
+            self._filter(q._q_filters)
+        elif isinstance(q, AnnotatedQ):
             self._annotate(q.annotation)
             self._filter(q.q)
         else:
@@ -98,10 +115,10 @@ class FilterBuilder:
 
         return queryset.annotate(**self._annotation).filter(self._q_filters)
 
-    def _annotate(self, annotation_dict: Dict[str, Any]) -> "FilterBuilder":
+    def _annotate(self, annotation_dict: Dict[str, Any]):
         self._annotation = {**self._annotation, **annotation_dict}
 
-    def _filter(self, q_filter: Q) -> "FilterBuilder":
+    def _filter(self, q_filter: Q):
         if self._filter_type == FILTER_TYPE_AND:
             self._q_filters &= q_filter
         elif self._filter_type == FILTER_TYPE_OR:
@@ -152,3 +169,122 @@ def is_even_and_whole_number_filter(
         annotation={f"{field_name}_is_even_and_whole": Mod(F(f"{field_name}"), 2)},
         q={f"{field_name}_is_even_and_whole": 0},
     )
+
+
+class FilterGroupNode:
+    """
+    Utility class to construct a tree made of filters and groups of filters.
+    """
+
+    def __init__(
+        self,
+        filter_builder: FilterBuilder,
+        parent: Optional["FilterGroupNode"] = None,
+    ):
+        self.filter_builder = filter_builder
+        self.parent = parent
+        self.children: List["FilterGroupNode"] = []
+        if parent:
+            parent.children.append(self)
+
+
+class GroupedFiltersAdapter(ABC):
+    """
+    An adapter class which provides a way to get a list of filters and groups
+    to construct a AdvancedFilterBuilder from.
+    """
+
+    def __init__(self, instance: any, model: "GeneratedTableModel", **kwargs):
+        self.instance = instance
+        self.model = model
+
+    @property
+    @abstractmethod
+    def filters(self):
+        """Returns a list of filters."""
+
+    @property
+    @abstractmethod
+    def groups(self):
+        """Returns a list of groups."""
+
+    @property
+    def filter_type(self):
+        return self.instance.filter_type
+
+    @abstractmethod
+    def get_q_from_filter(self, _filter) -> Union[Q, AnnotatedQ]:
+        """
+        Returns one of the compatible types to be applied to a filter builder
+        starting from a filter.
+        """
+
+
+class AdvancedFilterBuilder(metaclass=baserow_trace_methods(tracer)):
+    """
+    This utility class constructs a filter builder using an instance of
+    GroupedFiltersAdapter. While the FilterBuilder class combines filters using
+    only a single AND or OR operation, this class takes it a step further. It
+    can arrange different filter groups into a tree structure, where each group
+    has its own distinct filter type. This class ensures that the filters and
+    the annotations are applied in the correct order.
+    """
+
+    def __init__(self, adapter: GroupedFiltersAdapter):
+        self.adapter = adapter
+
+    def construct_filter_builder(self) -> FilterBuilder:
+        """
+        Constructs a filter builder for the provided instance and model.
+        This method reconstructs the tree of filters in memory and applied
+        the filters in the correct order.
+
+        :return: The created filter builder.
+        """
+
+        adapter = self.adapter
+        root_filter_builder = FilterBuilder(filter_type=adapter.filter_type)
+        root_node = FilterGroupNode(root_filter_builder, parent=None)
+        groups_by_id = {None: root_node}
+
+        # Construct the tree of filter groups from the database so we can
+        # later apply filters in the correct order.
+        # NOTE: This code assumes that groups are returned with parent groups
+        # before their children.
+
+        for group in adapter.groups:
+            parent_node = groups_by_id[group.parent_group_id]
+            group_filter_builder = FilterBuilder(filter_type=group.filter_type)
+            groups_by_id[group.id] = FilterGroupNode(
+                group_filter_builder, parent=parent_node
+            )
+
+        # At first, apply the filters to all the filter builder groups. The order
+        # does not matter here because the filters in the same groups are always
+        # combined with the same filter type.
+        for _filter in adapter.filters:
+            q_filter = self.adapter.get_q_from_filter(_filter)
+
+            group_node = groups_by_id[_filter.group_id]
+            group_filter_builder = group_node.filter_builder
+            group_filter_builder.filter(q_filter)
+
+        # recursively construct the filter builder from the tree of filter groups.
+        return self._construct_filter_builder_from_tree(root_node)
+
+    def _construct_filter_builder_from_tree(
+        self, node: FilterGroupNode
+    ) -> FilterBuilder:
+        """
+        Constructs a filter builder from a tree of FilterGroupNodes recursively.
+        It first apply all the filters to the leaves of the tree, and then
+        combines the filter builders in the correct order.
+        """
+
+        filter_builder = node.filter_builder
+        if node.children:
+            for child in node.children:
+                child_filter_builder = self._construct_filter_builder_from_tree(child)
+                filter_builder.filter(child_filter_builder)
+
+        return filter_builder

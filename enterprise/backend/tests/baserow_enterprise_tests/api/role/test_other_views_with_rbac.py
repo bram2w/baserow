@@ -349,3 +349,58 @@ def test_list_views_doesnt_include_personal_views_the_user_used_to_have(data_fix
     assert {v.id for v in user_views} == {
         collab_view.id,
     }
+
+
+VIEW_FILTER_RBAC_TESTS_PRAMS = [
+    ("VIEWER", OWNERSHIP_TYPE_PERSONAL, HTTP_200_OK),
+    ("EDITOR", OWNERSHIP_TYPE_COLLABORATIVE, HTTP_401_UNAUTHORIZED),
+    ("BUILDER", OWNERSHIP_TYPE_COLLABORATIVE, HTTP_200_OK),
+]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.view_ownership
+@pytest.mark.parametrize(
+    "role,ownership_type,expected_status_code", VIEW_FILTER_RBAC_TESTS_PRAMS
+)
+def test_viewer_can_create_filters_and_filter_groups_in_personal_views(
+    api_client, data_fixture, role, ownership_type, expected_status_code
+):
+    workspace = data_fixture.create_workspace()
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        workspace=workspace,
+    )
+    table = data_fixture.create_database_table(user)
+    field = data_fixture.create_text_field(table=table)
+    viewer = RoleAssignmentHandler().get_role_by_uid(role)
+    RoleAssignmentHandler().assign_role(
+        user, table.database.workspace, role=viewer, scope=table
+    )
+    view = data_fixture.create_grid_view(
+        user, table=table, created_by=user, ownership_type=ownership_type
+    )
+    response = api_client.post(
+        reverse("api:database:views:list_filter_groups", kwargs={"view_id": view.id}),
+        {"filter_type": "OR"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == expected_status_code
+    group_id = None
+    if expected_status_code == HTTP_200_OK:
+        assert response.json()["filter_type"] == "OR"
+        group_id = response.json()["id"]
+
+    response = api_client.post(
+        reverse("api:database:views:list_filters", kwargs={"view_id": view.id}),
+        {"field": field.id, "type": "equal", "value": "test", "group": group_id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == expected_status_code
+    if expected_status_code == HTTP_200_OK:
+        assert response.json()["id"] is not None
+        assert response.json()["group"] == group_id

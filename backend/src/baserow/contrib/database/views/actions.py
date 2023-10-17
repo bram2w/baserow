@@ -55,6 +55,7 @@ class CreateViewFilterActionType(UndoableActionType):
         view_filter_id: int
         filter_type: str
         filter_value: str
+        filter_group_id: Optional[int] = None
 
     @classmethod
     def do(
@@ -64,6 +65,7 @@ class CreateViewFilterActionType(UndoableActionType):
         field: Field,
         filter_type: str,
         filter_value: str,
+        filter_group_id: Optional[int] = None,
     ) -> ViewFilter:
         """
         Creates a new filter for the provided view.
@@ -78,10 +80,11 @@ class CreateViewFilterActionType(UndoableActionType):
         must be compared to the filter's value.
         :param filter_value: The filter value that must be
         compared to the field's value.
+        :param filter_group_id: The id of the filter group to add the filter to.
         """
 
         view_filter = ViewHandler().create_filter(
-            user, view, field, filter_type, filter_value
+            user, view, field, filter_type, filter_value, filter_group_id
         )
 
         workspace = view.table.database.workspace
@@ -97,6 +100,7 @@ class CreateViewFilterActionType(UndoableActionType):
             view_filter.id,
             filter_type,
             filter_value,
+            filter_group_id,
         )
         cls.register_action(user, params, cls.scope(view.id), workspace)
         return view_filter
@@ -123,6 +127,7 @@ class CreateViewFilterActionType(UndoableActionType):
             field,
             params.filter_type,
             params.filter_value,
+            params.filter_group_id,
             params.view_filter_id,
         )
 
@@ -271,6 +276,7 @@ class DeleteViewFilterActionType(UndoableActionType):
         view_filter_id: int
         filter_type: str
         filter_value: str
+        filter_group_id: Optional[int] = None
 
     @classmethod
     def do(
@@ -310,6 +316,7 @@ class DeleteViewFilterActionType(UndoableActionType):
             view_filter_id,
             view_filter_type,
             view_filter_value,
+            view_filter.group_id,
         )
         workspace = view_filter.view.table.database.workspace
         cls.register_action(
@@ -337,6 +344,7 @@ class DeleteViewFilterActionType(UndoableActionType):
             field,
             params.filter_type,
             params.filter_value,
+            params.filter_group_id,
             params.view_filter_id,
         )
 

@@ -34,6 +34,11 @@ ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD = (
     HTTP_400_BAD_REQUEST,
     "The filter {e.filter_type} is not compatible with field type {e.field_type}.",
 )
+ERROR_VIEW_FILTER_GROUP_DOES_NOT_EXIST = (
+    "ERROR_VIEW_FILTER_GROUP_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view filter group does not exist.",
+)
 ERROR_VIEW_SORT_DOES_NOT_EXIST = (
     "ERROR_VIEW_SORT_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,

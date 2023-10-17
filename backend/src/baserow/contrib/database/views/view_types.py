@@ -1,11 +1,11 @@
 from collections import defaultdict
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.urls import include, path
 
 from rest_framework.serializers import PrimaryKeyRelatedField
@@ -13,7 +13,11 @@ from rest_framework.serializers import PrimaryKeyRelatedField
 from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
 from baserow.contrib.database.api.views.form.errors import (
+    ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+)
+from baserow.contrib.database.api.views.form.exceptions import (
+    FormViewFieldOptionsConditionGroupDoesNotExist,
 )
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
@@ -44,6 +48,7 @@ from .models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    FormViewFieldOptionsConditionGroup,
     GalleryView,
     GalleryViewFieldOptions,
     GridView,
@@ -562,6 +567,7 @@ class FormViewType(ViewType):
     }
     api_exceptions_map = {
         FormViewFieldTypeIsNotSupported: ERROR_FORM_VIEW_FIELD_TYPE_IS_NOT_SUPPORTED,
+        FormViewFieldOptionsConditionGroupDoesNotExist: ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST,
     }
 
     def get_api_urls(self):
@@ -597,6 +603,269 @@ class FormViewType(ViewType):
 
         return field_options
 
+    def _prepare_new_condition_group(self, updated_field_option_instance, group):
+        return FormViewFieldOptionsConditionGroup(
+            field_option=updated_field_option_instance,
+            filter_type=group["filter_type"],
+        )
+
+    def _group_exists_and_matches_field(self, existing_group, numeric_field_id):
+        return (
+            existing_group is not None
+            and existing_group.field_option.field_id == numeric_field_id
+        )
+
+    def _prepare_condition_groups(
+        self,
+        field_options: Dict[str, Any],
+        updated_field_options_by_field_id: Dict[int, FormViewFieldOptions],
+        existing_condition_groups: Dict[int, FormViewFieldOptionsConditionGroup],
+    ) -> Tuple[
+        List[int],
+        List[FormViewFieldOptionsConditionGroup],
+        List[FormViewFieldOptionsConditionGroup],
+        List[int],
+    ]:
+        """
+        Figures out which condition groups need to be created, updated or deleted in
+        order to match the provided field options.
+        """
+
+        groups_to_create_temp_ids = []
+        groups_to_create = []
+        groups_to_update = []
+        group_ids_to_delete = set(existing_condition_groups.keys())
+
+        for field_id, options in field_options.items():
+            if "condition_groups" not in options:
+                continue
+
+            numeric_field_id = int(field_id)
+            updated_field_option_instance = updated_field_options_by_field_id[
+                numeric_field_id
+            ]
+
+            for group in options["condition_groups"]:
+                existing_group = existing_condition_groups.get(group["id"], None)
+                if self._group_exists_and_matches_field(
+                    existing_group, numeric_field_id
+                ):
+                    existing_group.filter_type = group["filter_type"]
+                    groups_to_update.append(existing_group)
+                    group_ids_to_delete.remove(existing_group.id)
+                else:
+                    new_condition_group = self._prepare_new_condition_group(
+                        updated_field_option_instance, group
+                    )
+                    groups_to_create_temp_ids.append(group["id"])
+                    groups_to_create.append(new_condition_group)
+
+        return (
+            groups_to_create_temp_ids,
+            groups_to_create,
+            groups_to_update,
+            group_ids_to_delete,
+        )
+
+    def _update_field_options_condition_groups(
+        self,
+        field_options: Dict[str, Any],
+        updated_field_options_by_field_id: Dict[int, FormViewFieldOptions],
+        existing_condition_groups: Dict[int, FormViewFieldOptionsConditionGroup],
+    ) -> Dict[int, FormViewFieldOptionsConditionGroup]:
+        """
+        Updates the condition groups for the specified field options. Based on
+        the new provided field options and the existing groups, this function
+        figures out which groups need to be created, updated or deleted in order
+        to match the options provided.
+
+        :param field_options: The field options that are being updated.
+        :param updated_field_options_by_field_id: A map containing the updated field
+            options by field id.
+        :param existing_condition_groups: A map containing the existing condition
+            groups by id.
+        :return: A map between the condition groups and their temporary id.
+        """
+
+        (
+            groups_to_create_temp_ids,
+            groups_to_create,
+            groups_to_update,
+            group_ids_to_delete,
+        ) = self._prepare_condition_groups(
+            field_options, updated_field_options_by_field_id, existing_condition_groups
+        )
+
+        groups_created = []
+        if len(groups_to_create) > 0:
+            groups_created = FormViewFieldOptionsConditionGroup.objects.bulk_create(
+                groups_to_create
+            )
+
+        if len(groups_to_update) > 0:
+            FormViewFieldOptionsConditionGroup.objects.bulk_update(
+                groups_to_update, ["filter_type"]
+            )
+
+        if len(group_ids_to_delete) > 0:
+            FormViewFieldOptionsConditionGroup.objects.filter(
+                id__in=group_ids_to_delete
+            ).delete()
+
+        # The map contains the temporary ids for the newly created groups, so
+        # that we can later map filters to the correct group.
+        condition_group_ids_map = {
+            **{
+                groups_to_create_temp_ids[i]: groups_created[i]
+                for i in range(len(groups_created))
+            },
+            **{group.id: group for group in groups_to_update},
+        }
+
+        return condition_group_ids_map
+
+    def _prepare_condition_update(self, existing_condition, condition, group_id):
+        existing_condition.field_id = condition["field"]
+        existing_condition.type = condition["type"]
+        existing_condition.value = condition["value"]
+        existing_condition.group_id = group_id
+
+    def _prepare_new_condition(
+        self, updated_field_option_instance, condition, group_id
+    ) -> FormViewFieldOptionsCondition:
+        return FormViewFieldOptionsCondition(
+            field_option=updated_field_option_instance,
+            field_id=condition["field"],
+            type=condition["type"],
+            value=condition["value"],
+            group_id=group_id,
+        )
+
+    def _get_group_id(self, condition, condition_group_id_map):
+        group_id = condition.get("group", None)
+        if group_id is None:
+            return None
+        elif group_id in condition_group_id_map:
+            return condition_group_id_map[group_id].id
+        else:
+            raise FormViewFieldOptionsConditionGroupDoesNotExist(
+                "Invalid filter group id."
+            )
+
+    def _condition_exists_and_matches_field(self, existing_condition, numeric_field_id):
+        return (
+            existing_condition is not None
+            and existing_condition.field_option.field_id == numeric_field_id
+        )
+
+    def _prepare_conditions(
+        self,
+        field_options: Dict[str, Any],
+        updated_field_options_by_field_id,
+        existing_conditions: Dict[int, FormViewFieldOptionsCondition],
+        condition_group_id_map,
+        table_id: int,
+        table_field_ids: Set[int],
+    ) -> Tuple[
+        List[FormViewFieldOptionsCondition],
+        List[FormViewFieldOptionsCondition],
+        List[int],
+    ]:
+        """
+        Figures out which conditions need to be created, updated or deleted in
+        order to match the options provided.
+        """
+
+        conditions_to_create = []
+        conditions_to_update = []
+        condition_ids_to_delete = set(existing_conditions.keys())
+
+        for field_id, options in field_options.items():
+            if "conditions" not in options:
+                continue
+
+            numeric_field_id = int(field_id)
+            updated_field_option_instance = updated_field_options_by_field_id[
+                numeric_field_id
+            ]
+
+            for condition in options["conditions"]:
+                if condition["field"] not in table_field_ids:
+                    raise FieldNotInTable(
+                        f"The field {condition['field']} does not belong to table {table_id}."
+                    )
+
+                existing_condition = existing_conditions.get(condition["id"], None)
+                group_id = self._get_group_id(condition, condition_group_id_map)
+
+                if self._condition_exists_and_matches_field(
+                    existing_condition, numeric_field_id
+                ):
+                    self._prepare_condition_update(
+                        existing_condition, condition, group_id
+                    )
+                    conditions_to_update.append(existing_condition)
+                    condition_ids_to_delete.remove(existing_condition.id)
+                else:
+                    new_condition = self._prepare_new_condition(
+                        updated_field_option_instance, condition, group_id
+                    )
+                    conditions_to_create.append(new_condition)
+
+        return conditions_to_create, conditions_to_update, condition_ids_to_delete
+
+    def _update_field_options_conditions(
+        self,
+        view: View,
+        field_options: Dict[str, Any],
+        existing_conditions: Dict[int, FormViewFieldOptionsCondition],
+        table_field_ids: Set[int],
+        updated_field_options_by_field_id: Dict[int, FormViewFieldOptions],
+        condition_group_id_map: Dict[int, FormViewFieldOptionsConditionGroup],
+    ):
+        """
+        Updates the conditions for the specified field options. Based on the new
+        provided field options and the existing conditions, this function figures out
+        which conditions need to be created, updated or deleted in order to match the
+        options provided.
+
+        :param view: The form view instance.
+        :param field_options: The field options that are being updated.
+        :param existing_conditions: A map containing the existing conditions by id.
+        :param table_field_ids: A set containing all the field ids that belong to the
+            table.
+        :param updated_field_options_by_field_id: A map containing the updated field
+            options by field id.
+        :param condition_group_id_map: A map containing the condition group ids by
+            temporary id.
+        """
+
+        (
+            conditions_to_create,
+            conditions_to_update,
+            condition_ids_to_delete,
+        ) = self._prepare_conditions(
+            field_options,
+            updated_field_options_by_field_id,
+            existing_conditions,
+            condition_group_id_map,
+            view.table_id,
+            table_field_ids,
+        )
+
+        if len(conditions_to_create) > 0:
+            FormViewFieldOptionsCondition.objects.bulk_create(conditions_to_create)
+
+        if len(conditions_to_update) > 0:
+            FormViewFieldOptionsCondition.objects.bulk_update(
+                conditions_to_update, ["field_id", "type", "value"]
+            )
+
+        if len(condition_ids_to_delete) > 0:
+            FormViewFieldOptionsCondition.objects.filter(
+                id__in=condition_ids_to_delete
+            ).delete()
+
     def after_field_options_update(
         self, view, field_options, fields, update_field_option_instances
     ):
@@ -606,7 +875,7 @@ class FormViewType(ViewType):
         manner.
         """
 
-        field_ids = [field.id for field in fields]
+        field_ids = {field.id for field in fields}
         updated_field_options_by_field_id = {
             o.field_id: o for o in update_field_option_instances
         }
@@ -623,61 +892,32 @@ class FormViewType(ViewType):
                 field_option__in=updated_field_options,
             ).select_related("field_option")
         }
+        existing_condition_groups = {
+            g.id: g
+            for g in FormViewFieldOptionsConditionGroup.objects.filter(
+                field_option__in=updated_field_options,
+            ).select_related("field_option")
+        }
 
-        conditions_to_create = []
-        conditions_to_update = []
-        condition_ids_to_delete = set(existing_conditions.keys())
+        condition_group_ids_map = self._update_field_options_condition_groups(
+            field_options,
+            updated_field_options_by_field_id,
+            existing_condition_groups,
+        )
 
-        for field_id, options in field_options.items():
-            if "conditions" not in options:
-                continue
+        self._update_field_options_conditions(
+            view,
+            field_options,
+            existing_conditions,
+            field_ids,
+            updated_field_options_by_field_id,
+            condition_group_ids_map,
+        )
 
-            numeric_field_id = int(field_id)
-            updated_field_option_instance = updated_field_options_by_field_id[
-                numeric_field_id
-            ]
-
-            for condition in options["conditions"]:
-                if condition["field"] not in field_ids:
-                    raise FieldNotInTable(
-                        f"The field {condition['field']} does not belong to table "
-                        f"{view.table.id}."
-                    )
-
-                # To avoid another query, we find the existing form condition in the
-                # prefetched conditions.
-                existing_condition = existing_conditions.get(condition["id"], None)
-                if (
-                    existing_condition is not None
-                    and existing_condition.field_option.field_id == numeric_field_id
-                ):
-                    existing_condition.field_id = condition["field"]
-                    existing_condition.type = condition["type"]
-                    existing_condition.value = condition["value"]
-                    conditions_to_update.append(existing_condition)
-                    condition_ids_to_delete.remove(existing_condition.id)
-                else:
-                    conditions_to_create.append(
-                        FormViewFieldOptionsCondition(
-                            field_option=updated_field_option_instance,
-                            field_id=condition["field"],
-                            type=condition["type"],
-                            value=condition["value"],
-                        )
-                    )
-
-        if len(conditions_to_create) > 0:
-            FormViewFieldOptionsCondition.objects.bulk_create(conditions_to_create)
-
-        if len(conditions_to_update) > 0:
-            FormViewFieldOptionsCondition.objects.bulk_update(
-                conditions_to_update, ["field_id", "type", "value"]
-            )
-
-        if len(condition_ids_to_delete) > 0:
-            FormViewFieldOptionsCondition.objects.filter(
-                id__in=condition_ids_to_delete
-            ).delete()
+        # Delete all groups that have no conditions anymore.
+        FormViewFieldOptionsConditionGroup.objects.filter(
+            field_option__in=updated_field_options
+        ).annotate(count=Count("conditions")).filter(count=0).delete()
 
     def export_serialized(
         self,
@@ -891,4 +1131,4 @@ class FormViewType(ViewType):
         return queryset.prefetch_related("formviewfieldoptions_set")
 
     def enhance_field_options_queryset(self, queryset):
-        return queryset.prefetch_related("conditions")
+        return queryset.prefetch_related("conditions", "condition_groups")
