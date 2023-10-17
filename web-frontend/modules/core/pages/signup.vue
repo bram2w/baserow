@@ -22,7 +22,7 @@
         type="error"
         icon="iconoir-warning-triangle"
         :title="$t('signup.disabled')"
-        >{{ $t('signup.disabledMessage') }}</Alert
+        ><p>{{ $t('signup.disabledMessage') }}</p></Alert
       >
       <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
         {{ $t('action.backToLogin') }}

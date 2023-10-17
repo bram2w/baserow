@@ -18,7 +18,7 @@
           type="error"
           icon="iconoir-warning-triangle"
           :title="$t('forgotPassword.disabled')"
-          >{{ $t('forgotPassword.disabledMessage') }}</Alert
+          ><p>{{ $t('forgotPassword.disabledMessage') }}</p></Alert
         >
         <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
           <i class="iconoir-arrow-left"></i>

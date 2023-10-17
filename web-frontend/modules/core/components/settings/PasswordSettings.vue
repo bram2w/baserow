@@ -8,7 +8,7 @@
       icon="iconoir-check"
       :title="$t('passwordSettings.changedTitle')"
     >
-      {{ $t('passwordSettings.changedDescription') }}
+      <p>{{ $t('passwordSettings.changedDescription') }}</p>
     </Alert>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">

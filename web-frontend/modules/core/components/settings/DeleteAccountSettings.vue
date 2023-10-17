@@ -20,7 +20,7 @@
       icon="iconoir-warning-triangle"
       :title="$t('deleteAccountSettings.workspaceLoadingError')"
     >
-      {{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}
+      <p>{{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}</p>
     </Alert>
 
     <div v-else-if="orphanWorkspaces.length" class="delete-section">

@@ -8,7 +8,7 @@
     :title="toast.title"
     @close="close(toast)"
   >
-    {{ toast.message }}
+    <p>{{ toast.message }}</p>
   </Alert>
 </template>
 

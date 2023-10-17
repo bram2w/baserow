@@ -6,7 +6,7 @@
     icon="iconoir-warning-triangle"
     :title="$t('userSessionExpiredToast.title')"
   >
-    {{ $t('userSessionExpiredToast.content') }}
+    <p>{{ $t('userSessionExpiredToast.content') }}</p>
   </Alert>
 </template>
 

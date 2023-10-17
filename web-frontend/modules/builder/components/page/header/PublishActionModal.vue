@@ -55,7 +55,7 @@
       icon="iconoir-check"
       :title="$t('publishActionModal.publishSucceedTitle')"
     >
-      {{ $t('publishActionModal.publishSucceedDescription') }}
+      <p>{{ $t('publishActionModal.publishSucceedDescription') }}</p>
     </Alert>
 
     <div class="modal-progress__actions">

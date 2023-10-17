@@ -7,7 +7,7 @@
       type="success"
       icon="iconoir-check"
       :title="$t('pageSettings.pageUpdatedTitle')"
-      >{{ $t('pageSettings.pageUpdatedDescription') }}
+      ><p>{{ $t('pageSettings.pageUpdatedDescription') }}</p>
     </Alert>
     <PageSettingsForm
       :builder="builder"

@@ -6,7 +6,7 @@
     icon="iconoir-warning-triangle"
     :title="$t('authorizationErrorToast.title')"
   >
-    {{ $t('authorizationErrorToast.content') }}
+    <p>{{ $t('authorizationErrorToast.content') }}</p>
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"

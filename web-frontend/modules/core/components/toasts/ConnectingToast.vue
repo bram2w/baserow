@@ -1,6 +1,6 @@
 <template>
   <Alert loading shadow simple :title="$t('connectingToast.title')"
-    >{{ $t('connectingToast.content') }}
+    ><p>{{ $t('connectingToast.content') }}</p>
   </Alert>
 </template>
 

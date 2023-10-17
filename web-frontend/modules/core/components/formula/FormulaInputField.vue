@@ -1,10 +1,10 @@
 <template>
   <Alert v-if="isFormulaInvalid" type="error" minimal>
-    <div class="margin-bottom-1">
+    <p>
       {{ $t('formulaInputField.errorInvalidFormula') }}
-    </div>
+    </p>
     <Button
-      class="button formula-input-field__reset-button"
+      class="button formula-input-field__reset-button margin-top-1"
       type="error"
       size="tiny"
       @click="reset"

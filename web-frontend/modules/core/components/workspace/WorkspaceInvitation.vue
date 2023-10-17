@@ -5,16 +5,18 @@
     icon="iconoir-warning-triangle"
     :title="$t('workspaceInvitation.title')"
   >
-    {{
-      $t('workspaceInvitation.message', {
-        by: invitation.invited_by,
-        workspace: invitation.workspace,
-      })
-    }}
-    <div v-if="invitation.message !== ''" class="quote">
+    <p>
+      {{
+        $t('workspaceInvitation.message', {
+          by: invitation.invited_by,
+          workspace: invitation.workspace,
+        })
+      }}
+    </p>
+    <p v-if="invitation.message !== ''" class="quote">
       "{{ invitation.message }}"
-    </div>
-    <br />
+    </p>
+
     <a
       class="button button--error dashboard__alert-button"
       :class="{ 'button--loading': rejectLoading }"

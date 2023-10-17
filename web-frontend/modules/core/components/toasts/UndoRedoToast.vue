@@ -6,7 +6,7 @@
     :loading="stateContent.loading"
     :title="stateContent.title"
   >
-    {{ stateContent.content }}
+    <p>{{ stateContent.content }}</p>
   </Alert>
 </template>
 
