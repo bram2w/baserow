@@ -308,6 +308,7 @@ class LocalBaserowListRowsUserServiceType(
     def enhance_queryset(self, queryset):
         return queryset.select_related("view", "table").prefetch_related(
             "view__viewfilter_set",
+            "view__filter_groups",
             "view__viewsort_set",
             "table__field_set",
             "view__viewgroupby_set",

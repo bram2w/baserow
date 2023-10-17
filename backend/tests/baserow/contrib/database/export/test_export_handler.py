@@ -674,6 +674,8 @@ def test_adding_more_rows_doesnt_increase_number_of_queries_run(
         [linked_row_1.id],
     )
 
+    data_fixture.warm_cache_before_counting_queries()
+
     with CaptureQueriesContext(connection) as captured:
         run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
 

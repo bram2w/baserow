@@ -43,6 +43,10 @@ class ViewFilterDoesNotExist(Exception):
     """Raised when trying to get a view filter that does not exist."""
 
 
+class ViewFilterGroupDoesNotExist(Exception):
+    """Raised when trying to get a view filter that does not exist."""
+
+
 class ViewFilterNotSupported(Exception):
     """Raised when the view type does not support filters."""
 

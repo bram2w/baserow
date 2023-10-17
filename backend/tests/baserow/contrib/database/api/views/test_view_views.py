@@ -336,8 +336,13 @@ def test_duplicate_views(api_client, data_fixture):
         aggregation_type="whatever",
         aggregation_raw_type="empty",
     )
+    view_filter_group = data_fixture.create_view_filter_group(view=view_1)
     view_filter = data_fixture.create_view_filter(
-        view=view_1, field=field, value="test", type="equal"
+        view=view_1,
+        field=field,
+        value="test",
+        type="equal",
+        group=view_filter_group,
     )
     view_sort = data_fixture.create_view_sort(view=view_1, field=field, order="ASC")
     view_group_by = data_fixture.create_view_group_by(
@@ -382,6 +387,7 @@ def test_duplicate_views(api_client, data_fixture):
     assert response_json["order"] == view_1.order + 1
     assert len(response_json["sortings"]) == 1
     assert len(response_json["filters"]) == 1
+    assert len(response_json["filter_groups"]) == 1
     assert len(response_json["decorations"]) == 1
     assert len(response_json["group_bys"]) == 1
 

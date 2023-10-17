@@ -22,6 +22,7 @@ from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    FormViewFieldOptionsConditionGroup,
 )
 from baserow.core.user_files.models import UserFile
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -321,6 +322,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "order": 1,
         "condition_type": "AND",
         "conditions": [],
+        "condition_groups": [],
         "show_when_matching_conditions": False,
         "field": {"id": text_field.id, "type": "text", "text_default": ""},
     }
@@ -331,6 +333,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "order": 2,
         "condition_type": "AND",
         "conditions": [],
+        "condition_groups": [],
         "show_when_matching_conditions": False,
         "field": {
             "id": number_field.id,
@@ -825,8 +828,11 @@ def test_get_form_view_field_options(
     text_field_option_2 = data_fixture.create_form_view_field_option(
         form_view=form_view, field=text_field_2
     )
+    condition_group_1 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option
+    )
     condition_1 = data_fixture.create_form_view_field_options_condition(
-        field_option=text_field_option, field=text_field_2
+        field_option=text_field_option, field=text_field_2, group=condition_group_1
     )
 
     with CaptureQueriesContext(connection) as captured:
@@ -850,12 +856,19 @@ def test_get_form_view_field_options(
                 "order": 32767,
                 "show_when_matching_conditions": True,
                 "condition_type": "AND",
+                "condition_groups": [
+                    {
+                        "id": condition_group_1.id,
+                        "filter_type": "AND",
+                    },
+                ],
                 "conditions": [
                     {
                         "id": condition_1.id,
                         "field": text_field_2.id,
                         "type": "equal",
                         "value": condition_1.value,
+                        "group": condition_group_1.id,
                     }
                 ],
             },
@@ -868,6 +881,7 @@ def test_get_form_view_field_options(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "conditions": [],
+                "condition_groups": [],
             },
         }
     }
@@ -916,12 +930,14 @@ def test_patch_form_view_field_options_conditions_create(
                 str(text_field.id): {
                     "show_when_matching_conditions": True,
                     "condition_type": "OR",
+                    "condition_groups": [],
                     "conditions": [
                         {
                             "id": 0,
                             "field": text_field_2.id,
                             "type": "equal",
                             "value": "test",
+                            "group": None,
                         }
                     ],
                 }
@@ -931,6 +947,8 @@ def test_patch_form_view_field_options_conditions_create(
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
     condition = FormViewFieldOptionsCondition.objects.all().first()
     assert response_json == {
         "field_options": {
@@ -942,12 +960,14 @@ def test_patch_form_view_field_options_conditions_create(
                 "show_when_matching_conditions": True,
                 "condition_type": "OR",
                 "order": 32767,
+                "condition_groups": [],
                 "conditions": [
                     {
                         "id": condition.id,
                         "field": text_field_2.id,
                         "type": "equal",
                         "value": "test",
+                        "group": None,
                     }
                 ],
             },
@@ -959,6 +979,117 @@ def test_patch_form_view_field_options_conditions_create(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_condition_groups_create(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "condition_type": "OR",
+                    "condition_groups": [
+                        {
+                            "id": 0,
+                            "filter_type": "OR",
+                        },
+                        {
+                            "id": -1,
+                            "filter_type": "OR",
+                        },
+                    ],
+                    "conditions": [
+                        {
+                            "id": 0,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                            "group": 0,
+                        },
+                        {
+                            "id": -1,
+                            "field": text_field_2.id,
+                            "type": "equal",
+                            "value": "test",
+                            "group": -1,
+                        },
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    conditions = FormViewFieldOptionsCondition.objects.all().values("id", "group_id")
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "OR",
+                "order": 32767,
+                "condition_groups": [
+                    {
+                        "id": conditions[0]["group_id"],
+                        "filter_type": "OR",
+                    },
+                    {
+                        "id": conditions[1]["group_id"],
+                        "filter_type": "OR",
+                    },
+                ],
+                "conditions": [
+                    {
+                        "id": conditions[0]["id"],
+                        "field": text_field_2.id,
+                        "type": "equal",
+                        "value": "test",
+                        "group": conditions[0]["group_id"],
+                    },
+                    {
+                        "id": conditions[1]["id"],
+                        "field": text_field_2.id,
+                        "type": "equal",
+                        "value": "test",
+                        "group": conditions[1]["group_id"],
+                    },
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
         }
@@ -991,12 +1122,14 @@ def test_patch_form_view_field_options_conditions_update(
             "field_options": {
                 str(text_field.id): {
                     "show_when_matching_conditions": True,
+                    "condition_groups": [],
                     "conditions": [
                         {
                             "id": condition_1.id,
                             "field": text_field_3.id,
                             "type": "not_equal",
                             "value": "test",
+                            "group": None,
                         }
                     ],
                 }
@@ -1016,12 +1149,14 @@ def test_patch_form_view_field_options_conditions_update(
                 "show_when_matching_conditions": True,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
                 "conditions": [
                     {
                         "id": condition_1.id,
                         "field": text_field_3.id,
                         "type": "not_equal",
                         "value": "test",
+                        "group": None,
                     }
                 ],
             },
@@ -1033,6 +1168,7 @@ def test_patch_form_view_field_options_conditions_update(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
             str(text_field_3.id): {
@@ -1043,6 +1179,139 @@ def test_patch_form_view_field_options_conditions_update(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_condition_groups_update(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    condition_group_1 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option, filter_type="AND"
+    )
+    condition_1 = data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2, group=condition_group_1
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "condition_groups": [],
+                    "conditions": [
+                        {
+                            "id": condition_1.id,
+                            "field": text_field_3.id,
+                            "type": "not_equal",
+                            "value": "test",
+                            "group": condition_group_1.id,
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert (
+        response_json["error"]
+        == "ERROR_FORM_VIEW_FIELD_OPTIONS_CONDITION_GROUP_DOES_NOT_EXIST"
+    )
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "condition_groups": [
+                        {"id": condition_group_1.id, "filter_type": "OR"}
+                    ],
+                    "conditions": [
+                        {
+                            "id": condition_1.id,
+                            "field": text_field_3.id,
+                            "type": "not_equal",
+                            "value": "test",
+                            "group": condition_group_1.id,
+                        }
+                    ],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [
+                    {
+                        "id": condition_group_1.id,
+                        "filter_type": "OR",
+                    }
+                ],
+                "conditions": [
+                    {
+                        "id": condition_1.id,
+                        "field": text_field_3.id,
+                        "type": "not_equal",
+                        "value": "test",
+                        "group": condition_group_1.id,
+                    }
+                ],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+            str(text_field_3.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
         }
@@ -1086,6 +1355,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 str(text_field.id): {
                     "order": 1,
                     "show_when_matching_conditions": False,
+                    "condition_groups": [],
                     "conditions": [],
                 },
                 str(text_field_3.id): {
@@ -1095,6 +1365,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 str(text_field_2.id): {
                     "order": 3,
                     "show_when_matching_conditions": False,
+                    "condition_groups": [],
                     "conditions": [],
                 },
             }
@@ -1113,6 +1384,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 1,
+                "condition_groups": [],
                 "conditions": [],
             },
             str(text_field_3.id): {
@@ -1123,12 +1395,14 @@ def test_patch_form_view_field_options_conditions_update_position(
                 "show_when_matching_conditions": True,
                 "condition_type": "AND",
                 "order": 2,
+                "condition_groups": [],
                 "conditions": [
                     {
                         "id": condition.id,
                         "field": text_field_2.id,
                         "type": condition.type,
                         "value": condition.value,
+                        "group": None,
                     }
                 ],
             },
@@ -1140,6 +1414,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 3,
+                "condition_groups": [],
                 "conditions": [],
             },
         }
@@ -1190,6 +1465,7 @@ def test_patch_form_view_field_options_conditions_delete(
                 "show_when_matching_conditions": True,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
             str(text_field_2.id): {
@@ -1200,6 +1476,7 @@ def test_patch_form_view_field_options_conditions_delete(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
             str(text_field_3.id): {
@@ -1210,6 +1487,85 @@ def test_patch_form_view_field_options_conditions_delete(
                 "show_when_matching_conditions": False,
                 "condition_type": "AND",
                 "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+        }
+    }
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_condition_groups_delete(
+    api_client, data_fixture, django_assert_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+        show_when_matching_conditions=False,
+    )
+    condition_group_1 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field_2, group=condition_group_1
+    )
+
+    assert FormViewFieldOptionsConditionGroup.objects.count() == 1
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+    response = api_client.patch(
+        url,
+        {
+            "field_options": {
+                str(text_field.id): {
+                    "show_when_matching_conditions": True,
+                    "conditions": [],
+                }
+            }
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response_json == {
+        "field_options": {
+            str(text_field.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": True,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+            str(text_field_2.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
+                "conditions": [],
+            },
+            str(text_field_3.id): {
+                "name": "",
+                "description": "",
+                "enabled": False,
+                "required": True,
+                "show_when_matching_conditions": False,
+                "condition_type": "AND",
+                "order": 32767,
+                "condition_groups": [],
                 "conditions": [],
             },
         }
@@ -1238,12 +1594,14 @@ def test_patch_form_view_field_options_conditions_create_invalid_field(
                 str(text_field.id): {
                     "show_when_matching_conditions": True,
                     "condition_type": "OR",
+                    "condition_groups": [],
                     "conditions": [
                         {
                             "id": 0,
                             "field": field_in_another_table.id,
                             "type": "equal",
                             "value": "test",
+                            "group": None,
                         }
                     ],
                 }
@@ -1266,6 +1624,7 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
     text_field = data_fixture.create_text_field(table=table)
     text_field_2 = data_fixture.create_text_field(table=table)
     form_view = data_fixture.create_form_view(table=table)
+    data_fixture.warm_cache_before_counting_queries()
 
     url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
 
@@ -1275,12 +1634,19 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
             {
                 "field_options": {
                     str(text_field.id): {
+                        "condition_groups": [
+                            {
+                                "id": 0,
+                                "filter_type": "AND",
+                            }
+                        ],
                         "conditions": [
                             {
                                 "id": 0,
                                 "field": text_field_2.id,
                                 "type": "equal",
                                 "value": "test",
+                                "group": 0,
                             }
                         ],
                     },
@@ -1293,6 +1659,7 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
     # Delete newly created form condition because we want to do the same below with
     # the same amount of queries.
     FormViewFieldOptionsCondition.objects.all().delete()
+    FormViewFieldOptionsConditionGroup.objects.all().delete()
 
     # Even though we're adding more conditions, we expect to execute the sam amount
     # of queries.
@@ -1302,28 +1669,47 @@ def test_patch_form_view_field_options_conditions_create_num_queries(
             {
                 "field_options": {
                     str(text_field.id): {
+                        "condition_groups": [
+                            {
+                                "id": 0,
+                                "filter_type": "AND",
+                            },
+                            {
+                                "id": -1,
+                                "filter_type": "AND",
+                            },
+                        ],
                         "conditions": [
                             {
                                 "id": 0,
                                 "field": text_field.id,
                                 "type": "equal",
                                 "value": "test",
+                                "group": 0,
                             },
                             {
                                 "id": 0,
                                 "field": text_field_2.id,
                                 "type": "equal",
                                 "value": "test",
+                                "group": -1,
                             },
                         ],
                     },
                     str(text_field_2.id): {
+                        "condition_groups": [
+                            {
+                                "id": -2,
+                                "filter_type": "AND",
+                            }
+                        ],
                         "conditions": [
                             {
                                 "id": 0,
                                 "field": text_field.id,
                                 "type": "equal",
                                 "value": "test",
+                                "group": -2,
                             }
                         ],
                     },
@@ -1356,18 +1742,40 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
         form_view=form_view,
         field=text_field_3,
     )
+    condition_group_1 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option, filter_type="AND"
+    )
     condition_1 = data_fixture.create_form_view_field_options_condition(
-        field_option=text_field_option, field=text_field
+        field_option=text_field_option,
+        field=text_field,
+        group=condition_group_1,
+        value="a",
     )
     condition_1_2 = data_fixture.create_form_view_field_options_condition(
-        field_option=text_field_option, field=text_field
+        field_option=text_field_option,
+        field=text_field,
+        group=condition_group_1,
+        value="a",
+    )
+    condition_group_2 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option_2, filter_type="AND"
     )
     condition_2 = data_fixture.create_form_view_field_options_condition(
-        field_option=text_field_option_2, field=text_field
+        field_option=text_field_option_2,
+        field=text_field,
+        group=condition_group_2,
+        value="a",
+    )
+    condition_group_3 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option_3, filter_type="AND"
     )
     condition_3 = data_fixture.create_form_view_field_options_condition(
-        field_option=text_field_option_3, field=text_field
+        field_option=text_field_option_3,
+        field=text_field,
+        group=condition_group_3,
+        value="a",
     )
+    data_fixture.warm_cache_before_counting_queries()
 
     url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
 
@@ -1377,12 +1785,19 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
             {
                 "field_options": {
                     str(text_field_3.id): {
+                        "condition_groups": [
+                            {
+                                "id": condition_3.group_id,
+                                "filter_type": "OR",
+                            }
+                        ],
                         "conditions": [
                             {
                                 "id": condition_3.id,
-                                "field": condition_3.id,
+                                "field": condition_3.field_id,
                                 "type": condition_3.type,
-                                "value": condition_3.type,
+                                "value": "b",
+                                "group": condition_3.group_id,
                             }
                         ],
                     }
@@ -1400,44 +1815,60 @@ def test_patch_form_view_field_options_conditions_update_num_queries(
             {
                 "field_options": {
                     str(text_field.id): {
+                        "condition_groups": [
+                            {
+                                "id": condition_group_1.id,
+                                "filter_type": "OR",
+                            }
+                        ],
                         "conditions": [
                             {
                                 "id": condition_1.id,
-                                "field": condition_1.id,
+                                "field": condition_1.field_id,
                                 "type": condition_1.type,
-                                "value": condition_1.type,
+                                "value": "b",
+                                "group": condition_group_1.id,
                             },
                             {
                                 "id": condition_1_2.id,
                                 "field": condition_1_2.field_id,
                                 "type": condition_1_2.type,
-                                "value": condition_1_2.type,
+                                "value": "b",
+                                "group": condition_group_1.id,
                             },
                         ],
                     },
                     str(text_field_2.id): {
+                        "condition_groups": [
+                            {
+                                "id": condition_group_2.id,
+                                "filter_type": "OR",
+                            }
+                        ],
                         "conditions": [
                             {
                                 "id": condition_2.id,
-                                "field": condition_2.id,
+                                "field": condition_2.field_id,
                                 "type": condition_2.type,
-                                "value": condition_2.type,
+                                "value": "b",
+                                "group": condition_group_2.id,
                             }
                         ],
                     },
                     str(text_field_3.id): {
+                        "condition_groups": [
+                            {
+                                "id": condition_group_3.id,
+                                "filter_type": "AND",
+                            }
+                        ],
                         "conditions": [
                             {
-                                "id": 0,
-                                "field": condition_3.id,
-                                "type": condition_3.type,
-                                "value": condition_3.type,
-                            },
-                            {
                                 "id": condition_3.id,
-                                "field": condition_3.id,
+                                "field": condition_3.field_id,
                                 "type": condition_3.type,
-                                "value": condition_3.type,
+                                "value": "b",
+                                "group": condition_group_3.id,
                             },
                         ],
                     },
@@ -1482,6 +1913,7 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
     data_fixture.create_form_view_field_options_condition(
         field_option=text_field_option_3, field=text_field
     )
+    data_fixture.warm_cache_before_counting_queries()
 
     url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
 
@@ -1491,6 +1923,7 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
             {
                 "field_options": {
                     str(text_field_3.id): {
+                        "condition_groups": [],
                         "conditions": [],
                     }
                 }
@@ -1507,12 +1940,103 @@ def test_patch_form_view_field_options_conditions_delete_num_queries(
             {
                 "field_options": {
                     str(text_field.id): {
+                        "condition_groups": [],
                         "conditions": [],
                     },
                     str(text_field_2.id): {
+                        "condition_groups": [],
                         "conditions": [],
                     },
                     str(text_field_3.id): {
+                        "condition_groups": [],
+                        "conditions": [],
+                    },
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+
+@pytest.mark.django_db
+def test_patch_form_view_field_options_condition_groups_delete_num_queries(
+    api_client, data_fixture, django_assert_max_num_queries
+):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    form_view = data_fixture.create_form_view(table=table)
+    text_field = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+    text_field_option = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field,
+    )
+    text_field_option_2 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_2,
+    )
+    text_field_option_3 = data_fixture.create_form_view_field_option(
+        form_view=form_view,
+        field=text_field_3,
+    )
+    condition_group_1 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field, group=condition_group_1
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option, field=text_field, group=condition_group_1
+    )
+    condition_group_2 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option_2
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_2, field=text_field, group=condition_group_2
+    )
+    condition_group_3 = data_fixture.create_form_view_field_options_condition_group(
+        field_option=text_field_option_3
+    )
+    data_fixture.create_form_view_field_options_condition(
+        field_option=text_field_option_3, field=text_field, group=condition_group_3
+    )
+    data_fixture.warm_cache_before_counting_queries()
+
+    url = reverse("api:database:views:field_options", kwargs={"view_id": form_view.id})
+
+    with CaptureQueriesContext(connection) as captured:
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field_3.id): {
+                        "condition_groups": [],
+                        "conditions": [],
+                    }
+                }
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    # Even though we're deleting more conditions, we expect to execute the same amount
+    # of queries.
+    with django_assert_max_num_queries(len(captured.captured_queries)):
+        api_client.patch(
+            url,
+            {
+                "field_options": {
+                    str(text_field.id): {
+                        "condition_groups": [],
+                        "conditions": [],
+                    },
+                    str(text_field_2.id): {
+                        "condition_groups": [],
+                        "conditions": [],
+                    },
+                    str(text_field_3.id): {
+                        "condition_groups": [],
                         "conditions": [],
                     },
                 }
@@ -1999,12 +2523,14 @@ def test_patch_multiple_form_view_field_options_conditions_update(
             "field_options": {
                 str(text_field_2.id): {
                     "show_when_matching_conditions": True,
+                    "condition_groups": [],
                     "conditions": [
                         {
                             "id": condition.id,
                             "field": text_field.id,
                             "type": "not_equal",
                             "value": "test",
+                            "group": None,
                         }
                     ],
                 }

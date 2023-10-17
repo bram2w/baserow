@@ -13,6 +13,7 @@ from baserow.contrib.database.views.models import (
     View,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
     ViewGroupBy,
     ViewSort,
 )
@@ -122,10 +123,27 @@ class ViewFilterSerializer(serializers.ModelSerializer):
         "a value is provided.",
         read_only=True,
     )
+    group = serializers.IntegerField(
+        source="group_id",
+        allow_null=True,
+        required=False,
+        help_text=(
+            "The id of the filter group this filter belongs to. "
+            "If this is null, the filter is not part of a filter group."
+        ),
+    )
 
     class Meta:
         model = ViewFilter
-        fields = ("id", "view", "field", "type", "value", "preload_values")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "type",
+            "value",
+            "preload_values",
+            "group",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 
@@ -134,10 +152,19 @@ class CreateViewFilterSerializer(serializers.ModelSerializer):
         choices=lazy(view_filter_type_registry.get_types, list)(),
         help_text=ViewFilter._meta.get_field("type").help_text,
     )
+    group = serializers.IntegerField(
+        allow_null=True,
+        required=False,
+        help_text=(
+            "The id of the filter group the new filter will belong to. "
+            "If this is null, the filter will not be part of a filter group, "
+            "but directly part of the view."
+        ),
+    )
 
     class Meta:
         model = ViewFilter
-        fields = ("field", "type", "value")
+        fields = ("field", "type", "value", "group")
         extra_kwargs = {"value": {"default": ""}}
 
 
@@ -152,6 +179,28 @@ class UpdateViewFilterSerializer(serializers.ModelSerializer):
         model = ViewFilter
         fields = ("field", "type", "value")
         extra_kwargs = {"field": {"required": False}, "value": {"required": False}}
+
+
+class ViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("id", "filter_type", "view")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
+class CreateViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("filter_type",)
+        extra_kwargs = {
+            "filter_type": {"required": False},
+        }
+
+
+class UpdateViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("filter_type",)
 
 
 class ViewSortSerializer(serializers.ModelSerializer):
@@ -286,6 +335,7 @@ class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
+    filter_groups = ViewFilterGroupSerializer(many=True, required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
     group_bys = ViewGroupBySerializer(
         many=True, source="viewgroupby_set", required=False
@@ -308,6 +358,7 @@ class ViewSerializer(serializers.ModelSerializer):
             "table",
             "filter_type",
             "filters",
+            "filter_groups",
             "sortings",
             "group_bys",
             "decorations",
@@ -341,6 +392,7 @@ class ViewSerializer(serializers.ModelSerializer):
         # specification.
         if not self.context["include_filters"]:
             self.fields.pop("filters", None)
+            self.fields.pop("filter_groups", None)
 
         if not self.context["include_sortings"]:
             self.fields.pop("sortings", None)
@@ -543,6 +595,7 @@ class PublicViewInfoSerializer(serializers.Serializer):
 
 class FieldWithFiltersAndSortsSerializer(FieldSerializer):
     filters = ViewFilterSerializer(many=True, source="viewfilter_set")
+    groups = ViewFilterGroupSerializer(many=True, source="filter_groups")
     sortings = ViewSortSerializer(many=True, source="viewsort_set")
     group_bys = ViewGroupBySerializer(many=True, source="viewgroupby_set")
 

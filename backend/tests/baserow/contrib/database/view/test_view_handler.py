@@ -20,6 +20,7 @@ from baserow.contrib.database.views.exceptions import (
     ViewDoesNotExist,
     ViewDoesNotSupportFieldOptions,
     ViewFilterDoesNotExist,
+    ViewFilterGroupDoesNotExist,
     ViewFilterNotSupported,
     ViewFilterTypeDoesNotExist,
     ViewFilterTypeNotAllowedForField,
@@ -45,6 +46,7 @@ from baserow.contrib.database.views.models import (
     GridView,
     View,
     ViewFilter,
+    ViewFilterGroup,
     ViewGroupBy,
     ViewSort,
 )
@@ -1955,7 +1957,7 @@ def test_public_view_row_checker_runs_expected_queries_on_init(
         view=public_grid_view, field=filtered_field, type="equal", value="FilterValue"
     )
     model = table.get_model()
-    num_queries = 6
+    num_queries = 7
     with django_assert_num_queries(num_queries):
         # First query to get the public views, second query to get their filters.
         ViewHandler().get_public_views_row_checker(
@@ -3532,3 +3534,214 @@ def test_apply_sortings_applies_group_bys_first_then_view_sorts(data_fixture):
     rows = view_handler.apply_sorting(grid_view, model.objects.all())
     row_ids = [row.id for row in rows]
     assert row_ids == [row_3.id, row_1.id, row_2.id, row_4.id, row_5.id, row_6.id]
+
+
+@pytest.mark.django_db
+def test_create_filter_group_and_add_a_view_filter(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    text_field = data_fixture.create_text_field(table=grid_view.table)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInWorkspace):
+        handler.create_filter_group(user=user_2, view=grid_view)
+
+    filter_group = handler.create_filter_group(user=user, view=grid_view)
+    assert filter_group.id is not None
+    assert filter_group.filter_type == "AND"
+    assert filter_group.view_id == grid_view.id
+
+    filter_kwargs = {
+        "user": user,
+        "view": grid_view,
+        "field": text_field,
+        "type_name": "equal",
+        "value": "Test",
+    }
+
+    with pytest.raises(ViewFilterGroupDoesNotExist):
+        handler.create_filter(
+            **filter_kwargs,
+            filter_group_id=9999,
+        )
+
+    view_filter = handler.create_filter(
+        **filter_kwargs,
+        filter_group_id=filter_group.id,
+    )
+
+    assert view_filter.id is not None
+    assert view_filter.group_id == filter_group.id
+
+    assert list(filter_group.filters.all()) == [view_filter]
+
+
+@pytest.mark.django_db
+def test_update_filter_group(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    filter_group = data_fixture.create_view_filter_group(user=user, view=grid_view)
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInWorkspace):
+        handler.update_filter_group(
+            user=user_2, filter_group=filter_group, filter_type="OR"
+        )
+
+    assert filter_group.filter_type == "AND"
+    updated_filter_group = handler.update_filter_group(
+        user=user, filter_group=filter_group, filter_type="OR"
+    )
+    assert updated_filter_group.filter_type == "OR"
+
+
+@pytest.mark.django_db
+def test_deleting_filter_group_deletes_also_filters(data_fixture):
+    user = data_fixture.create_user()
+    user_2 = data_fixture.create_user()
+    grid_view = data_fixture.create_grid_view(user=user)
+    text_field = data_fixture.create_text_field(table=grid_view.table)
+    filter_group = data_fixture.create_view_filter_group(user=user, view=grid_view)
+    view_filter_1 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=text_field,
+        type="equal",
+        value="Test",
+        group_id=filter_group.id,
+    )
+    view_filter_2 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=text_field,
+        type="equal",
+        value="Test 2",
+        group_id=filter_group.id,
+    )
+
+    handler = ViewHandler()
+
+    with pytest.raises(UserNotInWorkspace):
+        handler.delete_filter_group(user=user_2, filter_group=filter_group)
+
+    assert filter_group.id is not None
+    assert filter_group.filters.count() == 2
+
+    handler.delete_filter_group(user=user, filter_group=filter_group)
+
+    assert ViewFilterGroup.objects.count() == 0
+    assert ViewFilter.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_filter_builder_is_created_correctly_with_filter_groups(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table)
+    number_field = data_fixture.create_number_field(table=table)
+    boolean_field = data_fixture.create_boolean_field(table=table)
+    grid_view = data_fixture.create_grid_view(user=user, table=table, filter_type="OR")
+
+    model = table.get_model()
+    row_1 = model.objects.create(**{f"field_{text_field.id}": "Aaa"})
+    row_2 = model.objects.create(
+        **{f"field_{text_field.id}": "Bbb", f"field_{boolean_field.id}": False}
+    )
+    row_3 = model.objects.create(
+        **{f"field_{text_field.id}": "Bbb", f"field_{boolean_field.id}": True}
+    )
+    row_4 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Bbb",
+            f"field_{boolean_field.id}": True,
+            f"field_{number_field.id}": 1,
+        }
+    )
+    row_5 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Bbb",
+            f"field_{boolean_field.id}": True,
+            f"field_{number_field.id}": 2,
+        }
+    )
+    row_6 = model.objects.create(
+        **{
+            f"field_{text_field.id}": "Bbb",
+            f"field_{boolean_field.id}": True,
+            f"field_{number_field.id}": 3,
+        }
+    )
+
+    view_handler = ViewHandler()
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    filter_group = data_fixture.create_view_filter_group(
+        user=user, view=grid_view, filter_type="AND"
+    )
+    view_filter_1 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=text_field,
+        type="equal",
+        value="Aaa",
+    )
+    group_filter_1 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=text_field,
+        type="equal",
+        value="Bbb",
+        group_id=filter_group.id,
+    )
+
+    # view_filter_1 OR group_filter_1
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    group_filter_2 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=boolean_field,
+        type="equal",
+        value=True,
+        group_id=filter_group.id,
+    )
+
+    # view_filter_1 OR (group_filter_1 AND group_filter_2)
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_3.id, row_4.id, row_5.id, row_6.id]
+
+    # Also nested groups works correctly.
+    nested_filter_group = data_fixture.create_view_filter_group(
+        user=user, view=grid_view, filter_type="OR", parent_group=filter_group
+    )
+    group_filter_3 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=number_field,
+        type="equal",
+        value=2,
+        group_id=nested_filter_group.id,
+    )
+    group_filter_4 = data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=number_field,
+        type="equal",
+        value=3,
+        group_id=nested_filter_group.id,
+    )
+
+    # view_filter_1 OR (group_filter_1 AND group_filter_2 AND
+    # (group_filter_3 OR group_filter_4))
+    rows = view_handler.apply_filters(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row_1.id, row_5.id, row_6.id]

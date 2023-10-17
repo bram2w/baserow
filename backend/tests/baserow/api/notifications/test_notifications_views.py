@@ -250,7 +250,7 @@ def test_user_cannot_mark_notifications_as_read_if_not_part_of_workspace(
 
 
 @pytest.mark.django_db
-def test_user_cannot_mark_notifications_as_read_if_notification_does_not_exists(
+def test_user_cannot_mark_notifications_as_read_if_notification_does_not_exist(
     data_fixture, api_client
 ):
     user, token = data_fixture.create_user_and_token()

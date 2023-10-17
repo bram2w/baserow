@@ -7,12 +7,14 @@ from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    FormViewFieldOptionsConditionGroup,
     GalleryView,
     GalleryViewFieldOptions,
     GridView,
     GridViewFieldOptions,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
     ViewGroupBy,
     ViewSort,
 )
@@ -143,6 +145,15 @@ class ViewFixtures:
         )
         return field_options
 
+    def create_form_view_field_options_condition_group(self, user=None, **kwargs):
+        if "field_option" not in kwargs:
+            form_view = self.create_form_view(user)
+            kwargs["field_options"] = self.create_form_view_field_option(
+                form_view=form_view, field=kwargs["field"]
+            )
+
+        return FormViewFieldOptionsConditionGroup.objects.create(**kwargs)
+
     def create_form_view_field_options_condition(self, user=None, **kwargs):
         if "field" not in kwargs:
             kwargs["field"] = self.create_text_field(table=kwargs["view"].table)
@@ -160,6 +171,12 @@ class ViewFixtures:
             kwargs["value"] = self.fake.name()
 
         return FormViewFieldOptionsCondition.objects.create(**kwargs)
+
+    def create_view_filter_group(self, user=None, **kwargs):
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        return ViewFilterGroup.objects.create(**kwargs)
 
     def create_view_filter(self, user=None, **kwargs):
         if "view" not in kwargs:
