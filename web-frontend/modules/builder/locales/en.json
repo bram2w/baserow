@@ -318,5 +318,22 @@
     "currentRecordDataProviderType": {
       "index": "index",
       "firstPartName": "Data source: {name}"
+    },
+    "workflowActionTypes": {
+      "notificationLabel": "Show Notification",
+      "openPageLabel": "Open Page"
+    },
+    "notificationWorkflowActionForm": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter text...",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Enter text..."
+    },
+    "openPageWorkflowActionForm": {
+      "urlLabel": "URL",
+      "urlPlaceholder": "Enter text..."
+    },
+    "event": {
+      "addAction": "Add action"
     }
 }

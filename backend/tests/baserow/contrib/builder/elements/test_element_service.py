@@ -340,7 +340,7 @@ def test_duplicate_element(elements_created_mock, data_fixture):
     user = data_fixture.create_user()
     element = data_fixture.create_builder_heading_element(user=user)
 
-    elements_duplicated = ElementService().duplicate_element(user, element)
+    elements_duplicated = ElementService().duplicate_element(user, element)["elements"]
 
     assert elements_created_mock.called_with(
         elements=elements_duplicated, user=user, page=element.page

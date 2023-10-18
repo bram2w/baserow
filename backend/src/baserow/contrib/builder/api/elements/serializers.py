@@ -4,8 +4,15 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.contrib.builder.api.workflow_actions.serializers import (
+    BuilderWorkflowActionSerializer,
+)
 from baserow.contrib.builder.elements.models import CollectionElementField, Element
 from baserow.contrib.builder.elements.registries import element_type_registry
+from baserow.contrib.builder.elements.types import ElementsAndWorkflowActions
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
+)
 from baserow.core.formula.serializers import FormulaSerializerField
 
 
@@ -107,6 +114,29 @@ class MoveElementSerializer(serializers.Serializer):
         default=None,
         help_text="The place in the container.",
     )
+
+
+class DuplicateElementSerializer(serializers.Serializer):
+    elements = serializers.SerializerMethodField(help_text="The duplicated elements.")
+    workflow_actions = serializers.SerializerMethodField(
+        help_text="The duplicated workflow actions"
+    )
+
+    @extend_schema_field(ElementSerializer(many=True))
+    def get_elements(self, obj: ElementsAndWorkflowActions):
+        return [
+            element_type_registry.get_serializer(element, ElementSerializer).data
+            for element in obj["elements"]
+        ]
+
+    @extend_schema_field(BuilderWorkflowActionSerializer(many=True))
+    def get_workflow_actions(self, obj: ElementsAndWorkflowActions):
+        return [
+            builder_workflow_action_type_registry.get_serializer(
+                workflow_action, BuilderWorkflowActionSerializer
+            ).data
+            for workflow_action in obj["workflow_actions"]
+        ]
 
 
 class PageParameterValueSerializer(serializers.Serializer):

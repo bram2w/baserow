@@ -145,9 +145,12 @@ class ElementType(
         serialized_copy.pop("type")
 
         if serialized_copy.get("parent_element_id", None):
-            serialized_copy["parent_element_id"] = id_mapping["builder_page_elements"][
-                serialized_copy["parent_element_id"]
-            ]
+            serialized_copy["parent_element_id"] = id_mapping[
+                "builder_page_elements"
+            ].get(
+                serialized_copy["parent_element_id"],
+                serialized_copy["parent_element_id"],
+            )
 
         element = self.model_class(page=page, **serialized_copy)
         element.save()

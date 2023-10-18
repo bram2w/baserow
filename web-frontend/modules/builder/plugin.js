@@ -19,6 +19,7 @@ import dataSourceStore from '@baserow/modules/builder/store/dataSource'
 import pageParameterStore from '@baserow/modules/builder/store/pageParameter'
 import dataSourceContentStore from '@baserow/modules/builder/store/dataSourceContent'
 import themeStore from '@baserow/modules/builder/store/theme'
+import workflowActionStore from '@baserow/modules/builder/store/workflowAction'
 
 import { registerRealtimeEvents } from '@baserow/modules/builder/realtime'
 import {
@@ -73,6 +74,10 @@ import {
 } from '@baserow/modules/builder/dataProviderTypes'
 
 import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
+import {
+  NotificationWorkflowActionType,
+  OpenPageWorkflowActionType,
+} from '@baserow/modules/builder/workflowActionTypes'
 
 export default (context) => {
   const { store, app, isDev } = context
@@ -99,6 +104,7 @@ export default (context) => {
   store.registerModule('pageParameter', pageParameterStore)
   store.registerModule('dataSourceContent', dataSourceContentStore)
   store.registerModule('theme', themeStore)
+  store.registerModule('workflowAction', workflowActionStore)
 
   app.$registry.registerNamespace('builderSettings')
   app.$registry.registerNamespace('element')
@@ -189,4 +195,13 @@ export default (context) => {
     new PageParameterDataProviderType(context)
   )
   app.$registry.register('themeConfigBlock', new MainThemeConfigBlock(context))
+
+  app.$registry.register(
+    'workflowAction',
+    new NotificationWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new OpenPageWorkflowActionType(context)
+  )
 }

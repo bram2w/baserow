@@ -1,6 +1,7 @@
 from copy import deepcopy
 
 from baserow.contrib.builder.elements.models import (
+    ButtonElement,
     CollectionElementField,
     ColumnElement,
     HeadingElement,
@@ -62,6 +63,10 @@ class ElementFixtures:
 
         return element
 
+    def create_builder_button_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(ButtonElement, user, page, **kwargs)
+        return element
+
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):
         if user is None:
             user = self.create_user()
@@ -74,6 +79,6 @@ class ElementFixtures:
         if "order" not in kwargs:
             kwargs["order"] = model_class.get_last_order(page)
 
-        page = model_class.objects.create(page=page, **kwargs)
+        element = model_class.objects.create(page=page, **kwargs)
 
-        return page
+        return element

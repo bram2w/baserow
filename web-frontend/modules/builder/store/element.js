@@ -272,17 +272,24 @@ const actions = {
     }
   },
   async duplicate({ dispatch }, { page, elementId }) {
-    const { data: elementsCreated } = await ElementService(
-      this.$client
-    ).duplicate(elementId)
+    const {
+      data: { elements, workflow_actions: workflowActions },
+    } = await ElementService(this.$client).duplicate(elementId)
 
-    await Promise.all(
-      elementsCreated.map((element) =>
-        dispatch('forceCreate', { page, element })
+    const elementPromises = elements.map((element) =>
+      dispatch('forceCreate', { page, element })
+    )
+    const workflowActionPromises = workflowActions.map((workflowAction) =>
+      dispatch(
+        'workflowAction/forceCreate',
+        { page, workflowAction },
+        { root: true }
       )
     )
 
-    return elementsCreated
+    await Promise.all(elementPromises.concat(workflowActionPromises))
+
+    return elements
   },
   emitElementEvent({ getters }, { event, page, ...rest }) {
     const elements = getters.getElements(page)

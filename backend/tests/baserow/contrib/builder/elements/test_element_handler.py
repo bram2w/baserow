@@ -368,7 +368,7 @@ def test_before_places_in_container_removed_no_change(data_fixture):
 def test_duplicate_element_single_element(data_fixture):
     element = data_fixture.create_builder_paragraph_element(value="test")
 
-    [element_duplicated] = ElementHandler().duplicate_element(element)
+    [element_duplicated] = ElementHandler().duplicate_element(element)["elements"]
 
     assert element.id != element_duplicated.id
     assert element.value == element_duplicated.value
@@ -389,7 +389,7 @@ def test_duplicate_element_multiple_elements(data_fixture):
         container_element_duplicated,
         child_duplicated,
         child_two_duplicated,
-    ] = ElementHandler().duplicate_element(container_element)
+    ] = ElementHandler().duplicate_element(container_element)["elements"]
 
     assert container_element.id != container_element_duplicated.id
     assert container_element.column_amount == container_element_duplicated.column_amount
@@ -421,7 +421,7 @@ def test_duplicate_element_deeply_nested(data_fixture):
         container_element_duplicated,
         child_first_level_duplicated,
         child_second_level_duplicated,
-    ] = ElementHandler().duplicate_element(container_element)
+    ] = ElementHandler().duplicate_element(container_element)["elements"]
 
     assert container_element.id != container_element_duplicated.id
     assert container_element.column_amount == container_element_duplicated.column_amount
@@ -441,3 +441,70 @@ def test_duplicate_element_deeply_nested(data_fixture):
         child_second_level_duplicated.parent_element_id
         == child_first_level_duplicated.id
     )
+
+
+@pytest.mark.django_db
+def test_duplicate_element_with_workflow_action(data_fixture):
+    page = data_fixture.create_builder_page()
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action = data_fixture.create_notification_workflow_action(
+        page=page, element=element
+    )
+
+    result = ElementHandler().duplicate_element(element)
+    [element_duplicated] = result["elements"]
+    [duplicated_workflow_action] = result["workflow_actions"]
+
+    assert duplicated_workflow_action.id != workflow_action.id
+    assert duplicated_workflow_action.page_id == workflow_action.page_id
+    assert duplicated_workflow_action.element_id == element_duplicated.id
+
+
+@pytest.mark.django_db
+def test_get_element_workflow_actions(data_fixture):
+    page = data_fixture.create_builder_page()
+    element = data_fixture.create_builder_button_element()
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=page, element=element
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=page, element=element
+    )
+
+    [
+        workflow_action_one_returned,
+        workflow_action_two_returned,
+    ] = ElementHandler().get_element_workflow_actions(element)
+
+    assert workflow_action_one.id == workflow_action_one_returned.id
+    assert workflow_action_two.id == workflow_action_two_returned.id
+
+
+@pytest.mark.django_db
+def test_duplicate_element_with_workflow_action_in_container(data_fixture):
+    page = data_fixture.create_builder_page()
+
+    container_element = data_fixture.create_builder_column_element(
+        column_amount=2, page=page
+    )
+    first_child = data_fixture.create_builder_button_element(
+        parent_element=container_element, page=page
+    )
+    second_child = data_fixture.create_builder_button_element(
+        parent_element=container_element, page=page
+    )
+
+    workflow_action1 = data_fixture.create_notification_workflow_action(
+        page=page, element=first_child
+    )
+    workflow_action2 = data_fixture.create_notification_workflow_action(
+        page=page, element=second_child
+    )
+
+    result = ElementHandler().duplicate_element(container_element)
+
+    [duplicated_workflow_action1, duplicated_workflow_action2] = result[
+        "workflow_actions"
+    ]
+    assert duplicated_workflow_action1.page_id == workflow_action1.page_id
+    assert duplicated_workflow_action2.page_id == workflow_action2.page_id

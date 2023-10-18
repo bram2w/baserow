@@ -55,6 +55,7 @@ export default {
           page,
         }),
         store.dispatch('element/fetch', { page }),
+        store.dispatch('workflowAction/fetch', { page }),
       ])
 
       await DataProviderType.initAll($registry.getAll('builderDataProvider'), {

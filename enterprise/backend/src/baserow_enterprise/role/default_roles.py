@@ -48,6 +48,13 @@ from baserow.contrib.builder.pages.operations import (
     UpdatePageOperationType,
 )
 from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
+from baserow.contrib.builder.workflow_actions.operations import (
+    CreateBuilderWorkflowActionOperationType,
+    DeleteBuilderWorkflowActionOperationType,
+    ListBuilderWorkflowActionsPageOperationType,
+    ReadBuilderWorkflowActionOperationType,
+    UpdateBuilderWorkflowActionOperationType,
+)
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -278,6 +285,8 @@ default_roles[VIEWER_ROLE_UID].extend(
         ReadViewSortOperationType,
         ListViewGroupByOperationType,
         ReadViewGroupByOperationType,
+        ListBuilderWorkflowActionsPageOperationType,
+        ReadBuilderWorkflowActionOperationType,
         ReadViewFilterGroupOperationType,
     ]
 )
@@ -305,6 +314,7 @@ default_roles[EDITOR_ROLE_UID].extend(
         RestoreDatabaseRowOperationType,
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
+        UpdateBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -397,6 +407,8 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
         DispatchDataSourceOperationType,
+        DeleteBuilderWorkflowActionOperationType,
+        CreateBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(
