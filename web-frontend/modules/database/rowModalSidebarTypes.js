@@ -1,9 +1,5 @@
 import { Registerable } from '@baserow/modules/core/registry'
 import RowHistorySidebar from '@baserow/modules/database/components/row/RowHistorySidebar.vue'
-import {
-  featureFlagIsEnabled,
-  getFeatureFlags,
-} from '@baserow/modules/core/utils/env'
 
 export class RowModalSidebarType extends Registerable {
   /**
@@ -54,14 +50,12 @@ export class HistoryRowModalSidebarType extends RowModalSidebarType {
   }
 
   isDeactivated(database, table) {
-    const featureFlags = getFeatureFlags(this.app.$config)
-    const featureFlagEnabled = featureFlagIsEnabled(featureFlags, 'row_history')
     const hasPermissions = this.app.$hasPermission(
       'database.table.read_row_history',
       table,
       database.workspace.id
     )
-    return !featureFlagEnabled || !hasPermissions
+    return !hasPermissions
   }
 
   isSelectedByDefault(database) {
