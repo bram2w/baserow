@@ -1,13 +1,14 @@
 from dataclasses import dataclass
 from operator import attrgetter
-from typing import Optional
-
-from django.contrib.auth.models import AbstractUser
+from typing import TYPE_CHECKING, Optional
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from baserow.ws.registries import PageType, page_registry
+
+if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser
 
 
 @dataclass
@@ -19,7 +20,7 @@ class PageContext:
     """
 
     web_socket_id: str
-    user: Optional[AbstractUser]
+    user: Optional["AbstractUser"]
     resolved_page_type: PageType
     page_scope: "PageScope"
 
