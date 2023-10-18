@@ -754,6 +754,7 @@ class DatabaseConfig(AppConfig):
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
         import baserow.contrib.database.rows.history  # noqa: F401
+        import baserow.contrib.database.rows.tasks  # noqa: F401
         import baserow.contrib.database.search.tasks  # noqa: F401
         import baserow.contrib.database.views.tasks  # noqa: F401
 

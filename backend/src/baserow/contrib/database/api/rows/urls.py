@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.urls import re_path
 
 from .views import (
@@ -46,13 +45,9 @@ urlpatterns = [
         RowNamesView.as_view(),
         name="names",
     ),
+    re_path(
+        r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/history/$",
+        RowHistoryView.as_view(),
+        name="history",
+    ),
 ]
-
-if "row_history" in settings.FEATURE_FLAGS:
-    urlpatterns += [
-        re_path(
-            r"table/(?P<table_id>[0-9]+)/(?P<row_id>[0-9]+)/history/$",
-            RowHistoryView.as_view(),
-            name="history",
-        ),
-    ]

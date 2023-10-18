@@ -169,6 +169,17 @@ class RowHistoryHandler:
             "-action_timestamp", "-id"
         )
 
+    @classmethod
+    def delete_entries_older_than(cls, cutoff: datetime):
+        """
+        Deletes all row history entries that are older than the given cutoff date.
+
+        :param cutoff: The date and time before which all entries will be deleted.
+        """
+
+        delete_qs = RowHistory.objects.filter(action_timestamp__lt=cutoff)
+        delete_qs._raw_delete(delete_qs.db)
+
 
 ROW_HISTORY_ACTIONS = {
     UpdateRowsActionType.type: RowHistoryHandler.record_history_from_update_rows_action,
@@ -187,7 +198,7 @@ def on_action_done_update_row_history(
     action_uuid,
     **kwargs,
 ):
-    if "row_history" not in settings.FEATURE_FLAGS:
+    if settings.BASEROW_ROW_HISTORY_RETENTION_DAYS == 0:
         return
 
     if action_type and action_type.type in ROW_HISTORY_ACTIONS:

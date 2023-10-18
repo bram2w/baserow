@@ -6,6 +6,7 @@ from freezegun import freeze_time
 
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.history import RowHistoryHandler
 from baserow.contrib.database.rows.models import RowHistory
 from baserow.core.action.registries import action_type_registry
 
@@ -220,3 +221,87 @@ def test_update_rows_action_doesnt_insert_entries_if_row_doesnt_change(data_fixt
             },
         }
     ]
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_row_history_handler_delete_entries_older_than(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    before_retention_period = datetime(2021, 1, 3, 23, 59, tzinfo=pytz.UTC)
+    after_retention_period = datetime(2021, 1, 4, 0, 1, tzinfo=pytz.UTC)
+    cutoff = datetime(2021, 1, 4, 0, 0, tzinfo=pytz.UTC)
+    common_params = {
+        "table": table,
+        "row_id": 999,
+        "action_uuid": "uuid",
+        "action_command_type": "cmd",
+        "action_type": "type",
+        "field_names": [],
+        "fields_metadata": {},
+        "before_values": {},
+        "after_values": {},
+    }
+    entries = [
+        RowHistory(**common_params, action_timestamp=before_retention_period),
+        RowHistory(**common_params, action_timestamp=before_retention_period),
+        RowHistory(**common_params, action_timestamp=before_retention_period),
+        RowHistory(**common_params, action_timestamp=after_retention_period),
+        RowHistory(**common_params, action_timestamp=after_retention_period),
+    ]
+    RowHistory.objects.bulk_create(entries)
+    assert RowHistory.objects.count() == 5
+
+    RowHistoryHandler().delete_entries_older_than(cutoff)
+
+    assert RowHistory.objects.count() == 2
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_row_history_not_recorded_with_retention_zero_days(settings, data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    model = table.get_model()
+    row = model.objects.create()
+
+    # no history will be recorded with zero retention days
+    settings.BASEROW_ROW_HISTORY_RETENTION_DAYS = 0
+    UpdateRowsActionType.do(
+        user,
+        table,
+        [
+            {
+                "id": row.id,
+                f"field_{name_field.id}": "changed",
+            }
+        ],
+        model,
+    )
+
+    assert RowHistory.objects.count() == 0
+
+    # otherwise record row history
+    settings.BASEROW_ROW_HISTORY_RETENTION_DAYS = 1
+    UpdateRowsActionType.do(
+        user,
+        table,
+        [
+            {
+                "id": row.id,
+                f"field_{name_field.id}": "changed 2",
+            }
+        ],
+        model,
+    )
+
+    assert RowHistory.objects.count() == 1
