@@ -16,7 +16,7 @@ class DomainFixtures:
             kwargs["builder"] = self.create_builder_application(user=user)
 
         if "domain_name" not in kwargs:
-            kwargs["domain_name"] = self.fake.domain_name()
+            kwargs["domain_name"] = self.fake.unique.domain_name()
 
         if "order" not in kwargs:
             kwargs["order"] = 0
