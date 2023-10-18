@@ -21,7 +21,10 @@ from baserow.contrib.builder.elements.signals import (
     element_updated,
     elements_created,
 )
-from baserow.contrib.builder.elements.types import ElementForUpdate
+from baserow.contrib.builder.elements.types import (
+    ElementForUpdate,
+    ElementsAndWorkflowActions,
+)
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
@@ -245,7 +248,9 @@ class ElementService:
 
         element_orders_recalculated.send(self, page=page)
 
-    def duplicate_element(self, user: AbstractUser, element: Element) -> List[Element]:
+    def duplicate_element(
+        self, user: AbstractUser, element: Element
+    ) -> ElementsAndWorkflowActions:
         """
         Duplicate an element in a recursive fashion. If the element has any children
         they will also be imported using the same method and so will their children
@@ -265,8 +270,15 @@ class ElementService:
             context=page,
         )
 
-        elements_duplicated = self.handler.duplicate_element(element)
+        elements_and_workflow_actions_duplicated = self.handler.duplicate_element(
+            element
+        )
 
-        elements_created.send(self, elements=elements_duplicated, user=user, page=page)
+        elements_created.send(
+            self,
+            elements=elements_and_workflow_actions_duplicated["elements"],
+            user=user,
+            page=page,
+        )
 
-        return elements_duplicated
+        return elements_and_workflow_actions_duplicated

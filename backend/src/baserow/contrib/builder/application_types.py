@@ -20,6 +20,12 @@ from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
 from baserow.contrib.builder.theme.registries import theme_config_block_registry
 from baserow.contrib.builder.types import BuilderDict, DataSourceDict, PageDict
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
+)
 from baserow.contrib.database.constants import IMPORT_SERIALIZED_IMPORTING
 from baserow.core.db import specific_iterator
 from baserow.core.integrations.models import Integration
@@ -88,6 +94,15 @@ class BuilderApplicationType(ApplicationType):
                     element.get_type().export_serialized(element)
                 )
 
+            # Get serialized versions of all workflow actions of the current page
+            serialized_workflow_actions = []
+            for workflow_action in BuilderWorkflowActionHandler().get_workflow_actions(
+                page=page
+            ):
+                serialized_workflow_actions.append(
+                    workflow_action.get_type().export_serialized(workflow_action)
+                )
+
             # Get serialized version of all data_sources for the current page
             serialized_data_sources = []
             for data_source in DataSourceHandler().get_data_sources(page=page):
@@ -119,6 +134,7 @@ class BuilderApplicationType(ApplicationType):
                     path_params=page.path_params,
                     elements=serialized_elements,
                     data_sources=serialized_data_sources,
+                    workflow_actions=serialized_workflow_actions,
                 )
             )
 
@@ -255,6 +271,13 @@ class BuilderApplicationType(ApplicationType):
                     for page in serialized_pages
                 ]
             )
+            + sum(
+                [
+                    # Inserting every workflow action
+                    len(page["workflow_actions"])
+                    for page in serialized_pages
+                ]
+            )
         )
 
     def import_pages_serialized(
@@ -296,6 +319,9 @@ class BuilderApplicationType(ApplicationType):
         if "integrations" not in id_mapping:
             id_mapping["integrations"] = {}
 
+        if "builder_workflow_actions" not in id_mapping:
+            id_mapping["builder_workflow_actions"] = {}
+
         if "workspace_id" not in id_mapping and builder.workspace is not None:
             id_mapping["workspace_id"] = builder.workspace.id
 
@@ -315,6 +341,7 @@ class BuilderApplicationType(ApplicationType):
             serialized_page["_object"] = page_instance
             serialized_page["_element_objects"] = []
             serialized_page["_data_source_objects"] = []
+            serialized_page["_workflow_action_objects"] = []
             imported_pages.append(page_instance)
             progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
@@ -370,7 +397,20 @@ class BuilderApplicationType(ApplicationType):
                         id_mapping,
                     )
 
-                    progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+                progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        # Then we create all the workflow actions
+        for serialized_page in serialized_pages:
+            for serialized_workflow_action in serialized_page["workflow_actions"]:
+                page = serialized_page["_object"]
+                workflow_action_type = builder_workflow_action_type_registry.get(
+                    serialized_workflow_action["type"]
+                )
+                workflow_action_type.import_serialized(
+                    page, serialized_workflow_action, id_mapping
+                )
+
+                progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
 
         return imported_pages
 

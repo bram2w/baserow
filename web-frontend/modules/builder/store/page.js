@@ -12,6 +12,7 @@ export function populatePage(page) {
 
   page.dataSources = []
   page.elements = []
+  page.workflowActions = []
 
   return page
 }

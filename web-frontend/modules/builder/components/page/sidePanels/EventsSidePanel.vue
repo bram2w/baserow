@@ -3,7 +3,10 @@
     <Event
       v-for="event in elementType.getEvents()"
       :key="event.getType()"
+      :element="element"
       :event="event"
+      :available-workflow-action-types="availableWorkflowActionTypes"
+      :workflow-actions="getWorkflowActionsForEvent(event)"
       class="margin-bottom-2"
     ></Event>
   </div>
@@ -17,5 +20,23 @@ export default {
   name: 'EventSidePanel',
   components: { Event },
   mixins: [elementSidePanel],
+  computed: {
+    availableWorkflowActionTypes() {
+      return Object.values(this.$registry.getAll('workflowAction'))
+    },
+    workflowActions() {
+      return this.$store.getters['workflowAction/getElementWorkflowActions'](
+        this.page,
+        this.element.id
+      )
+    },
+  },
+  methods: {
+    getWorkflowActionsForEvent(event) {
+      return this.workflowActions.filter(
+        (workflowAction) => workflowAction.event === event.getType()
+      )
+    },
+  },
 }
 </script>

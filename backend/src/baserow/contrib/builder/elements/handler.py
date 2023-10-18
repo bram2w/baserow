@@ -17,7 +17,9 @@ from baserow.core.db import specific_iterator
 from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.utils import MirrorDict, extract_allowed
 
-from .types import ElementForUpdate
+from ..workflow_actions.models import BuilderWorkflowAction
+from ..workflow_actions.registries import builder_workflow_action_type_registry
+from .types import ElementForUpdate, ElementsAndWorkflowActions
 
 
 class ElementHandler:
@@ -323,7 +325,18 @@ class ElementHandler:
 
         Element.recalculate_full_orders(queryset=Element.objects.filter(page=page))
 
-    def duplicate_element(self, element: Element) -> List[Element]:
+    def get_element_workflow_actions(
+        self, element: Element
+    ) -> Iterable[BuilderWorkflowAction]:
+        """
+        Get all the workflow actions that belong to an element
+        :param element: The element associated with the workflow actions
+        :return: All the workflow actions associated
+        """
+
+        return specific_iterator(element.builderworkflowaction_set.all())
+
+    def duplicate_element(self, element: Element) -> ElementsAndWorkflowActions:
         """
         Duplicate an element in a recursive fashion. If the element has any children
         they will also be imported using the same method and so will their children
@@ -335,13 +348,13 @@ class ElementHandler:
 
         # We are just creating new elements here so other data id should remain
         id_mapping = defaultdict(lambda: MirrorDict())
-        id_mapping["builder_elements"] = {}
+        id_mapping["builder_page_elements"] = {}
 
         return self._duplicate_element_recursive(element, id_mapping)
 
     def _duplicate_element_recursive(
         self, element: Element, id_mapping
-    ) -> List[Element]:
+    ) -> ElementsAndWorkflowActions:
         """
         Duplicates an element and all of its children.
 
@@ -360,12 +373,54 @@ class ElementHandler:
             element.page, serialized, id_mapping
         )
 
-        elements_duplicated = [element_duplicated]
+        workflow_actions_duplicated = self._duplicate_workflow_actions_of_element(
+            element, id_mapping
+        )
+
+        elements_and_workflow_actions_duplicated = {
+            "elements": [element_duplicated],
+            "workflow_actions": workflow_actions_duplicated,
+        }
 
         for child in element.children.all():
             children_duplicated = self._duplicate_element_recursive(
                 child.specific, id_mapping
             )
-            elements_duplicated += children_duplicated
+            elements_and_workflow_actions_duplicated["elements"] += children_duplicated[
+                "elements"
+            ]
+            elements_and_workflow_actions_duplicated[
+                "workflow_actions"
+            ] += children_duplicated["workflow_actions"]
 
-        return elements_duplicated
+        return elements_and_workflow_actions_duplicated
+
+    def _duplicate_workflow_actions_of_element(
+        self,
+        element: Element,
+        id_mapping: MirrorDict,
+    ) -> List[BuilderWorkflowAction]:
+        """
+        This helper function duplicates all the workflow actions associated with the
+        element.
+
+        :param element: The original element
+        :param element_duplicated: The duplicated reference of the original element
+        """
+
+        workflow_actions_duplicated = []
+
+        for workflow_action in self.get_element_workflow_actions(element):
+            workflow_action_type = builder_workflow_action_type_registry.get_by_model(
+                workflow_action
+            )
+            workflow_action_serialized = workflow_action_type.export_serialized(
+                workflow_action
+            )
+            workflow_action_duplicated = workflow_action_type.import_serialized(
+                element.page, workflow_action_serialized, id_mapping
+            )
+
+            workflow_actions_duplicated.append(workflow_action_duplicated)
+
+        return workflow_actions_duplicated

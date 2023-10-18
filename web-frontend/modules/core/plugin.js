@@ -99,6 +99,7 @@ export default (context, inject) => {
   registry.registerNamespace('membersPagePlugins')
   registry.registerNamespace('runtimeFormulaFunction')
   registry.registerNamespace('notification')
+  registry.registerNamespace('workflowAction')
   registry.register('settings', new AccountSettingsType(context))
   registry.register('settings', new PasswordSettingsType(context))
   registry.register('settings', new EmailNotificationsSettingsType(context))

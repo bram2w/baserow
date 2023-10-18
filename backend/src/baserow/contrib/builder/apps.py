@@ -30,12 +30,16 @@ class BuilderConfig(AppConfig):
         from baserow.contrib.builder.pages.object_scopes import (
             BuilderPageObjectScopeType,
         )
+        from baserow.contrib.builder.workflow_actions.object_scopes import (
+            BuilderWorkflowActionScopeType,
+        )
 
         object_scope_type_registry.register(BuilderObjectScopeType())
         object_scope_type_registry.register(BuilderPageObjectScopeType())
         object_scope_type_registry.register(BuilderElementObjectScopeType())
         object_scope_type_registry.register(BuilderDomainObjectScopeType())
         object_scope_type_registry.register(BuilderDataSourceObjectScopeType())
+        object_scope_type_registry.register(BuilderWorkflowActionScopeType())
 
         from baserow.contrib.builder.operations import (
             ListDomainsBuilderOperationType,
@@ -128,6 +132,20 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateElementOperationType())
         operation_type_registry.register(DeleteElementOperationType())
 
+        from baserow.contrib.builder.workflow_actions.operations import (
+            CreateBuilderWorkflowActionOperationType,
+            DeleteBuilderWorkflowActionOperationType,
+            ListBuilderWorkflowActionsPageOperationType,
+            ReadBuilderWorkflowActionOperationType,
+            UpdateBuilderWorkflowActionOperationType,
+        )
+
+        operation_type_registry.register(ListBuilderWorkflowActionsPageOperationType())
+        operation_type_registry.register(CreateBuilderWorkflowActionOperationType())
+        operation_type_registry.register(DeleteBuilderWorkflowActionOperationType())
+        operation_type_registry.register(UpdateBuilderWorkflowActionOperationType())
+        operation_type_registry.register(ReadBuilderWorkflowActionOperationType())
+
         from baserow.core.registries import permission_manager_type_registry
 
         from .domains.permission_manager import AllowPublicBuilderManagerType
@@ -185,6 +203,15 @@ class BuilderConfig(AppConfig):
         from .theme.theme_config_block_types import MainThemeConfigBlockType
 
         theme_config_block_registry.register(MainThemeConfigBlockType())
+
+        from .workflow_actions.registries import builder_workflow_action_type_registry
+        from .workflow_actions.workflow_action_types import (
+            NotificationWorkflowActionType,
+            OpenPageWorkflowActionType,
+        )
+
+        builder_workflow_action_type_registry.register(NotificationWorkflowActionType())
+        builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
 
         from .domains.receivers import connect_to_domain_pre_delete_signal
 

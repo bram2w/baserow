@@ -426,8 +426,8 @@ def test_duplicate_element(api_client, data_fixture):
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json[0]["id"] != element.id
-    assert response_json[0]["value"] == element.value
+    assert response_json["elements"][0]["id"] != element.id
+    assert response_json["elements"][0]["value"] == element.value
 
 
 @pytest.mark.django_db

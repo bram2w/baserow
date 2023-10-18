@@ -11,6 +11,10 @@ from baserow.contrib.builder.elements.models import (
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
+from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
@@ -66,6 +70,14 @@ def test_builder_application_export(data_fixture):
         page=page2, data_source=datasource3
     )
 
+    workflow_action_1 = data_fixture.create_notification_workflow_action(
+        page=page1,
+        element=element1,
+        event=EventTypes.CLICK,
+        description="hello",
+        title="there",
+    )
+
     serialized = BuilderApplicationType().export_serialized(
         builder, ImportExportConfig(include_permission_data=True)
     )
@@ -78,6 +90,17 @@ def test_builder_application_export(data_fixture):
                 "order": page1.order,
                 "path": page1.path,
                 "path_params": page1.path_params,
+                "workflow_actions": [
+                    {
+                        "id": workflow_action_1.id,
+                        "type": "notification",
+                        "element_id": element1.id,
+                        "event": EventTypes.CLICK.value,
+                        "page_id": page1.id,
+                        "description": "hello",
+                        "title": "there",
+                    }
+                ],
                 "data_sources": [
                     {
                         "id": datasource1.id,
@@ -146,6 +169,7 @@ def test_builder_application_export(data_fixture):
                 "order": page2.order,
                 "path": page2.path,
                 "path_params": page2.path_params,
+                "workflow_actions": [],
                 "data_sources": [
                     {
                         "id": datasource2.id,
@@ -240,6 +264,16 @@ IMPORT_REFERENCE = {
             "order": 1,
             "path": "/test",
             "path_params": {},
+            "workflow_actions": [
+                {
+                    "id": 123,
+                    "page_id": 999,
+                    "element_id": 998,
+                    "type": "notification",
+                    "description": "hello",
+                    "title": "there",
+                }
+            ],
             "elements": [
                 {
                     "id": 998,
@@ -331,6 +365,7 @@ IMPORT_REFERENCE = {
             "order": 2,
             "path": "/test2",
             "path_params": {},
+            "workflow_actions": [],
             "elements": [
                 {
                     "id": 997,
@@ -459,6 +494,12 @@ def test_builder_application_import(data_fixture):
 
     assert element_inside_container.parent_element.specific == container_element
     assert element_inside_container2.parent_element.specific == container_element
+
+    [workflow_action] = BuilderWorkflowActionHandler().get_workflow_actions(page1)
+
+    assert workflow_action.element_id == element1.id
+    assert workflow_action.description == "hello"
+    assert workflow_action.title == "there"
 
 
 @pytest.mark.django_db
