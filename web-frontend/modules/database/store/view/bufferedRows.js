@@ -492,6 +492,7 @@ export default ({ service, customPopulateRow }) => {
             this.$registry,
             view.filter_type,
             view.filters,
+            view.filter_groups,
             fields,
             values
           )

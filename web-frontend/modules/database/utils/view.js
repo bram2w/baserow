@@ -87,6 +87,140 @@ export function filterHiddenFieldsFunction(fieldOptions) {
 }
 
 /**
+ * Represents a node in a tree structure used for grouped filters.
+ * A group node is made of a filterType (AND or OR), a list of filters and a parent.
+ * If the parent is null it means that it is the root node. If the parent is not
+ * null it means that it is a child of the parent node, and the constructor will take care to
+ * add itself to the children of the parent node, so that we can later traverse the tree
+ * from the root node and check if a row matches the filters.
+ */
+export const TreeGroupNode = class {
+  /**
+   * Constructs a new TreeGroupNode.
+   *
+   * @param {string} filterType - The type of filter (e.g., 'AND' or 'OR').
+   * @param {TreeGroupNode} [parent=null] - The parent node of this node. Null for the root node.
+   */
+  constructor(filterType, parent = null) {
+    this.filterType = filterType
+    this.parent = parent
+    this.filters = []
+    this.children = []
+    if (parent) {
+      parent.children.push(this)
+    }
+  }
+
+  /**
+   * Checks if this node or any of its descendants has filters.
+   *
+   * @returns {boolean} - True if there are filters, false otherwise.
+   */
+  hasFilters() {
+    return this.filters.length > 0 || this.children.some((c) => c.hasFilters())
+  }
+
+  /**
+   * Adds a filter object to this node list of filters.
+   *
+   * @param {object} filter - The filter to add.
+   */
+  addFilter(filter) {
+    this.filters.push(filter)
+  }
+
+  /**
+   * Determines if a given row matches the conditions of this node and its descendants.
+   * This function will recursively check if the row matches the filters of this node
+   * and its descendants. If the filter type of this node is 'AND' then it will return
+   * true if the row matches all the filters. If the filter type of this node is 'OR'
+   * then it will return true if the row matches at least one of the filters.
+   *
+   * @param {object} $registry - The registry containing field and filter type information.
+   * @param {Array} fields - The list of fields.
+   * @param {object} rowValues - The values of the row being checked.
+   * @returns {boolean} - True if the row matches, false otherwise.
+   */
+  matches($registry, fields, rowValues) {
+    for (const child of this.children) {
+      const matches = child.matches($registry, fields, rowValues)
+      if (this.filterType === 'AND' && !matches) {
+        return false
+      } else if (this.filterType === 'OR' && matches) {
+        return true
+      }
+    }
+    for (const filter of this.filters) {
+      const filterValue = filter.value
+      const field = fields.find((f) => f.id === filter.field)
+      const fieldType = $registry.get('field', field.type)
+      const viewFilterType = $registry.get('viewFilter', filter.type)
+      const rowValue = rowValues[`field_${field.id}`]
+      const matches = viewFilterType.matches(
+        rowValue,
+        filterValue,
+        field,
+        fieldType
+      )
+      if (this.filterType === 'AND' && !matches) {
+        // With an `AND` filter type, the row must match all the filters, so if
+        // one of the filters doesn't match we can mark it as invalid.
+        return false
+      } else if (this.filterType === 'OR' && matches) {
+        // With an 'OR' filter type, the row only has to match one of the filters,
+        // that is the case here so we can mark it as valid.
+        return true
+      }
+    }
+    if (this.filterType === 'AND') {
+      // At this point with an `AND` condition the filter type matched all the
+      // filters and therefore we can mark it as valid.
+      return true
+    } else if (this.filterType === 'OR') {
+      // At this point with an `OR` condition none of the filters matched and
+      // therefore we can mark it as invalid.
+      return false
+    }
+  }
+}
+
+/**
+ * Creates a tree structure from given filters and filter groups. Groups are
+ * first sorted by ID because parent groups have smaller IDs since they were
+ * created before their children. In this way, we ensure that when a child node
+ * is added to the tree, its parent will already be present.
+ * Once the tree has been created, it adds all the filters to the respective
+ * groups.
+ *
+ * @param {string} filterType - The root filter type.
+ * @param {Array} filters - The list of filters.
+ * @param {Array} filterGroups - The list of filter groups.
+ * @returns {TreeGroupNode} - The root of the filter tree.
+ */
+export const createFiltersTree = (filterType, filters, filterGroups) => {
+  const rootGroup = new TreeGroupNode(filterType)
+  const filterGroupsById = { '': rootGroup }
+  const filterGroupsOrderedById = filterGroups
+    ? [...filterGroups].sort((a, b) => a.id - b.id)
+    : []
+
+  for (const filterGroup of filterGroupsOrderedById) {
+    const parent = filterGroupsById[filterGroup.parent || '']
+    filterGroupsById[filterGroup.id] = new TreeGroupNode(
+      filterGroup.filter_type,
+      parent
+    )
+  }
+
+  for (const filter of filters) {
+    const filterGroupId = filter.group || ''
+    const filterGroup = filterGroupsById[filterGroupId]
+    filterGroup.addFilter(filter)
+  }
+  return rootGroup
+}
+
+/**
  * A helper function that checks if the provided row values match the provided view
  * filters. Returning false indicates that the row should not be visible for that
  * view.
@@ -95,6 +229,7 @@ export const matchSearchFilters = (
   $registry,
   filterType,
   filters,
+  filterGroups,
   fields,
   values
 ) => {
@@ -104,35 +239,8 @@ export const matchSearchFilters = (
     return true
   }
 
-  for (const i in filters) {
-    const filter = filters[i]
-    const filterValue = filter.value
-    const rowValue = values[`field_${filter.field}`]
-    const field = fields.find((f) => f.id === filter.field)
-    const fieldType = $registry.get('field', field.type)
-    const matches = $registry
-      .get('viewFilter', filter.type)
-      .matches(rowValue, filterValue, field, fieldType)
-    if (filterType === 'AND' && !matches) {
-      // With an `AND` filter type, the row must match all the filters, so if
-      // one of the filters doesn't match we can mark it as isvalid.
-      return false
-    } else if (filterType === 'OR' && matches) {
-      // With an 'OR' filter type, the row only has to match one of the filters,
-      // that is the case here so we can mark it as valid.
-      return true
-    }
-  }
-
-  if (filterType === 'AND') {
-    // When this point has been reached with an `AND` filter type it means that
-    // the row matches all the filters and therefore we can mark it as valid.
-    return true
-  } else if (filterType === 'OR') {
-    // When this point has been reached with an `OR` filter type it means that
-    // the row matches none of the filters and therefore we can mark it as invalid.
-    return false
-  }
+  const filterTree = createFiltersTree(filterType, filters, filterGroups)
+  return filterTree.matches($registry, fields, values)
 }
 
 function _fullTextSearch(registry, field, value, activeSearchTerm) {

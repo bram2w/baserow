@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="margin-top-3">
     <ChooseSingleSelectField
       :view="view"
       :table="table"

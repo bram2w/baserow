@@ -21,3 +21,6 @@ test: jest
 
 ci-test-javascript:
 	yarn test-coverage || exit;
+
+update-snapshots:
+	yarn run jest --updateSnapshot || exit;

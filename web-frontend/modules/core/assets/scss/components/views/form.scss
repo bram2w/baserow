@@ -280,7 +280,7 @@
 }
 
 .form-view__body {
-  padding: 20px;
+  padding: 16px;
   max-width: 100%;
   width: 680px;
   margin: 0 auto;
@@ -456,14 +456,31 @@
   }
 }
 
+.form-view__add-condition {
+  margin-top: 6px;
+  color: $palette-neutral-900;
+  margin-right: 16px;
+
+  @include flex-align-items(4px, inline-flex);
+
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-1100;
+  }
+
+  i {
+    font-size: 20px;
+  }
+}
+
 .form-view__conditions {
   margin-top: 6px;
 }
 
-.form-view__add-condition {
-  display: inline-block;
-  margin-top: 6px;
-  color: $color-neutral-700;
+.form-view__condition-actions {
+  border-top: 1px solid rgba(217, 219, 222, 0.5);
+  margin-top: 12px;
+  padding-top: 8px;
 }
 
 .form-view__actions {

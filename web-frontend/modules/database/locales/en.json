@@ -430,8 +430,12 @@
         "unnamed": "unnamed row {value}",
         "choose": "Choose row"
     },
+    "viewFieldConditionsForm": {
+        "addCondition": "Add condition"
+    },
     "viewFilterContext": {
         "addFilter": "Add filter",
+        "addFilterGroup": "Add filter group",
         "disableAllFilters": "all disabled",
         "noFilterTitle": "You have not yet created a filter",
         "noFilterText": "Filters allow you to show rows that apply to your conditions.",
@@ -692,11 +696,11 @@
         "linkError": "The link should look like: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "add single select field",
+        "addSelectField": "Add single select field",
         "warningWhenNothingToChooseOrCreate": "There are no single select fields to choose from and you do not have permissions to make one."
     },
     "viewDecoratorContext": {
-        "addDecorator": "add decorator"
+        "addDecorator": "Add decorator"
     },
     "databaseDashboardSidebarLinks": {
         "apiDocumentation": "API documentation"
@@ -705,7 +709,8 @@
         "required": "required",
         "descriptionPlaceholder": "Description",
         "showWhenMatchingConditions": "show when conditions are met",
-        "addCondition": "Add condition"
+        "addCondition": "Add condition",
+        "addConditionGroup": "Add condition group"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicate field",
