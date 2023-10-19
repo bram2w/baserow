@@ -131,7 +131,8 @@ export class EmptyCountViewAggregationType extends ViewAggregationType {
         'text',
         'char',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }
@@ -174,7 +175,8 @@ export class NotEmptyCountViewAggregationType extends ViewAggregationType {
         'text',
         'char',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }
@@ -282,7 +284,8 @@ export class EmptyPercentageViewAggregationType extends ViewAggregationType {
         'text',
         'char',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }
@@ -337,7 +340,8 @@ export class NotEmptyPercentageViewAggregationType extends ViewAggregationType {
         'text',
         'char',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }

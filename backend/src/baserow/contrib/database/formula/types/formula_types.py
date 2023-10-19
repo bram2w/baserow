@@ -3,10 +3,10 @@ from abc import ABC
 from decimal import Decimal
 from typing import Any, List, Optional, Type, Union
 
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.files.storage import default_storage
 from django.db import models
-from django.db.models import Expression, F, Func, JSONField, Q, QuerySet, Value
+from django.db.models import Expression, F, Func, Q, QuerySet, Value
 from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
@@ -24,6 +24,7 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
     BaserowExpression,
+    BaserowFieldReference,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
     BaserowStringLiteral,
@@ -862,6 +863,8 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             elif arg.function_def.type == double_unnest.type:
                 arg = arg.args[0]
                 sub_type = BaserowFormulaArrayType(sub_type)
+        elif isinstance(arg, BaserowFieldReference):
+            sub_type = BaserowFormulaArrayType(sub_type)
 
         return arg.with_valid_type(sub_type)
 
@@ -1006,8 +1009,18 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     def get_value_for_filter(self, row, field) -> any:
         return None
 
+    def check_if_compatible_with(self, compatible_formula_types: List[str]):
+        return (
+            self.type in compatible_formula_types
+            or str(self) in compatible_formula_types
+        )
+
     def __str__(self) -> str:
-        return f"array({self.sub_type})"
+        return self.formula_array_type_as_str(self.sub_type)
+
+    @classmethod
+    def formula_array_type_as_str(cls, sub_type):
+        return f"array({sub_type})"
 
 
 class BaserowFormulaSingleSelectType(

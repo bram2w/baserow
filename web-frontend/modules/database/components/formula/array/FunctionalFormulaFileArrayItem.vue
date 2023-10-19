@@ -1,17 +1,20 @@
 <template functional>
-  <div class="grid-field-file__item">
+  <div
+    v-tooltip="props.selected ? props.value.visible_name : null"
+    class="array-field__file"
+  >
     <a
-      class="grid-field-file__link"
+      class="array-field__file-link"
       @click.prevent="$options.methods.onClick(listeners, props)"
     >
       <img
         v-if="props.value.is_image"
-        class="grid-field-file__image"
+        class="array-field__file-image"
         :src="props.value.thumbnails?.tiny?.url"
       />
       <i
         v-else
-        class="grid-field-file__icon"
+        class="array-field__file-icon"
         :class="$options.methods.getIconClass(props.value.mime_type)"
       ></i>
     </a>

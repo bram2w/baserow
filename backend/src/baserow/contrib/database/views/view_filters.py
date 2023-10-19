@@ -47,6 +47,9 @@ from baserow.contrib.database.formula import (
     BaserowFormulaNumberType,
     BaserowFormulaTextType,
 )
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaSingleFileType,
+)
 from baserow.core.models import WorkspaceUser
 
 from .registries import ViewFilterType
@@ -114,7 +117,12 @@ class FilenameContainsViewFilterType(ViewFilterType):
     """
 
     type = "filename_contains"
-    compatible_field_types = [FileFieldType.type]
+    compatible_field_types = [
+        FileFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            FormulaFieldType.array_of(BaserowFormulaSingleFileType.type)
+        ),
+    ]
 
     def get_filter(self, *args):
         return filename_contains_filter(*args)
@@ -133,7 +141,12 @@ class HasFileTypeViewFilterType(ViewFilterType):
     """
 
     type = "has_file_type"
-    compatible_field_types = [FileFieldType.type]
+    compatible_field_types = [
+        FileFieldType.type,
+        FormulaFieldType.compatible_with_formula_types(
+            FormulaFieldType.array_of(BaserowFormulaSingleFileType.type)
+        ),
+    ]
 
     def get_filter(self, field_name, value, model_field, field):
         value = value.strip()
@@ -1310,6 +1323,7 @@ class EmptyViewFilterType(ViewFilterType):
             BaserowFormulaNumberType.type,
             BaserowFormulaDateType.type,
             BaserowFormulaBooleanType.type,
+            FormulaFieldType.array_of(BaserowFormulaSingleFileType.type),
         ),
     ]
 

@@ -2754,9 +2754,17 @@ export class FormulaFieldType extends FieldType {
     return (field) => {
       return (
         this.getTypeAndSubTypes().includes(field.type) &&
-        formulaTypeStrings.includes(field.formula_type)
+        (formulaTypeStrings.includes(field.formula_type) ||
+          (field.array_formula_type &&
+            formulaTypeStrings.includes(
+              this.arrayOf(field.array_formula_type)
+            )))
       )
     }
+  }
+
+  static arrayOf(type) {
+    return `array(${type})`
   }
 
   getIconClass() {
