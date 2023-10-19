@@ -452,7 +452,7 @@ export default {
      */
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
-      this.$emit('selected-row', row.id)
+      this.$emit('selected-row', row)
     },
     /**
      * Calls the fieldCreated callback and shows the hidden fields section

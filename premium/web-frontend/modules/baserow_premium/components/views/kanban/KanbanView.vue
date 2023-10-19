@@ -32,7 +32,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="openRowEditModal($event.id)"
+        @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <KanbanViewStack
@@ -47,7 +47,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="openRowEditModal($event.id)"
+        @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a

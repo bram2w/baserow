@@ -51,7 +51,7 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="openRowEditModal($event.id)"
+      @edit-modal="openRowEditModal($event)"
       @scroll="scroll($event.pixelY, 0)"
     >
       <template #foot>
@@ -118,7 +118,7 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="openRowEditModal($event.id)"
+      @edit-modal="openRowEditModal($event)"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
     </GridViewSection>
@@ -223,11 +223,7 @@
           </a>
         </li>
         <li>
-          <a
-            @click="
-              ;[openRowEditModal(selectedRow.id), $refs.rowContext.hide()]
-            "
-          >
+          <a @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
           </a>
@@ -433,9 +429,23 @@ export default {
     },
     row: {
       deep: true,
-      handler(row) {
-        if (row !== null && this.$refs.rowEditModal) {
-          this.populateAndEditRow(row)
+      handler(newRow, prevRow) {
+        if (newRow !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(newRow)
+        }
+        // `refreshRow` doesn't immediately hide a row not matching filters if a
+        // user open the modal for that row to solve
+        // https://gitlab.com/baserow/baserow/-/issues/1765. This handler ensure
+        // the row is correctly refreshed if the user open another row using the
+        // navigation buttons in the modal.
+        const prevRowId = prevRow?.id
+        if (prevRowId !== undefined && prevRowId !== newRow?.id) {
+          this.$store.dispatch(this.storePrefix + 'view/grid/refreshRowById', {
+            grid: this.view,
+            fields: this.fields,
+            rowId: prevRowId,
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          })
         }
       },
     },
@@ -871,21 +881,21 @@ export default {
         return
       }
 
-      this.$store.dispatch(this.storePrefix + 'view/grid/refreshRow', {
+      this.$store.dispatch(this.storePrefix + 'view/grid/refreshRowById', {
         grid: this.view,
         fields: this.fields,
-        row,
+        rowId: row.id,
         getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
       })
     },
     /**
-     * When the row edit modal is opened we notifiy
+     * When the row edit modal is opened we notify
      * the Table component that a new row has been selected,
      * such that we can update the path to include the row id.
      */
-    openRowEditModal(rowId) {
-      this.$refs.rowEditModal.show(rowId)
-      this.$emit('selected-row', rowId)
+    openRowEditModal(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
     },
     /**
      * Populates a new row and opens the row edit modal
@@ -951,6 +961,7 @@ export default {
             row,
             field,
             getScrollTop,
+            isRowOpenedInModal: this.rowOpenedInModal?.id === row.id,
           }
         )
       })
