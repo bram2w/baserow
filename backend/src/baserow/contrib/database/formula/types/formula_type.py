@@ -412,6 +412,9 @@ class BaserowFormulaType(abc.ABC):
 
         return Value(None)
 
+    def check_if_compatible_with(self, compatible_formula_types: List[str]):
+        return self.type in compatible_formula_types
+
     def __str__(self) -> str:
         return self.type
 

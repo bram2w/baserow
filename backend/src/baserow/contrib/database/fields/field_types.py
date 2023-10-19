@@ -3509,6 +3509,10 @@ class FormulaFieldType(ReadOnlyFieldType):
         return self.to_baserow_formula_type(field.specific).is_searchable(field)
 
     @staticmethod
+    def array_of(formula_type: str):
+        return BaserowFormulaArrayType.formula_array_type_as_str(formula_type)
+
+    @staticmethod
     def compatible_with_formula_types(*compatible_formula_types: List[str]):
         def checker(field) -> bool:
             from baserow.contrib.database.fields.registries import field_type_registry
@@ -3516,7 +3520,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             field_type = field_type_registry.get_by_model(field.specific_class)
             if isinstance(field_type, FormulaFieldType):
                 formula_type = field.specific.cached_formula_type
-                return formula_type.type in compatible_formula_types
+                return formula_type.check_if_compatible_with(compatible_formula_types)
             else:
                 return False
 

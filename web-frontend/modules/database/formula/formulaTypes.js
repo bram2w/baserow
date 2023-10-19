@@ -116,6 +116,9 @@ export class BaserowFormulaTypeDefinition extends Registerable {
     return true
   }
 
+  /**
+   * The extra modal is a component that can be opened by emitting the `show` event up.
+   */
   getExtraModal() {
     return null
   }

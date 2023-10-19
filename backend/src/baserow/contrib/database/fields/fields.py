@@ -219,7 +219,18 @@ class BaserowExpressionField(models.Field):
         return self.expression_field.__class__
 
     def get_transform(self, name):
+        # When a model field of this type is pickled and stored in the Baserow model
+        # cache, the lookups on the class setup in the __init__ are not persisted.
+        # So to ensure when they are accessed on a unserialized version of this model
+        # we override this method to delegate to the underlying field type. This means
+        # that django lookups and transforms like model.objects.filter(
+        # formula_field_1__year=Value(2023)) work out of the box and so view filters
+        # work on formula fields.
         return self.expression_field.get_transform(name)
+
+    def get_lookup(self, name):
+        # See comment in get_transform as to why we delegate here.
+        return self.expression_field.get_lookup(name)
 
     def deconstruct(self):
         name, path, args, kwargs = super().deconstruct()

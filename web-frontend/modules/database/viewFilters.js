@@ -233,7 +233,12 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['file']
+    return [
+      'file',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        FormulaFieldType.arrayOf('single_file')
+      ),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -260,7 +265,12 @@ export class HasFileTypeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['file']
+    return [
+      'file',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        FormulaFieldType.arrayOf('single_file')
+      ),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -1773,7 +1783,8 @@ export class EmptyViewFilterType extends ViewFilterType {
         'char',
         'boolean',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }
@@ -1828,7 +1839,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'char',
         'boolean',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }

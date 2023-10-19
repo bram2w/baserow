@@ -20,10 +20,12 @@
 <script>
 import FunctionalGridViewFieldArray from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldArray'
 import gridField from '@baserow/modules/database/mixins/gridField'
+import FileFieldModal from '@baserow/modules/database/components/field/FileFieldModal.vue'
+import { isElement } from '@baserow/modules/core/utils/dom'
 
 export default {
   name: 'GridViewFieldArray',
-  components: { FunctionalGridViewFieldArray },
+  components: { FileFieldModal, FunctionalGridViewFieldArray },
   mixins: [gridField],
   props: {
     selected: {
@@ -47,12 +49,20 @@ export default {
       return this.subType.getExtraModal()
     },
     needsModal() {
-      return this.modalComponent != null
+      return this.modalComponent !== null
     },
   },
   methods: {
     showModal() {
       this.$refs.modal?.show()
+    },
+    canUnselectByClickingOutside(event) {
+      return (
+        !this.needsModal ||
+        ((!this.$refs.modal ||
+          !isElement(this.$refs.modal.$el, event.target)) &&
+          !isElement(this.$refs.modal.$el, event.target))
+      )
     },
   },
 }

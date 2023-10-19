@@ -195,6 +195,31 @@ def test_can_use_complex_date_filters_on_formula_field(data_fixture):
 
 
 @pytest.mark.django_db
+def test_can_use_complex_date_filters_on_formula_field_with_lookup(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    grid_view = data_fixture.create_grid_view(user, table=table)
+    data_fixture.create_date_field(user=user, table=table, name="date_field")
+    formula_field = data_fixture.create_formula_field(
+        table=table, formula="field('date_field')", formula_type="date", name="formula"
+    )
+
+    data_fixture.create_view_filter(
+        user=user,
+        view=grid_view,
+        field=formula_field,
+        type="date_equals_years_ago",
+        value="1",
+    )
+
+    table.get_model()
+
+    queryset = ViewHandler().get_queryset(grid_view)
+    assert not queryset.exists()
+    assert queryset.count() == 0
+
+
+@pytest.mark.django_db
 def test_can_use_complex_contains_filters_on_formula_field(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
