@@ -55,7 +55,7 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     return 'conditional_color'
   }
 
-  static getDefaultFilterConf(registry, { fields }) {
+  static getDefaultFilterConf(registry, { fields, filterGroupId = null }) {
     const field = fields[0]
     const filter = { field: field.id }
 
@@ -71,8 +71,16 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     filter.value = viewFilterType.getDefaultValue(field)
     filter.preload_values = {}
     filter.id = uuid()
+    filter.group = filterGroupId
 
     return filter
+  }
+
+  static getDefaultFilterGroupConf() {
+    return {
+      filter_type: 'AND',
+      id: uuid(),
+    }
   }
 
   static getDefaultColorConf(
@@ -111,11 +119,23 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
 
   getValue({ options, fields, row }) {
     const { $registry } = this.app
-    for (const { color, filters, operator } of options.colors) {
+    for (const {
+      color,
+      filters,
+      operator,
+      filter_groups: filterGroups,
+    } of options.colors) {
       if (
         row.id !== -1 &&
         row.id !== undefined &&
-        matchSearchFilters($registry, operator, filters, fields, row)
+        matchSearchFilters(
+          $registry,
+          operator,
+          filters,
+          filterGroups,
+          fields,
+          row
+        )
       ) {
         return color
       }

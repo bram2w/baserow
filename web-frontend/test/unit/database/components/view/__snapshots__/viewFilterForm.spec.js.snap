@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ViewFilterForm component Default view filter component 1`] = `
-<div>
+<div
+  class="filters__content"
+>
   <div>
     <div
       class="filters__none"
@@ -24,22 +26,34 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
     </div>
   </div>
    
-  <div
-    class="filters__items"
-  />
+  <!---->
    
   <div
-    class="filters_footer"
+    class="filters__footer"
   >
-    <a
-      class="filters__add"
+    <div
+      class="filters__actions"
     >
-      <i
-        class="filters__add-icon iconoir-plus"
-      />
-      
-      viewFilterContext.addFilter
-    </a>
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilter
+      </a>
+       
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilterGroup
+      </a>
+    </div>
      
     <!---->
   </div>
@@ -47,959 +61,988 @@ exports[`ViewFilterForm component Default view filter component 1`] = `
 `;
 
 exports[`ViewFilterForm component Full view filter component 1`] = `
-<div>
+<div
+  class="filters__content"
+>
   <!---->
    
   <div
-    class="filters__items"
+    class="filters__items filters__items--with-padding filters__items--scrollable"
   >
     <div
-      class="filters__item"
+      class="filters__item-wrapper"
     >
-      <a
-        class="filters__remove"
-      >
-        <i
-          class="iconoir-cancel"
-        />
-      </a>
-       
       <div
-        class="filters__operator"
+        class="filters__item filters__item--level-1"
       >
-        <span
-          class="filters__operator-text"
-        >
-          viewFilterContext.where
-        </span>
-         
-        <!---->
-         
-        <!---->
-      </div>
-       
-      <div
-        class="filters__field"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
+        <div>
+          <span
+            class="filters__operator-where"
           >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              Name
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
+            viewFilterContext.where
+          </span>
            
+          <!---->
+           
+          <!---->
+        </div>
+         
+        <div
+          class="filters__condition-item"
+        >
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__field"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Name
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Name"
+                        >
+                          Name
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Stars"
+                        >
+                          Stars
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Flag"
+                        >
+                          Flag
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Name"
-                    >
-                      Name
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Stars"
-                    >
-                      Stars
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Flag"
-                    >
-                      Flag
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__type"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              viewFilter.is
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
            
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__type"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  viewFilter.is
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.is"
+                        >
+                          viewFilter.is
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isNot"
+                        >
+                          viewFilter.isNot
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.contains"
+                        >
+                          viewFilter.contains
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.containsNot"
+                        >
+                          viewFilter.containsNot
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.containsWord"
+                        >
+                          viewFilter.containsWord
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.doesntContainWord"
+                        >
+                          viewFilter.doesntContainWord
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lengthIsLowerThan"
+                        >
+                          viewFilter.lengthIsLowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isEmpty"
+                        >
+                          viewFilter.isEmpty
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isNotEmpty"
+                        >
+                          viewFilter.isNotEmpty
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.is"
-                    >
-                      viewFilter.is
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isNot"
-                    >
-                      viewFilter.isNot
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.contains"
-                    >
-                      viewFilter.contains
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.containsNot"
-                    >
-                      viewFilter.containsNot
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.containsWord"
-                    >
-                      viewFilter.containsWord
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.doesntContainWord"
-                    >
-                      viewFilter.doesntContainWord
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.lengthIsLowerThan"
-                    >
-                      viewFilter.lengthIsLowerThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isEmpty"
-                    >
-                      viewFilter.isEmpty
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isNotEmpty"
-                    >
-                      viewFilter.isNotEmpty
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
+           
+          <div
+            class="filters__value"
+          >
+            <input
+              class="input filters__value-input"
+              type="text"
+            />
+          </div>
+           
+          <a
+            class="filters__remove"
+          >
+            <i
+              class="iconoir-bin"
+            />
+          </a>
         </div>
-      </div>
-       
-      <div
-        class="filters__value"
-      >
-        <input
-          class="input filters__value-input"
-          type="text"
-        />
       </div>
     </div>
     <div
-      class="filters__item"
+      class="filters__item-wrapper"
     >
-      <a
-        class="filters__remove"
-      >
-        <i
-          class="iconoir-cancel"
-        />
-      </a>
-       
       <div
-        class="filters__operator"
+        class="filters__item filters__item--level-1"
       >
-        <!---->
+        <div>
+          <!---->
+           
+          <div
+            class="dropdown dropdown--tiny"
+            tabindex="0"
+          >
+            <a
+              class="dropdown__selected"
+            >
+              <!---->
+               
+              <!---->
+               
+              <span
+                class="dropdown__selected-text"
+              >
+                viewFilterContext.and
+              </span>
+               
+              <i
+                class="dropdown__toggle-icon iconoir-nav-arrow-down"
+              />
+            </a>
+             
+            <div
+              class="dropdown__items hidden dropdown__items--fixed"
+            >
+              <!---->
+               
+              <ul
+                class="select__items select__items--no-max-height"
+                tabindex=""
+              >
+                <li
+                  class="select__item select__item--no-options active"
+                >
+                  <a
+                    class="select__item-link"
+                  >
+                    <div
+                      class="select__item-name"
+                    >
+                      <!---->
+                       
+                      <!---->
+                       
+                      <span
+                        class="select__item-name-text"
+                        title="viewFilterContext.and"
+                      >
+                        viewFilterContext.and
+                      </span>
+                    </div>
+                     
+                    <!---->
+                  </a>
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
+                </li>
+                 
+                <li
+                  class="select__item select__item--no-options"
+                >
+                  <a
+                    class="select__item-link"
+                  >
+                    <div
+                      class="select__item-name"
+                    >
+                      <!---->
+                       
+                      <!---->
+                       
+                      <span
+                        class="select__item-name-text"
+                        title="viewFilterContext.or"
+                      >
+                        viewFilterContext.or
+                      </span>
+                    </div>
+                     
+                    <!---->
+                  </a>
+                   
+                  <i
+                    class="select__item-active-icon iconoir-check-circle"
+                  />
+                </li>
+              </ul>
+               
+              <!---->
+               
+              <!---->
+            </div>
+          </div>
+           
+          <!---->
+        </div>
          
         <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
+          class="filters__condition-item"
         >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              viewFilterContext.and
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
-           
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
-          >
-            <!---->
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilterContext.and"
-                    >
-                      viewFilterContext.and
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-               
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilterContext.or"
-                    >
-                      viewFilterContext.or
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
-          </div>
-        </div>
-         
-        <!---->
-      </div>
-       
-      <div
-        class="filters__field"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              Stars
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
-           
-          <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__field"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Stars
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Name"
+                        >
+                          Name
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Stars"
+                        >
+                          Stars
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Flag"
+                        >
+                          Flag
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Name"
-                    >
-                      Name
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Stars"
-                    >
-                      Stars
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Flag"
-                    >
-                      Flag
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__type"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              viewFilter.is
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
            
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__type"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  viewFilter.is
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.is"
+                        >
+                          viewFilter.is
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isNot"
+                        >
+                          viewFilter.isNot
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.higherThan"
+                        >
+                          viewFilter.higherThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThan"
+                        >
+                          viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.is"
-                    >
-                      viewFilter.is
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isNot"
-                    >
-                      viewFilter.isNot
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.higherThan"
-                    >
-                      viewFilter.higherThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.lowerThan"
-                    >
-                      viewFilter.lowerThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__value"
-      >
-        <div
-          class="filters__value-rating"
-        >
+           
           <div
-            class="rating color--dark-orange editing"
+            class="filters__value"
+          >
+            <div
+              class="filters__value-rating"
+            >
+              <div
+                class="rating color--dark-orange editing"
+              >
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+              </div>
+            </div>
+          </div>
+           
+          <a
+            class="filters__remove"
           >
             <i
-              class="rating__star baserow-icon-star rating__star--selected"
+              class="iconoir-bin"
             />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-          </div>
+          </a>
         </div>
       </div>
     </div>
+     
   </div>
    
   <div
-    class="filters_footer"
+    class="filters__footer"
   >
-    <a
-      class="filters__add"
+    <div
+      class="filters__actions"
     >
-      <i
-        class="filters__add-icon iconoir-plus"
-      />
-      
-      viewFilterContext.addFilter
-    </a>
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilter
+      </a>
+       
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilterGroup
+      </a>
+    </div>
      
     <div>
       <div
@@ -1013,388 +1056,411 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
 `;
 
 exports[`ViewFilterForm component Test rating filter 1`] = `
-<div>
+<div
+  class="filters__content"
+>
   <!---->
    
   <div
-    class="filters__items"
+    class="filters__items filters__items--with-padding filters__items--scrollable"
   >
     <div
-      class="filters__item"
+      class="filters__item-wrapper"
     >
-      <a
-        class="filters__remove"
-      >
-        <i
-          class="iconoir-cancel"
-        />
-      </a>
-       
       <div
-        class="filters__operator"
+        class="filters__item filters__item--level-1"
       >
-        <span
-          class="filters__operator-text"
-        >
-          viewFilterContext.where
-        </span>
-         
-        <!---->
-         
-        <!---->
-      </div>
-       
-      <div
-        class="filters__field"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
+        <div>
+          <span
+            class="filters__operator-where"
           >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              Stars
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
+            viewFilterContext.where
+          </span>
            
+          <!---->
+           
+          <!---->
+        </div>
+         
+        <div
+          class="filters__condition-item"
+        >
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__field"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Stars
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Name"
+                        >
+                          Name
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Stars"
+                        >
+                          Stars
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Flag"
+                        >
+                          Flag
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Name"
-                    >
-                      Name
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Stars"
-                    >
-                      Stars
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Flag"
-                    >
-                      Flag
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__type"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex=""
-        >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              viewFilter.is
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
            
           <div
-            class="dropdown__items dropdown__items--fixed"
-            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
+            class="filters__type"
           >
             <div
-              class="select__search"
-            >
-              <i
-                class="select__search-icon iconoir-search"
-              />
-               
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
-            </div>
-             
-            <ul
-              class="select__items select__items--no-max-height prevent-scroll"
+              class="dropdown dropdown--tiny"
               tabindex=""
             >
-              <li
-                class="select__item select__item--no-options active hover"
+              <a
+                class="dropdown__selected"
               >
-                <a
-                  class="select__item-link"
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
                 >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.is"
-                    >
-                      viewFilter.is
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
+                  viewFilter.is
+                </span>
                  
                 <i
-                  class="select__item-active-icon iconoir-check-circle"
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
                 />
-              </li>
-              <li
-                class="select__item select__item--no-options"
+              </a>
+               
+              <div
+                class="dropdown__items dropdown__items--fixed"
+                style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
               >
-                <a
-                  class="select__item-link"
+                <div
+                  class="select__search"
                 >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isNot"
-                    >
-                      viewFilter.isNot
-                    </span>
-                  </div>
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
                    
-                  <!---->
-                </a>
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
                  
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
+                <ul
+                  class="select__items select__items--no-max-height prevent-scroll"
+                  tabindex=""
                 >
-                  <div
-                    class="select__item-name"
+                  <li
+                    class="select__item select__item--no-options active hover"
                   >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.higherThan"
+                    <a
+                      class="select__item-link"
                     >
-                      viewFilter.higherThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.is"
+                        >
+                          viewFilter.is
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
                   >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.lowerThan"
+                    <a
+                      class="select__item-link"
                     >
-                      viewFilter.lowerThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isNot"
+                        >
+                          viewFilter.isNot
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.higherThan"
+                        >
+                          viewFilter.higherThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThan"
+                        >
+                          viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
                  
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
+                <!---->
+                 
+                <!---->
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__value"
-      >
-        <div
-          class="filters__value-rating"
-        >
+           
           <div
-            class="rating color--dark-orange editing"
+            class="filters__value"
+          >
+            <div
+              class="filters__value-rating"
+            >
+              <div
+                class="rating color--dark-orange editing"
+              >
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+                <i
+                  class="rating__star baserow-icon-star"
+                />
+              </div>
+            </div>
+          </div>
+           
+          <a
+            class="filters__remove"
           >
             <i
-              class="rating__star baserow-icon-star rating__star--selected"
+              class="iconoir-bin"
             />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-            <i
-              class="rating__star baserow-icon-star"
-            />
-          </div>
+          </a>
         </div>
       </div>
     </div>
+     
   </div>
    
   <div
-    class="filters_footer"
+    class="filters__footer"
   >
-    <a
-      class="filters__add"
+    <div
+      class="filters__actions"
     >
-      <i
-        class="filters__add-icon iconoir-plus"
-      />
-      
-      viewFilterContext.addFilter
-    </a>
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilter
+      </a>
+       
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilterGroup
+      </a>
+    </div>
      
     <div>
       <div
@@ -1408,388 +1474,411 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
 `;
 
 exports[`ViewFilterForm component Test rating filter 2`] = `
-<div>
+<div
+  class="filters__content"
+>
   <!---->
    
   <div
-    class="filters__items"
+    class="filters__items filters__items--with-padding filters__items--scrollable"
   >
     <div
-      class="filters__item"
+      class="filters__item-wrapper"
     >
-      <a
-        class="filters__remove"
-      >
-        <i
-          class="iconoir-cancel"
-        />
-      </a>
-       
       <div
-        class="filters__operator"
+        class="filters__item filters__item--level-1"
       >
-        <span
-          class="filters__operator-text"
-        >
-          viewFilterContext.where
-        </span>
-         
-        <!---->
-         
-        <!---->
-      </div>
-       
-      <div
-        class="filters__field"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
+        <div>
+          <span
+            class="filters__operator-where"
           >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              Stars
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
+            viewFilterContext.where
+          </span>
            
+          <!---->
+           
+          <!---->
+        </div>
+         
+        <div
+          class="filters__condition-item"
+        >
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
+            class="filters__field"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Stars
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Name"
+                        >
+                          Name
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options active"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Stars"
+                        >
+                          Stars
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="Flag"
+                        >
+                          Flag
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Name"
-                    >
-                      Name
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options active"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Stars"
-                    >
-                      Stars
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="Flag"
-                    >
-                      Flag
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__type"
-      >
-        <div
-          class="dropdown dropdown--tiny"
-          tabindex="0"
-        >
-          <a
-            class="dropdown__selected"
-          >
-            <!---->
-             
-            <!---->
-             
-            <span
-              class="dropdown__selected-text"
-            >
-              viewFilter.is
-            </span>
-             
-            <i
-              class="dropdown__toggle-icon iconoir-nav-arrow-down"
-            />
-          </a>
            
           <div
-            class="dropdown__items hidden dropdown__items--fixed"
-            style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
+            class="filters__type"
           >
             <div
-              class="select__search"
+              class="dropdown dropdown--tiny"
+              tabindex="0"
             >
-              <i
-                class="select__search-icon iconoir-search"
-              />
+              <a
+                class="dropdown__selected"
+              >
+                <!---->
+                 
+                <!---->
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  viewFilter.is
+                </span>
+                 
+                <i
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
+                />
+              </a>
                
-              <input
-                class="select__search-input"
-                placeholder="action.search"
-                tabindex="0"
-                type="text"
-              />
+              <div
+                class="dropdown__items hidden dropdown__items--fixed"
+                style="top: 0px; left: 0px; min-width: 0px; max-height: calc(100vh - 20px);"
+              >
+                <div
+                  class="select__search"
+                >
+                  <i
+                    class="select__search-icon iconoir-search"
+                  />
+                   
+                  <input
+                    class="select__search-input"
+                    placeholder="action.search"
+                    tabindex="0"
+                    type="text"
+                  />
+                </div>
+                 
+                <ul
+                  class="select__items select__items--no-max-height prevent-scroll"
+                  tabindex=""
+                >
+                  <li
+                    class="select__item select__item--no-options active hover"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.is"
+                        >
+                          viewFilter.is
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.isNot"
+                        >
+                          viewFilter.isNot
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.higherThan"
+                        >
+                          viewFilter.higherThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                  <li
+                    class="select__item select__item--no-options"
+                  >
+                    <a
+                      class="select__item-link"
+                    >
+                      <div
+                        class="select__item-name"
+                      >
+                        <!---->
+                         
+                        <!---->
+                         
+                        <span
+                          class="select__item-name-text"
+                          title="viewFilter.lowerThan"
+                        >
+                          viewFilter.lowerThan
+                        </span>
+                      </div>
+                       
+                      <!---->
+                    </a>
+                     
+                    <i
+                      class="select__item-active-icon iconoir-check-circle"
+                    />
+                  </li>
+                </ul>
+                 
+                <!---->
+                 
+                <!---->
+              </div>
             </div>
-             
-            <ul
-              class="select__items select__items--no-max-height prevent-scroll"
-              tabindex=""
-            >
-              <li
-                class="select__item select__item--no-options active hover"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.is"
-                    >
-                      viewFilter.is
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.isNot"
-                    >
-                      viewFilter.isNot
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.higherThan"
-                    >
-                      viewFilter.higherThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-              <li
-                class="select__item select__item--no-options"
-              >
-                <a
-                  class="select__item-link"
-                >
-                  <div
-                    class="select__item-name"
-                  >
-                    <!---->
-                     
-                    <!---->
-                     
-                    <span
-                      class="select__item-name-text"
-                      title="viewFilter.lowerThan"
-                    >
-                      viewFilter.lowerThan
-                    </span>
-                  </div>
-                   
-                  <!---->
-                </a>
-                 
-                <i
-                  class="select__item-active-icon iconoir-check-circle"
-                />
-              </li>
-            </ul>
-             
-            <!---->
-             
-            <!---->
           </div>
-        </div>
-      </div>
-       
-      <div
-        class="filters__value"
-      >
-        <div
-          class="filters__value-rating"
-        >
+           
           <div
-            class="rating color--dark-orange editing"
+            class="filters__value"
+          >
+            <div
+              class="filters__value-rating"
+            >
+              <div
+                class="rating color--dark-orange editing"
+              >
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+                <i
+                  class="rating__star baserow-icon-star rating__star--selected"
+                />
+              </div>
+            </div>
+          </div>
+           
+          <a
+            class="filters__remove"
           >
             <i
-              class="rating__star baserow-icon-star rating__star--selected"
+              class="iconoir-bin"
             />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-            <i
-              class="rating__star baserow-icon-star rating__star--selected"
-            />
-          </div>
+          </a>
         </div>
       </div>
     </div>
+     
   </div>
    
   <div
-    class="filters_footer"
+    class="filters__footer"
   >
-    <a
-      class="filters__add"
+    <div
+      class="filters__actions"
     >
-      <i
-        class="filters__add-icon iconoir-plus"
-      />
-      
-      viewFilterContext.addFilter
-    </a>
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilter
+      </a>
+       
+      <a
+        class="filters__add"
+      >
+        <i
+          class="filters__add-icon iconoir-plus"
+        />
+        
+        viewFilterContext.addFilterGroup
+      </a>
+    </div>
      
     <div>
       <div

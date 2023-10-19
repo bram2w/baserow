@@ -1,18 +1,18 @@
 .conditional-color-value-provider-form__color {
-  background-color: $color-neutral-100;
-  padding: 12px 30px;
-  margin: 0 -20px;
-  margin-bottom: 12px;
-
-  & .filters__item {
-    margin-left: 1px;
-  }
+  background-color: $color-neutral-10;
+  padding-top: 12px;
+  padding-right: 2px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: 1px solid $color-neutral-200;
 }
 
 .conditional-color-value-provider-form__color-header {
   display: flex;
   justify-content: left;
   align-items: center;
+  padding: 0 16px;
+  margin-bottom: 12px;
 }
 
 .conditional-color-value-provider-form__color-handle {
@@ -26,25 +26,25 @@
 }
 
 .conditional-color-value-provider-form__color-trash-link {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: $color-neutral-900;
-  padding: 6px;
-  margin-left: 4px;
+  color: $palette-neutral-900;
 
+  @include flex-align-items(4px, inline-flex);
   @include rounded($rounded);
 
   &:hover {
     text-decoration: none;
-    background-color: $color-neutral-100;
+    color: $palette-neutral-1100;
   }
+}
+
+.conditional-color-value-provider-form__color-trash-icon {
+  font-size: 16px;
 }
 
 .conditional-color-value-provider-form__color-color {
   @extend %option-shadow;
 
-  padding: 6px 9px;
+  padding: 9px;
   text-align: center;
   color: $color-neutral-900;
   font-size: 14px;
@@ -55,15 +55,71 @@
 }
 
 .conditional-color-value-provider-form__color-filter--empty {
-  padding: 12px;
+  padding: 0 12px;
   white-space: normal;
   text-align: center;
+  margin-left: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+
+  :first-child {
+    font-weight: 600;
+    font-size: 14px;
+  }
+}
+
+.conditional-color-value-provider-form__color-filter-add {
+  color: $palette-neutral-900;
+  margin-right: 12px;
+
+  @include flex-align-items(4px, inline-flex);
+
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-1100;
+  }
+}
+
+.conditional-color-value-provider-form__color-filter-action-icon {
+  font-size: 20px;
+}
+
+.conditional-color-value-provider-form__color-add {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: $palette-neutral-900;
+
+  &:hover {
+    text-decoration: none;
+    color: $palette-neutral-1100;
+  }
 }
 
 .conditional-color-value-provider-form__color-filters {
   margin-bottom: 12px;
+  padding: 0 6px 0 12px;
 }
 
-.conditional-color-value-provider-form__color-filter-add {
-  color: $color-neutral-900;
+.conditional-color-value-provider-form__color-filter-actions {
+  display: flex;
+  align-items: center;
+  border-top: 1px solid $color-neutral-200;
+  padding: 12px 16px;
 }
+
+.conditional-color-value-provider-form__colors-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 4px 0 4px;
+ }
+
+ .conditional-color-value-provider-form__colors-header-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 140%;
+ }

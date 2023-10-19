@@ -101,24 +101,42 @@
           >
             <ViewFieldConditionsForm
               :filters="fieldOptions.conditions"
+              :filter-groups="fieldOptions.condition_groups"
               :disable-filter="readOnly"
               :filter-type="fieldOptions.condition_type"
               :view="view"
               :fields="allowedConditionalFields"
               :read-only="readOnly"
-              @deleteFilter="deleteCondition(fieldOptions.conditions, $event)"
-              @updateFilter="updateCondition(fieldOptions.conditions, $event)"
+              :full-width="true"
+              :variant="'dark'"
+              @addFilter="addCondition(fieldOptions, $event)"
+              @deleteFilter="deleteCondition(fieldOptions, $event)"
+              @updateFilter="updateCondition(fieldOptions, $event)"
               @selectOperator="
                 $emit('updated-field-options', { condition_type: $event })
               "
+              @deleteFilterGroup="deleteConditionGroup(fieldOptions, $event)"
+              @selectFilterGroupOperator="
+                updateConditionGroupOperator(fieldOptions, $event)
+              "
             />
-            <a
-              class="form-view__add-condition"
-              @click="addCondition(fieldOptions.conditions)"
-            >
-              <i class="iconoir-plus"></i>
-              {{ $t('formViewField.addCondition') }}
-            </a>
+            <div class="form-view__condition-actions">
+              <a
+                class="form-view__add-condition"
+                @click="addCondition(fieldOptions)"
+              >
+                <i class="iconoir-plus"></i>
+                {{ $t('formViewField.addCondition') }}
+              </a>
+              <a
+                v-if="$featureFlagIsEnabled('advanced-filters')"
+                class="form-view__add-condition"
+                @click="addConditionGroup(fieldOptions)"
+              >
+                <i class="iconoir-plus"></i>
+                {{ $t('formViewField.addConditionGroup') }}
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -233,7 +251,13 @@ export default {
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)
     },
-    generateCompatibleCondition() {
+    createConditionGroup() {
+      return {
+        id: 0,
+        filter_type: 'AND',
+      }
+    },
+    generateCompatibleCondition(conditionGroupId = null) {
       const field =
         this.allowedConditionalFields[this.allowedConditionalFields.length - 1]
       const viewFilterTypes = this.$registry.getAll('viewFilter')
@@ -242,12 +266,16 @@ export default {
           return viewFilterType.fieldIsCompatible(field)
         }
       )
-      return {
+      const newCondition = {
         id: 0,
         field: field.id,
         type: compatibleType.type,
         value: '',
       }
+      if (conditionGroupId !== null) {
+        newCondition.group = conditionGroupId
+      }
+      return newCondition
     },
     setShowWhenMatchingConditions(value) {
       const values = { show_when_matching_conditions: value }
@@ -256,26 +284,91 @@ export default {
       }
       this.$emit('updated-field-options', values)
     },
-    addCondition(conditions) {
+    addCondition(
+      { conditions, condition_groups: conditionGroups },
+      conditionGroupId = null
+    ) {
       const newConditions = conditions.slice()
-      newConditions.push(this.generateCompatibleCondition())
-      this.$emit('updated-field-options', { conditions: newConditions })
+      newConditions.push(this.generateCompatibleCondition(conditionGroupId))
+      this.$emit('updated-field-options', {
+        conditions: newConditions,
+        condition_groups: conditionGroups,
+      })
     },
-    updateCondition(conditions, condition) {
+    addConditionGroup({ conditions, condition_groups: filterGroups }) {
+      const newConditionGroup = this.createConditionGroup()
+      const newConditionGroups = filterGroups.slice()
+      newConditionGroups.push(newConditionGroup)
+
+      const newConditions = conditions.slice()
+      newConditions.push(this.generateCompatibleCondition(newConditionGroup.id))
+      this.$emit('updated-field-options', {
+        condition_groups: newConditionGroups,
+        conditions: newConditions,
+      })
+    },
+    updateConditionGroupOperator(
+      { conditions, condition_groups: conditioGroups },
+      { value, filterGroup }
+    ) {
+      conditioGroups = clone(conditioGroups.slice())
+      conditioGroups.forEach((g, index) => {
+        if (g.id === filterGroup.id) {
+          Object.assign(conditioGroups[index], { filter_type: value })
+        }
+      })
+      this.$emit('updated-field-options', {
+        conditions,
+        condition_groups: conditioGroups,
+      })
+    },
+    updateCondition(
+      { conditions, condition_groups: conditionGroups },
+      condition
+    ) {
       conditions = clone(conditions.slice())
       conditions.forEach((c, index) => {
         if (c.id === condition.filter.id) {
           Object.assign(conditions[index], condition.values)
         }
       })
-      this.$emit('updated-field-options', { conditions })
+      this.$emit('updated-field-options', {
+        conditions,
+        condition_groups: conditionGroups,
+      })
     },
-    deleteCondition(conditions, condition) {
+    deleteCondition(
+      { conditions, condition_groups: conditionGroups },
+      condition
+    ) {
       // We need to wait for the next tick, otherwise the condition is already deleted
       // before the event completes, resulting in a click outside of the field.
       this.$nextTick(() => {
         conditions = conditions.filter((c) => c.id !== condition.id)
-        this.$emit('updated-field-options', { conditions })
+        this.$emit('updated-field-options', {
+          conditions,
+          condition_groups: conditionGroups,
+        })
+      })
+    },
+    deleteConditionGroup(
+      { conditions, condition_groups: conditionGroups },
+      { group }
+    ) {
+      // We need to wait for the next tick, otherwise the condition is already deleted
+      // before the event completes, resulting in a click outside of the field.
+      this.$nextTick(() => {
+        const conditionIdsToRemove = conditions
+          .filter((c) => c.group === group.id)
+          .map((c) => c.id)
+        conditions = conditions.filter(
+          (c) => !conditionIdsToRemove.includes(c.id)
+        )
+        conditionGroups = conditionGroups.filter((g) => g.id !== group.id)
+        this.$emit('updated-field-options', {
+          conditions,
+          condition_groups: conditionGroups,
+        })
       })
     },
     /**

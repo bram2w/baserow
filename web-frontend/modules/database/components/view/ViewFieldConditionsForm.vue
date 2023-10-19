@@ -1,125 +1,149 @@
 <template>
-  <div>
+  <div
+    class="filters__items"
+    :class="{
+      'filters__container--dark': variant === 'dark',
+      'filters__items--full-width': fullWidth,
+    }"
+  >
     <!--
       Here we use the index as key to avoid loosing focus when filter id change.
     -->
     <div
-      v-for="(filter, index) in filters"
+      v-for="(filter, index) in filtersTree.filters"
       :key="index"
-      class="filters__item"
-      :class="{
-        'filters__item--loading': filter._ && filter._.loading,
-      }"
+      class="filters__item-wrapper"
     >
-      <a
-        v-if="!disableFilter"
-        class="filters__remove"
-        @click="deleteFilter($event, filter)"
-      >
-        <i class="iconoir-cancel"></i>
-      </a>
-      <span v-else class="filters__remove"></span>
-      <div class="filters__operator">
-        <span v-if="index === 0" class="filters__operator-text">{{
-          $t('viewFilterContext.where')
-        }}</span>
-        <Dropdown
-          v-if="index === 1 && !disableFilter"
-          :value="filterType"
-          :show-search="false"
-          :fixed-items="true"
-          class="dropdown--tiny"
-          @input="selectBooleanOperator($event)"
-        >
-          <DropdownItem
-            :name="$t('viewFilterContext.and')"
-            value="AND"
-          ></DropdownItem>
-          <DropdownItem
-            :name="$t('viewFilterContext.or')"
-            value="OR"
-          ></DropdownItem>
-        </Dropdown>
-        <span v-if="index > 1 || (index > 0 && disableFilter)">
-          {{
-            filterType === 'AND'
-              ? $t('viewFilterContext.and')
-              : $t('viewFilterContext.or')
-          }}
-        </span>
-      </div>
-      <div class="filters__field">
-        <Dropdown
-          :value="filter.field"
-          :disabled="disableFilter"
-          :fixed-items="true"
-          class="dropdown--tiny"
-          @input="updateFilter(filter, { field: $event })"
-        >
-          <DropdownItem
-            v-for="field in fields"
-            :key="'field-' + field.id"
-            :name="field.name"
-            :value="field.id"
-            :disabled="!hasCompatibleFilterTypes(field, filterTypes)"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-      <div class="filters__type">
-        <Dropdown
-          :disabled="disableFilter"
-          :value="filter.type"
-          :fixed-items="true"
-          class="dropdown--tiny"
-          @input="updateFilter(filter, { type: $event })"
-        >
-          <DropdownItem
-            v-for="fType in allowedFilters(filterTypes, fields, filter.field)"
-            :key="fType.type"
-            :name="fType.getName()"
-            :value="fType.type"
-          ></DropdownItem>
-        </Dropdown>
-      </div>
-      <div class="filters__value">
-        <component
-          :is="getInputComponent(filter.type, filter.field)"
-          v-if="
-            fieldIdExists(fields, filter.field) &&
-            fieldIsCompatible(filter.type, filter.field)
-          "
-          :ref="`filter-value-${index}`"
+      <div class="filters__item filters__item--level-1">
+        <ViewFilterFormOperator
+          :index="index"
+          :filter-type="filterType"
+          :disable-filter="disableFilter"
+          @select-boolean-operator="$emit('selectOperator', $event)"
+        />
+        <ViewFieldConditionItem
+          :ref="`condition-${filter.id}`"
           :filter="filter"
           :view="view"
           :fields="fields"
-          :disabled="disableFilter"
+          :disable-filter="disableFilter"
           :read-only="readOnly"
-          @input="updateFilter(filter, { value: $event })"
+          @updateFilter="updateFilter(filter, $event)"
+          @deleteFilter="deleteFilter(filter, $event)"
         />
-        <i
-          v-else-if="!fieldIdExists(fields, filter.field)"
-          v-tooltip="$t('viewFilterContext.relatedFieldNotFound')"
-          class="iconoir-warning-triangle color-error"
-        ></i>
-        <i
-          v-else-if="!fieldIsCompatible(filter.type, filter.field)"
-          v-tooltip="$t('viewFilterContext.filterTypeNotFound')"
-          class="iconoir-warning-triangle color-error"
-        ></i>
+      </div>
+    </div>
+    <div
+      v-for="(groupNode, groupIndex) in filtersTree.groups"
+      :key="filtersTree.filters.length + groupIndex"
+      class="filters__group-item-wrapper"
+    >
+      <ViewFilterFormOperator
+        :index="filtersTree.filters.length + groupIndex"
+        :filter-type="filterType"
+        :disable-filter="disableFilter"
+        @select-boolean-operator="$emit('selectOperator', $event)"
+      />
+      <div class="filters__group-item">
+        <div class="filters__group-item-filters">
+          <div
+            v-for="(filter, index) in groupNode.filters"
+            :key="`${groupIndex}-${index}`"
+            class="filters__item-wrapper"
+          >
+            <div class="filters__item filters__item--level-2">
+              <ViewFilterFormOperator
+                :index="index"
+                :filter-type="groupNode.group.filter_type"
+                :disable-filter="disableFilter"
+                @select-boolean-operator="
+                  $emit('selectFilterGroupOperator', {
+                    value: $event,
+                    filterGroup: groupNode.group,
+                  })
+                "
+              />
+              <ViewFieldConditionItem
+                :ref="`condition-${filter.id}`"
+                :filter="filter"
+                :view="view"
+                :fields="fields"
+                :disable-filter="disableFilter"
+                :read-only="readOnly"
+                @updateFilter="updateFilter(filter, $event)"
+                @deleteFilter="deleteFilter(filter, $event)"
+              />
+            </div>
+          </div>
+        </div>
+        <div v-if="!disableFilter" class="filters__group-item-actions">
+          <a
+            class="filters__add"
+            @click.prevent="$emit('addFilter', groupNode.group.id)"
+          >
+            <i class="filters__add-icon iconoir-plus"></i>
+            {{ addConditionLabel }}</a
+          >
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
+import ViewFilterFormOperator from '@baserow/modules/database/components/view/ViewFilterFormOperator'
+import ViewFieldConditionItem from '@baserow/modules/database/components/view/ViewFieldConditionItem'
+
+const GroupNode = class {
+  constructor(group, parent = null) {
+    this.group = group
+    this.parent = parent
+    this.groups = []
+    this.filters = []
+    if (parent) {
+      parent.groups.push(this)
+    }
+  }
+
+  findGroup(id) {
+    if (this.group && this.group.id === id) {
+      return this
+    }
+    for (const group of this.groups) {
+      const found = group.findGroup(id)
+      if (found) {
+        return found
+      }
+    }
+    return null
+  }
+
+  addFilter(filter) {
+    this.filters.push(filter)
+  }
+
+  remove() {
+    if (this.parent) {
+      this.parent.groups = this.parent.groups.filter((g) => g !== this)
+    }
+  }
+}
 
 export default {
   name: 'ViewFieldConditionsForm',
+  components: {
+    ViewFilterFormOperator,
+    ViewFieldConditionItem,
+  },
   props: {
     filters: {
       type: Array,
       required: true,
+    },
+    filterGroups: {
+      type: Array,
+      required: false,
+      default: () => [],
     },
     disableFilter: {
       type: Boolean,
@@ -141,8 +165,34 @@ export default {
       type: Boolean,
       required: true,
     },
+    addConditionString: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    variant: {
+      type: String,
+      required: false,
+      default: 'light',
+    },
+    fullWidth: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+  },
+  data() {
+    return {
+      groups: {},
+    }
   },
   computed: {
+    addConditionLabel() {
+      return (
+        this.addConditionString ||
+        this.$t('viewFieldConditionsForm.addCondition')
+      )
+    },
     filterTypes() {
       return this.$registry.getAll('viewFilter')
     },
@@ -150,31 +200,43 @@ export default {
       // Copy the filters
       return [...this.filters]
     },
+    filtersTree() {
+      const root = new GroupNode(null)
+      const groups = { '': root }
+      for (const filterGroup of this.filterGroups) {
+        const parentId = filterGroup.parent || ''
+        const parent = groups[parentId]
+        const node = new GroupNode(filterGroup, parent)
+        groups[filterGroup.id] = node
+      }
+      for (const filter of this.filters) {
+        const groupId = filter.group != null ? filter.group : ''
+        const group = groups[groupId]
+        if (group) {
+          group.addFilter(filter)
+        }
+      }
+      return root
+    },
   },
   watch: {
     /**
      * When a filter has been created or removed we want to focus on last value. By
-     * watching localFilters instead of filters, the new and old values are differents.
+     * watching localFilters instead of filters, the new and old values are different.
      */
     localFilters(value, old) {
-      if (value.length !== old.length) {
+      if (value.length !== old.length && value.length > 0) {
         this.$nextTick(() => {
-          this.focusValue(value.length - 1)
+          this.focusFilterValue(value[value.length - 1])
         })
       }
     },
   },
   methods: {
-    hasCompatibleFilterTypes,
-    focusValue(position) {
-      const ref = `filter-value-${position}`
-      if (
-        position >= 0 &&
-        Object.prototype.hasOwnProperty.call(this.$refs, ref) &&
-        this.$refs[ref][0] &&
-        Object.prototype.hasOwnProperty.call(this.$refs[ref][0], 'focus')
-      ) {
-        this.$refs[ref][0].focus()
+    focusFilterValue(filter) {
+      const ref = `condition-${filter.id}`
+      if (this.$refs[ref] && this.$refs[ref].length > 0) {
+        this.$refs[ref][0]?.focusValue()
       }
     },
     /**
@@ -186,9 +248,15 @@ export default {
         return field !== undefined && filterType.fieldIsCompatible(field)
       })
     },
-    deleteFilter(event, filter) {
+    deleteFilter(filter, event) {
       event.deletedFilterEvent = true
-      this.$emit('deleteFilter', filter)
+      const groupNode = this.filtersTree.findGroup(filter.group)
+      const lastInGroup = groupNode && groupNode.filters.length === 1
+      if (lastInGroup) {
+        this.$emit('deleteFilterGroup', groupNode)
+      } else {
+        this.$emit('deleteFilter', filter)
+      }
     },
     /**
      * Updates a filter with the given values. Some data manipulation will also be done
@@ -231,26 +299,6 @@ export default {
       }
 
       this.$emit('updateFilter', { filter, values })
-    },
-    selectBooleanOperator(value) {
-      this.$emit('selectOperator', value)
-    },
-    /**
-     * Returns the input component related to the filter type. This component is
-     * responsible for updating the filter value.
-     */
-    getInputComponent(type, fieldId) {
-      const field = this.fields.find(({ id }) => id === fieldId)
-      return this.$registry.get('viewFilter', type).getInputComponent(field)
-    },
-    fieldIdExists(fields, fieldId) {
-      return fields.findIndex((field) => field.id === fieldId) !== -1
-    },
-    fieldIsCompatible(filterType, fieldId) {
-      const field = this.fields.find(({ id }) => id === fieldId)
-      return this.$registry
-        .get('viewFilter', filterType)
-        .fieldIsCompatible(field)
     },
   },
 }

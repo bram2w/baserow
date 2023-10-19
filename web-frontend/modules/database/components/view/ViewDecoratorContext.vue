@@ -1,5 +1,5 @@
 <template>
-  <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
+  <Context :max-height-if-outside-viewport="true">
     <ViewDecoratorList
       v-if="activeDecorations.length === 0"
       :database="database"
@@ -7,7 +7,7 @@
       @select="addDecoration($event)"
     />
     <div v-else class="decorator-context">
-      <div class="decorator-context__list">
+      <div v-auto-overflow-scroll class="decorator-context__list">
         <div
           v-for="dec in activeDecorations"
           :key="dec.decoration.id"
