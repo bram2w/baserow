@@ -107,7 +107,9 @@ export default {
   methods: {
     hasCompatibleFilterTypes,
     focusValue() {
-      this.$refs['filter-value'].focus()
+      if (this.$refs['filter-value']?.focus !== undefined) {
+        this.$refs['filter-value'].focus()
+      }
     },
     allowedFilters(filterTypes, fields, fieldId) {
       const field = fields.find((f) => f.id === fieldId)

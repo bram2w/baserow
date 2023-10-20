@@ -1069,9 +1069,6 @@ describe('All Tests', () => {
     const result = new DateBeforeOrEqualViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, { date_include_time: true })
-    if (values.expected !== result) {
-      console.log('beforeequal', values)
-    }
     expect(result).toBe(values.expected)
   })
 
@@ -1090,9 +1087,6 @@ describe('All Tests', () => {
       values.filterValue,
       { date_include_time: true }
     )
-    if (values.expected !== result) {
-      console.log('afterequal', values)
-    }
     expect(result).toBe(values.expected)
   })
 
@@ -1144,7 +1138,6 @@ describe('All Tests', () => {
     const result = new DateWithinDaysViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('days', values)
     expect(result).toBe(values.expected)
   })
 
@@ -1152,7 +1145,6 @@ describe('All Tests', () => {
     const result = new DateWithinWeeksViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('weeks', values)
     expect(result).toBe(values.expected)
   })
 
@@ -1160,7 +1152,6 @@ describe('All Tests', () => {
     const result = new DateWithinMonthsViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('months', values)
     expect(result).toBe(values.expected)
   })
 

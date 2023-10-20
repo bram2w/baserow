@@ -313,3 +313,52 @@ def test_view_group_by_deleted(mock_broadcast_to_channel_group, data_fixture):
     assert args[0][1]["type"] == "view_group_by_deleted"
     assert args[0][1]["view_id"] == view_id
     assert args[0][1]["view_group_by_id"] == view_group_by_id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_filter_group_created(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    view = data_fixture.create_grid_view(user=user, table=table)
+    view_filter_group = ViewHandler().create_filter_group(user=user, view=view)
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{table.id}"
+    assert args[0][1]["type"] == "view_filter_group_created"
+    assert args[0][1]["view_filter_group"]["id"] == view_filter_group.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_filter_group_updated(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    view_filter_group = data_fixture.create_view_filter_group(user=user)
+    ViewHandler().update_filter_group(
+        user=user, filter_group=view_filter_group, filter_type="OR"
+    )
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_filter_group.view.table.id}"
+    assert args[0][1]["type"] == "view_filter_group_updated"
+    assert args[0][1]["view_filter_group_id"] == view_filter_group.id
+    assert args[0][1]["view_filter_group"]["id"] == view_filter_group.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.registries.broadcast_to_channel_group")
+def test_view_filter_group_deleted(mock_broadcast_to_channel_group, data_fixture):
+    user = data_fixture.create_user()
+    view_filter_group = data_fixture.create_view_filter_group(user=user)
+    view_id = view_filter_group.view.id
+    view_filter_group_id = view_filter_group.id
+    ViewHandler().delete_filter_group(user=user, filter_group=view_filter_group)
+
+    mock_broadcast_to_channel_group.delay.assert_called_once()
+    args = mock_broadcast_to_channel_group.delay.call_args
+    assert args[0][0] == f"table-{view_filter_group.view.table.id}"
+    assert args[0][1]["type"] == "view_filter_group_deleted"
+    assert args[0][1]["view_id"] == view_id
+    assert args[0][1]["view_filter_group_id"] == view_filter_group_id

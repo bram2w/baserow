@@ -1,13 +1,17 @@
+import { getUndoRedoActionRequestConfig } from '@baserow/modules/database/utils/action'
+
 export default (client) => {
   return {
     fetchAll(viewId) {
       return client.get(`/database/views/${viewId}/filter/`)
     },
-    create(viewId, values) {
-      return client.post(`/database/views/${viewId}/filters/`, values)
+    create(viewId, values, undoRedoActionGroupId = null) {
+      const config = getUndoRedoActionRequestConfig({ undoRedoActionGroupId })
+      return client.post(`/database/views/${viewId}/filters/`, values, config)
     },
-    createGroup(viewId) {
-      return client.post(`/database/views/${viewId}/filter-groups/`)
+    createGroup(viewId, undoRedoActionGroupId = null) {
+      const config = getUndoRedoActionRequestConfig({ undoRedoActionGroupId })
+      return client.post(`/database/views/${viewId}/filter-groups/`, {}, config)
     },
     get(viewFilterId) {
       return client.get(`/database/views/filter/${viewFilterId}/`)

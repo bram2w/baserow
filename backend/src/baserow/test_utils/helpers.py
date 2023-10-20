@@ -427,7 +427,7 @@ def assert_undo_redo_actions_are_valid(
     for action, expected_action_type in zip(actions, expected_action_types):
         assert (
             action.type == expected_action_type.type
-        ), f"Action expected of type {expected_action_type} but got {action.type}"
+        ), f"Action expected of type {expected_action_type} but got {action}"
         assert (
             action is not None
         ), f"Action is None, but should be of type {expected_action_type}"

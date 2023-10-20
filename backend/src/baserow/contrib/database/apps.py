@@ -137,11 +137,13 @@ class DatabaseConfig(AppConfig):
             CreateDecorationActionType,
             CreateViewActionType,
             CreateViewFilterActionType,
+            CreateViewFilterGroupActionType,
             CreateViewGroupByActionType,
             CreateViewSortActionType,
             DeleteDecorationActionType,
             DeleteViewActionType,
             DeleteViewFilterActionType,
+            DeleteViewFilterGroupActionType,
             DeleteViewGroupByActionType,
             DeleteViewSortActionType,
             DuplicateViewActionType,
@@ -151,6 +153,7 @@ class DatabaseConfig(AppConfig):
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
             UpdateViewFilterActionType,
+            UpdateViewFilterGroupActionType,
             UpdateViewGroupByActionType,
             UpdateViewSortActionType,
         )
@@ -174,6 +177,9 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateDecorationActionType())
         action_type_registry.register(UpdateDecorationActionType())
         action_type_registry.register(DeleteDecorationActionType())
+        action_type_registry.register(CreateViewFilterGroupActionType())
+        action_type_registry.register(UpdateViewFilterGroupActionType())
+        action_type_registry.register(DeleteViewFilterGroupActionType())
 
         from .airtable.registry import airtable_column_type_registry
         from .export.registries import table_exporter_registry

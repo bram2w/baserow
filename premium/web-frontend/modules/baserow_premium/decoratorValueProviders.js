@@ -83,22 +83,11 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     }
   }
 
-  static getDefaultColorConf(
-    registry,
-    { fields },
-    noFilter = false,
-    excludeColors = undefined
-  ) {
+  static getDefaultColorConf(excludeColors = undefined) {
     return {
       color: randomColor(excludeColors),
       operator: 'AND',
-      filters: noFilter
-        ? []
-        : [
-            ConditionalColorValueProviderType.getDefaultFilterConf(registry, {
-              fields,
-            }),
-          ],
+      filters: [],
       id: uuid(),
     }
   }
@@ -151,15 +140,10 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     return ConditionalColorValueProviderForm
   }
 
-  getDefaultConfiguration({ fields }) {
-    const { $registry } = this.app
+  getDefaultConfiguration() {
     return {
       default: null,
-      colors: [
-        ConditionalColorValueProviderType.getDefaultColorConf($registry, {
-          fields,
-        }),
-      ],
+      colors: [ConditionalColorValueProviderType.getDefaultColorConf()],
     }
   }
 }

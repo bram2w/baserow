@@ -202,6 +202,9 @@ To stop receiving updates related to a page you are subscribed to, you will need
 * `view_filter_created`
 * `view_filter_updated`
 * `view_filter_deleted`
+* `view_filter_group_created`
+* `view_filter_group_updated`
+* `view_filter_group_deleted`
 * `view_sort_created`
 * `view_sort_updated`
 * `view_sort_deleted`
@@ -214,3 +217,5 @@ To stop receiving updates related to a page you are subscribed to, you will need
 ### Premium message types
 
 * `row_comment_created`
+* `row_comment_updated`
+* `row_comment_deleted`

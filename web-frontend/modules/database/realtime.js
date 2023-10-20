@@ -377,6 +377,79 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent(
+    'view_filter_group_created',
+    ({ store, app }, data) => {
+      if (!app.$featureFlagIsEnabled('advanced-filters')) {
+        return
+      }
+      const view = store.getters['view/get'](data.view_filter_group.view)
+      if (view !== undefined) {
+        store.dispatch('view/forceCreateFilterGroup', {
+          view,
+          values: data.view_filter_group,
+        })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  )
+
+  realtime.registerEvent(
+    'view_filter_group_updated',
+    ({ store, app }, data) => {
+      if (!app.$featureFlagIsEnabled('advanced-filters')) {
+        return
+      }
+      const view = store.getters['view/get'](data.view_filter_group.view)
+      if (view !== undefined) {
+        const filterGroup = view.filter_groups.find(
+          (group) => group.id === data.view_filter_group.id
+        )
+        if (filterGroup !== undefined) {
+          store.dispatch('view/forceUpdateFilterGroup', {
+            filterGroup,
+            values: data.view_filter_group,
+          })
+          if (store.getters['view/getSelectedId'] === view.id) {
+            app.$bus.$emit('table-refresh', {
+              tableId: store.getters['table/getSelectedId'],
+            })
+          }
+        }
+      }
+    }
+  )
+
+  realtime.registerEvent(
+    'view_filter_group_deleted',
+    ({ store, app }, data) => {
+      if (!app.$featureFlagIsEnabled('advanced-filters')) {
+        return
+      }
+      const view = store.getters['view/get'](data.view_id)
+      if (view !== undefined) {
+        const filterGroup = view.filter_groups.find(
+          (group) => group.id === data.view_filter_group_id
+        )
+        if (filterGroup !== undefined) {
+          store.dispatch('view/forceDeleteFilterGroup', {
+            view,
+            filterGroup,
+          })
+          if (store.getters['view/getSelectedId'] === view.id) {
+            app.$bus.$emit('table-refresh', {
+              tableId: store.getters['table/getSelectedId'],
+            })
+          }
+        }
+      }
+    }
+  )
+
   realtime.registerEvent('view_sort_created', ({ store, app }, data) => {
     const view = store.getters['view/get'](data.view_sort.view)
     if (view !== undefined) {
