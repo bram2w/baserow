@@ -1,5 +1,6 @@
 import pytest
 
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowGetRow
 from baserow.core.services.exceptions import (
     ServiceDoesNotExist,
@@ -81,6 +82,76 @@ def test_update_service(data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_service_filters(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = TableHandler().create_table_and_fields(
+        user,
+        database,
+        name="Films",
+        fields=[
+            ("Name", "text", {}),
+            ("Rating", "rating", {}),
+        ],
+    )
+    name_field = table.field_set.get(name="Name")
+    rating_field = table.field_set.get(name="Rating")
+    service = data_fixture.create_local_baserow_list_rows_service(table=table)
+    service_type = service_type_registry.get("local_baserow_list_rows")
+
+    # Create our initial 2 filters.
+    ServiceHandler().update_service(
+        service_type,
+        service,
+        service_filters=[
+            {
+                "field": name_field,
+                "type": "equal",
+                "value": "James Bond",
+            },
+            {
+                "field": rating_field,
+                "type": "equal",
+                "value": "5",
+            },
+        ],
+    )
+    assert service.service_filters.count() == 2
+    assert service.service_filters.filter(
+        field=name_field, type="equal", value="James Bond"
+    ).exists()
+    assert service.service_filters.filter(
+        field=rating_field, type="equal", value="5"
+    ).exists()
+
+    # Replace it with one different one.
+    ServiceHandler().update_service(
+        service_type,
+        service,
+        service_filters=[
+            {
+                "field": name_field,
+                "type": "equal",
+                "value": "Avengers",
+            },
+        ],
+    )
+    assert service.service_filters.count() == 1
+    assert service.service_filters.filter(
+        field=name_field, type="equal", value="Avengers"
+    ).exists()
+
+    # Replace it with none.
+    ServiceHandler().update_service(
+        service_type,
+        service,
+        service_filters=[],
+    )
+    assert service.service_filters.count() == 0
+
+
+@pytest.mark.django_db
 def test_update_service_invalid_values(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service()
 
@@ -96,8 +167,9 @@ def test_update_service_invalid_values(data_fixture):
 @pytest.mark.django_db
 def test_delete_service(data_fixture):
     service = data_fixture.create_local_baserow_get_row_service()
+    service_type = service_type_registry.get("local_baserow_get_row")
 
-    ServiceHandler().delete_service(service)
+    ServiceHandler().delete_service(service_type, service)
 
     assert Service.objects.count() == 0
 

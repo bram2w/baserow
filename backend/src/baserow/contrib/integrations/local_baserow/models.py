@@ -82,12 +82,16 @@ class LocalBaserowTableServiceFilter(ServiceFilter):
         blank=True,
         help_text="The filter value that must be compared to the field's value.",
     )
+    order = models.PositiveIntegerField()
 
     def __str__(self):
         return self.value
 
     def __repr__(self):
         return f"<LocalBaserowTableServiceFilter {self.field} {self.type} {self.value}>"
+
+    class Meta:
+        ordering = ("order", "id")
 
 
 class LocalBaserowTableServiceSort(ServiceSort):

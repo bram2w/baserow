@@ -37,6 +37,14 @@ export class ServiceType extends Registerable {
     throw new Error('Must be set on the type.')
   }
 
+  /**
+   * A hook called prior to an update to modify the new values
+   * before they get persisted in the API.
+   */
+  beforeUpdate(newValues, oldValues) {
+    return newValues
+  }
+
   getOrder() {
     return 0
   }

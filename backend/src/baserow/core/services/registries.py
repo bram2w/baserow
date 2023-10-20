@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -75,6 +75,38 @@ class ServiceType(
                 values["integration"] = None
 
         return values
+
+    def after_create(self, instance: ServiceSubClass, values: Dict):
+        """
+        This hook is called right after the service has been created.
+
+        :param instance: The created service instance.
+        :param values: The values that were passed when creating the service
+            metadata.
+        """
+
+    def after_update(
+        self,
+        instance: ServiceSubClass,
+        values: Dict,
+        changes: Dict[str, Tuple],
+    ):
+        """
+        This hook is called right after the service has been updated.
+
+        :param instance: The updated service instance.
+        :param values: The values that were passed when creating the service
+            metadata.
+        :param changes: A dictionary containing all changes which were made to the
+            service prior to `after_update` being called.
+        """
+
+    def before_delete(self, instance: ServiceSubClass):
+        """
+        This hook is called just before the service will be deleted.
+
+        :param instance: The to be deleted service instance.
+        """
 
     def dispatch_transform(
         self,

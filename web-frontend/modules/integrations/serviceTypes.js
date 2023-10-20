@@ -35,6 +35,23 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
     return service.schema
   }
 
+  /**
+   * A hook called prior to an update to modify the filters and
+   * sortings if the `table_id` changes from one ID to another.
+   * The same behavior happens in the backend, this reset is to
+   * make the filter/sort components reset properly.
+   */
+  beforeUpdate(newValues, oldValues) {
+    if (
+      oldValues.table_id !== null &&
+      newValues.table_id !== oldValues.table_id
+    ) {
+      newValues.filters = []
+      newValues.sortings = []
+    }
+    return newValues
+  }
+
   getOrder() {
     return 10
   }

@@ -153,6 +153,17 @@ const actions = {
       }
     })
 
+    // If we have a dataSource type, fetch it from the service type registry
+    // then call the registry's `beforeUpdate` hook to optionally manipulate
+    // the values prior to performing an update.
+    if (dataSource.type !== null) {
+      const dataSourceType = this.$registry.get('service', dataSource.type)
+      updateContext.valuesToUpdate = dataSourceType.beforeUpdate(
+        updateContext.valuesToUpdate,
+        oldValues
+      )
+    }
+
     await dispatch('forceUpdate', {
       page,
       dataSource,

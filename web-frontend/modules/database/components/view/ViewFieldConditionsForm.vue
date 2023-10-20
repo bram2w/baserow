@@ -133,9 +133,12 @@ export default {
       type: Array,
       required: true,
     },
+    // A view is optional, but may be required by some specific
+    // field components, such as `ViewFilterTypeLinkRow`.
     view: {
       type: Object,
-      required: true,
+      required: false,
+      default: () => {},
     },
     readOnly: {
       type: Boolean,

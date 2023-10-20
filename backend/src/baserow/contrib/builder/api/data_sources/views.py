@@ -250,9 +250,7 @@ class DataSourceView(APIView):
 
             # Is this service type different from the current service type?
             if service_type_from_query != service_type_from_service:
-                # Add the found service type
                 change_service_type = True
-                service_type = service_type_from_query
 
         if service_type:
             # We have a service type so either we have a service or a type in the query

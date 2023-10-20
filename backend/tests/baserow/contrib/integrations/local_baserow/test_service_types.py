@@ -19,6 +19,7 @@ from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowGetRowUserServiceType,
     LocalBaserowListRowsUserServiceType,
     LocalBaserowServiceType,
+    LocalBaserowTableServiceType,
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
@@ -467,7 +468,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
     assert list(queryset.values_list("id", flat=True)) == [row_1.id, row_2.id]
 
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=field, value="Cheese"
+        service=service, field=field, value="Cheese", order=0
     )
 
     dispatch_data = service_type.dispatch_data(service)
@@ -523,7 +524,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="equal", value="Goose"
     )
     cost_150 = data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="150"
+        service=service, field=cost, value="150", order=0
     )
     dispatch_data = service_type.dispatch_data(service)
     assert list(dispatch_data["data"].values_list("id", flat=True)) == [
@@ -538,10 +539,10 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
         view=view, field=ingredient, type="contains", value="Duck"
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="25"
+        service=service, field=cost, value="25", order=0
     )
     data_fixture.create_local_baserow_table_service_filter(
-        service=service, field=cost, value="50"
+        service=service, field=cost, value="50", order=0
     )
     dispatch_data = service_type.dispatch_data(service)
     assert list(dispatch_data["data"].values_list("id", flat=True)) == [
@@ -1201,3 +1202,25 @@ def test_local_baserow_table_service_type_schema_name():
         LocalBaserowListRowsUserServiceType().get_schema_name(mock_service)
         == "Table123Schema"
     )
+
+
+def test_local_baserow_table_service_type_after_update_table_change_deletes_filters():
+    mock_instance = Mock()
+    mock_from_table = Mock()
+    mock_to_table = Mock()
+    change_table_from_Table_to_None = {"table": (mock_from_table, None)}
+    change_table_from_None_to_Table = {"table": (None, mock_to_table)}
+    change_table_from_Table_to_Table = {"table": (mock_from_table, mock_to_table)}
+
+    service_type_cls = LocalBaserowTableServiceType
+    service_type_cls.model_class = Mock()
+    service_type = service_type_cls()
+
+    service_type.after_update(mock_instance, {}, change_table_from_Table_to_None)
+    assert not mock_instance.service_filters.all.return_value.delete.called
+
+    service_type.after_update(mock_instance, {}, change_table_from_None_to_Table)
+    assert not mock_instance.service_filters.all.return_value.delete.called
+
+    service_type.after_update(mock_instance, {}, change_table_from_Table_to_Table)
+    assert mock_instance.service_filters.all.return_value.delete.called
