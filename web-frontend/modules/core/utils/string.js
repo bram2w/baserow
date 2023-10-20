@@ -3,6 +3,18 @@ import {
   getFeatureFlags,
 } from '@baserow/modules/core/utils/env'
 
+/**
+ * Generates a UUID version 4 (UUID v4) string.
+ *
+ * This function creates a UUID v4 string by using a combination of the current
+ * timestamp and random numbers. While the standard UUID v4 is based on random
+ * numbers, this function uses the timestamp to influence the randomness.
+ *
+ * Note: This method does not produce a traditional time-based UUID (v1) or a
+ * purely random UUID v4, but rather a hybrid.
+ *
+ * @returns {string} - A UUID v4 string
+ */
 export const uuid = function () {
   let dt = new Date().getTime()
   const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

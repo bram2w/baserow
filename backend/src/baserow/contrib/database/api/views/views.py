@@ -61,11 +61,13 @@ from baserow.contrib.database.views.actions import (
     CreateDecorationActionType,
     CreateViewActionType,
     CreateViewFilterActionType,
+    CreateViewFilterGroupActionType,
     CreateViewGroupByActionType,
     CreateViewSortActionType,
     DeleteDecorationActionType,
     DeleteViewActionType,
     DeleteViewFilterActionType,
+    DeleteViewFilterGroupActionType,
     DeleteViewGroupByActionType,
     DeleteViewSortActionType,
     DuplicateViewActionType,
@@ -75,6 +77,7 @@ from baserow.contrib.database.views.actions import (
     UpdateViewActionType,
     UpdateViewFieldOptionsActionType,
     UpdateViewFilterActionType,
+    UpdateViewFilterGroupActionType,
     UpdateViewGroupByActionType,
     UpdateViewSortActionType,
 )
@@ -1008,9 +1011,11 @@ class ViewFilterGroupsView(APIView):
 
         view = ViewHandler().get_view(view_id)
 
-        view_group = ViewHandler().create_filter_group(request.user, view, **data)
+        view_filter_group = action_type_registry.get_by_type(
+            CreateViewFilterGroupActionType
+        ).do(request.user, view, **data)
 
-        serializer = ViewFilterGroupSerializer(view_group)
+        serializer = ViewFilterGroupSerializer(view_filter_group)
         return Response(serializer.data)
 
 
@@ -1087,17 +1092,17 @@ class ViewFilterGroupView(APIView):
         """Updates the view filter group."""
 
         handler = ViewHandler()
-        view_group = handler.get_filter_group(
+        view_filter_group = handler.get_filter_group(
             request.user,
             filter_group_id,
             base_queryset=ViewFilterGroup.objects.select_for_update(of=("self",)),
         )
 
-        view_group = ViewHandler().update_filter_group(
-            request.user, view_group, data["filter_type"]
-        )
+        view_filter_group = action_type_registry.get_by_type(
+            UpdateViewFilterGroupActionType
+        ).do(request.user, view_filter_group, **data)
 
-        serializer = ViewFilterGroupSerializer(view_group)
+        serializer = ViewFilterGroupSerializer(view_filter_group)
         return Response(serializer.data)
 
     @extend_schema(
@@ -1132,9 +1137,13 @@ class ViewFilterGroupView(APIView):
     def delete(self, request, filter_group_id):
         """Deletes an existing filter group."""
 
-        view_group = ViewHandler().get_filter_group(request.user, filter_group_id)
+        view_filter_group = ViewHandler().get_filter_group(
+            request.user, filter_group_id
+        )
 
-        ViewHandler().delete_filter_group(request.user, view_group)
+        action_type_registry.get_by_type(DeleteViewFilterGroupActionType).do(
+            request.user, view_filter_group
+        )
 
         return Response(status=204)
 

@@ -1,3 +1,4 @@
+import { v1 as uuidv1 } from 'uuid'
 import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import { uuid, isSecureURL } from '@baserow/modules/core/utils/string'
 import { fitInCookie } from '@baserow/modules/database/utils/view'
@@ -8,6 +9,7 @@ import SortService from '@baserow/modules/database/services/sort'
 import GroupByService from '@baserow/modules/database/services/groupBy'
 import { clone } from '@baserow/modules/core/utils/object'
 import { DATABASE_ACTION_SCOPES } from '@baserow/modules/database/utils/undoRedoConstants'
+import { createNewUndoRedoActionGroupId } from '@baserow/modules/database/utils/action'
 
 export function populateFilter(filter) {
   filter._ = {
@@ -54,6 +56,7 @@ export function populateView(view, registry) {
     type: type.serialize(),
     selected: false,
     loading: false,
+    focusFilter: null,
   }
 
   if (Object.prototype.hasOwnProperty.call(view, 'filters')) {
@@ -176,6 +179,9 @@ export const mutations = {
       view.filters[index].id = id
       view.filters[index]._.loading = false
     }
+  },
+  SET_FILTER_FOCUS(state, { view, filterId }) {
+    view._.focusFilter = filterId
   },
   DELETE_FILTER(state, { view, id }) {
     const index = view.filters.findIndex((item) => item.id === id)
@@ -636,6 +642,12 @@ export const actions = {
     commit('SET_FILTER_LOADING', { filter, value })
   },
   /**
+   * Focus a specific filter.
+   */
+  setFocusFilter({ commit }, { view, filterId }) {
+    commit('SET_FILTER_FOCUS', { view, filterId })
+  },
+  /**
    * Creates a new filter and adds it to the store right away. If the API call succeeds
    * the filter ID will be added, but if it fails it will be removed from the store.
    * It also create the filter group if it doesn't exist yet in the same optimistic
@@ -702,7 +714,7 @@ export const actions = {
 
     const filter = Object.assign({}, values)
     populateFilter(filter)
-    filter.id = uuid()
+    filter.id = uuidv1()
     filter._.loading = !readOnly
     filter.group = filterGroupId
     values.group = filterGroupId
@@ -711,14 +723,17 @@ export const actions = {
     if (emitEvent) {
       this.$bus.$emit('view-filter-created', { view, filter })
     }
+    commit('SET_FILTER_FOCUS', { view, filterId: filter.id })
 
+    const undoRedoActionGroupId = createNewUndoRedoActionGroupId()
     if (!readOnly) {
       if (createNewFilterGroup) {
         // The group needs to be created first before we can create the filter
         // in the case we're trying to create a new filter in a new group.
         try {
           const { data } = await FilterService(this.$client).createGroup(
-            view.id
+            view.id,
+            undoRedoActionGroupId
           )
           commit('FINALIZE_FILTER_GROUP', {
             view,
@@ -738,7 +753,8 @@ export const actions = {
       try {
         const { data } = await FilterService(this.$client).create(
           view.id,
-          values
+          values,
+          undoRedoActionGroupId
         )
         commit('FINALIZE_FILTER', { view, oldId: filter.id, id: data.id })
       } catch (error) {
@@ -757,7 +773,7 @@ export const actions = {
   async createFilterGroup({ commit }, { view, readOnly = false }) {
     const filterGroup = {}
     populateFilterGroup(filterGroup)
-    filterGroup.id = uuid()
+    filterGroup.id = uuidv1()
     filterGroup._.loading = !readOnly
     filterGroup.filter_type = 'AND'
 
@@ -776,6 +792,14 @@ export const actions = {
     }
 
     return { filterGroup }
+  },
+  /**
+   * Forcefully create a new view filter group without making a request to the backend.
+   */
+  forceCreateFilterGroup({ commit }, { view, values }) {
+    const filterGroup = Object.assign({}, values)
+    populateFilterGroup(filterGroup)
+    commit('ADD_FILTER_GROUP', { view, filterGroup })
   },
   /**
    * Forcefully create a new view filter without making a request to the backend.

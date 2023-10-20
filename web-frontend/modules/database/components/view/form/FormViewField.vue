@@ -109,6 +109,7 @@
               :read-only="readOnly"
               :full-width="true"
               :variant="'dark'"
+              :sorted="true"
               @addFilter="addCondition(fieldOptions, $event)"
               @deleteFilter="deleteCondition(fieldOptions, $event)"
               @updateFilter="updateCondition(fieldOptions, $event)"
@@ -118,6 +119,9 @@
               @deleteFilterGroup="deleteConditionGroup(fieldOptions, $event)"
               @selectFilterGroupOperator="
                 updateConditionGroupOperator(fieldOptions, $event)
+              "
+              @filterFocused="
+                $store.dispatch('view/setFocusFilter', { view, filterId: null })
               "
             />
             <div class="form-view__condition-actions">
@@ -289,10 +293,15 @@ export default {
       conditionGroupId = null
     ) {
       const newConditions = conditions.slice()
-      newConditions.push(this.generateCompatibleCondition(conditionGroupId))
+      const newCondition = this.generateCompatibleCondition(conditionGroupId)
+      newConditions.push(newCondition)
       this.$emit('updated-field-options', {
         conditions: newConditions,
         condition_groups: conditionGroups,
+      })
+      this.$store.dispatch('view/setFocusFilter', {
+        view: this.view,
+        filterId: newCondition.id,
       })
     },
     addConditionGroup({ conditions, condition_groups: filterGroups }) {
@@ -301,10 +310,17 @@ export default {
       newConditionGroups.push(newConditionGroup)
 
       const newConditions = conditions.slice()
-      newConditions.push(this.generateCompatibleCondition(newConditionGroup.id))
+      const newCondition = this.generateCompatibleCondition(
+        newConditionGroup.id
+      )
+      newConditions.push(newCondition)
       this.$emit('updated-field-options', {
         condition_groups: newConditionGroups,
         conditions: newConditions,
+      })
+      this.$store.dispatch('view/setFocusFilter', {
+        view: this.view,
+        filterId: newCondition.id,
       })
     },
     updateConditionGroupOperator(

@@ -64,6 +64,7 @@
           :view="view"
           :read-only="readOnly"
           :variant="'dark'"
+          :sorted="true"
           @addFilter="addFilter(color, $event)"
           @deleteFilter="deleteFilter(color, $event)"
           @updateFilter="updateFilter(color, $event)"
@@ -171,14 +172,7 @@ export default {
       this.$emit('update', {
         colors: [
           ...this.options.colors,
-          ConditionalColorValueProviderType.getDefaultColorConf(
-            this.$registry,
-            {
-              fields: this.fields,
-            },
-            true,
-            colorToExclude
-          ),
+          ConditionalColorValueProviderType.getDefaultColorConf(colorToExclude),
         ],
       })
     },
@@ -204,23 +198,21 @@ export default {
       })
     },
     addFilterGroup(color) {
-      const filterGroup =
+      const newFilterGroup =
         ConditionalColorValueProviderType.getDefaultFilterGroupConf()
+      const newFilter = ConditionalColorValueProviderType.getDefaultFilterConf(
+        this.$registry,
+        {
+          fields: this.fields,
+          filterGroupId: newFilterGroup.id,
+        }
+      )
       const newColors = this.options.colors.map((colorConf) => {
         if (colorConf.id === color.id) {
           return {
             ...colorConf,
-            filter_groups: [...(colorConf.filter_groups || []), filterGroup],
-            filters: [
-              ...colorConf.filters,
-              ConditionalColorValueProviderType.getDefaultFilterConf(
-                this.$registry,
-                {
-                  fields: this.fields,
-                  filterGroupId: filterGroup.id,
-                }
-              ),
-            ],
+            filter_groups: [...(colorConf.filter_groups || []), newFilterGroup],
+            filters: [...colorConf.filters, newFilter],
           }
         }
         return colorConf
@@ -228,6 +220,11 @@ export default {
 
       this.$emit('update', {
         colors: newColors,
+      })
+
+      this.$store.dispatch('view/setFocusFilter', {
+        view: this.view,
+        filterId: newFilter.id,
       })
     },
     updateFilterGroupOperator(color, { value, filterGroup }) {
@@ -252,20 +249,18 @@ export default {
       })
     },
     addFilter(color, filterGroupId = null) {
+      const newFilter = ConditionalColorValueProviderType.getDefaultFilterConf(
+        this.$registry,
+        {
+          fields: this.fields,
+          filterGroupId,
+        }
+      )
       const newColors = this.options.colors.map((colorConf) => {
         if (colorConf.id === color.id) {
           return {
             ...colorConf,
-            filters: [
-              ...colorConf.filters,
-              ConditionalColorValueProviderType.getDefaultFilterConf(
-                this.$registry,
-                {
-                  fields: this.fields,
-                  filterGroupId,
-                }
-              ),
-            ],
+            filters: [...colorConf.filters, newFilter],
           }
         }
         return colorConf
@@ -273,6 +268,11 @@ export default {
 
       this.$emit('update', {
         colors: newColors,
+      })
+
+      this.$store.dispatch('view/setFocusFilter', {
+        view: this.view,
+        filterId: newFilter.id,
       })
     },
     updateFilter(color, { filter, values }) {

@@ -146,6 +146,9 @@ from .signals import (
     view_field_options_updated,
     view_filter_created,
     view_filter_deleted,
+    view_filter_group_created,
+    view_filter_group_deleted,
+    view_filter_group_updated,
     view_filter_updated,
     view_group_by_created,
     view_group_by_deleted,
@@ -1562,7 +1565,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         return filter_group
 
     def create_filter_group(
-        self, user: AbstractUser, view: View, filter_type: Optional[str] = None
+        self,
+        user: AbstractUser,
+        view: View,
+        filter_type: Optional[str] = None,
+        primary_key: Optional[int] = None,
     ) -> ViewFilterGroup:
         """
         Creates a new view filter group.
@@ -1571,6 +1578,9 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param view: The view for which the filter group needs to be created.
         :param filter_type: The filter type, allowed values are the types in the
             view_group_type_registry `and`, `or`.
+        :param primary_key: An optional primary key to give to the new view
+            filter group. Useful to recreate a deleted view filter group with
+            the previous pk.
         :return: The created view filter group instance.
         """
 
@@ -1586,9 +1596,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if filter_type is not None:
             attrs["filter_type"] = filter_type
 
-        filter_group = ViewFilterGroup.objects.create(view=view, **attrs)
+        filter_group = ViewFilterGroup.objects.create(
+            pk=primary_key, view=view, **attrs
+        )
 
-        # view_group_created.send(self, view_group=view_group, user=user)
+        view_filter_group_created.send(self, view_filter_group=filter_group, user=user)
 
         return filter_group
 
@@ -1615,6 +1627,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         filter_group.filter_type = filter_type
         filter_group.save()
 
+        view_filter_group_updated.send(self, view_filter_group=filter_group, user=user)
+
         return filter_group
 
     def delete_filter_group(self, user: AbstractUser, filter_group: ViewFilterGroup):
@@ -1634,16 +1648,16 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             context=filter_group,
         )
 
-        # filter_group_id = view_group.id
+        filter_group_id = filter_group.id
 
         filter_group.delete()
 
-        # view_group_deleted.send(
-        #     self,
-        #     filter_group_id=filter_group_id,
-        #     view_group=view_group,
-        #     user=user,
-        # )
+        view_filter_group_deleted.send(
+            self,
+            view_filter_group_id=filter_group_id,
+            view_filter_group=filter_group,
+            user=user,
+        )
 
     def get_view_order_bys(
         self,

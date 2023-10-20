@@ -6,11 +6,8 @@
       'filters__items--full-width': fullWidth,
     }"
   >
-    <!--
-      Here we use the index as key to avoid loosing focus when filter id change.
-    -->
     <div
-      v-for="(filter, index) in filtersTree.filters"
+      v-for="(filter, index) in filtersTree.filtersOrdered()"
       :key="index"
       class="filters__item-wrapper"
     >
@@ -34,7 +31,7 @@
       </div>
     </div>
     <div
-      v-for="(groupNode, groupIndex) in filtersTree.groups"
+      v-for="(groupNode, groupIndex) in filtersTree.groupsOrdered()"
       :key="filtersTree.filters.length + groupIndex"
       class="filters__group-item-wrapper"
     >
@@ -47,7 +44,7 @@
       <div class="filters__group-item">
         <div class="filters__group-item-filters">
           <div
-            v-for="(filter, index) in groupNode.filters"
+            v-for="(filter, index) in groupNode.filtersOrdered()"
             :key="`${groupIndex}-${index}`"
             class="filters__item-wrapper"
           >
@@ -93,24 +90,44 @@
 <script>
 import ViewFilterFormOperator from '@baserow/modules/database/components/view/ViewFilterFormOperator'
 import ViewFieldConditionItem from '@baserow/modules/database/components/view/ViewFieldConditionItem'
+import { sortNumbersAndUuid1Asc } from '@baserow/modules/core/utils/sort'
 
 const GroupNode = class {
-  constructor(group, parent = null) {
+  constructor(group, parent = null, sorted = false) {
     this.group = group
     this.parent = parent
-    this.groups = []
+    this.children = []
     this.filters = []
+    this.sorted = sorted
     if (parent) {
-      parent.groups.push(this)
+      parent.children.push(this)
     }
+  }
+
+  groupsOrdered() {
+    if (this.sorted) {
+      return this.children
+    }
+
+    return this.children.sort((a, b) => {
+      return sortNumbersAndUuid1Asc(a.group, b.group)
+    })
+  }
+
+  filtersOrdered() {
+    if (this.sorted) {
+      return this.filters
+    }
+
+    return this.filters.sort(sortNumbersAndUuid1Asc)
   }
 
   findGroup(id) {
     if (this.group && this.group.id === id) {
       return this
     }
-    for (const group of this.groups) {
-      const found = group.findGroup(id)
+    for (const groupNode of this.children) {
+      const found = groupNode.findGroup(id)
       if (found) {
         return found
       }
@@ -124,7 +141,7 @@ const GroupNode = class {
 
   remove() {
     if (this.parent) {
-      this.parent.groups = this.parent.groups.filter((g) => g !== this)
+      this.parent.children = this.parent.children.filter((g) => g !== this)
     }
   }
 }
@@ -180,6 +197,11 @@ export default {
       required: false,
       default: false,
     },
+    sorted: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -196,17 +218,13 @@ export default {
     filterTypes() {
       return this.$registry.getAll('viewFilter')
     },
-    localFilters() {
-      // Copy the filters
-      return [...this.filters]
-    },
     filtersTree() {
-      const root = new GroupNode(null)
+      const root = new GroupNode(null, null, this.sorted)
       const groups = { '': root }
       for (const filterGroup of this.filterGroups) {
         const parentId = filterGroup.parent || ''
         const parent = groups[parentId]
-        const node = new GroupNode(filterGroup, parent)
+        const node = new GroupNode(filterGroup, parent, this.sorted)
         groups[filterGroup.id] = node
       }
       for (const filter of this.filters) {
@@ -220,24 +238,26 @@ export default {
     },
   },
   watch: {
-    /**
-     * When a filter has been created or removed we want to focus on last value. By
-     * watching localFilters instead of filters, the new and old values are different.
-     */
-    localFilters(value, old) {
-      if (value.length !== old.length && value.length > 0) {
-        this.$nextTick(() => {
-          this.focusFilterValue(value[value.length - 1])
-        })
-      }
+    'view._.focusFilter': {
+      handler(filterId) {
+        const filter =
+          filterId !== null && this.filters.find((f) => f.id === filterId)
+        if (filter) {
+          this.focusFilterValue(filter)
+        }
+      },
+      immediate: true,
     },
   },
   methods: {
     focusFilterValue(filter) {
-      const ref = `condition-${filter.id}`
-      if (this.$refs[ref] && this.$refs[ref].length > 0) {
-        this.$refs[ref][0]?.focusValue()
-      }
+      this.$nextTick(() => {
+        const ref = `condition-${filter.id}`
+        if (this.$refs[ref] && this.$refs[ref].length > 0) {
+          this.$refs[ref][0]?.focusValue()
+        }
+        this.$emit('filterFocused', filter)
+      })
     },
     /**
      * Returns a list of filter types that are allowed for the given fieldId.
