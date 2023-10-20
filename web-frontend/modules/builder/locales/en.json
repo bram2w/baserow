@@ -260,16 +260,16 @@
     "dataSourceForm": {
         "namePlaceholder": "Source name",
         "addIntegration": "Add new integration",
-        "noIntegrations": "you don't have any integration yet",
+        "noIntegrations": "No integrations found.",
         "selectTypeFirst": "Select the service first",
         "servicePlaceholder": "Select a service",
         "integrationPlaceholder": "Select an integration",
         "errorUniqueName": "Data source name must be unique."
     },
     "dataSourceContext": {
-        "addDataSource": "add new data source",
-        "noDataSourceTitle": "You have not yet added a data",
-        "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
+        "addDataSource": "Add new data source",
+        "noDataSourceTitle": "This page has no data sources.",
+        "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
     },
     "defaultStyleForm": {
         "boxTop": "Padding top",

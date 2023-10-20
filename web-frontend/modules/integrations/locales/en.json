@@ -16,9 +16,15 @@
         "tableFieldLabel": "Table",
         "tableFieldPlaceHolder": "Select a table",
         "databaseFieldLabel": "Database",
+        "viewFieldLabel": "View",
+        "filterTabTitle": "Filters",
+        "searchTabTitle": "Search",
+        "viewFieldPlaceHolder": "Select a view",
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
-        "rowFieldPlaceHolder": "Select a row ID"
+        "rowFieldPlaceHolder": "Select a row ID",
+        "searchFieldPlaceHolder": "Enter a search term...",
+        "noTableChosenForFiltering": "Choose a table to begin using data source filters."
     },
     "localBaserowListRowsForm": {
         "databaseFieldLabel": "Database",
@@ -26,7 +32,22 @@
         "tableFieldPlaceHolder": "Select a table",
         "viewFieldLabel": "View",
         "viewFieldPlaceHolder": "Select a view",
+        "filterTabTitle": "Filters",
         "searchTabTitle": "Search",
-        "searchFieldPlaceHolder": "Enter a search term..."
+        "searchFieldPlaceHolder": "Enter a search term...",
+        "noTableChosenForFiltering": "Choose a table to begin using data source filters."
+    },
+    "localBaserowTableServiceConditionalForm": {
+      "addFilter": "Add additional filter",
+      "noFilterTitle": "You have not yet created a data source filter",
+      "noFilterText": "Data source filters allow you to show Baserow table rows that apply to your conditions.",
+      "relatedFieldNotFound": "The related field is not found.",
+      "filterTypeNotFound": "The filter type is not compatible.",
+      "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
+      "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types"
+    },
+    "dataProviderType": {
+        "dataSource": "Data source",
+        "pageParameter": "Parameter"
     }
 }

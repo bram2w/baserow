@@ -14,6 +14,7 @@
           :ref="`dataSourceForm_${dataSource.id}`"
           :key="dataSource.id"
           :builder="builder"
+          :data-source="dataSource"
           :page="page"
           :default-values="dataSource"
           :integrations="integrations"

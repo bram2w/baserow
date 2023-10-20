@@ -170,6 +170,91 @@ def test_update_data_source(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_with_filters(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_text_field(table=table)
+    data_source1 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source1.id}
+    )
+
+    # No existing filters, add one.
+    response = api_client.patch(
+        url,
+        {
+            "filters": [
+                {
+                    "field": field.id,
+                    "type": "equals",
+                    "value": "foobar",
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    service_filter = data_source1.service.service_filters.get()
+    assert response.json()["filters"] == [
+        {
+            "id": service_filter.id,
+            "order": 0,
+            "field": field.id,
+            "type": "equals",
+            "value": "foobar",
+        }
+    ]
+
+    # Reset the filters to nothing.
+    response = api_client.patch(
+        url,
+        {"filters": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["filters"] == []
+
+    # Given an existing filter, we delete it if it's not in the payload.
+    data_fixture.create_local_baserow_table_service_filter(
+        service=data_source1.service, field=field, value="baz", order=0
+    )
+    response = api_client.patch(
+        url,
+        {
+            "filters": [
+                {
+                    "service": data_source1.service_id,
+                    "field": field.id,
+                    "type": "equals",
+                    "value": "foobar",
+                }
+            ]
+        },
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    service_filter = data_source1.service.service_filters.get()
+    assert response.json()["filters"] == [
+        {
+            "id": service_filter.id,
+            "order": 0,
+            "field": field.id,
+            "type": "equals",
+            "value": "foobar",
+        }
+    ]
+
+
+@pytest.mark.django_db
 def test_update_data_source_change_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)

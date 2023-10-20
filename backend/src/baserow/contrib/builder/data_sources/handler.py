@@ -209,7 +209,7 @@ class DataSourceHandler:
             integration_type = None
             if data_source.service:
                 integration = data_source.service.integration
-                ServiceHandler().delete_service(data_source.service)
+                ServiceHandler().delete_service(service_type, data_source.service)
                 data_source.service = None
 
             if integration:
