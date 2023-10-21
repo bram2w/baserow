@@ -1,8 +1,12 @@
 import abc
 from typing import Any, Dict, Generator, List
 
+from django.db.models import QuerySet
+
 from rest_framework.fields import Field
 
+from baserow.contrib.database.rows.models import RowHistory
+from baserow.core.models import Workspace
 from baserow.core.registry import Instance, Registry
 
 
@@ -103,4 +107,31 @@ class RowMetadataType(Instance, abc.ABC):
         pass
 
 
+class ChangeRowHistoryRegistry(Registry):
+    """
+    Contains instances providing additional filtering and operations
+    on row history entries.
+    """
+
+    name = "change_row_history"
+
+
+class ChangeRowHistoryType(Instance, abc.ABC):
+    @abc.abstractmethod
+    def apply_to_list_queryset(
+        self,
+        queryset: QuerySet[RowHistory],
+        workspace: Workspace,
+        table_id: int,
+        row_id: int,
+    ) -> QuerySet[RowHistory]:
+        """
+        By implementing this method you can further filter the
+        returned queryset of row history entries.
+        """
+
+        return queryset
+
+
 row_metadata_registry = RowMetadataRegistry()
+change_row_history_registry = ChangeRowHistoryRegistry()
