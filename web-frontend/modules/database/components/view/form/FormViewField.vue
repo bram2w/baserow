@@ -133,7 +133,6 @@
                 {{ $t('formViewField.addCondition') }}
               </a>
               <a
-                v-if="$featureFlagIsEnabled('advanced-filters')"
                 class="form-view__add-condition"
                 @click="addConditionGroup(fieldOptions)"
               >

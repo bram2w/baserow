@@ -380,9 +380,6 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent(
     'view_filter_group_created',
     ({ store, app }, data) => {
-      if (!app.$featureFlagIsEnabled('advanced-filters')) {
-        return
-      }
       const view = store.getters['view/get'](data.view_filter_group.view)
       if (view !== undefined) {
         store.dispatch('view/forceCreateFilterGroup', {
@@ -401,9 +398,6 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent(
     'view_filter_group_updated',
     ({ store, app }, data) => {
-      if (!app.$featureFlagIsEnabled('advanced-filters')) {
-        return
-      }
       const view = store.getters['view/get'](data.view_filter_group.view)
       if (view !== undefined) {
         const filterGroup = view.filter_groups.find(
@@ -427,9 +421,6 @@ export const registerRealtimeEvents = (realtime) => {
   realtime.registerEvent(
     'view_filter_group_deleted',
     ({ store, app }, data) => {
-      if (!app.$featureFlagIsEnabled('advanced-filters')) {
-        return
-      }
       const view = store.getters['view/get'](data.view_id)
       if (view !== undefined) {
         const filterGroup = view.filter_groups.find(

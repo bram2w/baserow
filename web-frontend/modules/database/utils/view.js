@@ -130,6 +130,57 @@ export const TreeGroupNode = class {
   }
 
   /**
+   * Serializes the filter tree rooted at this node. The serialized version will be in the form:
+   * {
+   *  filter_type: 'AND' | 'OR',
+   *  filters: [
+   *    {
+   *       type: 'contains' | 'does_not_contain' | 'is' | 'is_not' | 'is_empty' | 'is_not_empty' | etc.,
+   *       field: 1,
+   *       value: 'some value'
+   *     },
+   *     ...
+   *   ],
+   *   groups: [
+   *     {
+   *        filter_type: 'AND' | 'OR',
+   *        filters: [
+   *          type: 'contains' | 'does_not_contain' | 'is' | 'is_not' | 'is_empty' | 'is_not_empty' | etc.,
+   *          field: 2,
+   *          value: 'some other value'
+   *        },
+   *        ...
+   *        ],
+   *       groups: [...]
+   *     },
+   *    ...,
+   *   ],
+   * }
+   *
+   * @returns {object} - The serialized tree.
+   */
+  getFiltersTreeSerialized() {
+    const serialized = {
+      filter_type: this.filterType,
+      filters: [],
+      groups: [],
+    }
+
+    for (const filter of this.filters) {
+      serialized.filters.push({
+        type: filter.type,
+        field: filter.field,
+        value: filter.value,
+      })
+    }
+
+    for (const groupNode of this.children) {
+      serialized.groups.push(groupNode.getFiltersTreeSerialized())
+    }
+    return serialized
+  }
+
+  /**
    * Determines if a given row matches the conditions of this node and its descendants.
    * This function will recursively check if the row matches the filters of this node
    * and its descendants. If the filter type of this node is 'AND' then it will return
@@ -388,25 +439,25 @@ export function getOrderBy(rootGetters, viewId) {
 }
 
 export function getFilters(rootGetters, viewId) {
-  const filters = {}
+  const payload = {}
 
   if (rootGetters['page/view/public/getIsPublic']) {
     const view = rootGetters['view/get'](viewId)
 
     if (!view.filters_disabled) {
-      view.filters.forEach((filter) => {
-        const name = `filter__field_${filter.field}__${filter.type}`
-        if (!Object.prototype.hasOwnProperty.call(filters, name)) {
-          filters[name] = []
-        }
-        filters[name].push(filter.value)
-      })
+      const {
+        filter_type: filterType,
+        filter_groups: filterGroups,
+        filters,
+      } = view
+      const filterTree = createFiltersTree(filterType, filters, filterGroups)
+      if (filterTree.hasFilters()) {
+        const serializedTree = filterTree.getFiltersTreeSerialized()
+        payload.filters = [JSON.stringify(serializedTree)]
+      }
     }
-
-    filters.filter_type = [view.filter_type]
+    return payload
   }
-
-  return filters
 }
 
 /**

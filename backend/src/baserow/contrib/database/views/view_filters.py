@@ -48,6 +48,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaTextType,
 )
 from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaDateIntervalType,
     BaserowFormulaSingleFileType,
 )
 from baserow.core.models import WorkspaceUser
@@ -76,6 +77,7 @@ class EqualViewFilterType(ViewFilterType):
 
     type = "equal"
     compatible_field_types = [
+        BooleanFieldType.type,
         TextFieldType.type,
         LongTextFieldType.type,
         URLFieldType.type,
@@ -1323,6 +1325,7 @@ class EmptyViewFilterType(ViewFilterType):
             BaserowFormulaNumberType.type,
             BaserowFormulaDateType.type,
             BaserowFormulaBooleanType.type,
+            BaserowFormulaDateIntervalType.type,
             FormulaFieldType.array_of(BaserowFormulaSingleFileType.type),
         ),
     ]

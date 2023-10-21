@@ -14,14 +14,25 @@ from rest_framework.views import APIView
 from baserow.api.decorators import allowed_includes, map_exceptions
 from baserow.api.errors import ERROR_USER_NOT_IN_GROUP
 from baserow.api.schemas import get_error_schema
+from baserow.contrib.database.api.fields.errors import (
+    ERROR_FIELD_DOES_NOT_EXIST,
+    ERROR_FILTER_FIELD_NOT_FOUND,
+)
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
 from baserow.contrib.database.api.views.errors import (
     ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW,
+    ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+    ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
 )
+from baserow.contrib.database.api.views.serializers import validate_api_grouped_filters
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
+from baserow.contrib.database.fields.exceptions import (
+    FieldDoesNotExist,
+    FilterFieldNotFound,
+)
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
@@ -30,9 +41,14 @@ from baserow.contrib.database.table.operations import ListRowsDatabaseTableOpera
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
     ViewDoesNotExist,
+    ViewFilterTypeDoesNotExist,
+    ViewFilterTypeNotAllowedForField,
 )
 from baserow.contrib.database.views.handler import ViewHandler
-from baserow.contrib.database.views.registries import view_type_registry
+from baserow.contrib.database.views.registries import (
+    view_filter_type_registry,
+    view_type_registry,
+)
 from baserow.contrib.database.views.signals import view_loaded
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
@@ -239,6 +255,57 @@ class PublicKanbanViewView(APIView):
                     "option id `1` with a limit of `10` and and offset of `20`."
                 ),
             ),
+            OpenApiParameter(
+                name="filters",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "A JSON serialized string containing the filter tree to apply "
+                    "to this view. The filter tree is a nested structure containing "
+                    "the filters that need to be applied. \n\n"
+                    "Please note that if this parameter is provided, all other "
+                    "filter__{field}__{filter}` will be ignored, "
+                    "as well as the `filter_type` parameter. \n\n"
+                    "An example of a valid filter tree is the following: all others"
+                    '{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
+                    '"value": "test"}]}.\n\n'
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                ),
+            ),
+            OpenApiParameter(
+                name="filter__{field}__{filter}",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    f"The rows can optionally be filtered by the same view filters "
+                    f"available for the views. Multiple filters can be provided if "
+                    f"they follow the same format. The field and filter variable "
+                    f"indicate how to filter and the value indicates where to filter "
+                    f"on.\n\n"
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                    f"For example if you provide the following GET parameter "
+                    f"`filter__field_1__equal=test` then only rows where the value of "
+                    f"field_1 is equal to test are going to be returned.\n\n"
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                ),
+            ),
+            OpenApiParameter(
+                name="filter_type",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "`AND`: Indicates that the rows must match all the provided "
+                    "filters.\n"
+                    "`OR`: Indicates that the rows only have to match one of the "
+                    "filters.\n\n"
+                    "This works only if two or more filters are provided."
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
+                ),
+            ),
         ],
         tags=["Database table kanban view"],
         operation_id="public_list_database_table_kanban_view_rows",
@@ -253,8 +320,12 @@ class PublicKanbanViewView(APIView):
             401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             400: get_error_schema(
                 [
+                    "ERROR_USER_NOT_IN_GROUP",
                     "ERROR_KANBAN_VIEW_HAS_NO_SINGLE_SELECT_FIELD",
-                    "ERROR_INVALID_SELECT_OPTION_PARAMETER",
+                    "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
+                    "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTER_FIELD_NOT_FOUND",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
                 ]
             ),
             404: get_error_schema(["ERROR_KANBAN_DOES_NOT_EXIST"]),
@@ -270,11 +341,18 @@ class PublicKanbanViewView(APIView):
             NoAuthorizationToPubliclySharedView: (
                 ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW
             ),
+            FilterFieldNotFound: ERROR_FILTER_FIELD_NOT_FOUND,
+            ViewFilterTypeDoesNotExist: ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
+            ViewFilterTypeNotAllowedForField: ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
+            FieldDoesNotExist: ERROR_FIELD_DOES_NOT_EXIST,
         }
     )
     @allowed_includes("field_options")
     def get(self, request, slug: str, field_options: bool):
-        """@TODO"""
+        """
+        Lists all the rows of a kanban view that is publicly shared. The rows are
+        grouped by the view's single select field options.
+        """
 
         filter_type = (
             FILTER_TYPE_OR
@@ -282,6 +360,12 @@ class PublicKanbanViewView(APIView):
             else FILTER_TYPE_AND
         )
         filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
+
+        # Advanced filters are provided as a JSON string in the `filters` parameter.
+        # If provided, all other filter parameters are ignored.
+        api_filters = None
+        if (filters := filter_object.get("filters", None)) and len(filters) > 0:
+            api_filters = validate_api_grouped_filters(filters[0])
 
         view_handler = ViewHandler()
         view = view_handler.get_public_view_by_slug(
@@ -316,6 +400,7 @@ class PublicKanbanViewView(APIView):
             filter_object=filter_object,
             table_model=model,
             view_type=view_type,
+            api_filters_serialized=api_filters,
         )
 
         serializer_class = get_row_serializer_class(

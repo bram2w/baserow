@@ -153,6 +153,18 @@ def _search_up_class_hierarchy_for_mapping(e, mapping):
     return None
 
 
+def serialize_validation_errors_recursive(error):
+    if isinstance(error, dict):
+        return {
+            key: serialize_validation_errors_recursive(errors)
+            for key, errors in error.items()
+        }
+    elif isinstance(error, list):
+        return [serialize_validation_errors_recursive(errors) for errors in error]
+    else:
+        return {"error": force_str(error), "code": error.code}
+
+
 def validate_data(
     serializer_class: Type[ModelSerializer],
     data: Dict[str, Any],
@@ -176,19 +188,9 @@ def validate_data(
     :return: The data after being validated by the serializer.
     """
 
-    def serialize_errors_recursive(error):
-        if isinstance(error, dict):
-            return {
-                key: serialize_errors_recursive(errors) for key, errors in error.items()
-            }
-        elif isinstance(error, list):
-            return [serialize_errors_recursive(errors) for errors in error]
-        else:
-            return {"error": force_str(error), "code": error.code}
-
     serializer = serializer_class(data=data, partial=partial, many=many)
     if not serializer.is_valid():
-        detail = serialize_errors_recursive(serializer.errors)
+        detail = serialize_validation_errors_recursive(serializer.errors)
         raise exception_to_raise(detail)
 
     if return_validated:
