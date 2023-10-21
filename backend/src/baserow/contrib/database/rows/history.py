@@ -3,6 +3,7 @@ from typing import Any, Dict, List, NamedTuple, NewType, Optional
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser
+from django.db.models import QuerySet
 from django.dispatch import receiver
 
 from opentelemetry import trace
@@ -10,8 +11,10 @@ from opentelemetry import trace
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.models import RowHistory
+from baserow.contrib.database.rows.registries import change_row_history_registry
 from baserow.contrib.database.rows.signals import rows_history_updated
 from baserow.core.action.signals import ActionCommandType, action_done
+from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import baserow_trace
 
 tracer = trace.get_tracer(__name__)
@@ -164,10 +167,24 @@ class RowHistoryHandler:
 
     @classmethod
     @baserow_trace(tracer)
-    def list_row_history(cls, table_id, row_id):
-        return RowHistory.objects.filter(table_id=table_id, row_id=row_id).order_by(
+    def list_row_history(
+        cls, workspace: Workspace, table_id: int, row_id: int
+    ) -> QuerySet[RowHistory]:
+        """
+        Returns queryset of row history entries for the provided
+        workspace, table_id and row_id.
+        """
+
+        queryset = RowHistory.objects.filter(table_id=table_id, row_id=row_id).order_by(
             "-action_timestamp", "-id"
         )
+
+        for op_type in change_row_history_registry.get_all():
+            queryset = op_type.apply_to_list_queryset(
+                queryset, workspace, table_id, row_id
+            )
+
+        return queryset
 
     @classmethod
     def delete_entries_older_than(cls, cutoff: datetime):

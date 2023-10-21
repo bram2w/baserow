@@ -1496,7 +1496,9 @@ class RowHistoryView(APIView):
         except table_model.DoesNotExist:
             raise RowDoesNotExist(row_id)
 
-        row_history = RowHistoryHandler.list_row_history(table_id, row_id)
+        row_history = RowHistoryHandler.list_row_history(
+            table.database.workspace, table_id, row_id
+        )
         page = paginator.paginate_queryset(row_history, request, self)
 
         return paginator.get_paginated_response(

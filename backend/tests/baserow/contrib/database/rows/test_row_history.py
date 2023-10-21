@@ -8,6 +8,10 @@ from baserow.contrib.database.rows.actions import UpdateRowsActionType
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.history import RowHistoryHandler
 from baserow.contrib.database.rows.models import RowHistory
+from baserow.contrib.database.rows.registries import (
+    ChangeRowHistoryType,
+    change_row_history_registry,
+)
 from baserow.core.action.registries import action_type_registry
 
 
@@ -221,6 +225,60 @@ def test_update_rows_action_doesnt_insert_entries_if_row_doesnt_change(data_fixt
             },
         }
     ]
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_row_history_handler_list_history_filters_with_registry(data_fixture):
+    """
+    Test that queryset filtering is sourced from RowHistoryOperationsRegistry.
+    """
+
+    class FilterRowHistoryStub(ChangeRowHistoryType):
+        type = "row_history_op_stub"
+
+        def apply_to_list_queryset(self, queryset, workspace, table_id, row_id):
+            return queryset.filter(user_id__lt=2)
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    common_params = {
+        "table": table,
+        "row_id": 999,
+        "action_uuid": "uuid",
+        "action_command_type": "cmd",
+        "action_type": "type",
+        "field_names": [],
+        "fields_metadata": {},
+        "before_values": {},
+        "after_values": {},
+        "action_timestamp": datetime(2021, 1, 3, 23, 59, tzinfo=pytz.UTC),
+    }
+    entries = [RowHistory(**common_params, user_id=i) for i in range(0, 10)]
+    RowHistory.objects.bulk_create(entries)
+    assert (
+        len(
+            RowHistoryHandler().list_row_history(
+                database.workspace, table.id, row_id=999
+            )
+        )
+        == 10
+    )
+
+    change_row_history_registry.register(FilterRowHistoryStub())
+    assert (
+        len(
+            RowHistoryHandler().list_row_history(
+                database.workspace, table.id, row_id=999
+            )
+        )
+        == 2
+    )
+
+    change_row_history_registry.unregister("row_history_op_stub")
 
 
 @pytest.mark.django_db
