@@ -29,9 +29,7 @@ from baserow.contrib.database.fields.exceptions import FieldNotInTable
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     AdvancedFilterBuilder,
-    AnnotatedQ,
     FilterBuilder,
-    GroupedFiltersAdapter,
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
 from baserow.contrib.database.fields.models import Field
@@ -83,6 +81,10 @@ from baserow.contrib.database.views.operations import (
 from baserow.contrib.database.views.registries import (
     ViewType,
     view_ownership_type_registry,
+)
+from baserow.contrib.database.views.view_filter_groups import (
+    APIGroupedFiltersAdapter,
+    ViewGroupedFiltersAdapter,
 )
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
@@ -180,48 +182,6 @@ class UpdatedViewWithChangedAttributes:
     updated_view_instance: View
     original_view_attributes: Dict[str, Any]
     new_view_attributes: Dict[str, Any]
-
-
-def get_q_from_view_filter(
-    view_filter: ViewFilter, table_model: "GeneratedTableModel"
-) -> Union[Q, AnnotatedQ]:
-    """
-    Returns a Q or an AnnotatedQ object based on the provided view filter.
-
-    :param view_filter: The view filter to convert to a Q object.
-    :param table_model: The table model for which the view filter should be
-        generated.
-    :return: A Q or AnnotatedQ object based on the provided view filter.
-    """
-
-    if view_filter.field_id not in table_model._field_objects:
-        raise ValueError(
-            f"The table model does not contain field {view_filter.field_id}."
-        )
-
-    field_object = table_model._field_objects[view_filter.field_id]
-    field_name = field_object["name"]
-    model_field = table_model._meta.get_field(field_name)
-    view_filter_type = view_filter_type_registry.get(view_filter.type)
-    return view_filter_type.get_filter(
-        field_name, view_filter.value, model_field, field_object["field"]
-    )
-
-
-class ViewGroupedFiltersAdapter(GroupedFiltersAdapter):
-    def __init__(self, instance: "View", model: "GeneratedTableModel", **kwargs):
-        super().__init__(instance, model)
-
-    @property
-    def filters(self):
-        return self.instance.viewfilter_set.all()
-
-    @property
-    def groups(self):
-        return self.instance.filter_groups.all()
-
-    def get_q_from_filter(self, _filter) -> Union[Q, AnnotatedQ]:
-        return get_q_from_view_filter(_filter, self.model)
 
 
 class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
@@ -3133,6 +3093,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         filter_object: dict = None,
         table_model: Type[GeneratedTableModel] = None,
         view_type=None,
+        api_filters_serialized: Optional[Dict[str, Any]] = None,
     ):
         """
         This function constructs a queryset which applies all the filters
@@ -3153,6 +3114,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param table_model: A model which can be passed if it's already instantiated.
         :param view_type: The view_type which can be passed if it's already
             instantiated.
+        :param api_filters_serialized: A dictionary of filters and group of filters to
+            apply to the queryset.
         :return: A tuple containing:
             - A queryset of rows.
             - A list of field_ids of the fields that are visible.
@@ -3192,9 +3155,22 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 order_by, False, publicly_visible_field_ids
             )
 
-        queryset = queryset.filter_by_fields_object(
-            filter_object, filter_type, publicly_visible_field_ids
-        )
+        # If the new way of filtering is used with filters and groups, we use
+        # it, otherwise we use the old way. The new way consist in a nested JSON
+        # structure of filters (see `PublicViewGroupedFiltersAdapter` for more
+        # info). The old way of filtering is a list of query params with the
+        # filter__{field}__{type}=[value] format.
+
+        if api_filters_serialized and len(api_filters_serialized):
+            adapter = APIGroupedFiltersAdapter.from_serialized_filter_tree(
+                api_filters_serialized, table_model, publicly_visible_field_ids
+            )
+            filter_builder = AdvancedFilterBuilder(adapter).construct_filter_builder()
+            queryset = filter_builder.apply_to_queryset(queryset)
+        else:
+            queryset = queryset.filter_by_fields_object(
+                filter_object, filter_type, publicly_visible_field_ids
+            )
 
         if search:
             queryset = queryset.search_all_fields(

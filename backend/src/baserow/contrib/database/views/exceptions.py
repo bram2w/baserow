@@ -200,3 +200,9 @@ class ViewOwnershipTypeDoesNotExist(InstanceTypeDoesNotExist):
     Raised when trying to get a view ownership type
     that does not exist.
     """
+
+
+class InvalidAPIGroupedFiltersFormatException(ValueError):
+    """
+    Raised when the provided view filters format is invalid.
+    """

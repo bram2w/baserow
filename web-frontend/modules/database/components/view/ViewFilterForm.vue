@@ -35,11 +35,7 @@
           <i class="filters__add-icon iconoir-plus"></i>
           {{ $t('viewFilterContext.addFilter') }}</a
         >
-        <a
-          v-if="$featureFlagIsEnabled('advanced-filters')"
-          class="filters__add"
-          @click.prevent="addFilter(uuid())"
-        >
+        <a class="filters__add" @click.prevent="addFilter(uuid())">
           <i class="filters__add-icon iconoir-plus"></i>
           {{ $t('viewFilterContext.addFilterGroup') }}</a
         >

@@ -4,6 +4,7 @@ import {
   matchSearchFilters,
 } from '@baserow/modules/database/utils/view'
 import { TestApp } from '@baserow/test/helpers/testApp'
+import _ from 'lodash'
 
 describe('TreeGroupNode', () => {
   it('should initialize correctly', () => {
@@ -242,6 +243,32 @@ describe('matchSearchFilters', () => {
       matchSearchFilters(registry, 'AND', filters, filterGroups, fields, {
         field_1: 'John',
         field_2: 'Turing',
+      })
+    ).toBe(true)
+  })
+
+  it('should serialize the filter tree correctly', () => {
+    const filters = [
+      { field: 1, type: 'equal', value: 'a' },
+      { field: 2, type: 'equal', value: 'b', group: 1 },
+      { field: 3, type: 'equal', value: 'c', group: 1 },
+    ]
+    const filterGroups = [{ filter_type: 'OR', id: 1 }]
+    const rootNode = createFiltersTree('AND', filters, filterGroups)
+    expect(
+      _.isEqual(rootNode.getFiltersTreeSerialized(), {
+        filter_type: 'AND',
+        filters: [{ type: 'equal', field: 1, value: 'a' }],
+        groups: [
+          {
+            filter_type: 'OR',
+            filters: [
+              { type: 'equal', field: 2, value: 'b' },
+              { type: 'equal', field: 3, value: 'c' },
+            ],
+            groups: [],
+          },
+        ],
       })
     ).toBe(true)
   })

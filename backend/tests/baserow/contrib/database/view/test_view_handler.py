@@ -6,7 +6,10 @@ from django.test import override_settings
 
 import pytest
 
-from baserow.contrib.database.fields.exceptions import FieldNotInTable
+from baserow.contrib.database.fields.exceptions import (
+    FieldNotInTable,
+    FilterFieldNotFound,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
@@ -829,8 +832,8 @@ def test_apply_filters(data_fixture):
     with pytest.raises(ValueError):
         view_handler.apply_filters(grid_view, GridView.objects.all())
 
-    # Should raise a value error if the field is not included in the model.
-    with pytest.raises(ValueError):
+    # Should raise a FilterFieldNotFound if the field is not included in the model.
+    with pytest.raises(FilterFieldNotFound):
         view_handler.apply_filters(
             grid_view, table.get_model(field_ids=[]).objects.all()
         )

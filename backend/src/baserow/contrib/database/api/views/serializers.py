@@ -1,12 +1,20 @@
+import json
+from typing import Any, Dict, Type
+
 from django.utils.functional import lazy
 
 from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.utils import serialize_validation_errors_recursive
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.serializers import TableSerializer
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
@@ -24,6 +32,8 @@ from baserow.contrib.database.views.registries import (
     view_ownership_type_registry,
     view_type_registry,
 )
+
+from .exceptions import FiltersParamValidationException
 
 
 class ListQueryParamatersSerializer(serializers.Serializer):
@@ -601,3 +611,67 @@ class FieldWithFiltersAndSortsSerializer(FieldSerializer):
 
     class Meta(FieldSerializer.Meta):
         fields = FieldSerializer.Meta.fields + ("filters", "sortings", "group_bys")
+
+
+class PublicViewFilterSerializer(serializers.Serializer):
+    field = serializers.IntegerField(help_text="The id of the field to filter on.")
+    type = serializers.CharField(help_text="The filter type.")
+    value = serializers.CharField(allow_blank=True, help_text="The filter value.")
+
+
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+    def to_internal_value(self, data):
+        serializer = self.parent.parent.__class__(data=data, context=self.context)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+
+class PublicViewFiltersSerializer(serializers.Serializer):
+    filter_type = serializers.ChoiceField(choices=[FILTER_TYPE_AND, FILTER_TYPE_OR])
+    filters = serializers.ListField(
+        child=PublicViewFilterSerializer(),
+        required=False,
+        allow_empty=True,
+        help_text="The list of filters that should be applied in this group/public view.",
+    )
+    groups = RecursiveField(many=True, required=False)
+
+
+def validate_api_grouped_filters(
+    serialized_api_filters: str,
+    exception_to_raise: Type[Exception] = FiltersParamValidationException,
+) -> Dict[str, Any]:
+    """
+    Validates the provided serialized view filters and returns the validated
+    data. The serialized view filters should be a JSON string that can be
+    deserialized into a list of filters and/or group of filters. Group of
+    filters can nest other groups of filters. Look at
+    `PublicViewFiltersSerializer` for more info about the structure.
+
+    :param serialized_api_filters: The serialized view filters that need to be
+        validated.
+    :param exception_to_raise: The exception that should be raised if the
+        provided filters are not valid.
+    :return: The validated dict containing the filters and the filter groups.
+    """
+
+    try:
+        advanced_filters = json.loads(serialized_api_filters)
+    except json.JSONDecodeError:
+        raise exception_to_raise(
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            }
+        )
+
+    serializer = PublicViewFiltersSerializer(data=advanced_filters)
+    if not serializer.is_valid():
+        detail = serialize_validation_errors_recursive(serializer.errors)
+        raise exception_to_raise(detail)
+
+    return serializer.validated_data
