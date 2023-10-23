@@ -574,6 +574,18 @@ export default ({ service, customPopulateRow }) => {
       return { index, isCertain }
     },
     /**
+     * Used when row data needs to be directly re-fetched from the Backend and
+     * the other (background) row needs to be refreshed. For example, when editing
+     * row from a *different* table using ForeignRowEditModal or just RowEditModal
+     * component in general.
+     */
+    async refreshRowFromBackend({ commit, getters, dispatch }, { table, row }) {
+      const { data } = await RowService(this.$client).get(table.id, row.id)
+      // Use the return value to update the desired row with latest values from the
+      // backend.
+      commit('UPDATE_ROW', { row, values: data })
+    },
+    /**
      * Creates a new row and adds it to the store if needed.
      */
     async createNewRow(

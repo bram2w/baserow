@@ -52,6 +52,7 @@
       @unselected="unselectedCell"
       @select-next="selectNextCell"
       @edit-modal="openRowEditModal($event)"
+      @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, 0)"
     >
       <template #foot>
@@ -119,6 +120,7 @@
       @unselected="unselectedCell"
       @select-next="selectNextCell"
       @edit-modal="openRowEditModal($event)"
+      @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
     </GridViewSection>
@@ -253,6 +255,8 @@
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
+      :sortable="true"
+      :can-modify-fields="true"
       :read-only="
         readOnly ||
         !$hasPermission(
@@ -282,6 +286,7 @@
       @field-created="fieldCreated"
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
+      @refresh-row="refreshRow"
     ></RowEditModal>
   </div>
 </template>
@@ -645,6 +650,24 @@ export default {
       // When anything related to the fields has been updated, it could be that it
       // doesn't fit in two columns anymore. Calling this method checks that.
       this.checkCanFitInTwoColumns()
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/refreshRowFromBackend',
+          {
+            table: this.table,
+            row,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     },
     /**
      * Called when a cell value has been updated. This can for example happen via the

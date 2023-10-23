@@ -51,7 +51,11 @@
       v-if="canAccessLinkedTable"
       ref="rowEditModal"
       :table-id="field.link_row_table_id"
+      :fields-sortable="false"
+      :can-modify-fields="false"
+      :read-only="readOnly"
       @hidden="hideModal"
+      @refresh-row="$emit('refresh-row')"
     ></ForeignRowEditModal>
   </div>
 </template>
@@ -149,12 +153,23 @@ export default {
           (child) => child.$el
         ),
         this.$refs.selectModal.$el,
+        ...this.$refs.rowEditModal.$refs.modal.$refs.modal.moveToBody.children.map(
+          (child) => child.$el
+        ),
         this.$refs.rowEditModal.$refs.modal.$el,
       ]
 
-      return !openModals.some((modal) => {
-        return isElement(modal, event.target)
-      })
+      return (
+        // If the user clicks inside the select or row edit modal, we don't want to
+        // allow unselecting.
+        !openModals.some((modal) => {
+          return isElement(modal, event.target)
+        }) &&
+        // If an element is not part of the body anymore, then it was deleted, and then
+        // we don't have to unselect. This can for example happen when the user clicks
+        // on something that will deleted because of it.
+        document.body.contains(event.target)
+      )
     },
     /**
      * Prevent unselecting the field cell by changing the event. Because the deleted

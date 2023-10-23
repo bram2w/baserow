@@ -15,11 +15,13 @@ export class CommentsRowModalSidebarType extends RowModalSidebarType {
     return RowCommentsSidebar
   }
 
-  isDeactivated(database, table) {
-    return !this.app.$hasPermission(
-      'database.table.list_comments',
-      table,
-      database.workspace.id
+  isDeactivated(database, table, readOnly) {
+    return (
+      !this.app.$hasPermission(
+        'database.table.list_comments',
+        table,
+        database.workspace.id
+      ) || readOnly
     )
   }
 

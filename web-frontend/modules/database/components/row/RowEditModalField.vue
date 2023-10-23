@@ -40,6 +40,7 @@
       :value="row['field_' + field.id]"
       :read-only="readOnly"
       @update="update"
+      @refresh-row="$emit('refresh-row', row)"
     />
   </div>
 </template>
