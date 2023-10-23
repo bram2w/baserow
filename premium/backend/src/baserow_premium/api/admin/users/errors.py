@@ -17,3 +17,9 @@ USER_ADMIN_UNKNOWN_USER = (
     HTTP_400_BAD_REQUEST,
     "Unknown user supplied.",
 )
+
+USER_ADMIN_ALREADY_EXISTS = (
+    "USER_ADMIN_ALREADY_EXISTS",
+    HTTP_400_BAD_REQUEST,
+    "A user with that username/email already exists.",
+)

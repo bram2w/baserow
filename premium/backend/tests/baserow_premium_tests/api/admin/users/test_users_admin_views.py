@@ -1,11 +1,13 @@
 import json
 
+from django.contrib.auth import get_user_model
 from django.shortcuts import reverse
 from django.test.utils import override_settings
 from django.utils import timezone
 from django.utils.datetime_safe import datetime
 
 import pytest
+from freezegun import freeze_time
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -20,6 +22,7 @@ from baserow.core.models import (
     WORKSPACE_USER_PERMISSION_MEMBER,
 )
 
+User = get_user_model()
 invalid_passwords = [
     "a",
     "ab",
@@ -556,6 +559,132 @@ def test_non_admin_cannot_patch_user_without_premium_license(
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
+def test_admin_cannot_create_user_without_body(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        has_active_premium_license=True,
+    )
+    url = reverse("api:premium:admin:users:list")
+    response = api_client.post(
+        url,
+        {},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    user.refresh_from_db()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
+    assert response_json["detail"]["name"][0]["code"] == "required"
+    assert response_json["detail"]["password"][0]["code"] == "required"
+    assert response_json["detail"]["username"][0]["code"] == "required"
+    assert User.objects.all().count() == 1
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_create_user_without_license(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        has_active_premium_license=False,
+    )
+    url = reverse("api:premium:admin:users:list")
+    response = api_client.post(
+        url,
+        {"username": "test2@test.nl", "password": "Test1234", "name": "Test1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    user.refresh_from_db()
+    print(response.json())
+    assert response.status_code == HTTP_402_PAYMENT_REQUIRED
+    response_json = response.json()
+    assert response_json["error"] == "ERROR_FEATURE_NOT_AVAILABLE"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_cannot_create_user_that_already_exists(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        has_active_premium_license=True,
+    )
+    premium_data_fixture.create_user(email="test2@test.nl")
+    url = reverse("api:premium:admin:users:list")
+    response = api_client.post(
+        url,
+        {"username": "test2@test.nl", "password": "Test1234", "name": "Test1"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    user.refresh_from_db()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    response_json = response.json()
+    assert response_json["error"] == "USER_ADMIN_ALREADY_EXISTS"
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_can_create_user(api_client, premium_data_fixture):
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        has_active_premium_license=True,
+    )
+    url = reverse("api:premium:admin:users:list")
+    with freeze_time("2020-01-02 12:00"):
+        response = api_client.post(
+            url,
+            {
+                "username": "test2@test.nl",
+                "password": "Test1234",
+                "name": "Test1",
+                "is_staff": True,
+                "is_active": True,
+            },
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+        user = User.objects.all().last()
+        assert response.status_code == HTTP_200_OK
+        assert response.json() == {
+            "date_joined": "2020-01-02T12:00:00Z",
+            "name": "Test1",
+            "username": "test2@test.nl",
+            "groups": [],  # GroupDeprecation
+            "workspaces": [],
+            "id": user.id,
+            "is_staff": True,
+            "is_active": True,
+            "last_login": None,
+        }
+
+    response = api_client.post(
+        reverse("api:user:token_auth"),
+        {"email": "test@test.nl", "password": "password"},
+        format="json",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert "access_token" in response.json()
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
 def test_admin_can_patch_user(api_client, premium_data_fixture):
     user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl",
@@ -624,6 +753,29 @@ def test_admin_can_patch_user_without_providing_password(
         "is_active": True,
         "last_login": None,
     }
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_admin_update_to_existing_user(api_client, premium_data_fixture):
+    user_to_change = premium_data_fixture.create_user()
+    user, token = premium_data_fixture.create_user_and_token(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        date_joined=datetime(2021, 4, 1, 1, 0, 0, 0, tzinfo=timezone.utc),
+        has_active_premium_license=True,
+    )
+    url = reverse("api:premium:admin:users:edit", kwargs={"user_id": user_to_change.id})
+    response = api_client.patch(
+        url,
+        {"username": "test@test.nl"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    assert response.status_code == 400
+    assert response.json()["error"] == "USER_ADMIN_ALREADY_EXISTS"
 
 
 @pytest.mark.django_db

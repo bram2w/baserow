@@ -104,6 +104,55 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         except User.DoesNotExist:
             raise UserNotFound("The user with the provided parameters is not found.")
 
+    def force_create_user(self, email, name, password, **kwargs):
+        """
+        Creates a new user and their profile.
+
+        :param email: The username/email of the new user.
+        :param name: The full name of the new user.
+        :param password: The password of the new user.
+        :param kwargs: Additional kwargs that must be added when creating the User
+            object.
+        :raises UserAlreadyExist: When the user with the provided email already exists.
+        :raises PasswordDoesNotMatchValidation: When a provided password does not match
+            password validation.
+        :raises DeactivatedUserException: When a user with the provided email exists but
+            has been deactivated.
+        :return: The newly created user object.
+        """
+
+        language = settings.LANGUAGE_CODE
+        if "language" in kwargs:
+            language = kwargs.pop("language") or settings.LANGUAGE_CODE
+
+        email = normalize_email_address(email)
+        user_query = User.objects.filter(Q(email=email) | Q(username=email))
+        if user_query.exists():
+            user = user_query.first()
+            if user.is_active:
+                raise UserAlreadyExist(f"A user with email {email} already exists.")
+            else:
+                raise DeactivatedUserException(
+                    f"User with email {email} has been deactivated."
+                )
+
+        user = User(first_name=name, email=email, username=email, **kwargs)
+
+        if password is not None:
+            try:
+                validate_password(password, user)
+            except ValidationError as e:
+                raise PasswordDoesNotMatchValidation(e.messages)
+            user.set_password(password)
+
+        user.save()
+
+        # Immediately create the one-to-one relationship with the user profile
+        # so we can safely use it everywhere else in the code.
+        UserProfile.objects.create(user=user, language=language)
+
+        return user
+
     def create_user(
         self,
         name: str,
@@ -135,23 +184,10 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         :raises WorkspaceInvitationEmailMismatch: If the workspace invitation email
             does not match the one of the user.
         :raises SignupDisabledError: If signing up is disabled.
-        :raises PasswordDoesNotMatchValidation: When a provided password does not match
-            password validation.
         :return: The user object.
         """
 
         core_handler = CoreHandler()
-
-        email = normalize_email_address(email)
-        user_query = User.objects.filter(Q(email=email) | Q(username=email))
-        if user_query.exists():
-            user = user_query.first()
-            if user.is_active:
-                raise UserAlreadyExist(f"A user with email {email} already exists.")
-            else:
-                raise DeactivatedUserException(
-                    f"User with email {email} has been deactivated."
-                )
 
         workspace_invitation = None
         workspace_user = None
@@ -176,31 +212,20 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if not (allow_new_signups or allow_signup_for_invited_user):
             raise DisabledSignupError("Sign up is disabled.")
 
-        user = User(first_name=name, email=email, username=email)
-
-        if password is not None:
-            try:
-                validate_password(password, user)
-            except ValidationError as e:
-                raise PasswordDoesNotMatchValidation(e.messages)
-            user.set_password(password)
-
-        if not User.objects.exists():
+        user = self.force_create_user(
+            email=email,
+            name=name,
+            password=password,
             # This is the first ever user created in this baserow instance and
             # therefore the administrator user, lets give them staff rights so they
             # can set baserow wide settings.
-            user.is_staff = True
+            is_staff=not User.objects.exists(),
+            language=language,
+        )
 
         if instance_settings.show_admin_signup_page:
             instance_settings.show_admin_signup_page = False
             instance_settings.save()
-
-        user.save()
-
-        # Immediately create the one-to-one relationship with the user profile
-        # so we can safely use it everywhere else in the code.
-        language = language or settings.LANGUAGE_CODE
-        UserProfile.objects.create(user=user, language=language)
 
         # If we have an invitation to a workspace, then accept it.
         if workspace_invitation_token:

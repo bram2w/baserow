@@ -283,7 +283,9 @@
         "maxLocksPerTransactionExceededDescription": "Baserow attempted to permanently delete the trashed items, but exceeded the available locks specified in `max_locks_per_transaction`.",
         "disabledPasswordProviderMessage": "Please use another authentication provider.",
         "lastAdminTitle": "Can't remove last workspace admin",
-        "lastAdminMessage": "A workspace has to have at least one admin."
+        "lastAdminMessage": "A workspace has to have at least one admin.",
+        "adminAlreadyExistsTitle": "Can't use that username",
+        "adminAlreadyExistsDescription": "That username can't be used because it already exists."
     },
     "importerType": {
         "csv": "Import a CSV file",
