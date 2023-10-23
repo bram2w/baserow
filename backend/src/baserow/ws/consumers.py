@@ -150,7 +150,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add("users", self.channel_name)
 
     async def disconnect(self, message):
-        await self._remove_all_page_scopes()
+        await self._remove_all_page_scopes(send_confirmation=False)
         await self.channel_layer.group_discard("users", self.channel_name)
 
     async def receive_json(self, content, **parameters):
@@ -290,7 +290,7 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
                 }
             )
 
-    async def _remove_all_page_scopes(self):
+    async def _remove_all_page_scopes(self, send_confirmation=True):
         """
         Unsubscribes the connection from all currently subscribed pages.
         """
@@ -303,7 +303,9 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
                     "remove_page": page_scope.page_type,
                     **page_scope.page_parameters,
                 }
-                await self._remove_page_scope(content, send_confirmation=True)
+                await self._remove_page_scope(
+                    content, send_confirmation=send_confirmation
+                )
 
     async def _remove_page_scopes_associated_with_perm_group(
         self, permission_group_name: str
