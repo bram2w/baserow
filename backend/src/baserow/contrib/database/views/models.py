@@ -47,6 +47,9 @@ OWNERSHIP_TYPE_COLLABORATIVE = "collaborative"
 DEFAULT_OWNERSHIP_TYPE = OWNERSHIP_TYPE_COLLABORATIVE
 VIEW_OWNERSHIP_TYPES = [OWNERSHIP_TYPE_COLLABORATIVE]
 
+# Must be the same as `modules/database/constants.js`.
+DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY = "default"
+
 
 def get_default_view_content_type():
     return ContentType.objects.get_for_model(View)
@@ -769,6 +772,12 @@ class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
         default=FILTER_TYPE_AND,
         help_text="Indicates whether all (AND) or any (OR) of the conditions should "
         "match before shown.",
+    )
+    field_component = models.CharField(
+        max_length=32,
+        default=DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY,
+        help_text="Indicates which field input component is used in the form. The "
+        "value is only used in the frontend, and can differ per field.",
     )
     # The default value is the maximum value of the small integer field because a newly
     # created field must always be last.

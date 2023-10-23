@@ -49,6 +49,7 @@ class FormViewFieldOptionsSerializer(serializers.ModelSerializer):
             "order",
             "conditions",
             "condition_groups",
+            "field_component",
         )
 
 
@@ -89,6 +90,7 @@ class PublicFormViewFieldOptionsSerializer(FieldSerializer):
             "conditions",
             "condition_groups",
             "groups",
+            "field_component",
         )
 
     # @TODO show correct API docs discriminated by field type.

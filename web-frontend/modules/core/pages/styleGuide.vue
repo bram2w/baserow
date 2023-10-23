@@ -121,6 +121,14 @@
             large
             icon-left="iconoir-search"
           />
+          <FormInput
+            v-model="input"
+            horizontal-variable
+            label="Horizontal Large icon field left"
+            placeholder="Enter something here"
+            large
+            icon-left="iconoir-search"
+          />
           <div class="control">
             <label class="control__label">Checkbox field</label>
             <div class="control__elements">

@@ -710,7 +710,8 @@
         "descriptionPlaceholder": "Description",
         "showWhenMatchingConditions": "show when conditions are met",
         "addCondition": "Add condition",
-        "addConditionGroup": "Add condition group"
+        "addConditionGroup": "Add condition group",
+        "showFieldAs": "Show field as"
     },
     "duplicateFieldContext": {
         "duplicate": "Duplicate field",
