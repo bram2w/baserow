@@ -8,11 +8,13 @@ from baserow_premium.admin.users.exceptions import (
 )
 from baserow_premium.admin.users.handler import UserAdminHandler
 from baserow_premium.api.admin.users.errors import (
+    USER_ADMIN_ALREADY_EXISTS,
     USER_ADMIN_CANNOT_DEACTIVATE_SELF,
     USER_ADMIN_CANNOT_DELETE_SELF,
     USER_ADMIN_UNKNOWN_USER,
 )
 from baserow_premium.api.admin.users.serializers import (
+    UserAdminCreateSerializer,
     UserAdminResponseSerializer,
     UserAdminUpdateSerializer,
 )
@@ -32,6 +34,7 @@ from baserow.api.decorators import map_exceptions, validate_body
 from baserow.api.schemas import get_error_schema
 from baserow.api.user.schemas import authenticate_user_schema
 from baserow.api.user.serializers import get_all_user_data_serialized
+from baserow.core.user.exceptions import DeactivatedUserException, UserAlreadyExist
 from baserow.core.user.utils import generate_session_tokens_for_user
 
 from .serializers import BaserowImpersonateAuthTokenSerializer
@@ -71,6 +74,41 @@ class UsersAdminView(AdminListingView):
         )
         return super().get(request)
 
+    @extend_schema(
+        tags=["Admin"],
+        request=UserAdminCreateSerializer,
+        operation_id="admin_create_user",
+        description=(
+            "Creates and returns a new user if the requesting user is staff. This "
+            "works even if new signups are disabled. \n\nThis is a **premium** feature."
+        ),
+        responses={
+            200: UserAdminResponseSerializer(),
+            400: get_error_schema(
+                [
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                    "ERROR_FEATURE_NOT_AVAILABLE",
+                    "USER_ADMIN_ALREADY_EXISTS",
+                ]
+            ),
+        },
+    )
+    @validate_body(UserAdminCreateSerializer)
+    @map_exceptions(
+        {
+            UserAlreadyExist: USER_ADMIN_ALREADY_EXISTS,
+            DeactivatedUserException: USER_ADMIN_ALREADY_EXISTS,
+        }
+    )
+    @transaction.atomic
+    def post(self, request, data) -> Response:
+        """Creates a new user with the supplied attributes."""
+
+        handler = UserAdminHandler()
+        user = handler.create_user(request.user, **data)
+
+        return Response(UserAdminResponseSerializer(user).data)
+
 
 class UserAdminView(APIView):
     permission_classes = (IsAdminUser,)
@@ -97,6 +135,7 @@ class UserAdminView(APIView):
                     "ERROR_REQUEST_BODY_VALIDATION",
                     "USER_ADMIN_CANNOT_DEACTIVATE_SELF",
                     "USER_ADMIN_UNKNOWN_USER",
+                    "USER_ADMIN_ALREADY_EXISTS",
                     "ERROR_FEATURE_NOT_AVAILABLE",
                 ]
             ),
@@ -108,6 +147,7 @@ class UserAdminView(APIView):
         {
             CannotDeactivateYourselfException: USER_ADMIN_CANNOT_DEACTIVATE_SELF,
             UserDoesNotExistException: USER_ADMIN_UNKNOWN_USER,
+            UserAlreadyExist: USER_ADMIN_ALREADY_EXISTS,
         }
     )
     @transaction.atomic

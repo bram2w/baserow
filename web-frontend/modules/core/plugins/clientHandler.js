@@ -64,6 +64,10 @@ export class ClientErrorMap {
         app.i18n.t('clientHandler.adminCannotDeleteSelfTitle'),
         app.i18n.t('clientHandler.adminCannotDeleteSelfDescription')
       ),
+      USER_ADMIN_ALREADY_EXISTS: new ResponseErrorMessage(
+        app.i18n.t('clientHandler.adminAlreadyExistsTitle'),
+        app.i18n.t('clientHandler.adminAlreadyExistsDescription')
+      ),
       ERROR_MAX_FIELD_COUNT_EXCEEDED: new ResponseErrorMessage(
         app.i18n.t('clientHandler.maxFieldCountExceededTitle'),
         app.i18n.t('clientHandler.maxFieldCountExceededDescription')

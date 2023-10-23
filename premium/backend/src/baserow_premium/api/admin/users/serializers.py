@@ -66,6 +66,27 @@ class UserAdminResponseSerializer(ModelSerializer):
         extra_kwargs = _USER_ADMIN_SERIALIZER_API_DOC_KWARGS
 
 
+class UserAdminCreateSerializer(
+    UnknownFieldRaisesExceptionSerializerMixin, ModelSerializer
+):
+    """
+    Serializes a request body for creating a new user. Do not use for returning user
+    data as the password will be returned also.
+    """
+
+    # Max length set to match django user models first_name fields max length
+    name = CharField(source="first_name", max_length=150, required=True)
+    username = EmailField(required=True)
+    password = CharField(validators=[password_validation], required=True)
+
+    class Meta:
+        model = User
+        fields = ("username", "name", "is_active", "is_staff", "password")
+        extra_kwargs = {
+            **_USER_ADMIN_SERIALIZER_API_DOC_KWARGS,
+        }
+
+
 class UserAdminUpdateSerializer(
     UnknownFieldRaisesExceptionSerializerMixin, ModelSerializer
 ):

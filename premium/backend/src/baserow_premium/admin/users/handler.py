@@ -3,6 +3,7 @@ from typing import Optional
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 
 from baserow_premium.admin.users.exceptions import (
     CannotDeactivateYourselfException,
@@ -14,12 +15,54 @@ from baserow_premium.license.handler import LicenseHandler
 
 from baserow.core.exceptions import IsNotAdminError
 from baserow.core.signals import before_user_deleted
-from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
+from baserow.core.user.exceptions import (
+    PasswordDoesNotMatchValidation,
+    UserAlreadyExist,
+)
+from baserow.core.user.handler import UserHandler
+from baserow.core.user.utils import normalize_email_address
 
 User = get_user_model()
 
 
 class UserAdminHandler:
+    def create_user(
+        self,
+        requesting_user: User,
+        username: str,
+        name: str,
+        password: str,
+        is_active: bool = True,
+        is_staff: bool = False,
+    ):
+        """
+        Creates a new user with the provided values if the requesting user has admin
+        access. The user will be created, even if the signups are disabled.
+
+        :param requesting_user: The user who is making the request to creata a user, the
+            user must be a staff member or else an exception will be raised.
+        :param username: New username/email to set for the user.
+        :param name: New name to set on the user.
+        :param password: New password to securely set for the user.
+        :param is_staff: Value used to set if the user is an admin or not.
+        :param is_active: Value to disable or enable login for the user.
+        """
+
+        LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
+            PREMIUM, requesting_user
+        )
+        self._raise_if_not_permitted(requesting_user)
+
+        user = UserHandler().force_create_user(
+            email=username,
+            name=name,
+            password=password,
+            is_staff=is_staff,
+            is_active=is_active,
+        )
+
+        return user
+
     def update_user(
         self,
         requesting_user: User,
@@ -46,6 +89,7 @@ class UserAdminHandler:
         :param username: Optional new username/email to set for the user.
         :raises PasswordDoesNotMatchValidation: When the provided password value is not
             a valid password.
+        :raises UserAlreadyExist: If a user with that username already exists.
         """
 
         LicenseHandler.raise_if_user_doesnt_have_feature_instance_wide(
@@ -74,8 +118,17 @@ class UserAdminHandler:
         if name is not None:
             user.first_name = name
         if username is not None:
-            user.email = username
-            user.username = username
+            email = normalize_email_address(username)
+            user_query = User.objects.filter(
+                Q(email=email) | Q(username=email), ~Q(id=user.id)
+            )
+            if email != user.email and user_query.exists():
+                raise UserAlreadyExist(
+                    f"A user with the username {email} already exists."
+                )
+
+            user.email = email
+            user.username = email
 
         user.save()
         return user
