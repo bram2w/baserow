@@ -114,11 +114,11 @@ export default {
    * Prepares all the table, field and view data for the provided database, table and
    * view id.
    */
-  async asyncData({ store, params, error, app }) {
+  async asyncData({ store, params, error, app, redirect, route }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
-    let viewId = params.viewId ? parseInt(params.viewId) : null
+    const viewId = params.viewId ? parseInt(params.viewId) : null
     const data = {}
 
     // Try to find the table in the already fetched applications by the
@@ -157,7 +157,15 @@ export default {
       // view, so that the user can choose which they want to select in the top left
       // corner.
       if (!firstViewType.isDeactivated(data.database.workspace.id)) {
-        viewId = viewToUse.id
+        return redirect({
+          name: route.name,
+          params: {
+            databaseId,
+            tableId,
+            viewId: viewToUse.id,
+            rowId: params.rowId,
+          },
+        })
       }
     }
 
@@ -223,22 +231,6 @@ export default {
     this.$store.dispatch('table/setLoading', false)
   },
   mounted() {
-    // If no view route parameter is provided, then the `asyncData` function
-    // automatically selects the last viewed view, or the first one. This is however
-    // not updated in the URL path, so to make the history navigation work, we must
-    // replace the existing path.
-    if (
-      this.view !== undefined &&
-      parseInt(this.$route.params.viewId) !== this.view.id
-    ) {
-      this.$router.replace({
-        name: 'database-table',
-        params: {
-          viewId: this.view.id,
-        },
-      })
-    }
-
     this.$realtime.subscribe('table', { table_id: this.table.id })
   },
   beforeDestroy() {

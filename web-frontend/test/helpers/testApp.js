@@ -120,13 +120,14 @@ export class TestApp {
       },
       $router: {
         resolve({ name, params }) {
-          return new URL(`https://${name}`)
+          return new URL(`https://${name}.com`)
         },
         replace({ name, params }) {
-          return new URL(`https://${name}`)
+          return new URL(`https://${name}.com`)
         },
       },
       $route: {
+        name: '',
         params: {},
         matched: [],
       },
@@ -208,6 +209,8 @@ export class TestApp {
         params: asyncDataParams,
         error: fail,
         app: this._app,
+        route: this._app.$route,
+        redirect: this._app.$router.replace,
       })
       Component.data = function () {
         return data
