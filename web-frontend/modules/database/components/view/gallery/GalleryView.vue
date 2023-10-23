@@ -125,6 +125,7 @@
       @field-created="showFieldCreated"
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
+      @refresh-row="refreshRow"
     >
     </RowEditModal>
   </div>
@@ -453,6 +454,24 @@ export default {
     rowClick(row) {
       this.$refs.rowEditModal.show(row.id)
       this.$emit('selected-row', row)
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/gallery/refreshRowFromBackend',
+          {
+            table: this.table,
+            row,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     },
     /**
      * Calls the fieldCreated callback and shows the hidden fields section

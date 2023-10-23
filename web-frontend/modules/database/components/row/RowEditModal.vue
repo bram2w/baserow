@@ -32,7 +32,8 @@
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
         :fields="visibleFields"
-        :sortable="!readOnly"
+        :sortable="!readOnly && fieldsSortable"
+        :can-modify-fields="!readOnly && canModifyFields"
         :hidden="false"
         :read-only="readOnly"
         :row="row"
@@ -43,6 +44,7 @@
         @order-fields="$emit('order-fields', $event)"
         @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
         @update="update"
+        @refresh-row="$emit('refresh-row', $event)"
       ></RowEditModalFieldsList>
       <RowEditModalHiddenFieldsSection
         v-if="hiddenFields.length"
@@ -64,12 +66,14 @@
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
           @update="update"
+          @refresh-row="$emit('refresh-row', $event)"
         >
         </RowEditModalFieldsList>
       </RowEditModalHiddenFieldsSection>
       <div
         v-if="
           !readOnly &&
+          canModifyFields &&
           $hasPermission(
             'database.table.create_field',
             table,
@@ -99,6 +103,7 @@
         :table="table"
         :database="database"
         :fields="fields"
+        :read-only="readOnly"
       ></RowEditModalSidebar>
     </template>
   </Modal>
@@ -167,6 +172,16 @@ export default {
       required: false,
       default: false,
     },
+    fieldsSortable: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
+    canModifyFields: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
   },
   computed: {
     ...mapGetters({
@@ -215,8 +230,8 @@ export default {
       const allSidebarTypes = this.$registry.getOrderedList('rowModalSidebar')
       const activeSidebarTypes = allSidebarTypes.filter(
         (type) =>
-          type.isDeactivated(this.database, this.table) === false &&
-          type.getComponent()
+          type.isDeactivated(this.database, this.table, this.readOnly) ===
+            false && type.getComponent()
       )
       return activeSidebarTypes.length > 0
     },

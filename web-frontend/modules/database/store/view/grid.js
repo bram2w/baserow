@@ -1564,6 +1564,18 @@ export const actions = {
     })
   },
   /**
+   * Used when row data needs to be directly re-fetched from the Backend and
+   * the other (background) row needs to be refreshed. For example, when editing
+   * row from a *different* table using ForeignRowEditModal or just RowEditModal
+   * component in general.
+   */
+  async refreshRowFromBackend({ commit, getters, dispatch }, { table, row }) {
+    const { data } = await RowService(this.$client).get(table.id, row.id)
+    // Use the return value to update the desired row with latest values from the
+    // backend.
+    commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
+  },
+  /**
    * Called when the user wants to create a new row. Optionally a `before` row
    * object can be provided which will forcefully add the row before that row. If no
    * `before` is provided, the row will be added last.
