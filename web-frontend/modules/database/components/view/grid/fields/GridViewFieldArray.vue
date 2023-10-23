@@ -56,6 +56,15 @@ export default {
     showModal() {
       this.$refs.modal?.show()
     },
+    canSelectNext() {
+      return !this.needsModal || !this.$refs.modal.open
+    },
+    canKeyDown() {
+      return !this.needsModal || !this.$refs.modal.open
+    },
+    canKeyboardShortcut() {
+      return !this.needsModal || !this.$refs.modal.open
+    },
     canUnselectByClickingOutside(event) {
       return (
         !this.needsModal ||

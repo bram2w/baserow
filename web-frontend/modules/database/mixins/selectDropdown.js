@@ -27,6 +27,12 @@ export default {
           return
         }
 
+        // If the space bar key is pressed, we don't want to do anything because it
+        // should open the row edit modal.
+        if (event.key === ' ') {
+          return
+        }
+
         // When the escape key is pressed while editing the value we can hide the
         // dropdown.
         if (event.key === 'Escape' && this.editing) {
@@ -53,13 +59,7 @@ export default {
     canSelectNext() {
       return !this.editing
     },
-    canCopy() {
-      return !this.editing
-    },
-    canPaste() {
-      return !this.editing
-    },
-    canEmpty() {
+    canKeyboardShortcut() {
       return !this.editing
     },
   },

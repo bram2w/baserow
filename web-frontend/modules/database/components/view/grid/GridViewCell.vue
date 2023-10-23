@@ -73,6 +73,7 @@
       @add-row-after="$options.methods.addRowAfter(listeners, props)"
       @add-keep-alive="parent.addKeepAlive(props.field.id)"
       @remove-keep-alive="parent.removeKeepAlive(props.field.id)"
+      @edit-modal="$options.methods.editModal(listeners)"
     />
   </div>
 </template>
@@ -216,6 +217,11 @@ export default {
     addRowAfter(listeners, props) {
       if (listeners['add-row-after']) {
         listeners['add-row-after'](props.row)
+      }
+    },
+    editModal(listeners) {
+      if (listeners['edit-modal']) {
+        listeners['edit-modal']()
       }
     },
     refreshRow(listeners, props) {

@@ -19,6 +19,11 @@ export default {
       required: true,
     },
   },
+  computed: {
+    open() {
+      return this.$refs.fileModal.open
+    },
+  },
   methods: {
     show(index) {
       this.$refs.fileModal.show(index)
