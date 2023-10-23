@@ -201,13 +201,7 @@ export default {
     canKeyDown() {
       return !this.modalOpen
     },
-    canPaste() {
-      return !this.modalOpen
-    },
-    canCopy() {
-      return !this.modalOpen
-    },
-    canEmpty() {
+    canKeyboardShortcut() {
       return !this.modalOpen
     },
     async showForeignRowModal(item) {
