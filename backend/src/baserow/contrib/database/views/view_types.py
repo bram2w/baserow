@@ -543,6 +543,7 @@ class FormViewType(ViewType):
         "show_when_matching_conditions",
         "condition_type",
         "order",
+        "field_component",
     ]
     serializer_field_names = [
         "title",
@@ -978,6 +979,7 @@ class FormViewType(ViewType):
                         }
                         for condition in field_option.conditions.all()
                     ],
+                    "field_component": field_option.field_component,
                 }
             )
 

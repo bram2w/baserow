@@ -325,6 +325,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
         "condition_groups": [],
         "show_when_matching_conditions": False,
         "field": {"id": text_field.id, "type": "text", "text_default": ""},
+        "field_component": "default",
     }
     assert response_json["fields"][1] == {
         "name": number_field.name,
@@ -341,6 +342,7 @@ def test_meta_submit_form_view(api_client, data_fixture):
             "number_decimal_places": 0,
             "number_negative": False,
         },
+        "field_component": "default",
     }
 
 
@@ -871,6 +873,7 @@ def test_get_form_view_field_options(
                         "group": condition_group_1.id,
                     }
                 ],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -882,6 +885,7 @@ def test_get_form_view_field_options(
                 "condition_type": "AND",
                 "conditions": [],
                 "condition_groups": [],
+                "field_component": "default",
             },
         }
     }
@@ -940,6 +944,7 @@ def test_patch_form_view_field_options_conditions_create(
                             "group": None,
                         }
                     ],
+                    "field_component": "test",
                 }
             }
         },
@@ -970,6 +975,7 @@ def test_patch_form_view_field_options_conditions_create(
                         "group": None,
                     }
                 ],
+                "field_component": "test",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -981,6 +987,7 @@ def test_patch_form_view_field_options_conditions_create(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1080,6 +1087,7 @@ def test_patch_form_view_field_options_condition_groups_create(
                         "group": conditions[1]["group_id"],
                     },
                 ],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1091,6 +1099,7 @@ def test_patch_form_view_field_options_condition_groups_create(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1159,6 +1168,7 @@ def test_patch_form_view_field_options_conditions_update(
                         "group": None,
                     }
                 ],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1170,6 +1180,7 @@ def test_patch_form_view_field_options_conditions_update(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_3.id): {
                 "name": "",
@@ -1181,6 +1192,7 @@ def test_patch_form_view_field_options_conditions_update(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1291,6 +1303,7 @@ def test_patch_form_view_field_options_condition_groups_update(
                         "group": condition_group_1.id,
                     }
                 ],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1302,6 +1315,7 @@ def test_patch_form_view_field_options_condition_groups_update(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_3.id): {
                 "name": "",
@@ -1313,6 +1327,7 @@ def test_patch_form_view_field_options_condition_groups_update(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1386,6 +1401,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 "order": 1,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_3.id): {
                 "name": "",
@@ -1405,6 +1421,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                         "group": None,
                     }
                 ],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1416,6 +1433,7 @@ def test_patch_form_view_field_options_conditions_update_position(
                 "order": 3,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1467,6 +1485,7 @@ def test_patch_form_view_field_options_conditions_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1478,6 +1497,7 @@ def test_patch_form_view_field_options_conditions_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_3.id): {
                 "name": "",
@@ -1489,6 +1509,7 @@ def test_patch_form_view_field_options_conditions_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }
@@ -1545,6 +1566,7 @@ def test_patch_form_view_field_options_condition_groups_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_2.id): {
                 "name": "",
@@ -1556,6 +1578,7 @@ def test_patch_form_view_field_options_condition_groups_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
             str(text_field_3.id): {
                 "name": "",
@@ -1567,6 +1590,7 @@ def test_patch_form_view_field_options_condition_groups_delete(
                 "order": 32767,
                 "condition_groups": [],
                 "conditions": [],
+                "field_component": "default",
             },
         }
     }

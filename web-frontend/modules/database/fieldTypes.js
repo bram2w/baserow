@@ -93,6 +93,7 @@ import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/Row
 import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
+import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
@@ -111,6 +112,7 @@ import FieldLookupSubForm from '@baserow/modules/database/components/field/Field
 import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
 import FieldRollupSubForm from '@baserow/modules/database/components/field/FieldRollupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
+import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
@@ -181,19 +183,24 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * By default the row edit field component is used in the form. This can
-   * optionally be another component if needed. If null is returned, then the field
-   * is marked as not compatible with the form view.
+   * By default, the edit field component is used in the form. This can optionally be
+   * replaced by another component if needed. If an empty object `{}` is returned,
+   * then the field is marked as not compatible with the form view.
+   *
+   * The returned object should have one key with an empty string `''` as default
+   * component. If the object has multiple keys, then the user will be presented
+   * with these as options. This can be used to for example display a `single_select`
+   * field type as dropdown or radio inputs.
    */
-  getFormViewFieldComponent(field) {
-    return this.getRowEditFieldComponent(field)
-  }
-
-  /*
-   * Optional properties for the FormViewFieldComponent
-   */
-  getFormViewFieldComponentProperties(context) {
-    return {}
+  getFormViewFieldComponents(field) {
+    const { i18n } = this.app
+    return {
+      [DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY]: {
+        name: i18n.t('fieldType.defaultFormViewComponent'),
+        component: this.getRowEditFieldComponent(field),
+        properties: {},
+      },
+    }
   }
 
   /**
@@ -856,8 +863,20 @@ export class LinkRowFieldType extends FieldType {
     return RowEditFieldLinkRow
   }
 
-  getFormViewFieldComponent() {
-    return FormViewFieldLinkRow
+  getFormViewFieldComponents(field) {
+    const { i18n } = this.app
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].name = i18n.t(
+      'fieldType.linkRowSingle'
+    )
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].component =
+      FormViewFieldLinkRow
+    components.multiple = {
+      name: i18n.t('fieldType.linkRowMultiple'),
+      component: FormViewFieldMultipleLinkRow,
+      properties: {},
+    }
+    return components
   }
 
   getCardComponent() {
@@ -1017,6 +1036,18 @@ export class LinkRowFieldType extends FieldType {
 
   getCanImport() {
     return true
+  }
+
+  isEmpty(field, value) {
+    if (super.isEmpty(field, value)) {
+      return true
+    }
+
+    if (value.some((v) => !Number.isInteger(v.id))) {
+      return true
+    }
+
+    return false
   }
 }
 
@@ -1705,8 +1736,8 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return FieldDateSubForm
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
   getRowEditFieldComponent(field) {
@@ -2040,9 +2071,10 @@ export class FileFieldType extends FieldType {
     return RowHistoryFieldFile
   }
 
-  getFormViewFieldComponentProperties({ $store, $client, slug }) {
+  getFormViewFieldComponents(field, { $store, $client, slug }) {
+    const components = super.getFormViewFieldComponents(field)
     const userFileUploadTypes = [UploadFileUserFileUploadType.getType()]
-    return {
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       userFileUploadTypes,
       uploadFile: (file, progress) => {
         return FormService($client).uploadFile(
@@ -2053,6 +2085,7 @@ export class FileFieldType extends FieldType {
         )
       },
     }
+    return components
   }
 
   getCardComponent() {
@@ -2229,10 +2262,12 @@ export class SingleSelectFieldType extends FieldType {
     return RowHistoryFieldSingleSelect
   }
 
-  getFormViewFieldComponentProperties() {
-    return {
+  getFormViewFieldComponents(field) {
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
     }
+    return components
   }
 
   getCardComponent() {
@@ -2419,10 +2454,12 @@ export class MultipleSelectFieldType extends FieldType {
     return RowEditFieldMultipleSelect
   }
 
-  getFormViewFieldComponentProperties() {
-    return {
+  getFormViewFieldComponents(field) {
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
     }
+    return components
   }
 
   getCardComponent() {
@@ -2884,8 +2921,8 @@ export class FormulaFieldType extends FieldType {
     return true
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
   canBeReferencedByFormulaField() {
@@ -3029,8 +3066,8 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     return value
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
   getEmptyValue() {

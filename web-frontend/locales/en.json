@@ -100,7 +100,10 @@
         "count": "Count",
         "rollup": "Rollup",
         "lookup": "Lookup",
-        "multipleCollaborators": "Collaborators"
+        "multipleCollaborators": "Collaborators",
+        "defaultFormViewComponent": "Default",
+        "linkRowSingle": "Single",
+        "linkRowMultiple": "Multiple"
     },
     "fieldErrors": {
         "invalidNumber": "Invalid number",

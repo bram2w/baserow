@@ -4,6 +4,7 @@
     class="control"
     :class="{
       'control--horizontal': horizontal,
+      'control--horizontal-variable': horizontalVariable,
     }"
   >
     <label
@@ -117,6 +118,11 @@ export default {
       default: false,
     },
     horizontal: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    horizontalVariable: {
       type: Boolean,
       required: false,
       default: false,

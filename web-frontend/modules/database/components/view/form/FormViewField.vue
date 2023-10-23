@@ -66,7 +66,7 @@
           ></a>
         </div>
         <component
-          :is="getFieldComponent()"
+          :is="selectedFieldComponent.component"
           ref="field"
           :slug="view.slug"
           :workspace-id="database.workspace.id"
@@ -74,9 +74,31 @@
           :value="value"
           :read-only="readOnly"
           :lazy-load="true"
+          :touched="false"
+          :required="fieldOptions.required"
           @update="updateValue"
         />
         <div class="form-view__field-options">
+          <div
+            v-if="Object.keys(fieldComponents).length > 1"
+            class="control control--horizontal-variable"
+          >
+            <label class="control__label">
+              {{ $t('formViewField.showFieldAs') }}
+            </label>
+            <div class="control__elements">
+              <RadioButton
+                v-for="(v, key) in fieldComponents"
+                :key="key"
+                :model-value="fieldOptions.field_component"
+                :value="key"
+                @input="
+                  $emit('updated-field-options', { field_component: $event })
+                "
+                >{{ v.name }}</RadioButton
+              >
+            </div>
+          </div>
           <SwitchInput
             :value="fieldOptions.required"
             :large="true"
@@ -150,6 +172,7 @@
 <script>
 import { isElement, onClickOutside } from '@baserow/modules/core/utils/dom'
 import { clone } from '@baserow/modules/core/utils/object'
+import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 
@@ -205,6 +228,18 @@ export default {
       const index = this.fields.findIndex((f) => f.id === this.field.id)
       return this.fields.slice(0, index)
     },
+    fieldComponents() {
+      return this.getFieldType().getFormViewFieldComponents(this.field, this)
+    },
+    selectedFieldComponent() {
+      const components = this.fieldComponents
+      return Object.prototype.hasOwnProperty.call(
+        components,
+        this.fieldOptions.field_component
+      )
+        ? components[this.fieldOptions.field_component]
+        : components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY]
+    },
   },
   watch: {
     field: {
@@ -247,9 +282,6 @@ export default {
     },
     getFieldType() {
       return this.$registry.get('field', this.field.type)
-    },
-    getFieldComponent() {
-      return this.getFieldType().getFormViewFieldComponent(this.field)
     },
     resetValue() {
       this.value = this.getFieldType().getEmptyValue(this.field)
