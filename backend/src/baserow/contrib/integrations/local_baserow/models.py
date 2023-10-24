@@ -60,10 +60,23 @@ class LocalBaserowGetRow(LocalBaserowTableService, SearchableServiceMixin):
     row_id = FormulaField()
 
 
+class LocalBaserowTableServiceRefinementManager(models.Manager):
+    """
+    Manager for the `LocalBaserowTableService` filter and sort models.
+    Ensures that we exclude filters and sort with a trashed field.
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().filter(field__trashed=False)
+
+
 class LocalBaserowTableServiceFilter(ServiceFilter):
     """
     A service filter applicable to a `LocalBaserowTableService` integration service.
     """
+
+    objects_and_trash = models.Manager()
+    objects = LocalBaserowTableServiceRefinementManager()
 
     field = models.ForeignKey(
         "database.Field",
@@ -99,24 +112,31 @@ class LocalBaserowTableServiceSort(ServiceSort):
     A service sort applicable to a `LocalBaserowTableService` integration service.
     """
 
+    objects_and_trash = models.Manager()
+    objects = LocalBaserowTableServiceRefinementManager()
+
     field = models.ForeignKey(
         "database.Field",
         help_text="The database Field, in the LocalBaserowTableService service, "
         "which we would like to sort upon.",
         on_delete=models.CASCADE,
     )
-    order = models.CharField(
+    order_by = models.CharField(
         max_length=4,
         choices=SORT_ORDER_CHOICES,
         help_text="Indicates the sort order direction. ASC (Ascending) is from A to Z "
         "and DESC (Descending) is from Z to A.",
         default=SORT_ORDER_ASC,
     )
+    order = models.PositiveIntegerField()
 
     def __repr__(self):
-        return f"<LocalBaserowTableServiceSort {self.field} {self.order}>"
+        return f"<LocalBaserowTableServiceSort {self.field} {self.order_by}>"
 
-    def get_order(self) -> OrderBy:
+    class Meta:
+        ordering = ("order", "id")
+
+    def get_order_by(self) -> OrderBy:
         """
         Responsible for returning the `OrderBy` object,
         configured based on the `field` and `order` values.
@@ -124,7 +144,7 @@ class LocalBaserowTableServiceSort(ServiceSort):
 
         field_expr = F(self.field.db_column)
 
-        if self.order == SORT_ORDER_ASC:
+        if self.order_by == SORT_ORDER_ASC:
             field_order_by = field_expr.asc(nulls_first=True)
         else:
             field_order_by = field_expr.desc(nulls_last=True)

@@ -27,7 +27,24 @@
               {{ $t('localBaserowListRowsForm.noTableChosenForFiltering') }}
             </p>
           </Tab>
-          <Tab :title="$t('localBaserowListRowsForm.searchTabTitle')">
+          <Tab
+            :title="$t('localBaserowListRowsForm.sortTabTitle')"
+            class="data-source-form__sort-form-tab"
+          >
+            <LocalBaserowTableServiceSortForm
+              v-if="values.table_id && dataSource.schema"
+              v-model="values.sortings"
+              :schema="dataSource.schema"
+              :table-loading="tableLoading"
+            ></LocalBaserowTableServiceSortForm>
+            <p v-if="!values.table_id">
+              {{ $t('localBaserowListRowsForm.noTableChosenForSorting') }}
+            </p>
+          </Tab>
+          <Tab
+            :title="$t('localBaserowListRowsForm.searchTabTitle')"
+            class="data-source-form__search-form-tab"
+          >
             <FormInput
               v-model="values.search_query"
               type="text"
@@ -47,10 +64,12 @@
 import form from '@baserow/modules/core/mixins/form'
 import LocalBaserowTableSelector from '@baserow/modules/integrations/components/services/LocalBaserowTableSelector'
 import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/components/services/LocalBaserowTableServiceConditionalForm.vue'
+import LocalBaserowTableServiceSortForm from '@baserow/modules/integrations/components/services/LocalBaserowTableServiceSortForm'
 
 export default {
   components: {
     LocalBaserowTableSelector,
+    LocalBaserowTableServiceSortForm,
     LocalBaserowTableServiceConditionalForm,
   },
   mixins: [form],
@@ -74,12 +93,14 @@ export default {
         'search_query',
         'filters',
         'filter_type',
+        'sortings',
       ],
       values: {
         table_id: null,
         view_id: null,
         search_query: '',
         filters: [],
+        sortings: [],
         filter_type: 'AND',
       },
       tableLoading: false,
@@ -96,9 +117,10 @@ export default {
       set(newValue) {
         // If we currently have a `table_id` selected, and the `newValue`
         // is different to the current `table_id`, then reset the `filters`
-        // to a blank array, and `view_id` to `null`.
+        // and `sortings` to a blank array, and `view_id` to `null`.
         if (this.values.table_id && this.values.table_id !== newValue) {
           this.values.filters = []
+          this.values.sortings = []
           this.values.view_id = null
         }
         this.values.table_id = newValue
