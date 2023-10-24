@@ -300,20 +300,21 @@
     "getFormulaComponent": {
         "errorTooltip": "Invalid reference"
     },
-    "tableElementForm": {
-      "dataSource": "Data source"
-    },
     "fontSidePanelForm": {
-      "label": "Font",
+      "label": "Font"
+    },
+    "tableElementForm": {
       "dataSource": "Data source",
       "fields": "Fields",
       "fieldValueLabel": "Value",
       "addField": "add field",
       "fieldValuePlaceholder": "Enter value...",
-      "fieldDefaultName": "Column"
+      "itemsPerPage": "Items per page",
+      "itemsPerPagePlaceholder": "Enter value..."
     },
     "tableElement": {
-      "empty": "No items have been found."
+      "empty": "No items have been found.",
+      "showMore": "Show more"
     },
     "currentRecordDataProviderType": {
       "index": "index",

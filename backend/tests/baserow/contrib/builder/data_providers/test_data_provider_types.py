@@ -6,11 +6,31 @@ from baserow.contrib.builder.data_providers.data_provider_types import (
     DataSourceDataProviderType,
     PageParameterDataProviderType,
 )
-from baserow.contrib.builder.data_providers.registries import (
-    builder_data_provider_type_registry,
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
 )
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+
+
+class FakeDispatchContext(DispatchContext):
+    def __init__():
+        super().__init__()
+
+    def range(self, service):
+        return [0, 100]
+
+    def __getitem__(self, key: str):
+        if key == "test":
+            return 2
+        if key == "test1":
+            return 1
+        if key == "test2":
+            return ""
+        if key == "test999":
+            return "999"
+
+        return super().__getitem__(key)
 
 
 def test_page_parameter_data_provider_get_data_chunk():
@@ -19,19 +39,14 @@ def test_page_parameter_data_provider_get_data_chunk():
     fake_request = MagicMock()
     fake_request.data = {"page_parameter": {"id": 42}}
 
-    runtime_formula_context = MagicMock()
-    runtime_formula_context.application_context = {"request": fake_request}
+    dispatch_context = BuilderDispatchContext(fake_request, None)
 
-    assert page_parameter_provider.get_data_chunk(runtime_formula_context, ["id"]) == 42
-    assert page_parameter_provider.get_data_chunk(runtime_formula_context, []) is None
+    assert page_parameter_provider.get_data_chunk(dispatch_context, ["id"]) == 42
+    assert page_parameter_provider.get_data_chunk(dispatch_context, []) is None
     assert (
-        page_parameter_provider.get_data_chunk(runtime_formula_context, ["id", "test"])
-        is None
+        page_parameter_provider.get_data_chunk(dispatch_context, ["id", "test"]) is None
     )
-    assert (
-        page_parameter_provider.get_data_chunk(runtime_formula_context, ["test"])
-        is None
-    )
+    assert page_parameter_provider.get_data_chunk(dispatch_context, ["test"]) is None
 
 
 @pytest.mark.django_db
@@ -70,18 +85,11 @@ def test_data_source_data_provider_get_data_chunk(data_fixture):
 
     fake_request = MagicMock()
 
-    runtime_formula_context = MagicMock()
-    runtime_formula_context.application_context = {
-        "request": fake_request,
-        "service": data_source.service,
-        "page": page,
-        "integrations": [integration],
-    }
-    runtime_formula_context.cache = {}
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -127,16 +135,11 @@ def test_data_source_data_provider_get_data_chunk_with_formula(data_fixture):
         "page_parameter": {"id": 2},
     }
 
-    runtime_formula_context = RuntimeFormulaContext(
-        builder_data_provider_type_registry,
-        service=data_source.service,
-        request=fake_request,
-        page=page,
-    )
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -206,16 +209,11 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
         "page_parameter": {"id": 2},
     }
 
-    runtime_formula_context = RuntimeFormulaContext(
-        builder_data_provider_type_registry,
-        service=data_source.service,
-        request=fake_request,
-        page=page,
-    )
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     assert (
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
         == "Orange"
     )
@@ -276,16 +274,11 @@ def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_dataso
         "page_parameter": {},
     }
 
-    runtime_formula_context = RuntimeFormulaContext(
-        builder_data_provider_type_registry,
-        service=data_source.service,
-        request=fake_request,
-        page=page,
-    )
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
 
 
@@ -347,16 +340,11 @@ def test_data_source_data_provider_get_data_chunk_with_formula_recursion(
         "page_parameter": {},
     }
 
-    runtime_formula_context = RuntimeFormulaContext(
-        builder_data_provider_type_registry,
-        service=data_source.service,
-        request=fake_request,
-        page=page,
-    )
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )
 
 
@@ -427,14 +415,9 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         "page_parameter": {},
     }
 
-    runtime_formula_context = RuntimeFormulaContext(
-        builder_data_provider_type_registry,
-        service=data_source.service,
-        request=fake_request,
-        page=page,
-    )
+    dispatch_context = BuilderDispatchContext(fake_request, page)
 
     with pytest.raises(ServiceImproperlyConfigured):
         data_source_provider.get_data_chunk(
-            runtime_formula_context, [data_source.id, fields[1].db_column]
+            dispatch_context, [data_source.id, fields[1].db_column]
         )

@@ -1,12 +1,14 @@
 from typing import List, Union
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
-from baserow.core.formula.exceptions import RuntimeFormulaRecursion
+from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.utils import get_nested_value_from_dict
 
 
@@ -19,7 +21,7 @@ class PageParameterDataProviderType(DataProviderType):
     type = "page_parameter"
 
     def get_data_chunk(
-        self, runtime_formula_context: RuntimeFormulaContext, path: List[str]
+        self, dispatch_context: BuilderDispatchContext, path: List[str]
     ) -> Union[int, str]:
         """
         When a page parameter is read, returns the value previously saved from the
@@ -31,10 +33,8 @@ class PageParameterDataProviderType(DataProviderType):
 
         first_part = path[0]
 
-        return (
-            runtime_formula_context.application_context["request"]
-            .data.get("page_parameter", {})
-            .get(first_part, None)
+        return dispatch_context.request.data.get("page_parameter", {}).get(
+            first_part, None
         )
 
 
@@ -45,20 +45,20 @@ class DataSourceDataProviderType(DataProviderType):
 
     type = "data_source"
 
-    def get_data_source_by_id(self, runtime_formula_context, data_source_id: int):
+    def get_data_source_by_id(
+        self, dispatch_context: BuilderDispatchContext, data_source_id: int
+    ):
         """
         Helper to get data source from a name from the cache or populate the cache
         if not populated.
         """
 
-        if "data_sources" not in runtime_formula_context.cache:
-            runtime_formula_context.cache[
+        if "data_sources" not in dispatch_context.cache:
+            dispatch_context.cache[
                 "data_sources"
-            ] = DataSourceHandler().get_data_sources(
-                runtime_formula_context.application_context["page"]
-            )
+            ] = DataSourceHandler().get_data_sources(dispatch_context.page)
 
-        for data_source in runtime_formula_context.cache["data_sources"]:
+        for data_source in dispatch_context.cache["data_sources"]:
             if data_source.id == data_source_id:
                 return data_source
 
@@ -66,25 +66,21 @@ class DataSourceDataProviderType(DataProviderType):
             f"Data source with id {data_source_id} doesn't exist"
         )
 
-    def get_data_chunk(
-        self, runtime_formula_context: RuntimeFormulaContext, path: List[str]
-    ):
+    def get_data_chunk(self, dispatch_context: BuilderDispatchContext, path: List[str]):
         """Load a data chunk from a datasource of the page in context."""
 
         data_source_id, *rest = path
 
-        data_source = self.get_data_source_by_id(
-            runtime_formula_context, int(data_source_id)
-        )
+        data_source = self.get_data_source_by_id(dispatch_context, int(data_source_id))
 
         # Declare the call and check for recursion
         try:
-            runtime_formula_context.add_call(data_source.id)
-        except RuntimeFormulaRecursion:
+            dispatch_context.add_call(data_source.id)
+        except FormulaRecursion:
             raise DataSourceImproperlyConfigured("Recursion detected.")
 
         dispatch_result = DataSourceHandler().dispatch_data_source(
-            data_source, runtime_formula_context
+            data_source, dispatch_context
         )
 
         return get_nested_value_from_dict(dispatch_result, rest)

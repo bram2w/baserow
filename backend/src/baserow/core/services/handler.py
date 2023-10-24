@@ -4,7 +4,6 @@ from django.db.models import QuerySet
 
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.services.exceptions import (
@@ -15,6 +14,7 @@ from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType, service_type_registry
 from baserow.core.utils import extract_allowed
 
+from .dispatch_context import DispatchContext
 from .types import ServiceForUpdate
 
 
@@ -197,7 +197,7 @@ class ServiceHandler:
     def dispatch_service(
         self,
         service: Service,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Dispatch the given service.
@@ -210,4 +210,4 @@ class ServiceHandler:
         if service.integration_id is None:
             raise ServiceImproperlyConfigured("The integration property is missing.")
 
-        return service.get_type().dispatch(service, runtime_formula_context)
+        return service.get_type().dispatch(service, dispatch_context)

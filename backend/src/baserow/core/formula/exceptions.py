@@ -5,7 +5,7 @@ from loguru import logger
 from baserow.core.utils import exception_capturer
 
 
-class RuntimeFormulaRecursion(Exception):
+class FormulaRecursion(Exception):
     """Raised when the formula context detects a recursion."""
 
 

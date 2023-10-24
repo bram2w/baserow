@@ -67,7 +67,7 @@ def test_builder_application_export(data_fixture):
     )
 
     element4 = data_fixture.create_builder_table_element(
-        page=page2, data_source=datasource3
+        page=page2, data_source=datasource3, items_per_page=42
     )
 
     workflow_action_1 = data_fixture.create_notification_workflow_action(
@@ -217,6 +217,7 @@ def test_builder_application_export(data_fixture):
                         "order": str(element4.order),
                         "parent_element_id": None,
                         "place_in_container": None,
+                        "items_per_page": 42,
                         "style_padding_top": 10,
                         "style_padding_bottom": 10,
                         "data_source_id": element4.data_source.id,
@@ -297,6 +298,7 @@ IMPORT_REFERENCE = {
                     "type": "table",
                     "parent_element_id": None,
                     "place_in_container": None,
+                    "items_per_page": 42,
                     "order": 2.5,
                     "data_source_id": 5,
                     "fields": [
@@ -488,6 +490,7 @@ def test_builder_application_import(data_fixture):
     assert isinstance(table_element, TableElement)
 
     assert table_element.fields.count() == 2
+    assert table_element.items_per_page == 42
 
     assert element1.order == 1
     assert element1.level == 2

@@ -3,6 +3,17 @@ import PublicBuilderService from '@baserow/modules/builder/services/publishedBui
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
 import BigNumber from 'bignumber.js'
 
+const populateElement = (element) => {
+  element._ = {
+    contentLoading: false,
+    content: [],
+    hasNextPage: false,
+    reset: 0,
+  }
+
+  return element
+}
+
 const state = {
   // The currently selected element
   selected: null,
@@ -17,10 +28,10 @@ const updateContext = {
 const mutations = {
   SET_ITEMS(state, { page, elements }) {
     state.selected = null
-    page.elements = elements
+    page.elements = elements.map(populateElement)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    page.elements.push(element)
+    page.elements.push(populateElement(element))
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
     page.elements.forEach((element) => {

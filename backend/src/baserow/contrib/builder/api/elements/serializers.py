@@ -19,6 +19,10 @@ from baserow.core.formula.serializers import FormulaSerializerField
 class ElementSerializer(serializers.ModelSerializer):
     """
     Basic element serializer mostly for returned values.
+
+    👉 Mind to update the
+    baserow.contrib.builder.api.domains.serializer.PublicElementSerializer
+    when you update this one.
     """
 
     type = serializers.SerializerMethodField(help_text="The type of the element.")

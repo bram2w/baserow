@@ -409,38 +409,29 @@ export class TableElementType extends ElementType {
     return TableElementForm
   }
 
-  prepareValuesForRequest(values) {
-    const prepared = { ...values }
-
-    if (!prepared?.fields?.length || prepared.fields.length === 0) {
-      prepared.fields = [
-        {
-          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 1`,
-          value: '',
-        },
-        {
-          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 2`,
-          value: '',
-        },
-        {
-          name: `${this.app.i18n.t('tableElementForm.fieldDefaultName')} 3`,
-          value: '',
-        },
-      ]
-    }
-
-    return prepared
-  }
-
-  onElementEvent(event, { page, element, dataSourceId }) {
+  async onElementEvent(event, { page, element, dataSourceId }) {
     if (event === ELEMENT_EVENTS.DATA_SOURCE_REMOVED) {
       if (element.data_source_id === dataSourceId) {
         // Remove the data_source_id
-        this.app.store.dispatch('element/forceUpdate', {
+        await this.app.store.dispatch('element/forceUpdate', {
           page,
           element,
           values: { data_source_id: null },
         })
+        // Empty the element content
+        await this.app.store.dispatch('elementContent/clearElementContent', {
+          element,
+        })
+      }
+    }
+    if (event === ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE) {
+      if (element.data_source_id === dataSourceId) {
+        await this.app.store.dispatch(
+          'elementContent/triggerElementContentReset',
+          {
+            element,
+          }
+        )
       }
     }
   }

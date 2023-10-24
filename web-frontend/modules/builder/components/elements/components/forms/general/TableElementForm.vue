@@ -15,6 +15,25 @@
         </Dropdown>
       </div>
     </FormElement>
+    <FormInput
+      v-model="values.items_per_page"
+      :label="$t('tableElementForm.itemsPerPage')"
+      :placeholder="$t('tableElementForm.itemsPerPagePlaceholder')"
+      :to-value="(value) => parseInt(value)"
+      :error="
+        $v.values.items_per_page.$dirty && !$v.values.items_per_page.required
+          ? $t('error.requiredField')
+          : !$v.values.items_per_page.integer
+          ? $t('error.integerField')
+          : !$v.values.items_per_page.minValue
+          ? $t('error.minValueField', { min: 1 })
+          : !$v.values.items_per_page.maxValue
+          ? $t('error.maxValueField', { max: maxItemPerPage })
+          : ''
+      "
+      type="number"
+      @blur="$v.values.items_per_page.$touch()"
+    ></FormInput>
     <FormElement class="control">
       <label class="control__label">
         {{ $t('tableElementForm.fields') }}
@@ -75,7 +94,7 @@
               :placeholder="$t('tableElementForm.fieldValuePlaceholder')"
               :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
               :application-context-additions="{
-                element: values,
+                element,
               }"
               horizontal
             />
@@ -103,7 +122,14 @@ import {
   getNextAvailableNameInSequence,
   uuid,
 } from '@baserow/modules/core/utils/string'
-import { required, maxLength } from 'vuelidate/lib/validators'
+import {
+  required,
+  maxLength,
+  integer,
+  minValue,
+  maxValue,
+} from 'vuelidate/lib/validators'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'TableElementForm',
@@ -112,8 +138,10 @@ export default {
   inject: ['page'],
   data() {
     return {
+      allowedValues: ['data_source_id', 'fields', 'items_per_page'],
       values: {
         data_source_id: null,
+        items_per_page: 1,
         fields: [],
       },
     }
@@ -126,12 +154,36 @@ export default {
       return this.dataSources.filter(
         (dataSource) =>
           dataSource.type &&
-          this.$registry.get('service', dataSource.type).isCollection
+          this.$registry.get('service', dataSource.type).returnsList
       )
+    },
+    selectedDataSource() {
+      if (!this.values.data_source_id) {
+        return null
+      }
+      return this.$store.getters['dataSource/getPageDataSourceById'](
+        this.page,
+        this.values.data_source_id
+      )
+    },
+    selectedDataSourceType() {
+      if (!this.selectedDataSource || !this.selectedDataSource.type) {
+        return null
+      }
+      return this.$registry.get('service', this.selectedDataSource.type)
+    },
+    maxItemPerPage() {
+      if (!this.selectedDataSourceType) {
+        return 20
+      }
+      return this.selectedDataSourceType.maxResultLimit
     },
     DATA_PROVIDERS_ALLOWED_ELEMENTS() {
       return DATA_PROVIDERS_ALLOWED_ELEMENTS
     },
+    ...mapGetters({
+      element: 'element/getSelected',
+    }),
   },
   watch: {
     'dataSources.length'(newValue, oldValue) {
@@ -176,6 +228,12 @@ export default {
               maxLength: maxLength(225),
             },
           },
+        },
+        items_per_page: {
+          required,
+          integer,
+          minValue: minValue(1),
+          maxValue: maxValue(this.maxItemPerPage),
         },
       },
     }

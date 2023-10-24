@@ -1,12 +1,43 @@
 from abc import ABC, abstractmethod
 from typing import Any, List
 
+from baserow.core.formula.exceptions import FormulaRecursion
+
 BaserowFormula = str
 FormulaArg = Any
 FormulaArgs = List[FormulaArg]
 
 
 class FormulaContext(ABC):
+    def __init__(self):
+        """
+        Loads the context for each data provider from the extra context given to the
+        constructor.
+
+        :param registry: The registry that registers the available data providers that
+            can be used by this formula context instance.
+        :param kwargs: extra elements are given to the data providers to extract data.
+        """
+
+        self.call_stack = set()
+
+    def add_call(self, call_id: Any):
+        """
+        Used to track calls using this context.
+
+        :param call_id: the unique identifier of the call.
+        :raise FormulaRecursion: when a recursion is detected.
+        """
+
+        if call_id in self.call_stack:
+            raise FormulaRecursion()
+        self.call_stack.add(call_id)
+
+    def reset_call_stack(self):
+        """Reset the call stack."""
+
+        self.call_stack = set()
+
     @abstractmethod
     def __getitem__(self, key: str) -> Any:
         """

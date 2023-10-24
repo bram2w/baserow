@@ -2,13 +2,15 @@ from typing import Any, Iterable, Optional, Union
 
 from django.db.models import QuerySet
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.pages.models import Page
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.integrations.registries import integration_type_registry
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
@@ -255,7 +257,7 @@ class DataSourceHandler:
         data_source.delete()
 
     def dispatch_data_sources(
-        self, data_sources, runtime_formula_context: RuntimeFormulaContext
+        self, data_sources, dispatch_context: BuilderDispatchContext
     ):
         """
         Dispatch the service related to the data_sources.
@@ -270,20 +272,20 @@ class DataSourceHandler:
         data_sources_dispatch = {}
         for data_source in data_sources:
             # Add the initial call to the call stack
-            runtime_formula_context.add_call(data_source.id)
+            dispatch_context.add_call(data_source.id)
             try:
                 data_sources_dispatch[data_source.id] = self.dispatch_data_source(
-                    data_source, runtime_formula_context
+                    data_source, dispatch_context
                 )
             except Exception as e:
                 data_sources_dispatch[data_source.id] = e
             # Reset the stack as we are starting a new dispatch
-            runtime_formula_context.reset_call_stack()
+            dispatch_context.reset_call_stack()
 
         return data_sources_dispatch
 
     def dispatch_data_source(
-        self, data_source: DataSource, runtime_formula_context: RuntimeFormulaContext
+        self, data_source: DataSource, dispatch_context: BuilderDispatchContext
     ) -> Any:
         """
         Dispatch the service related to the data_source.
@@ -298,19 +300,19 @@ class DataSourceHandler:
         if not data_source.service_id:
             raise DataSourceImproperlyConfigured("The service type is missing.")
 
-        if data_source.id not in runtime_formula_context.cache.setdefault(
+        if data_source.id not in dispatch_context.cache.setdefault(
             "data_source_contents", {}
         ):
             service_dispatch = self.service_handler.dispatch_service(
-                data_source.service.specific, runtime_formula_context
+                data_source.service.specific, dispatch_context
             )
             # Cache the dispatch in the formula cache if we have formulas that need
             # it later
-            runtime_formula_context.cache["data_source_contents"][
+            dispatch_context.cache["data_source_contents"][
                 data_source.id
             ] = service_dispatch
 
-        return runtime_formula_context.cache["data_source_contents"][data_source.id]
+        return dispatch_context.cache["data_source_contents"][data_source.id]
 
     def move_data_source(
         self, data_source: DataSourceForUpdate, before: Optional[DataSource] = None
