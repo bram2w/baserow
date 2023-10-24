@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -567,6 +568,110 @@ def test_list_rows_filter_stacks_with_existing_filter(data_fixture, api_client):
     assert response_json["count"] == 1
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == row_4.id
+
+
+@pytest.mark.django_db
+def test_list_rows_filter_filters_query_param(data_fixture, api_client):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Number", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(name="a", number="1")
+    row_2 = model.objects.create(name="ab", number="2")
+    row_3 = model.objects.create(name="abc", number="3")
+    row_4 = model.objects.create(name="abcd", number="1")
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": field_1.id,
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": field_2.id,
+                        "type": "equal",
+                        "value": 3,
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
+
+
+@pytest.mark.django_db
+def test_list_rows_filter_filters_query_param_with_user_field_names(
+    data_fixture, api_client
+):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Number", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(name="a", number="1")
+    row_2 = model.objects.create(name="ab", number="2")
+    row_3 = model.objects.create(name="abc", number="3")
+    row_4 = model.objects.create(name="abcd", number="1")
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": "Name",
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": "Number",
+                        "type": "equal",
+                        "value": 3,
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters), "user_field_names=true"]
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
 
 
 @pytest.mark.django_db

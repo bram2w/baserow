@@ -83,8 +83,8 @@ from baserow.contrib.database.views.registries import (
     view_ownership_type_registry,
 )
 from baserow.contrib.database.views.view_filter_groups import (
-    APIGroupedFiltersAdapter,
     ViewGroupedFiltersAdapter,
+    construct_filter_builder_from_grouped_api_filters,
 )
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
@@ -3093,7 +3093,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         filter_object: dict = None,
         table_model: Type[GeneratedTableModel] = None,
         view_type=None,
-        api_filters_serialized: Optional[Dict[str, Any]] = None,
+        api_filters: Optional[Dict[str, Any]] = None,
     ):
         """
         This function constructs a queryset which applies all the filters
@@ -3114,7 +3114,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param table_model: A model which can be passed if it's already instantiated.
         :param view_type: The view_type which can be passed if it's already
             instantiated.
-        :param api_filters_serialized: A dictionary of filters and group of filters to
+        :param api_filters: A dictionary of filters and group of filters to
             apply to the queryset.
         :return: A tuple containing:
             - A queryset of rows.
@@ -3161,11 +3161,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         # info). The old way of filtering is a list of query params with the
         # filter__{field}__{type}=[value] format.
 
-        if api_filters_serialized and len(api_filters_serialized):
-            adapter = APIGroupedFiltersAdapter.from_serialized_filter_tree(
-                api_filters_serialized, table_model, publicly_visible_field_ids
+        if api_filters and len(api_filters):
+            filter_builder = construct_filter_builder_from_grouped_api_filters(
+                api_filters,
+                table_model,
+                only_filter_by_field_ids=publicly_visible_field_ids,
             )
-            filter_builder = AdvancedFilterBuilder(adapter).construct_filter_builder()
             queryset = filter_builder.apply_to_queryset(queryset)
         else:
             queryset = queryset.filter_by_fields_object(

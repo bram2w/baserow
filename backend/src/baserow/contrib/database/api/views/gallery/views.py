@@ -298,11 +298,11 @@ class PublicGalleryViewRowsView(APIView):
                     "to this view. The filter tree is a nested structure containing "
                     "the filters that need to be applied. \n\n"
                     "Please note that if this parameter is provided, all other "
-                    "filter__{field}__{filter}` will be ignored, "
+                    "`filter__{field}__{filter}` will be ignored, "
                     "as well as the `filter_type` parameter. \n\n"
-                    "An example of a valid filter tree is the following: all others"
-                    '{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
-                    '"value": "test"}]}.\n\n'
+                    "An example of a valid filter tree is the following:"
+                    '`{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
+                    '"value": "test"}]}`.\n\n'
                     f"The following filters are available: "
                     f'{", ".join(view_filter_type_registry.get_types())}.'
                 ),
@@ -483,7 +483,7 @@ class PublicGalleryViewRowsView(APIView):
             table_model=model,
             view_type=view_type,
             search_mode=search_mode,
-            api_filters_serialized=api_filters,
+            api_filters=api_filters,
         )
 
         if count:

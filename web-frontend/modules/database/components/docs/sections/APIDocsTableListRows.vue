@@ -56,6 +56,23 @@
             :content="$t('apiDocsTableListRows.orderBy')"
           />
         </APIDocsParameter>
+        <APIDocsParameter name="filters" :optional="true" type="JSON">
+          <MarkdownIt
+            class="api-docs__content"
+            :content="$t('apiDocsTableListRows.filters')"
+          />
+          <a
+            class="button button--ghost button--tiny"
+            @click.prevent="$refs.filtersModal.show()"
+          >
+            {{ $t('apiDocsTableListRows.filtersBuilder') }}</a
+          >
+          <APIDocsFiltersBuilderModal
+            ref="filtersModal"
+            :user-field-names="value.userFieldNames"
+            :fields="fields[table.id]"
+          ></APIDocsFiltersBuilderModal>
+        </APIDocsParameter>
         <APIDocsParameter
           name="filter__{field}__{filter}"
           :optional="true"
@@ -121,15 +138,21 @@
 <script>
 import APIDocsExample from '@baserow/modules/database/components/docs/APIDocsExample'
 import APIDocsParameter from '@baserow/modules/database/components/docs/APIDocsParameter'
+import APIDocsFiltersBuilderModal from '@baserow/modules/database/components/docs/APIDocsFiltersBuilderModal.vue'
 
 export default {
   name: 'APIDocsTableListRows',
   components: {
+    APIDocsFiltersBuilderModal,
     APIDocsParameter,
     APIDocsExample,
   },
   props: {
     value: {
+      type: Object,
+      required: true,
+    },
+    fields: {
       type: Object,
       required: true,
     },

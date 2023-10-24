@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, Type
+from typing import Any, Dict, Optional, Type
 
 from django.utils.functional import lazy
 
@@ -619,6 +619,10 @@ class PublicViewFilterSerializer(serializers.Serializer):
     value = serializers.CharField(allow_blank=True, help_text="The filter value.")
 
 
+class PublicViewFilterUserFieldNamesSerializer(PublicViewFilterSerializer):
+    field = serializers.CharField(help_text="The name of the field to filter on.")
+
+
 class RecursiveField(serializers.Serializer):
     def to_representation(self, value):
         serializer = self.parent.parent.__class__(value, context=self.context)
@@ -636,14 +640,21 @@ class PublicViewFiltersSerializer(serializers.Serializer):
         child=PublicViewFilterSerializer(),
         required=False,
         allow_empty=True,
-        help_text="The list of filters that should be applied in this group/public view.",
+        help_text="The list of filters that should be applied in this group/public "
+        "view.",
     )
     groups = RecursiveField(many=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.context.get("user_field_names", False):
+            self.fields["filters"].child = PublicViewFilterUserFieldNamesSerializer()
 
 
 def validate_api_grouped_filters(
     serialized_api_filters: str,
     exception_to_raise: Type[Exception] = FiltersParamValidationException,
+    user_field_names: Optional[bool] = False,
 ) -> Dict[str, Any]:
     """
     Validates the provided serialized view filters and returns the validated
@@ -656,6 +667,8 @@ def validate_api_grouped_filters(
         validated.
     :param exception_to_raise: The exception that should be raised if the
         provided filters are not valid.
+    :param user_field_names: Use field names instead of field ids in the
+        serialized filters.
     :return: The validated dict containing the filters and the filter groups.
     """
 
@@ -669,7 +682,9 @@ def validate_api_grouped_filters(
             }
         )
 
-    serializer = PublicViewFiltersSerializer(data=advanced_filters)
+    serializer = PublicViewFiltersSerializer(
+        data=advanced_filters, context={"user_field_names": user_field_names}
+    )
     if not serializer.is_valid():
         detail = serialize_validation_errors_recursive(serializer.errors)
         raise exception_to_raise(detail)

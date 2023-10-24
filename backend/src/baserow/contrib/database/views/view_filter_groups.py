@@ -7,7 +7,9 @@ from baserow.contrib.database.fields.exceptions import FilterFieldNotFound
 from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
+    AdvancedFilterBuilder,
     AnnotatedQ,
+    FilterBuilder,
     GroupedFiltersAdapter,
 )
 from baserow.contrib.database.table.models import GeneratedTableModel
@@ -149,6 +151,7 @@ class APIGroupedFiltersAdapter(GroupedFiltersAdapter):
         serialized_filter_tree: Dict[str, Any],
         model: GeneratedTableModel,
         only_filter_by_field_ids: Optional[List[int]] = None,
+        user_field_names: Optional[bool] = False,
     ) -> "APIGroupedFiltersAdapter":
         """
         Create a PublicViewGroupedFiltersAdapter from a serialized
@@ -167,6 +170,16 @@ class APIGroupedFiltersAdapter(GroupedFiltersAdapter):
         }
         So we need to extract and create a flat list of all the filters and the groups
         in the correct order to make the adapter work with the AdvancedFilterBuilder.
+
+        :param serialized_filter_tree: The serialized filter tree.
+        :param model: The model for which the filters are created.
+        :param only_filter_by_field_ids: If provided, only allow filters for the
+            provided field ids.
+        :param user_field_names: If True, the field names in the serialized filter
+            tree are user field names instead of field ids.
+        :return: A PublicViewGroupedFiltersAdapter.
+        :raises InvalidAPIGroupedFiltersFormatException: If the serialized filter
+            tree is not in the correct format.
         """
 
         filters = []
@@ -180,8 +193,17 @@ class APIGroupedFiltersAdapter(GroupedFiltersAdapter):
             create an adapter compatible with the AdvancedFilterBuilder.
             """
 
+            user_field_name_to_id_mapping = (
+                {v["field"].name: k for k, v in model._field_objects.items()}
+                if user_field_names
+                else {}
+            )
+
             for filter in filter_tree.get("filters", []):
-                field_id = filter["field"]
+                if user_field_names:
+                    field_id = user_field_name_to_id_mapping.get(filter["field"], None)
+                else:
+                    field_id = filter["field"]
 
                 if (
                     only_filter_by_field_ids
@@ -221,3 +243,30 @@ class APIGroupedFiltersAdapter(GroupedFiltersAdapter):
             groups=groups,
             model=model,
         )
+
+
+def construct_filter_builder_from_grouped_api_filters(
+    api_filters: Dict[str, Any],
+    model: GeneratedTableModel,
+    only_filter_by_field_ids: Optional[List[int]] = None,
+    user_field_names: Optional[bool] = False,
+) -> FilterBuilder:
+    """
+    Construct a filter builder from a validated filter tree.
+
+    :param api_filters: The validated filter tree.
+    :param model: The model for which the filters are created.
+    :param only_filter_by_field_ids: If provided, only allow filters for the
+        provided field ids.
+    :param user_field_names: If True, the field names in the serialized filter
+        tree are user field names instead of field ids.
+    :return: A FilterBuilder.
+    """
+
+    adapter = APIGroupedFiltersAdapter.from_serialized_filter_tree(
+        api_filters,
+        model,
+        only_filter_by_field_ids=only_filter_by_field_ids,
+        user_field_names=user_field_names,
+    )
+    return AdvancedFilterBuilder(adapter).construct_filter_builder()
