@@ -36,8 +36,8 @@ from baserow.contrib.builder.api.data_sources.serializers import (
     UpdateDataSourceSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
-from baserow.contrib.builder.data_providers.registries import (
-    builder_data_provider_type_registry,
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
 )
 from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceDoesNotExist,
@@ -49,7 +49,6 @@ from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.core.exceptions import PermissionException
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import service_type_registry
 
@@ -377,14 +376,10 @@ class DispatchDataSourceView(APIView):
 
         data_source = DataSourceHandler().get_data_source(data_source_id)
 
-        runtime_formula_context = RuntimeFormulaContext(
-            builder_data_provider_type_registry,
-            request=request,
-            page=data_source.page,
-        )
+        dispatch_context = BuilderDispatchContext(request, data_source.page)
 
         response = DataSourceService().dispatch_data_source(
-            request.user, data_source, runtime_formula_context
+            request.user, data_source, dispatch_context
         )
 
         return Response(response)
@@ -430,14 +425,10 @@ class DispatchDataSourcesView(APIView):
 
         page = PageHandler().get_page(page_id)
 
-        runtime_formula_context = RuntimeFormulaContext(
-            builder_data_provider_type_registry,
-            request=request,
-            page=page,
-        )
+        dispatch_context = BuilderDispatchContext(request, page)
 
         service_contents = DataSourceService().dispatch_page_data_sources(
-            request.user, page, runtime_formula_context
+            request.user, page, dispatch_context
         )
 
         responses = {}

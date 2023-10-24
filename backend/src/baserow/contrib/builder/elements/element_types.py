@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 
 from django.db.models import IntegerField, QuerySet
 from django.db.models.functions import Cast
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -105,11 +106,12 @@ class ContainerElementType(ElementType, ABC):
 
 
 class CollectionElementType(ElementType, ABC):
-    allowed_fields = ["data_source", "data_source_id"]
-    serializer_field_names = ["data_source_id", "fields"]
+    allowed_fields = ["data_source", "data_source_id", "items_per_page"]
+    serializer_field_names = ["data_source_id", "fields", "items_per_page"]
 
     class SerializedDict(ElementDict):
         data_source_id: int
+        items_per_page: int
         fields: List[Dict]
 
     @property
@@ -123,6 +125,11 @@ class CollectionElementType(ElementType, ABC):
                 allow_null=True,
                 default=None,
                 help_text=TableElement._meta.get_field("data_source").help_text,
+                required=False,
+            ),
+            "items_per_page": serializers.IntegerField(
+                default=20,
+                help_text=TableElement._meta.get_field("items_per_page").help_text,
                 required=False,
             ),
             "fields": CollectionElementFieldSerializer(
@@ -154,7 +161,27 @@ class CollectionElementType(ElementType, ABC):
         return super().prepare_value_for_db(values, instance)
 
     def after_create(self, instance, values):
+        default_fields = [
+            {"name": _("Column %(count)s") % {"count": 1}, "value": ""},
+            {"name": _("Column %(count)s") % {"count": 2}, "value": ""},
+            {"name": _("Column %(count)s") % {"count": 3}, "value": ""},
+        ]
+
+        fields = values.get("fields", default_fields)
+
+        created_fields = CollectionElementField.objects.bulk_create(
+            [
+                CollectionElementField(**field, order=index)
+                for index, field in enumerate(fields)
+            ]
+        )
+        instance.fields.add(*created_fields)
+
+    def after_update(self, instance, values):
         if "fields" in values:
+            # Remove previous fields
+            instance.fields.clear()
+
             created_fields = CollectionElementField.objects.bulk_create(
                 [
                     CollectionElementField(**field, order=index)
@@ -162,13 +189,6 @@ class CollectionElementType(ElementType, ABC):
                 ]
             )
             instance.fields.add(*created_fields)
-
-    def after_update(self, instance, values):
-        if "fields" in values:
-            # Remove previous fields
-            instance.fields.clear()
-
-            self.after_create(instance, values)
 
     def before_delete(self, instance):
         instance.fields.all().delete()

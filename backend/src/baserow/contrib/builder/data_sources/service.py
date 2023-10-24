@@ -4,6 +4,9 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import translation
 from django.utils.translation import gettext as _
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.data_sources.exceptions import DataSourceNotInSamePage
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.data_sources.models import DataSource
@@ -25,7 +28,6 @@ from baserow.contrib.builder.data_sources.signals import (
 from baserow.contrib.builder.data_sources.types import DataSourceForUpdate
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.handler import CoreHandler
 from baserow.core.services.registries import ServiceType
 from baserow.core.types import PermissionCheck
@@ -222,7 +224,7 @@ class DataSourceService:
         self,
         user,
         data_sources: List[DataSource],
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: BuilderDispatchContext,
     ) -> Dict[int, Union[Any, Exception]]:
         """
         Dispatch the service related to the given data_sources if the user
@@ -244,13 +246,13 @@ class DataSourceService:
             workspace=data_sources[0].page.builder.workspace,
         )
 
-        return self.handler.dispatch_data_sources(data_sources, runtime_formula_context)
+        return self.handler.dispatch_data_sources(data_sources, dispatch_context)
 
     def dispatch_page_data_sources(
         self,
         user,
         page: Page,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: BuilderDispatchContext,
     ) -> Dict[int, Union[Any, Exception]]:
         """
         Dispatch the service related data_source of the given page if the user
@@ -269,15 +271,15 @@ class DataSourceService:
 
         # Here we cache the data sources into the context because we know they are used
         # later in the data providers
-        runtime_formula_context.cache["data_sources"] = data_sources
+        dispatch_context.cache["data_sources"] = data_sources
 
-        return self.dispatch_data_sources(user, data_sources, runtime_formula_context)
+        return self.dispatch_data_sources(user, data_sources, dispatch_context)
 
     def dispatch_data_source(
         self,
         user,
         data_source: DataSource,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: BuilderDispatchContext,
     ) -> Any:
         """
         Dispatch the service related to the data_source if the user has the permission.
@@ -288,9 +290,9 @@ class DataSourceService:
         :return: return the dispatch result.
         """
 
-        result = self.dispatch_data_sources(
-            user, [data_source], runtime_formula_context
-        )[data_source.id]
+        result = self.dispatch_data_sources(user, [data_source], dispatch_context)[
+            data_source.id
+        ]
 
         if isinstance(result, Exception):
             raise result

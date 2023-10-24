@@ -50,10 +50,10 @@ from baserow.contrib.integrations.local_baserow.models import (
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.formula.serializers import FormulaSerializerField
 from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.registries import ServiceType
 from baserow.core.services.types import (
@@ -423,7 +423,7 @@ class LocalBaserowListRowsUserServiceType(
     def dispatch_data(
         self,
         service: LocalBaserowListRows,
-        runtime_formula_context: Optional[RuntimeFormulaContext] = None,
+        dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
         Returns a list of rows from the table stored in the service instance.
@@ -464,9 +464,21 @@ class LocalBaserowListRowsUserServiceType(
         if view_sorts is not None:
             queryset = queryset.order_by(*view_sorts)
 
-        rows = queryset[: self.default_result_limit]
+        offset, count = dispatch_context.range(service)
 
-        return {"data": rows, "baserow_table_model": model}
+        # We query one more row to be able to know if there is another page that can be
+        # loaded.
+        fake_count = min(self.max_result_limit, count) + 1
+
+        rows = list(queryset[offset : offset + fake_count])
+
+        has_next_page = len(rows) == fake_count
+
+        return {
+            "results": rows[:-1] if has_next_page else rows,
+            "has_next_page": has_next_page,
+            "baserow_table_model": model,
+        }
 
     def dispatch_transform(
         self,
@@ -486,7 +498,11 @@ class LocalBaserowListRowsUserServiceType(
             RowSerializer,
             is_response=True,
         )
-        return serializer(dispatch_data["data"], many=True).data
+
+        return {
+            "results": serializer(dispatch_data["results"], many=True).data,
+            "has_next_page": dispatch_data["has_next_page"],
+        }
 
 
 class LocalBaserowGetRowUserServiceType(
@@ -560,7 +576,7 @@ class LocalBaserowGetRowUserServiceType(
     def dispatch_data(
         self,
         service: LocalBaserowGetRow,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
         Returns the row targeted by the `row_id` formula from the table stored in the
@@ -585,7 +601,7 @@ class LocalBaserowGetRowUserServiceType(
                 resolve_formula(
                     service.row_id,
                     formula_runtime_function_registry,
-                    runtime_formula_context,
+                    dispatch_context,
                 )
             )
         except ValidationError:

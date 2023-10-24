@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.utils import translation
 
 from baserow.contrib.builder.elements.exceptions import ElementNotInSamePage
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -113,9 +114,10 @@ class ElementService:
             raise ElementNotInSamePage()
 
         try:
-            new_element = self.handler.create_element(
-                element_type, page, before=before, order=order, **kwargs
-            )
+            with translation.override(user.profile.language):
+                new_element = self.handler.create_element(
+                    element_type, page, before=before, order=order, **kwargs
+                )
         except CannotCalculateIntermediateOrder:
             self.recalculate_full_orders(user, page)
             # If the `find_intermediate_order` fails with a

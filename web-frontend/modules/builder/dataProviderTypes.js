@@ -54,7 +54,13 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/getDataSourceContents'
     ](applicationContext.page)
 
-    return dataSourceContents[dataSource.id]
+    const serviceType = this.app.$registry.get('service', dataSource.type)
+
+    if (serviceType.returnsList) {
+      return dataSourceContents[dataSource.id].results
+    } else {
+      return dataSourceContents[dataSource.id]
+    }
   }
 
   getDataSourceSchema(dataSource) {
@@ -197,36 +203,55 @@ export class CurrentRecordDataProviderType extends DataProviderType {
     return '__idx__'
   }
 
+  get needBackendContext() {
+    return true
+  }
+
+  // Loads all element contents
+  async init(applicationContext) {
+    const { page } = applicationContext
+
+    await Promise.all(
+      page.elements.map((element) => {
+        if (element.data_source_id) {
+          const dataSource = this.app.store.getters[
+            'dataSource/getPageDataSourceById'
+          ](page, element.data_source_id)
+
+          const dispatchContext = DataProviderType.getAllBackendContext(
+            this.app.$registry.getAll('builderDataProvider'),
+            { ...applicationContext, element }
+          )
+
+          // fetch the initial content
+          return this.app.store.dispatch('elementContent/fetchElementContent', {
+            element,
+            dataSource,
+            data: dispatchContext,
+            range: [0, element.items_per_page],
+          })
+        }
+        return Promise.resolve()
+      })
+    )
+  }
+
   getDataChunk(applicationContext, path) {
     const content = this.getDataContent(applicationContext)
     return _.get(content, path.join('.'))
   }
 
   getDataContent(applicationContext) {
-    const {
-      page,
-      element: { data_source_id: dataSourceId } = {},
-      recordIndex = 0,
-    } = applicationContext
+    const { element, recordIndex = 0 } = applicationContext
 
-    if (!dataSourceId) {
-      return null
-    }
-
-    const dataSource = this.app.store.getters[
-      'dataSource/getPageDataSourceById'
-    ](applicationContext.page, dataSourceId)
-
-    if (!dataSource) {
-      return null
+    if (!element) {
+      return []
     }
 
     const rows =
-      this.app.store.getters['dataSourceContent/getDataSourceContents'](page)[
-        dataSource.id
-      ] || []
+      this.app.store.getters['elementContent/getElementContent'](element)
 
-    const row = { [this.indexKey]: recordIndex, ...(rows[recordIndex] || {}) }
+    const row = { [this.indexKey]: recordIndex, ...rows[recordIndex] }
 
     // Add the index value
     row[this.indexKey] = recordIndex

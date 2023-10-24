@@ -1,3 +1,4 @@
+from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -22,10 +23,28 @@ from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowTableServiceType,
 )
 from baserow.core.exceptions import PermissionException
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
 from baserow.test_utils.helpers import setup_interesting_test_table
+
+
+class FakeDispatchContext(DispatchContext):
+    def range(self, service):
+        return [0, 100]
+
+    def __getitem__(self, key: str) -> Any:
+        if key == "test":
+            return 2
+        if key == "test1":
+            return 1
+        if key == "test2":
+            return ""
+        if key == "test999":
+            return "999"
+
+        return super().__getitem__(key)
 
 
 @pytest.mark.django_db
@@ -109,10 +128,11 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
     )
 
     service_type = LocalBaserowListRowsUserServiceType()
-    dispatch_data = service_type.dispatch_data(service)
+
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
     result = service_type.dispatch_transform(dispatch_data)
 
-    assert [dict(r) for r in result] == [
+    assert [dict(r) for r in result["results"]] == [
         {
             "id": rows[0].id,
             fields[0].db_column: "BMW",
@@ -126,6 +146,7 @@ def test_local_baserow_list_rows_service_dispatch_transform(data_fixture):
             "order": "1.00000000000000000000",
         },
     ]
+    assert result["has_next_page"] is False
 
 
 @pytest.mark.django_db
@@ -159,7 +180,9 @@ def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
-        LocalBaserowListRowsUserServiceType().dispatch_data(service)
+        LocalBaserowListRowsUserServiceType().dispatch_data(
+            service, FakeDispatchContext()
+        )
 
 
 @pytest.mark.django_db
@@ -174,7 +197,9 @@ def test_local_baserow_list_rows_service_dispatch_data_validation_error(data_fix
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        LocalBaserowListRowsUserServiceType().dispatch_data(service)
+        LocalBaserowListRowsUserServiceType().dispatch_data(
+            service, FakeDispatchContext()
+        )
 
 
 @pytest.mark.django_db
@@ -254,10 +279,7 @@ def test_local_baserow_get_row_service_dispatch_transform(data_fixture):
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
-    runtime_formula_context = {"test": 2}
-    dispatch_data = service_type.dispatch_data(
-        service, runtime_formula_context  # type: ignore
-    )
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
     result = service_type.dispatch_transform(dispatch_data)
 
     assert result == {
@@ -296,10 +318,9 @@ def test_local_baserow_get_row_service_dispatch_data_with_view_filter(data_fixtu
         integration=integration, view=view, table=table, row_id="1"
     )
 
-    runtime_formula_context = {}
     with pytest.raises(DoesNotExist):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, runtime_formula_context  # type: ignore
+            service, FakeDispatchContext()
         )
 
 
@@ -327,10 +348,9 @@ def test_local_baserow_get_row_service_dispatch_data_with_service_search(data_fi
         integration=integration, table=table, row_id="1", search_query="Au"
     )
 
-    runtime_formula_context = {}
     with pytest.raises(DoesNotExist):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, runtime_formula_context  # type: ignore
+            service, FakeDispatchContext()
         )
 
 
@@ -359,13 +379,11 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
         integration=integration, table=table, row_id="get('test')"
     )
 
-    runtime_formula_context = {"test": "1"}
-
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
     ):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, runtime_formula_context  # type: ignore
+            service, FakeDispatchContext()
         )
 
 
@@ -383,26 +401,22 @@ def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixtu
     )
     service_type = LocalBaserowGetRowUserServiceType()
 
-    runtime_formula_context = {"test": "1"}
-
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
+        service_type.dispatch_data(service, FakeDispatchContext())
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test')"
+        integration=integration, table=table, row_id="get('test2')"
     )
 
-    runtime_formula_context = {"test": ""}
-
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
+        service_type.dispatch_data(service, FakeDispatchContext())
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, runtime_formula_context)  # type: ignore
+        service_type.dispatch_data(service, FakeDispatchContext())
 
 
 @pytest.mark.django_db
@@ -415,14 +429,12 @@ def test_local_baserow_get_row_service_dispatch_data_row_not_exist(data_fixture)
     )
 
     service = data_fixture.create_local_baserow_get_row_service(
-        integration=integration, table=table, row_id="get('test')"
+        integration=integration, table=table, row_id="get('test999')"
     )
-
-    runtime_formula_context = {"test": "999"}
 
     with pytest.raises(DoesNotExist):
         LocalBaserowGetRowUserServiceType().dispatch_data(
-            service, runtime_formula_context  # type: ignore
+            service, FakeDispatchContext()
         )
 
 
@@ -463,17 +475,17 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
         view=view, table=table, integration=integration
     )
 
-    dispatch_data = service_type.dispatch_data(service)
-    queryset = dispatch_data["data"]
-    assert list(queryset.values_list("id", flat=True)) == [row_1.id, row_2.id]
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [row_1.id, row_2.id]
 
     data_fixture.create_local_baserow_table_service_filter(
         service=service, field=field, value="Cheese", order=0
     )
 
-    dispatch_data = service_type.dispatch_data(service)
-    queryset = dispatch_data["data"]
-    assert list(queryset.values_list("id", flat=True)) == [row_1.id]
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [row_1.id]
 
 
 @pytest.mark.django_db
@@ -526,8 +538,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
     cost_150 = data_fixture.create_local_baserow_table_service_filter(
         service=service, field=cost, value="150", order=0
     )
-    dispatch_data = service_type.dispatch_data(service)
-    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [
         row_3.id,  # Only Goose has a cost of 150.
     ]
     cost_150.delete()
@@ -544,8 +557,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
     data_fixture.create_local_baserow_table_service_filter(
         service=service, field=cost, value="50", order=0
     )
-    dispatch_data = service_type.dispatch_data(service)
-    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [
         row_1.id,  # Duck
         row_2.id,  # Duckling
     ]
@@ -589,8 +603,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
 
     # A `ViewSort` alone.
     view_sort = data_fixture.create_view_sort(view=view, field=ingredients, order="ASC")
-    dispatch_data = service_type.dispatch_data(service)
-    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [
         row_3.id,
         row_1.id,
         row_2.id,
@@ -601,8 +616,9 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
     service_sort = data_fixture.create_local_baserow_table_service_sort(
         service=service, field=cost, order=SORT_ORDER_DESC
     )
-    dispatch_data = service_type.dispatch_data(service)
-    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [
         row_3.id,
         row_2.id,
         row_1.id,
@@ -614,12 +630,91 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
         service=service, field=cost, order=SORT_ORDER_ASC
     )
     data_fixture.create_view_sort(view=view, field=cost, order=SORT_ORDER_DESC)
-    dispatch_data = service_type.dispatch_data(service)
-    assert list(dispatch_data["data"].values_list("id", flat=True)) == [
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+    results = dispatch_data["results"]
+    assert [r.id for r in results] == [
         row_1.id,
         row_2.id,
         row_3.id,
     ]
+
+
+@pytest.mark.django_db
+def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=builder, user=user
+    )
+    database = data_fixture.create_database_application(workspace=builder.workspace)
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Ingredient", "text", {}),
+        ],
+    )
+    field = table.field_set.get(name="Ingredient")
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {f"field_{field.id}": "Cheese"},
+            {f"field_{field.id}": "Chicken"},
+            {f"field_{field.id}": "Milk"},
+            {f"field_{field.id}": "Salt"},
+            {f"field_{field.id}": "Pepper"},
+            {f"field_{field.id}": "Tomato"},
+            {f"field_{field.id}": "Potato"},
+            {f"field_{field.id}": "Cucumber"},
+            {f"field_{field.id}": "Rice"},
+            {f"field_{field.id}": "Beans"},
+        ],
+    )
+
+    service_type = LocalBaserowListRowsUserServiceType()
+    service = data_fixture.create_local_baserow_list_rows_service(
+        table=table, integration=integration
+    )
+
+    dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
+
+    assert len(dispatch_data["results"]) == 10
+    assert dispatch_data["has_next_page"] is False
+
+    fake_dispatch = FakeDispatchContext()
+
+    fake_dispatch.range = Mock()
+    fake_dispatch.range.return_value = [0, 5]
+
+    dispatch_data = service_type.dispatch_data(service, fake_dispatch)
+
+    assert len(dispatch_data["results"]) == 5
+    assert dispatch_data["has_next_page"] is True
+
+    fake_dispatch.range.return_value = [5, 3]
+
+    dispatch_data = service_type.dispatch_data(service, fake_dispatch)
+
+    assert len(dispatch_data["results"]) == 3
+    assert dispatch_data["has_next_page"] is True
+
+    fake_dispatch.range.return_value = [5, 5]
+
+    dispatch_data = service_type.dispatch_data(service, fake_dispatch)
+
+    assert len(dispatch_data["results"]) == 5
+    assert dispatch_data["has_next_page"] is False
+
+    fake_dispatch.range.return_value = [5, 10]
+
+    dispatch_data = service_type.dispatch_data(service, fake_dispatch)
+
+    assert len(dispatch_data["results"]) == 5
+    assert dispatch_data["has_next_page"] is False
 
 
 @pytest.mark.django_db

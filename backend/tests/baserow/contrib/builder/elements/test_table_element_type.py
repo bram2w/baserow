@@ -19,12 +19,17 @@ def test_create_table_element_without_fields(data_fixture):
         element_type_registry.get("table"),
         page=page,
         data_source_id=data_source1.id,
-        fields=[],
     )
 
     created_element = Element.objects.last().specific
 
     assert created_element.data_source.id == data_source1.id
+
+    fields = list(created_element.fields.all())
+
+    assert len(fields) == 3
+
+    fields[0].name == "Column 1"
 
 
 @pytest.mark.django_db

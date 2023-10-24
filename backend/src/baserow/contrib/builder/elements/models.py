@@ -447,6 +447,15 @@ class CollectionElement(Element):
         "Only data_sources that return list are allowed.",
     )
 
+    items_per_page = models.PositiveIntegerField(
+        default=20,
+        help_text="The amount item loaded with each page.",
+        validators=[
+            MinValueValidator(1, message="Value cannot be less than 1."),
+            MaxValueValidator(100, message="Value cannot be greater than 100."),
+        ],
+    )
+
     fields = models.ManyToManyField(
         CollectionElementField, help_text="Fields of the collection element."
     )

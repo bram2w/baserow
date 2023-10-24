@@ -18,6 +18,7 @@ import publicBuilderStore from '@baserow/modules/builder/store/publicBuilder'
 import dataSourceStore from '@baserow/modules/builder/store/dataSource'
 import pageParameterStore from '@baserow/modules/builder/store/pageParameter'
 import dataSourceContentStore from '@baserow/modules/builder/store/dataSourceContent'
+import elementContentStore from '@baserow/modules/builder/store/elementContent'
 import themeStore from '@baserow/modules/builder/store/theme'
 import workflowActionStore from '@baserow/modules/builder/store/workflowAction'
 
@@ -103,6 +104,7 @@ export default (context) => {
   store.registerModule('dataSource', dataSourceStore)
   store.registerModule('pageParameter', pageParameterStore)
   store.registerModule('dataSourceContent', dataSourceContentStore)
+  store.registerModule('elementContent', elementContentStore)
   store.registerModule('theme', themeStore)
   store.registerModule('workflowAction', workflowActionStore)
 

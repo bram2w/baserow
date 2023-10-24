@@ -18,6 +18,12 @@ class PathParamSerializer(serializers.Serializer):
 
 
 class PageSerializer(serializers.ModelSerializer):
+    """
+    👉 Mind to update the
+    baserow.contrib.builder.api.domains.serializer.PublicPageSerializer
+    when you update this one.
+    """
+
     path_params = PathParamSerializer(many=True, required=False)
 
     class Meta:

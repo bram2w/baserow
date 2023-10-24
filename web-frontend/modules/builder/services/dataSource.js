@@ -26,13 +26,14 @@ export default (client) => {
         before_id: beforeId,
       })
     },
-    dispatch(dataSourceId, params) {
+    dispatch(dataSourceId, dispatchContext, { range }) {
       // Using POST Http method here is not Restful but it the cleanest way to send
       // data with the call without relying on GET parameter and serialization of
       // complex object.
       return client.post(
         `builder/data-source/${dataSourceId}/dispatch/`,
-        params
+        dispatchContext,
+        { params: { offset: range[0], count: range[1] } }
       )
     },
     dispatchAll(pageId, params) {

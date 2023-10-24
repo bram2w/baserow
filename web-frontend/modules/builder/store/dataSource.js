@@ -62,7 +62,7 @@ const actions = {
   forceCreate({ commit }, { page, dataSource, beforeId = null }) {
     commit('ADD_ITEM', { page, dataSource, beforeId })
   },
-  forceUpdate({ commit }, { page, dataSource, values }) {
+  forceUpdate({ commit, dispatch }, { page, dataSource, values }) {
     commit('UPDATE_ITEM', { page, dataSource, values })
   },
   forceDelete({ commit, dispatch }, { page, dataSourceId }) {
@@ -128,6 +128,16 @@ const actions = {
     commit('SET_LOADING', { page, value: true })
     try {
       await DataSourceService(this.$client).update(dataSource.id, values)
+
+      dispatch(
+        'element/emitElementEvent',
+        {
+          event: ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE,
+          page,
+          dataSourceId: dataSource.id,
+        },
+        { root: true }
+      )
     } catch (error) {
       await dispatch('forceUpdate', { page, dataSource, values: oldValues })
       throw error
@@ -181,6 +191,15 @@ const actions = {
             toUpdate
           )
           await commit('FULL_UPDATE_ITEM', { page, dataSource, values: data })
+          dispatch(
+            'element/emitElementEvent',
+            {
+              event: ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE,
+              page,
+              dataSourceId: dataSource.id,
+            },
+            { root: true }
+          )
           updateContext.lastUpdatedValues = null
           resolve()
         } catch (error) {

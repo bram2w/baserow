@@ -98,7 +98,6 @@ export default {
           this.actionFetchIntegrations({
             applicationId: this.builder.id,
           }),
-          this.actionFetchDataSources({ page: this.page }),
         ])
       } catch (error) {
         notifyIf(error)
