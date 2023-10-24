@@ -60,6 +60,7 @@
         <APIDocsTableListRows
           v-model="exampleData"
           :table="table"
+          :fields="fields"
           :navigate="navigate"
           :get-list-url="getListURL"
           :get-response-item="getResponseItem"

@@ -171,6 +171,10 @@
   flex-basis: 100%;
 }
 
+.position-relative {
+  position: relative;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);
