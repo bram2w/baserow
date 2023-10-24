@@ -109,6 +109,7 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource1.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
                             "row_id": "",
                             "view_id": None,
                             "table_id": None,
@@ -178,6 +179,7 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource2.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
                             "row_id": "",
                             "view_id": None,
                             "table_id": None,
@@ -192,6 +194,8 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource3.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
+                            "sortings": [],
                             "view_id": None,
                             "table_id": None,
                             "search_query": "",

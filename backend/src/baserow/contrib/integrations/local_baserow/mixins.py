@@ -92,7 +92,7 @@ class LocalBaserowTableServiceSortableMixin:
         """
 
         service_sorts = LocalBaserowTableServiceSort.objects.filter(service=service)
-        sort_ordering = [service_sort.get_order() for service_sort in service_sorts]
+        sort_ordering = [service_sort.get_order_by() for service_sort in service_sorts]
 
         if not sort_ordering and service.view:
             sort_ordering, queryset = ViewHandler().get_view_order_bys(

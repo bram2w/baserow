@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any
 from unittest.mock import Mock
 
@@ -16,6 +17,10 @@ from rest_framework.serializers import ListSerializer, Serializer
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.models import SORT_ORDER_ASC, SORT_ORDER_DESC
+from baserow.contrib.integrations.local_baserow.models import (
+    LocalBaserowGetRow,
+    LocalBaserowListRows,
+)
 from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowGetRowUserServiceType,
     LocalBaserowListRowsUserServiceType,
@@ -27,6 +32,7 @@ from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.registries import service_type_registry
+from baserow.core.utils import MirrorDict
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -71,6 +77,107 @@ def test_create_local_baserow_list_rows_service(data_fixture):
 
     assert service.view.id == view.id
     assert service.table.id == view.table_id
+
+
+@pytest.mark.django_db
+def test_export_import_local_baserow_list_rows_service(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    service_type = service_type_registry.get("local_baserow_list_rows")
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    service = data_fixture.create_local_baserow_list_rows_service(
+        integration=integration, view=view, table=view.table, search_query="Teams"
+    )
+
+    field = fields[0]
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=service, field=field, value="PSG", order=0
+    )
+    service_sort = data_fixture.create_local_baserow_table_service_sort(
+        service=service, field=field, order_by=SORT_ORDER_ASC, order=0
+    )
+
+    exported = service_type.export_serialized(service)
+
+    assert exported == {
+        "id": service.id,
+        "type": service_type.type,
+        "view_id": service.view_id,
+        "table_id": service.table_id,
+        "integration_id": service.integration_id,
+        "search_query": service.search_query,
+        "filters": [
+            {
+                "field_id": service_filter.field_id,
+                "type": service_filter.type,
+                "value": service_filter.value,
+            }
+        ],
+        "sortings": [
+            {
+                "field_id": service_sort.field_id,
+                "order_by": service_sort.order_by,
+            }
+        ],
+    }
+
+    id_mapping = {}
+    service: LocalBaserowListRows = service_type.import_serialized(  # type: ignore
+        integration, exported, id_mapping
+    )
+
+    assert service.id != exported["id"]
+    assert service.view_id == exported["view_id"]
+    assert service.table_id == exported["table_id"]
+    assert service.search_query == exported["search_query"]
+    assert service.integration_id == exported["integration_id"]
+    assert isinstance(service, service_type.model_class)
+
+    assert service.service_filters.count() == 1
+    service_filter = service.service_filters.get()
+    assert service_filter.type == exported["filters"][0]["type"]
+    assert service_filter.value == exported["filters"][0]["value"]
+    assert service_filter.field_id == exported["filters"][0]["field_id"]
+
+    assert service.service_sorts.count() == 1
+    service_sort = service.service_sorts.get()
+    assert service_sort.field_id == exported["sortings"][0]["field_id"]
+    assert service_sort.order_by == exported["sortings"][0]["order_by"]
+
+    view_2 = data_fixture.create_grid_view(user, table=table)
+    field_2 = data_fixture.create_text_field(order=1, table=table)
+    table_2, _, _ = data_fixture.build_table(
+        columns=[("Number", "number")], rows=[[1]], user=user
+    )
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["database_views"] = {view.id: view_2.id}  # type: ignore
+    id_mapping["database_fields"] = {field.id: field_2.id}  # type: ignore
+    id_mapping["database_tables"] = {table.id: table_2.id}  # type: ignore
+    service: LocalBaserowListRows = service_type.import_serialized(  # type: ignore
+        integration, exported, id_mapping
+    )
+
+    assert service.view_id == view_2.id
+    assert service.table_id == table_2.id
+
+    service_filter = service.service_filters.get()
+    assert service_filter.field_id == field_2.id
+
+    service_sort = service.service_sorts.get()
+    assert service_sort.field_id == field_2.id
 
 
 @pytest.mark.django_db
@@ -226,6 +333,95 @@ def test_create_local_baserow_get_row_service(data_fixture):
     assert service.view.id == view.id
     assert service.table.id == view.table_id
     assert service.row_id == "1"
+
+
+@pytest.mark.django_db
+def test_export_import_local_baserow_get_row_service(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+        ],
+    )
+    field = fields[0]
+    view = data_fixture.create_grid_view(user, table=table)
+    service_type = service_type_registry.get("local_baserow_get_row")
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    service = data_fixture.create_local_baserow_get_row_service(
+        integration=integration,
+        row_id="1",
+        view=view,
+        table=view.table,
+        search_query="Teams",
+    )
+    service_filter = data_fixture.create_local_baserow_table_service_filter(
+        service=service, field=field, value="PSG", order=0
+    )
+
+    exported = service_type.export_serialized(service)
+
+    assert exported == {
+        "id": service.id,
+        "row_id": service.row_id,
+        "type": service_type.type,
+        "view_id": service.view_id,
+        "table_id": service.table_id,
+        "integration_id": service.integration_id,
+        "search_query": service.search_query,
+        "filters": [
+            {
+                "field_id": service_filter.field_id,
+                "type": service_filter.type,
+                "value": service_filter.value,
+            }
+        ],
+    }
+
+    id_mapping = {}
+    service: LocalBaserowGetRow = service_type.import_serialized(  # type: ignore
+        integration, exported, id_mapping
+    )
+
+    assert service.id != exported["id"]
+    assert service.row_id == exported["row_id"]
+    assert service.view_id == exported["view_id"]
+    assert service.table_id == exported["table_id"]
+    assert service.search_query == exported["search_query"]
+    assert service.integration_id == exported["integration_id"]
+    assert isinstance(service, service_type.model_class)
+
+    assert service.service_filters.count() == 1
+    service_filter = service.service_filters.get()
+    assert service_filter.type == exported["filters"][0]["type"]
+    assert service_filter.value == exported["filters"][0]["value"]
+    assert service_filter.field_id == exported["filters"][0]["field_id"]
+
+    view_2 = data_fixture.create_grid_view(user, table=table)
+    field_2 = data_fixture.create_text_field(order=1, table=table)
+    table_2, _, _ = data_fixture.build_table(
+        columns=[("Number", "number")], rows=[[1]], user=user
+    )
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["database_views"] = {view.id: view_2.id}  # type: ignore
+    id_mapping["database_fields"] = {field.id: field_2.id}  # type: ignore
+    id_mapping["database_tables"] = {table.id: table_2.id}  # type: ignore
+    service: LocalBaserowGetRow = service_type.import_serialized(  # type: ignore
+        integration, exported, id_mapping
+    )
+
+    assert service.view_id == view_2.id
+    assert service.table_id == table_2.id
+
+    service_filter = service.service_filters.get()
+    assert service_filter.field_id == field_2.id
 
 
 @pytest.mark.django_db
@@ -614,7 +810,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
 
     # A `ServiceSort` alone.
     service_sort = data_fixture.create_local_baserow_table_service_sort(
-        service=service, field=cost, order=SORT_ORDER_DESC
+        service=service, field=cost, order_by=SORT_ORDER_DESC, order=0
     )
     dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
     results = dispatch_data["results"]
@@ -627,7 +823,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
 
     # A `ViewSort` & `ServiceSort`, the latter is used.
     data_fixture.create_local_baserow_table_service_sort(
-        service=service, field=cost, order=SORT_ORDER_ASC
+        service=service, field=cost, order_by=SORT_ORDER_ASC, order=0
     )
     data_fixture.create_view_sort(view=view, field=cost, order=SORT_ORDER_DESC)
     dispatch_data = service_type.dispatch_data(service, FakeDispatchContext())
@@ -1299,7 +1495,7 @@ def test_local_baserow_table_service_type_schema_name():
     )
 
 
-def test_local_baserow_table_service_type_after_update_table_change_deletes_filters():
+def test_local_baserow_table_service_type_after_update_table_change_deletes_filters_and_sorts():
     mock_instance = Mock()
     mock_from_table = Mock()
     mock_to_table = Mock()
@@ -1313,9 +1509,12 @@ def test_local_baserow_table_service_type_after_update_table_change_deletes_filt
 
     service_type.after_update(mock_instance, {}, change_table_from_Table_to_None)
     assert not mock_instance.service_filters.all.return_value.delete.called
+    assert not mock_instance.service_sorts.all.return_value.delete.called
 
     service_type.after_update(mock_instance, {}, change_table_from_None_to_Table)
     assert not mock_instance.service_filters.all.return_value.delete.called
+    assert not mock_instance.service_sorts.all.return_value.delete.called
 
     service_type.after_update(mock_instance, {}, change_table_from_Table_to_Table)
     assert mock_instance.service_filters.all.return_value.delete.called
+    assert mock_instance.service_sorts.all.return_value.delete.called

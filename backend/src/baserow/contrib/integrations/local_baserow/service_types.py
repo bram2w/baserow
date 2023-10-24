@@ -34,6 +34,7 @@ from baserow.contrib.database.table.operations import ListRowsDatabaseTableOpera
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.local_baserow.api.serializers import (
     LocalBaserowTableServiceFilterSerializer,
+    LocalBaserowTableServiceSortSerializer,
 )
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
@@ -47,6 +48,7 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowListRows,
     LocalBaserowTableServiceFilter,
+    LocalBaserowTableServiceSort,
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -59,6 +61,7 @@ from baserow.core.services.registries import ServiceType
 from baserow.core.services.types import (
     ServiceDict,
     ServiceFilterDictSubClass,
+    ServiceSortDictSubClass,
     ServiceSubClass,
 )
 from baserow.core.utils import atomic_if_not_already
@@ -164,6 +167,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     base_serializer_field_names = [
         "table_id",
         "filters",
+        "sortings",
         "view_id",
         "filter_type",
         "search_query",
@@ -175,6 +179,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     serializer_field_overrides = {
         "filters": LocalBaserowTableServiceFilterSerializer(
             many=True, source="service_filters", required=False
+        ),
+        "sortings": LocalBaserowTableServiceSortSerializer(
+            many=True, source="service_sorts", required=False
         ),
     }
 
@@ -215,6 +222,120 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             | self.child_request_serializer_field_overrides
         )
 
+    def transform_serialized_value(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+    ):
+        """
+        Get the view, table and field IDs from the mapping if they exists.
+        """
+
+        if prop_name == "table_id" and "database_tables" in id_mapping:
+            return id_mapping["database_tables"].get(value, None)
+
+        if prop_name == "view_id" and "database_views" in id_mapping:
+            return id_mapping["database_views"].get(value, None)
+
+        if "database_fields" in id_mapping and prop_name in ["filters", "sortings"]:
+            return [
+                {
+                    **item,
+                    "field_id": id_mapping["database_fields"][item["field_id"]],
+                }
+                for item in value
+            ]
+
+        return value
+
+    def get_property_for_serialization(
+        self, service: LocalBaserowListRows, prop_name: str
+    ):
+        """
+        Responsible for serializing the `filters` and `sortings` properties.
+
+        :param service: The LocalBaserowListRows service.
+        :param prop_name: The property name we're serializing.
+        :return: Any
+        """
+
+        if prop_name == "filters":
+            return [
+                {
+                    "field_id": f.field_id,
+                    "type": f.type,
+                    "value": f.value,
+                }
+                for f in service.service_filters.all()
+            ]
+        if prop_name == "sortings":
+            return [
+                {
+                    "field_id": s.field_id,
+                    "order_by": s.order_by,
+                }
+                for s in service.service_sorts.all()
+            ]
+
+        return super().get_property_for_serialization(service, prop_name)
+
+    def create_instance_from_serialized(self, integration, serialized_values):
+        """
+        Responsible for creating the `filters` and `sortings`.
+
+        :param page: The Page we're importing a data source for.
+        :param serialized_values: The serialized values we'll use to import.
+        :param id_mapping: The id_mapping dictionary.
+        :return: A Service.
+        """
+
+        filters = serialized_values.pop("filters", [])
+        sortings = serialized_values.pop("sortings", [])
+
+        service = super().create_instance_from_serialized(
+            integration, serialized_values
+        )
+
+        # Create filters
+        LocalBaserowTableServiceFilter.objects.bulk_create(
+            [
+                LocalBaserowTableServiceFilter(
+                    **service_filter,
+                    order=index,
+                    service=service,
+                )
+                for index, service_filter in enumerate(filters)
+            ]
+        )
+
+        # Create sortings
+        LocalBaserowTableServiceSort.objects.bulk_create(
+            [
+                LocalBaserowTableServiceSort(
+                    **service_sorting,
+                    order=index,
+                    service=service,
+                )
+                for index, service_sorting in enumerate(sortings)
+            ]
+        )
+
+        return service
+
+    def update_service_sortings(
+        self,
+        service: LocalBaserowTableServiceSubClass,
+        service_sorts: Optional[List[ServiceSortDictSubClass]] = None,
+    ):
+        with atomic_if_not_already():
+            service.service_sorts.all().delete()
+            LocalBaserowTableServiceSort.objects.bulk_create(
+                [
+                    LocalBaserowTableServiceSort(
+                        **service_sort, service=service, order=index
+                    )
+                    for index, service_sort in enumerate(service_sorts)
+                ]
+            )
+
     def update_service_filters(
         self,
         service: LocalBaserowTableServiceSubClass,
@@ -238,24 +359,28 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         changes: Dict[str, Tuple],
     ) -> None:
         """
-        Responsible for updating service filters which have been PATCHED to
-        the data source / service endpoint. At the moment we destroy all
-        current filters, and create the ones present in `service_filters`.
+        Responsible for updating service filters and sorts which have been
+        PATCHED to the data source / service endpoint. At the moment we
+        destroy all current filters and sorts, and create the ones present
+        in `service_filters` / `service_sorts` respectively.
 
-        :param instance: The service we want to manage filters for.
-        :param values: A dictionary which may contain filters.
+        :param instance: The service we want to manage filters/sorts for.
+        :param values: A dictionary which may contain filters/sorts.
         :param changes: A dictionary containing all changes which were made to the
             service prior to `after_update` being called.
         """
 
-        # Following a Table change, from one Table to another, we drop all filters.
-        # This is due to the fact that the filters point at specific table fields.
+        # Following a Table change, from one Table to another, we drop all filters
+        # and sorts. This is due to the fact that both point at specific table fields.
         from_table, to_table = changes.get("table", (None, None))
         if from_table and to_table:
             instance.service_filters.all().delete()
-
-        if "service_filters" in values:
-            self.update_service_filters(instance, values["service_filters"])
+            instance.service_sorts.all().delete()
+        else:
+            if "service_filters" in values:
+                self.update_service_filters(instance, values["service_filters"])
+            if "service_sorts" in values:
+                self.update_service_sortings(instance, values["service_sorts"])
 
     def prepare_values(
         self,
@@ -395,6 +520,8 @@ class LocalBaserowListRowsUserServiceType(
         table_id: int
         view_id: int
         search_query: str
+        filters: List[Dict]
+        sortings: List[Dict]
 
     def enhance_queryset(self, queryset):
         return queryset.select_related("view", "table").prefetch_related(
@@ -404,21 +531,6 @@ class LocalBaserowListRowsUserServiceType(
             "table__field_set",
             "view__viewgroupby_set",
         )
-
-    def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
-    ):
-        """
-        Get the view & table ID from the mapping if it exists.
-        """
-
-        if prop_name == "table_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
-
-        if prop_name == "view_id" and "database_views" in id_mapping:
-            return id_mapping["database_views"].get(value, None)
-
-        return value
 
     def dispatch_data(
         self,
@@ -534,26 +646,12 @@ class LocalBaserowGetRowUserServiceType(
         view_id: int
         row_id: str
         search_query: str
+        filters: List[Dict]
 
     def enhance_queryset(self, queryset):
         return queryset.select_related(
             "table", "table__database", "table__database__workspace", "view"
         )
-
-    def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
-    ):
-        """
-        Get the view & table ID from the mapping if it exists.
-        """
-
-        if prop_name == "table_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
-
-        if prop_name == "view_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
-
-        return value
 
     def dispatch_transform(
         self,

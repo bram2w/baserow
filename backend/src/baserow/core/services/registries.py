@@ -214,6 +214,16 @@ class ServiceType(
 
         return value
 
+    def create_instance_from_serialized(self, integration, serialized_values):
+        """
+        Create the instance related to the given serialized values.
+        Allow to hook into instance creation while still having the serialized values.
+        """
+
+        service = self.model_class(integration=integration, **serialized_values)
+        service.save()
+        return service
+
     def import_serialized(
         self,
         integration: Integration,
@@ -236,16 +246,16 @@ class ServiceType(
         ]
 
         for name in property_names:
-            serialized_copy[name] = self.transform_serialized_value(
-                name, serialized_copy[name], id_mapping
-            )
+            if name in serialized_copy:
+                serialized_copy[name] = self.transform_serialized_value(
+                    name, serialized_copy[name], id_mapping
+                )
 
         # Remove extra keys
         service_exported_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
 
-        service = self.model_class(integration=integration, **serialized_copy)
-        service.save()
+        service = self.create_instance_from_serialized(integration, serialized_copy)
 
         id_mapping["services"][service_exported_id] = service.id
 
