@@ -88,7 +88,8 @@ export default {
     },
     view: {
       type: Object,
-      required: true,
+      required: false,
+      default: () => {},
     },
     disableFilter: {
       type: Boolean,
