@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "baserow round formula causing sql errors",
+    "issue_number": 1595,
+    "bullet_points": [],
+    "created_at": "2023-09-19"
+}

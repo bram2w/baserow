@@ -30,14 +30,26 @@
                 >
                   <span>{{ formatDateSeparator(entry.timestamp) }}</span>
                 </div>
-                <RowHistoryEntry :entry="entry" :fields="fields">
+                <RowHistoryEntry
+                  :entry="entry"
+                  :fields="fields"
+                  :class="{
+                    'row-history-entry--first':
+                      index === 0 ||
+                      shouldDisplayDateSeparator(
+                        entriesWithContents,
+                        'timestamp',
+                        index - 1
+                      ),
+                  }"
+                >
                 </RowHistoryEntry>
               </div>
             </template>
           </InfiniteScroll>
         </div>
         <div v-else class="row-history__empty">
-          <i class="row-history__empty-icon fas fa-history"></i>
+          <i class="row-history__empty-icon baserow-icon-history"></i>
           <div class="row-history__empty-text">
             {{ $t('rowHistorySidebar.empty') }}
           </div>
@@ -101,6 +113,11 @@ export default {
         return validEntryFieldIds.size > 0
       })
       return entriesToRender
+    },
+  },
+  watch: {
+    row(newRow, oldRow) {
+      this.initialLoad()
     },
   },
   async created() {

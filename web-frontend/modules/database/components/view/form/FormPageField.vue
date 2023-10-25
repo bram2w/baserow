@@ -8,7 +8,7 @@
         <!-- prettier-ignore -->
         <div v-if="field.description" class="form-view__field-description whitespace-pre-wrap">{{ field.description }}</div>
         <component
-          :is="getFieldComponent()"
+          :is="selectedFieldComponent.component"
           :key="field.field.id"
           ref="field"
           :workspace-id="0"
@@ -18,7 +18,7 @@
           :read-only="false"
           :required="field.required"
           :touched="field._.touched"
-          v-bind="getFieldComponentProperties()"
+          v-bind="selectedFieldComponent.properties"
           @update="$emit('input', $event)"
           @touched="field._.touched = true"
         />
@@ -29,6 +29,7 @@
 
 <script>
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
+import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 
 export default {
   name: 'FormPageField',
@@ -47,17 +48,20 @@ export default {
       required: true,
     },
   },
+  computed: {
+    selectedFieldComponent() {
+      const components = this.$registry
+        .get('field', this.field.field.type)
+        .getFormViewFieldComponents(this.field.field, this)
+      return Object.prototype.hasOwnProperty.call(
+        components,
+        this.field.field_component
+      )
+        ? components[this.field.field_component]
+        : components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY]
+    },
+  },
   methods: {
-    getFieldComponent() {
-      return this.$registry
-        .get('field', this.field.field.type)
-        .getFormViewFieldComponent()
-    },
-    getFieldComponentProperties() {
-      return this.$registry
-        .get('field', this.field.field.type)
-        .getFormViewFieldComponentProperties(this)
-    },
     focus() {
       this.$el.scrollIntoView({ behavior: 'smooth' })
       this.$emit('focussed')

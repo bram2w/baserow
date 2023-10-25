@@ -1,3 +1,4 @@
+import dataclasses
 import itertools
 import sys
 from datetime import timedelta
@@ -10,9 +11,15 @@ from faker import Faker
 from tqdm import tqdm
 
 from baserow.contrib.database.rows.actions import UpdateRowsActionType
+from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.rows.history import RowHistoryHandler
 from baserow.contrib.database.rows.models import RowHistory
 from baserow.contrib.database.table.models import Table
+from baserow.core.action.signals import ActionCommandType
 from baserow.core.models import WorkspaceUser
+
+# for cache
+rows_values = None
 
 
 class Command(BaseCommand):
@@ -41,13 +48,25 @@ class Command(BaseCommand):
             action="store_true",
             help="If true, will create entries with various timestamps.",
         )
+        parser.add_argument(
+            "--cache",
+            action="store_true",
+            help="If provided, will be inserting the same generated values over and over.",
+        )
+        parser.add_argument(
+            "--skip-action",
+            action="store_true",
+            help="If provided, will be inserting the data without invoking UpdateRowsActionType.",
+        )
 
     def handle(self, *args, **options):
         table_id = options["table_id"]
         row_id = options["row_id"]
         limit = options["limit"]
         clean = options.get("clean", False)
-        randomize_timestamps = options.get("randomize-timestamps", True)
+        use_cache = options.get("cache", False)
+        skip_action = options.get("skip_action", False)
+        randomize_timestamps = options.get("randomize_timestamps", False)
 
         try:
             table = Table.objects.get(pk=table_id)
@@ -77,13 +96,22 @@ class Command(BaseCommand):
             RowHistory.objects.filter(row_id=row.id, table=table).delete()
             self.stdout.write(self.style.SUCCESS(f"History cleared."))
 
+        model = table.get_model()
+
         with transaction.atomic():
             with tqdm(
                 total=limit,
                 desc=f"Adding {limit} entries to row history for row {row_id}",
             ) as progress:
                 for _ in range(limit):
-                    record_row_history(table, row, user=wk_admin.user)
+                    record_row_history(
+                        table,
+                        model,
+                        row,
+                        user=wk_admin.user,
+                        use_cache=use_cache,
+                        skip_action=skip_action,
+                    )
                     progress.update(1)
 
         if randomize_timestamps:
@@ -92,21 +120,52 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f"History recorded successfully."))
 
 
-def record_row_history(table, row, user):
-    model = table.get_model()
+def record_row_history(table, model, row, user, use_cache=False, skip_action=False):
+    global rows_values
     fake = Faker()
     cache = {}
     row_random_values = {}
     row_random_values["id"] = row.id
 
-    for _, field_object in model._field_objects.items():
-        random_value = field_object["type"].random_value(
-            field_object["field"], fake, cache
-        )
-        row_random_values[f"field_{field_object['field'].id}"] = random_value
+    if use_cache is False or rows_values is None:
+        for _, field_object in model._field_objects.items():
+            if not field_object["type"].read_only:
+                random_value = field_object["type"].random_value(
+                    field_object["field"], fake, cache
+                )
+                serialized_random_value = field_object["type"].serialize_to_input_value(
+                    field_object["field"], random_value
+                )
+                row_random_values[
+                    f"field_{field_object['field'].id}"
+                ] = serialized_random_value
 
-    rows_values = [row_random_values]
-    UpdateRowsActionType.do(user, table, rows_values, model)
+        rows_values = [row_random_values]
+
+    if skip_action:
+        row_handler = RowHandler()
+        result = row_handler.update_rows(user, table, rows_values, model=model)
+        updated_rows = result.updated_rows
+        params = UpdateRowsActionType.Params(
+            table.id,
+            table.name,
+            table.database.id,
+            table.database.name,
+            [row.id for row in updated_rows],
+            rows_values,
+            result.original_rows_values_by_id,
+            result.updated_fields_metadata_by_row_id,
+        )
+
+        RowHistoryHandler().record_history_from_update_rows_action(
+            user,
+            "uuid",
+            dataclasses.asdict(params),
+            timezone.now(),
+            ActionCommandType.DO,
+        )
+    else:
+        UpdateRowsActionType.do(user, table, rows_values, model)
 
 
 def overwrite_timestamps(table, row, limit):

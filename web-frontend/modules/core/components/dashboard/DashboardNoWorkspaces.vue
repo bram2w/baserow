@@ -1,7 +1,7 @@
 <template>
   <div class="placeholder placeholder--align-left margin-top-0">
     <div class="placeholder__icon">
-      <i class="fas fa-layer-group"></i>
+      <i class="iconoir-book-stack"></i>
     </div>
     <h1 class="placeholder__title">{{ $t('dashboard.noWorkspaceTitle') }}</h1>
     <p v-if="$hasPermission('create_workspace')" class="placeholder__content">
@@ -16,7 +16,7 @@
         class="button button--large"
         @click="$emit('create-clicked')"
       >
-        <i class="fas fa-plus"></i>
+        <i class="iconoir-plus"></i>
         {{ $t('dashboard.createWorkspace') }}
       </a>
     </div>

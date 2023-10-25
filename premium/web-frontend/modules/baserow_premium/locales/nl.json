@@ -265,7 +265,11 @@
     "conditionalColorValueProviderForm": {
         "addCondition": "voorwaarde toevoegen",
         "colorAlwaysApply": "Deze kleur is standaard van toepassing. U kunt voorwaarden toevoegen door te klikken op de \"Voeg voorwaarde toe\" knop.",
-        "addColor": "kleur toevoegen"
+        "addColor": "kleur toevoegen",
+        "title": "Kleuren",
+        "deleteColor": "Verwijder kleur",
+        "colorAlwaysApplyTitle": "Deze kleur is standaard van toepassing.",
+        "addConditionGroup": "Voorwaarde groep toevoegen"
     },
     "redirectToBaserowModal": {
         "title": "Doorverwijzen naar http://baserow.io",

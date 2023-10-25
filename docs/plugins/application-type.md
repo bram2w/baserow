@@ -89,7 +89,7 @@ export class TextFileApplicationType extends ApplicationType {
   }
 
   getIconClass() {
-    return 'file-alt'
+    return 'iconoir-file-alt'
   }
 
   getName() {

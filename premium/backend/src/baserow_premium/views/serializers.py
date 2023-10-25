@@ -33,6 +33,25 @@ class ConditionalColorValueProviderConfColorFilterSerializer(serializers.Seriali
         default="",
         help_text=ViewFilter._meta.get_field("field").help_text,
     )
+    group = serializers.CharField(
+        allow_null=True,
+        required=False,
+        help_text=(
+            "The id of the filter group this filter belongs to. "
+            "If this is null, the filter is not part of a filter group."
+        ),
+    )
+
+
+class ConditionalColorValueProviderConfColorFilterGroupSerializer(
+    serializers.Serializer
+):
+    id = serializers.CharField(help_text="A unique identifier for this condition.")
+    filter_type = serializers.ChoiceField(
+        choices=FILTER_TYPES,
+        default="AND",
+        help_text="The boolean operator used to group all conditions.",
+    )
 
 
 class ConditionalColorValueProviderConfColorSerializer(serializers.Serializer):
@@ -48,11 +67,34 @@ class ConditionalColorValueProviderConfColorSerializer(serializers.Serializer):
             "this color will always match the row values."
         ),
     )
+    filter_groups = ConditionalColorValueProviderConfColorFilterGroupSerializer(
+        required=False,
+        many=True,
+        help_text=(
+            "A list of filter groups that the row must meet to get the selected color. "
+        ),
+    )
     operator = serializers.ChoiceField(
         choices=FILTER_TYPES,
         default="AND",
         help_text="The boolean operator used to group all conditions.",
     )
+
+    def validate(self, data):
+        """
+        Ensure every filter has a valid reference to a group.
+        """
+
+        group_ids = set(group["id"] for group in data.get("filter_groups", []))
+
+        for filter in data["filters"]:
+            group_id = filter.get("group", None)
+            if group_id is not None and group_id not in group_ids:
+                raise serializers.ValidationError(
+                    "Filter references a non-existent group."
+                )
+
+        return data
 
 
 class ConditionalColorValueProviderConfColorsSerializer(serializers.Serializer):

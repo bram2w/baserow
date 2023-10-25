@@ -1,3 +1,5 @@
+from typing import Optional
+
 from baserow.core.registry import Instance, Registry
 from baserow.ws.tasks import broadcast_to_channel_group
 
@@ -59,6 +61,22 @@ class PageType(Instance):
         raise NotImplementedError(
             "Each web socket page must have his own get_group_name method."
         )
+
+    def get_permission_channel_group_name(self, **kwargs) -> Optional[str]:
+        """
+        The generated name will be used by the core consumer to add the connected
+        client to a permission channel group so that the consumer can then listen
+        to permission changes and unsubscribe itself from channel groups where
+        permissions have been revoked.
+
+        The permission channel group is optional and so None can be returned which
+        will not add the consumer subscribing to the page to any permission groups.
+
+        :param kwargs: The additional parameters including their provided values.
+        :return: The permission group name relevant to the page.
+        """
+
+        return None
 
     def broadcast(self, payload, ignore_web_socket_id=None, **kwargs):
         """

@@ -16,7 +16,7 @@
             class="color-error"
             @click.prevent="remove(invitation)"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('membersSettings.invitesTable.actions.remove') }}
           </a>
         </li>

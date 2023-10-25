@@ -6,9 +6,9 @@ deploy or self-host your own Baserow.
 Please note that we have not officially been involved with these integrations as they 
 are independently setup and offered by third parties.
 
-## Elastio
+## Elestio
 
-[Elastio](https://elest.io) is a fully managed DevOps platform to deploy your code and
+[Elestio](https://elest.io) is a fully managed DevOps platform to deploy your code and
 open-source software.
 
 Click to deploy: [https://elest.io/open-source/baserow](https://elest.io/open-source/baserow)

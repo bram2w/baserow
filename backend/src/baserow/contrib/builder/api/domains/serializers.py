@@ -1,13 +1,20 @@
 from typing import List
 
+from django.utils.functional import lazy
+
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from baserow.api.services.serializers import PublicServiceSerializer
 from baserow.contrib.builder.api.pages.serializers import PathParamSerializer
+from baserow.contrib.builder.api.theme.serializers import (
+    CombinedThemeConfigBlocksSerializer,
+    serialize_builder_theme,
+)
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.domains.registries import domain_type_registry
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
@@ -16,9 +23,15 @@ from baserow.core.services.registries import service_type_registry
 
 
 class DomainSerializer(serializers.ModelSerializer):
+    type = serializers.SerializerMethodField(help_text="The type of the domain.")
+
+    @extend_schema_field(OpenApiTypes.STR)
+    def get_type(self, instance):
+        return domain_type_registry.get_by_model(instance.specific_class).type
+
     class Meta:
         model = Domain
-        fields = ("id", "domain_name", "order", "builder_id", "last_published")
+        fields = ("id", "type", "domain_name", "order", "builder_id", "last_published")
         extra_kwargs = {
             "id": {"read_only": True},
             "builder_id": {"read_only": True},
@@ -27,9 +40,37 @@ class DomainSerializer(serializers.ModelSerializer):
 
 
 class CreateDomainSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(domain_type_registry.get_types, list)(),
+        required=True,
+        help_text="The type of the domain.",
+    )
+
     class Meta:
         model = Domain
-        fields = ("domain_name",)
+        fields = (
+            "type",
+            "domain_name",
+        )
+
+
+class UpdateDomainSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(domain_type_registry.get_types, list)(),
+        required=False,
+        help_text="The type of the domain.",
+    )
+
+    domain_name = serializers.CharField(
+        required=False, help_text=Domain._meta.get_field("domain_name").help_text
+    )
+
+    class Meta:
+        model = Domain
+        fields = (
+            "type",
+            "domain_name",
+        )
 
 
 class OrderDomainsSerializer(serializers.Serializer):
@@ -94,11 +135,16 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
         "an array of pages that are in the builder."
     )
 
+    theme = serializers.SerializerMethodField(
+        help_text="This field is specific to the `builder` application and contains "
+        "the theme settings."
+    )
+
     type = serializers.SerializerMethodField(help_text="The type of the object.")
 
     class Meta:
         model = Builder
-        fields = ("id", "name", "pages", "type")
+        fields = ("id", "name", "pages", "type", "theme")
 
     @extend_schema_field(PublicPageSerializer(many=True))
     def get_pages(self, instance: Builder) -> List:
@@ -116,6 +162,10 @@ class PublicBuilderSerializer(serializers.ModelSerializer):
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance: Builder) -> str:
         return "builder"
+
+    @extend_schema_field(CombinedThemeConfigBlocksSerializer())
+    def get_theme(self, instance):
+        return serialize_builder_theme(instance)
 
 
 class PublicDataSourceSerializer(PublicServiceSerializer):

@@ -8,7 +8,7 @@
   color: $color-success-600;
   cursor: pointer;
 
-  @include center-text(18px, 11px);
+  @include center-text(20px, 18px);
   @include rounded($rounded);
 
   &.grid-field-boolean__checkbox--read-only {

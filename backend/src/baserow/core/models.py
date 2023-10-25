@@ -1,4 +1,5 @@
 import secrets
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -7,6 +8,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q, UniqueConstraint
 from django.utils import timezone
+from django.utils.timezone import make_aware
 
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -48,6 +50,7 @@ __all__ = [
     "Integration",
     "Service",
     "Notification",
+    "BlacklistedToken",
 ]
 
 
@@ -164,6 +167,43 @@ class UserProfile(models.Model):
         default=None,
         help_text="The last time an email notification was sent to the user.",
     )
+    # This property is used to invalidate authentication tokens that were generated
+    # before this date.
+    last_password_change = models.DateTimeField(
+        null=True,
+        default=None,
+        help_text="Timestamp when the user changed their password.",
+    )
+
+    def iat_before_last_password_change(self, iat: int) -> bool:
+        """
+        Returns whether the iat value of a token was generated before the last
+        password. This can be needed to invalidate the token if so.
+
+        :param iat: The unix in unit timestamp format to compare with the
+            `last_password_change`.
+        :return: Whether the iat was before the last password change.
+        """
+
+        if not self.last_password_change:
+            return False
+
+        iat = make_aware(datetime.utcfromtimestamp(iat))
+        # We have to remove the milliseconds because the `iat` doesn't have
+        # milliseconds in the timestamp, so that can result in the
+        # `last_password_change` being higher, while it was actually done before the
+        # `iat` was generated.
+        last_password_change = self.last_password_change.replace(microsecond=0)
+        return last_password_change > iat
+
+    def is_jwt_token_valid(self, token):
+        return not self.iat_before_last_password_change(token["iat"])
+
+
+class BlacklistedToken(CreatedAndUpdatedOnMixin, models.Model):
+    hashed_token = models.CharField(max_length=64, db_index=True, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expires_at = models.DateTimeField()
 
 
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):
@@ -363,8 +403,7 @@ class Template(GroupToWorkspaceCompatModelMixin, models.Model):
     )
     icon = models.CharField(
         max_length=32,
-        help_text="The font awesome class name that can be used for displaying "
-        "purposes.",
+        help_text="The icon class name that can be used for displaying purposes.",
     )
     categories = models.ManyToManyField(TemplateCategory, related_name="templates")
     workspace = models.ForeignKey(

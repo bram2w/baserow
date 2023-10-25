@@ -1,10 +1,12 @@
 import datetime
+from abc import ABC
 from decimal import Decimal
 from typing import Any, List, Optional, Type, Union
 
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.postgres.fields import ArrayField, JSONField
+from django.core.files.storage import default_storage
 from django.db import models
-from django.db.models import Expression, F, Func, JSONField, Q, QuerySet, Value
+from django.db.models import Expression, F, Func, Q, QuerySet, Value
 from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
@@ -22,6 +24,7 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowBooleanLiteral,
     BaserowDecimalLiteral,
     BaserowExpression,
+    BaserowFieldReference,
     BaserowFunctionCall,
     BaserowIntegerLiteral,
     BaserowStringLiteral,
@@ -35,11 +38,16 @@ from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
 )
-from baserow.contrib.database.formula.types.serializers import LinkSerializer
 from baserow.core.utils import list_to_comma_separated_string
 
 
+class BaserowJSONBObjectBaseType(BaserowFormulaValidType, ABC):
+    pass
+
+
 class BaserowFormulaBaseTextType(BaserowFormulaTypeHasEmptyBaserowExpression):
+    can_group_by = True
+
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [
@@ -106,21 +114,28 @@ class BaserowFormulaTextType(
         )
 
 
-class BaserowFormulaCharType(BaserowFormulaBaseTextType, BaserowFormulaValidType):
+class BaserowFormulaCharType(BaserowFormulaTextType, BaserowFormulaValidType):
     type = "char"
     baserow_field_type = "text"
     can_order_by_in_array = True
+    can_group_by = True
 
     def get_order_by_in_array_expr(self, field, field_name, order_direction):
         return JSONBSingleKeyArrayExpression(
             field_name, "value", "text", output_field=models.TextField()
         )
 
+    def placeholder_empty_baserow_expression(
+        self,
+    ) -> "BaserowExpression[BaserowFormulaValidType]":
+        return formula_function_registry.get("tovarchar")(literal(""))
 
-class BaserowFormulaLinkType(BaserowFormulaTextType):
+
+class BaserowFormulaLinkType(BaserowJSONBObjectBaseType):
     type = "link"
     baserow_field_type = None
     can_order_by = False
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -161,6 +176,8 @@ class BaserowFormulaLinkType(BaserowFormulaTextType):
 
     def get_serializer_field(self, instance, **kwargs) -> Optional[Field]:
         required = kwargs.get("required", False)
+
+        from baserow.contrib.database.formula.types.serializers import LinkSerializer
 
         return LinkSerializer(
             **{"required": required, "allow_null": not required, **kwargs}
@@ -249,6 +266,7 @@ class BaserowFormulaNumberType(
     user_overridable_formatting_option_fields = ["number_decimal_places"]
     MAX_DIGITS = 50
     can_order_by_in_array = True
+    can_group_by = True
 
     def __init__(self, number_decimal_places: int, **kwargs):
         super().__init__(**kwargs)
@@ -335,6 +353,7 @@ class BaserowFormulaBooleanType(
     type = "boolean"
     baserow_field_type = "boolean"
     can_order_by_in_array = True
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -399,6 +418,7 @@ class BaserowFormulaDateIntervalType(
 ):
     type = "date_interval"
     baserow_field_type = None
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -511,6 +531,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
     nullable_option_fields = ["date_force_timezone"]
     can_represent_date = True
     can_order_by_in_array = True
+    can_group_by = True
 
     def __init__(
         self,
@@ -587,7 +608,7 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
 
     def unwrap_at_field_level(self, expr: "BaserowFunctionCall[BaserowFormulaType]"):
         unwrapped = super().unwrap_at_field_level(expr)
-        return expr.args[0].with_valid_type(unwrapped.expression_type)
+        return unwrapped.args[0].with_valid_type(unwrapped.expression_type)
 
     def cast_to_text(
         self,
@@ -646,11 +667,132 @@ class BaserowFormulaDateType(BaserowFormulaValidType):
         return f"{date_or_datetime}({self.date_format}{optional_time_format})"
 
 
+class BaserowFormulaSingleFileType(BaserowJSONBObjectBaseType):
+    type = "single_file"
+    can_group_by = False
+    can_order_by = False
+    can_order_by_in_array = False
+    baserow_field_type = None
+    item_is_in_nested_value_object_when_in_array = False
+
+    def is_searchable(self, field):
+        return True
+
+    def placeholder_empty_value(self):
+        return Value(None, output_field=JSONField())
+
+    @property
+    def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
+    @property
+    def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    def get_model_field(self, instance, **kwargs) -> models.Field:
+        return JSONField(default=dict, **kwargs)
+
+    def get_baserow_field_instance_and_type(self):
+        return self, self
+
+    def get_response_serializer_field(self, instance, **kwargs):
+        from baserow.contrib.database.api.fields.serializers import (
+            FileFieldResponseSerializer,
+        )
+
+        return FileFieldResponseSerializer(**{"required": False, **kwargs})
+
+    def get_serializer_field(self, instance, **kwargs):
+        required = kwargs.get("required", False)
+        from baserow.contrib.database.api.fields.serializers import (
+            FileFieldRequestSerializer,
+        )
+
+        return FileFieldRequestSerializer(
+            **{
+                "required": required,
+                "allow_null": not required,
+                **kwargs,
+            }
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False) -> Any:
+        file = value
+        if "url" in file:
+            url = file["url"]
+        elif "name" in file:
+            from baserow.core.user_files.handler import UserFileHandler
+
+            path = UserFileHandler().user_file_path(file["name"])
+            url = default_storage.url(path)
+        else:
+            url = None
+
+        export_file = {
+            "visible_name": file["visible_name"],
+            "name": file["name"],
+            "url": url,
+        }
+
+        if rich_value:
+            return {
+                "visible_name": export_file["visible_name"],
+                "url": export_file["url"],
+            }
+        else:
+            return f'{export_file["visible_name"]}({export_file["url"]})'
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        # If an empty value has been provided we do not want to filter at all.
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__visible_name__icontains": value})
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        sql = f"""
+            p_in = p_in->'visible_name';
+        """
+        return sql, {}
+
+    def get_human_readable_value(self, value, field_object) -> str:
+        if value is None:
+            return ""
+        return self.get_export_value(value, field_object, rich_value=False) or ""
+
+    def cast_to_text(
+        self,
+        to_text_func_call: "BaserowFunctionCall[UnTyped]",
+        arg: "BaserowExpression[BaserowFormulaValidType]",
+    ) -> "BaserowExpression[BaserowFormulaType]":
+        single_select_value = formula_function_registry.get("get_single_select_value")(
+            arg
+        )
+        return formula_function_registry.get("when_empty")(
+            single_select_value, literal("")
+        )
+
+    def get_search_expression(self, field, queryset):
+        return Cast(
+            F(field.db_column + "__visible_name"), output_field=models.TextField()
+        )
+
+    def get_search_expression_in_array(self, field, queryset):
+        return extract_jsonb_array_values_to_single_string(
+            field,
+            queryset,
+            path_to_value_in_jsonb_list=[
+                Value("visible_name", output_field=models.TextField()),
+            ],
+        )
+
+
 class BaserowFormulaArrayType(BaserowFormulaValidType):
     type = "array"
     user_overridable_formatting_option_fields = [
         "array_formula_type",
     ]
+    can_group_by = True
 
     def __init__(self, sub_type: BaserowFormulaValidType, **kwargs):
         super().__init__(**kwargs)
@@ -721,6 +863,8 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             elif arg.function_def.type == double_unnest.type:
                 arg = arg.args[0]
                 sub_type = BaserowFormulaArrayType(sub_type)
+        elif isinstance(arg, BaserowFieldReference):
+            sub_type = BaserowFormulaArrayType(sub_type)
 
         return arg.with_valid_type(sub_type)
 
@@ -755,13 +899,17 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
             instance,
             field_type,
         ) = self.sub_type.get_baserow_field_instance_and_type()
+        if self.sub_type.item_is_in_nested_value_object_when_in_array:
+            serializer = ArrayValueSerializer(
+                field_type.get_response_serializer_field(instance)
+            )
+        else:
+            serializer = field_type.get_response_serializer_field(instance)
         return serializers.ListSerializer(
             **{
                 "required": required,
                 "allow_null": not required,
-                "child": ArrayValueSerializer(
-                    field_type.get_response_serializer_field(instance)
-                ),
+                "child": serializer,
                 **kwargs,
             }
         )
@@ -820,13 +968,16 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     ):
         human_readable_values = []
         for v in lookup_json_value_list:
-            lookup_json_value_list = v["value"]
-            if lookup_json_value_list is not None and self.sub_type.type == "date":
+            if self.sub_type.item_is_in_nested_value_object_when_in_array:
+                list_item = v["value"]
+            else:
+                list_item = v
+            if list_item is not None and self.sub_type.type == "date":
                 # Arrays are stored as JSON which means the dates are converted to
                 # strings, we need to reparse them back first before giving it to
                 # the date field type.
-                lookup_json_value_list = parser.isoparse(lookup_json_value_list)
-            export_value = map_func(lookup_json_value_list)
+                list_item = parser.isoparse(list_item)
+            export_value = map_func(list_item)
             if export_value is None:
                 export_value = ""
             human_readable_values.append(export_value)
@@ -858,15 +1009,28 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     def get_value_for_filter(self, row, field) -> any:
         return None
 
+    def check_if_compatible_with(self, compatible_formula_types: List[str]):
+        return (
+            self.type in compatible_formula_types
+            or str(self) in compatible_formula_types
+        )
+
     def __str__(self) -> str:
-        return f"array({self.sub_type})"
+        return self.formula_array_type_as_str(self.sub_type)
+
+    @classmethod
+    def formula_array_type_as_str(cls, sub_type):
+        return f"array({sub_type})"
 
 
-class BaserowFormulaSingleSelectType(BaserowFormulaValidType):
+class BaserowFormulaSingleSelectType(
+    BaserowJSONBObjectBaseType, BaserowFormulaValidType
+):
     type = "single_select"
     baserow_field_type = "single_select"
     can_order_by = True
     can_order_by_in_array = True
+    can_group_by = True
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -982,6 +1146,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaNumberType,
     BaserowFormulaArrayType,
     BaserowFormulaSingleSelectType,
+    BaserowFormulaSingleFileType,
 ]
 
 BASEROW_FORMULA_TYPE_ALLOWED_FIELDS = list(

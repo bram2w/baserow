@@ -14,20 +14,20 @@
 .hidings__search {
   position: relative;
   border-bottom: 1px solid $color-neutral-200;
+
+  @include flex-align-items();
 }
 
 .hidings__search-icon {
   color: $color-neutral-300;
-
-  @include absolute(0, auto, auto, 0);
-  @include center-text(32px, 14px, 36px);
+  font-size: 18px;
 }
 
 .hidings__search-input {
   display: block;
   width: 100%;
   border: none;
-  padding: 0 12px 0 36px;
+  padding: 0 12px;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 
@@ -48,10 +48,10 @@
 }
 
 .hidings__item {
+  @include flex-align-items(8px);
+
   position: relative;
   display: flex;
-  flex-direction: row;
-  align-items: center;
   margin-bottom: 2px;
   padding: 0;
 }
@@ -59,7 +59,6 @@
 .hidings__item-handle {
   width: 8px;
   height: 16px;
-  margin-right: 8px;
   background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
   background-size: 4px 4px;
   background-repeat: repeat;

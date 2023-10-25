@@ -11,6 +11,7 @@ from django.db import connections
 import pytest
 from freezegun import freeze_time
 from itsdangerous.exc import BadSignature, SignatureExpired
+from pytz import timezone
 
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.models import (
@@ -29,12 +30,13 @@ from baserow.core.exceptions import (
     WorkspaceInvitationEmailMismatch,
 )
 from baserow.core.handler import CoreHandler
-from baserow.core.models import Workspace, WorkspaceUser
+from baserow.core.models import BlacklistedToken, Workspace, WorkspaceUser
 from baserow.core.registries import plugin_registry
 from baserow.core.user.exceptions import (
     DisabledSignupError,
     InvalidPassword,
     PasswordDoesNotMatchValidation,
+    RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
@@ -379,6 +381,9 @@ def test_reset_password(data_fixture):
     with freeze_time("2020-01-02 12:00"):
         user = handler.reset_password(token, valid_password)
         assert user.check_password(valid_password)
+        assert user.profile.last_password_change == datetime.datetime(
+            2020, 1, 2, 12, 00, tzinfo=timezone("UTC")
+        )
 
 
 @pytest.mark.django_db
@@ -421,8 +426,12 @@ def test_change_password(data_fixture):
     user.refresh_from_db()
     assert user.check_password(valid_password)
 
-    user = handler.change_password(user, valid_password, valid_new_password)
-    assert user.check_password(valid_new_password)
+    with freeze_time("2020-01-01 12:00"):
+        user = handler.change_password(user, valid_password, valid_new_password)
+        assert user.check_password(valid_new_password)
+        assert user.profile.last_password_change == datetime.datetime(
+            2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+        )
 
 
 @pytest.mark.django_db
@@ -625,3 +634,45 @@ def test_active_users_qs_excludes_pending_deletion_users(data_fixture):
     assert set(
         UserHandler().get_all_active_users_qs().values_list("id", flat=True)
     ) == {active_user.id}
+
+
+@pytest.mark.django_db
+def test_blacklist_refresh_token(data_fixture):
+    user = data_fixture.create_user()
+
+    UserHandler().blacklist_refresh_token(
+        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
+    )
+
+    tokens = BlacklistedToken.objects.all()
+    assert len(tokens) == 1
+    assert tokens[0].user_id == user.id
+    assert (
+        tokens[0].hashed_token
+        == "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"
+    )
+
+
+@pytest.mark.django_db
+def test_duplicate_blacklist_refresh_token(data_fixture):
+    user = data_fixture.create_user()
+
+    UserHandler().blacklist_refresh_token(
+        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
+    )
+
+    with pytest.raises(RefreshTokenAlreadyBlacklisted):
+        UserHandler().blacklist_refresh_token(
+            user, "test", datetime.datetime(2021, 1, 1, 12, 00)
+        )
+
+
+@pytest.mark.django_db
+def test_refresh_token_is_blacklisted(data_fixture):
+    user = data_fixture.create_user()
+
+    assert UserHandler().refresh_token_is_blacklisted("test") is False
+    UserHandler().blacklist_refresh_token(
+        user, "test", datetime.datetime(2021, 1, 1, 12, 00)
+    )
+    assert UserHandler().refresh_token_is_blacklisted("test") is True

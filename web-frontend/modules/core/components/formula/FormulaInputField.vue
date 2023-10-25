@@ -1,10 +1,10 @@
 <template>
   <Alert v-if="isFormulaInvalid" type="error" minimal>
-    <div class="margin-bottom-1">
+    <p>
       {{ $t('formulaInputField.errorInvalidFormula') }}
-    </div>
+    </p>
     <Button
-      class="button formula-input-field__reset-button"
+      class="button formula-input-field__reset-button margin-top-1"
       type="error"
       size="tiny"
       @click="reset"
@@ -12,12 +12,25 @@
       {{ $t('action.reset') }}
     </Button>
   </Alert>
-  <EditorContent
-    v-else
-    class="input formula-input-field"
-    :class="classes"
-    :editor="editor"
-  />
+  <div v-else>
+    <EditorContent
+      ref="editor"
+      class="input formula-input-field"
+      :class="classes"
+      :editor="editor"
+      @data-component-clicked="dataComponentClicked"
+    />
+    <DataExplorer
+      ref="dataExplorer"
+      :nodes="nodes"
+      :node-selected="nodeSelected"
+      :loading="dataExplorerLoading"
+      @node-selected="dataExplorerItemSelected"
+      @node-toggled="editor.commands.focus()"
+      @focusin="dataExplorerFocused = true"
+      @focusout="dataExplorerFocused = false"
+    ></DataExplorer>
+  </div>
 </template>
 
 <script>
@@ -32,11 +45,18 @@ import { RuntimeFunctionCollection } from '@baserow/modules/core/functionCollect
 import { FromTipTapVisitor } from '@baserow/modules/core/formula/tiptap/fromTipTapVisitor'
 import { mergeAttributes } from '@tiptap/core'
 import { HardBreak } from '@tiptap/extension-hard-break'
+import DataExplorer from '@baserow/modules/core/components/dataExplorer/DataExplorer'
+import { RuntimeGet } from '@baserow/modules/core/runtimeFormulaTypes'
 
 export default {
   name: 'FormulaInputField',
   components: {
+    DataExplorer,
     EditorContent,
+  },
+  provide() {
+    // Provide the application context to all formula components
+    return { applicationContext: this.applicationContext }
   },
   props: {
     value: {
@@ -47,16 +67,35 @@ export default {
       type: String,
       default: null,
     },
+    dataProviders: {
+      type: Array,
+      required: false,
+      default: () => [],
+    },
+    dataExplorerLoading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    applicationContext: {
+      type: Object,
+      required: true,
+    },
   },
   data() {
     return {
       editor: null,
       content: null,
-      isFocused: false,
       isFormulaInvalid: false,
+      dataNodeSelected: null,
+      dataExplorerFocused: false,
+      formulaInputFocused: false,
     }
   },
   computed: {
+    isFocused() {
+      return this.dataExplorerFocused || this.formulaInputFocused
+    },
     classes() {
       return {
         'formula-input-field--focused': this.isFocused,
@@ -113,8 +152,31 @@ export default {
     wrapperContent() {
       return this.editor.getJSON().content[0].content
     },
+    nodes() {
+      return this.dataProviders
+        .map((dataProvider) => dataProvider.getNodes(this.applicationContext))
+        .filter((dataProviderNodes) => dataProviderNodes.nodes?.length > 0)
+    },
+    nodeSelected() {
+      return this.dataNodeSelected?.attrs?.path || null
+    },
   },
   watch: {
+    isFocused(value) {
+      if (!value) {
+        this.$refs.dataExplorer.hide()
+        this.unSelectNode()
+      } else {
+        this.unSelectNode()
+        this.$refs.dataExplorer.show(
+          this.$refs.editor.$el,
+          'bottom',
+          'left',
+          -100,
+          -330
+        )
+      }
+    },
     value(value) {
       if (!_.isEqual(value, this.toFormula(this.wrapperContent))) {
         const content = this.toContent(value)
@@ -147,6 +209,9 @@ export default {
       parseOptions: {
         preserveWhitespace: 'full',
       },
+      editorProps: {
+        handleClick: this.unSelectNode,
+      },
     })
   },
   beforeDestroy() {
@@ -157,18 +222,28 @@ export default {
       this.isFormulaInvalid = false
       this.$emit('input', '')
     },
-    onUpdate() {
-      this.fixMultipleWrappers()
-
+    emitChange() {
       if (!this.isFormulaInvalid) {
         this.$emit('input', this.toFormula(this.wrapperContent))
       }
     },
+    onUpdate() {
+      this.fixMultipleWrappers()
+      this.unSelectNode()
+      this.emitChange()
+    },
     onFocus() {
-      this.isFocused = true
+      this.formulaInputFocused = true
     },
     onBlur() {
-      this.isFocused = false
+      // We have to delay the browser here by just a bit, running the below will make
+      // sure the browser will execute all other events first, and then trigger this
+      // function. If we don't do this, the data explorer will be closed before the
+      // focus event can be fired which results in a closed data explorer once you lose
+      // focus on the input.
+      setTimeout(() => {
+        this.formulaInputFocused = false
+      }, 0)
     },
     toContent(formula) {
       if (_.isEmpty(formula)) {
@@ -213,6 +288,33 @@ export default {
     fixMultipleWrappers() {
       if (this.editor.getJSON().content.length > 1) {
         this.editor.commands.joinForward()
+      }
+    },
+    dataComponentClicked(node) {
+      this.selectNode(node)
+    },
+    dataExplorerItemSelected({ path }) {
+      const isInEditingMode = this.dataNodeSelected !== null
+      if (isInEditingMode) {
+        this.dataNodeSelected.attrs.path = path
+        this.emitChange()
+      } else {
+        const getNode = new RuntimeGet().toNode([{ text: path }])
+        this.editor.commands.insertContent(getNode)
+      }
+      this.editor.commands.focus()
+    },
+    selectNode(node) {
+      if (node) {
+        this.unSelectNode()
+        this.dataNodeSelected = node
+        this.dataNodeSelected.attrs.isSelected = true
+      }
+    },
+    unSelectNode() {
+      if (this.dataNodeSelected) {
+        this.dataNodeSelected.attrs.isSelected = false
+        this.dataNodeSelected = null
       }
     },
   },

@@ -8,10 +8,10 @@
       href="https://gitlab.com/baserow/baserow"
       target="_blank"
       rel="noopener noreferrer"
-      class="button button--primary dashboard__help-button"
+      class="button button--primary"
     >
       {{ $t('dashboard.starOnGitlab') }}
-      <i class="fab fa-gitlab"></i>
+      <i class="baserow-icon-gitlab"></i>
     </a>
     <a
       v-tooltip="$t('dashboard.shareOnTwitter')"
@@ -24,7 +24,7 @@
       rel="noopener noreferrer"
       class="button button--primary dashboard__help-button"
     >
-      <i class="fab fa-twitter"></i>
+      <i class="baserow-icon-twitter"></i>
     </a>
     <a
       v-tooltip="$t('dashboard.shareOnReddit')"
@@ -36,7 +36,7 @@
       rel="noopener noreferrer"
       class="button button--primary dashboard__help-button"
     >
-      <i class="fab fa-reddit"></i>
+      <i class="baserow-icon-reddit"></i>
     </a>
     <a
       v-tooltip="$t('dashboard.shareOnFacebook')"
@@ -45,7 +45,7 @@
       rel="noopener noreferrer"
       class="button button--primary dashboard__help-button"
     >
-      <i class="fab fa-facebook"></i>
+      <i class="baserow-icon-facebook"></i>
     </a>
     <a
       v-tooltip="$t('dashboard.shareOnLinkedIn')"
@@ -54,7 +54,7 @@
       rel="noopener noreferrer"
       class="button button--primary dashboard__help-button"
     >
-      <i class="fab fa-linkedin"></i>
+      <i class="baserow-icon-linkedin"></i>
     </a>
   </div>
 </template>

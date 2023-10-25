@@ -1,4 +1,9 @@
 {
+    "dataProviderType": {
+        "dataSource": "Data",
+        "pageParameter": "Parameter",
+        "currentRecord": "Data source"
+    },
     "builderForm": {
         "submit": "Add application"
     },
@@ -44,6 +49,7 @@
         "publishFailedTitle": "Site publishing failed",
         "publishFailedDescription": "The site publishing has failed. Please try again later.",
         "openInNewTab": "Open in a new tab",
+        "importingState": "Importing",
         "noDomain": "You need to have at least one domain in order to publish your application."
     },
     "lastPublishedDomainDate": {
@@ -66,7 +72,11 @@
         "inputText": "Text input",
         "inputTextDescription": "A text input field",
         "column": "Columns",
-        "columnDescription": "Columns container"
+        "columnDescription": "Columns container",
+        "button": "Button",
+        "buttonDescription": "A button element",
+        "table": "Table",
+        "tableDescription": "A table element"
     },
     "addElementButton": {
         "label": "Element"
@@ -155,17 +165,27 @@
         "hostHeader": "Host",
         "valueHeader": "Value"
     },
+    "domainForm": {
+      "invalidDomain": "The provided domain name is invalid",
+      "notUniqueDomain": "The provided domain is already used"
+    },
     "customDomainForm": {
-        "domainNameLabel": "Domain name",
-        "invalidDomain": "The provided domain name is invalid",
-        "notUniqueDomain": "The provided domain is already used"
+        "domainNameLabel": "Domain name"
+    },
+    "subDomainForm": {
+        "domainNameLabel": "Domain name"
+    },
+    "subDomainDetails": {
+      "text": "The DNS settings of the domain have already been configured and checked. It works without making any additional changes."
     },
     "domainCard": {
         "refresh": "Refresh settings",
         "detailLabel": "Show details"
     },
     "domainTypes": {
-        "customName": "Custom domain"
+        "customName": "Custom domain",
+        "subDomainName": "Subdomain",
+        "subDomain": "Subdomain of {domain}"
     },
     "linkElement": {
         "noValue": "Unnamed..."
@@ -181,9 +201,6 @@
         "variant": "Variant",
         "variantLink": "Link",
         "variantButton": "Button",
-        "width": "Width",
-        "widthAuto": "Auto",
-        "widthFull": "Full width",
         "target": "Open in...",
         "targetSelf": "Same tab",
         "targetNewTab": "New tab",
@@ -191,6 +208,11 @@
         "paramsInErrorDescription": "The saved parameters don't match the page parameters. The page has probably been deleted or updated.",
         "paramsInErrorButton": "Update parameters",
         "pageParameterTypeError": "Invalid type"
+    },
+    "widthSelector": {
+        "width": "Width",
+        "widthAuto": "Auto",
+        "widthFull": "Full width"
     },
     "horizontalAlignmentSelector": {
         "alignment": "Horizontal alignment",
@@ -238,7 +260,7 @@
     "dataSourceForm": {
         "namePlaceholder": "Source name",
         "addIntegration": "Add new integration",
-        "noIntegrations": "you don't have any integration yet",
+        "noIntegrations": "No integrations found.",
         "selectTypeFirst": "Select the service first",
         "servicePlaceholder": "Select a service",
         "integrationPlaceholder": "Select an integration",
@@ -246,8 +268,8 @@
     },
     "dataSourceContext": {
         "addDataSource": "Add new data source",
-        "noDataSourceTitle": "You have not yet added a data",
-        "noDataSourceMessage": "Data can be used to fetch from internal or external sources and display it on the page."
+        "noDataSourceTitle": "This page has no data sources.",
+        "noDataSourceMessage": "Data sources can be used to fetch data from internal or external sources and display it on the page."
     },
     "defaultStyleForm": {
         "boxTop": "Padding top",
@@ -264,5 +286,55 @@
       "headingLabel": "Heading {i} (h{i})",
       "headingValue": "Heading <h{i}>",
       "fontSizeError": "The value must be an integer between 1 and 100."
+    },
+    "buttonElementForm": {
+        "valueLabel": "Text",
+        "valuePlaceholder": "Enter text..."
+    },
+    "buttonElement": {
+        "noValue": "Unnamed..."
+    },
+    "eventTypes": {
+        "clickLabel": "On click"
+    },
+    "getFormulaComponent": {
+        "errorTooltip": "Invalid reference"
+    },
+    "fontSidePanelForm": {
+      "label": "Font"
+    },
+    "tableElementForm": {
+      "dataSource": "Data source",
+      "fields": "Fields",
+      "fieldValueLabel": "Value",
+      "addField": "add field",
+      "fieldValuePlaceholder": "Enter value...",
+      "itemsPerPage": "Items per page",
+      "itemsPerPagePlaceholder": "Enter value..."
+    },
+    "tableElement": {
+      "empty": "No items have been found.",
+      "showMore": "Show more"
+    },
+    "currentRecordDataProviderType": {
+      "index": "index",
+      "firstPartName": "Data source: {name}"
+    },
+    "workflowActionTypes": {
+      "notificationLabel": "Show Notification",
+      "openPageLabel": "Open Page"
+    },
+    "notificationWorkflowActionForm": {
+      "titleLabel": "Title",
+      "titlePlaceholder": "Enter text...",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Enter text..."
+    },
+    "openPageWorkflowActionForm": {
+      "urlLabel": "URL",
+      "urlPlaceholder": "Enter text..."
+    },
+    "event": {
+      "addAction": "Add action"
     }
 }

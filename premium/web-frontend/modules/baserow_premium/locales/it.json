@@ -28,7 +28,7 @@
         "noComment": "Non ci sono ancora commenti per questa riga. Usa il modulo qui sotto per aggiungere un commento.",
         "comment": "Commento",
         "more": "Maggiori informazioni",
-        "name": "Commenti di riga"
+        "name": "Commenti"
     },
     "rowComment": {
         "you": "Tu",
@@ -261,9 +261,13 @@
         "conditionalColorDescription": "Colora le righe quando vengono soddisfatte le condizioni"
     },
     "conditionalColorValueProviderForm": {
-        "addCondition": "aggiungi condizione",
-        "colorAlwaysApply": "Questo colore viene usato di default. Puoi aggiungere condizioni cliccando sul pulsante \"Aggiungi condizioni\".",
-        "addColor": "aggiungi colore"
+        "addCondition": "Aggiungi condizione",
+        "colorAlwaysApply": "Puoi aggiungere condizioni cliccando sul pulsante \"Aggiungi condizioni\".",
+        "addColor": "Aggiungi colore",
+        "title": "Colori",
+        "deleteColor": "Cancella colore",
+        "colorAlwaysApplyTitle": "Verrà applicato questo colore come default .",
+        "addConditionGroup": "Aggiungi gruppo di condizioni"
     },
     "singleSelectColorValueProviderForm": {
         "chooseAColor": "Quale singola selezione usare per colorare le righe?"

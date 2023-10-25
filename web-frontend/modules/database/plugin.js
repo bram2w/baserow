@@ -34,6 +34,7 @@ import {
   DateNotEqualViewFilterType,
   ContainsViewFilterType,
   FilenameContainsViewFilterType,
+  FilesLowerThanViewFilterType,
   HasFileTypeViewFilterType,
   ContainsNotViewFilterType,
   LengthIsLowerThanViewFilterType,
@@ -193,6 +194,14 @@ import {
   BaserowButton,
   BaserowGetLinkUrl,
   BaserowGetLinkLabel,
+  BaserowIsImage,
+  BaserowGetImageHeight,
+  BaserowGetImageWidth,
+  BaserowGetFileSize,
+  BaserowGetFileMimeType,
+  BaserowGetFileVisibleName,
+  BaserowIndex,
+  BaserowGetFileCount,
 } from '@baserow/modules/database/formula/functions'
 import {
   BaserowFormulaArrayType,
@@ -206,6 +215,7 @@ import {
   BaserowFormulaSingleSelectType,
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
+  BaserowFormulaFileType,
 } from '@baserow/modules/database/formula/formulaTypes'
 import {
   EmptyCountViewAggregationType,
@@ -361,6 +371,10 @@ export default (context) => {
     new FilenameContainsViewFilterType(context)
   )
   app.$registry.register('viewFilter', new HasFileTypeViewFilterType(context))
+  app.$registry.register(
+    'viewFilter',
+    new FilesLowerThanViewFilterType(context)
+  )
   app.$registry.register(
     'viewFilter',
     new LengthIsLowerThanViewFilterType(context)
@@ -552,6 +566,22 @@ export default (context) => {
   app.$registry.register('formula_function', new BaserowButton(context))
   app.$registry.register('formula_function', new BaserowGetLinkUrl(context))
   app.$registry.register('formula_function', new BaserowGetLinkLabel(context))
+  // File functions
+  app.$registry.register(
+    'formula_function',
+    new BaserowGetFileVisibleName(context)
+  )
+  app.$registry.register(
+    'formula_function',
+    new BaserowGetFileMimeType(context)
+  )
+  app.$registry.register('formula_function', new BaserowGetFileSize(context))
+  app.$registry.register('formula_function', new BaserowGetImageWidth(context))
+  app.$registry.register('formula_function', new BaserowGetImageHeight(context))
+  app.$registry.register('formula_function', new BaserowIsImage(context))
+
+  app.$registry.register('formula_function', new BaserowGetFileCount(context))
+  app.$registry.register('formula_function', new BaserowIndex(context))
 
   // Formula Types
   app.$registry.register('formula_type', new BaserowFormulaTextType(context))
@@ -571,6 +601,7 @@ export default (context) => {
     new BaserowFormulaSingleSelectType(context)
   )
   app.$registry.register('formula_type', new BaserowFormulaLinkType(context))
+  app.$registry.register('formula_type', new BaserowFormulaFileType(context))
 
   // File preview types
   app.$registry.register('preview', new ImageFilePreview(context))

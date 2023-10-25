@@ -28,7 +28,7 @@
         "noComment": "Aucun commentaire pour cette ligne. Utilisez le formulaire ci-dessous pour ajouter un commentaire.",
         "comment": "Commentaire",
         "more": "Plus d'informations",
-        "name": "Commentaires de ligne"
+        "name": "Commentaires"
     },
     "rowComment": {
         "you": "Vous",
@@ -264,8 +264,12 @@
     },
     "conditionalColorValueProviderForm": {
         "addColor": "Ajouter une couleur",
-        "addCondition": "ajouter une condition",
-        "colorAlwaysApply": "Cette couleur s'applique par défaut. Vous pouvez ajouter des conditions en cliquant sur le bouton « Ajouter une condition »."
+        "addCondition": "Ajouter une condition",
+        "colorAlwaysApply": "Vous pouvez ajouter des conditions en cliquant sur le bouton « Ajouter une condition ».",
+        "title": "Couleurs",
+        "deleteColor": "Supprimer la couleur",
+        "colorAlwaysApplyTitle": "Cette couleur s'applique par défaut.",
+        "addConditionGroup": "Ajouter un groupe de condition"
     },
     "redirectToBaserowModal": {
         "title": "Redirection vers http://baserow.io",
@@ -288,7 +292,7 @@
         "exports": "Export JSON et XML",
         "admin": "Administration avancée",
         "rowColoring": "Coloration des lignes",
-        "surveyForm": "Sondage",
+        "surveyForm": "Formulaire de sondage",
         "publicLogoRemoval": "Suppression du logo public",
         "personalViews": "Vues privées",
         "calendarView": "Vue Calendrier"

@@ -13,10 +13,7 @@
             :class="{ active: page === upload.type }"
             @click="setPage(upload.type)"
           >
-            <i
-              class="fas modal-sidebar__nav-icon"
-              :class="'fa-' + upload.iconClass"
-            ></i>
+            <i class="modal-sidebar__nav-icon" :class="upload.iconClass"></i>
             {{ upload.getName() }}
           </a>
         </li>

@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Optional, Set, Tuple
 from uuid import uuid4
 
 from baserow_premium.license.handler import LicenseHandler
@@ -134,25 +134,78 @@ class ConditionalColorValueProviderType(PremiumDecoratorValueProviderType):
 
         return value
 
-    def _map_filter_from_config(self, conf, fn):
+    def _map_filter_from_config(
+        self,
+        conf: Dict[str, Any],
+        fn: Callable[[Dict[str, Any]], Optional[Dict[str, Any]]],
+    ) -> Tuple[Dict[str, Any], bool]:
         """
-        Map a function on each filters of the configuration. If the given function
-        returns None, the filter is removed from the list of filters.
+        Map a function on each filter of the configuration. If the given
+        function returns None, the filter will be removed from the filter list.
+        This method is useful to remove filters from the configuration matching
+        a particular condition checked in the provided function (i.e. remove all
+        the filters related to a deleted field). It also updates the list of
+        filter groups for every color, removing any groups that are no longer
+        referenced. Please, note that this function will modify the given
+        configuration in place.
+
+        :param conf: The conditional color configuration to process.
+        :param fn: The function to apply to each filter.
+        :return: A tuple of the modified configuration and a boolean value
+            indicating if at least one filter was removed.
         """
 
         modified = False
-        for color in conf["colors"]:
-            new_filters = []
-            for filter in color["filters"]:
-                new_filter = fn(filter)
-                modified = modified or new_filter != filter
-                if new_filter is not None:
-                    new_filters.append(new_filter)
 
-            modified = modified or len(new_filters) != len(color["filters"])
-            color["filters"] = new_filters
+        for color in conf["colors"]:
+            modified_filters, found_group_ids = self._process_filters(color, fn)
+            modified = modified or modified_filters
+
+            filter_groups = color.get("filter_groups", None)
+            if filter_groups:
+                color["filter_groups"] = [
+                    group for group in filter_groups if group["id"] in found_group_ids
+                ]
 
         return conf, modified
+
+    def _process_filters(
+        self,
+        color: Dict[str, Any],
+        fn: Callable[[Dict[str, Any]], Optional[Dict[str, Any]]],
+    ) -> Tuple[bool, Set[int]]:
+        """
+        Process each filter in the color configuration. Returns a tuple of
+        modified status and filter group IDs referenced by filters. The value of
+        modified will be True if at least one filter was removed. The value of
+        found_group_ids will be a set of group IDs that were referenced by
+        filters that were not removed.
+
+        :param color: The color configuration to process.
+        :param fn: The function to apply to each filter.
+        :return: A tuple of modified status and a set of filter group IDs
+            referenced by the remaining filters.
+        """
+
+        new_filters = []
+        found_group_ids = set()
+
+        for filter in color["filters"]:
+            new_filter = fn(filter)
+
+            if new_filter is None:
+                continue
+
+            new_filters.append(new_filter)
+            group_id = new_filter.get("group")
+
+            if group_id:
+                found_group_ids.add(group_id)
+
+        modified = len(new_filters) != len(color["filters"])
+        color["filters"] = new_filters
+
+        return modified, found_group_ids
 
     def after_field_delete(self, deleted_field):
         """

@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Prevent filters to be applied when the user open the row edit modal.",
+    "issue_number": 1765,
+    "bullet_points": [],
+    "created_at": "2023-09-18"
+}

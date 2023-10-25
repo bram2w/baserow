@@ -2,8 +2,10 @@
   <li class="tree__item" :class="{ 'tree__item--loading': loading }">
     <div class="tree__action">
       <a class="tree__link" @click="open">
-        <i class="tree__icon tree__icon--type fas fa-question-circle"></i>
-        {{ $t('chatwootSupportSidebarWorkspace.directSupport') }}
+        <i class="tree__icon tree__icon--type iconoir-chat-bubble-question"></i>
+        <span class="tree__link-text">{{
+          $t('chatwootSupportSidebarWorkspace.directSupport')
+        }}</span>
       </a>
     </div>
   </li>

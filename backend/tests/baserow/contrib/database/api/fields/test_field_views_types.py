@@ -1784,7 +1784,7 @@ def test_lookup_field_type(api_client, data_fixture):
 
     # You cannot create a lookup field with a target field that cant be used in
     # formulas
-    field_that_cant_be_used = data_fixture.create_file_field(
+    field_that_cant_be_used = data_fixture.create_multiple_collaborators_field(
         table=table2, name="trashed_looked_up"
     )
     response = api_client.post(

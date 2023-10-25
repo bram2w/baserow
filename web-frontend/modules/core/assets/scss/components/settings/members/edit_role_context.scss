@@ -3,7 +3,6 @@
   justify-content: space-between;
 }
 
-.edit-role-context__role-name {
-  display: flex;
-  align-items: center;
+.edit-role-context__header-link {
+  @include flex-align-items(4px);
 }

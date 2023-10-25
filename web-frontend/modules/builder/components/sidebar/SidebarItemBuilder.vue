@@ -13,6 +13,7 @@
         @change="renamePage(builder, page, $event)"
       ></Editable>
     </a>
+
     <a
       v-show="!builder._.loading"
       v-if="showOptions"
@@ -20,8 +21,9 @@
       @click="$refs.context.toggle($event.currentTarget, 'bottom', 'right', 0)"
       @mousedown.stop
     >
-      <i class="fas fa-ellipsis-v"></i>
+      <i class="baserow-icon-more-vertical"></i>
     </a>
+
     <Context
       ref="context"
       :overflow-scroll="true"
@@ -35,7 +37,7 @@
           "
         >
           <a @click="enableRename()">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon iconoir-edit-pencil"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
@@ -51,7 +53,7 @@
             }"
             @click="duplicatePage()"
           >
-            <i class="context__menu-icon fas fa-fw fa-copy"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('action.duplicate') }}
           </a>
         </li>
@@ -64,7 +66,7 @@
             :class="{ 'context__menu-item--loading': deleteLoading }"
             @click="deletePage()"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('action.delete') }}
           </a>
         </li>

@@ -1,11 +1,12 @@
 .form-input {
-  display: block;
+  display: flex;
+  flex: 1;
   border: 1px solid $color-neutral-400;
   position: relative;
-  @include rounded($rounded);
 
-  &:active,
-  &:focus {
+  @include rounded($rounded-md);
+
+  &.form-input--focus {
     border-color: $color-primary-500;
   }
 
@@ -53,6 +54,7 @@
   background: none;
   padding: 8px 12px;
   background-color: $white;
+
   @include rounded($rounded-md);
 
   .form-input--large & {
@@ -77,10 +79,9 @@
   position: absolute;
   right: 12px;
   top: 50%;
-  font-size: 12px;
-  line-height: 12px;
-  margin-top: -6px;
+  transform: translateY(-50%);
   color: $color-neutral-300;
+  font-size: 16px;
 
   .form-input--large & {
     font-size: 16px;
@@ -95,4 +96,19 @@
   .form-input--loading & {
     display: none;
   }
+}
+
+.form-input__suffix {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  border-left: 1px solid $color-neutral-400;
+  appearance: none;
+  padding: 0 12px;
+  outline: none;
+  line-height: 100%;
+}
+
+.form-input__input-wrapper {
+  display: flex;
 }

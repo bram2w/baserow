@@ -3,7 +3,7 @@
     <ul class="field-link-row__items">
       <li v-for="item in value" :key="item.id" class="field-link-row__item">
         <component
-          :is="readOnly ? 'span' : 'a'"
+          :is="readOnly || isInForeignRowEditModal ? 'span' : 'a'"
           class="field-link-row__name"
           :class="{
             'field-link-row__name--unnamed':
@@ -22,12 +22,12 @@
           class="field-link-row__remove"
           @click.prevent.stop="removeValue($event, value, item.id)"
         >
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </li>
     </ul>
     <a v-if="!readOnly" class="add" @click.prevent="$refs.selectModal.show()">
-      <i class="fas fa-plus add__icon"></i>
+      <i class="iconoir-plus add__icon"></i>
       {{ $t('rowEditFieldLinkRow.addLink') }}
     </a>
     <div v-show="touched && !valid" class="error">
@@ -41,10 +41,14 @@
       @selected="addValue(value, $event)"
     ></SelectRowModal>
     <ForeignRowEditModal
-      v-if="!readOnly"
+      v-if="!readOnly || isInForeignRowEditModal"
       ref="rowEditModal"
       :table-id="field.link_row_table_id"
+      :fields-sortable="false"
+      :can-modify-fields="false"
+      :read-only="readOnly"
       @hidden="modalOpen = false"
+      @refresh-row="$emit('refresh-row')"
     ></ForeignRowEditModal>
   </div>
 </template>
@@ -64,6 +68,23 @@ export default {
       itemLoadingId: -1,
     }
   },
+  computed: {
+    /**
+     * If this component is a child of the `ForeignRowEditModal`, then we don't want to
+     * open another ForeignRowEditModal when clicking on a relationship. This is because
+     * we don't support that yet. Mainly because of real-time collaboration reasons.
+     */
+    isInForeignRowEditModal() {
+      let parent = this.$parent
+      while (parent !== undefined) {
+        if (parent.$options.name === ForeignRowEditModal.name) {
+          return true
+        }
+        parent = parent.$parent
+      }
+      return false
+    },
+  },
   methods: {
     removeValue(...args) {
       linkRowField.methods.removeValue.call(this, ...args)
@@ -74,7 +95,7 @@ export default {
       this.touch()
     },
     async showForeignRowModal(item) {
-      if (this.readOnly) {
+      if (this.readOnly || this.isInForeignRowEditModal) {
         return
       }
 

@@ -25,6 +25,11 @@ export default {
       type: String,
       required: true,
     },
+    field: {
+      type: Object,
+      required: false,
+      default: null,
+    },
   },
 }
 </script>

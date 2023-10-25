@@ -34,7 +34,10 @@ def update_view_index(view_id: int):
 
     try:
         view = ViewHandler().get_view(
-            view_id, base_queryset=View.objects.prefetch_related("viewsort_set")
+            view_id,
+            base_queryset=View.objects.prefetch_related(
+                "viewsort_set", "viewgroupby_set"
+            ),
         )
         ViewIndexingHandler.update_index(view)
     finally:

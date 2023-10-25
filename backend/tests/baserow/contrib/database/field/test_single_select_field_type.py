@@ -1,7 +1,9 @@
 from io import BytesIO
 
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.shortcuts import reverse
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
@@ -22,6 +24,7 @@ from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -862,7 +865,7 @@ def test_primary_single_select_field_with_link_row_field(
     queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(model, RowSerializer, is_response=True)
 
-    with django_assert_num_queries(3):
+    with django_assert_num_queries(2):
         serializer = serializer_class(queryset, many=True)
         serializer.data
 
@@ -1105,3 +1108,143 @@ def test_single_select_adjacent_row(data_fixture):
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+def test_num_queries_n_number_of_single_select_field_get_rows_query(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red", order=1
+    )
+
+    handler = RowHandler()
+    handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{single_select_field.id}": option_a.id,
+            },
+            {
+                f"field_{single_select_field.id}": option_b.id,
+            },
+        ],
+    )
+
+    model = table.get_model()
+
+    with CaptureQueriesContext(connection) as query_1:
+        result = list(model.objects.all().enhance_by_fields())
+        getattr(result[0], f"field_{single_select_field.id}").id
+        getattr(result[1], f"field_{single_select_field.id}").id
+
+    single_select_field_2 = data_fixture.create_single_select_field(
+        table=table, name="option_field_2", order=2, primary=True
+    )
+    option_1 = data_fixture.create_select_option(
+        field=single_select_field_2, value="1", color="blue", order=0
+    )
+    option_2 = data_fixture.create_select_option(
+        field=single_select_field_2, value="2", color="red", order=1
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    setattr(rows[0], f"field_{single_select_field_2.id}_id", option_1.id)
+    rows[0].save()
+    setattr(rows[1], f"field_{single_select_field_2.id}_id", option_2.id)
+    rows[1].save()
+
+    with CaptureQueriesContext(connection) as query_2:
+        result = list(model.objects.all().enhance_by_fields())
+        print(getattr(result[0], f"field_{single_select_field.id}").id)
+        print(getattr(result[0], f"field_{single_select_field_2.id}").id)
+        print(getattr(result[1], f"field_{single_select_field.id}").id)
+        print(getattr(result[1], f"field_{single_select_field_2.id}").id)
+
+    assert len(query_1.captured_queries) == len(query_2.captured_queries)
+
+
+@pytest.mark.django_db
+@pytest.mark.field_single_select
+@pytest.mark.row_history
+def test_single_select_serialize_metadata_for_row_history(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="single_select",
+        name="Single select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+            {"value": "Option 3", "color": "white"},
+            {"value": "Option 4", "color": "green"},
+        ],
+    )
+    model = table.get_model()
+    row_handler = RowHandler()
+    select_options = field.select_options.all()
+    select_option_1_id = select_options[0].id
+    select_option_3_id = select_options[2].id
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": select_option_1_id},
+    )
+
+    updated_row = model.objects.first()
+    setattr(updated_row, f"field_{field.id}", select_options[2])
+
+    with django_assert_num_queries(0):
+        metadata = SingleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        )
+        metadata = SingleSelectFieldType().serialize_metadata_for_row_history(
+            field, updated_row, metadata
+        )
+        assert metadata == {
+            "id": AnyInt(),
+            "select_options": {
+                select_option_1_id: {
+                    "color": "blue",
+                    "id": select_option_1_id,
+                    "value": "Option 1",
+                },
+                select_option_3_id: {
+                    "color": "white",
+                    "id": select_option_3_id,
+                    "value": "Option 3",
+                },
+            },
+            "type": "single_select",
+        }
+
+    # empty values
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": None},
+    )
+
+    with django_assert_num_queries(0):
+        assert SingleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        ) == {
+            "id": AnyInt(),
+            "select_options": {},
+            "type": "single_select",
+        }

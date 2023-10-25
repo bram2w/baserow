@@ -2,6 +2,8 @@ from datetime import date
 from io import BytesIO
 
 from django.apps.registry import apps
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
@@ -29,7 +31,8 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
-from baserow.core.registries import ImportExportConfig
+from baserow.core.registries import ImportExportConfig, application_type_registry
+from baserow.test_utils.helpers import AnyInt
 
 
 @pytest.mark.django_db
@@ -746,6 +749,51 @@ def test_import_export_multiple_select_field(data_fixture):
     assert imported_select_option.value == select_option.value
     assert imported_select_option.color == select_option.color
     assert imported_select_option.order == select_option.order
+
+
+@pytest.mark.django_db
+def test_import_serialized_value_with_missing_select_options(data_fixture):
+    table = data_fixture.create_database_table()
+    database = table.database
+    workspace = database.workspace
+
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="field"
+    )
+    option_1 = data_fixture.create_select_option(
+        field=multiple_select_field, value="Option 1"
+    )
+    option_2 = data_fixture.create_select_option(
+        field=multiple_select_field, value="Option 2"
+    )
+
+    model = table.get_model(attribute_names=True)
+    row = model.objects.create()
+    row.field.set([option_1.id, option_2.id])
+
+    # The relationship between the row and the delete option will still exist.
+    option_2.delete()
+
+    config = ImportExportConfig(include_permission_data=False)
+    serialized = application_type_registry.get_by_model(database).export_serialized(
+        database, config, BytesIO()
+    )
+    imported_database = application_type_registry.get_by_model(
+        database
+    ).import_serialized(
+        workspace,
+        serialized,
+        config,
+        {},
+        DeferredFieldFkUpdater(),
+    )
+
+    imported_model = imported_database.table_set.all()[0].get_model(
+        attribute_names=True
+    )
+    imported_row = imported_model.objects.all()[0]
+
+    assert len(imported_row.field.all()) == 1
 
 
 @pytest.mark.django_db(transaction=True)
@@ -2263,3 +2311,207 @@ def test_multiple_select_adjacent_row(data_fixture):
 
     assert previous_row.id == row_a.id
     assert next_row.id == row_c.id
+
+
+@pytest.mark.django_db
+def test_num_queries_n_number_of_multiple_select_field_get_rows_query(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="option_field", order=1, primary=True
+    )
+    option_a = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue", order=0
+    )
+    option_b = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red", order=1
+    )
+
+    handler = RowHandler()
+    handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{multiple_select_field.id}": [option_a.id],
+            },
+            {
+                f"field_{multiple_select_field.id}": [option_b.id],
+            },
+        ],
+    )
+
+    model = table.get_model()
+
+    with CaptureQueriesContext(connection) as query_1:
+        result = list(model.objects.all().enhance_by_fields())
+        list(getattr(result[0], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field.id}").all())
+
+    multiple_select_field_2 = data_fixture.create_multiple_select_field(
+        table=table, name="option_field_2", order=2, primary=True
+    )
+    option_1 = data_fixture.create_select_option(
+        field=multiple_select_field_2, value="1", color="blue", order=0
+    )
+    option_2 = data_fixture.create_select_option(
+        field=multiple_select_field_2, value="2", color="red", order=1
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    print(rows)
+    getattr(rows[0], f"field_{multiple_select_field_2.id}").set([option_1.id])
+    rows[0].save()
+    getattr(rows[1], f"field_{multiple_select_field_2.id}").set([option_2.id])
+    rows[1].save()
+
+    with CaptureQueriesContext(connection) as query_2:
+        result = list(model.objects.all().enhance_by_fields())
+        list(getattr(result[0], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[0], f"field_{multiple_select_field_2.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field.id}").all())
+        list(getattr(result[1], f"field_{multiple_select_field_2.id}").all())
+
+    assert len(query_1.captured_queries) == len(query_2.captured_queries)
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.row_history
+def test_multiple_select_serialize_metadata_for_row_history(
+    data_fixture, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+            {"value": "Option 3", "color": "white"},
+            {"value": "Option 4", "color": "green"},
+        ],
+    )
+    model = table.get_model()
+    row_handler = RowHandler()
+    select_options = field.select_options.all()
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={
+            f"field_{field.id}": [
+                select_options[0].id,
+                select_options[1].id,
+            ],
+        },
+    )
+    select_option_1_id = select_options[0].id
+    select_option_2_id = select_options[1].id
+    select_option_3_id = select_options[2].id
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        )
+
+    getattr(original_row, f"field_{field.id}").set([select_options[2].id], clear=True)
+    updated_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        metadata = MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, updated_row, metadata
+        )
+
+        assert metadata == {
+            "id": AnyInt(),
+            "select_options": {
+                select_option_1_id: {
+                    "color": "blue",
+                    "id": select_option_1_id,
+                    "value": "Option 1",
+                },
+                select_option_2_id: {
+                    "color": "red",
+                    "id": select_option_2_id,
+                    "value": "Option 2",
+                },
+                select_option_3_id: {
+                    "color": "white",
+                    "id": select_option_3_id,
+                    "value": "Option 3",
+                },
+            },
+            "type": "multiple_select",
+        }
+
+    # empty values
+    original_row = row_handler.create_row(
+        user=user,
+        table=table,
+        model=model,
+        values={f"field_{field.id}": []},
+    )
+    original_row = model.objects.all().enhance_by_fields().get(id=original_row.id)
+
+    with django_assert_num_queries(0):
+        assert MultipleSelectFieldType().serialize_metadata_for_row_history(
+            field, original_row, None
+        ) == {
+            "id": AnyInt(),
+            "select_options": {},
+            "type": "multiple_select",
+        }
+
+
+@pytest.mark.django_db
+@pytest.mark.field_multiple_select
+@pytest.mark.row_history
+def test_multiple_select_are_row_values_equal(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="multiple_select",
+        name="Multi select",
+        select_options=[
+            {"value": "Option 1", "color": "blue"},
+            {"value": "Option 2", "color": "red"},
+            {"value": "Option 3", "color": "white"},
+            {"value": "Option 4", "color": "green"},
+        ],
+    )
+    option_a = data_fixture.create_select_option(field=field, value="A", color="blue")
+    option_b = data_fixture.create_select_option(field=field, value="B", color="red")
+
+    with django_assert_num_queries(0):
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([option_a.id], [option_a.id])
+            is True
+        )
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal(
+                [option_a.id, option_b.id], [option_b.id, option_a.id]
+            )
+            is True
+        )
+
+        assert MultipleSelectFieldType().are_row_values_equal([], []) is True
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([], [option_a.id]) is False
+        )
+
+        assert (
+            MultipleSelectFieldType().are_row_values_equal([option_a.id], [option_b.id])
+            is False
+        )

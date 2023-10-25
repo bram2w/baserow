@@ -17,17 +17,18 @@
       <RowEditModalField
         :ref="'field-' + field.id"
         :field="field"
-        :sortable="fieldIsSortable(field)"
         :can-be-hidden="field.primary ? primaryIsSortable : true"
         :hidden="hidden"
         :read-only="readOnly"
         :row="row"
         :table="table"
         :database="database"
+        :sortable="sortable && fieldIsSortable(field)"
         :can-modify-fields="canModifyFields"
         @field-updated="$emit('field-updated', $event)"
         @field-deleted="$emit('field-deleted')"
         @update="$emit('update', $event)"
+        @refresh-row="$emit('refresh-row', $event)"
         @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
       ></RowEditModalField>
     </li>

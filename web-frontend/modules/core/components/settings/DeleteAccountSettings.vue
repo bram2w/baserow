@@ -17,16 +17,16 @@
     <Alert
       v-else-if="$fetchState.error"
       type="error"
-      icon="exclamation"
+      icon="iconoir-warning-triangle"
       :title="$t('deleteAccountSettings.workspaceLoadingError')"
     >
-      {{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}
+      <p>{{ $t('deleteAccountSettings.workspaceLoadingErrorDescription') }}</p>
     </Alert>
 
     <div v-else-if="orphanWorkspaces.length" class="delete-section">
       <div class="delete-section__label">
         <div class="delete-section__label-icon">
-          <i class="fas fa-exclamation"></i>
+          <i class="iconoir-warning-triangle"></i>
         </div>
         {{ $t('deleteAccountSettings.orphanWorkspaces') }}
       </div>
@@ -35,7 +35,7 @@
       </p>
       <ul class="delete-section__list">
         <li v-for="workspace in orphanWorkspaces" :key="workspace.id">
-          <i class="delete-section__list-icon fas fa-users"></i>
+          <i class="delete-section__list-icon iconoir-community"></i>
           {{ workspace.name }}
           <small>
             {{
@@ -66,7 +66,7 @@
           :disabled="loading"
         >
           {{ $t('deleteAccountSettings.submitButton') }}
-          <i class="fas fa-trash"></i>
+          <i class="iconoir-bin"></i>
         </button>
       </div>
     </form>
@@ -131,7 +131,13 @@ export default {
   },
   methods: {
     logoff() {
-      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
+      logoutAndRedirectToLogin(
+        this.$nuxt.$router,
+        this.$store,
+        false,
+        false,
+        true
+      )
       this.$store.dispatch('toast/success', {
         title: this.$t('deleteAccountSettings.accountDeletedSuccessTitle'),
         message: this.$t('deleteAccountSettings.accountDeletedSuccessMessage'),

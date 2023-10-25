@@ -4,7 +4,7 @@
       <ul class="tree">
         <li class="tree__item margin-top-2">
           <div class="tree__link tree__link--group">
-            {{ template.name }}
+            <span class="tree__link-text">{{ template.name }}</span>
           </div>
         </li>
         <component
@@ -28,10 +28,9 @@
       </div>
       <a class="sidebar__collapse-link" @click="$emit('collapse-toggled')">
         <i
-          class="fas"
           :class="{
-            'fa-angle-double-right': collapsed,
-            'fa-angle-double-left': !collapsed,
+            'iconoir-fast-arrow-right': collapsed,
+            'iconoir-fast-arrow-left': !collapsed,
           }"
         ></i>
       </a>

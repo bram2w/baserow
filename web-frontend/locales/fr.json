@@ -32,7 +32,8 @@
         "remove": "Supprimer",
         "login": "S'identifier",
         "download": "Télécharger",
-        "copyToClipboard": "Copier dans le presse-papier"
+        "copyToClipboard": "Copier dans le presse-papier",
+        "reset": "Réinitialiser"
     },
     "adminType": {
         "settings": "Paramètres",
@@ -52,7 +53,8 @@
         "account": "Informations personnelles",
         "password": "Mot de passe",
         "tokens": "Jetons d'accès à la base",
-        "deleteAccount": "Supprimer le compte"
+        "deleteAccount": "Supprimer le compte",
+        "emailNotifications": "Notifications par courriel"
     },
     "userFileUploadType": {
         "file": "de mon appareil",
@@ -67,7 +69,10 @@
         "minLength": "Un minimum de {min} caractères sont attendus ici.",
         "maxLength": "Un maximum de {max} caractères sont attendus ici.",
         "minMaxLength": "Un minimum de {min} et un maximum de {max} caractères sont attendus ici.",
-        "requiredField": "Ce champ est requis."
+        "requiredField": "Ce champ est requis.",
+        "integerField": "Le champ doit être un entier.",
+        "minValueField": "Le champ doit être supérieur ou égal à {min}.",
+        "maxValueField": "Le champ doit être inférieur ou égal à {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -95,7 +100,10 @@
         "lookup": "Champ rapporté",
         "multipleCollaborators": "Collaborateurs",
         "count": "Compteur",
-        "rollup": "Rollup"
+        "rollup": "Rollup",
+        "linkRowMultiple": "Multiple",
+        "defaultFormViewComponent": "Par défaut",
+        "linkRowSingle": "Simple"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -168,7 +176,10 @@
         "isWithinDays": "dans les X jours",
         "isWithinWeeks": "dans les X semaines",
         "isBeforeOrEqualDate": "antérieure ou identique à la date",
-        "isWithinMonths": "dans les X mois"
+        "isWithinMonths": "dans les X mois",
+        "isAfterDaysAgo": "Après X jours",
+        "isEvenAndWhole": "Est un entier pair",
+        "filesLowerThan": "Nb fichiers plus petit que"
     },
     "viewType": {
         "grid": "Tableau",
@@ -277,7 +288,9 @@
         "maxLocksPerTransactionExceededTitle": "Problème avec PostgreSQL",
         "maxLocksPerTransactionExceededDescription": "Baserow a tenté de supprimer définitivement les éléments mis à la corbeille, mais a dépassé les verrous disponibles spécifiés dans `max_locks_per_transaction`.",
         "notificationDoesNotExistTitle": "La notification n’existe pas.",
-        "notificationDoesNotExistDescription": "L’action n’a pas pu être terminée car le lien n’existe plus."
+        "notificationDoesNotExistDescription": "L’action n’a pas pu être terminée car le lien n’existe plus.",
+        "adminAlreadyExistsDescription": "Ce nom d'utilisateur ne peut pas être utilisé car il existe déjà.",
+        "adminAlreadyExistsTitle": "Impossible d'utiliser ce nom d'utilisateur"
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -413,7 +426,18 @@
         "todayDescription": "Retourne la date actuelle en UTC.",
         "toDateTzDescription": "Renvoie le premier argument converti en date à partir de la chaîne de caractères représentant le format de cette date en deuxième argument et du fuseau horaire fourni en troisième argument.",
         "whenNanDescription": "Renvoie le premier argument s'il n'est pas 'NaN'. Renvoie le second argument si le premier argument est 'NaN'",
-        "datetimeFormatTzDescription": "Convertit la date en texte en donnant un moyen de formater la date dans le fuseau horaire spécifié."
+        "datetimeFormatTzDescription": "Convertit la date en texte en donnant un moyen de formater la date dans le fuseau horaire spécifié.",
+        "getFileVisibleNameDescription": "Renvoie le nom de fichier à partir du fichier sélectionné par la fonction d'index.",
+        "indexDescription": "Retourne le fichier correspondant à la position fournie par le deuxième argument pour un champ de type fichiers.",
+        "getFileSizeDescription": "Renvoie la taille du fichier sélectionné par la fonction index.",
+        "encodeUriComponentDescription": "Permet d'encoder la chaîne fournie en argument en remplaçant certains caractères par la séquences d'échappement correspondante afin de la rendre compatible avec une URI.",
+        "getImageWidthDescription": "Renvoie la largeur de l'image sélectionnée par la fonction index.",
+        "getImageHeightDescription": "Renvoie la hauteur de l'image sélectionnée par la fonction index.",
+        "splitPartDescription": "Extrait un segment d'une chaîne délimitée par un délimiteur et un indice (indicateur numérique indiquant quel élément dans la chaîne doit être renvoyé)",
+        "getFileCountDescription": "Renvoie le nombre de fichiers dans le champ de fichier référencé",
+        "encodeUriDescription": "Retourne une URI encodée à partir des paramètres fournis.",
+        "getIsImageDescription": "Renvoie Vrai le fichier désigné par la fonction d'index est une image, Faux sinon.",
+        "getFileMimeTypeDescription": "Renvoie le type de mime du fichier sélectionné par la fonction index."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

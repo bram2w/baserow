@@ -7,7 +7,7 @@ import TableJSONImporter from '@baserow/modules/database/components/table/TableJ
 
 export class ImporterType extends Registerable {
   /**
-   * Should return a font awesome class name related to the icon that must be displayed
+   * Should return a icon class name class name related to the icon that must be displayed
    * to the user.
    */
   getIconClass() {
@@ -52,11 +52,11 @@ export class ImporterType extends Registerable {
 
 export class CSVImporterType extends ImporterType {
   static getType() {
-    return 'csv'
+    return 'baserow-icon-file-csv'
   }
 
   getIconClass() {
-    return 'file-csv'
+    return 'baserow-icon-file-csv'
   }
 
   getName() {
@@ -75,7 +75,7 @@ export class PasteImporterType extends ImporterType {
   }
 
   getIconClass() {
-    return 'paste'
+    return 'iconoir-paste-clipboard'
   }
 
   getName() {
@@ -94,7 +94,7 @@ export class XMLImporterType extends ImporterType {
   }
 
   getIconClass() {
-    return 'file-code'
+    return 'baserow-icon-file-code'
   }
 
   getName() {
@@ -113,7 +113,7 @@ export class JSONImporterType extends ImporterType {
   }
 
   getIconClass() {
-    return 'file-code'
+    return 'baserow-icon-file-code'
   }
 
   getName() {

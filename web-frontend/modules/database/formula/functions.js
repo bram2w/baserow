@@ -2311,3 +2311,181 @@ export class BaserowFilter extends BaserowFunctionDefinition {
     return 'array'
   }
 }
+
+export class BaserowGetFileVisibleName extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_file_visible_name'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getFileVisibleNameDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_file_visible_name(a file)']
+  }
+
+  getExamples() {
+    return ['get_file_visible_name(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+export class BaserowGetFileMimeType extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_file_mime_type'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getFileMimeTypeDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_file_mime_type(a file)']
+  }
+
+  getExamples() {
+    return ['get_file_mime_type(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+
+export class BaserowGetFileCount extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_file_count'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getFileCountDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_file_count(a file field)']
+  }
+
+  getExamples() {
+    return ['get_file_count(field("File field"))']
+  }
+
+  getFormulaType() {
+    return 'array'
+  }
+}
+export class BaserowGetFileSize extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_file_size'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getFileSizeDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_file_size(a file)']
+  }
+
+  getExamples() {
+    return ['get_file_size(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+export class BaserowGetImageWidth extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_image_width'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getImageWidthDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_image_width(a file)']
+  }
+
+  getExamples() {
+    return ['get_image_width(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+export class BaserowGetImageHeight extends BaserowFunctionDefinition {
+  static getType() {
+    return 'get_image_height'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getImageHeightDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['get_image_height(a file)']
+  }
+
+  getExamples() {
+    return ['get_image_height(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+export class BaserowIsImage extends BaserowFunctionDefinition {
+  static getType() {
+    return 'is_image'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.getIsImageDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['is_image(a file)']
+  }
+
+  getExamples() {
+    return ['is_image(index(field("File field"), 0))']
+  }
+
+  getFormulaType() {
+    return 'single_file'
+  }
+}
+export class BaserowIndex extends BaserowFunctionDefinition {
+  static getType() {
+    return 'index'
+  }
+
+  getDescription() {
+    const { i18n } = this.app
+    return i18n.t('formulaFunctions.indexDescription')
+  }
+
+  getSyntaxUsage() {
+    return ['index(a file field, a number)']
+  }
+
+  getExamples() {
+    return ['index(field("File field"), 0)']
+  }
+
+  getFormulaType() {
+    return 'special'
+  }
+}

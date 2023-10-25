@@ -3,6 +3,9 @@
     :is="`h${element.level}`"
     class="heading-element"
     :class="{ 'element--no-value': !resolvedValue }"
+    :style="{
+      '--color': resolveColor(element.font_color, headingColorVariables),
+    }"
   >
     {{ resolvedValue || $t('headingElement.noValue') }}
   </component>
@@ -10,10 +13,11 @@
 
 <script>
 import element from '@baserow/modules/builder/mixins/element'
+import headingElement from '@baserow/modules/builder/mixins/headingElement'
 
 export default {
   name: 'HeadingElement',
-  mixins: [element],
+  mixins: [element, headingElement],
   props: {
     /**
      * @type {Object}

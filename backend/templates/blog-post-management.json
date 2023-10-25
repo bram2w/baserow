@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Blog Post Management",
-  "icon": "th",
+  "icon": "iconoir-view-grid",
   "keywords": [
     "blog",
     "post",

@@ -6,8 +6,11 @@
           <div>
             {{ $t('membersSettings.membersTable.columns.role') }}
           </div>
-          <div v-if="atLeastOneBillableRole">
-            <i class="fas fa-fw fa-book"></i>
+          <div
+            v-if="atLeastOneBillableRole"
+            class="edit-role-context__header-link"
+          >
+            <i class="iconoir-book"></i>
             <a
               href="https://baserow.io/user-docs/subscriptions-overview#who-is-considered-a-user-for-billing-purposes"
               target="_blank"
@@ -20,21 +23,26 @@
       <ul class="context__menu context__menu--can-be-active">
         <li v-for="role in roles" :key="role.uid">
           <a
+            class="context__menu-item-with-desc"
             :class="{ active: subject[roleValueColumn] === role.uid }"
             @click="roleUpdate(role.uid, subject)"
           >
-            <div class="edit-role-context__role-name">
+            <span class="context__menu-item-title">
               {{ role.name }}
-              <Badge
-                v-if="!role.isBillable && atLeastOneBillableRole"
-                primary
-                class="margin-left-1"
+              <Badge v-if="!role.isBillable && atLeastOneBillableRole" primary
                 >{{ $t('common.free') }}
               </Badge>
-            </div>
-            <div v-if="role.description" class="context__menu-item-description">
+            </span>
+            <span
+              v-if="role.description"
+              class="context__menu-item-description"
+            >
               {{ role.description }}
-            </div>
+            </span>
+            <i
+              v-if="subject[roleValueColumn] === role.uid"
+              class="context__menu-active-icon iconoir-check-circle"
+            ></i>
           </a>
         </li>
         <li>

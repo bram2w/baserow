@@ -26,7 +26,7 @@
                 ;[copyDomainUrl(domain), $refs.domainCopied[index].show()]
               "
             >
-              <i class="fas fa-fw fa-copy" />
+              <i class="iconoir-copy" />
               <Copied ref="domainCopied" />
             </a>
             <a
@@ -37,7 +37,7 @@
               target="_blank"
               @click.stop=""
             >
-              <i class="fas fa-fw fa-external-link-alt" />
+              <i class="iconoir-link" />
             </a>
           </Radio>
           <LastPublishedDomainDate
@@ -52,10 +52,10 @@
     <Alert
       v-if="jobHasSucceeded"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('publishActionModal.publishSucceedTitle')"
     >
-      {{ $t('publishActionModal.publishSucceedDescription') }}
+      <p>{{ $t('publishActionModal.publishSucceedDescription') }}</p>
     </Alert>
 
     <div class="modal-progress__actions">
@@ -166,6 +166,12 @@ export default {
     },
     copyDomainUrl(domain) {
       copyToClipboard(this.getDomainUrl(domain))
+    },
+    getCustomHumanReadableJobState(state) {
+      if (state === 'importing') {
+        return this.$t('publishActionModal.importingState')
+      }
+      return ''
     },
   },
 }

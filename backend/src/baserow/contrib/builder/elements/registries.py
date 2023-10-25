@@ -57,6 +57,31 @@ class ElementType(
 
         return values
 
+    def after_create(self, instance: ElementSubClass, values: Dict):
+        """
+        This hook is called right after the element has been created.
+
+        :param instance: The created element instance.
+        :param values: The values that were passed when creating the field
+            instance.
+        """
+
+    def after_update(self, instance: ElementSubClass, values: Dict):
+        """
+        This hook is called right after the element has been updated.
+
+        :param instance: The updated element instance.
+        :param values: The values that were passed when creating the field
+            instance.
+        """
+
+    def before_delete(self, instance: ElementSubClass):
+        """
+        This hook is called just before the element will be deleted.
+
+        :param instance: The to be deleted element instance.
+        """
+
     def get_property_for_serialization(self, element: Element, prop_name: str):
         """
         You can customize the behavior of the serialization of a property with this
@@ -110,8 +135,8 @@ class ElementType(
         :return: The created element.
         """
 
-        if "builder_elements" not in id_mapping:
-            id_mapping["builder_elements"] = {}
+        if "builder_page_elements" not in id_mapping:
+            id_mapping["builder_page_elements"] = {}
 
         serialized_copy = serialized_values.copy()
 
@@ -119,10 +144,18 @@ class ElementType(
         element_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
 
+        if serialized_copy.get("parent_element_id", None):
+            serialized_copy["parent_element_id"] = id_mapping[
+                "builder_page_elements"
+            ].get(
+                serialized_copy["parent_element_id"],
+                serialized_copy["parent_element_id"],
+            )
+
         element = self.model_class(page=page, **serialized_copy)
         element.save()
 
-        id_mapping["builder_elements"][element_id] = element.id
+        id_mapping["builder_page_elements"][element_id] = element.id
 
         return element
 

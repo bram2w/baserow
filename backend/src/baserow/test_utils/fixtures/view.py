@@ -7,12 +7,15 @@ from baserow.contrib.database.views.models import (
     FormView,
     FormViewFieldOptions,
     FormViewFieldOptionsCondition,
+    FormViewFieldOptionsConditionGroup,
     GalleryView,
     GalleryViewFieldOptions,
     GridView,
     GridViewFieldOptions,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
+    ViewGroupBy,
     ViewSort,
 )
 from baserow.contrib.database.views.registries import (
@@ -84,9 +87,10 @@ class ViewFixtures:
         ]
 
     def create_grid_view_field_option(self, grid_view, field, **kwargs):
-        return GridViewFieldOptions.objects.create(
-            grid_view=grid_view, field=field, **kwargs
+        field_options, _ = GridViewFieldOptions.objects.update_or_create(
+            grid_view=grid_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_gallery_view(self, user=None, create_options=True, **kwargs):
         if "table" not in kwargs:
@@ -110,9 +114,10 @@ class ViewFixtures:
         ]
 
     def create_gallery_view_field_option(self, gallery_view, field, **kwargs):
-        return GalleryViewFieldOptions.objects.create(
-            gallery_view=gallery_view, field=field, **kwargs
+        field_options, _ = GalleryViewFieldOptions.objects.update_or_create(
+            gallery_view=gallery_view, field=field, defaults=kwargs
         )
+        return field_options
 
     def create_form_view(self, user=None, **kwargs):
         if "table" not in kwargs:
@@ -135,9 +140,19 @@ class ViewFixtures:
         ]
 
     def create_form_view_field_option(self, form_view, field, **kwargs):
-        return FormViewFieldOptions.objects.create(
-            form_view=form_view, field=field, **kwargs
+        field_options, _ = FormViewFieldOptions.objects.update_or_create(
+            form_view=form_view, field=field, defaults=kwargs
         )
+        return field_options
+
+    def create_form_view_field_options_condition_group(self, user=None, **kwargs):
+        if "field_option" not in kwargs:
+            form_view = self.create_form_view(user)
+            kwargs["field_options"] = self.create_form_view_field_option(
+                form_view=form_view, field=kwargs["field"]
+            )
+
+        return FormViewFieldOptionsConditionGroup.objects.create(**kwargs)
 
     def create_form_view_field_options_condition(self, user=None, **kwargs):
         if "field" not in kwargs:
@@ -156,6 +171,12 @@ class ViewFixtures:
             kwargs["value"] = self.fake.name()
 
         return FormViewFieldOptionsCondition.objects.create(**kwargs)
+
+    def create_view_filter_group(self, user=None, **kwargs):
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        return ViewFilterGroup.objects.create(**kwargs)
 
     def create_view_filter(self, user=None, **kwargs):
         if "view" not in kwargs:
@@ -183,6 +204,18 @@ class ViewFixtures:
             kwargs["order"] = "ASC"
 
         return ViewSort.objects.create(**kwargs)
+
+    def create_view_group_by(self, user=None, **kwargs):
+        if "view" not in kwargs:
+            kwargs["view"] = self.create_grid_view(user)
+
+        if "field" not in kwargs:
+            kwargs["field"] = self.create_text_field(table=kwargs["view"].table)
+
+        if "order" not in kwargs:
+            kwargs["order"] = "ASC"
+
+        return ViewGroupBy.objects.create(**kwargs)
 
     def register_temp_decorators_and_value_providers(self):
         try:

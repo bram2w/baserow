@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Company Asset Tracker",
-  "icon": "barcode",
+  "icon": "iconoir-barcode",
   "keywords": [
     "asset tracker",
     "company assets",

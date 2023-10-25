@@ -1,10 +1,9 @@
-from typing import Any, Iterable, Optional, Union, cast
+from typing import Any, Dict, Iterable, Optional, Tuple, Union, cast
 
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.db import specific_iterator
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.services.exceptions import (
@@ -15,6 +14,7 @@ from baserow.core.services.models import Service
 from baserow.core.services.registries import ServiceType, service_type_registry
 from baserow.core.utils import extract_allowed
 
+from .dispatch_context import DispatchContext
 from .types import ServiceForUpdate
 
 
@@ -145,6 +145,8 @@ class ServiceHandler:
         service = model_class(**allowed_values)
         service.save()
 
+        service_type.after_create(service, kwargs)
+
         return service
 
     def update_service(
@@ -164,26 +166,38 @@ class ServiceHandler:
             kwargs, shared_allowed_fields + service_type.allowed_fields
         )
 
-        for key, value in allowed_updates.items():
-            setattr(service, key, value)
+        # Responsible for tracking the fields which changed in this update.
+        # This will be passed to `service_type.after_update` so that granular
+        # decisions can be made if certain field values changed.
+        service_changes: Dict[str, Tuple] = {}
+
+        for key, new_value in allowed_updates.items():
+            prev_value = getattr(service, key)
+            if prev_value != new_value:
+                service_changes[key] = (prev_value, new_value)
+            setattr(service, key, new_value)
 
         service.save()
 
+        service_type.after_update(service, kwargs, service_changes)
+
         return service
 
-    def delete_service(self, service: Service):
+    def delete_service(self, service_type: ServiceType, service: Service):
         """
-        Deletes an service.
+        Deletes a service.
 
+        :param service_type: The type of the service.
         :param service: The to-be-deleted service.
         """
 
+        service_type.before_delete(service)
         service.delete()
 
     def dispatch_service(
         self,
         service: Service,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Dispatch the given service.
@@ -196,4 +210,4 @@ class ServiceHandler:
         if service.integration_id is None:
             raise ServiceImproperlyConfigured("The integration property is missing.")
 
-        return service.get_type().dispatch(service, runtime_formula_context)
+        return service.get_type().dispatch(service, dispatch_context)

@@ -27,17 +27,17 @@
           >
             <template v-if="hasSelectedView">
               <i
-                class="header__filter-icon header-filter-icon--view fas fa-fw"
-                :class="view._.type.colorClass + ' fa-' + view._.type.iconClass"
+                class="header__filter-icon header-filter-icon--view"
+                :class="`${view._.type.colorClass} ${view._.type.iconClass}`"
               ></i>
               <span class="header__filter-name header__filter-name--forced">
                 <EditableViewName ref="rename" :view="view"></EditableViewName>
               </span>
             </template>
-            <span v-else-if="view !== null">
-              <i class="header__filter-icon fas fa-caret-square-down"></i>
+            <template v-else-if="view !== null">
+              <i class="header__filter-icon iconoir-nav-arrow-down"></i>
               {{ $t('table.chooseView') }}
-            </span>
+            </template>
           </a>
           <ViewsContext
             v-if="views !== null"
@@ -65,7 +65,7 @@
               )
             "
           >
-            <i class="header__filter-icon fas fa-ellipsis-h"></i>
+            <i class="header__filter-icon baserow-icon-more-vertical"></i>
           </a>
           <ViewContext
             ref="viewContext"
@@ -117,6 +117,28 @@
             :disable-sort="disableSort"
             @changed="refresh()"
           ></ViewSort>
+        </li>
+        <li
+          v-if="
+            hasSelectedView &&
+            view._.type.canGroupBy &&
+            (readOnly ||
+              $hasPermission(
+                'database.table.view.create_group_by',
+                view,
+                database.workspace.id
+              )) &&
+            $featureFlagIsEnabled('group_by')
+          "
+          class="header__filter-item"
+        >
+          <ViewGroupBy
+            :view="view"
+            :fields="fields"
+            :read-only="readOnly"
+            :disable-group-by="disableGroupBy"
+            @changed="refresh()"
+          ></ViewGroupBy>
         </li>
         <li
           v-if="
@@ -211,6 +233,7 @@ import ViewSearch from '@baserow/modules/database/components/view/ViewSearch'
 import EditableViewName from '@baserow/modules/database/components/view/EditableViewName'
 import ShareViewLink from '@baserow/modules/database/components/view/ShareViewLink'
 import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
+import ViewGroupBy from '@baserow/modules/database/components/view/ViewGroupBy.vue'
 
 /**
  * This page component is the skeleton for a table. Depending on the selected view it
@@ -218,6 +241,7 @@ import BaserowLogo from '@baserow/modules/core/components/BaserowLogo'
  */
 export default {
   components: {
+    ViewGroupBy,
     BaserowLogo,
     ShareViewLink,
     EditableViewName,
@@ -272,6 +296,11 @@ export default {
       default: false,
     },
     disableSort: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    disableGroupBy: {
       type: Boolean,
       required: false,
       default: false,

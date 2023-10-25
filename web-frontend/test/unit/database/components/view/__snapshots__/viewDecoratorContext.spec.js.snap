@@ -2,7 +2,7 @@
 
 exports[`GridViewRows component with decoration Default component 1`] = `
 <div
-  class="context context--overflow-scroll"
+  class="context"
   style="max-height: none;"
 >
   <div
@@ -60,7 +60,7 @@ exports[`GridViewRows component with decoration Should show cant add decorator t
     </div>
   </div>
   <div
-    class="context context--overflow-scroll"
+    class="context"
     style="max-height: none;"
   >
     <div
@@ -119,7 +119,7 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
     </div>
   </div>
   <div
-    class="context context--overflow-scroll"
+    class="context"
     style="max-height: none;"
   >
     <div
@@ -149,7 +149,7 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
                 class="deactivated-label"
               >
                 <i
-                  class="fas fa-lock"
+                  class="iconoir-lock"
                 />
               </div>
             </div>
@@ -173,7 +173,7 @@ exports[`GridViewRows component with decoration Should show unavailable decorato
 
 exports[`GridViewRows component with decoration View with decoration configured 1`] = `
 <div
-  class="context context--overflow-scroll"
+  class="context"
   style="max-height: none;"
 >
   <div
@@ -232,13 +232,17 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 class="dropdown__selected"
               >
                 <i
-                  class="dropdown__selected-icon fas fa-filter"
+                  class="dropdown__selected-icon iconoir-filter"
                 />
-                
-    Fake value provider
-    
+                 
+                <span
+                  class="dropdown__selected-text"
+                >
+                  Fake value provider
+                </span>
+                 
                 <i
-                  class="dropdown__toggle-icon fas fa-caret-down"
+                  class="dropdown__toggle-icon iconoir-nav-arrow-down"
                 />
               </a>
                
@@ -252,7 +256,7 @@ exports[`GridViewRows component with decoration View with decoration configured 
               class="decorator-context__decorator-header-trash-link"
             >
               <i
-                class="fa fa-trash"
+                class="iconoir-bin"
               />
             </a>
           </div>
@@ -316,7 +320,7 @@ exports[`GridViewRows component with decoration View with decoration configured 
               class="decorator-context__decorator-header-trash-link"
             >
               <i
-                class="fa fa-trash"
+                class="iconoir-bin"
               />
             </a>
           </div>
@@ -335,11 +339,14 @@ exports[`GridViewRows component with decoration View with decoration configured 
                 class="value-provider-item__title"
               >
                 <i
-                  class="fa fa-fw fa-filter value-provider-item__icon"
+                  class="iconoir-filter value-provider-item__icon"
                 />
-                
-    Fake value provider
-  
+                 
+                <span
+                  class="value-provider-item__title-text"
+                >
+                  Fake value provider
+                </span>
               </div>
                
               <div
@@ -350,6 +357,8 @@ exports[`GridViewRows component with decoration View with decoration configured 
   
               </div>
             </div>
+             
+            <!---->
           </div>
         </div>
       </div>
@@ -362,7 +371,7 @@ exports[`GridViewRows component with decoration View with decoration configured 
         class="decorator-context__add"
       >
         <i
-          class="fas fa-plus"
+          class="decorator-context__add-icon iconoir-plus"
         />
         
         viewDecoratorContext.addDecorator

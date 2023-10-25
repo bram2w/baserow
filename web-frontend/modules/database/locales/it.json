@@ -139,12 +139,13 @@
         "userFieldNames": "Quando viene fornito un valore qualsiasi per il parametro GET `user_field_names`, allora i nomi campo restituiti da questo endpoint saranno i nomi reali dei campi.\n\nSe il parametro GET `user_field_names` non viene fornito, allora tutti i nomi campo restituiti saranno `field_` seguito dall'id del campo. Ad esempio `field_1` si riferisce al campo con un id di `1`.\n\nInoltre, quando `user_field_names` è impostato, allora il comportamento degli altri parametri GET `order_by`, `include` e `exclude` cambia. Si aspettano invece elenchi separati da virgole di nomi campo effettivi.",
         "search": "Se fornito, saranno restituite solo le righe con i dati che corrispondono alla query di ricerca.",
         "orderBy": "Opzionalmente le righe possono essere ordinate per campi separati da virgola. Per default o se preceduto da un '+' un campo è ordinato in ordine ascendente (A-Z), ma precedendo il campo con un '-' può essere ordinato in ordine discendente (Z-A).\n\n#### Con `user_field_names`:\n\n`order_by` deve essere un elenco separato da virgole dei nomi campo per cui ordinare. Ad esempio se fornisci il seguente parametro GET `order_by=My Field,-My Field 2` le righe saranno ordinate per il campo chiamato `My Field` in ordine crescente. Se alcuni campi hanno lo stesso valore, quel sottoinsieme sarà ordinato dal campo chiamato `My Field 2` in ordine decrescente.\n\nAssicurati che i campi con nomi che iniziano con un `+` o `-` siano esplicitamente preceduti da un altro `+` o `-`. Ad esempio `+-Nome`.\n\nIl nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi dei campi contengono virgolette, allora devono essere evasi usando il carattere `\\`. Es: `Name \\\"`.\n\n#### Senza `nomi_di_campo_utente`:\n\n`order_by` dovrebbe essere un elenco separato da virgole di `field_` seguito dall'id del campo per cui ordinare. Ad esempio se fornisci il seguente parametro GET `order_by=field_1,-field_2` le righe saranno ordinate per `field_1` in ordine crescente. Se alcuni campi hanno lo stesso valore, quel sottoinsieme sarà ordinato per `field_2` in ordine decrescente.",
-        "filter": "Le righe possono opzionalmente essere filtrate per gli stessi filtri disponibili per le viste. Possono essere forniti più filtri, se seguono lo stesso formato. Le variabili `field` e `filter` indicano come filtrare e il valore indica dove filtrare.\n\nAd esempio se si fornisce il seguente parametro GET `filter__field_1__equal=test` allora saranno restituite solo le righe in cui il valore di field_1 è uguale a test.",
+        "filter": "Le righe possono opzionalmente essere filtrate per gli stessi filtri disponibili per le viste. Possono essere forniti più filtri, se seguono lo stesso formato. Le variabili `field` e `filter` indicano come filtrare e il valore indica dove filtrare.\n\nAd esempio se si fornisce il seguente parametro GET `filter__field_1__equal=test` allora saranno restituite solo le righe in cui il valore di field_1 è uguale a test. ",
         "filterLink": "Qui puoi trovare un elenco di tutti i filtri.",
         "filterType": "- `AND`: indica che le righe devono corrispondere a tutti i filtri forniti.\n- `OR`: indica che le righe devono corrispondere solo a uno dei filtri.\n\nQuesto funziona solo se vengono forniti due o più filtri.",
         "include": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da includere, fornendo il parametro di query include.\n\n#### Con `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di nomi campo da includere nei risultati. Ad esempio se si fornisce il seguente parametro GET: `include=My Field,-My Field 2` allora solo quei campi saranno inclusi (a meno che non siano esplicitamente esclusi).\n\nIl nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi campo contengono virgolette, allora devono essere evasi usando il carattere `\\`. Es: `Name \\\"`.\n\n#### Senza `user_field_names`:\n\n`include` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da includere nei risultati. Ad esempio: se si fornisce il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno i soli inclusi (a meno che non siano esplicitamente esclusi).",
         "exclude": "Tutti i campi sono inclusi nella risposta per impostazione predefinita. Si può selezionare un sottoinsieme di campi da escludere, fornendo il parametro di query exclude.\n\n #### Con `user_field_names`:\n\n `exclude` deve essere un elenco separato da virgole di nomi campo da escludere dai risultati. As esempio se si fornisce il seguente parametro GET: `exclude=My Field,-My Field 2` allora quei campi saranno esclusi.\n\n Il nome dei campi che contengono virgole deve essere circondato da virgolette: `\"Name ,\"`. Se i nomi dei campi contengono virgolette, allora devono essere evasi usando il carattere ```. Es: `Name \\\"`.\n\n #### Senza `nomi_di_campo_utente`:\n\n `exclude` deve essere un elenco separato da virgole di `field_` seguito dall'id del campo da escludere dai risultati. Ad esempio: Se fornisci il seguente parametro GET `exclude=field_1,field_2` allora i campi con id `1` e id `2` saranno esclusi.",
-        "viewId": "Di default nessuno dei filtri o ordinamenti fuori da quelli definiti nei parametri query del URL verrà applicato. Puoi aggiungere filtri e ordinamenti fornendo i relativi `id` come parametro GET per il parametro `view_id`. Per esempio, scrivendo `view_id=1` allora verranno utilizzati i filtri e l'ordinamento della vista con `id` 1. Puoi trovare l'id della vista nel menu di modifica della singola vista. L'id è il numero tra parentesi dopo il nome.\n\n #### With `filter__{field}__{filter}` \n\n Verranno applicati sia il filtro fornito nei parametri query del URL che quello impostato nella vista. \n\n #### With `order_by` \n\n Se viene fornito uno specifico `order_by`, l'ordinamento impostato nella vista viene ignorato."
+        "viewId": "Di default nessuno dei filtri o ordinamenti fuori da quelli definiti nei parametri query del URL verrà applicato. Puoi aggiungere filtri e ordinamenti fornendo i relativi `id` come parametro GET per il parametro `view_id`. Per esempio, scrivendo `view_id=1` allora verranno utilizzati i filtri e l'ordinamento della vista con `id` 1. Puoi trovare l'id della vista nel menu di modifica della singola vista. L'id è il numero tra parentesi dopo il nome.\n\n #### With `filter__{field}__{filter}` \n\n Verranno applicati sia il filtro fornito nei parametri query del URL che quello impostato nella vista. \n\n #### With `order_by` \n\n Se viene fornito uno specifico `order_by`, l'ordinamento impostato nella vista viene ignorato.",
+        "filtersBuilder": "Apri il tool per preparare i tuoi filtri"
     },
     "apiDocsIntro": {
         "intro": "Il database {name} fornisce un modo semplice per integrare i dati con qualsiasi sistema esterno. L'API segue la semantica REST, usa JSON per codificare gli oggetti e si basa su codici HTTP standard, errori leggibili dalla macchina e dall'uomo per segnalare i risultati delle operazioni.",
@@ -397,7 +398,8 @@
         "relatedFieldNotFound": "Il campo relativo non è stato trovato.",
         "filterTypeNotFound": "Il tipo di filtro è incompatibile.",
         "noCompatibleFilterTypesErrorMessage": "Nessuno dei campi ha filtri compatibili",
-        "noCompatibleFilterTypesErrorTitle": "Nessun filtro compatibile"
+        "noCompatibleFilterTypesErrorTitle": "Nessun filtro compatibile",
+        "addFilterGroup": "Aggiungi gruppo di filtri"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "immagine",
@@ -494,7 +496,10 @@
         "deleteRows": "Elimina righe",
         "copyCells": "Copia celle",
         "hiddenRowsInsertedMessage": "{number} nuove righe sono state aggiunte, ma non sono visibili a causa dei filtri attivi.",
-        "hiddenRowsInsertedTitle": "Righe aggiunte"
+        "hiddenRowsInsertedTitle": "Righe aggiunte",
+        "copiedRowURLMessage": "La riga {id} è stata copiata nella tua clipboard.",
+        "copiedRowURL": "URL di riga copiato",
+        "copyRowURL": "Copia URL di riga"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "riga senza nome {value}"
@@ -598,7 +603,7 @@
         "decorator": "Colore | 1 Colore | {count} Colori"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "aggiungi selezione singola",
+        "addSelectField": "Aggiungi selezione singola",
         "warningWhenNothingToChooseOrCreate": "Non ci sono campi a selezione singola da scegliere e tu non hai i permessi per crearne uno."
     },
     "viewDecoratorContext": {
@@ -659,7 +664,9 @@
         "required": "richiesto",
         "showWhenMatchingConditions": "mostra quando le condizioni sono soddisfatte",
         "addCondition": "Aggiungi condizione",
-        "descriptionPlaceholder": "Descrizione"
+        "descriptionPlaceholder": "Descrizione",
+        "addConditionGroup": "Aggiungi gruppo di condizioni",
+        "showFieldAs": "Mostra campo come"
     },
     "formViewMeta": {
         "includeRowId": "Usa {row_id} per includere l'id di riga nel tuo URL."
@@ -783,5 +790,35 @@
     "fieldRollupSubForm": {
         "selectTargetFieldLabel": "Scegli un campo di rollup",
         "label": "Funzione di rollup"
+    },
+    "apiDocsFiltersBuilderModal": {
+        "userFieldNames": "Usa il nome dei campi",
+        "json": "JSON",
+        "title": "Prepara i tuoi filtri",
+        "queryParameter": "Parametro query"
+    },
+    "viewGroupBy": {
+        "groupBy": "Gruppo | Raggruppato su 1 campo | Raggruppato su {count} campi"
+    },
+    "rowHistorySidebar": {
+        "you": "Tu",
+        "name": "Registro modifiche",
+        "empty": "Nessuna modifica finora. Qui troverai le modifiche fatte a questa riga."
+    },
+    "viewGroupByContext": {
+        "groupBy": "Raggruppa",
+        "thenBy": "Poi per",
+        "addGroupBy": "Scegli un campo con cui raggruppare",
+        "noGroupByTitle": "Non hai ancora creato nessun groupp",
+        "noGroupByText": "Raggruppa righe per campo."
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{sender} ti ha assegnato a {fieldName} nella riga {rowId} della tabella {tableName}"
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Notifica gli utenti quando vengono aggiunti"
+    },
+    "viewFieldConditionsForm": {
+        "addCondition": "Aggiungi condizione"
     }
 }

@@ -83,8 +83,17 @@ import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFi
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
+import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
+import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
+import RowHistoryFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators'
+import RowHistoryFieldFile from '@baserow/modules/database/components/row/RowHistoryFieldFile'
+import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect'
+import RowHistoryFieldSingleSelect from '@baserow/modules/database/components/row/RowHistoryFieldSingleSelect'
+import RowHistoryFieldBoolean from '@baserow/modules/database/components/row/RowHistoryFieldBoolean'
+import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/RowHistoryFieldLinkRow'
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
+import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
@@ -103,6 +112,7 @@ import FieldLookupSubForm from '@baserow/modules/database/components/field/Field
 import FieldCountSubForm from '@baserow/modules/database/components/field/FieldCountSubForm'
 import FieldRollupSubForm from '@baserow/modules/database/components/field/FieldRollupSubForm'
 import RowEditFieldFormula from '@baserow/modules/database/components/row/RowEditFieldFormula'
+import { DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY } from '@baserow/modules/database/constants'
 import ViewService from '@baserow/modules/database/services/view'
 import FormService from '@baserow/modules/database/services/view/form'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
@@ -110,10 +120,10 @@ import _ from 'lodash'
 
 export class FieldType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize certain field types. If you for example want the database
    * icon, you must return 'database' here. This will result in the classname
-   * 'fas fa-database'.
+   * 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -166,26 +176,31 @@ export class FieldType extends Registerable {
    * will be used in the row edit modal, but can also be used in other forms. It is
    * responsible for editing the value.
    */
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     throw new Error(
       'Not implement error. This method should return a component.'
     )
   }
 
   /**
-   * By default the row edit field component is used in the form. This can
-   * optionally be another component if needed. If null is returned, then the field
-   * is marked as not compatible with the form view.
+   * By default, the edit field component is used in the form. This can optionally be
+   * replaced by another component if needed. If an empty object `{}` is returned,
+   * then the field is marked as not compatible with the form view.
+   *
+   * The returned object should have one key with an empty string `''` as default
+   * component. If the object has multiple keys, then the user will be presented
+   * with these as options. This can be used to for example display a `single_select`
+   * field type as dropdown or radio inputs.
    */
-  getFormViewFieldComponent() {
-    return this.getRowEditFieldComponent()
-  }
-
-  /*
-   * Optional properties for the FormViewFieldComponent
-   */
-  getFormViewFieldComponentProperties(context) {
-    return {}
+  getFormViewFieldComponents(field) {
+    const { i18n } = this.app
+    return {
+      [DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY]: {
+        name: i18n.t('fieldType.defaultFormViewComponent'),
+        component: this.getRowEditFieldComponent(field),
+        properties: {},
+      },
+    }
   }
 
   /**
@@ -252,6 +267,17 @@ export class FieldType extends Registerable {
    */
   getCanSortInView(field) {
     return true
+  }
+
+  /**
+   * Indicates whether or not it is possible to group by this field in a view.
+   */
+  getCanGroupByInView(field) {
+    return false
+  }
+
+  getGroupByIndicator(field, registry) {
+    return this.getSortIndicator(field, registry)
   }
 
   /**
@@ -341,9 +367,9 @@ export class FieldType extends Registerable {
   /**
    * Should return a visualisation of how the sort function is going to work. For
    * example ['text', 'A', 'Z'] will result in 'A -> Z' as ascending and 'Z -> A'
-   * descending visualisation for the user. It is also possible to use a Font Awesome
+   * descending visualisation for the user. It is also possible to use a icon class name
    * icon here by changing the first value to 'icon'. For example
-   * ['icon', 'square', 'check-square'].
+   * ['icon', 'square', 'security-pass'].
    */
   getSortIndicator() {
     return ['text', 'A', 'Z']
@@ -642,7 +668,7 @@ export class TextFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'font'
+    return 'iconoir-text'
   }
 
   getName() {
@@ -662,7 +688,7 @@ export class TextFieldType extends FieldType {
     return FunctionalGridViewFieldText
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldText
   }
 
@@ -717,6 +743,10 @@ export class TextFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class LongTextFieldType extends FieldType {
@@ -725,7 +755,7 @@ export class LongTextFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'align-left'
+    return 'iconoir-align-left'
   }
 
   getName() {
@@ -741,7 +771,7 @@ export class LongTextFieldType extends FieldType {
     return FunctionalGridViewFieldLongText
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldLongText
   }
 
@@ -797,6 +827,10 @@ export class LongTextFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class LinkRowFieldType extends FieldType {
@@ -805,7 +839,7 @@ export class LinkRowFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'plug'
+    return 'iconoir-ev-plug'
   }
 
   getName() {
@@ -825,16 +859,32 @@ export class LinkRowFieldType extends FieldType {
     return FunctionalGridViewFieldLinkRow
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldLinkRow
   }
 
-  getFormViewFieldComponent() {
-    return FormViewFieldLinkRow
+  getFormViewFieldComponents(field) {
+    const { i18n } = this.app
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].name = i18n.t(
+      'fieldType.linkRowSingle'
+    )
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].component =
+      FormViewFieldLinkRow
+    components.multiple = {
+      name: i18n.t('fieldType.linkRowMultiple'),
+      component: FormViewFieldMultipleLinkRow,
+      properties: {},
+    }
+    return components
   }
 
   getCardComponent() {
     return RowCardFieldLinkRow
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldLinkRow
   }
 
   getEmptyValue(field) {
@@ -987,6 +1037,18 @@ export class LinkRowFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  isEmpty(field, value) {
+    if (super.isEmpty(field, value)) {
+      return true
+    }
+
+    if (value.some((v) => !Number.isInteger(v.id))) {
+      return true
+    }
+
+    return false
+  }
 }
 
 export class NumberFieldType extends FieldType {
@@ -999,7 +1061,7 @@ export class NumberFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'hashtag'
+    return 'baserow-icon-hashtag'
   }
 
   getName() {
@@ -1019,12 +1081,16 @@ export class NumberFieldType extends FieldType {
     return FunctionalGridViewFieldNumber
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldNumber
   }
 
   getCardComponent() {
     return RowCardFieldNumber
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldNumber
   }
 
   getSortIndicator() {
@@ -1180,6 +1246,10 @@ export class NumberFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class RatingFieldType extends FieldType {
@@ -1192,7 +1262,7 @@ export class RatingFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'star'
+    return 'iconoir-star'
   }
 
   getName() {
@@ -1212,12 +1282,16 @@ export class RatingFieldType extends FieldType {
     return FunctionalGridViewFieldRating
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldRating
   }
 
   getCardComponent() {
     return RowCardFieldRating
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
   }
 
   getSortIndicator() {
@@ -1310,6 +1384,10 @@ export class RatingFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class BooleanFieldType extends FieldType {
@@ -1318,7 +1396,7 @@ export class BooleanFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'check-square'
+    return 'baserow-icon-circle-checked'
   }
 
   getName() {
@@ -1334,7 +1412,7 @@ export class BooleanFieldType extends FieldType {
     return FunctionalGridViewFieldBoolean
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldBoolean
   }
 
@@ -1342,12 +1420,16 @@ export class BooleanFieldType extends FieldType {
     return RowCardFieldBoolean
   }
 
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldBoolean
+  }
+
   getEmptyValue(field) {
     return false
   }
 
   getSortIndicator() {
-    return ['icon', 'square', 'check-square']
+    return ['icon', 'baserow-icon-circle-empty', 'baserow-icon-circle-checked']
   }
 
   getSort(name, order) {
@@ -1401,11 +1483,15 @@ export class BooleanFieldType extends FieldType {
   toSearchableString(field, value, delimiter = ', ') {
     return value ? 'true' : 'false'
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 class BaseDateFieldType extends FieldType {
   getIconClass() {
-    return 'calendar-alt'
+    return 'iconoir-calendar'
   }
 
   getSortIndicator() {
@@ -1418,6 +1504,10 @@ class BaseDateFieldType extends FieldType {
 
   getCardComponent() {
     return RowCardFieldDate
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldDate
   }
 
   getSort(name, order) {
@@ -1597,6 +1687,10 @@ class BaseDateFieldType extends FieldType {
   canRepresentDate(field) {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class DateFieldType extends BaseDateFieldType {
@@ -1617,7 +1711,7 @@ export class DateFieldType extends BaseDateFieldType {
     return FunctionalGridViewFieldDate
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldDate
   }
 
@@ -1642,11 +1736,11 @@ export class CreatedOnLastModifiedBaseFieldType extends BaseDateFieldType {
     return FieldDateSubForm
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldDateReadOnly
   }
 
@@ -1697,7 +1791,7 @@ export class LastModifiedFieldType extends CreatedOnLastModifiedBaseFieldType {
   }
 
   getIconClass() {
-    return 'edit'
+    return 'iconoir-edit'
   }
 
   getName() {
@@ -1731,7 +1825,7 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   }
 
   getIconClass() {
-    return 'plus'
+    return 'iconoir-plus'
   }
 
   getDocsDescription(field) {
@@ -1753,7 +1847,7 @@ export class URLFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'link'
+    return 'iconoir-link'
   }
 
   getName() {
@@ -1769,12 +1863,16 @@ export class URLFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldURL
   }
 
   getCardComponent() {
     return RowCardFieldURL
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
   }
 
   prepareValueForPaste(field, clipboardData) {
@@ -1832,6 +1930,10 @@ export class URLFieldType extends FieldType {
   canBeReferencedByFormulaField() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class EmailFieldType extends FieldType {
@@ -1840,7 +1942,7 @@ export class EmailFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'at'
+    return 'iconoir-mail'
   }
 
   getName() {
@@ -1856,12 +1958,16 @@ export class EmailFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldEmail
   }
 
   getCardComponent() {
     return RowCardFieldEmail
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
   }
 
   prepareValueForPaste(field, clipboardData) {
@@ -1926,6 +2032,10 @@ export class EmailFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class FileFieldType extends FieldType {
@@ -1937,7 +2047,7 @@ export class FileFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'file'
+    return 'iconoir-empty-page'
   }
 
   getName() {
@@ -1953,13 +2063,18 @@ export class FileFieldType extends FieldType {
     return FunctionalGridViewFieldFile
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldFile
   }
 
-  getFormViewFieldComponentProperties({ $store, $client, slug }) {
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldFile
+  }
+
+  getFormViewFieldComponents(field, { $store, $client, slug }) {
+    const components = super.getFormViewFieldComponents(field)
     const userFileUploadTypes = [UploadFileUserFileUploadType.getType()]
-    return {
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       userFileUploadTypes,
       uploadFile: (file, progress) => {
         return FormService($client).uploadFile(
@@ -1970,6 +2085,7 @@ export class FileFieldType extends FieldType {
         )
       },
     }
+    return components
   }
 
   getCardComponent() {
@@ -2106,6 +2222,10 @@ export class FileFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
 }
 
 export class SingleSelectFieldType extends FieldType {
@@ -2114,7 +2234,7 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'chevron-circle-down'
+    return 'baserow-icon-single-select'
   }
 
   getName() {
@@ -2134,14 +2254,20 @@ export class SingleSelectFieldType extends FieldType {
     return FunctionalGridViewFieldSingleSelect
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldSingleSelect
   }
 
-  getFormViewFieldComponentProperties() {
-    return {
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldSingleSelect
+  }
+
+  getFormViewFieldComponents(field) {
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
     }
+    return components
   }
 
   getCardComponent() {
@@ -2292,6 +2418,10 @@ export class SingleSelectFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -2300,7 +2430,7 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'list'
+    return 'iconoir-list'
   }
 
   getName() {
@@ -2320,18 +2450,24 @@ export class MultipleSelectFieldType extends FieldType {
     return FunctionalGridViewFieldMultipleSelect
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldMultipleSelect
   }
 
-  getFormViewFieldComponentProperties() {
-    return {
+  getFormViewFieldComponents(field) {
+    const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
     }
+    return components
   }
 
   getCardComponent() {
     return RowCardFieldMultipleSelect
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldMultipleSelect
   }
 
   getSort(name, order) {
@@ -2528,6 +2664,10 @@ export class MultipleSelectFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class PhoneNumberFieldType extends FieldType {
@@ -2536,7 +2676,7 @@ export class PhoneNumberFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'phone'
+    return 'iconoir-phone'
   }
 
   getName() {
@@ -2552,12 +2692,16 @@ export class PhoneNumberFieldType extends FieldType {
     return FunctionalGridViewFieldURL
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldPhoneNumber
   }
 
   getCardComponent() {
     return RowCardFieldPhoneNumber
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldText
   }
 
   prepareValueForPaste(field, clipboardData) {
@@ -2623,6 +2767,10 @@ export class PhoneNumberFieldType extends FieldType {
   getCanImport() {
     return true
   }
+
+  getCanGroupByInView(field) {
+    return true
+  }
 }
 
 export class FormulaFieldType extends FieldType {
@@ -2643,13 +2791,21 @@ export class FormulaFieldType extends FieldType {
     return (field) => {
       return (
         this.getTypeAndSubTypes().includes(field.type) &&
-        formulaTypeStrings.includes(field.formula_type)
+        (formulaTypeStrings.includes(field.formula_type) ||
+          (field.array_formula_type &&
+            formulaTypeStrings.includes(
+              this.arrayOf(field.array_formula_type)
+            )))
       )
     }
   }
 
+  static arrayOf(type) {
+    return `array(${type})`
+  }
+
   getIconClass() {
-    return 'square-root-alt'
+    return 'baserow-icon-formula'
   }
 
   getName() {
@@ -2665,7 +2821,7 @@ export class FormulaFieldType extends FieldType {
     return FunctionalGridViewFieldFormula
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldFormula
   }
 
@@ -2765,8 +2921,8 @@ export class FormulaFieldType extends FieldType {
     return true
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
   canBeReferencedByFormulaField() {
@@ -2777,6 +2933,11 @@ export class FormulaFieldType extends FieldType {
     const subType = this.app.$registry.get('formula_type', field.formula_type)
     return subType.canRepresentDate(field)
   }
+
+  getCanGroupByInView(field) {
+    const subType = this.app.$registry.get('formula_type', field.formula_type)
+    return subType.canGroupByInView(field)
+  }
 }
 
 export class CountFieldType extends FormulaFieldType {
@@ -2785,7 +2946,7 @@ export class CountFieldType extends FormulaFieldType {
   }
 
   getIconClass() {
-    return 'calculator'
+    return 'iconoir-calculator'
   }
 
   getName() {
@@ -2812,7 +2973,7 @@ export class RollupFieldType extends FormulaFieldType {
   }
 
   getIconClass() {
-    return 'box-open'
+    return 'iconoir-box-iso'
   }
 
   getName() {
@@ -2839,7 +3000,7 @@ export class LookupFieldType extends FormulaFieldType {
   }
 
   getIconClass() {
-    return 'binoculars'
+    return 'iconoir-binocular'
   }
 
   getName() {
@@ -2866,7 +3027,7 @@ export class MultipleCollaboratorsFieldType extends FieldType {
   }
 
   getIconClass() {
-    return 'user-friends'
+    return 'iconoir-community'
   }
 
   getName() {
@@ -2886,12 +3047,16 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     return FunctionalGridViewFieldMultipleCollaborators
   }
 
-  getRowEditFieldComponent() {
+  getRowEditFieldComponent(field) {
     return RowEditFieldMultipleCollaborators
   }
 
   getCardComponent() {
     return RowCardFieldMultipleCollaborators
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldMultipleCollaborators
   }
 
   prepareValueForUpdate(field, value) {
@@ -2901,8 +3066,8 @@ export class MultipleCollaboratorsFieldType extends FieldType {
     return value
   }
 
-  getFormViewFieldComponent() {
-    return null
+  getFormViewFieldComponents(field) {
+    return {}
   }
 
   getEmptyValue() {

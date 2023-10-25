@@ -47,12 +47,20 @@ export const getTokenIfEnoughTimeLeft = (
 export const logoutAndRedirectToLogin = (
   router,
   store,
-  showSessionExpiredToast = false
+  showSessionExpiredToast = false,
+  showPasswordChangedToast = false,
+  invalidateToken = false
 ) => {
-  store.dispatch('auth/logoff')
+  if (showPasswordChangedToast) {
+    store.dispatch('auth/forceLogoff')
+  } else {
+    store.dispatch('auth/logoff', { invalidateToken })
+  }
   router.push({ name: 'login', query: { noredirect: null } }, () => {
     if (showSessionExpiredToast) {
       store.dispatch('toast/setUserSessionExpired', true)
+    } else if (showPasswordChangedToast) {
+      store.dispatch('toast/setUserPasswordChanged', true)
     }
     store.dispatch('auth/clearAllStoreUserData')
   })

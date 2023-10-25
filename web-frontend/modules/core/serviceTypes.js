@@ -23,6 +23,35 @@ export class ServiceType extends Registerable {
     return true
   }
 
+  /**
+   * Whether the service returns a collection of records.
+   */
+  get returnsList() {
+    return false
+  }
+
+  /**
+   * The maximum number of records that can be returned by this service
+   */
+  get maxResultLimit() {
+    return 1
+  }
+
+  /**
+   * Should return a JSON schema of the data returned by this data source.
+   */
+  getDataSchema(applicationContext, dataSource) {
+    throw new Error('Must be set on the type.')
+  }
+
+  /**
+   * A hook called prior to an update to modify the new values
+   * before they get persisted in the API.
+   */
+  beforeUpdate(newValues, oldValues) {
+    return newValues
+  }
+
   getOrder() {
     return 0
   }

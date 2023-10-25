@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Risk Assessment and Management",
-  "icon": "exclamation-circle",
+  "icon": "iconoir-check-circle",
   "keywords": [
     "risk assessment",
     "risk analysis",

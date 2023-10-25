@@ -1,12 +1,13 @@
 <template>
   <div>
-    <Toasts></Toasts>
     <div class="style-guide__wrapper">
+      <Toasts></Toasts>
       <div class="style-guide">
         <div class="margin-bottom-3">
           <h1>&lt;h1&gt;Heading 1&lt;/h1&gt;</h1>
           <h2>&lt;h2&gt;Heading 2&lt;/h2&gt;</h2>
           <h3>&lt;h3&gt;Heading 3&lt;/h3&gt;</h3>
+          <h4>&lt;h4&gt;Heading 4&lt;/h4&gt;</h4>
         </div>
         <div class="margin-bottom-3">
           <p>
@@ -62,27 +63,27 @@
             v-model="input"
             label="Icon text field with error"
             placeholder="Enter something here"
-            icon-right="clock"
+            icon-right="iconoir-clock"
             error="This field is mandatory"
           />
           <FormInput
             v-model="input"
             label="Icon text field left"
             placeholder="Enter something here"
-            icon-left="search"
+            icon-left="iconoir-search"
           />
           <FormInput
             v-model="input"
             label="Icon text field right loading"
             placeholder="Enter something here"
-            icon-right="search"
+            icon-right="iconoir-search"
             loading
           />
           <FormInput
             v-model="input"
             label="Icon text field left loading"
             placeholder="Enter something here"
-            icon-left="search"
+            icon-left="iconoir-search"
             loading
           />
           <FormInput
@@ -103,14 +104,14 @@
             label="Large icon field"
             placeholder="Enter something here"
             large
-            icon-right="clock"
+            icon-right="iconoir-clock"
           />
           <FormInput
             v-model="input"
             label="Large icon field left"
             placeholder="Enter something here"
             large
-            icon-left="search"
+            icon-left="iconoir-search"
           />
           <FormInput
             v-model="input"
@@ -118,7 +119,15 @@
             label="Horizontal Large icon field left"
             placeholder="Enter something here"
             large
-            icon-left="search"
+            icon-left="iconoir-search"
+          />
+          <FormInput
+            v-model="input"
+            horizontal-variable
+            label="Horizontal Large icon field left"
+            placeholder="Enter something here"
+            large
+            icon-left="iconoir-search"
           />
           <div class="control">
             <label class="control__label">Checkbox field</label>
@@ -178,17 +187,17 @@
               <RadioButton
                 v-model="radioButton"
                 value="d"
-                icon="align-left"
+                icon="iconoir-align-left"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="e"
-                icon="align-center"
+                icon="iconoir-align-center"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="f"
-                icon="align-right"
+                icon="iconoir-align-right"
               ></RadioButton>
             </div>
             <div
@@ -198,19 +207,19 @@
               <RadioButton
                 v-model="radioButton"
                 value="d"
-                icon="align-left"
+                icon="iconoir-align-left"
                 size="large"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="e"
-                icon="align-center"
+                icon="iconoir-align-center"
                 size="large"
               ></RadioButton>
               <RadioButton
                 v-model="radioButton"
                 value="f"
-                icon="align-right"
+                icon="iconoir-align-right"
                 size="large"
               ></RadioButton>
             </div>
@@ -245,30 +254,30 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="edit"
+                    icon="iconoir-edit-pencil"
                     description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
                     value="choice-3"
-                    icon="database"
+                    icon="iconoir-db"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 4"
                     value="choice-4"
-                    icon="times"
+                    icon="iconoir-cancel"
                     :disabled="true"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 5"
                     value="choice-5"
-                    icon="edit"
+                    icon="iconoir-edit-pencil"
                     description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 6"
                     value="choice-6"
-                    icon="edit"
+                    icon="iconoir-edit-pencil"
                     description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                 </Dropdown>
@@ -287,17 +296,17 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="edit"
+                    icon="iconoir-edit-pencil"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
                     value="choice-3"
-                    icon="database"
+                    icon="iconoir-db"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 4"
                     value="choice-4"
-                    icon="times"
+                    icon="iconoir-cancel"
                     :disabled="true"
                   ></DropdownItem>
                 </Dropdown>
@@ -354,17 +363,17 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="edit"
+                    icon="iconoir-edit-pencil"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
                     value="choice-3"
-                    icon="database"
+                    icon="iconoir-db"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 4"
                     value="choice-4"
-                    icon="times"
+                    icon="iconoir-cancel"
                     :disabled="true"
                   ></DropdownItem>
                   <template #footer>
@@ -372,7 +381,7 @@
                       class="select__footer-button"
                       @click="$refs.IntegrationCreateEditModal.show()"
                     >
-                      <i class="fas fa-plus"></i>
+                      <i class="iconoir-plus"></i>
                       Add item
                     </a>
                   </template>
@@ -435,81 +444,148 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert title="Toast message" icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent lobortis feugiat erat, nec volutpat nulla tincidunt
-            vel. In hac habitasse platea dictumst. Aenean fringilla lacus nunc,
-            non pharetra mauris pulvinar lacinia. Aenean ut sem lacinia,
-            sagittis quam sed, pellentesque orci. Aenean non consequat mi. Nunc
-            laoreet ligula a nunc eleifend, nec accumsan felis euismod.
+          <Alert title="Toast message" close-button>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
+              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
+              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
+              lacinia, sagittis quam sed, pellentesque orci. Aenean non
+              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
+              felis euismod.
+            </p>
           </Alert>
-          <Alert title="Toast message" type="success" icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            type="success"
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message" type="warning" icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            type="warning"
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message" type="error" icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            type="error"
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message" simple icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+
+          <Alert
+            title="Toast message"
+            simple
+            icon="iconoir-warning-triangle"
+            close-button
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert title="Toast message" simple>
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
-          <Alert title="Toast message" type="success" simple icon="exclamation">
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+          <Alert
+            title="Toast message"
+            type="success"
+            simple
+            icon="iconoir-warning-triangle"
+          >
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
             type="warning"
             simple
             shadow
-            icon="exclamation"
+            icon="iconoir-warning-triangle"
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
           </Alert>
           <Alert
             title="Toast message"
             type="error"
             simple
             shadow
-            icon="exclamation"
+            icon="iconoir-warning-triangle"
           >
-            Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-            elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui ligula.
-            Pellentesque feugiat erat vel porttitor euismod. Duis nec viverra
-            urna. Praesent.
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+          </Alert>
+
+          <Alert
+            simple
+            type="primary"
+            icon="iconoir-warning-triangle"
+            title="Workspace invitation"
+          >
+            <p>Lorem ipsum dolor sit amet bla</p>
+            <p>Hello Mat, please join this workspace</p>
+            <div class="margin-top-1">
+              <a class="button button--error dashboard__alert-button">Reject</a>
+              <a class="button button--success dashboard__alert-button"
+                >Accept</a
+              >
+            </div>
           </Alert>
         </div>
         <div
@@ -523,15 +599,21 @@
           <Button size="tiny" type="success">button.button-success</Button>
           <Button size="tiny" type="warning">button.button-warning</Button>
           <Button size="tiny" type="error">button.button-error</Button>
-          <Button size="tiny" append-icon="lock-open">button</Button>
+          <Button size="tiny" append-icon="baserow-icon-lock-open"
+            >button</Button
+          >
           <Button size="tiny" type="link" prepend-icon="arrow-left">
             button
           </Button>
           <Button size="tiny" type="ghost">button.button-ghost</Button>
           <Button size="tiny" type="link">button.button-link</Button>
-          <Button size="tiny" icon="user-check"></Button>
-          <Button size="tiny" icon="user-check" type="ghost"></Button>
-          <Button size="tiny" icon="user-check" type="link"></Button>
+          <Button size="tiny" icon="iconoir-verified-user"></Button>
+          <Button
+            size="tiny"
+            icon="iconoir-verified-user"
+            type="ghost"
+          ></Button>
+          <Button size="tiny" icon="iconoir-verified-user" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -545,15 +627,15 @@
           </Button>
           <Button tag="a" type="warning">a.button.button-warning</Button>
           <Button tag="a" type="error">a.button.button-error</Button>
-          <Button tag="a" append-icon="lock-open">a.button</Button>
-          <Button tag="a" type="link" prepend-icon="arrow-left"
+          <Button tag="a" append-icon="baserow-icon-lock-open">a.button</Button>
+          <Button tag="a" type="link" prepend-icon="iconoir-nav-arrow-left"
             >a.button</Button
           >
           <Button tag="a" type="ghost">a.button.button-ghost</Button>
           <Button tag="a" type="link">a.button.button-link</Button>
-          <Button tag="a" icon="user-check"></Button>
-          <Button tag="a" icon="user-check" type="ghost"></Button>
-          <Button tag="a" icon="user-check" type="link"></Button>
+          <Button tag="a" icon="iconoir-verified-user"></Button>
+          <Button tag="a" icon="iconoir-verified-user" type="ghost"></Button>
+          <Button tag="a" icon="iconoir-verified-user" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -565,16 +647,16 @@
           <Button type="success">button.button-success</Button>
           <Button type="warning">button.button-warning</Button>
           <Button type="error">button.button-error</Button>
-          <Button append-icon="lock-open">button</Button>
+          <Button append-icon="lbaserow-icon-lock-open">button</Button>
           <Button type="link" prepend-icon="arrow-left">button</Button>
           <Button type="ghost">button.button-ghost</Button>
           <Button type="link">button.button-link</Button>
-          <Button icon="user-check"></Button>
-          <Button icon="user-check" type="ghost"></Button>
+          <Button icon="iconoir-verified-user"></Button>
+          <Button icon="iconoir-verified-user" type="ghost"></Button>
           <Button type="light">button.light</Button>
           <Button type="light" active>button.light.active</Button>
-          <Button type="light" icon="trash"></Button>
-          <Button type="link" icon="trash"></Button>
+          <Button type="light" icon="iconoir-bin"></Button>
+          <Button type="link" icon="iconoir-bin"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -587,13 +669,23 @@
           <Button size="large" type="success">button.button-success</Button>
           <Button size="large" type="warning">button.button-warning</Button>
           <Button size="large" type="error">button.button-error</Button>
-          <Button size="large" append-icon="lock-open">button</Button>
+          <Button size="large" append-icon="baserow-icon-lock-open"
+            >button</Button
+          >
           <Button size="large" prepend-icon="arrow-left">button</Button>
           <Button size="large" type="ghost">button.button-ghost</Button>
           <Button size="large" type="link">button.button-link</Button>
-          <Button size="large" icon="user-check"></Button>
-          <Button size="large" icon="user-check" type="ghost"></Button>
-          <Button size="large" icon="user-check" type="link"></Button>
+          <Button size="large" icon="iconoir-verified-user"></Button>
+          <Button
+            size="large"
+            icon="iconoir-verified-user"
+            type="ghost"
+          ></Button>
+          <Button
+            size="large"
+            icon="iconoir-verified-user"
+            type="link"
+          ></Button>
         </div>
         <div
           class="margin-bottom-3"
@@ -606,13 +698,13 @@
           <Button type="link" loading>Loading</Button>
           <Button size="large" loading>Loading</Button>
           <Button size="large" type="ghost" loading>Loading</Button>
-          <Button size="large" icon="user-check" loading></Button>
+          <Button size="large" icon="iconoir-verified-user" loading></Button>
           <Button type="light" loading>button.light.loading</Button>
           <Button type="link" loading>button.link.loading</Button>
           <Button type="light" active loading>
             button.light.active.loading
           </Button>
-          <Button type="link" icon="trash" loading />
+          <Button type="link" icon="iconoir-bin" loading />
         </div>
         <div
           class="margin-bottom-3"
@@ -699,19 +791,19 @@
             <ul class="context__menu">
               <li>
                 <a href="#">
-                  <i class="context__menu-icon fas fa-fw fa-pen"></i>
+                  <i class="context__menu-icon iconoir-edit-pencil"></i>
                   Rename database
                 </a>
               </li>
               <li>
                 <a href="#">
-                  <i class="context__menu-icon fas fa-fw fa-trash"></i>
+                  <i class="context__menu-icon iconoir-bin"></i>
                   Delete table
                 </a>
               </li>
               <li>
                 <a href="#" class="context__menu-item--loading">
-                  <i class="context__menu-icon fas fa-fw fa-trash"></i>
+                  <i class="context__menu-icon iconoir-bin"></i>
                   Loading
                 </a>
               </li>
@@ -721,17 +813,21 @@
             <div class="context__menu-title">Workspace permissions</div>
             <ul class="context__menu context__menu--can-be-active">
               <li>
-                <a href="#" class="active">
-                  Admin
+                <a href="#" class="context__menu-item-with-desc active">
+                  <span class="context__menu-item-title">Admin</span>
                   <div class="context__menu-item-description">
                     Description of what an admin can or can’t do on the
                     workspace.
                   </div>
+                  <i class="context__menu-active-icon iconoir-check-circle"></i>
                 </a>
               </li>
               <li>
-                <a href="#" class="context__menu-item--loading">
-                  Builder
+                <a
+                  href="#"
+                  class="context__menu-item-with-desc context__menu-item--loading"
+                >
+                  <span class="context__menu-item-title">Builder</span>
                   <div class="context__menu-item-description">
                     Description of what a builder can or can’t do on the
                     workspace.
@@ -745,7 +841,7 @@
           </div>
           <div class="select">
             <div class="select__search">
-              <i class="select__search-icon fas fa-search"></i>
+              <i class="select__search-icon iconoir-search"></i>
               <input
                 type="text"
                 class="select__search-input"
@@ -756,9 +852,10 @@
               <li class="select__item active">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">Workspace name 1</div>
+                  <i class="select__item-active-icon iconoir-check-circle"></i>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item">
@@ -766,7 +863,7 @@
                   <div class="select__item-name">Workspace name 2</div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item select__item--loading">
@@ -774,7 +871,7 @@
                   <div class="select__item-name">Workspace name 3</div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item">
@@ -782,13 +879,13 @@
                   <div class="select__item-name">roup name 4</div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
             </ul>
             <div class="select__footer">
               <a href="#" class="select__footer-button">
-                <i class="fas fa-plus"></i>
+                <i class="iconoir-plus"></i>
                 Do something
               </a>
             </div>
@@ -797,7 +894,7 @@
         <div class="margin-bottom-3 style-guide__contexts">
           <div class="select">
             <div class="select__search">
-              <i class="select__search-icon fas fa-search"></i>
+              <i class="select__search-icon iconoir-search"></i>
               <input
                 type="text"
                 class="select__search-input"
@@ -809,7 +906,7 @@
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">
                     <i
-                      class="select__item-icon fas fa-th fa-fw color-primary"
+                      class="select__item-icon iconoir-view-grid color-primary"
                     ></i>
                     Grid view name
                   </div>
@@ -819,63 +916,74 @@
                   class="select__item-options"
                   data-context=".context"
                 >
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">
                     <i
-                      class="select__item-icon fas fa-th fa-fw color-primary"
+                      class="select__item-icon iconoir-view-grid color-primary"
                     ></i>
                     Grid view option 2.
                   </div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">
                     <i
-                      class="select__item-icon fas fa-th fa-fw color-primary"
+                      class="select__item-icon iconoir-view-grid color-primary"
                     ></i>
                     Grid view 2
                   </div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">
                     <i
-                      class="select__item-icon fas fa-th fa-fw color-primary"
+                      class="select__item-icon iconoir-view-grid color-primary"
                     ></i>
                     Grid view 3
                   </div>
                 </a>
                 <a href="#" class="select__item-options">
-                  <i class="fas fa-ellipsis-v"></i>
+                  <i class="baserow-icon-more-vertical"></i>
                 </a>
               </li>
             </ul>
             <div class="select__footer">
               <div class="select__footer-create">
-                <a class="select__footer-create-link"
-                  ><i class="select__footer-create-icon fas fa-bars"></i>
-                  Grid </a
+                <a class="select__footer-create-link">
+                  <i class="select__footer-create-icon iconoir-table"></i>
+                  Grid
+                  <i
+                    class="select__footer-create-link-icon iconoir-plus"
+                  ></i></a
+                ><a class="select__footer-create-link">
+                  <i class="select__footer-create-icon iconoir-view-grid"></i>
+                  Gallery
+                  <i
+                    class="select__footer-create-link-icon iconoir-plus"
+                  ></i></a
                 ><a class="select__footer-create-link"
-                  ><i class="select__footer-create-icon fas fa-th-large"></i>
-                  Gallery </a
+                  ><i class="select__footer-create-icon iconoir-edit"></i> Form
+                  <i
+                    class="select__footer-create-link-icon iconoir-plus"
+                  ></i></a
                 ><a class="select__footer-create-link"
-                  ><i class="select__footer-create-icon fas fa-edit"></i>
-                  Form </a
-                ><a class="select__footer-create-link"
-                  ><i class="select__footer-create-icon fas fa-trello fab"></i>
+                  ><i
+                    class="select__footer-create-icon iconoir-kanban-board"
+                  ></i>
                   Kanban
+                  <i class="select__footer-create-link-icon iconoir-plus"></i>
                 </a>
               </div>
             </div>
@@ -932,19 +1040,19 @@
                 <li class="formula-field__item-group-title">Fields</li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-font formula-field__item-icon" />
+                    <i class="iconoir-text formula-field__item-icon" />
                     Text
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     Number
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-check-square formula-field__item-icon" />
+                    <i class="iconoir-check formula-field__item-icon" />
                     Checkbox
                   </a>
                 </li>
@@ -953,25 +1061,25 @@
                 <li class="formula-field__item-group-title">Constants</li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     e
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     pi
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-check-square formula-field__item-icon" />
+                    <i class="iconoir-check formula-field__item-icon" />
                     true
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-check-square formula-field__item-icon" />
+                    <i class="iconoir-check formula-field__item-icon" />
                     false
                   </a>
                 </li>
@@ -980,37 +1088,37 @@
                 <li class="formula-field__item-group-title">Operators</li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-font formula-field__item-icon" />
+                    <i class="iconoir-text formula-field__item-icon" />
                     If
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     add
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     subtract
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     multiply
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     divide
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     pow
                   </a>
                 </li>
@@ -1019,25 +1127,25 @@
                 <li class="formula-field__item-group-title">Functions</li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-font formula-field__item-icon" />
+                    <i class="iconoir-text formula-field__item-icon" />
                     concat
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-font formula-field__item-icon" />
+                    <i class="iconoir-text formula-field__item-icon" />
                     join
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-font formula-field__item-icon" />
+                    <i class="iconoir-text formula-field__item-icon" />
                     slice
                   </a>
                 </li>
                 <li class="formula-field__item">
                   <a href="#" class="formula-field__item-link">
-                    <i class="fas fa-hashtag formula-field__item-icon" />
+                    <i class="baserow-icon-hashtag formula-field__item-icon" />
                     length
                   </a>
                 </li>
@@ -1072,7 +1180,7 @@
             <ul class="context__menu">
               <li>
                 <a href="#">
-                  <i class="context__menu-icon fas fa-fw fa-pen"></i>
+                  <i class="context__menu-icon iconoir-edit-pencil"></i>
                   This does nothing
                 </a>
               </li>
@@ -1085,7 +1193,7 @@
                   <ul class="context__menu">
                     <li>
                       <a @click="$refs.modal1.show()">
-                        <i class="context__menu-icon fas fa-fw fa-pen"></i>
+                        <i class="context__menu-icon iconoir-edit-pencil"></i>
                         Click to open modal
                       </a>
                     </li>
@@ -1102,7 +1210,7 @@
                           <li>
                             <a href="#">
                               <i
-                                class="context__menu-icon fas fa-fw fa-pen"
+                                class="context__menu-icon iconoir-edit-pencil"
                               ></i>
                               This does nothing
                             </a>
@@ -1117,9 +1225,7 @@
                           </li>
                           <li>
                             <a href="#">
-                              <i
-                                class="context__menu-icon fas fa-fw fa-trash"
-                              ></i>
+                              <i class="context__menu-icon iconoir-bin"></i>
                               This does nothing
                             </a>
                           </li>
@@ -1131,7 +1237,7 @@
               </li>
               <li>
                 <a href="#">
-                  <i class="context__menu-icon fas fa-fw fa-trash"></i>
+                  <i class="context__menu-icon iconoir-bin"></i>
                   This does nothing
                 </a>
               </li>
@@ -1201,7 +1307,7 @@
         <div class="margin-bottom-3">
           <div class="modal__box">
             <a class="modal__close">
-              <i class="fas fa-times"></i>
+              <i class="iconoir-cancel"></i>
             </a>
             <h2 class="box__title">An example modal</h2>
             <p>
@@ -1220,7 +1326,7 @@
             <div class="delete-section">
               <div class="delete-section__label">
                 <div class="delete-section__label-icon">
-                  <i class="fas fa-exclamation"></i>
+                  <i class="iconoir-warning-triangle"></i>
                 </div>
                 Will also be permanently deleted
               </div>
@@ -1232,12 +1338,12 @@
               </p>
               <ul class="delete-section__list">
                 <li>
-                  <i class="delete-section__list-icon fas fa-database"></i>
+                  <i class="delete-section__list-icon iconoir-db"></i>
                   Vehicles
                   <small>including 12 tables</small>
                 </li>
                 <li>
-                  <i class="delete-section__list-icon fas fa-database"></i>
+                  <i class="delete-section__list-icon iconoir-db"></i>
                   Webshop
                   <small>including 12 tables</small>
                 </li>
@@ -1249,7 +1355,7 @@
           </div>
           <div class="modal__box modal__box--with-sidebar">
             <a class="modal__close">
-              <i class="fas fa-times"></i>
+              <i class="iconoir-cancel"></i>
             </a>
             <div
               class="modal__box-sidebar modal__box-sidebar--left modal__box-sidebar--scrollable"
@@ -1261,25 +1367,25 @@
               <ul class="modal-sidebar__nav">
                 <li>
                   <a class="modal-sidebar__nav-link active"
-                    ><i class="fas modal-sidebar__nav-icon fa-user"></i>
+                    ><i class="modal-sidebar__nav-icon iconoir-user"></i>
                     Account
                   </a>
                 </li>
                 <li>
                   <a class="modal-sidebar__nav-link"
-                    ><i class="fas modal-sidebar__nav-icon fa-lock"></i>
+                    ><i class="modal-sidebar__nav-icon iconoir-lock"></i>
                     Password
                   </a>
                 </li>
                 <li>
                   <a class="modal-sidebar__nav-link"
-                    ><i class="fas modal-sidebar__nav-icon fa-key"></i>
+                    ><i class="modal-sidebar__nav-icon iconoir-key-alt"></i>
                     API Tokens
                   </a>
                 </li>
                 <li>
                   <a class="modal-sidebar__nav-link"
-                    ><i class="fas modal-sidebar__nav-icon fa-user-slash"></i>
+                    ><i class="modal-sidebar__nav-icon iconoir-eye-off"></i>
                     Delete account
                   </a>
                 </li>
@@ -1306,6 +1412,7 @@
         <div class="margin-bottom-3">
           <div class="card" style="width: 320px">
             <div class="card__cover">
+              <i class="card__cover-empty-image iconoir-media-image"></i>
               <div
                 v-if="false"
                 class="card__cover-image"
@@ -1373,7 +1480,7 @@
                 <div class="card__field-name">Boolean</div>
                 <div class="card__field-value">
                   <div class="card-boolean">
-                    <i class="fas fa-check"></i>
+                    <i class="iconoir-check"></i>
                   </div>
                 </div>
               </div>
@@ -1423,7 +1530,7 @@
                         />
                       </li>
                       <li class="card-file__item">
-                        <i class="fas card-file__icon fa-file"></i>
+                        <i class="card-file__icon iconoir-page-empty"></i>
                       </li>
                     </ul>
                   </div>
@@ -1501,7 +1608,7 @@
                     placeholder="Find member..."
                     class="input input--large"
                   />
-                  <i class="fas fa-search"></i>
+                  <i class="iconoir-search"></i>
                 </div>
                 <Button href="#" size="large" class="margin-left-2">
                   Invite member
@@ -1530,7 +1637,7 @@
                           >Name</a
                         >
                         <div>
-                          <i class="fas fa-sort-down"></i>
+                          <i class="iconoir-sort-down"></i>
                           0
                         </div>
                       </div>
@@ -1546,7 +1653,7 @@
                       <div class="data-table__table-cell-head">
                         Workspace permissions
                         <div>
-                          <i class="fas fa-sort-up"></i>
+                          <i class="iconoir-sort-up"></i>
                           1
                         </div>
                       </div>
@@ -1609,7 +1716,9 @@
                       <div class="data-table__table-cell-content">
                         <div class="data-table__more-wrapper">
                           <a href="#" class="data-table__more">
-                            <i class="fas fa-ellipsis-h"></i>
+                            <i
+                              class="data-table__more-icon baserow-icon-more-horizontal"
+                            ></i>
                           </a>
                         </div>
                       </div>
@@ -1623,7 +1732,7 @@
                 <div class="paginator__name">page</div>
                 <div class="paginator__group">
                   <a class="paginator__button paginator__button--disabled"
-                    ><i class="fas fa-caret-left"></i
+                    ><i class="iconoir-nav-arrow-left"></i
                   ></a>
                   <input
                     type="number"
@@ -1632,7 +1741,7 @@
                   />
                   <div class="paginator__count">of 233</div>
                   <a class="paginator__button"
-                    ><i class="fas fa-caret-right"></i
+                    ><i class="iconoir-nav-arrow-right"></i
                   ></a>
                 </div>
               </div>
@@ -1662,7 +1771,7 @@
                 />
                 <Button
                   size="tiny"
-                  icon="trash"
+                  icon="iconoir-bin"
                   @click="alert('should delete item ' + item.name)"
                 />
               </div>
@@ -1673,43 +1782,43 @@
         <div class="margin-bottom-3">
           <h2>Avatars</h2>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar size="tiny" icon="trash" />
-            <Avatar size="tiny" icon="trash" color="warning" />
-            <Avatar size="tiny" icon="trash" color="error" />
-            <Avatar size="tiny" icon="trash" color="ghost" />
+            <Avatar size="tiny" icon="iconoir-bin" />
+            <Avatar size="tiny" icon="iconoir-bin" color="warning" />
+            <Avatar size="tiny" icon="iconoir-bin" color="error" />
+            <Avatar size="tiny" icon="iconoir-bin" color="ghost" />
             <Avatar size="tiny" :image="image" color="ghost" />
             <Avatar size="tiny" initials="BW" color="ghost" />
-            <Avatar size="tiny" icon="trash" :rounded="false" />
+            <Avatar size="tiny" icon="iconoir-bin" :rounded="false" />
             <Avatar size="tiny" :image="image" color="ghost" :rounded="false" />
             <Avatar size="tiny" initials="BW" color="error" :rounded="false" />
           </div>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar icon="trash" />
+            <Avatar icon="iconoir-bin" />
             <Avatar :image="image" />
             <Avatar initials="BW" />
-            <Avatar icon="trash" color="warning" />
+            <Avatar icon="iconoir-bin" color="warning" />
             <Avatar :image="image" color="warning" />
             <Avatar initials="BW" color="warning" />
-            <Avatar icon="trash" color="error" />
+            <Avatar icon="iconoir-bin" color="error" />
             <Avatar :image="image" color="error" />
             <Avatar initials="BW" color="error" />
           </div>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar icon="trash" color="ghost" />
+            <Avatar icon="iconoir-bin" color="ghost" />
             <Avatar :image="image" color="ghost" />
             <Avatar initials="BW" color="ghost" />
-            <Avatar icon="trash" :rounded="false" />
+            <Avatar icon="iconoir-bin" :rounded="false" />
             <Avatar :image="image" color="ghost" :rounded="false" />
             <Avatar initials="BW" color="error" :rounded="false" />
           </div>
           <div style="display: flex; gap: 10px; padding: 0.5em">
-            <Avatar size="large" icon="trash" />
-            <Avatar size="large" icon="trash" color="warning" />
-            <Avatar size="large" icon="trash" color="error" />
-            <Avatar size="large" icon="trash" color="ghost" />
+            <Avatar size="large" icon="iconoir-bin" />
+            <Avatar size="large" icon="iconoir-bin" color="warning" />
+            <Avatar size="large" icon="iconoir-bin" color="error" />
+            <Avatar size="large" icon="iconoir-bin" color="ghost" />
             <Avatar size="large" :image="image" color="ghost" />
             <Avatar size="large" initials="BW" color="ghost" />
-            <Avatar size="large" icon="trash" :rounded="false" />
+            <Avatar size="large" icon="iconoir-bin" :rounded="false" />
             <Avatar
               size="large"
               :image="image"
@@ -1756,21 +1865,27 @@
           <br /><br />
           <a
             ref="colorPickerLink"
-            href="#"
             @click="$refs.colorPicker.toggle($refs.colorPickerLink)"
             >Open color picker context</a
           >
           <ColorPickerContext
             ref="colorPicker"
             v-model="color"
+            :variables="colorVariables"
           ></ColorPickerContext>
           <br /><br />
-          {{ color }}
-          <br /><br />
+          {{ color }} - {{ resolveColor(color, colorVariables) }} <br /><br />
           <div
-            :style="`width: 40px; height: 20px; background-color: ${color};`"
+            :style="{
+              width: '40px',
+              height: '20px',
+              'background-color': resolveColor(color, colorVariables),
+            }"
           ></div>
         </div>
+        <br /><br /><br />
+        <br /><br /><br />
+        <br /><br /><br />
       </div>
     </div>
   </div>
@@ -1782,6 +1897,7 @@ import AutoExpandableTextarea from '@baserow/modules/core/components/helpers/Aut
 import BaserowIcon from '@baserow/modules/core/static/img/logoOnly.svg'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext.vue'
 import ColorPicker from '@baserow/modules/core/components/ColorPicker.vue'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
 
 export default {
   components: {
@@ -1803,7 +1919,11 @@ export default {
       formula: 'concat(field("Text"), field("Text"))',
       image: BaserowIcon,
       input: '',
-      color: '#ffffffff',
+      color: 'primary',
+      colorVariables: [
+        { name: 'Primary', value: 'primary', color: '#985353ff' },
+        { name: 'Secondary', value: 'secondary', color: '#545398ff' },
+      ],
     }
   },
   head() {
@@ -1812,6 +1932,7 @@ export default {
     }
   },
   methods: {
+    resolveColor,
     alert(message) {
       alert(message)
     },

@@ -7,6 +7,7 @@ from django.db.models import (
     Avg,
     Case,
     Count,
+    DecimalField,
     Expression,
     ExpressionWrapper,
     F,
@@ -100,8 +101,10 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaDateType,
     BaserowFormulaLinkType,
     BaserowFormulaNumberType,
+    BaserowFormulaSingleFileType,
     BaserowFormulaSingleSelectType,
     BaserowFormulaTextType,
+    BaserowJSONBObjectBaseType,
     calculate_number_type,
     literal,
 )
@@ -126,6 +129,7 @@ def register_formula_functions(registry):
     registry.register(BaserowLower())
     registry.register(BaserowConcat())
     registry.register(BaserowToText())
+    registry.register(BaserowToVarchar())
     registry.register(BaserowT())
     registry.register(BaserowReplace())
     registry.register(BaserowSearch())
@@ -220,6 +224,18 @@ def register_formula_functions(registry):
     registry.register(BaserowButton())
     registry.register(BaserowGetLinkUrl())
     registry.register(BaserowGetLinkLabel())
+    # JSON functions
+    registry.register(BaserowJsonbExtractPathText())
+    registry.register(BaserowIndex())
+    # FIle functions
+    registry.register(BaserowGetFileVisibleName())
+    registry.register(BaserowGetFileMimeType())
+    registry.register(BaserowGetFileSize())
+    registry.register(BaserowGetImageWidth())
+    registry.register(BaserowGetImageHeight())
+    registry.register(BaserowIsImage())
+    registry.register(BaserowArrayAggNoNesting())
+    registry.register(BaserowGetFileCount())
 
 
 class BaserowUpper(OneArgumentBaserowFunction):
@@ -377,6 +393,30 @@ class BaserowToText(OneArgumentBaserowFunction):
         )
 
 
+class BaserowToVarchar(OneArgumentBaserowFunction):
+    """
+    Internal function not registered in the frontend intentionally as we don't want
+    users making char types. Used purely for working with our BaserowFormulaCharType
+    on internal operations.
+    """
+
+    type = "tovarchar"
+    arg_type = [BaserowFormulaTextType]
+    try_coerce_nullable_args_to_not_null = False
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return arg.with_valid_type(
+            BaserowFormulaCharType(nullable=arg.expression_type.nullable)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Cast(arg, output_field=fields.CharField())
+
+
 class BaserowT(OneArgumentBaserowFunction):
     type = "t"
     arg_type = [BaserowFormulaValidType]
@@ -452,11 +492,23 @@ class BaserowAdd(TwoArgumentBaserowFunction):
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
         # date + interval = date
         # non date/interval types + non date/interval types = first arg type always
-        output_field = arg1.output_field
-        if isinstance(arg1.output_field, fields.DurationField):
+
+        first_arg_is_duration = isinstance(arg1.output_field, fields.DurationField)
+        second_arg_is_duration = isinstance(arg2.output_field, fields.DurationField)
+        first_arg_is_date = isinstance(arg1.output_field, fields.DateField)
+        second_arg_is_date = isinstance(arg2.output_field, fields.DateField)
+        if (first_arg_is_duration or second_arg_is_duration) and (
+            first_arg_is_date or second_arg_is_date
+        ):
+            # interval + date = datetime
+            # date + interval = datetime
+            output_field = fields.DateTimeField()
+        elif first_arg_is_duration:
             # interval + interval = interval
-            # interval + date = date
+            # interval + datetime = datetime
             output_field = arg2.output_field
+        else:
+            output_field = arg1.output_field
         return ExpressionWrapper(arg1 + arg2, output_field=output_field)
 
 
@@ -507,11 +559,22 @@ class BaserowMinus(TwoArgumentBaserowFunction):
         return arg1.expression_type.minus(func_call, arg1, arg2)
 
     def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
-        output_field = arg1.output_field
-        if isinstance(arg1.output_field, fields.DateField) and isinstance(
-            arg2.output_field, fields.DateField
-        ):
+        first_arg_is_duration = isinstance(arg1.output_field, fields.DurationField)
+        second_arg_is_duration = isinstance(arg2.output_field, fields.DurationField)
+        first_arg_is_date = isinstance(arg1.output_field, fields.DateField)
+        second_arg_is_date = isinstance(arg2.output_field, fields.DateField)
+        if first_arg_is_duration and second_arg_is_duration:
+            # interval - interval = interval
             output_field = fields.DurationField()
+        elif first_arg_is_date and second_arg_is_duration:
+            # date/datetime - interval = datetime
+            output_field = fields.DateTimeField()
+        elif first_arg_is_date and second_arg_is_date:
+            # date - date = interval (django does this magic)
+            output_field = fields.DurationField()
+        else:
+            output_field = arg1.output_field
+
         return ExpressionWrapper(arg1 - arg2, output_field=output_field)
 
 
@@ -589,7 +652,13 @@ class BaserowRound(TwoArgumentBaserowFunction):
             when_nan=Value(Decimal("NaN")),
             when_not_nan=(
                 Func(
-                    arg1,
+                    Cast(
+                        arg1,
+                        output_field=DecimalField(
+                            max_digits=BaserowFormulaNumberType.MAX_DIGITS,
+                            decimal_places=NUMBER_MAX_DECIMAL_PLACES,
+                        ),
+                    ),
                     # The round function requires an integer input.
                     trunc_numeric_to_int(arg2),
                     function="round",
@@ -1739,6 +1808,48 @@ def _calculate_aggregate_orders(join_ids: JoinIdsType):
     return orders
 
 
+def array_agg_expression(
+    args: List["WrappedExpressionWithMetadata"],
+    context: BaserowExpressionContext,
+    nest_in_value: bool,
+):
+    pre_annotations = dict()
+    aggregate_filters = []
+    join_ids = []
+    for child in args:
+        pre_annotations.update(child.pre_annotations)
+        aggregate_filters.extend(child.aggregate_filters)
+        join_ids.extend(child.join_ids)
+
+    join_ids = list(dict.fromkeys(join_ids))
+    orders = _calculate_aggregate_orders(join_ids)
+    if nest_in_value:
+        json_builder_args = {"value": args[0].expression}
+        # Remove any duplicates from join_ids
+        if len(join_ids) > 1:
+            json_builder_args["ids"] = JSONObject(
+                **{tbl: F(i + "__id") for i, tbl in join_ids}
+            )
+        else:
+            json_builder_args["id"] = F(join_ids[0][0] + "__id")
+        expr = JSONBAgg(JSONObject(**json_builder_args), ordering=orders)
+    else:
+        expr = JSONBAgg(args[0].expression, ordering=orders)
+    wrapped_expr = aggregate_wrapper(
+        WrappedExpressionWithMetadata(
+            expr, pre_annotations, aggregate_filters, join_ids
+        ),
+        context.model,
+    ).expression
+    return WrappedExpressionWithMetadata(
+        Coalesce(
+            wrapped_expr,
+            Value([], output_field=JSONField()),
+            output_field=JSONField(),
+        )
+    )
+
+
 class BaserowArrayAgg(OneArgumentBaserowFunction):
     type = "array_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
@@ -1759,41 +1870,21 @@ class BaserowArrayAgg(OneArgumentBaserowFunction):
         args: List["WrappedExpressionWithMetadata"],
         context: BaserowExpressionContext,
     ) -> "WrappedExpressionWithMetadata":
-        pre_annotations = dict()
-        aggregate_filters = []
-        join_ids = []
-        for child in args:
-            pre_annotations.update(child.pre_annotations)
-            aggregate_filters.extend(child.aggregate_filters)
-            join_ids.extend(child.join_ids)
+        return array_agg_expression(args, context, nest_in_value=True)
 
-        json_builder_args = {"value": args[0].expression}
 
-        # Remove any duplicates from join_ids
-        join_ids = list(dict.fromkeys(join_ids))
-        if len(join_ids) > 1:
-            json_builder_args["ids"] = JSONObject(
-                **{tbl: F(i + "__id") for i, tbl in join_ids}
-            )
-        else:
-            json_builder_args["id"] = F(join_ids[0][0] + "__id")
+class BaserowArrayAggNoNesting(BaserowArrayAgg):
+    type = "array_agg_no_nesting"
 
-        orders = _calculate_aggregate_orders(join_ids)
+    def to_django_expression(self, arg: Expression) -> Expression:
+        pass
 
-        expr = JSONBAgg(JSONObject(**json_builder_args), ordering=orders)
-        wrapped_expr = aggregate_wrapper(
-            WrappedExpressionWithMetadata(
-                expr, pre_annotations, aggregate_filters, join_ids
-            ),
-            context.model,
-        ).expression
-        return WrappedExpressionWithMetadata(
-            Coalesce(
-                wrapped_expr,
-                Value([], output_field=JSONField()),
-                output_field=JSONField(),
-            )
-        )
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        return array_agg_expression(args, context, nest_in_value=False)
 
 
 class Baserow2dArrayAgg(OneArgumentBaserowFunction):
@@ -1836,12 +1927,42 @@ class BaserowCount(OneArgumentBaserowFunction):
         func_call: BaserowFunctionCall[UnTyped],
         arg: BaserowExpression[BaserowFormulaValidType],
     ) -> BaserowExpression[BaserowFormulaType]:
+        if BaserowGetFileCount().can_accept_arg(arg):
+            return BaserowGetFileCount()(arg)
+
         return func_call.with_valid_type(
             BaserowFormulaNumberType(number_decimal_places=0)
         )
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return Count(arg, output_field=int_like_numeric_output_field())
+
+
+class BaserowGetFileCount(OneArgumentBaserowFunction):
+    type = "get_file_count"
+    arg_type = [BaserowFormulaArrayType]
+
+    def can_accept_arg(self, arg):
+        return isinstance(arg.expression_type, BaserowFormulaArrayType) and isinstance(
+            arg.expression_type.sub_type, BaserowFormulaSingleFileType
+        )
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        if not self.can_accept_arg(arg):
+            return func_call.with_invalid_type("can only count file fields")
+        else:
+            return func_call.with_valid_type(
+                BaserowFormulaNumberType(number_decimal_places=0)
+            )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            arg, function="jsonb_array_length", output_field=fields.IntegerField()
+        )
 
 
 class BaserowFilter(TwoArgumentBaserowFunction):
@@ -2131,6 +2252,214 @@ class BaserowGetSingleSelectValue(OneArgumentBaserowFunction):
         )
 
 
+class BaserowIndex(TwoArgumentBaserowFunction):
+    arg1_type = [BaserowFormulaArrayType]
+    arg2_type = [BaserowFormulaNumberType]
+
+    type = "index"
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        if not isinstance(arg1.expression_type.sub_type, BaserowFormulaSingleFileType):
+            return func_call.with_invalid_type(
+                "index only currently supports indexing file fields."
+            )
+        else:
+            if arg1.many:
+                arg1 = arg1.expression_type.collapse_many(arg1)
+            return func_call.with_args([arg1, arg2]).with_valid_type(
+                arg1.expression_type.sub_type
+            )
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return Func(
+            arg1,
+            Cast(arg2, fields.TextField()),
+            function="jsonb_extract_path",
+            output_field=JSONField(),
+        )
+
+
+class BaserowJsonbExtractPathText(BaserowFunctionDefinition):
+    type = "jsonb_extract_path_text"
+    num_args = NumOfArgsGreaterThan(1)
+
+    @property
+    def arg_types(self) -> BaserowArgumentTypeChecker:
+        def type_checker(arg_index: int, arg_types: List[BaserowFormulaType]):
+            if arg_index == 0:
+                return [BaserowJSONBObjectBaseType]
+            else:
+                return [BaserowFormulaTextType]
+
+        return type_checker
+
+    def type_function_given_valid_args(
+        self,
+        args: List[BaserowExpression[BaserowFormulaValidType]],
+        expression: "BaserowFunctionCall[UnTyped]",
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return expression.with_valid_type(BaserowFormulaTextType(nullable=True))
+
+    def to_django_expression_given_args(
+        self, expr_args: List[WrappedExpressionWithMetadata], *args, **kwargs
+    ) -> WrappedExpressionWithMetadata:
+        return WrappedExpressionWithMetadata(
+            Func(
+                *[e.expression for e in expr_args],
+                function="jsonb_extract_path_text",
+                output_field=fields.TextField(),
+            )
+        )
+
+    def __call__(
+        self,
+        arg: BaserowExpression[BaserowJSONBObjectBaseType],
+        *path: BaserowExpression[BaserowFormulaTextType]
+    ) -> BaserowFunctionCall[BaserowFormulaTextType]:
+        return self.call_and_type_with_args([arg, *path])
+
+
+class BaserowGetFileVisibleName(OneArgumentBaserowFunction):
+    type = "get_file_visible_name"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaTextType]:
+        return BaserowJsonbExtractPathText()(arg, literal("visible_name"))
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return arg
+
+
+class BaserowGetFileMimeType(OneArgumentBaserowFunction):
+    type = "get_file_mime_type"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaTextType]:
+        return BaserowJsonbExtractPathText()(arg, literal("mime_type"))
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return arg
+
+
+class BaserowGetFileSize(OneArgumentBaserowFunction):
+    type = "get_file_size"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaNumberType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(
+                nullable=arg.expression_type.nullable, number_decimal_places=0
+            )
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Cast(
+            Func(
+                arg,
+                Value("size"),
+                function="jsonb_extract_path_text",
+                output_field=fields.IntegerField(),
+            ),
+            output_field=fields.IntegerField(),
+        )
+
+
+class BaserowGetImageWidth(OneArgumentBaserowFunction):
+    type = "get_image_width"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaNumberType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(nullable=True, number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Cast(
+            Func(
+                arg,
+                Value("image_width"),
+                function="jsonb_extract_path_text",
+                output_field=fields.IntegerField(),
+            ),
+            output_field=fields.IntegerField(),
+        )
+
+
+class BaserowGetImageHeight(OneArgumentBaserowFunction):
+    type = "get_image_height"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaNumberType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(nullable=True, number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Cast(
+            Func(
+                arg,
+                Value("image_height"),
+                function="jsonb_extract_path_text",
+                output_field=fields.IntegerField(),
+            ),
+            output_field=fields.IntegerField(),
+        )
+
+
+class BaserowIsImage(OneArgumentBaserowFunction):
+    type = "is_image"
+    arg_type = [BaserowFormulaSingleFileType]
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaSingleFileType],
+    ) -> BaserowExpression[BaserowFormulaBooleanType]:
+        return func_call.with_valid_type(
+            BaserowFormulaBooleanType(nullable=arg.expression_type.nullable)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Coalesce(
+            Cast(
+                Func(
+                    arg,
+                    Value("is_image"),
+                    function="jsonb_extract_path_text",
+                    output_field=fields.BooleanField(),
+                ),
+                output_field=fields.BooleanField(),
+            ),
+            Value(False),
+            output_field=fields.BooleanField(),
+        )
+
+
 class BaserowGetLinkUrl(OneArgumentBaserowFunction):
     type = "get_link_url"
     arg_type = [BaserowFormulaLinkType]
@@ -2332,13 +2661,18 @@ class BaserowSecond(OneArgumentBaserowFunction):
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
-        arg: BaserowExpression[BaserowFormulaValidType],
+        arg: BaserowExpression[BaserowFormulaDateType],
     ) -> BaserowExpression[BaserowFormulaType]:
-        return func_call.with_valid_type(
-            BaserowFormulaNumberType(
-                number_decimal_places=0, nullable=arg.expression_type.nullable
+        if not arg.expression_type.date_include_time:
+            return func_call.with_invalid_type(
+                "cannot extract seconds from a date without time"
             )
-        )
+        else:
+            return func_call.with_valid_type(
+                BaserowFormulaNumberType(
+                    number_decimal_places=0, nullable=arg.expression_type.nullable
+                )
+            )
 
     def to_django_expression(self, arg: Expression) -> Expression:
         return BaserowExtract(

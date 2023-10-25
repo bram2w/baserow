@@ -9,8 +9,8 @@
           class="dashboard__sidebar-link"
           @click="$emit('workspace-selected', workspace)"
         >
-          <i class="fas fa-fw fa-layer-group"></i>
-          {{ workspace.name }}
+          <i class="dashboard__sidebar-link-icon iconoir-book-stack"></i>
+          <span class="dashboard__sidebar-link-text">{{ workspace.name }}</span>
         </a>
       </li>
       <li>
@@ -19,8 +19,10 @@
           class="dashboard__sidebar-link dashboard__sidebar-link--light"
           @click="$emit('create-workspace-clicked')"
         >
-          <i class="fas fa-fw fa-plus"></i>
-          {{ $t('dashboard.createWorkspace') }}
+          <i class="dashboard__sidebar-link-icon iconoir-plus"></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboard.createWorkspace')
+          }}</span>
         </a>
       </li>
     </ul>
@@ -39,8 +41,12 @@
           href="https://baserow.io/user-docs"
           target="_blank"
         >
-          <i class="fas fa-fw fa-question-circle"></i>
-          {{ $t('dashboardSidebar.knowledgeBase') }}
+          <i
+            class="dashboard__sidebar-link-icon iconoir-chat-bubble-question"
+          ></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboardSidebar.knowledgeBase')
+          }}</span>
         </a>
       </li>
       <li>
@@ -49,26 +55,34 @@
           href="https://baserow.io/blog/category/tutorials"
           target="_blank"
         >
-          <i class="fas fa-fw fa-graduation-cap"></i>
-          {{ $t('dashboardSidebar.tutorials') }}
+          <i class="dashboard__sidebar-link-icon iconoir-graduation-cap"></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboardSidebar.tutorials')
+          }}</span>
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="$refs.settingsModal.show()">
-          <i class="fas fa-fw fa-cogs"></i>
-          {{ $t('dashboardSidebar.userSettings') }}
+          <i class="dashboard__sidebar-link-icon iconoir-settings"></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboardSidebar.userSettings')
+          }}</span>
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="$refs.trashModal.show()">
-          <i class="fas fa-fw fa-trash"></i>
-          {{ $t('dashboardSidebar.trash') }}
+          <i class="dashboard__sidebar-link-icon iconoir-bin"></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboardSidebar.trash')
+          }}</span>
         </a>
       </li>
       <li>
         <a class="dashboard__sidebar-link" @click="logoff()">
-          <i class="fas fa-fw fa-sign-out-alt"></i>
-          {{ $t('dashboardSidebar.logoff') }}
+          <i class="dashboard__sidebar-link-icon iconoir-log-out"></i>
+          <span class="dashboard__sidebar-link-text">{{
+            $t('dashboardSidebar.logoff')
+          }}</span>
         </a>
       </li>
     </ul>
@@ -100,7 +114,13 @@ export default {
   },
   methods: {
     logoff() {
-      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
+      logoutAndRedirectToLogin(
+        this.$nuxt.$router,
+        this.$store,
+        false,
+        false,
+        true
+      )
     },
   },
 }

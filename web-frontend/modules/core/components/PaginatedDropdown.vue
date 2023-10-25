@@ -11,12 +11,12 @@
   >
     <a v-if="showInput" class="dropdown__selected" @click="show()">
       <template v-if="displayName !== null">
-        {{ displayName }}
+        <span class="dropdown__selected-text">{{ displayName }}</span>
       </template>
       <template v-else>{{
         notSelectedText === null ? $t('action.makeChoice') : notSelectedText
       }}</template>
-      <i class="dropdown__toggle-icon fas fa-caret-down"></i>
+      <i class="dropdown__toggle-icon iconoir-nav-arrow-down"></i>
     </a>
     <div
       ref="itemsContainer"
@@ -27,7 +27,7 @@
       }"
     >
       <div v-if="showSearch" class="select__search">
-        <i class="select__search-icon fas fa-search"></i>
+        <i class="select__search-icon iconoir-search"></i>
         <input
           ref="search"
           v-model="query"

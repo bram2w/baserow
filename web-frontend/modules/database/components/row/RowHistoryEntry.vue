@@ -8,16 +8,21 @@
       }}</span>
     </div>
     <div class="row-history-entry__content">
-      <template v-for="field in entryFields">
-        <template v-if="getFieldName(field) && getEntryComponent(field)">
-          <div :key="field" class="row-history-entry__field">
-            {{ getFieldName(field) }}
+      <template v-for="fieldIdentifier in entryFields">
+        <template
+          v-if="
+            getFieldName(fieldIdentifier) && getEntryComponent(fieldIdentifier)
+          "
+        >
+          <div :key="fieldIdentifier" class="row-history-entry__field">
+            {{ getFieldName(fieldIdentifier) }}
           </div>
           <component
-            :is="getEntryComponent(field)"
-            :key="field + 'content'"
+            :is="getEntryComponent(fieldIdentifier)"
+            :key="fieldIdentifier + 'content'"
             :entry="entry"
-            :field-identifier="field"
+            :field-identifier="fieldIdentifier"
+            :field="getField(fieldIdentifier)"
           ></component>
         </template>
       </template>
@@ -27,9 +32,11 @@
 
 <script>
 import moment from '@baserow/modules/core/moment'
+import collaboratorName from '@baserow/modules/database/mixins/collaboratorName'
 
 export default {
   name: 'RowHistoryEntry',
+  mixins: [collaboratorName],
   props: {
     entry: {
       type: Object,
@@ -42,7 +49,10 @@ export default {
   },
   computed: {
     name() {
-      return this.entry.user.name
+      if (this.entry.user.id === this.$store.getters['auth/getUserObject'].id) {
+        return this.$t('rowHistorySidebar.you')
+      }
+      return this.getCollaboratorName(this.entry.user, this.store)
     },
     initials() {
       return this.name.slice(0, 1).toUpperCase()
@@ -64,12 +74,16 @@ export default {
       return moment.utc(timestamp).tz(moment.tz.guess())
     },
     getFieldName(fieldIdentifier) {
-      const id = this.entry.fields_metadata[fieldIdentifier].id
-      const field = this.fields.find((f) => f.id === id)
+      const field = this.getField(fieldIdentifier)
       if (field) {
         return field.name
       }
       return null
+    },
+    getField(fieldIdentifier) {
+      const id = this.entry.fields_metadata[fieldIdentifier].id
+      const field = this.fields.find((f) => f.id === id)
+      return field
     },
     getEntryComponent(fieldIdentifier) {
       const type = this.entry.fields_metadata[fieldIdentifier].type

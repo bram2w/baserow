@@ -11,7 +11,7 @@
       class="grid-field-file__dragging"
     >
       <div>
-        <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
+        <i class="grid-field-file__drop-icon iconoir-cloud-upload"></i>
         Drop here
       </div>
     </div>
@@ -29,8 +29,8 @@
           />
           <i
             v-else
-            class="fas grid-field-file__icon"
-            :class="'fa-' + $options.methods.getIconClass(file.mime_type)"
+            class="grid-field-file__icon"
+            :class="$options.methods.getIconClass(file.mime_type)"
           ></i>
         </a>
       </li>
@@ -39,13 +39,13 @@
 </template>
 
 <script>
-import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
+import { mimetype2icon } from '@baserow/modules/core/utils/fileTypeToIcon'
 
 export default {
   name: 'FunctionalGridViewFieldFile',
   methods: {
     getIconClass(mimeType) {
-      return mimetype2fa(mimeType)
+      return mimetype2icon(mimeType)
     },
     drop(parent, props, event) {
       if (props.readOnly) {

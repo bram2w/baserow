@@ -1,17 +1,13 @@
 .add {
-  display: inline-block;
   padding: 0 5px;
   background-color: $color-primary-100;
   color: $color-neutral-900;
   @include fixed-height(22px, 13px);
   @include rounded($rounded);
+  @include flex-align-items(4px, inline-flex);
 
   &:hover {
     background-color: $color-primary-200;
     text-decoration: none;
   }
-}
-
-.add__icon {
-  font-size: 12px;
 }

@@ -3,7 +3,7 @@
     <div v-if="!loaded" class="select-row-modal__initial-loading"></div>
     <div v-if="loaded" :class="{ 'select-row-modal__loading': loading }">
       <div class="select-row-modal__search">
-        <i class="fas fa-search select-row-modal__search-icon"></i>
+        <i class="iconoir-search select-row-modal__search-icon"></i>
         <input
           ref="search"
           v-model="visibleSearch"
@@ -155,7 +155,7 @@ export default {
 
     // Focus the search field so the user may begin typing immediately.
     this.$nextTick(() => {
-      this.focusSearch()
+      this.focusSearch({})
     })
 
     this.$priorityBus.$on(
@@ -199,6 +199,7 @@ export default {
       try {
         const { data: views } = await ViewService(this.$client).fetchAll(
           tableId,
+          false,
           false,
           false,
           false,
@@ -291,7 +292,8 @@ export default {
     /**
      * Focuses the search field when the component mounts.
      */
-    focusSearch() {
+    focusSearch({ event }) {
+      event?.preventDefault()
       this.$refs.search?.focus()
     },
     async createRow({ row, callback }) {

@@ -1,84 +1,103 @@
 .alert {
-  border: 1px solid;
+  display: flex;
+  padding: 16px;
   margin: 30px 0;
-  padding: 20px;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  gap: 12px;
+  z-index: $z-index-toasts;
+  border: 1px solid $palette-neutral-400;
+  background: $color-neutral-50;
   @include rounded($rounded-md);
+  @include add-elevation($elevation-low);
+}
 
-  @include alert-style(
-    $color-primary-100,
-    $color-primary-300,
-    $color-neutral-900,
-    $color-primary-700,
-    $color-primary-400
-  );
+.alert--with-shadow {
+  @include add-elevation($elevation-medium);
+}
 
-  &.alert--has-icon {
-    position: relative;
-    padding-left: 80px;
-  }
-
-  &.alert--with-shadow {
-    @include add-elevation($elevation-medium);
-  }
+.alert--minimal {
+  white-space: normal;
+  margin: 16px 0;
+  padding: 14px;
+  width: inherit;
 }
 
 .alert__icon {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  background-color: #fff;
-  border: 4px solid;
-  width: 40px;
-  height: 40px;
-  line-height: 32px;
-  text-align: center;
-  border-radius: 100%;
+  font-size: 18px;
+  flex: 0 1 auto;
 }
 
 .alert__icon-loading {
-  margin: 9px auto 0 auto;
+  margin: 0 auto 0 auto;
 }
 
 .alert__title {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-weight: 500;
+  line-height: 20px;
+  font-size: 13px;
+  margin-bottom: 4px;
 }
 
 .alert__content {
   margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  font-size: 12px;
+  text-align: justify;
+
+  p {
+    margin: 0;
+  }
 }
 
 .alert__close {
-  @include absolute(10px, 10px, auto, auto);
+  background: none;
+  width: 16px;
+  height: 16px;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  flex: 0 1 auto;
+  cursor: pointer;
+  color: $palette-neutral-800;
+  margin-left: auto;
+
+  &:hover {
+    color: $palette-neutral-900;
+  }
 }
 
 .alert--success {
   @include alert-style(
-    $color-success-100,
-    $color-success-300,
-    $color-success-900,
-    $color-success-700,
-    $color-success-400
+    $palette-green-50,
+    $palette-green-200,
+    $palette-green-900,
+    $palette-green-800,
+    $palette-green-400,
+    $palette-green-1000
   );
 }
 
 .alert--warning {
   @include alert-style(
-    $color-warning-100,
-    $color-warning-300,
-    $color-warning-900,
-    $color-warning-700,
-    $color-warning-400
+    $palette-yellow-50,
+    $palette-yellow-200,
+    $palette-yellow-900,
+    $palette-yellow-800,
+    $palette-yellow-400,
+    $palette-yellow-1000
   );
 }
 
 .alert--error {
   @include alert-style(
-    $color-error-100,
-    $color-error-300,
-    $color-error-900,
-    $color-error-700,
-    $color-error-400
+    $palette-red-50,
+    $palette-red-200,
+    $palette-red-900,
+    $palette-red-800,
+    $palette-red-400,
+    $palette-red-1000
   );
 }

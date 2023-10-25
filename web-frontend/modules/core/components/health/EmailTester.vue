@@ -6,7 +6,7 @@
       <a
         href="https://baserow.io/docs/installation%2Fconfiguration#email-configuration"
         target="_blank"
-        ><i class="fas fa-question-circle"
+        ><i class="iconoir-chat-bubble-question"
       /></a>
     </h2>
     <Error :error="error" />
@@ -16,7 +16,7 @@
         type="error"
         :title="testResult.error_type"
       >
-        <span>{{ testResult.error }}</span>
+        <p>{{ testResult.error }}</p>
         <pre class="email-tester__full-stack">{{ trimmedFullStack }}</pre>
       </Alert>
       <Alert v-else type="success" :title="$t('emailTester.success')"> </Alert>

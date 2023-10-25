@@ -29,7 +29,7 @@ class TableWebhookCreateRequestSerializer(serializers.ModelSerializer):
         help_text="The additional headers as an object where the key is the name and "
         "the value the value.",
     )
-    url = serializers.URLField(
+    url = serializers.CharField(
         max_length=2000,
         validators=[url_validation],
         help_text="The URL that must be called when the webhook is triggered.",
@@ -66,7 +66,7 @@ class TableWebhookUpdateRequestSerializer(serializers.ModelSerializer):
         help_text="The additional headers as an object where the key is the name and "
         "the value the value.",
     )
-    url = serializers.URLField(
+    url = serializers.CharField(
         required=False,
         max_length=2000,
         validators=[url_validation],
@@ -159,7 +159,7 @@ class TableWebhookTestCallRequestSerializer(serializers.ModelSerializer):
         help_text="The additional headers as an object where the key is the name and "
         "the value the value.",
     )
-    url = serializers.URLField(
+    url = serializers.CharField(
         max_length=2000,
         validators=[url_validation],
         help_text="The URL that must be called when the webhook is triggered.",

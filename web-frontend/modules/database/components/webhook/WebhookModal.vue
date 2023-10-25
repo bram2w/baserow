@@ -9,10 +9,10 @@
       <div class="align-right">
         <a v-if="state === 'list'" class="button" @click="state = 'create'">
           {{ $t('webhookModal.createWebhook') }}
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
         </a>
         <a v-if="state === 'create'" class="button" @click="state = 'list'">
-          <i class="fas fa-arrow-left"></i>
+          <i class="iconoir-arrow-left"></i>
           {{ $t('webhookModal.backToList') }}
         </a>
       </div>

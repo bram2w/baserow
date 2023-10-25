@@ -1,0 +1,28 @@
+.row-history-field-select-option__diff {
+  display: inline-block;
+  background: transparent;
+  padding: 2px;
+  border: 2px solid #c2f0d3;
+  margin-right: 4px;
+  margin-bottom: 10px;
+  border-radius: 80px;
+}
+
+.row-history-field-select-option__diff--removed {
+  border-color: #f5d3ce;
+  text-decoration: line-through;
+}
+
+.row-history-field-select-option__diff--added {
+  border-color: #c2f0d3;
+}
+
+.row-history-field-select-option__diff-inner {
+  display: inline-block;
+  padding: 2px 8px 2px 8px;
+  border-radius: 80px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+}

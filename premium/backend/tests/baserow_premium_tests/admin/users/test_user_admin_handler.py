@@ -11,7 +11,10 @@ from baserow_premium.admin.users.handler import UserAdminHandler
 from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.core.exceptions import IsNotAdminError
-from baserow.core.user.exceptions import PasswordDoesNotMatchValidation
+from baserow.core.user.exceptions import (
+    PasswordDoesNotMatchValidation,
+    UserAlreadyExist,
+)
 
 User = get_user_model()
 invalid_passwords = [
@@ -164,6 +167,128 @@ def test_admin_can_deactive_and_unstaff_other_users(premium_data_fixture):
     )
     active_user.refresh_from_db()
     assert not active_user.is_active
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_user(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+    user = handler.create_user(
+        requesting_user=admin_user,
+        username="new@test.nl",
+        name="Test",
+        password="password",
+        is_active=True,
+        is_staff=True,
+    )
+
+    user = User.objects.get(pk=user.id)
+    assert user.username == "new@test.nl"
+    assert user.email == "new@test.nl"
+    assert user.first_name == "Test"
+    assert user.is_active is True
+    assert user.is_staff is True
+    assert user.check_password("password")
+    assert user.profile.id
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_user_as_non_admin(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=False,
+        has_active_premium_license=True,
+    )
+
+    with pytest.raises(IsNotAdminError):
+        handler.create_user(
+            requesting_user=admin_user,
+            username="new@test.nl",
+            name="Test",
+            password="password",
+            is_active=True,
+            is_staff=True,
+        )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_user_without_license(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=False,
+        has_active_premium_license=False,
+    )
+
+    with pytest.raises(FeaturesNotAvailableError):
+        handler.create_user(
+            requesting_user=admin_user,
+            username="new@test.nl",
+            name="Test",
+            password="password",
+            is_active=True,
+            is_staff=True,
+        )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_user_that_already_exists(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+
+    with pytest.raises(UserAlreadyExist):
+        handler.create_user(
+            requesting_user=admin_user,
+            username="test@test.nl",
+            name="Test",
+            password="password",
+            is_active=True,
+            is_staff=True,
+        )
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_create_user_with_invalid_password(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        has_active_premium_license=True,
+    )
+
+    with pytest.raises(PasswordDoesNotMatchValidation):
+        handler.create_user(
+            requesting_user=admin_user,
+            username="test2@test.nl",
+            name="Test",
+            password="t",
+            is_active=True,
+            is_staff=True,
+        )
 
 
 @pytest.mark.django_db
@@ -357,3 +482,39 @@ def test_raises_exception_when_updating_an_unknown_user(premium_data_fixture):
     )
     with pytest.raises(UserDoesNotExistException):
         handler.update_user(admin_user, 99999, username="new_password")
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_raises_exception_when_changing_to_an_existing_user(premium_data_fixture):
+    premium_data_fixture.create_user(email="existing@test.nl")
+
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+        has_active_premium_license=True,
+    )
+    with pytest.raises(UserAlreadyExist):
+        handler.update_user(admin_user, admin_user.id, username="existing@test.nl")
+
+
+@pytest.mark.django_db
+@override_settings(DEBUG=True)
+def test_does_not_raise_exception_when_changing_to_same_username(premium_data_fixture):
+    handler = UserAdminHandler()
+    admin_user = premium_data_fixture.create_user(
+        email="test@test.nl",
+        password="password",
+        first_name="Test1",
+        is_staff=True,
+        is_active=True,
+        has_active_premium_license=True,
+    )
+    assert (
+        handler.update_user(admin_user, admin_user.id, username="test@test.nl").email
+        == "test@test.nl"
+    )

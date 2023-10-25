@@ -34,6 +34,11 @@ ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD = (
     HTTP_400_BAD_REQUEST,
     "The filter {e.filter_type} is not compatible with field type {e.field_type}.",
 )
+ERROR_VIEW_FILTER_GROUP_DOES_NOT_EXIST = (
+    "ERROR_VIEW_FILTER_GROUP_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view filter group does not exist.",
+)
 ERROR_VIEW_SORT_DOES_NOT_EXIST = (
     "ERROR_VIEW_SORT_DOES_NOT_EXIST",
     HTTP_404_NOT_FOUND,
@@ -53,6 +58,26 @@ ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED = (
     "ERROR_VIEW_SORT_FIELD_NOT_SUPPORTED",
     HTTP_400_BAD_REQUEST,
     "The field does not support view sorting.",
+)
+ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST = (
+    "ERROR_VIEW_GROUP_BY_DOES_NOT_EXIST",
+    HTTP_404_NOT_FOUND,
+    "The view group by does not exist.",
+)
+ERROR_VIEW_GROUP_BY_NOT_SUPPORTED = (
+    "ERROR_VIEW_GROUP_BY_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "Grouping is not supported for the view type.",
+)
+ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS = (
+    "ERROR_VIEW_GROUP_BY_FIELD_ALREADY_EXISTS",
+    HTTP_400_BAD_REQUEST,
+    "A group by for the field already exists in the view.",
+)
+ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED = (
+    "ERROR_VIEW_GROUP_BY_FIELD_NOT_SUPPORTED",
+    HTTP_400_BAD_REQUEST,
+    "The field does not support view grouping.",
 )
 ERROR_UNRELATED_FIELD = (
     "ERROR_UNRELATED_FIELD",

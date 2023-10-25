@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix rounded corners in edit row modal",
+    "issue_number": 1950,
+    "bullet_points": [],
+    "created_at": "2023-09-28"
+}

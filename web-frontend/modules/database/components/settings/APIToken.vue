@@ -23,7 +23,7 @@
               $refs.context.toggle($refs.contextLink, 'bottom', 'right', 4)
             "
           >
-            <i class="fas fa-ellipsis-h"></i>
+            <i class="baserow-icon-more-horizontal"></i>
           </a>
           <Context
             ref="context"
@@ -46,8 +46,9 @@
                 @click.prevent="tokenVisible = !tokenVisible"
               >
                 <i
-                  class="fas"
-                  :class="tokenVisible ? 'fa-eye-slash' : 'fa-eye'"
+                  :class="
+                    tokenVisible ? 'iconoir-eye-off' : 'iconoir-eye-empty'
+                  "
                 ></i>
               </a>
               <a
@@ -55,14 +56,14 @@
                 :title="$t('apiToken.copyToClipboard')"
                 @click=";[copyTokenToClipboard(), $refs.copied.show()]"
               >
-                <i class="fas fa-copy"></i>
+                <i class="iconoir-copy"></i>
                 <Copied ref="copied"></Copied>
               </a>
             </div>
             <ul class="context__menu">
               <li>
                 <nuxt-link :to="{ name: 'database-api-docs' }">
-                  <i class="context__menu-icon fas fa-fw fa-book"></i>
+                  <i class="context__menu-icon iconoir-book"></i>
                   {{ $t('apiToken.viewAPIDocs') }}
                 </nuxt-link>
               </li>
@@ -73,13 +74,13 @@
                   }"
                   @click="rotateKey(token)"
                 >
-                  <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+                  <i class="context__menu-icon iconoir-refresh-double"></i>
                   {{ $t('apiToken.generateNewToken') }}
                 </a>
               </li>
               <li>
                 <a @click="enableRename()">
-                  <i class="context__menu-icon fas fa-fw fa-pen"></i>
+                  <i class="context__menu-icon iconoir-edit-pencil"></i>
                   {{ $t('action.rename') }}
                 </a>
               </li>
@@ -90,7 +91,7 @@
                   }"
                   @click.prevent="deleteToken(token)"
                 >
-                  <i class="context__menu-icon fas fa-fw fa-trash"></i>
+                  <i class="context__menu-icon iconoir-bin"></i>
                   {{ $t('action.delete') }}
                 </a>
               </li>
@@ -102,10 +103,9 @@
           <a class="api-token__expand" @click.prevent="open = !open">
             {{ $t('apiToken.showDatabases') }}
             <i
-              class="fas"
               :class="{
-                'fa-angle-down': !open,
-                'fa-angle-up': open,
+                'iconoir-nav-arrow-down': !open,
+                'iconoir-nav-arrow-up': open,
               }"
             ></i>
           </a>

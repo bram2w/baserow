@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
+from baserow.contrib.builder.domains.domain_types import CustomDomainType
 from baserow.contrib.builder.domains.exceptions import DomainNotInBuilder
 from baserow.contrib.builder.domains.models import Domain
 from baserow.contrib.builder.domains.service import DomainService
@@ -15,7 +16,9 @@ def test_domain_created_signal_sent(domain_created_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    domain = DomainService().create_domain(user, builder, "test")
+    domain = DomainService().create_domain(
+        user, CustomDomainType(), builder, domain_name="test"
+    )
 
     assert domain_created_mock.called_with(domain=domain, user=user)
 
@@ -26,7 +29,9 @@ def test_create_domain_user_not_in_workspace(data_fixture):
     builder = data_fixture.create_builder_application()
 
     with pytest.raises(UserNotInWorkspace):
-        DomainService().create_domain(user, builder, "test")
+        DomainService().create_domain(
+            user, CustomDomainType, builder, domain_name="test"
+        )
 
 
 @patch("baserow.contrib.builder.domains.service.domain_deleted")
@@ -34,7 +39,7 @@ def test_create_domain_user_not_in_workspace(data_fixture):
 def test_domain_deleted_signal_sent(domain_deleted_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     DomainService().delete_domain(user, domain)
 
@@ -49,7 +54,9 @@ def test_delete_domain_user_not_in_workspace(data_fixture):
     user_unrelated = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    domain = DomainService().create_domain(user, builder, "test")
+    domain = DomainService().create_domain(
+        user, CustomDomainType(), builder, domain_name="test"
+    )
 
     with pytest.raises(UserNotInWorkspace):
         DomainService().delete_domain(user_unrelated, domain)
@@ -61,7 +68,7 @@ def test_delete_domain_user_not_in_workspace(data_fixture):
 def test_get_domain_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     with pytest.raises(UserNotInWorkspace):
         DomainService().get_domain(user, domain.id)
@@ -71,7 +78,7 @@ def test_get_domain_user_not_in_workspace(data_fixture):
 def test_get_domains_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     with pytest.raises(UserNotInWorkspace):
         DomainService().get_domains(user, builder)
@@ -81,8 +88,8 @@ def test_get_domains_user_not_in_workspace(data_fixture):
 def test_get_domains_partial_permissions(data_fixture, stub_check_permissions):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain_with_access = data_fixture.create_builder_domain(builder=builder)
-    domain_without_access = data_fixture.create_builder_domain(builder=builder)
+    domain_with_access = data_fixture.create_builder_custom_domain(builder=builder)
+    domain_without_access = data_fixture.create_builder_custom_domain(builder=builder)
 
     def exclude_domain_without_access(
         actor,
@@ -107,7 +114,7 @@ def test_get_domains_partial_permissions(data_fixture, stub_check_permissions):
 def test_domain_updated_signal_sent(domain_updated_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     DomainService().update_domain(user, domain, domain_name="new.com")
 
@@ -118,7 +125,7 @@ def test_domain_updated_signal_sent(domain_updated_mock, data_fixture):
 def test_update_domain_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     with pytest.raises(UserNotInWorkspace):
         DomainService().update_domain(user, domain, domain_name="test.com")
@@ -128,7 +135,7 @@ def test_update_domain_user_not_in_workspace(data_fixture):
 def test_update_domain_invalid_values(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain = data_fixture.create_builder_domain(builder=builder)
+    domain = data_fixture.create_builder_custom_domain(builder=builder)
 
     domain_updated = DomainService().update_domain(user, domain, nonsense="hello")
 
@@ -140,8 +147,8 @@ def test_update_domain_invalid_values(data_fixture):
 def test_domains_reordered_signal_sent(domains_reordered_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     full_order = DomainService().order_domains(
         user, builder, [domain_two.id, domain_one.id]
@@ -156,8 +163,8 @@ def test_domains_reordered_signal_sent(domains_reordered_mock, data_fixture):
 def test_order_domains_user_not_in_workspace(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application()
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(builder=builder, order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(builder=builder, order=2)
 
     with pytest.raises(UserNotInWorkspace):
         DomainService().order_domains(user, builder, [domain_two.id, domain_one.id])
@@ -167,8 +174,8 @@ def test_order_domains_user_not_in_workspace(data_fixture):
 def test_order_domains_domain_not_in_builder(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
-    domain_one = data_fixture.create_builder_domain(builder=builder, order=1)
-    domain_two = data_fixture.create_builder_domain(order=2)
+    domain_one = data_fixture.create_builder_custom_domain(builder=builder, order=1)
+    domain_two = data_fixture.create_builder_custom_domain(order=2)
 
     with pytest.raises(DomainNotInBuilder):
         DomainService().order_domains(user, builder, [domain_two.id, domain_one.id])
@@ -179,7 +186,7 @@ def test_get_published_builder_by_domain_name(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 
@@ -197,7 +204,7 @@ def test_get_published_builder_by_domain_name_unauthorized(
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 
@@ -213,7 +220,7 @@ def test_async_publish_domain(mock_run_async_job, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     job = DomainService().async_publish(user, domain1)
 
@@ -225,7 +232,7 @@ def test_async_publish_domain(mock_run_async_job, data_fixture):
 @pytest.mark.django_db(transaction=True)
 def test_async_publish_domain_no_permission(data_fixture, stub_check_permissions):
     user = data_fixture.create_user()
-    domain1 = data_fixture.create_builder_domain()
+    domain1 = data_fixture.create_builder_custom_domain()
 
     with stub_check_permissions(raise_permission_denied=True), pytest.raises(
         PermissionException
@@ -239,7 +246,7 @@ def test_publish_domain(domain_updated_mock, data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     progress = Progress(100)
     domain = DomainService().publish(user, domain1, progress)
@@ -252,7 +259,7 @@ def test_publish_domain_unauthorized(data_fixture, stub_check_permissions):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
 
-    domain1 = data_fixture.create_builder_domain(builder=builder)
+    domain1 = data_fixture.create_builder_custom_domain(builder=builder)
 
     progress = Progress(100)
 

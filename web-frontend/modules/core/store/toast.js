@@ -6,6 +6,7 @@ export const state = () => ({
   failedConnecting: false,
   authorizationError: false,
   userSessionExpired: false,
+  userPasswordChanged: false,
   copying: false,
   pasting: false,
   clearing: false,
@@ -49,6 +50,9 @@ export const mutations = {
   },
   SET_PERMISSIONS_UPDATED(state, value) {
     state.permissionsUpdated = value
+  },
+  SET_USER_PASSWORD_CHANGED(state, value) {
+    state.userPasswordChanged = value
   },
 }
 
@@ -115,6 +119,9 @@ export const actions = {
   },
   setUserSessionExpired({ commit }, value) {
     commit('SET_USER_SESSION_EXPIRED', value)
+  },
+  setUserPasswordChanged({ commit }, value) {
+    commit('SET_USER_PASSWORD_CHANGED', value)
   },
   setPermissionsUpdated({ commit }, value) {
     commit('SET_PERMISSIONS_UPDATED', value)

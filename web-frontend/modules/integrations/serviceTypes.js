@@ -22,13 +22,34 @@ export class LocalBaserowGetRowServiceType extends ServiceType {
   isValid(service) {
     return (
       super.isValid(service) &&
-      Boolean(service.view_id) &&
+      Boolean(service.table_id) &&
       Boolean(service.row_id)
     )
   }
 
   get formComponent() {
     return LocalBaserowGetRowForm
+  }
+
+  getDataSchema(service) {
+    return service.schema
+  }
+
+  /**
+   * A hook called prior to an update to modify the filters and
+   * sortings if the `table_id` changes from one ID to another.
+   * The same behavior happens in the backend, this reset is to
+   * make the filter/sort components reset properly.
+   */
+  beforeUpdate(newValues, oldValues) {
+    if (
+      oldValues.table_id !== null &&
+      newValues.table_id !== oldValues.table_id
+    ) {
+      newValues.filters = []
+      newValues.sortings = []
+    }
+    return newValues
   }
 
   getOrder() {
@@ -57,7 +78,19 @@ export class LocalBaserowListRowsServiceType extends ServiceType {
   }
 
   isValid(service) {
-    return super.isValid(service) && Boolean(service.view_id)
+    return super.isValid(service) && Boolean(service.table_id)
+  }
+
+  get returnsList() {
+    return true
+  }
+
+  getDataSchema(service) {
+    return service.schema
+  }
+
+  get maxResultLimit() {
+    return 100
   }
 
   getOrder() {

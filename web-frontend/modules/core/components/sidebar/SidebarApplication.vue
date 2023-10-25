@@ -13,23 +13,27 @@
         @click="$emit('selected', application)"
       >
         <i
-          class="tree__icon tree__icon--type fas"
-          :class="'fa-' + application._.type.iconClass"
+          class="tree__icon tree__icon--type"
+          :class="application._.type.iconClass"
         ></i>
-        <Editable
-          ref="rename"
-          :value="application.name"
-          @change="renameApplication(application, $event)"
-        ></Editable>
+        <span class="tree__link-text">
+          <Editable
+            ref="rename"
+            :value="application.name"
+            @change="renameApplication(application, $event)"
+          ></Editable>
+        </span>
       </a>
+
       <a
         ref="contextLink"
         class="tree__options"
         @click="$refs.context.toggle($refs.contextLink, 'bottom', 'right', 0)"
         @mousedown.stop
       >
-        <i class="fas fa-ellipsis-v"></i>
+        <i class="baserow-icon-more-vertical"></i>
       </a>
+
       <Context
         ref="context"
         :overflow-scroll="true"
@@ -57,7 +61,7 @@
             "
           >
             <a @click="enableRename()">
-              <i class="context__menu-icon fas fa-fw fa-pen"></i>
+              <i class="context__menu-icon iconoir-edit-pencil"></i>
               {{
                 $t('sidebarApplication.rename', {
                   type: application._.type.name.toLowerCase(),
@@ -90,7 +94,7 @@
             "
           >
             <a @click="openSnapshots">
-              <i class="context__menu-icon fas fa-fw fa-history"></i>
+              <i class="context__menu-icon baserow-icon-history"></i>
               {{ $t('sidebarApplication.snapshots') }}
             </a>
           </li>
@@ -108,7 +112,7 @@
             "
           >
             <a @click="showApplicationTrashModal">
-              <i class="context__menu-icon fas fa-fw fa-recycle"></i>
+              <i class="context__menu-icon iconoir-refresh-double"></i>
               {{ $t('sidebarApplication.viewTrash') }}
             </a>
           </li>
@@ -125,7 +129,7 @@
               :class="{ 'context__menu-item--loading': deleting }"
               @click="deleteApplication()"
             >
-              <i class="context__menu-icon fas fa-fw fa-trash"></i>
+              <i class="context__menu-icon iconoir-bin"></i>
               {{
                 $t('sidebarApplication.delete', {
                   type: application._.type.name.toLowerCase(),

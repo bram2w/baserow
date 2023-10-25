@@ -19,8 +19,8 @@
           >
             {{ statusDescription }}
           </div>
-          <i v-show="isExpanded" class="fas fa-chevron-up"></i>
-          <i v-show="!isExpanded" class="fas fa-chevron-down"></i>
+          <i v-show="isExpanded" class="iconoir-nav-arrow-up"></i>
+          <i v-show="!isExpanded" class="iconoir-nav-arrow-down"></i>
         </a>
       </div>
     </div>

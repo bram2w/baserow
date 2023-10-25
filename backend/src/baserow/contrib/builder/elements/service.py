@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from django.contrib.auth.models import AbstractUser
+from django.utils import translation
 
 from baserow.contrib.builder.elements.exceptions import ElementNotInSamePage
 from baserow.contrib.builder.elements.handler import ElementHandler
@@ -21,7 +22,10 @@ from baserow.contrib.builder.elements.signals import (
     element_updated,
     elements_created,
 )
-from baserow.contrib.builder.elements.types import ElementForUpdate
+from baserow.contrib.builder.elements.types import (
+    ElementForUpdate,
+    ElementsAndWorkflowActions,
+)
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
@@ -110,9 +114,10 @@ class ElementService:
             raise ElementNotInSamePage()
 
         try:
-            new_element = self.handler.create_element(
-                element_type, page, before=before, order=order, **kwargs
-            )
+            with translation.override(user.profile.language):
+                new_element = self.handler.create_element(
+                    element_type, page, before=before, order=order, **kwargs
+                )
         except CannotCalculateIntermediateOrder:
             self.recalculate_full_orders(user, page)
             # If the `find_intermediate_order` fails with a
@@ -245,7 +250,9 @@ class ElementService:
 
         element_orders_recalculated.send(self, page=page)
 
-    def duplicate_element(self, user: AbstractUser, element: Element) -> List[Element]:
+    def duplicate_element(
+        self, user: AbstractUser, element: Element
+    ) -> ElementsAndWorkflowActions:
         """
         Duplicate an element in a recursive fashion. If the element has any children
         they will also be imported using the same method and so will their children
@@ -265,8 +272,15 @@ class ElementService:
             context=page,
         )
 
-        elements_duplicated = self.handler.duplicate_element(element)
+        elements_and_workflow_actions_duplicated = self.handler.duplicate_element(
+            element
+        )
 
-        elements_created.send(self, elements=elements_duplicated, user=user, page=page)
+        elements_created.send(
+            self,
+            elements=elements_and_workflow_actions_duplicated["elements"],
+            user=user,
+            page=page,
+        )
 
-        return elements_duplicated
+        return elements_and_workflow_actions_duplicated

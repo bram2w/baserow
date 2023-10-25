@@ -1,5 +1,6 @@
 import itertools
 import re
+from collections import defaultdict
 from types import MethodType
 from typing import Generator, Iterable, List, Optional, Type, TypedDict, Union
 
@@ -44,7 +45,7 @@ from baserow.contrib.database.table.constants import (
 )
 from baserow.contrib.database.views.exceptions import ViewFilterTypeNotAllowedForField
 from baserow.contrib.database.views.registries import view_filter_type_registry
-from baserow.core.db import specific_iterator
+from baserow.core.db import MultiFieldPrefetchQuerysetMixin, specific_iterator
 from baserow.core.fields import AutoTrueBooleanField
 from baserow.core.jobs.mixins import (
     JobWithUndoRedoIds,
@@ -82,7 +83,7 @@ def get_row_needs_background_update_index(table):
     )
 
 
-class TableModelQuerySet(models.QuerySet):
+class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
     def _insert(self, objs, fields, *args, **kwargs):
         """
         We never want to include TSVector fields when inserting rows, we manage them
@@ -152,19 +153,22 @@ class TableModelQuerySet(models.QuerySet):
 
     def enhance_by_fields(self):
         """
-        Enhances the queryset based on the `enhance_queryset` for each field in the
-        table. For example the `link_row` field adds the `prefetch_related` to prevent
-        N queries per row. This helper should only be used when multiple rows are going
-        to be fetched.
+        Enhances the queryset based on the `enhance_queryset_in_bulk` for each unique
+        field type used in the table. This one will eventually call the
+        `enhance_queryset` for reach field in the table. For example the `link_row`
+        field adds the `prefetch_related` to prevent N queries per row. This helper
+        should only be used when multiple rows are going to be fetched.
 
         :return: The enhanced queryset.
         :rtype: QuerySet
         """
 
+        by_type = defaultdict(list)
         for field_object in self.model._field_objects.values():
-            self = field_object["type"].enhance_queryset(
-                self, field_object["field"], field_object["name"]
-            )
+            field_type = field_object["type"]
+            by_type[field_type].append(field_object)
+        for field_type, field_objects in by_type.items():
+            self = field_type.enhance_queryset_in_bulk(self, field_objects)
         return self
 
     def search_all_fields(

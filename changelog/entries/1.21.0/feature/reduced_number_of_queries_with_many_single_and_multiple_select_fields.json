@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Reduced the number of queries when listing rows in a table that has many single/multiple select fields.",
+  "issue_number": null,
+  "bullet_points": [],
+  "created_at": "2023-09-18"
+}

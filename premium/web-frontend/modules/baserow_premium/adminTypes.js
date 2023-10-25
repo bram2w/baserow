@@ -17,7 +17,7 @@ export class DashboardType extends PremiumAdminType {
   }
 
   getIconClass() {
-    return 'chart-line'
+    return 'iconoir-candlestick-chart'
   }
 
   getName() {
@@ -40,7 +40,7 @@ export class UsersAdminType extends PremiumAdminType {
   }
 
   getIconClass() {
-    return 'users'
+    return 'iconoir-community'
   }
 
   getName() {
@@ -63,7 +63,7 @@ export class WorkspacesAdminType extends PremiumAdminType {
   }
 
   getIconClass() {
-    return 'layer-group'
+    return 'iconoir-book-stack'
   }
 
   getName() {
@@ -86,7 +86,7 @@ export class LicensesAdminType extends AdminType {
   }
 
   getIconClass() {
-    return 'certificate'
+    return 'iconoir-shield-check'
   }
 
   getName() {

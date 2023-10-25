@@ -15,7 +15,7 @@
         @selected="selectTemplate"
       >
         <a class="modal__close" @click="hide()">
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </TemplateCategories>
       <TemplatePreview

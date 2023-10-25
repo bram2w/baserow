@@ -1,0 +1,28 @@
+.event__header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.event__header-left {
+  display: flex;
+}
+
+.event__label {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.event__amount-actions {
+  background-color: $color-neutral-100;
+  padding: 1px 7px;
+  border-radius: 3px;
+}
+
+.event__toggle {
+  color: $color-neutral-900;
+}
+
+.event__workflow-action:not(:first-child) {
+  border-top: 1px solid $color-neutral-200;
+  padding-top: 20px;
+}

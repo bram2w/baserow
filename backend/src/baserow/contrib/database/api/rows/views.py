@@ -52,6 +52,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST,
     ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD,
 )
+from baserow.contrib.database.api.views.serializers import validate_api_grouped_filters
 from baserow.contrib.database.fields.exceptions import (
     FieldDoesNotExist,
     FilterFieldNotFound,
@@ -95,6 +96,9 @@ from baserow.contrib.database.views.exceptions import (
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.database.views.models import View
 from baserow.contrib.database.views.registries import view_filter_type_registry
+from baserow.contrib.database.views.view_filter_groups import (
+    construct_filter_builder_from_grouped_api_filters,
+)
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
 from baserow.core.handler import CoreHandler
@@ -166,6 +170,26 @@ class RowsView(APIView):
                 'double quotes like so: `order_by=My Field,Field with \\"`.',
             ),
             OpenApiParameter(
+                name="filters",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description=(
+                    "A JSON serialized string containing the filter tree to apply "
+                    "to this view. The filter tree is a nested structure containing "
+                    "the filters that need to be applied. \n\n"
+                    "Please note that if this parameter is provided, all other "
+                    "`filter__{field}__{filter}` will be ignored, "
+                    "as well as the `filter_type` parameter. \n\n"
+                    "An example of a valid filter tree is the following:"
+                    '`{"filter_type": "AND", "filters": [{"field": 1, "type": "equal", '
+                    '"value": "test"}]}`. The `field` value must be the ID of the '
+                    "field to filter on, or the name of the field if "
+                    "`user_field_names` is true.\n\n"
+                    f"The following filters are available: "
+                    f'{", ".join(view_filter_type_registry.get_types())}.'
+                ),
+            ),
+            OpenApiParameter(
                 name="filter__{field}__{filter}",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -175,6 +199,8 @@ class RowsView(APIView):
                     f"they follow the same format. The field and filter variable "
                     f"indicate how to filter and the value indicates where to filter "
                     f"on.\n\n"
+                    f"Please note that if the `filters` parameter is provided, this "
+                    f"parameter will be ignored. \n\n"
                     f"For example if you provide the following GET parameter "
                     f"`filter__field_1__equal=test` then only rows where the value of "
                     f"field_1 is equal to test are going to be returned.\n\n"
@@ -192,6 +218,8 @@ class RowsView(APIView):
                     "`OR`: Indicates that the rows only have to match one of the "
                     "filters.\n\n"
                     "This works only if two or more filters are provided."
+                    "Please note that if the `filters` parameter is provided, "
+                    "this parameter will be ignored. \n\n"
                 ),
             ),
             OpenApiParameter(
@@ -279,6 +307,7 @@ class RowsView(APIView):
                     "ERROR_FILTER_FIELD_NOT_FOUND",
                     "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST",
                     "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD",
+                    "ERROR_FILTERS_PARAM_VALIDATION_ERROR",
                 ]
             ),
             401: get_error_schema(["ERROR_NO_PERMISSION_TO_TABLE"]),
@@ -359,16 +388,32 @@ class RowsView(APIView):
         if order_by:
             queryset = queryset.order_by_fields_string(order_by, user_field_names)
 
-        filter_type_query_param = query_params.get("filter_type")
-        filter_type = (
-            FILTER_TYPE_OR
-            if filter_type_query_param.upper() == "OR"
-            else FILTER_TYPE_AND
-        )
-        filter_object = {key: request.GET.getlist(key) for key in request.GET.keys()}
-        queryset = queryset.filter_by_fields_object(
-            filter_object, filter_type, user_field_names=user_field_names
-        )
+        # Advanced filters are provided as a JSON string in the `filters` parameter.
+        # If provided, all other filter parameters are ignored.
+        api_filters = None
+        if (filters := request.GET.get("filters", None)) is not None:
+            api_filters = validate_api_grouped_filters(
+                filters, user_field_names=user_field_names
+            )
+
+        if api_filters is not None:
+            filter_builder = construct_filter_builder_from_grouped_api_filters(
+                api_filters, model, user_field_names=user_field_names
+            )
+            queryset = filter_builder.apply_to_queryset(queryset)
+        else:
+            filter_type_query_param = query_params.get("filter_type")
+            filter_type = (
+                FILTER_TYPE_OR
+                if filter_type_query_param.upper() == "OR"
+                else FILTER_TYPE_AND
+            )
+            filter_object = {
+                key: request.GET.getlist(key) for key in request.GET.keys()
+            }
+            queryset = queryset.filter_by_fields_object(
+                filter_object, filter_type, user_field_names=user_field_names
+            )
 
         paginator = PageNumberPagination(limit_page_size=settings.ROW_PAGE_SIZE_LIMIT)
         page = paginator.paginate_queryset(queryset, request, self)
@@ -1496,7 +1541,9 @@ class RowHistoryView(APIView):
         except table_model.DoesNotExist:
             raise RowDoesNotExist(row_id)
 
-        row_history = RowHistoryHandler.list_row_history(table_id, row_id)
+        row_history = RowHistoryHandler.list_row_history(
+            table.database.workspace, table_id, row_id
+        )
         page = paginator.paginate_queryset(row_history, request, self)
 
         return paginator.get_paginated_response(

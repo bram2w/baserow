@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Health Inspection Reports",
-    "icon": "notes-medical",
+    "icon": "iconoir-health-shield",
     "keywords": [
         "health",
         "inspection",

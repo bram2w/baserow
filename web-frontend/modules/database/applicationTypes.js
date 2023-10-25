@@ -21,7 +21,7 @@ export class DatabaseApplicationType extends ApplicationType {
   }
 
   getIconClass() {
-    return 'database'
+    return 'iconoir-db'
   }
 
   getName() {

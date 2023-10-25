@@ -3,6 +3,7 @@ from django.dispatch import receiver
 
 from baserow.contrib.database.api.views.serializers import (
     ViewDecorationSerializer,
+    ViewFilterGroupSerializer,
     ViewFilterSerializer,
     ViewSerializer,
     ViewSortSerializer,
@@ -50,6 +51,7 @@ def view_created(sender, view, user, **kwargs):
             filters=True,
             sortings=True,
             decorations=True,
+            group_bys=True,
         ).data,
     }
 
@@ -71,6 +73,7 @@ def view_updated(sender, view, user, **kwargs):
             filters=False,
             sortings=False,
             decorations=False,
+            group_bys=False,
         ).data,
     }
 
@@ -127,6 +130,40 @@ def view_filter_deleted(sender, view_filter_id, view_filter, user, **kwargs):
     broadcast_to(user, view_filter.view, payload)
 
 
+@receiver(view_signals.view_filter_group_created)
+def view_filter_group_created(sender, view_filter_group, user, **kwargs):
+    payload = {
+        "type": "view_filter_group_created",
+        "view_filter_group": ViewFilterGroupSerializer(view_filter_group).data,
+    }
+
+    broadcast_to(user, view_filter_group.view, payload)
+
+
+@receiver(view_signals.view_filter_group_updated)
+def view_filter_group_updated(sender, view_filter_group, user, **kwargs):
+    payload = {
+        "type": "view_filter_group_updated",
+        "view_filter_group_id": view_filter_group.id,
+        "view_filter_group": ViewFilterGroupSerializer(view_filter_group).data,
+    }
+
+    broadcast_to(user, view_filter_group.view, payload)
+
+
+@receiver(view_signals.view_filter_group_deleted)
+def view_filter_group_deleted(
+    sender, view_filter_group_id, view_filter_group, user, **kwargs
+):
+    payload = {
+        "type": "view_filter_group_deleted",
+        "view_id": view_filter_group.view_id,
+        "view_filter_group_id": view_filter_group_id,
+    }
+
+    broadcast_to(user, view_filter_group.view, payload)
+
+
 @receiver(view_signals.view_sort_created)
 def view_sort_created(sender, view_sort, user, **kwargs):
     payload = {
@@ -157,6 +194,38 @@ def view_sort_deleted(sender, view_sort_id, view_sort, user, **kwargs):
     }
 
     broadcast_to(user, view_sort.view, payload)
+
+
+@receiver(view_signals.view_group_by_created)
+def view_group_by_created(sender, view_group_by, user, **kwargs):
+    payload = {
+        "type": "view_group_by_created",
+        "view_group_by": ViewSortSerializer(view_group_by).data,
+    }
+
+    broadcast_to(user, view_group_by.view, payload)
+
+
+@receiver(view_signals.view_group_by_updated)
+def view_group_by_updated(sender, view_group_by, user, **kwargs):
+    payload = {
+        "type": "view_group_by_updated",
+        "view_group_by_id": view_group_by.id,
+        "view_group_by": ViewSortSerializer(view_group_by).data,
+    }
+
+    broadcast_to(user, view_group_by.view, payload)
+
+
+@receiver(view_signals.view_group_by_deleted)
+def view_group_by_deleted(sender, view_group_by_id, view_group_by, user, **kwargs):
+    payload = {
+        "type": "view_group_by_deleted",
+        "view_id": view_group_by.view_id,
+        "view_group_by_id": view_group_by_id,
+    }
+
+    broadcast_to(user, view_group_by.view, payload)
 
 
 @receiver(view_signals.view_decoration_created)

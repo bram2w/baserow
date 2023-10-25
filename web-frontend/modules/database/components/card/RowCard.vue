@@ -15,6 +15,10 @@
       "
     >
       <div v-if="coverImageField !== null" class="card__cover">
+        <i
+          v-if="!coverImageUrl"
+          class="card__cover-empty-image iconoir-media-image"
+        ></i>
         <div
           v-if="coverImageUrl !== null"
           class="card__cover-image"

@@ -109,7 +109,7 @@
   flex: 0 0;
   font-size: 12px;
   line-height: 22px;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   &:hover {
     text-decoration: none;
@@ -185,7 +185,7 @@
   background-color: $white;
   border: solid 1px $color-neutral-400;
   border-radius: 100%;
-  color: $color-primary-900;
+  color: $color-neutral-900;
 
   @include center-text(28px, 12px);
 
@@ -212,7 +212,7 @@
 
 .kanban-view__stacked-by-title {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 

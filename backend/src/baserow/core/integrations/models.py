@@ -67,6 +67,13 @@ class Integration(
     def get_parent(self):
         return self.application
 
+    @property
+    def context_data(self):
+        from baserow.core.integrations.registries import integration_type_registry
+
+        integration_type = integration_type_registry.get_by_model(self.specific_class)
+        return integration_type.get_context_data(self)
+
     @classmethod
     def get_last_order(cls, application: "Application"):
         """

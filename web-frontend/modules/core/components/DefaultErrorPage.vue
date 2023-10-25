@@ -20,7 +20,7 @@
         class="button button--large"
         @click="refresh"
       >
-        <i class="fas fa-redo-alt"></i>
+        <i class="iconoir-redo"></i>
         {{ $t('errorLayout.refresh') }}
       </button>
       <nuxt-link
@@ -28,11 +28,11 @@
         :to="{ name: 'dashboard' }"
         class="button button--large"
       >
-        <i class="fas fa-arrow-left"></i>
+        <i class="iconoir-nav-arrow-left"></i>
         {{ $t('errorLayout.backDashboard') }}
       </nuxt-link>
       <nuxt-link v-else :to="{ name: 'login' }" class="button button--large">
-        <i class="fas fa-arrow-left"></i>
+        <i class="iconoir-nav-arrow-left"></i>
         {{ $t('errorLayout.backLogin') }}
       </nuxt-link>
     </div>

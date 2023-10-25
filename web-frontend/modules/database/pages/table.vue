@@ -42,6 +42,14 @@ export default {
     this.$store.dispatch('application/unselect')
     next()
   },
+  /**
+   * If a `rowId` is provided in the route params, we want to immediately open
+   * the row modal in the table page and show the `database-table-row` URL in
+   * the browser. This function parses the params and fetches the data needed to
+   * render the page correctly, redirecting to the table page if the row is not
+   * found. If the row is found in the store or in the backend, calling `next()`
+   * will open the row modal and will update the URL in the browser correctly.
+   */
   async beforeRouteUpdate(to, from, next) {
     function parseIntOrNull(x) {
       return x != null ? parseInt(x) : null
@@ -50,15 +58,20 @@ export default {
     const currentTableId = parseIntOrNull(to.params.tableId)
 
     const storeRow = this.$store.getters['rowModalNavigation/getRow']
+    const prevTableId = parseIntOrNull(from.params.tableId)
     const failedToFetchTableRowId =
       this.$store.getters['rowModalNavigation/getFailedToFetchTableRowId']
+
     if (currentRowId == null) {
+      // If the rowId is null, we want to close the row modal and show the table
+      // page, so clear the store accordingly.
       await this.$store.dispatch('rowModalNavigation/clearRow')
     } else if (
       failedToFetchTableRowId &&
       parseIntOrNull(failedToFetchTableRowId?.rowId) === currentRowId &&
       parseIntOrNull(failedToFetchTableRowId?.tableId) === currentTableId
     ) {
+      // Show the table page if the row failed to fetch.
       return next({
         name: 'database-table',
         params: {
@@ -68,8 +81,11 @@ export default {
       })
     } else if (
       storeRow?.id !== currentRowId ||
-      storeRow?.table_id !== currentTableId
+      prevTableId !== currentTableId
     ) {
+      // Fetch the row if it's not already in the store. If the row is not found,
+      // the store will be updated with the failedToFetchTableRowId and the table
+      // page will be shown.
       const row = await this.$store.dispatch('rowModalNavigation/fetchRow', {
         tableId: currentTableId,
         rowId: currentRowId,
@@ -98,11 +114,11 @@ export default {
    * Prepares all the table, field and view data for the provided database, table and
    * view id.
    */
-  async asyncData({ store, params, error, app }) {
+  async asyncData({ store, params, error, app, redirect, route }) {
     // @TODO figure out why the id's aren't converted to an int in the route.
     const databaseId = parseInt(params.databaseId)
     const tableId = parseInt(params.tableId)
-    let viewId = params.viewId ? parseInt(params.viewId) : null
+    const viewId = params.viewId ? parseInt(params.viewId) : null
     const data = {}
 
     // Try to find the table in the already fetched applications by the
@@ -141,7 +157,15 @@ export default {
       // view, so that the user can choose which they want to select in the top left
       // corner.
       if (!firstViewType.isDeactivated(data.database.workspace.id)) {
-        viewId = viewToUse.id
+        return redirect({
+          name: route.name,
+          params: {
+            databaseId,
+            tableId,
+            viewId: viewToUse.id,
+            rowId: params.rowId,
+          },
+        })
       }
     }
 
@@ -210,7 +234,7 @@ export default {
     this.$realtime.subscribe('table', { table_id: this.table.id })
   },
   beforeDestroy() {
-    this.$realtime.subscribe(null)
+    this.$realtime.unsubscribe('table', { table_id: this.table.id })
   },
   methods: {
     selectedView(view) {
@@ -218,7 +242,7 @@ export default {
         return
       }
 
-      this.$nuxt.$router.push({
+      this.$router.push({
         name: 'database-table',
         params: {
           viewId: view.id,
@@ -227,8 +251,7 @@ export default {
     },
     async setAdjacentRow(previous, row = null, activeSearchTerm = null) {
       if (row) {
-        await this.$store.dispatch('rowModalNavigation/setRow', row)
-        this.navigateToRowModal(row.id)
+        await this.navigateToRowModal(row)
       } else {
         // If the row isn't provided then the row is
         // probably not visible to the user at the moment
@@ -236,15 +259,19 @@ export default {
         await this.fetchAdjacentRow(previous, activeSearchTerm)
       }
     },
-    selectRow(rowId) {
-      this.navigateToRowModal(rowId)
-    },
-    navigateToRowModal(rowId) {
+    async navigateToRowModal(row) {
+      const rowId = row?.id
       if (
         this.$route.params.rowId !== undefined &&
         this.$route.params.rowId === rowId
       ) {
         return
+      }
+
+      if (row) {
+        // Prevent the row from being fetched again from the backend
+        // when the route is updated
+        await this.$store.dispatch('rowModalNavigation/setRow', row)
       }
 
       const location = {
@@ -256,7 +283,7 @@ export default {
           rowId,
         },
       }
-      this.$nuxt.$router.push(location)
+      this.$router.push(location)
     },
     async fetchAdjacentRow(previous, activeSearchTerm = null) {
       const { row, status } = await this.$store.dispatch(
@@ -285,7 +312,7 @@ export default {
       }
 
       if (row) {
-        this.navigateToRowModal(row.id)
+        await this.navigateToRowModal(row)
       }
     },
   },

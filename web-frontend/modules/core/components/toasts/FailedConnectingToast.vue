@@ -3,9 +3,10 @@
     shadow
     simple
     type="error"
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :title="$t('failedConnectingToast.title')"
-    >{{ $t('failedConnectingToast.content') }}
+  >
+    <p>{{ $t('failedConnectingToast.content') }}</p>
     <a
       class="button margin-top-1"
       :class="{ 'button--loading': loading }"

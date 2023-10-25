@@ -8,7 +8,7 @@
       :database="database"
       :table="table"
       :view="view"
-      @edit-row="openRowEditModal($event.id)"
+      @edit-row="openRowEditModal($event)"
       @create-row="openCreateRowModal"
     ></CalendarMonth>
     <RowCreateModal
@@ -189,9 +189,9 @@ export default {
      * the Table component that a new row has been selected,
      * such that we can update the path to include the row id.
      */
-    openRowEditModal(rowId) {
-      this.$refs.rowEditModal.show(rowId)
-      this.$emit('selected-row', rowId)
+    openRowEditModal(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
     },
     /**
      * Populates a new row and opens the row edit modal
@@ -226,6 +226,10 @@ export default {
     openCreateRowModal(event) {
       const defaults = {}
       const dateField = this.getDateField(this.fields)
+      if (!dateField) {
+        // Cannot create a row without a proper date field
+        return
+      }
       const fieldType = this.$registry.get('field', dateField.type)
       if (event?.day?.date != null && dateField && !fieldType.getIsReadOnly()) {
         const name = `field_${dateField.id}`

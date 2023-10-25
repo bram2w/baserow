@@ -37,7 +37,7 @@
             class="modal__close"
             @click="hide()"
           >
-            <i class="fas fa-times"></i>
+            <i class="iconoir-cancel"></i>
           </a>
 
           <a
@@ -46,10 +46,9 @@
             @click="collapseSidebar"
           >
             <i
-              class="fas"
               :class="{
-                'fa-angle-double-right': !sidebarCollapsed,
-                'fa-angle-double-left': sidebarCollapsed,
+                'iconoir-fast-arrow-right': !sidebarCollapsed,
+                'iconoir-fast-arrow-left': sidebarCollapsed,
               }"
             ></i>
           </a>
@@ -70,7 +69,7 @@
         <slot></slot>
         <slot name="content"></slot>
         <a v-if="closeButton && canClose" class="modal__close" @click="hide()">
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </template>
     </div>

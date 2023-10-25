@@ -128,6 +128,8 @@ class ViewType(
     Indicates if the view supports being shared via a public link.
     """
 
+    can_group_by = False
+
     has_public_info = False
     """
     Indicates if the view supports public information being returned by
@@ -222,14 +224,33 @@ class ViewType(
                     "value": view_filter_type_registry.get(
                         view_filter.type
                     ).get_export_serialized_value(view_filter.value, cache),
+                    "group": view_filter.group_id,
                 }
                 for view_filter in view.viewfilter_set.all()
+            ]
+            serialized["filter_groups"] = [
+                {
+                    "id": filter_group.id,
+                    "filter_type": filter_group.filter_type,
+                    "parent_group": filter_group.parent_group_id,
+                }
+                for filter_group in view.filter_groups.all()
             ]
 
         if self.can_sort:
             serialized["sortings"] = [
                 {"id": sort.id, "field_id": sort.field_id, "order": sort.order}
                 for sort in view.viewsort_set.all()
+            ]
+
+        if self.can_group_by:
+            serialized["group_bys"] = [
+                {
+                    "id": group_by.id,
+                    "field_id": group_by.field_id,
+                    "order": group_by.order,
+                }
+                for group_by in view.viewgroupby_set.all()
             ]
 
         if self.can_decorate:
@@ -275,12 +296,21 @@ class ViewType(
             unknown ownership type.
         """
 
-        from .models import DEFAULT_OWNERSHIP_TYPE, ViewDecoration, ViewFilter, ViewSort
+        from .models import (
+            DEFAULT_OWNERSHIP_TYPE,
+            ViewDecoration,
+            ViewFilter,
+            ViewFilterGroup,
+            ViewGroupBy,
+            ViewSort,
+        )
 
         if "database_views" not in id_mapping:
             id_mapping["database_views"] = {}
             id_mapping["database_view_filters"] = {}
+            id_mapping["database_view_filter_groups"] = {}
             id_mapping["database_view_sortings"] = {}
+            id_mapping["database_view_group_bys"] = {}
             id_mapping["database_view_decorations"] = {}
 
         if "created_by" not in id_mapping:
@@ -323,7 +353,11 @@ class ViewType(
         view_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
         filters = serialized_copy.pop("filters") if self.can_filter else []
+        filter_groups = (
+            serialized_copy.pop("filter_groups", []) if self.can_filter else []
+        )
         sortings = serialized_copy.pop("sortings") if self.can_sort else []
+        group_bys = serialized_copy.pop("group_bys", []) if self.can_group_by else []
         decorations = (
             serialized_copy.pop("decorations", []) if self.can_decorate else []
         )
@@ -331,6 +365,17 @@ class ViewType(
         id_mapping["database_views"][view_id] = view.id
 
         if self.can_filter:
+            for filter_group in filter_groups:
+                filter_group_copy = filter_group.copy()
+                filter_group_id = filter_group_copy.pop("id")
+                filter_group_copy["view_id"] = view.id
+                filter_group_object = ViewFilterGroup.objects.create(
+                    view=view, **filter_group_copy
+                )
+                id_mapping["database_view_filter_groups"][
+                    filter_group_id
+                ] = filter_group_object.id
+
             for view_filter in filters:
                 view_filter_type = view_filter_type_registry.get(view_filter["type"])
                 view_filter_copy = view_filter.copy()
@@ -343,6 +388,10 @@ class ViewType(
                 ] = view_filter_type.set_import_serialized_value(
                     view_filter_copy["value"], id_mapping
                 )
+                if view_filter.get("group", None):
+                    view_filter_copy["group_id"] = id_mapping[
+                        "database_view_filter_groups"
+                    ][view_filter_copy.pop("group")]
                 view_filter_object = ViewFilter.objects.create(
                     view=view, **view_filter_copy
                 )
@@ -359,6 +408,20 @@ class ViewType(
                 ]
                 view_sort_object = ViewSort.objects.create(view=view, **view_sort_copy)
                 id_mapping["database_view_sortings"][view_sort_id] = view_sort_object.id
+
+        if self.can_group_by:
+            for view_group_by in group_bys:
+                view_group_by_copy = view_group_by.copy()
+                view_group_by_id = view_group_by_copy.pop("id")
+                view_group_by_copy["field_id"] = id_mapping["database_fields"][
+                    view_group_by_copy["field_id"]
+                ]
+                view_group_by_object = ViewGroupBy.objects.create(
+                    view=view, **view_group_by_copy
+                )
+                id_mapping["database_view_group_bys"][
+                    view_group_by_id
+                ] = view_group_by_object.id
 
         if self.can_decorate:
             for view_decoration in decorations:

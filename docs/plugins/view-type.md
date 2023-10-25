@@ -133,7 +133,7 @@ export class CalendarViewType extends ViewType {
   }
 
   getIconClass() {
-    return 'calendar'
+    return 'iconoir-calendar'
   }
 
   getName() {

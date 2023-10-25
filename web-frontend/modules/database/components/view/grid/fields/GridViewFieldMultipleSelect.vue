@@ -15,7 +15,7 @@
           class="grid-field-many-to-many__remove"
           @click.prevent="removeValue($event, value, item.id)"
         >
-          <i class="fas fa-times"></i>
+          <i class="iconoir-cancel"></i>
         </a>
       </div>
       <a
@@ -23,7 +23,7 @@
         class="grid-field-many-to-many__item grid-field-many-to-many__item--link"
         @click.prevent="toggleDropdown()"
       >
-        <i class="fas fa-plus"></i>
+        <i class="iconoir-plus"></i>
       </a>
     </div>
     <FieldSelectOptionsDropdown

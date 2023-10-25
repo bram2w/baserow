@@ -1,3 +1,7 @@
+import _ from 'lodash'
+
+import moment from '@baserow/modules/core/moment'
+
 import RowHistoryService from '@baserow/modules/database/services/rowHistory'
 
 export const state = () => ({
@@ -49,7 +53,7 @@ export const actions = {
       const { data } = await RowHistoryService(this.$client).fetchAll({
         tableId,
         rowId,
-        limit: 5,
+        limit: 30,
       })
       commit('ADD_ENTRIES', { entries: data.results })
       commit('SET_TOTAL_COUNT', data.count)
@@ -65,8 +69,8 @@ export const actions = {
       const { data } = await RowHistoryService(this.$client).fetchAll({
         tableId,
         rowId,
-        limit: 5,
         offset: getters.getCurrentCount,
+        limit: 30,
       })
       commit('ADD_ENTRIES', { entries: data.results })
       commit('SET_TOTAL_COUNT', data.count)
@@ -74,11 +78,17 @@ export const actions = {
       commit('SET_LOADING', false)
     }
   },
+  forceCreate({ commit, state }, { rowHistoryEntry, rowId, tableId }) {
+    if (state.loadedTableId === tableId && state.loadedRowId === rowId) {
+      commit('ADD_ENTRIES', { entries: [rowHistoryEntry] })
+      commit('SET_TOTAL_COUNT', state.totalCount + 1)
+    }
+  },
 }
 
 export const getters = {
   getSortedEntries(state) {
-    return state.entries
+    return _.sortBy(state.entries, (e) => -moment.utc(e.timestamp))
   },
   getCurrentCount(state) {
     return state.entries.length

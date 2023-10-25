@@ -32,7 +32,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="openRowEditModal($event.id)"
+        @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <KanbanViewStack
@@ -47,7 +47,7 @@
         :read-only="readOnly"
         :store-prefix="storePrefix"
         @create-row="openCreateRowModal"
-        @edit-row="openRowEditModal($event.id)"
+        @edit-row="openRowEditModal($event)"
         @refresh="$emit('refresh', $event)"
       ></KanbanViewStack>
       <a
@@ -63,7 +63,7 @@
         class="kanban-view__add-stack"
         @click="$refs.addOptionContext.toggle($refs.addOptionContextLink)"
       >
-        <i class="fas fa-plus"></i>
+        <i class="iconoir-plus"></i>
       </a>
       <KanbanViewCreateStackContext
         ref="addOptionContext"
@@ -122,6 +122,7 @@
       "
       @navigate-previous="$emit('navigate-previous', $event)"
       @navigate-next="$emit('navigate-next', $event)"
+      @refresh-row="refreshRow"
     ></RowEditModal>
   </div>
 </template>
@@ -299,6 +300,24 @@ export default {
         )
       } catch (error) {
         notifyIf(error, 'field')
+      }
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/kanban/refreshRowFromBackend',
+          {
+            table: this.table,
+            row,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
       }
     },
     /**

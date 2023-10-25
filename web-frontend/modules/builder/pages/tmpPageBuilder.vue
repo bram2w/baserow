@@ -11,7 +11,7 @@
         <li class="header__filter-item">
           <div>
             <a class="header__filter-link"
-              ><i class="header__filter-icon fas fa-stream"></i>
+              ><i class="header__filter-icon iconoir-selection"></i>
               <span class="header__filter-name">Elements</span></a
             >
           </div>
@@ -19,7 +19,7 @@
         <li class="header__filter-item">
           <div>
             <a class="header__filter-link"
-              ><i class="header__filter-icon fas fa-table"></i>
+              ><i class="header__filter-icon iconoir-table"></i>
               <span class="header__filter-name">Data</span></a
             >
           </div>
@@ -27,7 +27,7 @@
         <li class="header__filter-item">
           <div>
             <a class="header__filter-link"
-              ><i class="header__filter-icon fas fa-square-root-alt"></i>
+              ><i class="header__filter-icon iconoir-sigma-function"></i>
               <span class="header__filter-name">Variables</span></a
             >
           </div>
@@ -35,7 +35,7 @@
         <li class="header__filter-item">
           <div>
             <a class="header__filter-link"
-              ><i class="header__filter-icon fas fa-cogs"></i>
+              ><i class="header__filter-icon iconoir-settings"></i>
               <span class="header__filter-name">Page settings</span></a
             >
           </div>
@@ -48,7 +48,7 @@
               class="header__filter-link"
               :class="{ 'active active--primary': device === 'desktop' }"
               @click="setDevice('desktop')"
-              ><i class="header__filter-icon fas fa-laptop"></i
+              ><i class="header__filter-icon iconoir-laptop"></i
             ></a>
           </div>
         </li>
@@ -58,7 +58,7 @@
               class="header__filter-link"
               :class="{ 'active active--primary': device == 'tablet' }"
               @click="setDevice('tablet')"
-              ><i class="header__filter-icon fas fa-tablet"></i
+              ><i class="header__filter-icon baserow-icon-tablet"></i
             ></a>
           </div>
         </li>
@@ -68,7 +68,7 @@
               class="header__filter-link"
               :class="{ 'active active--primary': device == 'smartphone' }"
               @click="setDevice('smartphone')"
-              ><i class="header__filter-icon fas fa-mobile"></i
+              ><i class="header__filter-icon iconoir-smartphone-device"></i
             ></a>
           </div>
         </li>
@@ -84,7 +84,7 @@
         <li class="header__filter-item header__filter-item--right">
           <div>
             <a class="header__filter-link"
-              ><i class="header__filter-icon fas fa-upload"></i>
+              ><i class="header__filter-icon iconoir-upload"></i>
               <span class="header__filter-name">Publish</span></a
             >
           </div>
@@ -119,38 +119,38 @@
                     href="#"
                     class="page-builder__preview-add page-builder__preview-element-add page-builder__preview-element-add-first"
                   >
-                    <i class="fas fa-plus"></i>
+                    <i class="iconoir-plus"></i>
                   </a>
                   <a
                     v-if="selectedElementIndex - 1 !== index"
                     href="#"
                     class="page-builder__preview-add page-builder__preview-element-add page-builder__preview-element-add-last"
                   >
-                    <i class="fas fa-plus"></i>
+                    <i class="iconoir-plus"></i>
                   </a>
                   <div
                     class="page-builder__preview-menu page-builder__preview-element-menu"
                   >
                     <a href="#" class="page-builder__preview-menu-item">
-                      <i class="fas fa-copy"></i>
+                      <i class="iconoir-copy"></i>
                       <div class="page-builder__preview-menu-item-description">
                         Copy
                       </div>
                     </a>
                     <a href="#" class="page-builder__preview-menu-item">
-                      <i class="fas fa-arrow-up"></i>
+                      <i class="iconoir-nav-arrow-up"></i>
                       <div class="page-builder__preview-menu-item-description">
                         Move up
                       </div>
                     </a>
                     <a href="#" class="page-builder__preview-menu-item">
-                      <i class="fas fa-arrow-down"></i>
+                      <i class="iconoir-nav-arrow-down"></i>
                       <div class="page-builder__preview-menu-item-description">
                         Move down
                       </div>
                     </a>
                     <a href="#" class="page-builder__preview-menu-item">
-                      <i class="fas fa-trash"></i>
+                      <i class="iconoir-bin"></i>
                       <div class="page-builder__preview-menu-item-description">
                         Delete
                       </div>

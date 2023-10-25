@@ -19,7 +19,7 @@
       "
       class="calendar-month-day__create-row-btn"
       @click="!readOnly && $emit('create-row', { day })"
-      ><i class="fas fa-plus"></i>
+      ><i class="iconoir-plus"></i>
     </a>
     <span v-else class="calendar-month-day__read-only-filler"></span>
 

@@ -23,10 +23,10 @@
 
 .sortings__item {
   position: relative;
-  display: flex;
-  align-items: center;
   padding: 6px 0;
+  margin-left: 5px;
   @include rounded($rounded);
+  @include flex-align-items(10px);
 
   &:not(:last-child) {
     margin-bottom: 6px;
@@ -40,17 +40,17 @@
       margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(50%, auto, 0, 10px);
+      @include absolute(50%, auto, 0, 5px);
     }
   }
 }
 
 .sortings__remove {
-  flex: 0 0 32px;
-  width: 32px;
+  font-size: 18px;
   color: $color-neutral-900;
-  line-height: 30px;
-  text-align: center;
+  justify-content: center;
+
+  @include flex-align-items();
 
   &:hover {
     text-decoration: none;
@@ -66,6 +66,7 @@
   flex: 0 0 50px;
   width: 50px;
   margin-right: 10px;
+  margin-left: 14px;
 
   span {
     padding-left: 12px;
@@ -87,13 +88,15 @@
 }
 
 .sortings__order-item {
-  display: flex;
   justify-content: center;
   flex-wrap: nowrap;
-  line-height: 32px;
+  height: 32px;
   color: $color-neutral-900;
+  font-weight: 600;
   width: 80px;
+  font-size: 14px;
   @include rounded($rounded);
+  @include flex-align-items(5px);
 
   &:not(:last-child) {
     margin-right: 10px;
@@ -127,13 +130,18 @@
 }
 
 .sortings__add {
-  display: inline-block;
   margin: 12px 0 6px 4px;
+
+  @include flex-align-items(4px, inline-flex);
 
   &:hover {
     text-decoration: none;
     color: $color-neutral-900;
   }
+}
+
+.sortings__add-icon {
+  font-size: 20px;
 }
 
 .sortings__add-context .context__menu-icon {

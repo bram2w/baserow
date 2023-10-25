@@ -1,14 +1,14 @@
 # Create a template
 
 Templates are a starting point for other users. They can use them for inspiration and
-easily install them into their workspaces. A template consists of one or more applications 
+easily install them into their workspaces. A template consists of one or more applications
 that will be copied into the desired workspace if a user decides to install it. It is also
 possible for the user to see an preview of the template before installing.
 
 ## Build your own
 
 If you want to create your own template, you first need to make one in an installation
-of  Baserow. You need at least version 1.1 because that contains the exporting
+of Baserow. You need at least version 1.1 because that contains the exporting
 functionality that you are going to need later.
 
 The first step is creating a new empty workspace. It doesn't matter what it is named. Next
@@ -17,21 +17,21 @@ you just created.
 
 If you for example want to create a content calendar, you might want to create a
 database named `Content Calendar` that contains three tables names `Pipeline`,
-`Campaigns` and `Authors`. Once you have filled in all the tables in the way you want, 
+`Campaigns` and `Authors`. Once you have filled in all the tables in the way you want,
 you can proceed to the next step, which is exporting the workspace you just made to then
 create a template based off it.
 
 ## Exporting the applications
 
-It is possible to make an export of all the applications that are in a workspace. When a 
+It is possible to make an export of all the applications that are in a workspace. When a
 user installs a template, then that export is used to import the applications
-into the user's desired workspace. It is only possible to make this export via the command 
+into the user's desired workspace. It is only possible to make this export via the command
 line interface of Baserow.
 
 Before you can export the application, you first need to figure out what the ID of your
 workspace is. You will see a list of all your workspaces when you click on the name of your
 workspace in the sidebar. If you hover over a workspace there, you will see the click-able
-three  dots. If you click on that you will see another context menu containing the name
+three dots. If you click on that you will see another context menu containing the name
 of that workspace, and a number between brackets. That number is your workspace ID.
 
 Now that you have the workspace ID that contains your template, you need to export it to
@@ -81,26 +81,26 @@ a file field and files have been uploaded.
 ## Creating the template file
 
 Inside the `backend/templates` directory you will find all the existing templates. You
-need to create a new JSON file here that has the same content as shown below. You can 
-replace the values with something that matches your template. We keep all the templates 
+need to create a new JSON file here that has the same content as shown below. You can
+replace the values with something that matches your template. We keep all the templates
 as JSON files so that everyone who self hosts also has access them.
 
-* **name**: The name of the template that is visible to the user.
-* **icon**: A font awesome class name that is visible to the user (`fa-{icon}`).
-* **keyword**: Invisible keywords will only be used to improve searching.
-* **categories**: The categories that the template belongs to.
-* **export**: The export value must contain the contents of the exported JSON file
-  after running the `export_workspace_applications`. This file is named
-  `workspace_YOUR_WORKSPACE_ID.json`.
+-   **name**: The name of the template that is visible to the user.
+-   **icon**: An icon class name that is visible to the user (`iconoir-{icon}` or `baserow-icon-{icon}`).
+-   **keyword**: Invisible keywords will only be used to improve searching.
+-   **categories**: The categories that the template belongs to.
+-   **export**: The export value must contain the contents of the exported JSON file
+    after running the `export_workspace_applications`. This file is named
+    `workspace_YOUR_WORKSPACE_ID.json`.
 
 ```json
 {
-  "baserow_template_version": 1,
-  "name": "Content Calendar",
-  "icon": "file",
-  "keywords": ["Example", "Template", "For", "Search"],
-  "categories": ["Test category 1"],
-  "export": []
+    "baserow_template_version": 1,
+    "name": "Content Calendar",
+    "icon": "iconoir-user",
+    "keywords": ["Example", "Template", "For", "Search"],
+    "categories": ["Test category 1"],
+    "export": []
 }
 ```
 

@@ -1,0 +1,150 @@
+.group-bys {
+  padding: 12px;
+
+  .dropdown__selected {
+    @extend %ellipsis;
+  }
+}
+
+.group-bys__none {
+  padding: 4px;
+  margin-bottom: 6px;
+}
+
+.group-bys__none-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.group-bys__none-description {
+  font-size: 13px;
+}
+
+.group-bys__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 6px 0;
+  @include rounded($rounded);
+  @include flex-align-items(10px);
+
+  &:not(:last-child) {
+    margin-bottom: 6px;
+  }
+
+  &.group-bys__item--loading {
+    padding-left: 32px;
+
+    &::before {
+      content: '';
+      margin-top: -7px;
+
+      @include loading(14px);
+      @include absolute(50%, auto, 0, 10px);
+    }
+  }
+}
+
+.group-bys__remove {
+  font-size: 20px;
+  color: $color-neutral-900;
+  justify-content: center;
+  width: 22px;
+
+  @include flex-align-items();
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-500;
+  }
+
+  .group-bys__item--loading & {
+    display: none;
+  }
+}
+
+.group-bys__description {
+  flex: 0 0 60px;
+  width: 60px;
+  margin-right: 10px;
+
+  span {
+    padding-left: 12px;
+  }
+}
+
+.group-bys__field {
+  margin-right: 10px;
+  flex: 0 0 120px;
+
+  .dropdown,
+  .dropdown__selected {
+    width: 120px;
+  }
+}
+
+.group-bys__order {
+  display: flex;
+}
+
+.group-bys__order-item {
+  justify-content: center;
+  flex-wrap: nowrap;
+  height: 32px;
+  color: $color-neutral-900;
+  font-weight: 600;
+  width: 80px;
+  font-size: 14px;
+  @include rounded($rounded);
+  @include flex-align-items(5px);
+
+  &:not(:last-child) {
+    margin-right: 10px;
+  }
+
+  > div {
+    font-weight: 600;
+
+    &:not(:last-child) {
+      margin-right: 8px;
+    }
+  }
+
+  &:hover {
+    background-color: $color-neutral-100;
+    text-decoration: none;
+
+    .group-bys__order--disabled & {
+      cursor: inherit;
+      background-color: transparent;
+    }
+  }
+
+  &.active {
+    background-color: $color-primary-100;
+
+    .group-bys__order--disabled & {
+      background-color: $color-neutral-100;
+    }
+  }
+}
+
+.group-bys__add {
+  margin: 12px 0 6px 4px;
+
+  @include flex-align-items(4px, inline-flex);
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-900;
+  }
+}
+
+.group-bys__add-icon {
+  font-size: 20px;
+}
+
+.group-bys__add-context .context__menu-icon {
+  color: $color-neutral-900;
+}

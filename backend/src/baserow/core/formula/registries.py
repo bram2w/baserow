@@ -7,7 +7,6 @@ from baserow.core.formula.parser.exceptions import (
     InvalidFormulaArgumentType,
     InvalidNumberOfArguments,
 )
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.formula.types import (
     FormulaArg,
     FormulaArgs,
@@ -15,6 +14,7 @@ from baserow.core.formula.types import (
     FunctionCollection,
 )
 from baserow.core.registry import Instance, Registry
+from baserow.core.services.dispatch_context import DispatchContext
 
 
 class RuntimeFormulaFunction(ABC, Instance):
@@ -143,9 +143,7 @@ class DataProviderType(
     """
 
     @abstractmethod
-    def get_data_chunk(
-        self, runtime_formula_context: RuntimeFormulaContext, path: List[str]
-    ):
+    def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
         """
         Returns data designated by the path parameter. Usually use some of the
         context created by the get_context method and stored in the context.

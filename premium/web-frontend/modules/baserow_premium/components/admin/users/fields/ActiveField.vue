@@ -1,14 +1,14 @@
 <template functional>
   <div :class="[data.staticClass, data.class]" v-on="listeners">
-    <div v-if="props.row[props.column.key]">
+    <div v-if="props.row[props.column.key]" class="user-admin-active">
       <i
-        class="fas fa-fw fa-check user-admin-active__icon user-admin-active__icon--activated"
+        class="iconoir-check user-admin-active__icon user-admin-active__icon--activated"
       ></i>
       {{ parent.$t('premium.user.active') }}
     </div>
     <div v-else>
       <i
-        class="fas fa-fw fa-times user-admin-active__icon user-admin-active__icon--deactivated"
+        class="iconoir-cancel user-admin-active__icon user-admin-active__icon--deactivated"
       ></i>
       {{ parent.$t('premium.user.deactivated') }}
     </div>

@@ -1,5 +1,6 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
+import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -16,6 +17,14 @@ export default {
     isEditable() {
       return this.mode === 'editing'
     },
+    applicationContext() {
+      return {
+        builder: this.builder,
+        page: this.page,
+        mode: this.mode,
+        element: this.element,
+      }
+    },
     runtimeFormulaContext() {
       /**
        * This proxy allow the RuntimeFormulaContextClass to act like a regular object.
@@ -23,11 +32,7 @@ export default {
       return new Proxy(
         new RuntimeFormulaContext(
           this.$registry.getAll('builderDataProvider'),
-          {
-            builder: this.builder,
-            page: this.page,
-            mode: this.mode,
-          }
+          this.applicationContext
         ),
         {
           get(target, prop) {
@@ -51,6 +56,14 @@ export default {
         this.formulaFunctions,
         this.runtimeFormulaContext
       )
+    },
+    fireEvent(EventType) {
+      if (this.mode !== 'editing') {
+        new EventType(this).fire({ element: this.element })
+      }
+    },
+    fireClickEvent() {
+      this.fireEvent(ClickEvent)
     },
   },
 }

@@ -1,3 +1,5 @@
+from baserow.core.db import get_collation_name
+
 from .airtable import AirtableFixtures
 from .application import ApplicationFixtures
 from .auth_provider import AuthProviderFixtures
@@ -21,6 +23,7 @@ from .user import UserFixtures
 from .user_file import UserFileFixtures
 from .view import ViewFixtures
 from .webhook import TableWebhookFixture
+from .workflow_action import WorkflowActionFixture
 from .workspace import WorkspaceFixtures
 
 
@@ -49,6 +52,18 @@ class Fixtures(
     ServiceFixtures,
     DataSourceFixtures,
     NotificationsFixture,
+    WorkflowActionFixture,
 ):
     def __init__(self, fake=None):
         self.fake = fake
+
+    def warm_cache_before_counting_queries(self):
+        """
+        This method is called before counting the queries so that the cache is already
+        filled with queries that need to run the first time and then cached.
+        In this way we avoid cases where the second time the queries are less than the
+        first time because the cache is already filled.
+        """
+
+        self.update_settings()
+        get_collation_name()

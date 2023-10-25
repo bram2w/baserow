@@ -12,6 +12,7 @@ from baserow.contrib.database.action.scopes import (
     TableActionScopeType,
     ViewActionScopeType,
 )
+from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.handler import TableHandler
@@ -22,6 +23,8 @@ from baserow.contrib.database.views.models import (
     View,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
+    ViewGroupBy,
     ViewSort,
 )
 from baserow.core.action.models import Action
@@ -54,6 +57,7 @@ class CreateViewFilterActionType(UndoableActionType):
         view_filter_id: int
         filter_type: str
         filter_value: str
+        filter_group_id: Optional[int] = None
 
     @classmethod
     def do(
@@ -63,12 +67,13 @@ class CreateViewFilterActionType(UndoableActionType):
         field: Field,
         filter_type: str,
         filter_value: str,
+        filter_group_id: Optional[int] = None,
     ) -> ViewFilter:
         """
         Creates a new filter for the provided view.
-        See baserow.contrib.database.views.handler.ViewHandler.create_field
+        See baserow.contrib.database.views.handler.ViewHandler.create_filter
         for more. When undone the view_filter is fully deleted from the
-        database and when redone it is recreated.
+        database and when redone it is recreated with the same id.
 
         :param user: The user creating the filter.
         :param view: The view to create the filter for.
@@ -77,10 +82,11 @@ class CreateViewFilterActionType(UndoableActionType):
         must be compared to the filter's value.
         :param filter_value: The filter value that must be
         compared to the field's value.
+        :param filter_group_id: The id of the filter group to add the filter to.
         """
 
         view_filter = ViewHandler().create_filter(
-            user, view, field, filter_type, filter_value
+            user, view, field, filter_type, filter_value, filter_group_id
         )
 
         workspace = view.table.database.workspace
@@ -96,6 +102,7 @@ class CreateViewFilterActionType(UndoableActionType):
             view_filter.id,
             filter_type,
             filter_value,
+            filter_group_id,
         )
         cls.register_action(user, params, cls.scope(view.id), workspace)
         return view_filter
@@ -122,11 +129,14 @@ class CreateViewFilterActionType(UndoableActionType):
             field,
             params.filter_type,
             params.filter_value,
-            params.view_filter_id,
+            params.filter_group_id,
+            primary_key=params.view_filter_id,
         )
 
 
 # TODO: What to do here with fast UI updates?
+# Every time a user type a character in the filter input, a new action is created.
+# This means every single change ends in the undo/redo stack and in the audit log.
 class UpdateViewFilterActionType(UndoableActionType):
     type = "update_view_filter"
     description = ActionTypeDescription(
@@ -270,6 +280,7 @@ class DeleteViewFilterActionType(UndoableActionType):
         view_filter_id: int
         filter_type: str
         filter_value: str
+        filter_group_id: Optional[int] = None
 
     @classmethod
     def do(
@@ -294,6 +305,7 @@ class DeleteViewFilterActionType(UndoableActionType):
         field_name = view_filter.field.name
         view_filter_type = view_filter.type
         view_filter_value = view_filter.value
+        view_filter_group_id = view_filter.group_id
 
         ViewHandler().delete_filter(user, view_filter)
 
@@ -309,6 +321,7 @@ class DeleteViewFilterActionType(UndoableActionType):
             view_filter_id,
             view_filter_type,
             view_filter_value,
+            view_filter_group_id,
         )
         workspace = view_filter.view.table.database.workspace
         cls.register_action(
@@ -336,6 +349,7 @@ class DeleteViewFilterActionType(UndoableActionType):
             field,
             params.filter_type,
             params.filter_value,
+            params.filter_group_id,
             params.view_filter_id,
         )
 
@@ -344,6 +358,289 @@ class DeleteViewFilterActionType(UndoableActionType):
         view_filter = ViewHandler().get_filter(user, params.view_filter_id)
 
         ViewHandler().delete_filter(user, view_filter)
+
+
+class CreateViewFilterGroupActionType(UndoableActionType):
+    type = "create_view_filter_group"
+    description = ActionTypeDescription(
+        _("Create a view filter group"),
+        _("View filter group created"),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_filter_group_id: int
+        filter_type: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        view: View,
+        filter_type: Optional[str] = None,
+    ) -> ViewFilterGroup:
+        """
+        Creates a new filter group for the provided view. See
+        baserow.contrib.database.views.handler.ViewHandler.create_filter_group
+        for more. When undone the view_filter_group is fully deleted from the
+        database and when redone it is recreated with the same id.
+
+        :param user: The user creating the filter.
+        :param view: The view to create the filter for.
+        :param field: The field to filter by.
+        :param filter_type: Indicates whether all the rows should apply to all
+            filters (AND) or to any filter (OR) in the group to be shown.
+        """
+
+        view_filter_group = ViewHandler().create_filter_group(user, view, filter_type)
+
+        workspace = view.table.database.workspace
+        params = cls.Params(
+            view.id,
+            view.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_filter_group.id,
+            filter_type,
+        )
+        cls.register_action(user, params, cls.scope(view.id), workspace)
+        return view_filter_group
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_filter_group = ViewHandler().get_filter_group(
+            user, params.view_filter_group_id
+        )
+
+        ViewHandler().delete_filter_group(user, view_filter_group)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view(params.view_id)
+
+        view_handler.create_filter_group(
+            user, view, params.filter_type, params.view_filter_group_id
+        )
+
+
+class UpdateViewFilterGroupActionType(UndoableActionType):
+    type = "update_view_filter_group"
+    description = ActionTypeDescription(
+        _("Update a view filter group"),
+        _('View filter group updated to "%(filter_type)s"'),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_filter_group_id: int
+        filter_type: str
+        original_filter_type: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        view_filter_group: ViewFilterGroup,
+        filter_type: Optional[str] = None,
+    ) -> ViewFilterGroup:
+        """
+        Updates the filter_type of an existing filter group. See
+        baserow.contrib.database.views.handler.ViewHandler.update_filter_group
+        for more. When undone the view_filter_group is restored to it's original
+        filter_type and when redone it is updated to the new one.
+
+        :param user: The user on whose behalf the view filter is updated.
+        :param view_filter_group: The view filter group that needs to be
+            updated.
+        :param filter_type: ndicates whether all the rows should apply to all
+            filters (AND) or to any filter (OR) in the group to be shown.
+        """
+
+        original_view_filter_type = view_filter_group.filter_type
+
+        view_handler = ViewHandler()
+        updated_view_filter_group = view_handler.update_filter_group(
+            user, view_filter_group, filter_type
+        )
+        view = view_filter_group.view
+        params = cls.Params(
+            view.id,
+            view.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_filter_group.id,
+            updated_view_filter_group.filter_type,
+            original_view_filter_type,
+        )
+        workspace = updated_view_filter_group.view.table.database.workspace
+        cls.register_action(
+            user,
+            params,
+            cls.scope(view_filter_group.view_id),
+            workspace,
+        )
+
+        return updated_view_filter_group
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_handler = ViewHandler()
+        view_filter_group = view_handler.get_filter_group(
+            user, params.view_filter_group_id
+        )
+
+        view_handler.update_filter_group(
+            user, view_filter_group, params.original_filter_type
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_handler = ViewHandler()
+        view_filter_group = view_handler.get_filter_group(
+            user, params.view_filter_group_id
+        )
+
+        view_handler.update_filter_group(user, view_filter_group, params.filter_type)
+
+
+class DeleteViewFilterGroupActionType(UndoableActionType):
+    type = "delete_view_filter_group"
+    description = ActionTypeDescription(
+        _("Delete a view filter group"),
+        _("View filter group deleted"),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_filter_group_id: int
+        filter_type: str
+        filters: List[Dict[str, Any]]
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        view_filter_group: ViewFilterGroup,
+    ):
+        """
+        Deletes an existing view filter group with all the filters. See
+        baserow.contrib.database.views.handler.ViewHandler.delete_filter_group
+        for more. When undone the view_filter_group is recreated with all the
+        filters and when redone it is deleted again.
+
+        :param user: The user on whose behalf the view filter is deleted.
+        :param view_filter_group: The view filter group that needs to be
+            deleted.
+        """
+
+        view_filter_group_id = view_filter_group.id
+        view_id = view_filter_group.view_id
+        view_name = view_filter_group.view.name
+        view_filter_type = view_filter_group.filter_type
+
+        filters = []
+        for view_filter in view_filter_group.filters.all():
+            filters.append(
+                {
+                    "id": view_filter.id,
+                    "field_id": view_filter.field_id,
+                    "filter_type": view_filter.type,
+                    "filter_value": view_filter.value,
+                    "group_id": view_filter.group_id,
+                }
+            )
+
+        ViewHandler().delete_filter_group(user, view_filter_group)
+
+        params = cls.Params(
+            view_id,
+            view_name,
+            view_filter_group.view.table.id,
+            view_filter_group.view.table.name,
+            view_filter_group.view.table.database.id,
+            view_filter_group.view.table.database.name,
+            view_filter_group_id,
+            view_filter_type,
+            filters,
+        )
+        workspace = view_filter_group.view.table.database.workspace
+        cls.register_action(
+            user,
+            params,
+            cls.scope(view_filter_group.view_id),
+            workspace,
+        )
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view(params.view_id)
+
+        view_handler.create_filter_group(
+            user, view, params.filter_type, params.view_filter_group_id
+        )
+
+        # recreate all the filters belonging to the group
+        for view_filter in params.filters:
+            try:
+                field = FieldHandler().get_field(view_filter["field_id"])
+            except FieldDoesNotExist:
+                continue
+            view_handler.create_filter(
+                user,
+                view,
+                field,
+                view_filter["filter_type"],
+                view_filter["filter_value"],
+                view_filter["group_id"],
+                primary_key=view_filter["id"],
+            )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_filter_group = ViewHandler().get_filter_group(
+            user, params.view_filter_group_id
+        )
+
+        ViewHandler().delete_filter_group(user, view_filter_group)
 
 
 class CreateViewSortActionType(UndoableActionType):
@@ -1410,3 +1707,261 @@ class DeleteDecorationActionType(UndoableActionType):
             user, params.original_decorator_id
         )
         ViewHandler().delete_decoration(view_decoration, user=user)
+
+
+class CreateViewGroupByActionType(UndoableActionType):
+    type = "create_view_group"
+    description = ActionTypeDescription(
+        _("Create a view group"),
+        _('View grouped on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_group_by_id: int
+        group_by_order: str
+
+    @classmethod
+    def do(
+        cls, user: AbstractUser, view: View, field: Field, group_by_order: str
+    ) -> ViewGroupBy:
+        """
+        Creates a new view group_by.
+        See baserow.contrib.database.views.handler.ViewHandler.create_group
+        for more. When undone the view_group_by is fully deleted from the
+        database and when redone it is recreated.
+
+        :param user: The user on whose behalf the view group by is created.
+        :param view: The view for which the group by needs to be created.
+        :param field: The field that needs to be grouped.
+        :param group_by_order: The desired order, can either be ascending (A to Z) or
+            descending (Z to A).
+        """
+
+        view_group_by = ViewHandler().create_group_by(user, view, field, group_by_order)
+
+        params = cls.Params(
+            field.id,
+            field.name,
+            view.id,
+            view.name,
+            view.table.id,
+            view.table.name,
+            view.table.database.id,
+            view.table.database.name,
+            view_group_by.id,
+            group_by_order,
+        )
+        workspace = view.table.database.workspace
+        cls.register_action(user, params, cls.scope(view.id), workspace)
+        return view_group_by
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_group_by = ViewHandler().get_group_by(user, params.view_group_by_id)
+
+        ViewHandler().delete_group_by(user, view_group_by)
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_handler = ViewHandler()
+        field = FieldHandler().get_field(params.field_id)
+        view = view_handler.get_view(params.view_id)
+
+        view_handler.create_group_by(
+            user, view, field, params.group_by_order, params.view_group_by_id
+        )
+
+
+class UpdateViewGroupByActionType(UndoableActionType):
+    type = "update_view_group"
+    description = ActionTypeDescription(
+        _("Update a view group"),
+        _('View group by updated on field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_group_by_id: int
+        group_by_order: str
+        original_field_id: int
+        original_field_name: str
+        original_group_by_order: str
+
+    @classmethod
+    def do(
+        cls,
+        user: AbstractUser,
+        view_group_by: ViewGroupBy,
+        field: Optional[Field] = None,
+        order: Optional[str] = None,
+    ) -> ViewGroupBy:
+        """
+        Updates the values of an existing view group_by.
+        See baserow.contrib.database.views.handler.ViewHandler.update_group
+        for more. When undone the view_group_by is restored to it's original state
+        and when redone it is updated to it's new state.
+
+        :param user: The user on whose behalf the view group by is updated.
+        :param view_group: The view group by that needs to be updated.
+        :param field: The field that must be grouped on.
+        :param order: Indicates the group by order direction.
+        """
+
+        original_field_id = view_group_by.field.id
+        original_field_name = view_group_by.field.name
+        view_id = view_group_by.view.id
+        view_name = view_group_by.view.name
+        original_group_by_order = view_group_by.order
+
+        handler = ViewHandler()
+        updated_view_group_by = handler.update_group_by(
+            user, view_group_by, field, order
+        )
+
+        cls.register_action(
+            user=user,
+            params=cls.Params(
+                updated_view_group_by.field.id,
+                updated_view_group_by.field.name,
+                view_id,
+                view_name,
+                updated_view_group_by.view.table.id,
+                updated_view_group_by.view.table.name,
+                updated_view_group_by.view.table.database.id,
+                updated_view_group_by.view.table.database.name,
+                updated_view_group_by.id,
+                updated_view_group_by.order,
+                original_field_id,
+                original_field_name,
+                original_group_by_order,
+            ),
+            scope=cls.scope(view_group_by.view.id),
+            workspace=view_group_by.view.table.database.workspace,
+        )
+
+        return updated_view_group_by
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        field = FieldHandler().get_field(params.original_field_id)
+
+        view_handler = ViewHandler()
+        view_group_by = view_handler.get_group_by(user, params.view_group_by_id)
+
+        view_handler.update_group_by(
+            user, view_group_by, field, params.original_group_by_order
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        field = FieldHandler().get_field(params.field_id)
+
+        view_handler = ViewHandler()
+        view_group_by = view_handler.get_group_by(user, params.view_group_by_id)
+
+        view_handler.update_group_by(user, view_group_by, field, params.group_by_order)
+
+
+class DeleteViewGroupByActionType(UndoableActionType):
+    type = "delete_view_group"
+    description = ActionTypeDescription(
+        _("Delete a view group"),
+        _('View group by deleted from field "%(field_name)s" (%(field_id)s)'),
+        VIEW_ACTION_CONTEXT,
+    )
+
+    @dataclasses.dataclass
+    class Params:
+        field_id: int
+        field_name: str
+        view_id: int
+        view_name: str
+        table_id: int
+        table_name: str
+        database_id: int
+        database_name: str
+        view_group_by_id: int
+        group_by_order: str
+
+    @classmethod
+    def do(cls, user: AbstractUser, view_group_by: ViewGroupBy):
+        """
+        Deletes an existing view group_by.
+        See baserow.contrib.database.views.handler.ViewHandler.delete_group
+        for more. When undone the view_group_by is recreated and when redone
+        it is deleted.
+
+        :param user: The user on whose behalf the view group by is deleted.
+        :param view_group: The view group by instance that needs
+        to be deleted.
+        """
+
+        view_group_by_id = view_group_by.id
+        view_id = view_group_by.view.id
+        view_name = view_group_by.view.name
+        field_id = view_group_by.field.id
+        field_name = view_group_by.field.name
+        group_by_order = view_group_by.order
+
+        ViewHandler().delete_group_by(user, view_group_by)
+
+        params = cls.Params(
+            field_id,
+            field_name,
+            view_id,
+            view_name,
+            view_group_by.view.table.id,
+            view_group_by.view.table.name,
+            view_group_by.view.table.database.id,
+            view_group_by.view.table.database.name,
+            view_group_by_id,
+            group_by_order,
+        )
+        workspace = view_group_by.view.table.database.workspace
+        cls.register_action(user, params, cls.scope(view_group_by.view.id), workspace)
+
+    @classmethod
+    def scope(cls, view_id: int) -> ActionScopeStr:
+        return ViewActionScopeType.value(view_id)
+
+    @classmethod
+    def undo(cls, user: AbstractUser, params: Params, action_to_undo: Action):
+        view_handler = ViewHandler()
+        view = view_handler.get_view(params.view_id)
+        field = FieldHandler().get_field(params.field_id)
+
+        view_handler.create_group_by(
+            user, view, field, params.group_by_order, params.view_group_by_id
+        )
+
+    @classmethod
+    def redo(cls, user: AbstractUser, params: Params, action_to_redo: Action):
+        view_group_by = ViewHandler().get_group_by(user, params.view_group_by_id)
+        ViewHandler().delete_group_by(user, view_group_by)

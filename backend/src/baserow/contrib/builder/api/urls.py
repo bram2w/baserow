@@ -5,6 +5,7 @@ from .domains import urls as domain_urls
 from .elements import urls as element_urls
 from .pages import urls as page_urls
 from .theme import urls as theme_urls
+from .workflow_actions import urls as workflow_action_urls
 
 app_name = "baserow.contrib.builder.api"
 
@@ -59,6 +60,16 @@ paths_without_builder_id = [
         include(
             (domain_urls.urlpatterns_without_builder_id, page_urls.app_name),
             namespace="domains",
+        ),
+    ),
+    path(
+        "",
+        include(
+            (
+                workflow_action_urls.urls_without_builder_id,
+                workflow_action_urls.app_name,
+            ),
+            namespace="workflow_action",
         ),
     ),
 ]

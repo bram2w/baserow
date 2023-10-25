@@ -1,6 +1,6 @@
 <template>
   <Alert loading simple shadow :title="$t('PastingToast.title')">
-    {{ $t('PastingToast.content') }}
+    <p>{{ $t('PastingToast.content') }}</p>
   </Alert>
 </template>
 

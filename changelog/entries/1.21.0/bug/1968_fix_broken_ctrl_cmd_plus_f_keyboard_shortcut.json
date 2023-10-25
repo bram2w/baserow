@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix a not working ctrl/cmd+f keyboard shortcut on pages that don't have a search box.",
+  "issue_number": 1968,
+  "bullet_points": [],
+  "created_at": "2023-09-22"
+}

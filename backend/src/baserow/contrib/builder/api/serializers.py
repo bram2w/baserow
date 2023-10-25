@@ -15,6 +15,14 @@ from baserow.core.handler import CoreHandler
 
 
 class BuilderSerializer(ApplicationSerializer):
+    """
+    The builder serializer.
+
+    👉 Mind to update the
+    baserow.contrib.builder.api.domains.serializer.PublicBuilderSerializer
+    when you update this one.
+    """
+
     pages = serializers.SerializerMethodField(
         help_text="This field is specific to the `builder` application and contains "
         "an array of pages that are in the builder."

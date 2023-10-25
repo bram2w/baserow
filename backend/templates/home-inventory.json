@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Home Inventory",
-  "icon": "warehouse",
+  "icon": "iconoir-house-rooms",
   "keywords": [
     "home",
     "inventory",

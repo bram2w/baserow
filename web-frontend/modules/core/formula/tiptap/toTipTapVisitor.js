@@ -109,8 +109,7 @@ export class ToTipTapVisitor extends BaserowFormulaVisitor {
   }
 
   visitIntegerLiteral(ctx) {
-    // TODO
-    return parseInt(ctx.getText())
+    return { type: 'text', text: ctx.getText() }
   }
 
   visitLeftWhitespaceOrComments(ctx) {

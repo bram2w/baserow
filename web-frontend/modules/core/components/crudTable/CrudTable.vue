@@ -38,9 +38,9 @@
                     >
                     <HelpIcon v-if="col.helpText" :tooltip="col.helpText" />
                   </div>
-                  <div>
+                  <div class="data-table__table-cell-head-sort-icon">
                     <template v-if="sorted(col)">
-                      <i class="fas" :class="sortIcon(col)"></i>
+                      <i :class="sortIcon(col)"></i>
                       {{ sortIndex(col) }}
                     </template>
                   </div>
@@ -255,8 +255,8 @@ export default {
     sortIcon(column) {
       const i = this.sortIndex(column)
       return this.columnSorts[i].direction === 'desc'
-        ? 'fa-sort-down'
-        : 'fa-sort-up'
+        ? 'iconoir-sort-up'
+        : 'iconoir-sort-down'
     },
     sorted(column) {
       return this.sortIndex(column) !== -1

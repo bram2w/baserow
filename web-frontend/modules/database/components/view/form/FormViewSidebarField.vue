@@ -16,12 +16,17 @@
       "
     >
       <i
-        class="form-view__sidebar-fields-icon fas"
-        :class="'fa-' + field._.type.iconClass"
+        class="form-view__sidebar-fields-icon"
+        :class="field._.type.iconClass"
       ></i>
       <div class="form-view__sidebar-fields-name">
         {{ field.name }}
       </div>
+      <i
+        v-if="!compatible"
+        class="form-view__sidebar-fields-incompatible-icon iconoir-warning-triangle"
+      ></i>
+      <i class="form-view__sidebar-fields-hover-arrow iconoir-arrow-right"></i>
     </a>
   </div>
 </template>
@@ -42,7 +47,10 @@ export default {
   computed: {
     compatible() {
       const fieldType = this.$registry.get('field', this.field.type)
-      return fieldType.getFormViewFieldComponent() !== null
+      return (
+        Object.keys(fieldType.getFormViewFieldComponents(this.field, this))
+          .length > 0
+      )
     },
   },
 }

@@ -18,7 +18,7 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
     page = data_fixture.create_builder_page(user=user, builder=builder_to)
     page2 = data_fixture.create_builder_page(user=user, builder=builder_to)
 
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io", published_to=builder_to
     )
 
@@ -56,7 +56,7 @@ def test_get_builder_missing_domain_name(api_client, data_fixture):
     page = data_fixture.create_builder_page(user=user)
     page2 = data_fixture.create_builder_page(builder=page.builder, user=user)
 
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io", published_to=page.builder
     )
 
@@ -78,7 +78,7 @@ def test_get_non_public_builder(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     page = data_fixture.create_builder_page(user=user)
     page2 = data_fixture.create_builder_page(builder=page.builder, user=user)
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io", builder=page.builder
     )
 
@@ -148,7 +148,7 @@ def test_publish_builder(mock_run_async_job, api_client, data_fixture):
     page = data_fixture.create_builder_page(builder=builder_from, user=user)
     page2 = data_fixture.create_builder_page(builder=builder_from, user=user)
 
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io", builder=builder_from
     )
 
@@ -182,7 +182,7 @@ def test_get_elements_of_public_builder(api_client, data_fixture):
     element2 = data_fixture.create_builder_heading_element(page=page)
     element3 = data_fixture.create_builder_paragraph_element(page=page)
 
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io",
         published_to=page.builder,
         builder=builder_from,
@@ -238,7 +238,7 @@ def test_get_data_source_of_public_builder(api_client, data_fixture):
         page=page
     )
 
-    domain = data_fixture.create_builder_domain(
+    domain = data_fixture.create_builder_custom_domain(
         domain_name="test.getbaserow.io",
         published_to=page.builder,
         builder=builder_from,

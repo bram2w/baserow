@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="filters__content">
     <div v-if="view.filters.length === 0">
       <div class="filters__none">
         <div class="filters__none-title">
@@ -11,22 +11,35 @@
       </div>
     </div>
     <ViewFieldConditionsForm
+      v-if="view.filters.length > 0"
+      v-auto-overflow-scroll
       :filters="view.filters"
+      :filter-groups="view.filter_groups"
       :disable-filter="disableFilter"
       :filter-type="view.filter_type"
       :fields="fields"
       :view="view"
       :read-only="readOnly"
-      class="filters__items"
+      :add-condition-string="$t('viewFilterContext.addFilter')"
+      class="filters__items--with-padding filters__items--scrollable"
+      @addFilter="addFilter($event)"
       @deleteFilter="deleteFilter($event)"
+      @deleteFilterGroup="deleteFilterGroup($event)"
       @updateFilter="updateFilter($event)"
       @selectOperator="updateView(view, { filter_type: $event })"
+      @selectFilterGroupOperator="updateFilterGroupOperator(view, $event)"
     />
-    <div v-if="!disableFilter" class="filters_footer">
-      <a class="filters__add" @click.prevent="addFilter()">
-        <i class="fas fa-plus"></i>
-        {{ $t('viewFilterContext.addFilter') }}</a
-      >
+    <div v-if="!disableFilter" class="filters__footer">
+      <div class="filters__actions">
+        <a class="filters__add" @click.prevent="addFilter()">
+          <i class="filters__add-icon iconoir-plus"></i>
+          {{ $t('viewFilterContext.addFilter') }}</a
+        >
+        <a class="filters__add" @click.prevent="addFilter(uuid())">
+          <i class="filters__add-icon iconoir-plus"></i>
+          {{ $t('viewFilterContext.addFilterGroup') }}</a
+        >
+      </div>
       <div v-if="view.filters.length > 0">
         <SwitchInput
           :value="view.filters_disabled"
@@ -40,6 +53,7 @@
 
 <script>
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import { uuid } from '@baserow/modules/core/utils/string'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
 
@@ -72,7 +86,8 @@ export default {
     },
   },
   methods: {
-    async addFilter(values) {
+    uuid,
+    async addFilter(filterGroupId = null) {
       try {
         const field = this.getFirstCompatibleField(this.fields)
         if (field === undefined) {
@@ -93,6 +108,7 @@ export default {
             },
             emitEvent: false,
             readOnly: this.readOnly,
+            filterGroupId,
           })
           this.$emit('changed')
         }
@@ -111,6 +127,18 @@ export default {
         await this.$store.dispatch('view/deleteFilter', {
           view: this.view,
           filter,
+          readOnly: this.readOnly,
+        })
+        this.$emit('changed')
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
+    },
+    async deleteFilterGroup({ group }) {
+      try {
+        await this.$store.dispatch('view/deleteFilterGroup', {
+          view: this.view,
+          filterGroup: group,
           readOnly: this.readOnly,
         })
         this.$emit('changed')
@@ -152,6 +180,20 @@ export default {
         notifyIf(error, 'view')
       }
 
+      this.$store.dispatch('view/setItemLoading', { view, value: false })
+    },
+    async updateFilterGroupOperator(view, { filterGroup, value }) {
+      this.$store.dispatch('view/setItemLoading', { view, value: true })
+      try {
+        await this.$store.dispatch('view/updateFilterGroup', {
+          filterGroup,
+          values: { filter_type: value },
+          readOnly: this.readOnly,
+        })
+        this.$emit('changed')
+      } catch (error) {
+        notifyIf(error, 'view')
+      }
       this.$store.dispatch('view/setItemLoading', { view, value: false })
     },
   },

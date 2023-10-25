@@ -16,7 +16,7 @@
           )
         "
       >
-        <i class="header__filter-icon fas" :class="`fa-${itemType.icon}`"></i>
+        <i class="header__filter-icon" :class="itemType.icon"></i>
         <span class="header__filter-name">{{ itemType.label }}</span>
       </a>
       <component

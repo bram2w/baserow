@@ -73,23 +73,23 @@ export default class UserAdminUserHelpers {
   }
 
   clickDeleteUser(editUserContext) {
-    return editUserContext.find('.fa-trash-alt').trigger('click')
+    return editUserContext.find('.iconoir-bin').trigger('click')
   }
 
   clickDeactivateUser(editUserContext) {
-    return editUserContext.find('.fa-times').trigger('click')
+    return editUserContext.find('.iconoir-cancel').trigger('click')
   }
 
   clickActivateUser(editUserContext) {
-    return editUserContext.find('.fa-check').trigger('click')
+    return editUserContext.find('.iconoir-check').trigger('click')
   }
 
   clickEditUser(editUserContext) {
-    return editUserContext.find('.fa-pen').trigger('click')
+    return editUserContext.find('.iconoir-edit-pencil').trigger('click')
   }
 
   clickChangeUserPassword(editUserContext) {
-    return editUserContext.find('.fa-key').trigger('click')
+    return editUserContext.find('.iconoir-key-alt').trigger('click')
   }
 
   async attemptToChangePasswordReturningModalError(password, repeatPassword) {
@@ -198,11 +198,11 @@ export default class UserAdminUserHelpers {
   }
 
   clickNextPage() {
-    return this.c.find('.fa-caret-right').trigger('click')
+    return this.c.find('.iconoir-nav-arrow-right').trigger('click')
   }
 
   clickPrevPage() {
-    return this.c.find('.fa-caret-left').trigger('click')
+    return this.c.find('.iconoir-nav-arrow-left').trigger('click')
   }
 
   async typeIntoSearchBox(searchText) {

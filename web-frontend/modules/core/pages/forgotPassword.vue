@@ -16,12 +16,12 @@
         <Alert
           simple
           type="error"
-          icon="exclamation"
+          icon="iconoir-warning-triangle"
           :title="$t('forgotPassword.disabled')"
-          >{{ $t('forgotPassword.disabledMessage') }}</Alert
+          ><p>{{ $t('forgotPassword.disabledMessage') }}</p></Alert
         >
         <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-          <i class="fas fa-arrow-left"></i>
+          <i class="iconoir-arrow-left"></i>
           {{ $t('action.backToLogin') }}
         </nuxt-link>
       </template>
@@ -49,7 +49,7 @@
               />
               <div class="auth__control-error">
                 <div v-if="$v.account.email.$error" class="error">
-                  <i class="fas fa-fw fa-exclamation-triangle"></i>
+                  <i class="iconoir-warning-triangle"></i>
                   {{ $t('error.invalidEmail') }}
                 </div>
               </div>
@@ -79,13 +79,13 @@
     </div>
     <div v-if="success" class="box__message">
       <div class="box__message-icon">
-        <i class="fas fa-paper-plane"></i>
+        <i class="iconoir-send"></i>
       </div>
       <p class="box__message-text">
         {{ $t('forgotPassword.confirmation') }}
       </p>
       <nuxt-link :to="{ name: 'login' }" class="button button--large">
-        <i class="fas fa-arrow-left"></i>
+        <i class="iconoir-arrow-left"></i>
         {{ $t('action.backToLogin') }}
       </nuxt-link>
     </div>

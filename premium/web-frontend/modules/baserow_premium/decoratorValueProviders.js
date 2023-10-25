@@ -26,7 +26,7 @@ export class SingleSelectColorValueProviderType extends DecoratorValueProviderTy
   }
 
   getIconClass() {
-    return 'chevron-circle-down'
+    return 'baserow-icon-single-select'
   }
 
   getFormComponent() {
@@ -55,7 +55,7 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     return 'conditional_color'
   }
 
-  static getDefaultFilterConf(registry, { fields }) {
+  static getDefaultFilterConf(registry, { fields, filterGroupId = null }) {
     const field = fields[0]
     const filter = { field: field.id }
 
@@ -71,26 +71,23 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     filter.value = viewFilterType.getDefaultValue(field)
     filter.preload_values = {}
     filter.id = uuid()
+    filter.group = filterGroupId
 
     return filter
   }
 
-  static getDefaultColorConf(
-    registry,
-    { fields },
-    noFilter = false,
-    excludeColors = undefined
-  ) {
+  static getDefaultFilterGroupConf() {
+    return {
+      filter_type: 'AND',
+      id: uuid(),
+    }
+  }
+
+  static getDefaultColorConf(excludeColors = undefined) {
     return {
       color: randomColor(excludeColors),
       operator: 'AND',
-      filters: noFilter
-        ? []
-        : [
-            ConditionalColorValueProviderType.getDefaultFilterConf(registry, {
-              fields,
-            }),
-          ],
+      filters: [],
       id: uuid(),
     }
   }
@@ -106,16 +103,28 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
   }
 
   getIconClass() {
-    return 'filter'
+    return 'iconoir-filter'
   }
 
   getValue({ options, fields, row }) {
     const { $registry } = this.app
-    for (const { color, filters, operator } of options.colors) {
+    for (const {
+      color,
+      filters,
+      operator,
+      filter_groups: filterGroups,
+    } of options.colors) {
       if (
         row.id !== -1 &&
         row.id !== undefined &&
-        matchSearchFilters($registry, operator, filters, fields, row)
+        matchSearchFilters(
+          $registry,
+          operator,
+          filters,
+          filterGroups,
+          fields,
+          row
+        )
       ) {
         return color
       }
@@ -131,15 +140,10 @@ export class ConditionalColorValueProviderType extends DecoratorValueProviderTyp
     return ConditionalColorValueProviderForm
   }
 
-  getDefaultConfiguration({ fields }) {
-    const { $registry } = this.app
+  getDefaultConfiguration() {
     return {
       default: null,
-      colors: [
-        ConditionalColorValueProviderType.getDefaultColorConf($registry, {
-          fields,
-        }),
-      ],
+      colors: [ConditionalColorValueProviderType.getDefaultColorConf()],
     }
   }
 }

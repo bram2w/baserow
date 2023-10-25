@@ -66,10 +66,8 @@ class KanbanViewFieldOptions(HierarchicalModelMixin, models.Model):
 
     class Meta:
         db_table = "database_kanbanviewfieldoptions"
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("kanban_view", "field")
 
 
 class CalendarView(View):
@@ -121,7 +119,5 @@ class CalendarViewFieldOptions(HierarchicalModelMixin, models.Model):
 
     class Meta:
         db_table = "database_calendarviewfieldoptions"
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("calendar_view", "field")

@@ -1,9 +1,11 @@
+import itertools
 import secrets
+from typing import Iterable, Optional, Union
 
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Q
 from django.utils.functional import lazy
 
@@ -44,6 +46,9 @@ FORM_VIEW_SUBMIT_ACTION_CHOICES = (
 OWNERSHIP_TYPE_COLLABORATIVE = "collaborative"
 DEFAULT_OWNERSHIP_TYPE = OWNERSHIP_TYPE_COLLABORATIVE
 VIEW_OWNERSHIP_TYPES = [OWNERSHIP_TYPE_COLLABORATIVE]
+
+# Must be the same as `modules/database/constants.js`.
+DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY = "default"
 
 
 def get_default_view_content_type():
@@ -186,6 +191,33 @@ class View(
     class Meta:
         ordering = ("order",)
 
+    def get_all_sorts(
+        self, restrict_to_field_ids: Optional[Iterable[int]] = None
+    ) -> Iterable["Union[ViewGroupBy, ViewSort]"]:
+        """
+        Returns any applied ViewGroupBys and ViewSorts on this view. A view should
+        be sorted first by the ViewGroupBys, and then it's ViewSorts.
+
+        :param restrict_to_field_ids: If provided only view group bys and sorts will be
+            returned for fields with an id in this iterable.
+        """
+
+        can_group_by = view_type_registry.get_by_model(self.specific_class).can_group_by
+        viewsorts_qs = self.viewsort_set
+        if restrict_to_field_ids is not None:
+            viewsorts_qs = viewsorts_qs.filter(field_id__in=restrict_to_field_ids)
+
+        if can_group_by:
+            viewgroupbys_qs = self.viewgroupby_set
+            if restrict_to_field_ids is not None:
+                viewgroupbys_qs = viewgroupbys_qs.filter(
+                    field_id__in=restrict_to_field_ids
+                )
+                # GroupBy's have higher priority and must be sorted by first.
+            return itertools.chain(viewgroupbys_qs.all(), viewsorts_qs.all())
+        else:
+            return viewsorts_qs.all()
+
     @classmethod
     def get_last_order(cls, table):
         queryset = View.objects.filter(table=table)
@@ -248,28 +280,18 @@ class View(
                 if fields is None:
                     fields = fields_queryset
 
-                with transaction.atomic():
-                    # Lock the view so concurrent calls to this method wont create
-                    # duplicate field options.
-                    View.objects.filter(id=self.id).select_for_update(
-                        of=("self",)
-                    ).first()
-
-                    # Invalidate the field options because they could have been
-                    # changed concurrently.
-                    field_options = get_queryset()
-
-                    # In the case when field options are missing, we can be more
-                    # in-efficient because this rarely happens. The most important part
-                    # is that the check is fast.
-                    existing_field_ids = [options.field_id for options in field_options]
-                    through_model.objects.bulk_create(
-                        [
-                            through_model(**{field_name: self, "field": field})
-                            for field in fields
-                            if field.id not in existing_field_ids
-                        ]
-                    )
+                # In the case when field options are missing, we can be more
+                # in-efficient because this rarely happens. The most important part
+                # is that the check is fast.
+                existing_field_ids = [options.field_id for options in field_options]
+                through_model.objects.bulk_create(
+                    [
+                        through_model(**{field_name: self, "field": field})
+                        for field in fields
+                        if field.id not in existing_field_ids
+                    ],
+                    ignore_conflicts=True,
+                )
 
                 # Invalidate the field options because new ones have been created and
                 # we always want to return a queryset.
@@ -290,9 +312,47 @@ class ViewFilterManager(models.Manager):
         return super().get_queryset().filter(~trashed_Q)
 
 
+class FilterGroupMixin(models.Model):
+    filter_type = models.CharField(
+        max_length=3,
+        choices=FILTER_TYPES,
+        default=FILTER_TYPE_AND,
+        help_text="Indicates whether all the rows should apply to all filters (AND) "
+        "or to any filter (OR) in the group to be shown.",
+    )
+    parent_group = models.ForeignKey("self", on_delete=models.CASCADE, null=True)
+
+    class Meta:
+        abstract = True
+
+
+class ViewFilterGroup(HierarchicalModelMixin, FilterGroupMixin):
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text="The view to which the filter group applies to. "
+        "Each view can have its own filter groups.",
+        related_name="filter_groups",
+    )
+
+    class Meta:
+        ordering = ("id",)
+
+    def get_parent(self):
+        return self.view
+
+
 class ViewFilter(HierarchicalModelMixin, models.Model):
     objects = ViewFilterManager()
 
+    group = models.ForeignKey(
+        ViewFilterGroup,
+        on_delete=models.CASCADE,
+        null=True,
+        help_text="The filter group to which the filter applies. "
+        "Each view can have his own filters.",
+        related_name="filters",
+    )
     view = models.ForeignKey(
         View,
         on_delete=models.CASCADE,
@@ -427,6 +487,41 @@ class ViewSort(HierarchicalModelMixin, models.Model):
         ordering = ("id",)
 
 
+class ViewGroupByManager(models.Manager):
+    def get_queryset(self):
+        trashed_Q = Q(view__trashed=True) | Q(field__trashed=True)
+        return super().get_queryset().filter(~trashed_Q)
+
+
+class ViewGroupBy(HierarchicalModelMixin, models.Model):
+    objects = ViewGroupByManager()
+
+    view = models.ForeignKey(
+        View,
+        on_delete=models.CASCADE,
+        help_text="The view to which the group by applies. Each view can have his own "
+        "group bys.",
+    )
+    field = models.ForeignKey(
+        "database.Field",
+        on_delete=models.CASCADE,
+        help_text="The field that must be grouped by.",
+    )
+    order = models.CharField(
+        max_length=4,
+        choices=SORT_ORDER_CHOICES,
+        help_text="Indicates the sort order direction. ASC (Ascending) is from A to Z "
+        "and DESC (Descending) is from Z to A.",
+        default=SORT_ORDER_ASC,
+    )
+
+    def get_parent(self):
+        return self.view
+
+    class Meta:
+        ordering = ("id",)
+
+
 class GridView(View):
     class RowIdentifierTypes(models.TextChoices):
         ID = "id"
@@ -513,7 +608,8 @@ class GridViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.grid_view
 
     class Meta:
-        ordering = ("field_id",)
+        ordering = ("order", "field_id")
+        unique_together = ("grid_view", "field")
 
 
 class GalleryView(View):
@@ -561,10 +657,8 @@ class GalleryViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.gallery_view
 
     class Meta:
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("gallery_view", "field")
 
 
 class FormView(View):
@@ -627,7 +721,7 @@ class FormView(View):
         return (
             FormViewFieldOptions.objects.filter(form_view=self, enabled=True)
             .select_related("field")
-            .prefetch_related("conditions")
+            .prefetch_related("conditions", "condition_groups")
             .order_by("order")
         )
 
@@ -679,6 +773,12 @@ class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
         help_text="Indicates whether all (AND) or any (OR) of the conditions should "
         "match before shown.",
     )
+    field_component = models.CharField(
+        max_length=32,
+        default=DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY,
+        help_text="Indicates which field input component is used in the form. The "
+        "value is only used in the frontend, and can differ per field.",
+    )
     # The default value is the maximum value of the small integer field because a newly
     # created field must always be last.
     order = models.SmallIntegerField(
@@ -690,10 +790,8 @@ class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
         return self.form_view
 
     class Meta:
-        ordering = (
-            "order",
-            "field_id",
-        )
+        ordering = ("order", "field_id")
+        unique_together = ("form_view", "field")
 
     def is_required(self):
         return (
@@ -711,6 +809,21 @@ class FormViewFieldOptions(HierarchicalModelMixin, models.Model):
 class FormViewFieldOptionsConditionManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(~Q(field__trashed=True))
+
+
+class FormViewFieldOptionsConditionGroup(HierarchicalModelMixin, FilterGroupMixin):
+    field_option = models.ForeignKey(
+        FormViewFieldOptions,
+        on_delete=models.CASCADE,
+        help_text="The form view option where the condition is related to.",
+        related_name="condition_groups",
+    )
+
+    class Meta:
+        ordering = ("id",)
+
+    def get_parent(self):
+        return self.field_option
 
 
 class FormViewFieldOptionsCondition(HierarchicalModelMixin, models.Model):
@@ -735,6 +848,12 @@ class FormViewFieldOptionsCondition(HierarchicalModelMixin, models.Model):
         max_length=255,
         blank=True,
         help_text="The filter value that must be compared to the field's value.",
+    )
+    group = models.ForeignKey(
+        FormViewFieldOptionsConditionGroup,
+        on_delete=models.CASCADE,
+        null=True,
+        related_name="conditions",
     )
     objects = FormViewFieldOptionsConditionManager()
 

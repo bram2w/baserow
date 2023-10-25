@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 from typing import Optional
 from urllib.parse import urljoin, urlparse
@@ -9,6 +10,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Q, QuerySet
+from django.db.utils import IntegrityError
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
@@ -23,6 +25,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
+    BlacklistedToken,
     Template,
     UserLogEntry,
     UserProfile,
@@ -38,6 +41,7 @@ from baserow.core.signals import (
     user_updated,
 )
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import generate_hash
 
 from ..telemetry.utils import baserow_trace_methods
 from .emails import (
@@ -51,11 +55,13 @@ from .exceptions import (
     DisabledSignupError,
     InvalidPassword,
     PasswordDoesNotMatchValidation,
+    RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
     UserNotFound,
 )
+from .signals import user_password_changed
 from .utils import normalize_email_address
 
 User = get_user_model()
@@ -88,7 +94,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if not user_id and not email:
             raise ValueError("Either a user id or email must be provided.")
 
-        query = User.objects.filter(is_active=True)
+        query = User.objects.filter(is_active=True).select_related("profile")
         if exclude_users_scheduled_to_be_deleted:
             query = query.filter(profile__to_be_deleted=False)
 
@@ -103,6 +109,55 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             return query.get()
         except User.DoesNotExist:
             raise UserNotFound("The user with the provided parameters is not found.")
+
+    def force_create_user(self, email, name, password, **kwargs):
+        """
+        Creates a new user and their profile.
+
+        :param email: The username/email of the new user.
+        :param name: The full name of the new user.
+        :param password: The password of the new user.
+        :param kwargs: Additional kwargs that must be added when creating the User
+            object.
+        :raises UserAlreadyExist: When the user with the provided email already exists.
+        :raises PasswordDoesNotMatchValidation: When a provided password does not match
+            password validation.
+        :raises DeactivatedUserException: When a user with the provided email exists but
+            has been deactivated.
+        :return: The newly created user object.
+        """
+
+        language = settings.LANGUAGE_CODE
+        if "language" in kwargs:
+            language = kwargs.pop("language") or settings.LANGUAGE_CODE
+
+        email = normalize_email_address(email)
+        user_query = User.objects.filter(Q(email=email) | Q(username=email))
+        if user_query.exists():
+            user = user_query.first()
+            if user.is_active:
+                raise UserAlreadyExist(f"A user with email {email} already exists.")
+            else:
+                raise DeactivatedUserException(
+                    f"User with email {email} has been deactivated."
+                )
+
+        user = User(first_name=name, email=email, username=email, **kwargs)
+
+        if password is not None:
+            try:
+                validate_password(password, user)
+            except ValidationError as e:
+                raise PasswordDoesNotMatchValidation(e.messages)
+            user.set_password(password)
+
+        user.save()
+
+        # Immediately create the one-to-one relationship with the user profile
+        # so we can safely use it everywhere else in the code.
+        UserProfile.objects.create(user=user, language=language)
+
+        return user
 
     def create_user(
         self,
@@ -135,23 +190,10 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         :raises WorkspaceInvitationEmailMismatch: If the workspace invitation email
             does not match the one of the user.
         :raises SignupDisabledError: If signing up is disabled.
-        :raises PasswordDoesNotMatchValidation: When a provided password does not match
-            password validation.
         :return: The user object.
         """
 
         core_handler = CoreHandler()
-
-        email = normalize_email_address(email)
-        user_query = User.objects.filter(Q(email=email) | Q(username=email))
-        if user_query.exists():
-            user = user_query.first()
-            if user.is_active:
-                raise UserAlreadyExist(f"A user with email {email} already exists.")
-            else:
-                raise DeactivatedUserException(
-                    f"User with email {email} has been deactivated."
-                )
 
         workspace_invitation = None
         workspace_user = None
@@ -176,31 +218,20 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if not (allow_new_signups or allow_signup_for_invited_user):
             raise DisabledSignupError("Sign up is disabled.")
 
-        user = User(first_name=name, email=email, username=email)
-
-        if password is not None:
-            try:
-                validate_password(password, user)
-            except ValidationError as e:
-                raise PasswordDoesNotMatchValidation(e.messages)
-            user.set_password(password)
-
-        if not User.objects.exists():
+        user = self.force_create_user(
+            email=email,
+            name=name,
+            password=password,
             # This is the first ever user created in this baserow instance and
             # therefore the administrator user, lets give them staff rights so they
             # can set baserow wide settings.
-            user.is_staff = True
+            is_staff=not User.objects.exists(),
+            language=language,
+        )
 
         if instance_settings.show_admin_signup_page:
             instance_settings.show_admin_signup_page = False
             instance_settings.save()
-
-        user.save()
-
-        # Immediately create the one-to-one relationship with the user profile
-        # so we can safely use it everywhere else in the code.
-        language = language or settings.LANGUAGE_CODE
-        UserProfile.objects.create(user=user, language=language)
 
         # If we have an invitation to a workspace, then accept it.
         if workspace_invitation_token:
@@ -347,6 +378,15 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         user.set_password(password)
         user.save()
 
+        # Update the last password change timestamp to invalidate old authentication
+        # tokens.
+        user.profile.last_password_change = timezone.now()
+        user.profile.save()
+
+        user_password_changed.send(
+            self, user=user, ignore_web_socket_id=getattr(user, "web_socket_id", None)
+        )
+
         return user
 
     def change_password(
@@ -377,6 +417,15 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         user.set_password(new_password)
         user.save()
+
+        # Update the last password change timestamp to invalidate old authentication
+        # tokens.
+        user.profile.last_password_change = timezone.now()
+        user.profile.save()
+
+        user_password_changed.send(
+            self, user=user, ignore_web_socket_id=getattr(user, "web_socket_id", None)
+        )
 
         return user
 
@@ -546,3 +595,38 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             profile__to_be_deleted=False,
             is_active=True,
         )
+
+    def blacklist_refresh_token(
+        self, user: AbstractUser, refresh_token: str, expires_at: datetime.datetime
+    ):
+        """
+        Blacklists the provided refresh token. This results in not being able to
+        generate access tokens anymore. The access does remain working until it expires.
+
+        :param user: The user that owns the refresh token.
+        :param refresh_token: The raw refresh token that must be blacklisted.
+        :param expires_at: Date when the token expires, this will be used when
+            cleaning up.
+        """
+
+        hashed_token = generate_hash(refresh_token)
+
+        try:
+            BlacklistedToken.objects.create(
+                user=user,
+                hashed_token=hashed_token,
+                expires_at=expires_at,
+            )
+        except IntegrityError:
+            raise RefreshTokenAlreadyBlacklisted
+
+    def refresh_token_is_blacklisted(self, refresh_token: str) -> bool:
+        """
+        Checks if the provided refresh token is blacklisted.
+
+        :param refresh_token: The refresh token that must be checked.
+        :return: Whether the token is blacklisted.
+        """
+
+        hashed_token = generate_hash(refresh_token)
+        return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()

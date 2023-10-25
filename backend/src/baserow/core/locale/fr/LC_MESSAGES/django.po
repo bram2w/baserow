@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-27 10:23+0000\n"
-"PO-Revision-Date: 2023-07-18 19:30+0000\n"
+"PO-Revision-Date: 2023-10-25 09:47+0000\n"
 "Last-Translator: Jérémie Pardou-Piquemal <jrmi@jeremiez.net>\n"
 "Language-Team: French <https://hosted.weblate.org/projects/baserow/"
 "backend-core/fr/>\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 5.0-dev\n"
+"X-Generator: Weblate 5.1.1-dev\n"
 
 #: src/baserow/core/action/scopes.py:9
 #, python-format
@@ -467,9 +467,8 @@ msgstr ""
 "(%(auth_provider_id)s)"
 
 #: src/baserow/core/user/actions.py:275
-#| msgid "Reset password"
 msgid "Send reset user password"
-msgstr "Réinitialiser le mot de passe"
+msgstr "Envoyer le lien de réinitialisation de mot de passe"
 
 #: src/baserow/core/user/actions.py:276
 #, python-format
@@ -478,9 +477,8 @@ msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr "Utilisateur « %(user_email)s » (%(user_id)s) mis à jour"
 
 #: src/baserow/core/user/actions.py:306
-#| msgid "Reset password"
 msgid "Change user password"
-msgstr "Réinitialiser le mot de passe"
+msgstr "Changer le mot de passe"
 
 #: src/baserow/core/user/actions.py:307
 #, python-format

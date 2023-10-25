@@ -43,6 +43,10 @@ class ViewFilterDoesNotExist(Exception):
     """Raised when trying to get a view filter that does not exist."""
 
 
+class ViewFilterGroupDoesNotExist(Exception):
+    """Raised when trying to get a view filter that does not exist."""
+
+
 class ViewFilterNotSupported(Exception):
     """Raised when the view type does not support filters."""
 
@@ -83,6 +87,22 @@ class ViewSortFieldAlreadyExist(Exception):
 
 class ViewSortFieldNotSupported(Exception):
     """Raised when a field does not support sorting in a view."""
+
+
+class ViewGroupByDoesNotExist(Exception):
+    """Raised when trying to get a view group by that does not exist."""
+
+
+class ViewGroupByNotSupported(Exception):
+    """Raised when the view type does not support grouping."""
+
+
+class ViewGroupByFieldAlreadyExist(Exception):
+    """Raised when a view group by with the field type already exists."""
+
+
+class ViewGroupByFieldNotSupported(Exception):
+    """Raised when a field does not support grouping in a view."""
 
 
 class ViewDoesNotSupportFieldOptions(Exception):
@@ -179,4 +199,10 @@ class ViewOwnershipTypeDoesNotExist(InstanceTypeDoesNotExist):
     """
     Raised when trying to get a view ownership type
     that does not exist.
+    """
+
+
+class InvalidAPIGroupedFiltersFormatException(ValueError):
+    """
+    Raised when the provided view filters format is invalid.
     """

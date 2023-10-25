@@ -3,7 +3,7 @@
     class="grid-view__row-more"
     @click="listeners['edit-modal'] && listeners['edit-modal']()"
   >
-    <i class="fas fa-expand"></i>
+    <i class="iconoir-expand"></i>
   </a>
 </template>
 <script>

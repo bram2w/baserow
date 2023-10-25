@@ -20,6 +20,7 @@ import {
   MultipleSelectHasFilterType,
   MultipleSelectHasNotFilterType,
   HasFileTypeViewFilterType,
+  FilesLowerThanViewFilterType,
   LengthIsLowerThanViewFilterType,
   LinkRowContainsFilterType,
   LinkRowNotContainsFilterType,
@@ -1068,9 +1069,6 @@ describe('All Tests', () => {
     const result = new DateBeforeOrEqualViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, { date_include_time: true })
-    if (values.expected !== result) {
-      console.log('beforeequal', values)
-    }
     expect(result).toBe(values.expected)
   })
 
@@ -1089,9 +1087,6 @@ describe('All Tests', () => {
       values.filterValue,
       { date_include_time: true }
     )
-    if (values.expected !== result) {
-      console.log('afterequal', values)
-    }
     expect(result).toBe(values.expected)
   })
 
@@ -1143,7 +1138,6 @@ describe('All Tests', () => {
     const result = new DateWithinDaysViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('days', values)
     expect(result).toBe(values.expected)
   })
 
@@ -1151,7 +1145,6 @@ describe('All Tests', () => {
     const result = new DateWithinWeeksViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('weeks', values)
     expect(result).toBe(values.expected)
   })
 
@@ -1159,7 +1152,6 @@ describe('All Tests', () => {
     const result = new DateWithinMonthsViewFilterType({
       app: testApp,
     }).matches(values.rowValue, values.filterValue, {})
-    if (result !== values.expected) console.log('months', values)
     expect(result).toBe(values.expected)
   })
 
@@ -1306,6 +1298,28 @@ describe('All Tests', () => {
         [{ is_image: true }, { is_image: false }],
         'document',
         {}
+      )
+    ).toBe(true)
+  })
+
+  test('FilesLowerThanFilterType', () => {
+    expect(new FilesLowerThanViewFilterType().matches([], 0)).toBe(false)
+    expect(
+      new FilesLowerThanViewFilterType().matches(
+        [
+          { visible_name: 'test_file_1.txt' },
+          { visible_name: 'test_file_2.txt' },
+        ],
+        2
+      )
+    ).toBe(false)
+    expect(
+      new FilesLowerThanViewFilterType().matches(
+        [
+          { visible_name: 'test_file_1.txt' },
+          { visible_name: 'test_file_2.txt' },
+        ],
+        3
       )
     ).toBe(true)
   })

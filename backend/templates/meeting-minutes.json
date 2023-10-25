@@ -1,7 +1,7 @@
 {
   "baserow_template_version": 1,
   "name": "Meeting Minutes",
-  "icon": "comments",
+  "icon": "iconoir-timer",
   "keywords": [
     "meeting minutes",
     "minutes",

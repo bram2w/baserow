@@ -3,7 +3,7 @@ from typing import Optional
 from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import QuerySet
+from django.db.models import SET_NULL, QuerySet
 
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
@@ -28,6 +28,11 @@ class VerticalAlignments(models.TextChoices):
     TOP = "top"
     CENTER = "center"
     BOTTOM = "bottom"
+
+
+class WIDTHS(models.TextChoices):
+    AUTO = "auto"
+    FULL = "full"
 
 
 def get_default_element_content_type():
@@ -251,6 +256,12 @@ class HeadingElement(Element):
     level = models.IntegerField(
         choices=HeadingLevel.choices, default=1, help_text="The level of the heading"
     )
+    font_color = models.CharField(
+        max_length=20,
+        default="default",
+        blank=True,
+        help_text="The font color of the heading",
+    )
 
 
 class ParagraphElement(Element):
@@ -277,10 +288,6 @@ class LinkElement(Element):
     class TARGETS(models.TextChoices):
         SELF = "self"
         BLANK = "blank"
-
-    class WIDTHS(models.TextChoices):
-        AUTO = "auto"
-        FULL = "full"
 
     value = FormulaField(default="")
     navigation_type = models.CharField(
@@ -395,3 +402,69 @@ class InputTextElement(InputElement):
         max_length=225,
         help_text="The placeholder text which should be applied to the element.",
     )
+
+
+class ButtonElement(Element):
+    """
+    A button element
+    """
+
+    value = FormulaField(default="", help_text="The caption of the button.")
+    width = models.CharField(
+        choices=WIDTHS.choices,
+        max_length=10,
+        default=WIDTHS.AUTO,
+    )
+    alignment = models.CharField(
+        choices=HorizontalAlignments.choices,
+        max_length=10,
+        default=HorizontalAlignments.LEFT,
+    )
+
+
+class CollectionElementField(models.Model):
+    """
+    A field of a Collection element
+    """
+
+    order = models.PositiveIntegerField()
+    name = models.CharField(
+        max_length=225,
+        help_text="The name of the field.",
+    )
+    value = FormulaField(default="", help_text="The value of the field.")
+
+    class Meta:
+        ordering = ("order", "id")
+
+
+class CollectionElement(Element):
+    data_source = models.ForeignKey(
+        "builder.DataSource",
+        null=True,
+        on_delete=SET_NULL,
+        help_text="The data source we want to show in the element for. "
+        "Only data_sources that return list are allowed.",
+    )
+
+    items_per_page = models.PositiveIntegerField(
+        default=20,
+        help_text="The amount item loaded with each page.",
+        validators=[
+            MinValueValidator(1, message="Value cannot be less than 1."),
+            MaxValueValidator(100, message="Value cannot be greater than 100."),
+        ],
+    )
+
+    fields = models.ManyToManyField(
+        CollectionElementField, help_text="Fields of the collection element."
+    )
+
+    class Meta:
+        abstract = True
+
+
+class TableElement(CollectionElement):
+    """
+    A table element
+    """

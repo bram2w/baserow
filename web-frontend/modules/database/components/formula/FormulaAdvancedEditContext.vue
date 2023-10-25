@@ -163,12 +163,12 @@ export default {
     },
     getFieldIcon(field) {
       const fieldType = this.$registry.get('field', field.type)
-      return `fa-${fieldType.getIconClass()}`
+      return fieldType.getIconClass()
     },
     funcTypeToIconClass(func) {
       const formulaTypeValue = func.getFormulaType()
       const formulaType = this.$registry.get('formula_type', formulaTypeValue)
-      return `fa-${formulaType.getIconClass()}`
+      return formulaType.getIconClass()
     },
     resetFilters() {
       this.filteredFunctions = this.functions

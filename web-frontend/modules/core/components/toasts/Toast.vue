@@ -3,12 +3,12 @@
     simple
     shadow
     close-button
-    icon="exclamation"
+    icon="iconoir-warning-triangle"
     :type="toast.type"
     :title="toast.title"
     @close="close(toast)"
   >
-    {{ toast.message }}
+    <p>{{ toast.message }}</p>
   </Alert>
 </template>
 

@@ -3,7 +3,9 @@ import abc
 from baserow.contrib.database.table.operations import DatabaseTableOperationType
 from baserow.contrib.database.views.object_scopes import (
     DatabaseViewDecorationObjectScopeType,
+    DatabaseViewFilterGroupObjectScopeType,
     DatabaseViewFilterObjectScopeType,
+    DatabaseViewGroupByObjectScopeType,
     DatabaseViewObjectScopeType,
     DatabaseViewSortObjectScopeType,
 )
@@ -16,6 +18,10 @@ class ViewOperationType(OperationType, abc.ABC):
 
 class ViewFilterOperationType(OperationType, abc.ABC):
     context_scope_name = DatabaseViewFilterObjectScopeType.type
+
+
+class ViewFilterGroupOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewFilterGroupObjectScopeType.type
 
 
 class ViewSortOperationType(OperationType, abc.ABC):
@@ -41,6 +47,31 @@ class UpdateViewSortOperationType(ViewSortOperationType):
 
 class DeleteViewSortOperationType(ViewSortOperationType):
     type = "database.table.view.sort.delete"
+
+
+class ViewGroupByOperationType(OperationType, abc.ABC):
+    context_scope_name = DatabaseViewGroupByObjectScopeType.type
+
+
+class CreateViewGroupByOperationType(ViewOperationType):
+    type = "database.table.view.create_group_by"
+
+
+class ListViewGroupByOperationType(ViewOperationType):
+    type = "database.table.view.list_group_bys"
+    object_scope_name = DatabaseViewGroupByObjectScopeType.type
+
+
+class ReadViewGroupByOperationType(ViewGroupByOperationType):
+    type = "database.table.view.group_by.read"
+
+
+class UpdateViewGroupByOperationType(ViewGroupByOperationType):
+    type = "database.table.view.group_by.update"
+
+
+class DeleteViewGroupByOperationType(ViewGroupByOperationType):
+    type = "database.table.view.group_by.delete"
 
 
 class UpdateViewSlugOperationType(ViewOperationType):
@@ -132,6 +163,22 @@ class UpdateViewFilterOperationType(ViewFilterOperationType):
 
 class DeleteViewFilterOperationType(ViewFilterOperationType):
     type = "database.table.view.filter.delete"
+
+
+class CreateViewFilterGroupOperationType(ViewOperationType):
+    type = "database.table.view.create_filter_group"
+
+
+class ReadViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.read"
+
+
+class UpdateViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.update"
+
+
+class DeleteViewFilterGroupOperationType(ViewFilterGroupOperationType):
+    type = "database.table.view.filter_group.delete"
 
 
 class CreateViewDecorationOperationType(ViewOperationType):

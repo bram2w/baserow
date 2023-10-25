@@ -64,6 +64,12 @@ export default {
           return
         }
 
+        // If the space bar key is pressed, and not editing, we don't want to do
+        // anything because it should open the row edit modal.
+        if (event.key === ' ' && !this.editing) {
+          return
+        }
+
         // If the escape key is pressed while editing we want to cancel the current
         // input and undo the editing state.
         if (event.key === 'Escape' && this.editing) {
@@ -206,16 +212,10 @@ export default {
      * If true the value can be saved by pressing the enter key. This could for
      * example be disabled for a long text field that can have multiple lines.
      */
-    canSaveByPressingEnter(event) {
+    canSaveByPressingEnter() {
       return true
     },
-    canCopy() {
-      return !this.editing
-    },
-    canPaste() {
-      return !this.editing
-    },
-    canEmpty() {
+    canKeyboardShortcut() {
       return !this.editing
     },
     getError() {

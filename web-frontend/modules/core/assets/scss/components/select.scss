@@ -10,20 +10,21 @@
   flex: 0 0;
   position: relative;
   border-bottom: 1px solid $color-neutral-200;
+
+  @include flex-align-items();
 }
 
 .select__search-icon {
   color: $color-neutral-300;
-
-  @include absolute(0, auto, auto, 0);
-  @include center-text(32px, 14px, 36px);
+  padding: 0 12px;
+  font-size: 18px;
 }
 
 .select__search-input {
   display: block;
   width: 100%;
   border: none;
-  padding: 0 12px 0 36px;
+  padding: 0 12px 0 0;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 
@@ -96,6 +97,16 @@
   @include fixed-height(32px, 14px);
 }
 
+.select__item-active-icon {
+  text-align: center;
+  color: $palette-green-600;
+  position: absolute;
+  top: 8px;
+  right: 5px;
+  font-size: 17px;
+  display: none;
+}
+
 .select__item {
   position: relative;
   margin: 0 8px 4px 8px;
@@ -133,20 +144,14 @@
   &.active {
     background-color: $color-primary-100;
 
-    &:not(.select__item--loading)::after {
-      @extend .fas;
-      @extend %select__item-size;
-
-      content: fa-content($fa-var-check-circle);
-      width: 32px;
-      text-align: center;
-      color: $color-success-500;
-
-      @include absolute(0, 0, auto, auto);
+    .select__item-active-icon {
+      display: block;
     }
 
-    &:not(.select__item--no-options):hover::after {
-      display: none;
+    &:not(.select__item--no-options):hover {
+      .select__item-active-icon {
+        display: none;
+      }
     }
   }
 
@@ -194,6 +199,7 @@
 
 .select__item-icon {
   margin-right: 6px;
+  font-size: 16px;
 }
 
 .select__item-image {
@@ -218,12 +224,13 @@
   display: none;
   text-align: center;
   width: 32px;
-  color: $color-neutral-300;
+  color: $color-neutral-600;
+  font-size: 17px;
 
-  @include absolute(0, 0, auto, auto);
+  @include absolute(2px, 0, auto, auto);
 
   &:hover {
-    color: $color-neutral-700;
+    color: $color-neutral-800;
   }
 
   :not(.select__item--loading):not(.select__item--no-options):hover > & {
@@ -251,10 +258,7 @@
   border-bottom-right-radius: 2px;
 
   @include fixed-height(36px, 14px);
-
-  .fas {
-    margin-right: 6px;
-  }
+  @include flex-align-items(6px);
 
   &:hover {
     background-color: $color-neutral-100;
@@ -274,15 +278,15 @@
 
 .select__footer-create-link {
   position: relative;
-  flex: 0 0 calc(50% - 10px);
   width: calc(50% - 10px);
   color: $color-neutral-900;
-  padding: 0 32px 0 10px;
+  padding: 0 10px;
   margin-bottom: 4px;
   min-width: 0;
   line-height: 26px;
   font-size: 13px;
   @include rounded($rounded);
+  @include flex-align-items(4px);
 
   &:only-child {
     width: 100%;
@@ -299,25 +303,20 @@
     text-decoration: none;
   }
 
-  &::after {
-    @extend .fas;
-
-    content: fa-content($fa-var-plus);
-    color: $color-neutral-200;
-    margin-top: -6.5px;
-    line-height: 13px;
-    font-size: 13px;
-
-    @include absolute(50%, 8px, auto, auto);
-  }
-
   &:not(.select__footer-create-link--disabled):hover {
     text-decoration: none;
     background-color: $color-neutral-100;
   }
 }
 
+.select__footer-create-link-icon {
+  color: $color-neutral-600;
+  font-size: 14px;
+  margin-left: auto;
+}
+
 .select__footer-create-icon {
-  color: $color-neutral-300;
+  color: $color-neutral-600;
   margin-right: 4px;
+  font-size: 14px;
 }

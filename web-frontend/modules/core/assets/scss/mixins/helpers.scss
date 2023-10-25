@@ -11,6 +11,12 @@
   text-align: center;
 }
 
+@mixin flex-align-items($gap: 0, $display: flex) {
+  display: $display;
+  align-items: center;
+  gap: $gap;
+}
+
 @mixin loading($size: 1.4rem) {
   position: relative;
   display: block;

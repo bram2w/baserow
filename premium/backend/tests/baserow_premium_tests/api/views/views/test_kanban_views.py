@@ -1,3 +1,5 @@
+import json
+
 from django.shortcuts import reverse
 from django.test.utils import override_settings
 
@@ -1092,6 +1094,7 @@ def test_get_public_kanban_without_with_single_select_and_cover(
             "public": True,
             "slug": kanban_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
@@ -1190,6 +1193,7 @@ def test_get_public_kanban_view_with_single_select_and_cover(
             "public": True,
             "slug": kanban_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
@@ -1745,3 +1749,238 @@ def test_kanban_view_hierarchy(api_client, premium_data_fixture):
     kanban_view_field_options = kanban_view.get_field_options()[0]
     assert kanban_view_field_options.get_parent() == kanban_view
     assert kanban_view_field_options.get_root() == workspace
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_filter(api_client, premium_data_fixture):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, public=True
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+    )
+    get_params = [f"filter__field_{public_field.id}__contains=a"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["rows"]["null"]["count"] == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == first_row.id
+
+    url = reverse(
+        "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+    )
+    get_params = [
+        f"filter__field_{public_field.id}__contains=a",
+        f"filter__field_{public_field.id}__contains=b",
+        f"filter_type=OR",
+    ]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["rows"]["null"]["count"] == 2
+
+    get_params = [f"filter__field_{hidden_field.id}__contains=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+    get_params = [f"filter__field_{public_field.id}__random=y"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    get_params = [f"filter__field_{public_field.id}__higher_than=1"]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+
+@pytest.mark.django_db
+def test_list_rows_public_with_query_param_advanced_filters(
+    api_client, premium_data_fixture
+):
+    user = premium_data_fixture.create_user()
+    table = premium_data_fixture.create_database_table(user=user)
+    public_field = premium_data_fixture.create_text_field(table=table, name="public")
+    hidden_field = premium_data_fixture.create_text_field(table=table, name="hidden")
+    kanban_view = premium_data_fixture.create_kanban_view(
+        table=table, user=user, public=True
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, public_field, hidden=False
+    )
+    premium_data_fixture.create_kanban_view_field_option(
+        kanban_view, hidden_field, hidden=True
+    )
+
+    first_row = RowHandler().create_row(
+        user, table, values={"public": "a", "hidden": "y"}, user_field_names=True
+    )
+    RowHandler().create_row(
+        user, table, values={"public": "b", "hidden": "z"}, user_field_names=True
+    )
+
+    url = reverse(
+        "api:database:views:kanban:public_rows", kwargs={"slug": kanban_view.slug}
+    )
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "contains",
+                "value": "a",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["rows"]["null"]["count"] == 1
+    assert response_json["rows"]["null"]["results"][0]["id"] == first_row.id
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "OR",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "b",
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["rows"]["null"]["count"] == 2
+
+    # groups can be arbitrarily nested
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": public_field.id,
+                        "type": "contains",
+                        "value": "",
+                    },
+                ],
+                "groups": [
+                    {
+                        "filter_type": "OR",
+                        "filters": [
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "a",
+                            },
+                            {
+                                "field": public_field.id,
+                                "type": "contains",
+                                "value": "b",
+                            },
+                        ],
+                    },
+                ],
+            },
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["rows"]["null"]["count"] == 2
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": hidden_field.id,
+                "type": "contains",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_FILTER_FIELD_NOT_FOUND"
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "random",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_DOES_NOT_EXIST"
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "filters": [
+            {
+                "field": public_field.id,
+                "type": "higher_than",
+                "value": "y",
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    response = api_client.get(f'{url}?{"&".join(get_params)}')
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_VIEW_FILTER_TYPE_UNSUPPORTED_FIELD"
+
+    for filters in [
+        "invalid_json",
+        json.dumps({"filter_type": "invalid"}),
+        json.dumps({"filter_type": "OR", "filters": "invalid"}),
+    ]:
+        get_params = [f"filters={filters}"]
+        response = api_client.get(f'{url}?{"&".join(get_params)}')
+        response_json = response.json()
+        assert response.status_code == HTTP_400_BAD_REQUEST
+        assert response_json["error"] == "ERROR_FILTERS_PARAM_VALIDATION_ERROR"

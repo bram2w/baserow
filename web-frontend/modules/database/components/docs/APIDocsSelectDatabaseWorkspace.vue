@@ -14,7 +14,7 @@
           :class="{ active: selected === database.id }"
         >
           <div class="select-application__icon">
-            <i class="fas" :class="'fa-' + database._.type.iconClass"></i>
+            <i :class="database._.type.iconClass"></i>
           </div>
           <div class="select-application__name">
             {{ database.name }}

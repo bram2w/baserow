@@ -151,7 +151,10 @@ export default {
         }
 
         // Removes the value if the backspace/delete key is pressed.
-        if ((key === 'Delete' || key === 'Backspace') && this.canEmpty(event)) {
+        if (
+          (key === 'Delete' || key === 'Backspace') &&
+          this.canKeyboardShortcut(event)
+        ) {
           event.preventDefault()
           const value = this.$registry
             .get('field', this.field.type)
@@ -165,6 +168,12 @@ export default {
             this.$emit('update', value, oldValue)
           }
         }
+
+        // Space bar should enlarge the row.
+        if (key === ' ' && this.canKeyboardShortcut(event)) {
+          event.preventDefault()
+          this.$emit('edit-modal')
+        }
       }
       this.addEventListenerWithAutoRemove(
         document.body,
@@ -173,7 +182,7 @@ export default {
       )
 
       const copyEventListener = async (event) => {
-        if (!this.canKeyDown(event) || !this.canCopy(event)) return
+        if (!this.canKeyDown(event) || !this.canKeyboardShortcut(event)) return
 
         await this.copySelectionToClipboard(
           Promise.resolve([
@@ -188,7 +197,7 @@ export default {
 
       // Updates the value of the field when a user pastes something in the field.
       const pasteEventListener = async (event) => {
-        if (!this.canPaste(event)) {
+        if (!this.canKeyboardShortcut(event)) {
           return
         }
 
@@ -280,32 +289,6 @@ export default {
       return true
     },
     /**
-     * If the user presses ctrl/cmd + c while a field is selected, the value is
-     * going to be copied to the clipboard. In some cases, for example when the user
-     * is editing the value, we do not want to copy the value. If false is returned
-     * the value won't be copied.
-     */
-    canCopy() {
-      return true
-    },
-    /**
-     * If the user presses ctrl/cmd + v while a field is selected, the value is
-     * overwritten with the data of the clipboard. In some cases, for example when the
-     * user is editing the value, we do not want to change the value. If false is
-     * returned the value won't be changed.
-     */
-    canPaste() {
-      return true
-    },
-    /**
-     * If the user presses delete or backspace while a field is selected, the value is
-     * deleted. In some cases, for example when the user is editing the value, we do
-     * not want to delete the value. If false is returned the value won't be changed.
-     */
-    canEmpty() {
-      return true
-    },
-    /**
      * If the user clicks outside the cell, the cell is automatically unselected. In
      * some cases, for example when you have a context menu as helper, you might not
      * want to unselect when the user clicks in the context menu. The can be
@@ -321,6 +304,15 @@ export default {
      * backspace/delete key should not empty the field at that moment.
      */
     canKeyDown() {
+      return true
+    },
+    /**
+     * If the user presses a keyboard shortcut like ctrl/cmd + v or spacebar while a
+     * field is selected In some cases, for example when the user is editing the
+     * value, we do not want to allow the keyboard shortcut to work. If false it will
+     * be disabled.
+     */
+    canKeyboardShortcut() {
       return true
     },
   },

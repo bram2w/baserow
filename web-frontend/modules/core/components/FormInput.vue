@@ -4,6 +4,7 @@
     class="control"
     :class="{
       'control--horizontal': horizontal,
+      'control--horizontal-variable': horizontalVariable,
     }"
   >
     <label
@@ -14,35 +15,42 @@
       {{ label }}
     </label>
     <div class="control__elements">
-      <div
-        :class="{
-          'form-input': true,
-          'form-input--with-icon': hasIcon,
-          'form-input--with-icon-left': iconLeft,
-          'form-input--with-icon-right': iconRight,
-          'form-input--error': hasError,
-          'form-input--large': large,
-          'form-input--monospace': monospace,
-          'form-input--loading': loading,
-          'form-input--disabled': disabled,
-        }"
-      >
-        <input
-          ref="base_url"
-          class="form-input__input"
-          :value="fromValue(value)"
-          :disabled="disabled"
-          :type="type"
-          :placeholder="placeholder"
-          @blur="$emit('blur', $event)"
-          @input="$emit('input', toValue($event.target.value))"
-        />
+      <div class="form-input__input-wrapper">
+        <div
+          :class="{
+            'form-input': true,
+            'form-input--with-icon': hasIcon,
+            'form-input--with-icon-left': iconLeft,
+            'form-input--with-icon-right': iconRight,
+            'form-input--error': hasError,
+            'form-input--large': large,
+            'form-input--monospace': monospace,
+            'form-input--loading': loading,
+            'form-input--disabled': disabled,
+            'form-input--focus': focus,
+          }"
+        >
+          <input
+            ref="base_url"
+            class="form-input__input"
+            :value="fromValue(value)"
+            :disabled="disabled"
+            :type="type"
+            :placeholder="placeholder"
+            @blur="$emit('blur', $event)"
+            @input="$emit('input', toValue($event.target.value))"
+            @focusin="focus = true"
+            @focusout="focus = false"
+          />
 
-        <i
-          v-if="hasIcon"
-          class="form-input__icon fas"
-          :class="[`fa-${icon}`]"
-        />
+          <i v-if="hasIcon" class="form-input__icon" :class="icon" />
+          <div v-if="$slots.suffix" class="form-input__suffix disabled">
+            <div>
+              <slot name="suffix"></slot>
+            </div>
+          </div>
+        </div>
+        <slot name="after-input" />
       </div>
       <div v-if="hasError" class="error">
         {{ error }}
@@ -114,6 +122,11 @@ export default {
       required: false,
       default: false,
     },
+    horizontalVariable: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
     loading: {
       type: Boolean,
       required: false,
@@ -129,6 +142,11 @@ export default {
       required: false,
       default: null,
     },
+  },
+  data() {
+    return {
+      focus: false,
+    }
   },
   computed: {
     hasError() {

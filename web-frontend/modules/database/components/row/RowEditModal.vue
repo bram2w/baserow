@@ -6,7 +6,7 @@
     :content-scrollable="hasRightSidebar"
     :right-sidebar-scrollable="false"
     :collapsible-right-sidebar="true"
-    @hidden="$emit('hidden', { row })"
+    @hidden="hidden"
   >
     <template #content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
@@ -16,13 +16,13 @@
             class="row-edit-modal__navigation__item"
             @click="$emit('navigate-previous', previousRow)"
           >
-            <i class="fa fa-lg fa-chevron-up"></i>
+            <i class="iconoir-nav-arrow-up"></i>
           </a>
           <a
             class="row-edit-modal__navigation__item"
             @click="$emit('navigate-next', nextRow)"
           >
-            <i class="fa fa-lg fa-chevron-down"></i>
+            <i class="iconoir-nav-arrow-down"></i>
           </a>
         </template>
       </div>
@@ -32,7 +32,8 @@
       <RowEditModalFieldsList
         :primary-is-sortable="primaryIsSortable"
         :fields="visibleFields"
-        :sortable="!readOnly"
+        :sortable="!readOnly && fieldsSortable"
+        :can-modify-fields="!readOnly && canModifyFields"
         :hidden="false"
         :read-only="readOnly"
         :row="row"
@@ -43,6 +44,7 @@
         @order-fields="$emit('order-fields', $event)"
         @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
         @update="update"
+        @refresh-row="$emit('refresh-row', $event)"
       ></RowEditModalFieldsList>
       <RowEditModalHiddenFieldsSection
         v-if="hiddenFields.length"
@@ -64,12 +66,14 @@
           @field-deleted="$emit('field-deleted')"
           @toggle-field-visibility="$emit('toggle-field-visibility', $event)"
           @update="update"
+          @refresh-row="$emit('refresh-row', $event)"
         >
         </RowEditModalFieldsList>
       </RowEditModalHiddenFieldsSection>
       <div
         v-if="
           !readOnly &&
+          canModifyFields &&
           $hasPermission(
             'database.table.create_field',
             table,
@@ -80,9 +84,10 @@
       >
         <a
           ref="createFieldContextLink"
+          class="row-modal__add-field"
           @click="$refs.createFieldContext.toggle($refs.createFieldContextLink)"
         >
-          <i class="fas fa-plus"></i>
+          <i class="row-modal__add-field-icon iconoir-plus"></i>
           {{ $t('rowEditModal.addField') }}
         </a>
         <CreateFieldContext
@@ -98,6 +103,7 @@
         :table="table"
         :database="database"
         :fields="fields"
+        :read-only="readOnly"
       ></RowEditModalSidebar>
     </template>
   </Modal>
@@ -166,6 +172,16 @@ export default {
       required: false,
       default: false,
     },
+    fieldsSortable: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
+    canModifyFields: {
+      type: Boolean,
+      required: false,
+      default: () => true,
+    },
   },
   computed: {
     ...mapGetters({
@@ -214,10 +230,17 @@ export default {
       const allSidebarTypes = this.$registry.getOrderedList('rowModalSidebar')
       const activeSidebarTypes = allSidebarTypes.filter(
         (type) =>
-          type.isDeactivated(this.database, this.table) === false &&
-          type.getComponent()
+          type.isDeactivated(this.database, this.table, this.readOnly) ===
+            false && type.getComponent()
       )
       return activeSidebarTypes.length > 0
+    },
+    canSubscribeToRowUpdates() {
+      return this.$hasPermission(
+        'database.table.listen_to_all',
+        this.table,
+        this.database.workspace.id
+      )
     },
   },
   watch: {
@@ -251,6 +274,22 @@ export default {
         })
       }
     },
+    rowId(newValue, oldValue) {
+      if (this.canSubscribeToRowUpdates) {
+        if (oldValue > 0) {
+          this.$realtime.unsubscribe('row', {
+            table_id: this.table.id,
+            row_id: oldValue,
+          })
+        }
+        if (newValue > 0) {
+          this.$realtime.subscribe('row', {
+            table_id: this.table.id,
+            row_id: newValue,
+          })
+        }
+      }
+    },
   },
   methods: {
     show(rowId, rowFallback = {}, ...args) {
@@ -262,11 +301,23 @@ export default {
         row: row || rowFallback,
         exists: !!row,
       })
+      if (this.canSubscribeToRowUpdates) {
+        this.$realtime.subscribe('row', {
+          table_id: this.table.id,
+          row_id: rowId,
+        })
+      }
       this.getRootModal().show(...args)
     },
-    hide(...args) {
+    hidden(...args) {
+      if (this.canSubscribeToRowUpdates) {
+        this.$realtime.unsubscribe('row', {
+          table_id: this.table.id,
+          row_id: this.rowId,
+        })
+      }
       this.$store.dispatch('rowModal/clear', { componentId: this._uid })
-      this.getRootModal().hide(...args)
+      this.$emit('hidden', { row: this.row })
     },
     /**
      * Because the modal can't update values by himself, an event will be called to

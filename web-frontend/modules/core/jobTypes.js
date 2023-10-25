@@ -8,10 +8,10 @@ import SidebarApplicationPendingJob from '@baserow/modules/core/components/sideb
  */
 export class JobType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize certain job types. If you for example want the database
    * icon, you must return 'database' here. This will result in the classname
-   * 'fas fa-database'.
+   * 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -109,7 +109,7 @@ export class DuplicateApplicationJobType extends JobType {
 
   getIconClass() {
     // TODO: This should be moved to a registry and in the database module.
-    return 'database'
+    return 'iconoir-db'
   }
 
   getName() {
@@ -166,7 +166,7 @@ export class InstallTemplateJobType extends JobType {
 
   getIconClass() {
     // TODO: This should be moved to a registry and in the database module.
-    return 'database'
+    return 'iconoir-db'
   }
 
   getName() {

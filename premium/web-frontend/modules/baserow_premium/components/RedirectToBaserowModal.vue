@@ -9,7 +9,7 @@
         <p>{{ $t('redirectToBaserowModal.content') }}</p>
         <div class="redirect-modal__from-to">
           <client-only>{{ getHostname() }}</client-only>
-          <i class="fas fa-arrow-right redirect-modal__from-to-icon"></i>
+          <i class="iconoir-arrow-right redirect-modal__from-to-icon"></i>
           baserow.io
         </div>
         <div class="redirect-modal__loading">

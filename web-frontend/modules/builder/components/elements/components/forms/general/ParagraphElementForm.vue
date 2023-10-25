@@ -1,12 +1,10 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormulaInputGroup
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
       :label="$t('paragraphElementForm.textTitle')"
       :placeholder="$t('elementForms.textInputPlaceholder')"
-      :error="
-        !$v.values.value.validFormula ? $t('elementForms.invalidFormula') : ''
-      "
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
   </form>
 </template>
@@ -14,14 +12,13 @@
 <script>
 import form from '@baserow/modules/core/mixins/form'
 
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
-import { isValidFormula } from '@baserow/modules/core/formula'
+import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'ParagraphElementForm',
-  components: { FormulaInputGroup },
+  components: { ApplicationBuilderFormulaInputGroup },
   mixins: [form],
-  props: {},
   data() {
     return {
       values: {
@@ -29,12 +26,8 @@ export default {
       },
     }
   },
-  validations() {
-    return {
-      values: {
-        value: { validFormula: isValidFormula },
-      },
-    }
+  computed: {
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
 }
 </script>

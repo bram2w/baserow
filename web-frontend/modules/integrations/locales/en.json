@@ -13,17 +13,54 @@
         "userMessage": "By creating this connection, you’re authorizing the application to use your account to make changes in your local Baserow workspace."
     },
     "localBaserowGetRowForm": {
+        "tableFieldLabel": "Table",
+        "tableFieldPlaceHolder": "Select a table",
         "viewFieldLabel": "View",
+        "filterTabTitle": "Filters",
+        "sortTabTitle": "Sorts",
+        "searchTabTitle": "Search",
+        "viewFieldPlaceHolder": "Select a view",
+        "databaseFieldLabel": "Database",
+        "viewFieldLabel": "View",
+        "filterTabTitle": "Filters",
+        "searchTabTitle": "Search",
         "viewFieldPlaceHolder": "Select a view",
         "rowFieldLabel": "Row ID",
         "invalidFormula": "The formula is invalid",
-        "rowFieldPlaceHolder": "Select a row ID"
+        "rowFieldPlaceHolder": "Select a row ID",
+        "searchFieldPlaceHolder": "Enter a search term...",
+        "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
+        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
     },
     "localBaserowListRowsForm": {
+        "databaseFieldLabel": "Database",
+        "tableFieldLabel": "Table",
+        "tableFieldPlaceHolder": "Select a table",
         "viewFieldLabel": "View",
         "viewFieldPlaceHolder": "Select a view",
+        "filterTabTitle": "Filters",
+        "sortTabTitle": "Sorts",
         "searchTabTitle": "Search",
-        "searchFieldPlaceHolder": "Enter a search term..."
+        "searchFieldPlaceHolder": "Enter a search term...",
+        "noTableChosenForFiltering": "Choose a table to begin using data source filters.",
+        "noTableChosenForSorting": "Choose a table to begin using data source sorts."
+    },
+    "localBaserowTableServiceConditionalForm": {
+      "addFilter": "Add additional filter",
+      "noFilterTitle": "You have not yet created a data source filter",
+      "noFilterText": "Data source filters allow you to show Baserow table rows that apply to your conditions.",
+      "relatedFieldNotFound": "The related field is not found.",
+      "filterTypeNotFound": "The filter type is not compatible.",
+      "noCompatibleFilterTypesErrorTitle": "No compatible filter types",
+      "noCompatibleFilterTypesErrorMessage": "None of your fields have any compatible filter types"
+    },
+    "localBaserowTableServiceSortForm": {
+      "noSortTitle": "You have not yet created a data source sort",
+      "noSortText": "Sorts allow you to sort rows by a field.",
+      "sortBy": "Sort by",
+      "thenBy": "Then by",
+      "addSort": "Add additional sort",
+      "noTableChosenForSorting": "Choose a table to begin using data source sorts."
     },
     "dataProviderType": {
         "dataSource": "Data source",

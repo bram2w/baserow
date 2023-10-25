@@ -1,4 +1,4 @@
-import { UNDO_REDO_ACTION_GROUP_HEADER } from '@baserow/modules/database/utils/action'
+import { getUndoRedoActionRequestConfig } from '@baserow/modules/database/utils/action'
 import addPublicAuthTokenHeader from '@baserow/modules/database/utils/publicView'
 
 export default (client) => {
@@ -7,6 +7,7 @@ export default (client) => {
       tableId,
       includeFilters = false,
       includeSortings = false,
+      includeGroupBys = false,
       includeDecorations = false,
       limit = null,
       type = null
@@ -22,6 +23,10 @@ export default (client) => {
 
       if (includeSortings) {
         include.push('sortings')
+      }
+
+      if (includeGroupBys) {
+        include.push('group_bys')
       }
 
       if (includeDecorations) {
@@ -53,7 +58,8 @@ export default (client) => {
       viewId,
       includeFilters = false,
       includeSortings = false,
-      includeDecorations = false
+      includeDecorations = false,
+      includeGroupBys = false
     ) {
       const config = {
         params: {},
@@ -69,6 +75,10 @@ export default (client) => {
 
       if (includeDecorations) {
         include.push('decorations')
+      }
+
+      if (includeGroupBys) {
+        include.push('group_bys')
       }
 
       if (include.length > 0) {
@@ -95,12 +105,7 @@ export default (client) => {
       return client.get(`/database/views/${viewId}/field-options/`)
     },
     updateFieldOptions({ viewId, values, undoRedoActionGroupId = null }) {
-      const config = {}
-      if (undoRedoActionGroupId != null) {
-        config.headers = {
-          [UNDO_REDO_ACTION_GROUP_HEADER]: undoRedoActionGroupId,
-        }
-      }
+      const config = getUndoRedoActionRequestConfig({ undoRedoActionGroupId })
       return client.patch(
         `/database/views/${viewId}/field-options/`,
         values,

@@ -4,7 +4,7 @@
 
 .color-picker-context__color {
   display: flex;
-  margin-top: 20px;
+  margin-top: 12px;
   width: 288px;
 }
 
@@ -37,4 +37,17 @@
   flex-grow: 0;
   flex-shrink: 0;
   margin-left: auto;
+}
+
+.color-picker-context__variables {
+  margin-top: 12px;
+}
+
+.color-picker-context__variable-color {
+  width: 40px;
+  height: 20px;
+  border-radius: 3px;
+  margin-right: 6px;
+
+  @include add-elevation($elevation-low);
 }

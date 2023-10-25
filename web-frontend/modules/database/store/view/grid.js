@@ -397,6 +397,9 @@ export const mutations = {
       }
     }
   },
+  UPDATE_ROW_VALUES(state, { row, values }) {
+    Object.assign(row, values)
+  },
   UPDATE_ROW_FIELD_VALUE(state, { row, field, value }) {
     row[`field_${field.id}`] = value
   },
@@ -1549,10 +1552,28 @@ export const actions = {
    */
   removeRowSelectedBy(
     { dispatch, commit },
-    { grid, row, field, fields, getScrollTop }
+    { grid, row, field, fields, getScrollTop, isRowOpenedInModal = false }
   ) {
     commit('REMOVE_ROW_SELECTED_BY', { row, fieldId: field.id })
-    dispatch('refreshRow', { grid, row, fields, getScrollTop })
+    dispatch('refreshRow', {
+      grid,
+      row,
+      fields,
+      getScrollTop,
+      isRowOpenedInModal,
+    })
+  },
+  /**
+   * Used when row data needs to be directly re-fetched from the Backend and
+   * the other (background) row needs to be refreshed. For example, when editing
+   * row from a *different* table using ForeignRowEditModal or just RowEditModal
+   * component in general.
+   */
+  async refreshRowFromBackend({ commit, getters, dispatch }, { table, row }) {
+    const { data } = await RowService(this.$client).get(table.id, row.id)
+    // Use the return value to update the desired row with latest values from the
+    // backend.
+    commit('UPDATE_ROW_IN_BUFFER', { row, values: data })
   },
   /**
    * Called when the user wants to create a new row. Optionally a `before` row
@@ -1762,7 +1783,8 @@ export const actions = {
     const sortFunction = getRowSortFunction(
       this.$registry,
       view.sortings,
-      fields
+      fields,
+      view.group_bys
     )
     allRowsCopy.sort(sortFunction)
     const index = allRowsCopy.findIndex((r) => r.id === row.id)
@@ -1879,23 +1901,48 @@ export const actions = {
   },
   /**
    * Updates a grid view field value. It will immediately be updated in the store
-   * and only if the change request fails it will reverted to give a faster
+   * and only if the change request fails it will revert to give a faster
    * experience for the user.
    */
   async updateRowValue(
-    { commit, dispatch },
+    { commit, dispatch, getters },
     { table, view, row, field, fields, value, oldValue }
   ) {
-    // Immediately updated the store with the updated row field
-    // value.
-    commit('UPDATE_ROW_FIELD_VALUE', { row, field, value })
+    /**
+     * This helper function will make sure that the values of the related row are
+     * updated the right way.
+     */
+    const updateValues = async (values) => {
+      const rowExistsInBuffer = getters.getRow(row.id) !== undefined
+      if (rowExistsInBuffer) {
+        // If the row exists in the buffer, we can visually show to the user that
+        // the values have changed, without immediately reflecting the change in
+        // the buffer.
+        commit('UPDATE_ROW_VALUES', {
+          row,
+          values: { ...values },
+        })
+        await dispatch('onRowChange', { view, row, fields })
+      } else {
+        // If the row doesn't exist in the buffer, it could be that the new values
+        // bring in into there. Dispatching the `updatedExistingRow` will make
+        // sure that will happen in the right way.
+        await dispatch('updatedExistingRow', { view, fields, row, values })
+        await dispatch('fetchByScrollTopDelayed', {
+          scrollTop: getters.getScrollTop,
+          fields,
+        })
+      }
+    }
 
-    const optimisticFieldValues = {}
-    const valuesBeforeOptimisticUpdate = {}
-
-    // Store the before value of the field that gets updated
-    // in case we need to rollback changes
-    valuesBeforeOptimisticUpdate[`field_${field.id}`] = oldValue
+    const fieldValues = {
+      [`field_${field.id}`]: value,
+    }
+    const valuesBeforeUpdate = {
+      // Store the before value of the field that gets updated in case we need to
+      // rollback changes.
+      [`field_${field.id}`]: oldValue,
+    }
 
     let fieldsToCallOnRowChange = fields
 
@@ -1916,15 +1963,14 @@ export const actions = {
       )
 
       if (currentFieldValue !== optimisticFieldValue) {
-        optimisticFieldValues[fieldID] = optimisticFieldValue
-        valuesBeforeOptimisticUpdate[fieldID] = currentFieldValue
+        fieldValues[fieldID] = optimisticFieldValue
+        valuesBeforeUpdate[fieldID] = currentFieldValue
       }
     })
-    commit('UPDATE_ROW_IN_BUFFER', {
-      row,
-      values: { ...optimisticFieldValues },
-    })
-    dispatch('onRowChange', { view, row, fields })
+
+    // Update the values before making a request to the backend to make it feel
+    // instant for the user.
+    await updateValues(fieldValues)
 
     const fieldType = this.$registry.get('field', field._.type.type)
     const newValue = fieldType.prepareValueForUpdate(field, value)
@@ -1937,18 +1983,13 @@ export const actions = {
         row.id,
         values
       )
-      commit('UPDATE_ROW_IN_BUFFER', { row, values: updatedRow.data })
-      dispatch('onRowChange', { view, row, fields })
+      // Update the remaining values like formula, which depend on the backend.
+      await updateValues(updatedRow.data)
       dispatch('fetchAllFieldAggregationData', {
         view,
       })
     } catch (error) {
-      commit('UPDATE_ROW_IN_BUFFER', {
-        row,
-        values: { ...valuesBeforeOptimisticUpdate },
-      })
-
-      dispatch('onRowChange', { view, row, fields })
+      await updateValues(valuesBeforeUpdate)
       throw error
     }
   },
@@ -2221,7 +2262,8 @@ export const actions = {
       const sortFunction = getRowSortFunction(
         this.$registry,
         view.sortings,
-        fields
+        fields,
+        view.group_bys
       )
       const allRows = getters.getAllRows
       const index = allRows.findIndex((r) => r.id === row.id)
@@ -2413,7 +2455,8 @@ export const actions = {
     const sortFunction = getRowSortFunction(
       this.$registry,
       view.sortings,
-      fields
+      fields,
+      view.group_bys
     )
     allRowsCopy.sort(sortFunction)
     const index = allRowsCopy.findIndex((r) => r.id === row.id)
@@ -2453,6 +2496,7 @@ export const actions = {
           this.$registry,
           view.filter_type,
           view.filters,
+          view.filter_groups,
           fields,
           values
         )
@@ -2523,21 +2567,50 @@ export const actions = {
     const currentIndex = getters.getAllRows.findIndex((r) => r.id === row.id)
     const sortedRows = clone(allRows)
     sortedRows[currentIndex] = values
-    sortedRows.sort(getRowSortFunction(this.$registry, view.sortings, fields))
+    sortedRows.sort(
+      getRowSortFunction(this.$registry, view.sortings, fields, view.group_bys)
+    )
     const newIndex = sortedRows.findIndex((r) => r.id === row.id)
 
     commit('SET_ROW_MATCH_SORTINGS', { row, value: currentIndex === newIndex })
+  },
+  /**
+   * Refreshes the row in the store if the given rowId exists. If the row
+   * doesn't exist in the store, nothing will happen. This method ensures that
+   * the row refreshed is the one of this store, because it could be that the
+   * row object could come from another store.
+   */
+  async refreshRowById(
+    { dispatch, getters },
+    { grid, rowId, fields, getScrollTop, isRowOpenedInModal = false }
+  ) {
+    const row = getters.getRow(rowId)
+    if (row === undefined) {
+      return
+    }
+
+    await dispatch('refreshRow', {
+      grid,
+      row,
+      fields,
+      getScrollTop,
+      isRowOpenedInModal,
+    })
   },
   /**
    * The row is going to be removed or repositioned if the matchFilters and
    * matchSortings state is false. It will make the state correct.
    */
   async refreshRow(
-    { dispatch, commit, getters },
-    { grid, row, fields, getScrollTop }
+    { dispatch, commit },
+    { grid, row, fields, getScrollTop, isRowOpenedInModal = false }
   ) {
     const rowShouldBeHidden = !row._.matchFilters || !row._.matchSearch
-    if (row._.selectedBy.length === 0 && rowShouldBeHidden) {
+    if (
+      row._.selectedBy.length === 0 &&
+      rowShouldBeHidden &&
+      !isRowOpenedInModal
+    ) {
       commit('DELETE_ROW_IN_BUFFER', row)
     } else if (row._.selectedBy.length === 0 && !row._.matchSortings) {
       await dispatch('updatedExistingRow', {

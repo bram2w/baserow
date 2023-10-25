@@ -4,12 +4,13 @@ from django.db import transaction
 from faker import Faker
 
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
-from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.domains.models import CustomDomain
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.table.models import Table
 from baserow.contrib.database.views.models import GridView
 from baserow.core.handler import CoreHandler
@@ -38,12 +39,18 @@ def load_test_data():
             user, workspace, "builder", name="Back to local website"
         )
 
-    Domain.objects.filter(domain_name="test1.getbaserow.io").delete()
-    Domain.objects.filter(domain_name="test2.getbaserow.io").delete()
-    Domain.objects.filter(domain_name="test3.getbaserow.io").delete()
-    Domain.objects.create(builder=builder, domain_name="test1.getbaserow.io", order=1)
-    Domain.objects.create(builder=builder, domain_name="test2.getbaserow.io", order=2)
-    Domain.objects.create(builder=builder, domain_name="test3.getbaserow.io", order=3)
+    CustomDomain.objects.filter(domain_name="test1.getbaserow.io").delete()
+    CustomDomain.objects.filter(domain_name="test2.getbaserow.io").delete()
+    CustomDomain.objects.filter(domain_name="test3.getbaserow.io").delete()
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test1.getbaserow.io", order=1
+    )
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test2.getbaserow.io", order=2
+    )
+    CustomDomain.objects.create(
+        builder=builder, domain_name="test3.getbaserow.io", order=3
+    )
 
     integration_type = integration_type_registry.get("local_baserow")
 
@@ -164,6 +171,14 @@ def load_test_data():
             navigate_to_url='"https://baserow.io"',
         )
 
+    table = Table.objects.get(
+        name="Products",
+        database__workspace=workspace,
+        database__trashed=False,
+    )
+    field_name = Field.objects.get(table=table, name="Name")
+    field_notes = Field.objects.get(table=table, name="Notes")
+
     try:
         product_detail = Page.objects.get(name="Product detail", builder=builder)
     except Page.DoesNotExist:
@@ -191,6 +206,7 @@ def load_test_data():
             "Product",
             service_type=service_type,
             view=view,
+            table=table,
             integration=integration,
             row_id='get("page_parameter.id")',
         )
@@ -198,14 +214,16 @@ def load_test_data():
         ElementHandler().create_element(
             heading_element_type,
             product_detail,
-            value=f'get("data_source.{product_detail_data_source.id}.Name")',
+            value=f'get("data_source.{product_detail_data_source.id}.{field_name.db_column}")',
             level=1,
         )
 
         ElementHandler().create_element(
             paragraph_element_type,
             product_detail,
-            value=(f'get("data_source.{product_detail_data_source.id}.Notes")'),
+            value=(
+                f'get("data_source.{product_detail_data_source.id}.{field_notes.db_column}")'
+            ),
         )
 
     try:
@@ -215,11 +233,7 @@ def load_test_data():
 
         # Data source creation
         service_type = service_type_registry.get("local_baserow_list_rows")
-        table = Table.objects.get(
-            name="Products",
-            database__workspace=workspace,
-            database__trashed=False,
-        )
+
         view = GridView.objects.create(table=table, order=0, name="Products Grid 2")
 
         products_data_source = DataSourceHandler().create_data_source(
@@ -227,6 +241,7 @@ def load_test_data():
             "Products",
             service_type=service_type,
             view=view,
+            table=table,
             integration=integration,
         )
 
@@ -238,7 +253,7 @@ def load_test_data():
             ElementHandler().create_element(
                 link_element_type,
                 products,
-                value=f'concat("Product {i+1} - ", get("data_source.{products_data_source.id}.{i}.Name"))',
+                value=f'concat("Product {i+1} - ", get("data_source.{products_data_source.id}.{i}.{field_name.db_column}"))',
                 variant="button",
                 alignment="left",
                 navigation_type="page",
@@ -247,7 +262,7 @@ def load_test_data():
                     {"name": "id", "value": f"{i+1}"},
                     {
                         "name": "name",
-                        "value": f'get("data_source.{products_data_source.id}.{i}.Name")',
+                        "value": f'get("data_source.{products_data_source.id}.{i}.{field_name.db_column}")',
                     },
                 ],
             )
@@ -255,11 +270,11 @@ def load_test_data():
         ElementHandler().create_element(
             link_element_type,
             products,
-            value=f'concat("Product 4 - ", get("data_source.{products_data_source.id}.3.Name"))',
+            value=f'concat("Product 4 - ", get("data_source.{products_data_source.id}.3.{field_name.db_column}"))',
             variant="button",
             alignment="left",
             navigation_type="custom",
-            navigate_to_url=f'concat("/product/4/", get("data_source.{products_data_source.id}.3.Name"))',
+            navigate_to_url=f'concat("/product/4/", get("data_source.{products_data_source.id}.3.{field_name.db_column}"))',
         )
 
         ElementHandler().create_element(

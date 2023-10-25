@@ -6,10 +6,13 @@ import { generateHash } from '@baserow/modules/core/utils/hashing'
 export function populatePage(page) {
   page._ = {
     selected: false,
+    dataSourceContentLoading: false,
+    dataSourceLoading: false,
   }
 
   page.dataSources = []
   page.elements = []
+  page.workflowActions = []
 
   return page
 }

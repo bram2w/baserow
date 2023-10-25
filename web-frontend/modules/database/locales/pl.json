@@ -139,7 +139,7 @@
         "userFieldNames": "Jeśli podano jakąkolwiek wartość dla parametru `user_field_names` GET, wówczas nazwy pól zwrócone przez ten punkt końcowy będą rzeczywistymi nazwami pól.\n\n Jeśli `user_field_names` GET param nie jest podany, wtedy wszystkie zwrócone nazwy pól będą miały postać `field_` a następnie id pola. Na przykład `field_1` odnosi się do pola o id `1`.\n\n Dodatkowo, gdy `user_field_names` jest ustawione, wtedy zachowanie innych parametrów GET `order_by`, `include` i `exclude` zmienia się. Zamiast tego oczekują one listy rozdzielonych przecinkami nazw pól.",
         "search": "Jeśli zostanie podane, zostaną zwrócone tylko wiersze z danymi pasującymi do zapytania.",
         "orderBy": "Opcjonalnie wiersze mogą być uporządkowane według pól oddzielonych przecinkiem. Domyślnie lub po poprzedzeniu znakiem '+', pole jest uporządkowane rosnąco (A-Z), ale poprzedzeniu znakiem '-' może być uporządkowane malejąco (Z-A).\n\n #### Z `user_field_names`:\n\n `order_by` powinna być rozdzieloną przecinkami listą nazw pól, po których mają być zamawiane. Na przykład jeśli podasz następujący parametr GET `order_by=My Field,-My Field 2` wiersze zostaną uporządkowane według pola o nazwie `My Field` w porządku rosnącym. Jeśli niektóre pola mają tę samą wartość, ten podzbiór zostanie uporządkowany według pola o nazwie `My Field 2` w porządku malejącym.\n\n Upewnij się, że pola z nazwami zaczynającymi się od `+` lub `-` są wyraźnie poprzedzone innym `+` lub `-`. Np. `+-Name`.\n\n Nazwy pól zawierające przecinki muszą być otoczone cudzysłowami: `Name ,,`''. Jeśli nazwy pól zawierają cudzysłowy, to muszą one zostać usunięte przy użyciu znaku ``. Eg: `Name \\\"`. \n\n#### Bez `user_field_names`:\n\n `order_by` powinno być rozdzieloną przecinkami listą `field_`, po której następuje id pola, po którym ma być złożone zamówienie. Na przykład, jeśli podasz następujący parametr GET `order_by=field_1,-field_2` wiersze zostaną uporządkowane według `field_1` w porządku rosnącym. Jeśli niektóre pola mają tę samą wartość, ten podzbiór zostanie uporządkowany przez `field_2` w porządku malejącym.",
-        "filter": "Wiersze mogą być opcjonalnie filtrowane przez te same filtry widoku, które są dostępne dla widoków. Można podać wiele filtrów, jeśli są one zgodne z tym samym formatem. Zmienna `field` i `filter` wskazują jak filtrować, a wartość wskazuje, na co filtrować.\n\n Na przykład, jeśli podasz następujący parametr GET `filter__field_1__equal=test` to zwrócone zostaną tylko te wiersze, w których wartość pola_1 jest równa testowi.",
+        "filter": "Wiersze mogą być opcjonalnie filtrowane przy użyciu tych samych filtrów widoku, które są dostępne dla widoków. Można zastosować wiele filtrów, jeśli mają one ten sam format. Zmienne `field` i `filter` wskazują odpowiednio jak i gdzie zastosować filtr.\n\n#### Z `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__Name__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `Name` jest równa \"test\". Ta metoda jest kompatybilna wstecz i będzie sprawdzać `field_id`, jeśli nie powiedzie się na nazwie.\n\n#### Bez `user_field_names`:\n\nNa przykład, jeśli opcjonalnie podasz następujący parametr GET: `filter__field_1__equal=test`, zwrócone zostaną tylko wiersze, w których wartość `field_1` jest równa 'test'.",
         "filterLink": "Listę wszystkich filtrów można znaleźć tutaj.",
         "filterType": "- `AND`: Wskazuje, że wiersze muszą pasować do wszystkich podanych filtrów.\n- `OR`: Wskazuje, że wiersze muszą pasować tylko do jednego z filtrów.\n\n Działa to tylko wtedy, gdy podane są dwa lub więcej filtrów.",
         "include": "Wszystkie pola są domyślnie zawarte w odpowiedzi. Możesz wybrać podzbiór pól do uwzględnienia poprzez podanie parametru zapytania include.\n\n #### Z `user_field_names`:\n\n `include` powinna być rozdzieloną przecinkami listą nazw pól, które mają być zawarte w wynikach. Na przykład, jeśli podasz następujący parametr GET: `include=My Field,-My Field 2` to tylko te pola zostaną uwzględnione (chyba, że zostaną wyraźnie wykluczone).\n\n Nazwy pól zawierające przecinki muszą być otoczone cudzysłowami: `\"Name ,\"`. Jeśli nazwy pól zawierają cudzysłowy, to muszą one zostać usunięte przy użyciu znaku `\\` . Na przykład: `Name \\\"`.\n\n #### Bez `user_field_names`:\n\n `include` powinno być rozdzieloną przecinkami listą `field_`, po której następuje id pola do uwzględnienia w wynikach. Na przykład: Jeśli podasz następujący parametr GET `exclude=field_1,field_2` to pola o id `1` i id `2` to tylko te pola zostaną uwzględnione (chyba, że zostaną jawnie wykluczone).",
@@ -539,7 +539,10 @@
         "copyCells": "Kopiuj komórki",
         "rowCount": "Brak wierszy | 1 wiersz | {count} wierszy",
         "hiddenRowsInsertedTitle": "Dodano wiersze",
-        "hiddenRowsInsertedMessage": "Dodano {number} nowych wierszy, ale nie są one widoczne z powodu aktywnych filtrów."
+        "hiddenRowsInsertedMessage": "Dodano {number} nowych wierszy, ale nie są one widoczne z powodu aktywnych filtrów.",
+        "copiedRowURLMessage": "Adres URL wiersza {id} został skopiowany do schowka.",
+        "copiedRowURL": "Skopiowany adres URL wiersza",
+        "copyRowURL": "Skopiuj adres URL wiersza"
     },
     "gridViewFieldFile": {
         "dropHere": "Upuść tutaj",
@@ -647,7 +650,8 @@
         "linkError": "Link powinien wyglądać tak: https://airtable.com/shrxxxxxxxxxxxxxx"
     },
     "chooseSingleSelectField": {
-        "addSelectField": "dodaj pojedyncze pole wyboru"
+        "addSelectField": "dodaj pojedyncze pole wyboru",
+        "warningWhenNothingToChooseOrCreate": "Nie ma pojedynczych pól wyboru do wyboru i nie masz uprawnień do ich utworzenia."
     },
     "viewDecoratorContext": {
         "addDecorator": "dodaj dekorator"
@@ -670,7 +674,7 @@
     "snapshotsModal": {
         "title": "migawki",
         "description": "Migawki są pełną kopią bazy danych z momentu, w którym zostały utworzone. Duplikacja tych danych zostanie utworzona podczas przywracania. Migawki są automatycznie usuwane po roku.",
-        "descriptionLimits": "Możesz mieć maksymalnie {n} migawek na grupę. | Możesz mieć maksymalnie {n} migawki na grupę. | Możesz mieć maksymalnie {n} migawek na grupę.",
+        "descriptionLimits": "Możesz mieć maksymalnie {n} migawek na obszar roboczy. | Możesz mieć maksymalnie {n} migawek na obszar roboczy. | Możesz mieć maksymalnie {n} migawek na obszar roboczy.",
         "createLabel": "Utwórz nową migawkę",
         "create": "Utwórz migawkę",
         "snapshotRestoredErrorTitle": "Wystąpił błąd",
@@ -709,6 +713,22 @@
                     "previous": {
                         "title": "Nigdy więcej wierszy",
                         "message": "Nie ma poprzedniego wiersza"
+                    }
+                },
+                "error": {
+                    "title": "Wystąpił błąd",
+                    "message": "Wystąpił błąd podczas pobierania sąsiedniego wiersza"
+                }
+            },
+            "toast": {
+                "notFound": {
+                    "previous": {
+                        "message": "Nie ma poprzedniego wiersza",
+                        "title": "Nie ma już rzędów"
+                    },
+                    "next": {
+                        "title": "Nie ma już rzędów",
+                        "message": "Nie ma następnego wiersza"
                     }
                 },
                 "error": {
@@ -758,5 +778,23 @@
     "gridViewRowsAddContext": {
         "title": "Utwórz wiele wierszy",
         "choice": "Dodawanie {rowAmountChoice} wierszy"
+    },
+    "fieldSelectThroughFieldSubForm": {
+        "noTable": "Potrzeba przynajmniej jeden link do tabeli aby utworzyć to pole.",
+        "selectThroughFieldLabel": "Wybierz link do pola tabeli"
+    },
+    "fieldRollupSubForm": {
+        "label": "Funkcja zwijania",
+        "selectTargetFieldLabel": "Wybierz pole do zestawienia"
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{sender} przypisał cię do {fieldName} w wierszu {rowId} w {tableName}"
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Powiadomienie użytkownika o dodaniu"
+    },
+    "rowHistorySidebar": {
+        "name": "Historia",
+        "empty": "Nie wprowadzono jeszcze żadnych zmian. Wszelkie zmiany w tym wierszu można śledzić tutaj."
     }
 }

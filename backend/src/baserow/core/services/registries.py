@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -31,6 +31,8 @@ class ServiceType(
     A service type describe a specific service of an external integration.
     """
 
+    integration_type = None
+
     SerializedDict: Type[ServiceDictSubClass]
 
     # The maximum number of records this service is able to return.
@@ -41,8 +43,14 @@ class ServiceType(
     # unless instructed otherwise by a user.
     default_result_limit = max_result_limit
 
+    # Does this service return a list of record?
+    returns_list = False
+
     def prepare_values(
-        self, values: Dict[str, Any], user: AbstractUser
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: Optional[ServiceSubClass] = None,
     ) -> Dict[str, Any]:
         """
         The prepare_values hook gives the possibility to change the provided values
@@ -53,6 +61,7 @@ class ServiceType(
 
         :param values: The provided values.
         :param user: The user on whose behalf the change is made.
+        :param instance: The current instance if it exists.
         :return: The updated values.
         """
 
@@ -66,6 +75,38 @@ class ServiceType(
                 values["integration"] = None
 
         return values
+
+    def after_create(self, instance: ServiceSubClass, values: Dict):
+        """
+        This hook is called right after the service has been created.
+
+        :param instance: The created service instance.
+        :param values: The values that were passed when creating the service
+            metadata.
+        """
+
+    def after_update(
+        self,
+        instance: ServiceSubClass,
+        values: Dict,
+        changes: Dict[str, Tuple],
+    ):
+        """
+        This hook is called right after the service has been updated.
+
+        :param instance: The updated service instance.
+        :param values: The values that were passed when creating the service
+            metadata.
+        :param changes: A dictionary containing all changes which were made to the
+            service prior to `after_update` being called.
+        """
+
+    def before_delete(self, instance: ServiceSubClass):
+        """
+        This hook is called just before the service will be deleted.
+
+        :param instance: The to be deleted service instance.
+        """
 
     def dispatch_transform(
         self,
@@ -121,6 +162,28 @@ class ServiceType(
 
         return getattr(service, prop_name)
 
+    def get_schema_name(self, service: Service) -> str:
+        """
+        The default schema name added to the `title` in a JSON Schema object.
+
+        :param service: The service we want to generate a schema `title` with.
+        :return: A string.
+        """
+
+        return f"Service{service.id}Schema"
+
+    def generate_schema(self, service: Service) -> Optional[Dict[str, Any]]:
+        """
+        Responsible for generating the full JSON Schema response. Must be
+        overridden by child classes so that the can return their service's
+        schema.
+
+        :param service: The service we want to generate a schema for.
+        :return: None, or a dictionary representing the schema.
+        """
+
+        return None
+
     def export_serialized(
         self,
         service: Service,
@@ -151,6 +214,16 @@ class ServiceType(
 
         return value
 
+    def create_instance_from_serialized(self, integration, serialized_values):
+        """
+        Create the instance related to the given serialized values.
+        Allow to hook into instance creation while still having the serialized values.
+        """
+
+        service = self.model_class(integration=integration, **serialized_values)
+        service.save()
+        return service
+
     def import_serialized(
         self,
         integration: Integration,
@@ -173,16 +246,16 @@ class ServiceType(
         ]
 
         for name in property_names:
-            serialized_copy[name] = self.transform_serialized_value(
-                name, serialized_copy[name], id_mapping
-            )
+            if name in serialized_copy:
+                serialized_copy[name] = self.transform_serialized_value(
+                    name, serialized_copy[name], id_mapping
+                )
 
         # Remove extra keys
         service_exported_id = serialized_copy.pop("id")
         serialized_copy.pop("type")
 
-        service = self.model_class(integration=integration, **serialized_copy)
-        service.save()
+        service = self.create_instance_from_serialized(integration, serialized_copy)
 
         id_mapping["services"][service_exported_id] = service.id
 

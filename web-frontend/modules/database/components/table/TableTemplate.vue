@@ -9,6 +9,7 @@
     :read-only="true"
     :disable-filter="true"
     :disable-sort="true"
+    :disable-group-by="true"
     store-prefix="template/"
     @selected-view="selectView({ viewId: $event.id })"
   ></Table>
@@ -89,6 +90,8 @@ export default {
           // Fetch and prepare the views of the given table.
           const { data: viewsData } = await ViewService(this.$client).fetchAll(
             table.id,
+            true,
+            true,
             true,
             true
           )

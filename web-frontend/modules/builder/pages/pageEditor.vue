@@ -20,7 +20,7 @@ import { StoreItemLookupError } from '@baserow/modules/core/errors'
 import PageHeader from '@baserow/modules/builder/components/page/header/PageHeader'
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
-import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 
 export default {
   name: 'PageEditor',
@@ -55,19 +55,14 @@ export default {
           page,
         }),
         store.dispatch('element/fetch', { page }),
+        store.dispatch('workflowAction/fetch', { page }),
       ])
 
-      const runtimeFormulaContext = new RuntimeFormulaContext(
-        $registry.getAll('builderDataProvider'),
-        {
-          builder,
-          page,
-          mode: 'editing',
-        }
-      )
-
-      // Initialize all data provider contents
-      await runtimeFormulaContext.initAll()
+      await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
+        builder,
+        page,
+        mode: 'editing',
+      })
 
       // And finally select the page to display it
       await store.dispatch('page/selectById', {
@@ -89,21 +84,21 @@ export default {
     return data
   },
   computed: {
+    applicationContext() {
+      return {
+        builder: this.builder,
+        page: this.page,
+        mode: 'editing',
+      }
+    },
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
-    runtimeFormulaContext() {
-      return new RuntimeFormulaContext(
-        this.$registry.getAll('builderDataProvider'),
-        {
-          builder: this.builder,
-          page: this.page,
-          mode: 'editing',
-        }
-      )
-    },
     backendContext() {
-      return this.runtimeFormulaContext.getAllBackendContext()
+      return DataProviderType.getAllBackendContext(
+        this.$registry.getAll('builderDataProvider'),
+        this.applicationContext
+      )
     },
   },
   watch: {

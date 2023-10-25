@@ -396,6 +396,89 @@ def test_get_adjacent_row_with_view_sort(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_adjacent_row_with_view_group_by(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    view = data_fixture.create_grid_view(table=table)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+
+    data_fixture.create_view_group_by(view=view, field=name_field, order="DESC")
+
+    handler = RowHandler()
+    [row_1, row_2, row_3] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "A",
+            },
+            {
+                f"field_{name_field.id}": "B",
+            },
+            {
+                f"field_{name_field.id}": "C",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    previous_row = handler.get_adjacent_row(
+        row_2, base_queryset, previous=True, view=view
+    )
+
+    assert next_row.id == row_1.id
+    assert previous_row.id == row_3.id
+
+
+@pytest.mark.django_db
+def test_get_adjacent_row_with_view_group_by_and_view_sort(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(name="Car", user=user)
+    view = data_fixture.create_grid_view(table=table)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    other_field = data_fixture.create_text_field(table=table, name="Other")
+
+    data_fixture.create_view_sort(view=view, field=name_field, order="ASC")
+    data_fixture.create_view_group_by(view=view, field=name_field, order="DESC")
+
+    handler = RowHandler()
+    [row_1, row_2, row_3] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {
+                f"field_{name_field.id}": "A",
+                f"field_{other_field.id}": "C",
+            },
+            {
+                f"field_{name_field.id}": "B",
+                f"field_{other_field.id}": "B",
+            },
+            {
+                f"field_{name_field.id}": "C",
+                f"field_{other_field.id}": "A",
+            },
+        ],
+    )
+
+    base_queryset = table.get_model().objects.all()
+
+    next_row = handler.get_adjacent_row(row_2, base_queryset, view=view)
+    previous_row = handler.get_adjacent_row(
+        row_2, base_queryset, previous=True, view=view
+    )
+
+    assert next_row.id == row_1.id
+    assert previous_row.id == row_3.id
+
+
+@pytest.mark.django_db
 @pytest.mark.disabled_in_ci
 # You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
@@ -587,7 +670,7 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
             f"field_{price_field.id}": None,
         },
     }
-    assert result.updated_row_fields_metadata_by_row_id == {
+    assert result.updated_fields_metadata_by_row_id == {
         rows[0].id: {
             "id": rows[0].id,
             f"field_{name_field.id}": {
@@ -598,11 +681,13 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
                 "id": speed_field.id,
                 "type": "number",
                 "number_decimal_places": 0,
+                "number_negative": False,
             },
             f"field_{price_field.id}": {
                 "id": price_field.id,
                 "type": "number",
                 "number_decimal_places": 2,
+                "number_negative": False,
             },
         },
         rows[1].id: {
@@ -610,6 +695,18 @@ def test_update_rows_return_original_values_and_fields_metadata(data_fixture):
             f"field_{name_field.id}": {
                 "id": name_field.id,
                 "type": "text",
+            },
+            f"field_{speed_field.id}": {
+                "id": speed_field.id,
+                "type": "number",
+                "number_decimal_places": 0,
+                "number_negative": False,
+            },
+            f"field_{price_field.id}": {
+                "id": price_field.id,
+                "type": "number",
+                "number_decimal_places": 2,
+                "number_negative": False,
             },
         },
     }

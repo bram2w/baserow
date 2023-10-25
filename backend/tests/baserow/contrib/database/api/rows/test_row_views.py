@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -6,6 +7,7 @@ from django.test import override_settings
 
 import pytest
 from freezegun import freeze_time
+from pytz import UTC
 from rest_framework.status import (
     HTTP_200_OK,
     HTTP_204_NO_CONTENT,
@@ -566,6 +568,110 @@ def test_list_rows_filter_stacks_with_existing_filter(data_fixture, api_client):
     assert response_json["count"] == 1
     assert len(response_json["results"]) == 1
     assert response_json["results"][0]["id"] == row_4.id
+
+
+@pytest.mark.django_db
+def test_list_rows_filter_filters_query_param(data_fixture, api_client):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Number", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(name="a", number="1")
+    row_2 = model.objects.create(name="ab", number="2")
+    row_3 = model.objects.create(name="abc", number="3")
+    row_4 = model.objects.create(name="abcd", number="1")
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": field_1.id,
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": field_2.id,
+                        "type": "equal",
+                        "value": 3,
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters)]
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
+
+
+@pytest.mark.django_db
+def test_list_rows_filter_filters_query_param_with_user_field_names(
+    data_fixture, api_client
+):
+    user, jwt_token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    field_1 = data_fixture.create_text_field(name="Name", table=table, primary=True)
+    field_2 = data_fixture.create_number_field(name="Number", table=table)
+
+    model = table.get_model(attribute_names=True)
+    row_1 = model.objects.create(name="a", number="1")
+    row_2 = model.objects.create(name="ab", number="2")
+    row_3 = model.objects.create(name="abc", number="3")
+    row_4 = model.objects.create(name="abcd", number="1")
+
+    advanced_filters = {
+        "filter_type": "AND",
+        "groups": [
+            {
+                "filter_type": "AND",
+                "filters": [
+                    {
+                        "field": "Name",
+                        "type": "contains",
+                        "value": "a",
+                    },
+                    {
+                        "field": "Number",
+                        "type": "equal",
+                        "value": 3,
+                    },
+                ],
+            }
+        ],
+    }
+    get_params = ["filters=" + json.dumps(advanced_filters), "user_field_names=true"]
+    url = reverse("api:database:rows:list", kwargs={"table_id": table.id})
+
+    response = api_client.get(
+        f'{url}?{"&".join(get_params)}',
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    assert response_json["count"] == 1
+    assert len(response_json["results"]) == 1
+    assert response_json["results"][0]["id"] == row_3.id
 
 
 @pytest.mark.django_db
@@ -2262,6 +2368,7 @@ def test_list_row_history_for_different_rows(data_fixture, api_client):
                         "id": number_field.id,
                         "type": "number",
                         "number_decimal_places": 2,
+                        "number_negative": False,
                     },
                 },
             },
@@ -2301,6 +2408,322 @@ def test_list_row_history_for_different_rows(data_fixture, api_client):
                         "id": name_field.id,
                         "type": "text",
                     }
+                },
+            },
+        ],
+    }
+
+
+@pytest.mark.django_db
+@pytest.mark.row_history
+def test_list_row_history_for_different_fields(data_fixture, api_client):
+    workspace = data_fixture.create_workspace()
+    user2 = data_fixture.create_user(workspace=workspace)
+    user3 = data_fixture.create_user(workspace=workspace)
+    user, jwt_token = data_fixture.create_user_and_token(workspace=workspace)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(
+        name="Test", user=user, database=database
+    )
+    table2 = data_fixture.create_database_table(user=user, database=table.database)
+    name_field = data_fixture.create_text_field(
+        table=table, name="Name", text_default="Test"
+    )
+    number_field = data_fixture.create_number_field(
+        table=table, name="Number", number_decimal_places=2
+    )
+    email_field = data_fixture.create_email_field(table=table, name="Email")
+    url_field = data_fixture.create_url_field(table=table, name="URL")
+    rating_field = data_fixture.create_rating_field(
+        table=table, user=user, name="Rating", max_value=5
+    )
+    boolean_field = data_fixture.create_boolean_field(table=table, name="Boolean")
+    phone_field = data_fixture.create_phone_number_field(table=table, name="Phone")
+    date_field = data_fixture.create_date_field(
+        table=table, date_include_time=False, date_format="ISO", name="Date"
+    )
+    datetime_field = data_fixture.create_date_field(
+        table=table, date_include_time=True, date_format="ISO", name="Date"
+    )
+    file_field = data_fixture.create_file_field(table=table, name="File")
+    file1 = data_fixture.create_user_file(
+        original_name="test.txt",
+        is_image=True,
+    )
+    file1.uploaded_at = datetime(2021, 1, 1, 12, 30, tzinfo=UTC)
+    file1.save()
+    file2 = data_fixture.create_user_file(
+        original_name="test2.txt",
+        is_image=True,
+    )
+    single_select_field = data_fixture.create_single_select_field(
+        table=table, name="Single select"
+    )
+    option_a = data_fixture.create_select_option(
+        field=single_select_field, value="A", color="blue"
+    )
+    option_b = data_fixture.create_select_option(
+        field=single_select_field, value="B", color="red"
+    )
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table, name="Multiple select"
+    )
+    multi_option_a = data_fixture.create_select_option(
+        field=multiple_select_field, value="A", color="blue"
+    )
+    multi_option_b = data_fixture.create_select_option(
+        field=multiple_select_field, value="B", color="red"
+    )
+    multiple_select_field.select_options.set([multi_option_a, multi_option_b])
+    collaborator_field = data_fixture.create_multiple_collaborators_field(
+        table=table, name="Collaborators", notify_user_when_added=False
+    )
+    linkrow_field = FieldHandler().create_field(
+        user,
+        table,
+        "link_row",
+        name="linkrowfield",
+        link_row_table=table2,
+    )
+    table2_model = table2.get_model()
+    table2_row1 = table2_model.objects.create()
+    table2_row2 = table2_model.objects.create()
+
+    row_handler = RowHandler()
+
+    row_one = row_handler.create_row(
+        user,
+        table,
+        {
+            name_field.id: "Original 1",
+            number_field.id: "0.00",
+            email_field.id: "test@example.com",
+            url_field.id: "http://baserow.io",
+            rating_field.id: 3,
+            boolean_field.id: False,
+            phone_field.id: "123456789",
+            date_field.id: "2023-06-06",
+            datetime_field.id: "2023-06-06T12:00",
+            file_field.id: [{"name": file1.name, "visible_name": "file 1"}],
+            single_select_field.id: option_a,
+            multiple_select_field.id: [multi_option_a.id],
+            collaborator_field.id: [{"id": user2.id}, {"id": user3.id}],
+            linkrow_field.id: [table2_row1.id],
+        },
+    )
+
+    with freeze_time("2021-01-01 12:00"):
+        action_type_registry.get_by_type(UpdateRowsActionType).do(
+            user,
+            table,
+            [
+                {
+                    "id": row_one.id,
+                    f"field_{name_field.id}": "New 1",
+                    f"field_{number_field.id}": "1.00",
+                    f"field_{email_field.id}": "test2@example.com",
+                    f"field_{url_field.id}": "https://baserow.io",
+                    f"field_{rating_field.id}": 5,
+                    f"field_{boolean_field.id}": True,
+                    f"field_{phone_field.id}": "123456790",
+                    f"field_{date_field.id}": "2023-06-07",
+                    f"field_{datetime_field.id}": "2023-06-06T13:00",
+                    f"field_{file_field.id}": [
+                        {"name": file1.name, "visible_name": "file 1"},
+                        {"name": file2.name, "visible_name": "file 2"},
+                    ],
+                    f"field_{single_select_field.id}": option_b.id,
+                    f"field_{multiple_select_field.id}": [
+                        multi_option_a.id,
+                        multi_option_b.id,
+                    ],
+                    f"field_{collaborator_field.id}": [{"id": user2.id}],
+                    f"field_{linkrow_field.id}": [table2_row1.id, table2_row2.id],
+                },
+            ],
+        )
+
+    response = api_client.get(
+        reverse(
+            "api:database:rows:history",
+            kwargs={"table_id": table.id, "row_id": row_one.id},
+        ),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {jwt_token}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json() == {
+        "count": 1,
+        "next": None,
+        "previous": None,
+        "results": [
+            {
+                "id": AnyInt(),
+                "action_type": "update_rows",
+                "user": {
+                    "id": user.id,
+                    "name": user.first_name,
+                },
+                "timestamp": "2021-01-01T12:00:00Z",
+                "before": {
+                    f"field_{name_field.id}": "Original 1",
+                    f"field_{number_field.id}": "0.00",
+                    f"field_{email_field.id}": "test@example.com",
+                    f"field_{url_field.id}": "http://baserow.io",
+                    f"field_{rating_field.id}": 3,
+                    f"field_{boolean_field.id}": False,
+                    f"field_{phone_field.id}": "123456789",
+                    f"field_{date_field.id}": "2023-06-06",
+                    f"field_{datetime_field.id}": "2023-06-06 12:00:00+00:00",
+                    f"field_{file_field.id}": [
+                        {
+                            "name": file1.name,
+                            "visible_name": "file 1",
+                            "image_height": None,
+                            "image_width": None,
+                            "is_image": True,
+                            "mime_type": "text/plain",
+                            "size": 100,
+                            "uploaded_at": "2021-01-01T12:30:00+00:00",
+                        },
+                    ],
+                    f"field_{single_select_field.id}": option_a.id,
+                    f"field_{multiple_select_field.id}": [multi_option_a.id],
+                    f"field_{collaborator_field.id}": [
+                        {"id": user2.id},
+                        {"id": user3.id},
+                    ],
+                    f"field_{linkrow_field.id}": [table2_row1.id],
+                },
+                "after": {
+                    f"field_{name_field.id}": "New 1",
+                    f"field_{number_field.id}": "1.00",
+                    f"field_{email_field.id}": "test2@example.com",
+                    f"field_{url_field.id}": "https://baserow.io",
+                    f"field_{rating_field.id}": 5,
+                    f"field_{boolean_field.id}": True,
+                    f"field_{phone_field.id}": "123456790",
+                    f"field_{date_field.id}": "2023-06-07",
+                    f"field_{datetime_field.id}": "2023-06-06T13:00",
+                    f"field_{file_field.id}": [
+                        {"name": file1.name, "visible_name": "file 1"},
+                        {"name": file2.name, "visible_name": "file 2"},
+                    ],
+                    f"field_{single_select_field.id}": option_b.id,
+                    f"field_{multiple_select_field.id}": [
+                        multi_option_a.id,
+                        multi_option_b.id,
+                    ],
+                    f"field_{collaborator_field.id}": [
+                        {"id": user2.id},
+                    ],
+                    f"field_{linkrow_field.id}": [table2_row1.id, table2_row2.id],
+                },
+                "fields_metadata": {
+                    f"field_{name_field.id}": {
+                        "id": name_field.id,
+                        "type": "text",
+                    },
+                    f"field_{number_field.id}": {
+                        "id": number_field.id,
+                        "number_decimal_places": 2,
+                        "number_negative": False,
+                        "type": "number",
+                    },
+                    f"field_{email_field.id}": {
+                        "id": email_field.id,
+                        "type": "email",
+                    },
+                    f"field_{url_field.id}": {
+                        "id": url_field.id,
+                        "type": "url",
+                    },
+                    f"field_{rating_field.id}": {
+                        "id": rating_field.id,
+                        "type": "rating",
+                    },
+                    f"field_{boolean_field.id}": {
+                        "id": boolean_field.id,
+                        "type": "boolean",
+                    },
+                    f"field_{phone_field.id}": {
+                        "id": phone_field.id,
+                        "type": "phone_number",
+                    },
+                    f"field_{date_field.id}": {
+                        "id": date_field.id,
+                        "type": "date",
+                        "date_force_timezone": None,
+                        "date_format": "ISO",
+                        "date_include_time": False,
+                        "date_time_format": "24",
+                        "date_show_tzinfo": False,
+                    },
+                    f"field_{datetime_field.id}": {
+                        "id": datetime_field.id,
+                        "type": "date",
+                        "date_force_timezone": None,
+                        "date_format": "ISO",
+                        "date_include_time": True,
+                        "date_time_format": "24",
+                        "date_show_tzinfo": False,
+                    },
+                    f"field_{file_field.id}": {
+                        "id": file_field.id,
+                        "type": "file",
+                    },
+                    f"field_{single_select_field.id}": {
+                        "id": single_select_field.id,
+                        "select_options": {
+                            f"{option_a.id}": {
+                                "color": option_a.color,
+                                "id": option_a.id,
+                                "value": option_a.value,
+                            },
+                            f"{option_b.id}": {
+                                "color": option_b.color,
+                                "id": option_b.id,
+                                "value": option_b.value,
+                            },
+                        },
+                        "type": "single_select",
+                    },
+                    f"field_{multiple_select_field.id}": {
+                        "id": multiple_select_field.id,
+                        "select_options": {
+                            f"{multi_option_a.id}": {
+                                "color": multi_option_a.color,
+                                "id": multi_option_a.id,
+                                "value": multi_option_a.value,
+                            },
+                            f"{multi_option_b.id}": {
+                                "color": multi_option_b.color,
+                                "id": multi_option_b.id,
+                                "value": multi_option_b.value,
+                            },
+                        },
+                        "type": "multiple_select",
+                    },
+                    f"field_{collaborator_field.id}": {
+                        "id": collaborator_field.id,
+                        "type": "multiple_collaborators",
+                        "collaborators": {
+                            f"{user2.id}": {"id": user2.id, "name": user2.first_name},
+                            f"{user3.id}": {"id": user3.id, "name": user3.first_name},
+                        },
+                    },
+                    f"field_{linkrow_field.id}": {
+                        "id": linkrow_field.id,
+                        "type": "link_row",
+                        "linked_rows": {
+                            f"{table2_row1.id}": {
+                                "value": f"unnamed row {table2_row1.id}"
+                            },
+                            f"{table2_row2.id}": {
+                                "value": f"unnamed row {table2_row2.id}"
+                            },
+                        },
+                    },
                 },
             },
         ],

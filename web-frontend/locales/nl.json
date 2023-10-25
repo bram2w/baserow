@@ -32,7 +32,8 @@
         "remove": "Verwijder",
         "login": "Inloggen",
         "download": "Downloaden",
-        "copyToClipboard": "Naar klembord kopiëren"
+        "copyToClipboard": "Naar klembord kopiëren",
+        "reset": "Reset"
     },
     "adminType": {
         "settings": "Instellingen",
@@ -52,7 +53,8 @@
         "account": "Account",
         "password": "Wachtwoord",
         "tokens": "API-tokens",
-        "deleteAccount": "Account verwijderen"
+        "deleteAccount": "Account verwijderen",
+        "emailNotifications": "E-mail notificaties"
     },
     "userFileUploadType": {
         "file": "mijn apparaat",
@@ -67,7 +69,10 @@
         "minLength": "Een minimum van {min} tekens is hier een verplicht veld.",
         "maxLength": "Een maximum van {max} tekens is hier toegestaan.",
         "minMaxLength": "Een minimum van {min} en een maximum van {max} tekens is hier toegestaan.",
-        "requiredField": "Dit veld is verplicht."
+        "requiredField": "Dit veld is verplicht.",
+        "integerField": "Het veld moet een geheel getal zijn.",
+        "minValueField": "Het veld moet groter dan of gelijk aan {min} zijn.",
+        "maxValueField": "Het veld moet kleiner zijn dan of gelijk aan {max}."
     },
     "permission": {
         "admin": "Beheerder",
@@ -95,7 +100,10 @@
         "lookup": "Lookup (opzoeken)",
         "multipleCollaborators": "Medewerkers",
         "count": "Tellen",
-        "rollup": "Rollup"
+        "rollup": "Rollup",
+        "linkRowMultiple": "Meerdere",
+        "defaultFormViewComponent": "Standaard",
+        "linkRowSingle": "Enkel"
     },
     "fieldErrors": {
         "invalidNumber": "Ongeldig nummer",
@@ -168,7 +176,10 @@
         "isWithinWeeks": "is binnen weken",
         "isBeforeOrEqualDate": "is voor of dezelfde datum",
         "isAfterOrEqualDate": "is na of dezelfde datum",
-        "isWithinMonths": "is binnen maanden"
+        "isWithinMonths": "is binnen maanden",
+        "isEvenAndWhole": "is even en heel",
+        "filesLowerThan": "bestanden lager dan",
+        "isAfterDaysAgo": "is na dagen geleden"
     },
     "viewType": {
         "grid": "Raster",
@@ -277,7 +288,9 @@
         "maxLocksPerTransactionExceededTitle": "PostgreSQL probleem ontdekt",
         "maxLocksPerTransactionExceededDescription": "Baserow probeerde de weggegooide items permanent te verwijderen, maar overschreed de beschikbare sloten gespecificeerd in `max_locks_per_transaction`.",
         "notificationDoesNotExistDescription": "De actie kan niet worden voltooid omdat de gerelateerde niet meer bestaat.",
-        "notificationDoesNotExistTitle": "Melding bestaat niet."
+        "notificationDoesNotExistTitle": "Melding bestaat niet.",
+        "adminAlreadyExistsDescription": "De gebruikersnaam kan niet worden gebruikt omdat hij al bestaat.",
+        "adminAlreadyExistsTitle": "Kan die gebruikersnaam niet gebruiken"
     },
     "importerType": {
         "csv": "Een CSV-bestand importeren",
@@ -413,7 +426,18 @@
         "todayDescription": "Geeft de huidige datum terug in UTC.",
         "toDateTzDescription": "Retourneert het eerste argument geconverteerd naar een datum met als tweede argument een tekenreeks voor datumnotatie en de tijdzone als derde argument.",
         "whenNanDescription": "Geeft het eerste argument als het niet 'NaN' is. Geeft het tweede argument als het eerste argument 'NaN' is.",
-        "datetimeFormatTzDescription": "Converteert de datum naar tekst op de manier waarop de datum wordt opgemaakt in de tijdzone."
+        "datetimeFormatTzDescription": "Converteert de datum naar tekst op de manier waarop de datum wordt opgemaakt in de tijdzone.",
+        "getFileVisibleNameDescription": "Geeft de zichtbare bestandsnaam van een enkel bestand teruggegeven door de indexfunctie.",
+        "indexDescription": "Retourneert het bestand van een bestandsveld op de positie die is opgegeven door het tweede argument.",
+        "getFileSizeDescription": "Geeft de bestandsgrootte van een enkel bestand teruggegeven door de indexfunctie.",
+        "encodeUriComponentDescription": "Retourneert een gecodeerde URI-tekenreekscomponent van het opgegeven argument.",
+        "getImageWidthDescription": "Geeft als resultaat de afbeeldingsbreedte van een enkel bestand dat is geretourneerd door de indexfunctie.",
+        "getImageHeightDescription": "Retourneert de afbeeldingshoogte van een enkel bestand dat is geretourneerd door de indexfunctie.",
+        "splitPartDescription": "Extraheert een segment uit een afgebakende tekenreeks op basis van een scheidingsteken en index (numerieke indicator die aangeeft welk element uit de tekenreeks moet worden geretourneerd)",
+        "getFileCountDescription": "Retourneert het aantal bestanden in het bestandsveld waarnaar wordt verwezen",
+        "encodeUriDescription": "Retourneert een gecodeerde URI-tekenreeks van het opgegeven argument.",
+        "getIsImageDescription": "Geeft als resultaat of het enkele bestand dat is geretourneerd door de indexfunctie een afbeelding is of niet.",
+        "getFileMimeTypeDescription": "Retourneert het mime-type van een bestand dat is geretourneerd met de indexfunctie."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "onbenoemde rij {value}"

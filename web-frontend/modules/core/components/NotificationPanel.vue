@@ -22,7 +22,7 @@
     </div>
     <div v-if="!loaded && loading" class="loading-absolute-center"></div>
     <div v-else-if="totalCount === 0" class="notification-panel__empty">
-      <i class="notification-panel__empty-icon fas fa-bell-slash"></i>
+      <i class="notification-panel__empty-icon iconoir-bell-off"></i>
       <div class="notification-panel__empty-title">
         {{ $t('notificationPanel.noNotificationTitle') }}
       </div>

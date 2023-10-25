@@ -1,0 +1,42 @@
+.table-element {
+  width: 100%;
+  border: 1px solid $black;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 12px;
+}
+
+.table-element__header-row {
+  background-color: $palette-neutral-200;
+}
+
+.table-element__header-cell,
+.table-element__cell {
+  padding: 12px 20px 10px 20px;
+}
+
+.table-element__header-cell {
+  font-weight: 600;
+  border-bottom: 1px solid $black;
+}
+
+.table-element__cell {
+  border-bottom: 1px solid $black;
+
+  .table-element__row:last-child & {
+    border-bottom: none;
+  }
+}
+
+.table-element__empty-message {
+  text-align: center;
+  padding: 50px 0;
+  font-weight: 600;
+}
+
+.table-element__footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}

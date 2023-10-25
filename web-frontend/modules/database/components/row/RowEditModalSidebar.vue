@@ -50,6 +50,11 @@ export default {
       type: Object,
       required: true,
     },
+    readOnly: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   computed: {
     selectedTabIndex() {
@@ -63,8 +68,8 @@ export default {
       const allSidebarTypes = this.$registry.getOrderedList('rowModalSidebar')
       return allSidebarTypes.filter(
         (type) =>
-          type.isDeactivated(this.database, this.table) === false &&
-          type.getComponent()
+          type.isDeactivated(this.database, this.table, this.readOnly) ===
+            false && type.getComponent()
       )
     },
   },

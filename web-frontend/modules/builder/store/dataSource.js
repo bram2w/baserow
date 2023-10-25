@@ -1,5 +1,6 @@
 import DataSourceService from '@baserow/modules/builder/services/dataSource'
 import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
+import { ELEMENT_EVENTS } from '../enums'
 
 const state = {}
 
@@ -52,16 +53,31 @@ const mutations = {
   CLEAR_ITEMS(state, { page }) {
     page.dataSources = []
   },
+  SET_LOADING(state, { page, value }) {
+    page._.dataSourceLoading = value
+  },
 }
 
 const actions = {
   forceCreate({ commit }, { page, dataSource, beforeId = null }) {
     commit('ADD_ITEM', { page, dataSource, beforeId })
   },
-  forceUpdate({ commit }, { page, dataSource, values }) {
+  forceUpdate({ commit, dispatch }, { page, dataSource, values }) {
     commit('UPDATE_ITEM', { page, dataSource, values })
   },
-  forceDelete({ commit }, { page, dataSourceId }) {
+  forceDelete({ commit, dispatch }, { page, dataSourceId }) {
+    // Remove related content first
+    dispatch(
+      'dataSourceContent/clearDataSourceContent',
+      { page, dataSourceId },
+      { root: true }
+    )
+    //
+    dispatch(
+      'element/emitElementEvent',
+      { event: ELEMENT_EVENTS.DATA_SOURCE_REMOVED, page, dataSourceId },
+      { root: true }
+    )
     commit('DELETE_ITEM', { page, dataSourceId })
   },
   forceMove({ commit, getters }, { page, dataSourceId, beforeDataSourceId }) {
@@ -82,7 +98,8 @@ const actions = {
       commit('MOVE_ITEM', { page, index, oldIndex })
     }
   },
-  async create({ dispatch }, { page, values, beforeId }) {
+  async create({ commit, dispatch }, { page, values, beforeId }) {
+    commit('SET_LOADING', { page, value: true })
     const { data: dataSource } = await DataSourceService(this.$client).create(
       page.id,
       values,
@@ -90,8 +107,9 @@ const actions = {
     )
 
     await dispatch('forceCreate', { page, dataSource, beforeId })
+    commit('SET_LOADING', { page, value: false })
   },
-  async update({ dispatch }, { page, dataSourceId, values }) {
+  async update({ commit, dispatch }, { page, dataSourceId, values }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSource = dataSourcesOfPage.find(
       (dataSource) => dataSource.id === dataSourceId
@@ -107,12 +125,24 @@ const actions = {
 
     await dispatch('forceUpdate', { page, dataSource, values: newValues })
 
+    commit('SET_LOADING', { page, value: true })
     try {
       await DataSourceService(this.$client).update(dataSource.id, values)
+
+      dispatch(
+        'element/emitElementEvent',
+        {
+          event: ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE,
+          page,
+          dataSourceId: dataSource.id,
+        },
+        { root: true }
+      )
     } catch (error) {
       await dispatch('forceUpdate', { page, dataSource, values: oldValues })
       throw error
     }
+    commit('SET_LOADING', { page, value: false })
   },
 
   async debouncedUpdate(
@@ -133,6 +163,17 @@ const actions = {
       }
     })
 
+    // If we have a dataSource type, fetch it from the service type registry
+    // then call the registry's `beforeUpdate` hook to optionally manipulate
+    // the values prior to performing an update.
+    if (dataSource.type !== null) {
+      const dataSourceType = this.$registry.get('service', dataSource.type)
+      updateContext.valuesToUpdate = dataSourceType.beforeUpdate(
+        updateContext.valuesToUpdate,
+        oldValues
+      )
+    }
+
     await dispatch('forceUpdate', {
       page,
       dataSource,
@@ -143,12 +184,22 @@ const actions = {
       const fire = async () => {
         const toUpdate = updateContext.valuesToUpdate
         updateContext.valuesToUpdate = {}
+        commit('SET_LOADING', { page, value: true })
         try {
           const { data } = await DataSourceService(this.$client).update(
             dataSource.id,
             toUpdate
           )
           await commit('FULL_UPDATE_ITEM', { page, dataSource, values: data })
+          dispatch(
+            'element/emitElementEvent',
+            {
+              event: ELEMENT_EVENTS.DATA_SOURCE_AFTER_UPDATE,
+              page,
+              dataSourceId: dataSource.id,
+            },
+            { root: true }
+          )
           updateContext.lastUpdatedValues = null
           resolve()
         } catch (error) {
@@ -161,6 +212,7 @@ const actions = {
           updateContext.lastUpdatedValues = null
           reject(error)
         }
+        commit('SET_LOADING', { page, value: false })
       }
 
       if (updateContext.promiseResolve) {
@@ -178,7 +230,7 @@ const actions = {
       updateContext.promiseResolve = resolve
     })
   },
-  async delete({ dispatch, getters }, { page, dataSourceId }) {
+  async delete({ commit, dispatch, getters }, { page, dataSourceId }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSourceIndex = dataSourcesOfPage.findIndex(
       (dataSource) => dataSource.id === dataSourceId
@@ -191,6 +243,7 @@ const actions = {
 
     await dispatch('forceDelete', { page, dataSourceId })
 
+    commit('SET_LOADING', { page, value: true })
     try {
       await DataSourceService(this.$client).delete(dataSourceId)
     } catch (error) {
@@ -201,8 +254,10 @@ const actions = {
       })
       throw error
     }
+    commit('SET_LOADING', { page, value: false })
   },
   async fetch({ dispatch, commit }, { page }) {
+    commit('SET_LOADING', { page, value: true })
     dispatch(
       'dataSourceContent/clearDataSourceContents',
       { page },
@@ -218,10 +273,12 @@ const actions = {
         dispatch('forceCreate', { page, dataSource })
       )
     )
+    commit('SET_LOADING', { page, value: false })
 
     return dataSources
   },
   async fetchPublished({ dispatch, commit }, { page }) {
+    commit('SET_LOADING', { page, value: true })
     dispatch(
       'dataSourceContent/clearDataSourceContents',
       { page },
@@ -238,6 +295,7 @@ const actions = {
         dispatch('forceCreate', { page, dataSource })
       )
     )
+    commit('SET_LOADING', { page, value: false })
 
     return dataSources
   },
@@ -258,20 +316,28 @@ const actions = {
       throw error
     }
   },
-  async duplicate({ getters, dispatch }, { page, dataSourceId }) {
+  async duplicate({ commit, getters, dispatch }, { page, dataSourceId }) {
     const dataSourcesOfPage = getters.getPageDataSources(page)
     const dataSource = dataSourcesOfPage.find((e) => e.id === dataSourceId)
+    commit('SET_LOADING', { page, value: true })
     await dispatch('create', {
       page,
       dataSourceType: dataSource.type,
       beforeId: dataSource.id,
     })
+    commit('SET_LOADING', { page, value: false })
   },
 }
 
 const getters = {
   getPageDataSources: (state) => (page) => {
     return page.dataSources
+  },
+  getPageDataSourceById: (state) => (page, id) => {
+    return page.dataSources.find((dataSource) => dataSource.id === id)
+  },
+  getLoading: (state) => (page) => {
+    return page._.dataSourceLoading
   },
 }
 

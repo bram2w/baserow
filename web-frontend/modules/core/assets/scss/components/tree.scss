@@ -35,7 +35,6 @@
 
 %tree__size {
   line-height: 32px;
-  height: 32px;
 }
 
 .tree__action {
@@ -43,6 +42,12 @@
 
   padding: 0 6px;
   @include rounded($rounded);
+
+  .layout--collapsed & {
+    height: 32px;
+    justify-content: center;
+    @include flex-align-items();
+  }
 
   &.tree__action--disabled {
     opacity: 0.6;
@@ -74,11 +79,11 @@
 
 .tree__link {
   @extend %tree__size;
-  @extend %ellipsis;
 
   color: $color-neutral-900;
   font-size: 14px;
-  display: block;
+
+  @include flex-align-items(4px);
 
   .tree__action--deactivated & {
     color: $color-neutral-500;
@@ -97,6 +102,12 @@
   }
 }
 
+.tree__link-text {
+  @extend %ellipsis;
+
+  min-width: 0;
+}
+
 .tree__progress_percentage {
   display: inline-block;
   position: absolute;
@@ -108,13 +119,10 @@
   @extend %tree__size;
 
   text-align: center;
-  width: $fa-fw-width;
-  color: $color-neutral-700;
-  margin-right: 4px;
-  font-size: 11px;
+  color: $color-neutral-900;
 
   &.tree__icon--type {
-    color: $color-neutral-300;
+    color: $color-neutral-500;
   }
 }
 
@@ -217,19 +225,21 @@
 }
 
 .tree__right-icon {
-  display: none;
   position: absolute;
   z-index: 1;
   right: 0;
   top: 0;
-  text-align: center;
+  bottom: 0;
+  max-height: 32px;
   width: 32px;
   color: $color-neutral-700;
-  height: inherit;
-  line-height: inherit;
+  font-size: 16px;
+  display: none;
+  align-items: center;
+  justify-content: center;
 
   :hover > & {
-    display: block;
+    display: flex;
   }
 
   .tree__item--loading > .tree__action > & {
@@ -240,10 +250,11 @@
 .tree__options {
   @extend .tree__right-icon;
 
-  color: $color-neutral-300;
+  color: $color-neutral-500;
+  cursor: pointer;
 
   &:hover {
-    color: $color-neutral-700;
+    color: $color-neutral-900;
   }
 }
 

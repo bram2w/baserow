@@ -101,11 +101,16 @@
   border-bottom: 1px solid $color-neutral-200;
 }
 
+.grid-view__head-row-identifier {
+  @include flex-align-items();
+
+  height: 100%;
+}
+
 .grid-view__head-row-identifier-dropdown {
   position: relative;
-  line-height: 32px;
   z-index: 1;
-  padding-left: 10px;
+  padding-left: 8px;
   color: $color-neutral-600;
 
   &:hover {
@@ -333,7 +338,8 @@
 }
 
 .grid-view__row-more {
-  @include center-text(18px, 11px);
+  padding: 2px;
+  @include center-text(18px, 14px);
 
   color: $color-neutral-400;
   visibility: hidden;
@@ -471,38 +477,35 @@
 .grid-view__description {
   position: relative;
   z-index: 1;
-  padding: 0 30px;
-  line-height: 32px;
+  padding: 0 0 0 10px;
+  height: 100%;
+
+  @include flex-align-items(5px);
 
   .grid-view__description-icon,
   .grid-view__description-options {
     line-height: inherit;
-    width: 30px;
     color: $color-neutral-600;
   }
 
   .grid-view__description-icon {
-    @include absolute(0, auto, 0, 0);
-
-    padding-left: 10px;
-    text-align: left;
+    font-size: 16px;
   }
 
   .grid-view__description-icon-error {
-    @include absolute(0, 0, 0, auto);
-
     line-height: inherit;
-    width: 30px;
     color: $color-error-400;
     padding-right: 45px;
     text-align: right;
   }
 
   .grid-view__description-options {
-    @include absolute(0, 4px, 0, auto);
-
-    text-align: center;
-    display: block;
+    margin-left: auto;
+    cursor: pointer;
+    padding: 0 10px;
+    height: 100%;
+    display: flex;
+    align-items: center;
 
     &:hover {
       color: $color-neutral-900;
@@ -533,6 +536,7 @@
     @extend %ellipsis;
 
     user-select: none;
+    line-height: 15px;
   }
 
   &.grid-view__description--loading {
@@ -551,14 +555,19 @@
 }
 
 .grid-view__add-column {
-  display: block;
-  line-height: 32px;
-  text-align: center;
+  @include flex-align-items();
+
   color: $color-neutral-900;
+  height: 100%;
+  justify-content: center;
 
   &:hover {
     background-color: $color-primary-100;
   }
+}
+
+.grid-view__add-column-icon {
+  font-size: 22px;
 }
 
 .grid-view__add-column-placeholder {
@@ -570,11 +579,11 @@
 }
 
 .grid-view__add-row {
-  display: block;
-  line-height: 32px;
-  height: 32px;
   color: $color-neutral-900;
   background-color: $white;
+  height: 100%;
+
+  @include flex-align-items();
 
   &:hover {
     text-decoration: none;
@@ -585,7 +594,7 @@
   }
 
   .grid-view__left & {
-    padding-left: 10px;
+    padding-left: 8px;
   }
 }
 
@@ -622,4 +631,8 @@
   @include absolute(auto, auto, auto, 0);
 
   border-top: solid 1px $color-neutral-900;
+}
+
+.grid-view__add-row-icon {
+  font-size: 22px;
 }

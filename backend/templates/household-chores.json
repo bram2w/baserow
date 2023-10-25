@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Household Chores",
-    "icon": "list-alt",
+    "icon": "iconoir-numbered-list-left",
     "keywords": [
         "household chores",
         "cleaning organization",

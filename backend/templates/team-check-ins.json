@@ -1,7 +1,7 @@
 {
     "baserow_template_version": 1,
     "name": "Team Check-ins",
-    "icon": "check-to-slot",
+    "icon": "iconoir-double-check",
     "keywords": [
         "team check-ins",
         "daily",

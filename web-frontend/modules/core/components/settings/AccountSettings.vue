@@ -5,9 +5,9 @@
     <Alert
       v-if="success"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('accountSettings.changedTitle')"
-      >{{ $t('accountSettings.changedDescription') }}
+      ><p>{{ $t('accountSettings.changedDescription') }}</p>
     </Alert>
     <AccountForm :default-values="user" @submitted="submitted">
       <div class="actions actions--right">

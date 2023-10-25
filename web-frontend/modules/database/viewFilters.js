@@ -233,7 +233,12 @@ export class FilenameContainsViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['file']
+    return [
+      'file',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        FormulaFieldType.arrayOf('single_file')
+      ),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -260,7 +265,12 @@ export class HasFileTypeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['file']
+    return [
+      'file',
+      FormulaFieldType.compatibleWithFormulaTypes(
+        FormulaFieldType.arrayOf('single_file')
+      ),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -278,6 +288,33 @@ export class HasFileTypeViewFilterType extends ViewFilterType {
     }
 
     return false
+  }
+}
+
+export class FilesLowerThanViewFilterType extends ViewFilterType {
+  static getType() {
+    return 'files_lower_than'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.filesLowerThan')
+  }
+
+  getExample() {
+    return '2'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeNumber
+  }
+
+  getCompatibleFieldTypes() {
+    return ['file']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    return rowValue.length < parseInt(filterValue)
   }
 }
 
@@ -1746,7 +1783,8 @@ export class EmptyViewFilterType extends ViewFilterType {
         'char',
         'boolean',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }
@@ -1801,7 +1839,8 @@ export class NotEmptyViewFilterType extends ViewFilterType {
         'char',
         'boolean',
         'date',
-        'number'
+        'number',
+        FormulaFieldType.arrayOf('single_file')
       ),
     ]
   }

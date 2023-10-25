@@ -48,6 +48,13 @@ from baserow.contrib.builder.pages.operations import (
     UpdatePageOperationType,
 )
 from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
+from baserow.contrib.builder.workflow_actions.operations import (
+    CreateBuilderWorkflowActionOperationType,
+    DeleteBuilderWorkflowActionOperationType,
+    ListBuilderWorkflowActionsPageOperationType,
+    ReadBuilderWorkflowActionOperationType,
+    UpdateBuilderWorkflowActionOperationType,
+)
 from baserow.contrib.database.airtable.operations import (
     RunAirtableImportJobOperationType,
 )
@@ -99,31 +106,40 @@ from baserow.contrib.database.views.operations import (
     CreateAndUsePersonalViewOperationType,
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
+    CreateViewFilterGroupOperationType,
     CreateViewFilterOperationType,
+    CreateViewGroupByOperationType,
     CreateViewOperationType,
     CreateViewSortOperationType,
     DeleteViewDecorationOperationType,
+    DeleteViewFilterGroupOperationType,
     DeleteViewFilterOperationType,
+    DeleteViewGroupByOperationType,
     DeleteViewOperationType,
     DeleteViewSortOperationType,
     DuplicateViewOperationType,
     ListAggregationsViewOperationType,
     ListViewDecorationOperationType,
     ListViewFilterOperationType,
+    ListViewGroupByOperationType,
     ListViewsOperationType,
     ListViewSortOperationType,
     OrderViewsOperationType,
     ReadAggregationsViewOperationType,
     ReadViewDecorationOperationType,
     ReadViewFieldOptionsOperationType,
+    ReadViewFilterGroupOperationType,
     ReadViewFilterOperationType,
+    ReadViewGroupByOperationType,
     ReadViewOperationType,
     ReadViewsOrderOperationType,
     ReadViewSortOperationType,
     RestoreViewOperationType,
     UpdateViewDecorationOperationType,
     UpdateViewFieldOptionsOperationType,
+    UpdateViewFilterGroupOperationType,
     UpdateViewFilterOperationType,
+    UpdateViewGroupByOperationType,
     UpdateViewOperationType,
     UpdateViewPublicOperationType,
     UpdateViewSlugOperationType,
@@ -267,6 +283,11 @@ default_roles[VIEWER_ROLE_UID].extend(
         ListenToAllDatabaseTableEventsOperationType,
         ReadViewsOrderOperationType,
         ReadViewSortOperationType,
+        ListViewGroupByOperationType,
+        ReadViewGroupByOperationType,
+        ListBuilderWorkflowActionsPageOperationType,
+        ReadBuilderWorkflowActionOperationType,
+        ReadViewFilterGroupOperationType,
     ]
 )
 default_roles[COMMENTER_ROLE_UID].extend(
@@ -293,6 +314,7 @@ default_roles[EDITOR_ROLE_UID].extend(
         RestoreDatabaseRowOperationType,
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
+        UpdateBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(
@@ -327,6 +349,9 @@ default_roles[BUILDER_ROLE_UID].extend(
         DuplicateViewOperationType,
         UpdateWebhookOperationType,
         CreateViewFilterOperationType,
+        CreateViewFilterGroupOperationType,
+        UpdateViewFilterGroupOperationType,
+        DeleteViewFilterGroupOperationType,
         UpdateViewFilterOperationType,
         DeleteViewFilterOperationType,
         DeleteViewDecorationOperationType,
@@ -348,6 +373,9 @@ default_roles[BUILDER_ROLE_UID].extend(
         UpdateViewSortOperationType,
         DuplicateDatabaseTableOperationType,
         CreateViewSortOperationType,
+        CreateViewGroupByOperationType,
+        UpdateViewGroupByOperationType,
+        DeleteViewGroupByOperationType,
         ReadWorkspaceTrashOperationType,
         CreateTokenOperationType,
         ReadTokenOperationType,
@@ -379,6 +407,8 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
         DispatchDataSourceOperationType,
+        DeleteBuilderWorkflowActionOperationType,
+        CreateBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

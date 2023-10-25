@@ -10,7 +10,7 @@
   >
     <div v-show="dragging" class="grid-field-file__dragging">
       <div>
-        <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
+        <i class="grid-field-file__drop-icon iconoir-cloud-upload"></i>
         {{ $t('gridViewFieldFile.dropHere') }}
       </div>
     </div>
@@ -32,8 +32,8 @@
           />
           <i
             v-else
-            class="fas grid-field-file__icon"
-            :class="'fa-' + getIconClass(file.mime_type)"
+            class="grid-field-file__icon"
+            :class="getIconClass(file.mime_type)"
           ></i>
         </a>
       </li>
@@ -46,10 +46,10 @@
       </li>
       <li v-if="!readOnly" v-show="selected" class="grid-field-file__item">
         <a class="grid-field-file__item-add" @click.prevent="showUploadModal()">
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
         </a>
         <div v-if="value.length == 0" class="grid-field-file__drop">
-          <i class="grid-field-file__drop-icon fas fa-cloud-upload-alt"></i>
+          <i class="grid-field-file__drop-icon iconoir-cloud-upload"></i>
           {{ $t('gridViewFieldFile.dropFileHere') }}
         </div>
       </li>
@@ -217,13 +217,7 @@ export default {
     canKeyDown() {
       return !this.modalOpen
     },
-    canPaste() {
-      return !this.modalOpen
-    },
-    canCopy() {
-      return !this.modalOpen
-    },
-    canEmpty() {
+    canKeyboardShortcut() {
       return !this.modalOpen
     },
     dragEnter(event) {

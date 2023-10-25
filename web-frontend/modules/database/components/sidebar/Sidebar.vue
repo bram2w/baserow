@@ -14,7 +14,7 @@
             },
           }"
         >
-          <i class="context__menu-icon fas fa-fw fa-book"></i>
+          <i class="context__menu-icon iconoir-book"></i>
           {{ $t('sidebar.viewAPI') }}
         </nuxt-link>
       </li>
@@ -60,7 +60,7 @@
         class="tree__sub-add"
         @click="$refs.importFileModal.show()"
       >
-        <i class="fas fa-plus"></i>
+        <i class="iconoir-plus"></i>
         {{ $t('sidebar.createTable') }}
       </a>
       <ImportFileModal ref="importFileModal" :database="application" />

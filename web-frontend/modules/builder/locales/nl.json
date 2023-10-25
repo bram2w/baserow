@@ -45,7 +45,8 @@
         "labelSettings": "Pagina-instellingen"
     },
     "elementsContext": {
-        "searchPlaceholder": "Zoek elementen"
+        "searchPlaceholder": "Zoek elementen",
+        "noElements": "Geen elementen gevonden"
     },
     "elementType": {
         "heading": "Kop",
@@ -55,7 +56,10 @@
         "link": "Link",
         "image": "Afbeelding",
         "linkDescription": "Een link naar pagina/URL",
-        "imageDescription": "Afbeelding weergeven"
+        "imageDescription": "Afbeelding weergeven",
+        "inputText": "Tekstinvoer",
+        "inputTextDescription": "Een tekstinvoerveld",
+        "column": "Kolommen"
     },
     "addElementButton": {
         "label": "Element"
@@ -115,7 +119,8 @@
         "publishFailedTitle": "Publiceren van de site is mislukt",
         "publishFailedDescription": "Het publiceren van de site is mislukt. Probeer het later opnieuw.",
         "openInNewTab": "Openen in nieuw tabblad",
-        "noDomain": "Je moet ten minste één domein hebben om uw applicatie te kunnen publiceren."
+        "noDomain": "Je moet ten minste één domein hebben om uw applicatie te kunnen publiceren.",
+        "importingState": "importeren"
     },
     "lastPublishedDomainDate": {
         "neverPublished": "nooit",
@@ -227,5 +232,10 @@
     },
     "pageSettingsTypes": {
         "pageName": "Pagina"
+    },
+    "dataProviderType": {
+        "currentRecord": "Gegevensbron",
+        "pageParameter": "Parameter",
+        "dataSource": "Data"
     }
 }

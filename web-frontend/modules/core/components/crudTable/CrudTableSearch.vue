@@ -12,7 +12,7 @@
         class="input input--large"
         @keyup="searchIfChanged(headerSearchTerm, false)"
       />
-      <i class="fas fa-search"></i>
+      <i class="iconoir-search"></i>
     </div>
   </form>
 </template>
@@ -56,7 +56,8 @@ export default {
     this.$priorityBus.$off('start-search', this.searchStarted)
   },
   methods: {
-    searchStarted() {
+    searchStarted({ event }) {
+      event.preventDefault()
       this.$bus.$emit('close-modals')
       this.$refs.searchInput.focus()
     },

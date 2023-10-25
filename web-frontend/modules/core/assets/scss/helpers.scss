@@ -160,6 +160,21 @@
   }
 }
 
+.flex {
+  width: 100%;
+  display: flex;
+  gap: var(--gap, 10px);
+}
+
+.flex-100 {
+  width: 100%;
+  flex-basis: 100%;
+}
+
+.position-relative {
+  position: relative;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0);

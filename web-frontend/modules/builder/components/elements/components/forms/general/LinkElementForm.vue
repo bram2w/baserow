@@ -1,12 +1,10 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormulaInputGroup
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.value"
       :label="$t('linkElementForm.text')"
       :placeholder="$t('linkElementForm.textPlaceholder')"
-      :error="
-        !$v.values.value.validFormula ? $t('elementForms.invalidFormula') : ''
-      "
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
     />
     <FormElement class="control">
       <label class="control__label">
@@ -42,27 +40,22 @@
       </div>
     </FormElement>
     <FormElement v-if="navigateTo === 'custom'" class="control">
-      <FormulaInputGroup
+      <ApplicationBuilderFormulaInputGroup
         v-model="values.navigate_to_url"
         :page="page"
         :label="$t('linkElementForm.url')"
         :placeholder="$t('linkElementForm.urlPlaceholder')"
-        :error="
-          !$v.values.navigate_to_url.validFormula
-            ? $t('elementForms.invalidFormula')
-            : ''
-        "
-        @blur="$v.values.navigate_to_url.$touch()"
+        :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       />
     </FormElement>
     <FormElement v-if="destinationPage" class="control">
       <template v-if="parametersInError">
         <Alert type="error" minimal>
-          <div class="margin-bottom-1">
+          <p>
             {{ $t('linkElementForm.paramsInErrorDescription') }}
-          </div>
+          </p>
           <Button
-            class="link-element-form__reset-button"
+            class="link-element-form__reset-button margin-top-1"
             type="error"
             size="tiny"
             @click.prevent="updatePageParameters"
@@ -73,23 +66,17 @@
       </template>
       <div v-else>
         <div
-          v-for="(param, index) in values.page_parameters"
+          v-for="param in values.page_parameters"
           :key="param.name"
           class="link-element-form__param"
         >
-          <FormulaInputGroup
+          <ApplicationBuilderFormulaInputGroup
             v-model="param.value"
             :page="page"
             :label="param.name"
             horizontal
             :placeholder="$t('linkElementForm.paramPlaceholder')"
-            :error="
-              $v.values.page_parameters.$each[index].$dirty &&
-              $v.values.page_parameters.$each[index].$error
-                ? $t('elementForms.invalidFormula')
-                : ''
-            "
-            @blur="$v.values.page_parameters.$each[index].$touch()"
+            :data-providers-allowed="DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS"
           />
         </div>
       </div>
@@ -124,17 +111,7 @@
       </div>
     </FormElement>
     <FormElement v-if="values.variant === 'button'" class="control">
-      <label class="control__label">
-        {{ $t('linkElementForm.width') }}
-      </label>
-      <div class="control__elements">
-        <RadioButton v-model="values.width" value="auto">
-          {{ $t('linkElementForm.widthAuto') }}
-        </RadioButton>
-        <RadioButton v-model="values.width" value="full">
-          {{ $t('linkElementForm.widthFull') }}
-        </RadioButton>
-      </div>
+      <WidthSelector v-model="values.width" />
     </FormElement>
   </form>
 </template>
@@ -143,18 +120,24 @@
 import form from '@baserow/modules/core/mixins/form'
 import { LinkElementType } from '@baserow/modules/builder/elementTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { HORIZONTAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
-import FormulaInputGroup from '@baserow/modules/core/components/formula/FormulaInputGroup'
-import { isValidFormula } from '@baserow/modules/core/formula'
+import {
+  DATA_PROVIDERS_ALLOWED_ELEMENTS,
+  HORIZONTAL_ALIGNMENTS,
+  WIDTHS,
+} from '@baserow/modules/builder/enums'
+import WidthSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/WidthSelector'
+import { PageParameterDataProviderType } from '@baserow/modules/builder/dataProviderTypes'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'LinkElementForm',
-  components: { HorizontalAlignmentSelector, FormulaInputGroup },
-  mixins: [form],
-  props: {
-    builder: { type: Object, required: true },
-    page: { type: Object, required: true },
+  components: {
+    WidthSelector,
+    ApplicationBuilderFormulaInputGroup,
+    HorizontalAlignmentSelector,
   },
+  mixins: [form],
+  inject: ['builder', 'page'],
   data() {
     let navigateTo = ''
     if (this.defaultValues.navigation_type === 'page') {
@@ -173,7 +156,7 @@ export default {
         navigate_to_page_id: null,
         navigate_to_url: '',
         page_parameters: [],
-        width: 'auto',
+        width: WIDTHS.AUTO.value,
         target: 'self',
       },
       parametersInError: false,
@@ -181,6 +164,15 @@ export default {
     }
   },
   computed: {
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
+    DATA_PROVIDERS_ALLOWED_PAGE_PARAMETERS() {
+      const PROVIDERS_TO_REMOVE = [
+        new PageParameterDataProviderType().getType(),
+      ]
+      return this.DATA_PROVIDERS_ALLOWED_ELEMENTS.filter(
+        (dataProvider) => !PROVIDERS_TO_REMOVE.includes(dataProvider)
+      )
+    },
     pages() {
       return this.builder.pages
     },
@@ -227,11 +219,6 @@ export default {
     }
   },
   methods: {
-    getPageParameterType(parameterName) {
-      return (this.destinationPage?.path_params || []).find(
-        (pathParam) => pathParam.name === parameterName
-      )?.type
-    },
     updatePageParameters() {
       this.values.page_parameters = (
         this.destinationPage?.path_params || []
@@ -240,22 +227,7 @@ export default {
         return { name, value: previousValue }
       })
       this.parametersInError = false
-      this.$v.values.page_parameters.$touch()
     },
-    validatePageParameter(pageParameter) {
-      return isValidFormula(pageParameter.value)
-    },
-  },
-  validations() {
-    return {
-      values: {
-        value: { validFormula: isValidFormula },
-        page_parameters: {
-          $each: { $validator: this.validatePageParameter },
-        },
-        navigate_to_url: { validFormula: isValidFormula },
-      },
-    }
   },
 }
 </script>

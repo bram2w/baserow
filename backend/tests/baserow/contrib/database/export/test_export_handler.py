@@ -244,7 +244,7 @@ def test_can_export_every_interesting_different_field_to_csv(
         '"name.txt (http://localhost:8000/media/user_files/test_hash.txt),unnamed row 2",'
         '"a.txt (http://localhost:8000/media/user_files/hashed_name.txt),'
         'b.txt (http://localhost:8000/media/user_files/other_name.txt)",A,"D,C,E",'
-        '"user2@example.com,user3@example.com",+4412345678,test FORMULA,1,True,33.3333333333,'
+        '"user2@example.com,user3@example.com",\'+4412345678,test FORMULA,1,True,33.3333333333,'
         "1 day,2020-01-01,A,test@example.com,label (https://google.com),https://google.com,"
         '3,-122.222,"linked_row_1,linked_row_2,"\r\n'
     )
@@ -674,6 +674,8 @@ def test_adding_more_rows_doesnt_increase_number_of_queries_run(
         [linked_row_1.id],
     )
 
+    data_fixture.warm_cache_before_counting_queries()
+
     with CaptureQueriesContext(connection) as captured:
         run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
 
@@ -891,3 +893,22 @@ def test_action_done_is_emitted_when_the_export_finish(storage_mock, data_fixtur
         action_type = send_mock.call_args[1]["action_type"]
         params = send_mock.call_args[1]["action_params"]
         assert action_type.get_long_description(params).startswith("View")
+
+
+@pytest.mark.django_db
+@patch("baserow.contrib.database.export.handler.default_storage")
+def test_csv_is_escaped(storage_mock, data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(table=table, name="text_field")
+    grid_view = data_fixture.create_grid_view(table=table)
+    model = table.get_model()
+    model.objects.create(
+        **{
+            f"field_{text_field.id}": "=1+2",
+        },
+    )
+    _, contents = run_export_job_with_mock_storage(table, grid_view, storage_mock, user)
+    bom = "\ufeff"
+    expected = bom + "id,text_field\r\n1,'=1+2\r\n"
+    assert contents == expected

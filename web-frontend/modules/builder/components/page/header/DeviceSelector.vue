@@ -13,7 +13,7 @@
         }"
         @click="$emit('selected', deviceType.getType())"
       >
-        <i :class="`header__filter-icon fas fa-${deviceType.iconClass}`"></i>
+        <i :class="`header__filter-icon ${deviceType.iconClass}`"></i>
       </a>
     </li>
   </ul>

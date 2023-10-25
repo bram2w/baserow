@@ -151,7 +151,12 @@ def test_dispatch_data_source(data_fixture):
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user, page=page, integration=integration, view=view, row_id="2"
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id="2",
     )
 
     formula_context = MagicMock()
@@ -162,8 +167,8 @@ def test_dispatch_data_source(data_fixture):
     assert result == {
         "id": rows[1].id,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
 
@@ -190,13 +195,28 @@ def test_dispatch_data_sources(data_fixture):
     )
     page = data_fixture.create_builder_page(user=user, builder=builder)
     data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user, page=page, integration=integration, view=view, row_id="2"
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id="2",
     )
     data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user, page=page, integration=integration, view=view, row_id="3"
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id="3",
     )
     data_source3 = data_fixture.create_builder_local_baserow_get_row_data_source(
-        user=user, page=page, integration=integration, view=view, row_id="b"
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id="b",
     )
 
     formula_context = MagicMock()
@@ -209,15 +229,15 @@ def test_dispatch_data_sources(data_fixture):
     assert result[data_source.id] == {
         "id": rows[1].id,
         "order": "1.00000000000000000000",
-        "Name": "Audi",
-        "My Color": "Orange",
+        fields[0].db_column: "Audi",
+        fields[1].db_column: "Orange",
     }
 
     assert result[data_source2.id] == {
         "id": rows[2].id,
         "order": "1.00000000000000000000",
-        "Name": "Volkswagen",
-        "My Color": "White",
+        fields[0].db_column: "Volkswagen",
+        fields[1].db_column: "White",
     }
 
     assert isinstance(result[data_source3.id], Exception)

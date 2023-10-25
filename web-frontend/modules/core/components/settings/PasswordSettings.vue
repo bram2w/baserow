@@ -5,10 +5,10 @@
     <Alert
       v-if="success"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('passwordSettings.changedTitle')"
     >
-      {{ $t('passwordSettings.changedDescription') }}
+      <p>{{ $t('passwordSettings.changedDescription') }}</p>
     </Alert>
     <form v-if="!success" @submit.prevent="changePassword">
       <div class="control">
@@ -63,7 +63,7 @@
           :disabled="loading"
         >
           {{ $t('passwordSettings.submitButton') }}
-          <i class="fas fa-pencil-alt"></i>
+          <i class="iconoir-edit-pencil"></i>
         </button>
       </div>
     </form>
@@ -109,6 +109,13 @@ export default {
           this.account.oldPassword,
           this.account.newPassword
         )
+        // Changing the password invalidates all the refresh and access token, so we
+        // have to log in again. This can be done with the new password we still have
+        // in memory.
+        await this.$store.dispatch('auth/login', {
+          email: this.$store.getters['auth/getUsername'],
+          password: this.account.newPassword,
+        })
         this.success = true
         this.loading = false
       } catch (error) {

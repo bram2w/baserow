@@ -119,7 +119,8 @@
         "members": "Membri",
         "viewTrash": "Visualizza cestino",
         "leaveWorkspace": "Lascia progetto",
-        "deleteWorkspace": "Elimina progetto"
+        "deleteWorkspace": "Elimina progetto",
+        "auditLog": "Audit log"
     },
     "createWorkspaceModal": {
         "createNew": "Crea nuovo progetto",
@@ -547,7 +548,9 @@
         "noNotificationTitle": "Non hai nessuna notifica",
         "noNotification": "Ti invieremo una notifica per aggiornamenti importanti o quando vieni taggato in Baserow.",
         "markAllAsRead": "Segna tutte come lette",
-        "clearAll": "Elimina tutte"
+        "clearAll": "Elimina tutte",
+        "newNotificationsAvailable": "Nuova notifica disponibile",
+        "refresh": "Aggiorna"
     },
     "userSessionExpiredToast": {
         "title": "Sessione scaduta",
@@ -626,5 +629,21 @@
     },
     "workspaceInvitationRejectedNotification": {
         "title": "{sender} ha rifiutato il tuo invito per far parte di {workspaceName}"
+    },
+    "emailNotifications": {
+        "submitButton": "Aggiorna frequenza",
+        "label": "Menzioni, commenti e altre notifiche",
+        "daily": "Una volta al giorno",
+        "title": "Notifiche email",
+        "never": "Mai",
+        "weekly": "Una volta a settimana",
+        "description": "Configura la frequenza con cui vuoi ricevere le email.",
+        "instant": "Immediatamente"
+    },
+    "dataExplorer": {
+        "emptyText": "Nessun dato trovato"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "La formula non è valida"
     }
 }

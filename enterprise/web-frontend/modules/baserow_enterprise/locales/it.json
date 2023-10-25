@@ -4,7 +4,7 @@
         "sidebarTooltip": "Il tuo account ha accesso alle funzionalità enterprise",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Disponibile con licenza enterprise",
+        "deactivated": "Disponibile con licenza advanced/enterprise",
         "licenseDescription": "I Viewers sono gratuiti. Se un utente ha un altro ruolo, una licenza a pagamento verrà assegnata in automatico.",
         "overflowWarning": "Le licenze disponibili sono terminate. Imposta gli utenti come \"viewers\" per liberare le licenze necessarie."
     },
@@ -77,13 +77,16 @@
         "actionType": "Tipo di evento",
         "workspace": "Progetto",
         "allWorkspaces": "Tutti i progetti",
-        "allActionTypes": "Tutti gli eventi"
+        "allActionTypes": "Tutti gli eventi",
+        "workspaceTitle": "Audit log - {workspaceName}",
+        "adminTitle": "Audit log"
     },
     "auditLogExportModal": {
-        "exportFilename": "Audit Log Export - {date}",
+        "exportFilename": "Admin Audit Log Export - {date}",
         "cancelledTitle": "Esportazione fallita",
         "cancelledDescription": "Qualcosa è andato storto durante l'esportazione. Riprova più tardi.",
-        "title": "Esporta in CSV"
+        "title": "Esporta in CSV",
+        "exportWorkspaceFilename": " Progetto ({workspaceId}) Audit Log Export - {date}"
     },
     "authProviders": {
         "title": "Provider di autenticazione",
@@ -275,5 +278,9 @@
     },
     "snapshotModalWarning": {
         "message": "Ricorda che gli snapshots includeranno tutti i permessi impostati a livello di applicazione e tabelle."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Audit log",
+        "deactivated": "Disponibile con licenza advanced/enterprise"
     }
 }

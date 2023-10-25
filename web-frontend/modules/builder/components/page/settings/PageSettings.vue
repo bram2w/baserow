@@ -5,9 +5,9 @@
     <Alert
       v-if="success"
       type="success"
-      icon="check"
+      icon="iconoir-check"
       :title="$t('pageSettings.pageUpdatedTitle')"
-      >{{ $t('pageSettings.pageUpdatedDescription') }}
+      ><p>{{ $t('pageSettings.pageUpdatedDescription') }}</p>
     </Alert>
     <PageSettingsForm
       :builder="builder"

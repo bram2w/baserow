@@ -68,13 +68,12 @@
   margin-top: 6px;
   font-weight: 400;
 
-  & div i.fas {
-    color: $color-error-500;
-    margin-right: 4px;
-  }
-
   & .error {
     color: $color-neutral-700;
+
+    i {
+      color: $color-error-500;
+    }
   }
 }
 

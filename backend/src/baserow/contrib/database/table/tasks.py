@@ -22,7 +22,7 @@ from baserow.core.registries import (
     subject_type_registry,
 )
 from baserow.core.subjects import UserSubjectType
-from baserow.ws.tasks import closing_group_send
+from baserow.ws.tasks import send_message_to_channel_group
 
 
 @app.task(queue="export")
@@ -89,7 +89,9 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     channel_group_names_users_dict = defaultdict(set)
     for user in users:
         for table in tables:
-            channel_group_name = TablePageType().get_group_name(table.id)
+            channel_group_name = TablePageType().get_permission_channel_group_name(
+                table.id
+            )
             if permission_manager is None:
                 channel_group_names_users_dict[channel_group_name].add(user.id)
             else:
@@ -106,28 +108,29 @@ def unsubscribe_subject_from_tables_currently_subscribed_to(
     channel_layer = get_channel_layer()
 
     for channel_group_name, user_ids in channel_group_names_users_dict.items():
-        async_to_sync(closing_group_send)(
+        async_to_sync(send_message_to_channel_group)(
             channel_layer,
             channel_group_name,
             {
-                "type": "remove_user_from_group",
+                "type": "users_removed_from_permission_group",
                 "user_ids_to_remove": list(user_ids),
+                "permission_group_name": channel_group_name,
             },
         )
 
 
 @app.task(bind=True)
-def unsubscribe_user_from_table_currently_subscribed_to(
+def unsubscribe_user_from_tables_when_removed_from_workspace(
     self,
     user_id: int,
     workspace_id: int,
 ):
     """
-    Unsubscribe all users associated with the subject from the table they are currently
-    viewing.
+    Task that will unsubscribe the provided user from web socket
+    CoreConsumer pages that belong to the provided workspace.
 
-    :param user_id: The id of the user that is supposed to be unsubscribed
-    :param workspace_id: The id of the workspace the user belongs to
+    :param user_id: The id of the user that is supposed to be unsubscribed.
+    :param workspace_id: The id of the workspace the user belonged to.
     """
 
     unsubscribe_subject_from_tables_currently_subscribed_to(

@@ -23,7 +23,7 @@ import { PUBLIC_PLACEHOLDER_ENTITY_ID } from '@baserow/modules/database/utils/co
 import { DatabaseApplicationType } from '@baserow/modules/database/applicationTypes'
 import { mapGetters } from 'vuex'
 import languageDetection from '@baserow/modules/core/mixins/languageDetection'
-import { isOsSpecificModifierPressed } from '@baserow/modules/core/utils/events'
+import { keyboardShortcutsToPriorityEventBus } from '@baserow/modules/core/utils/events'
 
 export default {
   components: { Table, Toasts },
@@ -131,13 +131,7 @@ export default {
   },
   methods: {
     keyDown(event) {
-      if (
-        isOsSpecificModifierPressed(event) &&
-        event.key.toLowerCase() === 'f'
-      ) {
-        event.preventDefault()
-        this.$priorityBus.$emit('start-search')
-      }
+      keyboardShortcutsToPriorityEventBus(event, this.$priorityBus)
     },
   },
 }

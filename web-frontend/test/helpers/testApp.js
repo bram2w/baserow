@@ -6,6 +6,7 @@ import setupClient, {
 } from '@baserow/modules/core/plugins/clientHandler'
 
 import setupDatabasePlugin from '@baserow/modules/database/plugin'
+import setupBuilderPlugin from '@baserow/modules/builder/plugin'
 import { bootstrapVueContext } from '@baserow/test/helpers/components'
 import MockAdapter from 'axios-mock-adapter'
 import _ from 'lodash'
@@ -39,6 +40,7 @@ function _createBaserowStoreAndRegistry(app, vueContext, extraPluginSetupFunc) {
     app,
   }
   setupDatabasePlugin(setupContext)
+  setupBuilderPlugin(setupContext)
   setupHasFeaturePlugin(setupContext, (name, dep) => {
     app[`$${name}`] = dep
   })
@@ -86,6 +88,7 @@ export class TestApp {
     this._realtime = {
       registerEvent(e, f) {},
       subscribe(e, f) {},
+      unsubscribe(e, f) {},
       connect(a, b) {},
       disconnect() {},
     }
@@ -117,10 +120,14 @@ export class TestApp {
       },
       $router: {
         resolve({ name, params }) {
-          return new URL(`https://${name}`)
+          return new URL(`https://${name}.com`)
+        },
+        replace({ name, params }) {
+          return new URL(`https://${name}.com`)
         },
       },
       $route: {
+        name: '',
         params: {},
         matched: [],
       },
@@ -202,6 +209,8 @@ export class TestApp {
         params: asyncDataParams,
         error: fail,
         app: this._app,
+        route: this._app.$route,
+        redirect: this._app.$router.replace,
       })
       Component.data = function () {
         return data

@@ -7,10 +7,10 @@ import { Registerable } from '@baserow/modules/core/registry'
  */
 export class AdminType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize admin types. The icon will for example be displayed in the
    * sidebar. If you for example want the database icon, you must return
-   * 'database' here. This will result in the classname 'fas fa-database'.
+   * 'database' here. This will result in the classname 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -83,7 +83,7 @@ export class SettingsAdminType extends AdminType {
   }
 
   getIconClass() {
-    return 'cogs'
+    return 'iconoir-settings'
   }
 
   getName() {
@@ -106,7 +106,7 @@ export class HealthCheckAdminType extends AdminType {
   }
 
   getIconClass() {
-    return 'medkit'
+    return 'iconoir-health-shield'
   }
 
   getName() {

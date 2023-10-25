@@ -6,7 +6,7 @@
       :class="{ 'active--primary': view.public }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
-      <i class="header__filter-icon fas fa-share-square"></i>
+      <i class="header__filter-icon iconoir-share-android"></i>
       <span class="header__filter-name">
         {{ $t('shareViewLink.shareView', { viewTypeSharingLinkName }) }}
       </span>
@@ -22,7 +22,7 @@
         :class="{ 'view-sharing__create-link--disabled': readOnly }"
         @click.stop="!readOnly && updateView({ public: true })"
       >
-        <i class="fas fa-share-square view-sharing__create-link-icon"></i>
+        <i class="iconoir-share-android view-sharing__create-link-icon"></i>
         {{ $t('shareViewLink.shareViewTitle', { viewTypeSharingLinkName }) }}
       </a>
       <div v-else class="view-sharing__shared-link">
@@ -43,7 +43,7 @@
             class="view-sharing__shared-link-action"
             @click="copyShareUrlToClipboard()"
           >
-            <i class="fas fa-copy"></i>
+            <i class="iconoir-copy"></i>
             <Copied ref="copied"></Copied>
           </a>
           <a
@@ -52,7 +52,7 @@
             class="view-sharing__shared-link-action"
             @click.prevent="$refs.rotateSlugModal.show()"
           >
-            <i class="fas fa-sync"></i>
+            <i class="iconoir-refresh-double"></i>
             <ViewRotateSlugModal
               ref="rotateSlugModal"
               :view="view"
@@ -67,22 +67,24 @@
               @input="toggleShareViewPassword"
             >
             </SwitchInput>
-            <div class="margin-left-2">
-              <i
-                class="fas margin-right-1"
-                :class="[
-                  view.public_view_has_password ? 'fa-lock' : 'fa-globe',
-                ]"
-              ></i>
-              <span>{{ $t(optionPasswordText) }}</span>
-            </div>
+
+            <i
+              class="view-sharing__option-icon"
+              :class="[
+                view.public_view_has_password
+                  ? 'iconoir-lock'
+                  : 'iconoir-globe',
+              ]"
+            ></i>
+            <span>{{ $t(optionPasswordText) }}</span>
+
             <a
               v-if="view.public_view_has_password"
               class="view-sharing__option-change-password"
               @click.stop="$refs.enablePasswordModal.show"
             >
               {{ $t('shareViewLink.ChangePassword') }}
-              <i class="fas fa-pen"></i>
+              <i class="iconoir-edit-pencil"></i>
             </a>
             <EnablePasswordModal ref="enablePasswordModal" :view="view" />
             <DisablePasswordModal ref="disablePasswordModal" :view="view" />
@@ -100,7 +102,7 @@
             class="view-sharing__shared-link-disable"
             @click.stop="updateView({ public: false })"
           >
-            <i class="fas fa-times"></i>
+            <i class="iconoir-cancel"></i>
             {{ $t('shareViewLink.disableLink') }}
           </a>
         </div>

@@ -13,7 +13,7 @@
           )
         "
       >
-        <i class="header__filter-icon fas fa-chevron-circle-down"></i>
+        <i class="header__filter-icon iconoir-nav-arrow-down"></i>
         <span class="header__filter-name">
           <template v-if="view.single_select_field === null">{{
             $t('kanbanViewHeader.stackBy')
@@ -61,7 +61,7 @@
           )
         "
       >
-        <i class="header__filter-icon fas fa-cog"></i>
+        <i class="header__filter-icon iconoir-settings"></i>
         <span class="header__filter-name">{{
           $t('kanbanViewHeader.customizeCards')
         }}</span>

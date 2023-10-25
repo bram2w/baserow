@@ -4,15 +4,15 @@
     <Error :error="error"></Error>
     <FormElement class="control">
       <Dropdown
-        v-model="selectedDomainType"
+        v-model="selectedDomain"
         :show-search="false"
         class="domain-settings__domain-type"
       >
         <DropdownItem
-          v-for="domainType in domainTypes"
-          :key="domainType.getType()"
-          :name="domainType.name"
-          :value="domainType.getType()"
+          v-for="option in options"
+          :key="option.value.domain"
+          :name="option.name"
+          :value="option.value"
         />
       </Dropdown>
     </FormElement>
@@ -20,16 +20,18 @@
       :is="currentDomainType.formComponent"
       ref="domainForm"
       :builder="builder"
+      :domain="selectedDomain.domain"
       @submitted="createDomain($event)"
+      @error="formHasError = $event"
     />
     <div class="actions">
       <a @click="hideForm">
-        <i class="fas fa-chevron-left margin-right-1"></i>
+        <i class="iconoir-nav-arrow-left margin-right-1"></i>
         {{ $t('action.back') }}
       </a>
       <button
         class="button button--large"
-        :disabled="createLoading || formHasError()"
+        :disabled="createLoading || formHasError"
         :class="{ 'button--loading': createLoading }"
         @click="onSubmit"
       >
@@ -58,16 +60,28 @@ export default {
   },
   data() {
     return {
-      selectedDomainType: 'custom',
+      selectedDomain: { type: 'custom', domain: 'custom' },
       createLoading: false,
+      formHasError: false,
     }
   },
   computed: {
     domainTypes() {
-      return this.$registry.getAll('domain')
+      return Object.values(this.$registry.getAll('domain')) || []
+    },
+    selectedDomainType() {
+      return this.selectedDomain.type
     },
     currentDomainType() {
       return this.$registry.get('domain', this.selectedDomainType)
+    },
+    options() {
+      return this.domainTypes.map((domainType) => domainType.options).flat()
+    },
+  },
+  watch: {
+    selectedDomainType() {
+      this.$refs?.domainForm?.reset()
     },
   },
   methods: {
@@ -91,13 +105,6 @@ export default {
         this.handleAnyError(error)
       }
       this.createLoading = false
-    },
-    formHasError() {
-      if (this.$refs.domainForm) {
-        return this.$refs.domainForm.hasError()
-      } else {
-        return false
-      }
     },
     handleAnyError(error) {
       if (

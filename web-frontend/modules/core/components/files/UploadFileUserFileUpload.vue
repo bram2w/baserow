@@ -11,11 +11,7 @@
       <li v-for="file in files" :key="file.id" class="upload-files__item">
         <div class="upload-files__preview">
           <div class="upload-files__icon">
-            <i
-              v-if="!file.isImage"
-              class="fas"
-              :class="'fa-' + file.iconClass"
-            ></i>
+            <i v-if="!file.isImage" :class="file.iconClass"></i>
             <img v-if="file.isImage" :ref="'file-image-' + file.id" />
           </div>
         </div>
@@ -34,11 +30,11 @@
         <div class="upload-files__state">
           <i
             v-show="file.state === 'finished'"
-            class="upload-files__state-waiting fas fa-check"
+            class="upload-files__state-waiting iconoir-check"
           ></i>
           <i
             v-show="file.state === 'failed'"
-            class="upload-files__state-failed fas fa-times"
+            class="upload-files__state-failed iconoir-cancel"
           ></i>
           <div
             v-show="file.state === 'uploading'"
@@ -49,7 +45,7 @@
             class="upload-files__state-link"
             @click.stop.prevent="removeFile(file.id)"
           >
-            <i class="fas fa-trash"></i>
+            <i class="iconoir-bin"></i>
           </a>
         </div>
       </li>
@@ -72,7 +68,7 @@
 
 <script>
 import { uuid } from '@baserow/modules/core/utils/string'
-import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
+import { mimetype2icon } from '@baserow/modules/core/utils/fileTypeToIcon'
 import { generateThumbnail } from '@baserow/modules/core/utils/image'
 import UserFileService from '@baserow/modules/core/services/userFile'
 import UploadFileDropzone from '@baserow/modules/core/components/files/UploadFileDropzone'
@@ -146,7 +142,7 @@ export default {
           percentage: 0,
           error: null,
           state: 'waiting',
-          iconClass: mimetype2fa(file.type),
+          iconClass: mimetype2icon(file.type),
           isImage,
           file,
         }

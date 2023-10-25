@@ -238,6 +238,15 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent('row_history_updated', ({ store }, data) => {
+    const rowHistoryEntry = data.row_history_entry
+    store.dispatch('rowHistory/forceCreate', {
+      rowHistoryEntry,
+      rowId: data.row_id,
+      tableId: data.table_id,
+    })
+  })
+
   realtime.registerEvent('view_created', ({ store }, data) => {
     if (store.getters['table/getSelectedId'] === data.view.table_id) {
       store.dispatch('view/forceCreate', { data: data.view })
@@ -368,6 +377,70 @@ export const registerRealtimeEvents = (realtime) => {
     }
   })
 
+  realtime.registerEvent(
+    'view_filter_group_created',
+    ({ store, app }, data) => {
+      const view = store.getters['view/get'](data.view_filter_group.view)
+      if (view !== undefined) {
+        store.dispatch('view/forceCreateFilterGroup', {
+          view,
+          values: data.view_filter_group,
+        })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  )
+
+  realtime.registerEvent(
+    'view_filter_group_updated',
+    ({ store, app }, data) => {
+      const view = store.getters['view/get'](data.view_filter_group.view)
+      if (view !== undefined) {
+        const filterGroup = view.filter_groups.find(
+          (group) => group.id === data.view_filter_group.id
+        )
+        if (filterGroup !== undefined) {
+          store.dispatch('view/forceUpdateFilterGroup', {
+            filterGroup,
+            values: data.view_filter_group,
+          })
+          if (store.getters['view/getSelectedId'] === view.id) {
+            app.$bus.$emit('table-refresh', {
+              tableId: store.getters['table/getSelectedId'],
+            })
+          }
+        }
+      }
+    }
+  )
+
+  realtime.registerEvent(
+    'view_filter_group_deleted',
+    ({ store, app }, data) => {
+      const view = store.getters['view/get'](data.view_id)
+      if (view !== undefined) {
+        const filterGroup = view.filter_groups.find(
+          (group) => group.id === data.view_filter_group_id
+        )
+        if (filterGroup !== undefined) {
+          store.dispatch('view/forceDeleteFilterGroup', {
+            view,
+            filterGroup,
+          })
+          if (store.getters['view/getSelectedId'] === view.id) {
+            app.$bus.$emit('table-refresh', {
+              tableId: store.getters['table/getSelectedId'],
+            })
+          }
+        }
+      }
+    }
+  )
+
   realtime.registerEvent('view_sort_created', ({ store, app }, data) => {
     const view = store.getters['view/get'](data.view_sort.view)
     if (view !== undefined) {
@@ -407,6 +480,58 @@ export const registerRealtimeEvents = (realtime) => {
       const sort = view.sortings.find((sort) => sort.id === data.view_sort_id)
       if (sort !== undefined) {
         store.dispatch('view/forceDeleteSort', { view, sort })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  })
+
+  realtime.registerEvent('view_group_by_created', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_group_by.view)
+    if (view !== undefined) {
+      store.dispatch('view/forceCreateGroupBy', {
+        view,
+        values: data.view_group_by,
+      })
+      if (store.getters['view/getSelectedId'] === view.id) {
+        app.$bus.$emit('table-refresh', {
+          tableId: store.getters['table/getSelectedId'],
+        })
+      }
+    }
+  })
+
+  realtime.registerEvent('view_group_by_updated', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_group_by.view)
+    if (view !== undefined) {
+      const groupBy = view.group_bys.find(
+        (groupBy) => groupBy.id === data.view_group_by_id
+      )
+      if (groupBy !== undefined) {
+        store.dispatch('view/forceUpdateGroupBy', {
+          groupBy,
+          values: data.view_group_by,
+        })
+        if (store.getters['view/getSelectedId'] === view.id) {
+          app.$bus.$emit('table-refresh', {
+            tableId: store.getters['table/getSelectedId'],
+          })
+        }
+      }
+    }
+  })
+
+  realtime.registerEvent('view_group_by_deleted', ({ store, app }, data) => {
+    const view = store.getters['view/get'](data.view_id)
+    if (view !== undefined) {
+      const groupBy = view.group_bys.find(
+        (groupBy) => groupBy.id === data.view_group_by_id
+      )
+      if (groupBy !== undefined) {
+        store.dispatch('view/forceDeleteGroupBy', { view, groupBy })
         if (store.getters['view/getSelectedId'] === view.id) {
           app.$bus.$emit('table-refresh', {
             tableId: store.getters['table/getSelectedId'],

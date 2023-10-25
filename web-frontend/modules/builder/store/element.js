@@ -3,6 +3,17 @@ import PublicBuilderService from '@baserow/modules/builder/services/publishedBui
 import { calculateTempOrder } from '@baserow/modules/core/utils/order'
 import BigNumber from 'bignumber.js'
 
+const populateElement = (element) => {
+  element._ = {
+    contentLoading: false,
+    content: [],
+    hasNextPage: false,
+    reset: 0,
+  }
+
+  return element
+}
+
 const state = {
   // The currently selected element
   selected: null,
@@ -17,10 +28,10 @@ const updateContext = {
 const mutations = {
   SET_ITEMS(state, { page, elements }) {
     state.selected = null
-    page.elements = elements
+    page.elements = elements.map(populateElement)
   },
   ADD_ITEM(state, { page, element, beforeId = null }) {
-    page.elements.push(element)
+    page.elements.push(populateElement(element))
   },
   UPDATE_ITEM(state, { page, element: elementToUpdate, values }) {
     page.elements.forEach((element) => {
@@ -98,17 +109,18 @@ const actions = {
     { dispatch },
     {
       page,
-      elementType,
+      elementType: elementTypeName,
       beforeId = null,
       configuration = null,
       forceCreate = true,
     }
   ) {
+    const elementType = this.$registry.get('element', elementTypeName)
     const { data: element } = await ElementService(this.$client).create(
       page.id,
-      elementType,
+      elementTypeName,
       beforeId,
-      configuration
+      elementType.prepareValuesForRequest(configuration)
     )
 
     if (forceCreate) {
@@ -271,17 +283,32 @@ const actions = {
     }
   },
   async duplicate({ dispatch }, { page, elementId }) {
-    const { data: elementsCreated } = await ElementService(
-      this.$client
-    ).duplicate(elementId)
+    const {
+      data: { elements, workflow_actions: workflowActions },
+    } = await ElementService(this.$client).duplicate(elementId)
 
-    await Promise.all(
-      elementsCreated.map((element) =>
-        dispatch('forceCreate', { page, element })
+    const elementPromises = elements.map((element) =>
+      dispatch('forceCreate', { page, element })
+    )
+    const workflowActionPromises = workflowActions.map((workflowAction) =>
+      dispatch(
+        'workflowAction/forceCreate',
+        { page, workflowAction },
+        { root: true }
       )
     )
 
-    return elementsCreated
+    await Promise.all(elementPromises.concat(workflowActionPromises))
+
+    return elements
+  },
+  emitElementEvent({ getters }, { event, page, ...rest }) {
+    const elements = getters.getElements(page)
+
+    elements.forEach((element) => {
+      const elementType = this.$registry.get('element', element.type)
+      elementType.onElementEvent(event, { page, element, ...rest })
+    })
   },
 }
 

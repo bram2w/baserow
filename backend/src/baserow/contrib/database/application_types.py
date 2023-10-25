@@ -151,7 +151,9 @@ class DatabaseApplicationType(ApplicationType):
             "field_set",
             "view_set",
             "view_set__viewfilter_set",
+            "view_set__filter_groups",
             "view_set__viewsort_set",
+            "view_set__viewgroupby_set",
         )
 
         serialized_tables = self.export_tables_serialized(

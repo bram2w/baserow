@@ -1,5 +1,48 @@
 # Changelog
 
+## Released 1.21.0
+
+### New features
+* Add file field support to formula and lookup fields [#1012](https://gitlab.com/baserow/baserow/-/issues/1012)
+* Make it possible to edit values in the row edit modal of a relationship [#1117](https://gitlab.com/baserow/baserow/-/issues/1117)
+* Added condition groups for advanced row filtering using 'And' & 'Or' conjunctions. [#1271](https://gitlab.com/baserow/baserow/-/issues/1271)
+* Add a new view filter for selecting rows whose file columns have less files than a given number [#1771](https://gitlab.com/baserow/baserow/-/issues/1771)
+* Replace icons [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Restyle tabs component [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Add ability to subscribe to multiple pages via websockets [#2019](https://gitlab.com/baserow/baserow/-/issues/2019)
+* Add row edit history [#2030](https://gitlab.com/baserow/baserow/-/issues/2030)
+* Prevent CSV injection when exporting view to CSV format. [#2043](https://gitlab.com/baserow/baserow/-/issues/2043)
+* Invalidate authentication tokens on password change. [#2044](https://gitlab.com/baserow/baserow/-/issues/2044)
+* Expires the refresh token on log out. [#2045](https://gitlab.com/baserow/baserow/-/issues/2045)
+* Enable linking to multiple link to table entries in form view [#810](https://gitlab.com/baserow/baserow/-/issues/810)
+* Introduced endpoint to create a new user as admin.
+* Reduced the number of queries when listing rows in a table that has many single/multiple select fields.
+* Introduced space bar keyboard shortcut to open row edit modal in grid view. [#2030](https://gitlab.com/baserow/baserow/-/issues/2030)
+
+### Bug fixes
+* baserow round formula causing sql errors [#1595](https://gitlab.com/baserow/baserow/-/issues/1595)
+* date interval addtion bug [#1742](https://gitlab.com/baserow/baserow/-/issues/1742)
+* Prevent filters to be applied when the user open the row edit modal. [#1765](https://gitlab.com/baserow/baserow/-/issues/1765)
+* the second formula function applied on a date field fails hard [#1812](https://gitlab.com/baserow/baserow/-/issues/1812)
+* fix when_empty must be the same type error when working with url and email fields [#1880](https://gitlab.com/baserow/baserow/-/issues/1880)
+* Fix rounded corners in edit row modal [#1950](https://gitlab.com/baserow/baserow/-/issues/1950)
+* fix webhook url validation not being disabled when baserow_webhooks_allow_private_address true [#1959](https://gitlab.com/baserow/baserow/-/issues/1959)
+* Fix a not working ctrl/cmd+f keyboard shortcut on pages that don't have a search box. [#1968](https://gitlab.com/baserow/baserow/-/issues/1968)
+* Fix bug where the navigation history was wrong after last view. [#2006](https://gitlab.com/baserow/baserow/-/issues/2006)
+* Fix a bug not clearing the notification store when the user logs out. [#2016](https://gitlab.com/baserow/baserow/-/issues/2016)
+* Fix an issue with running Baserow in production mode [#2035](https://gitlab.com/baserow/baserow/-/issues/2035)
+* Remove duplicate field options and fix remaining race in update_field_options [#725](https://gitlab.com/baserow/baserow/-/issues/725)
+* Fix batch file request missing validation.
+* Fix performance bug when N number `empty_count` view aggregation were added.
+* Fix import serialized with missing select options error.
+* Fix bug in the gallery view which resulted in the row edit modal not always having an update to do row.
+* Reduced the number of `get_model` calls in the row endpoints.
+
+### Refactors
+* Replaced template icons with Iconoir.
+* Replaced the logo with the new one.
+
+
 ## Released 1.20.2
 
 ### Bug fixes
@@ -41,6 +84,7 @@
 * Introduce Workspace level audit log feature [#1901](https://gitlab.com/baserow/baserow/-/issues/1901)
 * Introduce new border radius design [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
 * Introduce new elevation design [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
+* Update typography rules [#1918](https://gitlab.com/baserow/baserow/-/issues/1918)
 * Added support for `user_field_names` in the list rows endpoint's filtering mechanism. [#510](https://gitlab.com/baserow/baserow/-/issues/510)
 * Add forumulas to encode complete and partial URIs. [#983](https://gitlab.com/baserow/baserow/-/issues/983)
 * Implemented optional Posthog product analytics.

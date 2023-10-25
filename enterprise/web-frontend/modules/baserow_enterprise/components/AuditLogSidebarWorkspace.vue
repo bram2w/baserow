@@ -19,8 +19,10 @@
           params: { workspaceId: workspace.id },
         }"
       >
-        <i class="tree__icon tree__icon--type fas fa-history"></i>
-        {{ $t('auditLogSidebarWorkspace.title') }}
+        <i class="tree__icon tree__icon--type baserow-icon-history"></i>
+        <span class="tree__link-text">{{
+          $t('auditLogSidebarWorkspace.title')
+        }}</span>
       </nuxt-link>
     </div>
   </li>

@@ -1,12 +1,42 @@
 <template>
-  <div>Event panel</div>
+  <div>
+    <Event
+      v-for="event in elementType.getEvents()"
+      :key="event.getType()"
+      :element="element"
+      :event="event"
+      :available-workflow-action-types="availableWorkflowActionTypes"
+      :workflow-actions="getWorkflowActionsForEvent(event)"
+      class="margin-bottom-2"
+    ></Event>
+  </div>
 </template>
 
 <script>
+import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
+import Event from '@baserow/modules/builder/components/event/Event.vue'
+
 export default {
   name: 'EventSidePanel',
-  data() {
-    return {}
+  components: { Event },
+  mixins: [elementSidePanel],
+  computed: {
+    availableWorkflowActionTypes() {
+      return Object.values(this.$registry.getAll('workflowAction'))
+    },
+    workflowActions() {
+      return this.$store.getters['workflowAction/getElementWorkflowActions'](
+        this.page,
+        this.element.id
+      )
+    },
+  },
+  methods: {
+    getWorkflowActionsForEvent(event) {
+      return this.workflowActions.filter(
+        (workflowAction) => workflowAction.event === event.getType()
+      )
+    },
   },
 }
 </script>

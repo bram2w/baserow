@@ -5,13 +5,10 @@
     class="select__footer-create-link"
     @click="select"
   >
-    <i
-      class="select__footer-create-icon fas"
-      :class="'fa-' + viewType.iconClass"
-    ></i>
+    <i class="select__footer-create-icon" :class="viewType.iconClass"></i>
     {{ viewType.getName() }}
     <div v-if="deactivated" class="deactivated-label">
-      <i class="fas fa-lock"></i>
+      <i class="iconoir-lock"></i>
     </div>
     <CreateViewModal
       ref="createModal"
@@ -27,6 +24,7 @@
       :workspace="database.workspace"
       :name="viewType.getName()"
     ></component>
+    <i class="select__footer-create-link-icon iconoir-plus"></i>
   </a>
 </template>
 

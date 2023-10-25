@@ -251,11 +251,12 @@ def test_get_view(api_client, data_fixture):
     assert not response_json["filters_disabled"]
     assert "filters" not in response_json
     assert "sortings" not in response_json
+    assert "group_bys" not in response_json
     assert "decorations" not in response_json
 
     url = reverse("api:database:views:item", kwargs={"view_id": view.id})
     response = api_client.get(
-        "{}?include=filters,sortings,decorations".format(url),
+        "{}?include=filters,sortings,group_bys,decorations".format(url),
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -270,6 +271,7 @@ def test_get_view(api_client, data_fixture):
     assert response_json["filters"][0]["value"] == view_filter.value
     assert response_json["sortings"] == []
     assert response_json["decorations"] == []
+    assert response_json["group_bys"] == []
 
     response = api_client.delete(
         reverse(
@@ -334,10 +336,18 @@ def test_duplicate_views(api_client, data_fixture):
         aggregation_type="whatever",
         aggregation_raw_type="empty",
     )
+    view_filter_group = data_fixture.create_view_filter_group(view=view_1)
     view_filter = data_fixture.create_view_filter(
-        view=view_1, field=field, value="test", type="equal"
+        view=view_1,
+        field=field,
+        value="test",
+        type="equal",
+        group=view_filter_group,
     )
     view_sort = data_fixture.create_view_sort(view=view_1, field=field, order="ASC")
+    view_group_by = data_fixture.create_view_group_by(
+        view=view_1, field=field, order="ASC"
+    )
 
     view_decoration = data_fixture.create_view_decoration(
         view=view_1,
@@ -375,9 +385,11 @@ def test_duplicate_views(api_client, data_fixture):
 
     assert response_json["id"] != view_1.id
     assert response_json["order"] == view_1.order + 1
-    assert "sortings" in response_json
-    assert "filters" in response_json
-    assert "decorations" in response_json
+    assert len(response_json["sortings"]) == 1
+    assert len(response_json["filters"]) == 1
+    assert len(response_json["filter_groups"]) == 1
+    assert len(response_json["decorations"]) == 1
+    assert len(response_json["group_bys"]) == 1
 
 
 @pytest.mark.django_db
@@ -914,6 +926,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             "public": True,
             "slug": grid_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,
@@ -941,6 +954,7 @@ def test_user_with_password_can_get_info_about_a_public_password_protected_view(
             "public": True,
             "slug": grid_view.slug,
             "sortings": [],
+            "group_bys": [],
             "table": {
                 "database_id": PUBLIC_PLACEHOLDER_ENTITY_ID,
                 "id": PUBLIC_PLACEHOLDER_ENTITY_ID,

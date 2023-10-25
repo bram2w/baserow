@@ -5,9 +5,13 @@ from zipfile import ZIP_DEFLATED, ZipFile
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.files.storage import FileSystemStorage
+from django.urls import reverse
 
 import pytest
+from freezegun import freeze_time
+from rest_framework.status import HTTP_200_OK
 
+from baserow.contrib.database.fields.field_types import FileFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FileField
 from baserow.contrib.database.rows.handler import RowHandler
@@ -19,9 +23,11 @@ from baserow.core.user_files.exceptions import (
 )
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.user_files.models import UserFile
+from baserow.test_utils.helpers import AnyStr
 
 
 @pytest.mark.django_db
+@pytest.mark.field_file
 def test_file_field_type(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
@@ -187,6 +193,7 @@ def test_file_field_type(data_fixture):
 
 
 @pytest.mark.django_db(transaction=True)
+@pytest.mark.field_file
 def test_import_export_file_field(data_fixture, tmpdir):
     user = data_fixture.create_user()
     imported_workspace = data_fixture.create_workspace(user=user)
@@ -302,3 +309,288 @@ def test_import_export_file_field(data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", imported_user_file.name)
     assert file_path.isfile()
     assert file_path.open().read() == "Hello World"
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+@pytest.mark.row_history
+def test_file_field_are_row_values_equal(
+    data_fixture, tmpdir, django_assert_num_queries
+):
+    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user(workspace=workspace)
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    file1 = handler.upload_user_file(
+        user, "test.txt", ContentFile(b"Hello World"), storage=storage
+    )
+    file2 = handler.upload_user_file(
+        user, "test2.txt", ContentFile(b"Hello World 2"), storage=storage
+    )
+
+    with django_assert_num_queries(0):
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}], [{"name": file1.name}]
+            )
+            is True
+        )
+
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}, {"name": file2.name}],
+                [{"name": file2.name}, {"name": file1.name}],
+            )
+            is True
+        )
+
+        assert FileFieldType().are_row_values_equal([], []) is True
+
+        assert FileFieldType().are_row_values_equal([], [{"name": file1.name}]) is False
+
+        assert (
+            FileFieldType().are_row_values_equal(
+                [{"name": file1.name}, {"name": file2.name}], [{"name": file1.name}]
+            )
+            is False
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+def test_file_field_type_in_formulas(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    with freeze_time("2023-01-01 12:00:00"):
+        user_file_1 = data_fixture.create_user_file(
+            mime_type="text/plain", size=100, original_name="a.txt"
+        )
+        user_file_2 = data_fixture.create_user_file(
+            is_image=True, image_width=200, image_height=300, original_name="b.gif"
+        )
+        user_file_3 = data_fixture.create_user_file()
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+
+    row_handler = RowHandler()
+
+    file_field = FieldHandler().create_field(
+        user, table, "file", name="file", primary=True
+    )
+
+    assert FileField.objects.all().count() == 1
+    model = table.get_model()
+
+    row = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            file_field.db_column: [
+                {"name": user_file_1.name},
+                {"name": user_file_2.name},
+            ]
+        },
+        model=model,
+    )
+    formula_field = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="file_formula",
+        formula=f"field('{file_field.name}')",
+    )
+    row.refresh_from_db()
+    file_values = getattr(row, file_field.db_column)
+    expected_first_file_contents = {
+        "image_height": None,
+        "image_width": None,
+        "is_image": False,
+        "mime_type": "text/plain",
+        "name": AnyStr(),
+        "size": 100,
+        "uploaded_at": "2023-01-01T12:00:00+00:00",
+        "visible_name": "a.txt",
+    }
+    assert file_values[0] == expected_first_file_contents
+    assert file_values[1] == {
+        "image_height": 300,
+        "image_width": 200,
+        "is_image": True,
+        "mime_type": "image/gif",
+        "name": AnyStr(),
+        "size": 100,
+        "uploaded_at": "2023-01-01T12:00:00+00:00",
+        "visible_name": "b.gif",
+    }
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert (
+        response_json["results"][0][formula_field.db_column][0]["visible_name"]
+        == user_file_1.original_name
+    )
+
+    expected_first_file_serialized_contents = {
+        "image_height": None,
+        "image_width": None,
+        "is_image": False,
+        "mime_type": "text/plain",
+        "name": AnyStr(),
+        "size": 100,
+        "thumbnails": None,
+        "uploaded_at": "2023-01-01T12:00:00+00:00",
+        "url": AnyStr(),
+        "visible_name": "a.txt",
+    }
+
+    formula_to_expected = [
+        (
+            f"index(field('{file_field.name}'), 0)",
+            expected_first_file_serialized_contents,
+        ),
+        (
+            f"get_file_visible_name(index(field('{file_field.name}'), 0))",
+            user_file_1.original_name,
+        ),
+        (f"is_image(index(field('{file_field.name}'), 0))", False),
+        (f"get_image_height(index(field('{file_field.name}'), 0))", None),
+        (f"get_image_width(index(field('{file_field.name}'), 0))", None),
+        (f"get_file_size(index(field('{file_field.name}'), 0))", "100"),
+        (f"get_file_mime_type(index(field('{file_field.name}'), 0))", "text/plain"),
+        (f"is_image(index(field('{file_field.name}'), 1))", True),
+        (f"get_image_height(index(field('{file_field.name}'), 1))", "300"),
+        (f"get_image_width(index(field('{file_field.name}'), 1))", "200"),
+    ]
+
+    for formula, expected in formula_to_expected:
+        formula_field = FieldHandler().update_field(
+            user,
+            formula_field,
+            formula=formula,
+        )
+        url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+        response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK, response_json
+        assert (
+            response_json["results"][0][formula_field.db_column] == expected
+        ), f"Failed for {formula} but was " + str(response_json["results"][0])
+
+    formula_field3 = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="file_formula3",
+        formula=f"get_file_count(field('{file_field.name}'))",
+    )
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert response_json["results"][0][formula_field3.db_column] == "2"
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+def test_file_field_type_in_double_formula(data_fixture, api_client):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    user_file_1 = data_fixture.create_user_file(
+        mime_type="text/plain", size=100, original_name="a.txt"
+    )
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+
+    row_handler = RowHandler()
+
+    file_field = FieldHandler().create_field(
+        user, table, "file", name="file", primary=True
+    )
+
+    row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            file_field.db_column: [
+                {"name": user_file_1.name},
+            ]
+        },
+    )
+    formula_field_1 = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="file_formula",
+        formula=f"field('{file_field.name}')",
+    )
+    formula_field_2 = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="file_formula_2",
+        formula=f"field('{formula_field_1.name}')",
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    result = response_json["results"][0]
+
+    assert (
+        result[f"field_{formula_field_1.id}"] == result[f"field_{formula_field_2.id}"]
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_file
+def test_filtering_file_field_type(data_fixture, api_client, django_assert_num_queries):
+    user, token = data_fixture.create_user_and_token()
+    table = data_fixture.create_database_table(user=user)
+    with freeze_time("2023-01-01 12:00:00"):
+        user_file_1 = data_fixture.create_user_file(mime_type="text/plain", size=100)
+        user_file_2 = data_fixture.create_user_file(
+            is_image=True, image_width=200, image_height=300
+        )
+        user_file_3 = data_fixture.create_user_file()
+    grid_view = data_fixture.create_grid_view(user=user, table=table)
+
+    row_handler = RowHandler()
+
+    file = FieldHandler().create_field(user, table, "file", name="file", primary=True)
+
+    assert FileField.objects.all().count() == 1
+    model = table.get_model(attribute_names=True)
+
+    row = row_handler.create_row(
+        user=user,
+        table=table,
+        values={"file": [{"name": user_file_1.name}, {"name": user_file_2.name}]},
+        model=model,
+    )
+    assert row.file[0]["visible_name"] == user_file_1.original_name
+    del row.file[0]["visible_name"]
+    assert row.file[0] == user_file_1.serialize()
+
+    formula_field = FieldHandler().create_field(
+        user,
+        table,
+        "formula",
+        name="file_formula",
+        formula=f"field('{file.name}')",
+    )
+
+    data_fixture.create_view_filter(
+        user,
+        view=grid_view,
+        field=formula_field,
+        type="has_file_type",
+        value="image",
+    )
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid_view.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK, response_json
+    assert (
+        response_json["results"][0][formula_field.db_column][0]["visible_name"]
+        == user_file_1.original_name
+    )

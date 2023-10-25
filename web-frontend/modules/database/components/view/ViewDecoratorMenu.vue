@@ -14,7 +14,7 @@
       :class="{ 'active--primary': decoratorCount > 0 }"
       @click="$refs.context.toggle($refs.contextLink, 'bottom', 'left', 4)"
     >
-      <i class="header__filter-icon fas fa-palette"></i>
+      <i class="header__filter-icon iconoir-palette"></i>
       <span class="header__filter-name">
         {{
           $tc('viewDecorator.decorator', decoratorCount, {

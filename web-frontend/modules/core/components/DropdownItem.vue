@@ -1,6 +1,6 @@
 <template>
   <li
-    class="select__item"
+    class="select__item select__item--no-options"
     :class="{
       hidden: !isVisible(query),
       active: isActive(value),
@@ -18,8 +18,8 @@
           <i
             v-if="icon"
             v-tooltip="iconTooltip"
-            class="select__item-icon fas fa-fw"
-            :class="'fa-' + icon"
+            class="select__item-icon"
+            :class="icon"
           />
           <img v-if="image" class="select__item-image" :src="image" />
           <span class="select__item-name-text" :title="name">{{ name }}</span>
@@ -29,6 +29,7 @@
         {{ description }}
       </div>
     </a>
+    <i class="select__item-active-icon iconoir-check-circle"></i>
   </li>
 </template>
 

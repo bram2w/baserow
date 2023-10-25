@@ -1,6 +1,6 @@
 <template functional>
   <div class="card-boolean">
-    <i v-if="!!props.value" class="fas fa-check"></i>
+    <i v-if="!!props.value" class="iconoir-check"></i>
   </div>
 </template>
 

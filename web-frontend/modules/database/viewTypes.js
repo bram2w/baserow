@@ -13,10 +13,10 @@ export const maxPossibleOrderValue = 32767
 
 export class ViewType extends Registerable {
   /**
-   * The font awesome 5 icon name that is used as convenience for the user to
+   * The icon class name that is used as convenience for the user to
    * recognize certain view types. If you for example want the database
    * icon, you must return 'database' here. This will result in the classname
-   * 'fas fa-database'.
+   * 'iconoir-database'.
    */
   getIconClass() {
     return null
@@ -53,6 +53,14 @@ export class ViewType extends Registerable {
   }
 
   /**
+   * Indicates whether it is possible to group the rows. If true the group by context
+   * menu is added to the header.
+   */
+  canGroupBy() {
+    return false
+  }
+
+  /**
    * Indicates whether it is possible to share this view via an url publically.
    */
   canShare() {
@@ -66,6 +74,7 @@ export class ViewType extends Registerable {
     this.colorClass = this.getColorClass()
     this.canFilter = this.canFilter()
     this.canSort = this.canSort()
+    this.canGroupBy = this.canGroupBy()
     this.canShare = this.canShare()
 
     if (this.type === null) {
@@ -271,6 +280,7 @@ export class ViewType extends Registerable {
       canFilter: this.canFilter,
       canSort: this.canSort,
       canShare: this.canShare,
+      canGroupBy: this.canGroupBy,
     }
   }
 
@@ -323,7 +333,11 @@ export class GridViewType extends ViewType {
   }
 
   getIconClass() {
-    return 'bars'
+    return 'iconoir-menu'
+  }
+
+  canGroupBy() {
+    return true
   }
 
   getName() {
@@ -714,7 +728,7 @@ export class GalleryViewType extends BaseBufferedRowView {
   }
 
   getIconClass() {
-    return 'th-large'
+    return 'baserow-icon-gallery'
   }
 
   getColorClass() {
@@ -805,7 +819,7 @@ export class FormViewType extends ViewType {
   }
 
   getIconClass() {
-    return 'edit'
+    return 'baserow-icon-form'
   }
 
   getColorClass() {

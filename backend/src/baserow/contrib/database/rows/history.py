@@ -3,15 +3,19 @@ from typing import Any, Dict, List, NamedTuple, NewType, Optional
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractBaseUser
+from django.db.models import QuerySet
 from django.dispatch import receiver
 
 from opentelemetry import trace
 
+from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.actions import UpdateRowsActionType
+from baserow.contrib.database.rows.models import RowHistory
+from baserow.contrib.database.rows.registries import change_row_history_registry
+from baserow.contrib.database.rows.signals import rows_history_updated
 from baserow.core.action.signals import ActionCommandType, action_done
+from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import baserow_trace
-
-from .actions import UpdateRowsActionType
-from .models import RowHistory
 
 tracer = trace.get_tracer(__name__)
 
@@ -61,25 +65,28 @@ class RowHistoryHandler:
         )
 
     @classmethod
-    def _extract_fields_diff(
-        cls, before_values: Dict[str, Any], after_values: Dict[str, Any]
+    def _extract_row_diff(
+        cls,
+        before_values: Dict[str, Any],
+        after_values: Dict[str, Any],
+        fields_metadata,
     ) -> Optional[RowChangeDiff]:
         """
         Extracts the fields that have changed between the before and after values of a
         row. Returns None if no fields have changed.
         """
 
-        # TODO: fixme using some field_type compare method. This is already
-        # broken for m2m fields where a list can contain the same values in a
-        # different order, resulting in a false positive.
-
-        def are_equal(before_value, after_value):
-            return before_value == after_value
+        def are_equal(field_identifier, before_value, after_value) -> bool:
+            field_type = fields_metadata[field_identifier]["type"]
+            field_type = field_type_registry.get(field_type)
+            return field_type.are_row_values_equal(before_value, after_value)
 
         changed_fields = {
             k
             for k, v in after_values.items()
-            if k in before_values and not are_equal(v, before_values[k])
+            if k != "id"
+            and k in before_values
+            and not are_equal(k, v, before_values[k])
         }
         if not changed_fields:
             return None
@@ -123,10 +130,10 @@ class RowHistoryHandler:
         row_history_entries = []
         for i, after in enumerate(after_values):
             before = before_values[i]
-            fields_metadata = params.updated_rows_fields_metadata_by_id[after["id"]]
+            fields_metadata = params.updated_fields_metadata_by_row_id[after["id"]]
             cls._raise_if_ids_mismatch(before, after, fields_metadata)
 
-            diff = cls._extract_fields_diff(before, after)
+            diff = cls._extract_row_diff(before, after, fields_metadata)
             if diff is None:
                 continue
 
@@ -151,14 +158,44 @@ class RowHistoryHandler:
             row_history_entries.append(entry)
 
         if row_history_entries:
-            RowHistory.objects.bulk_create(row_history_entries)
+            row_history_entries = RowHistory.objects.bulk_create(row_history_entries)
+            rows_history_updated.send(
+                RowHistoryHandler,
+                table_id=params.table_id,
+                row_history_entries=row_history_entries,
+            )
 
     @classmethod
     @baserow_trace(tracer)
-    def list_row_history(cls, table_id, row_id):
-        return RowHistory.objects.filter(table_id=table_id, row_id=row_id).order_by(
+    def list_row_history(
+        cls, workspace: Workspace, table_id: int, row_id: int
+    ) -> QuerySet[RowHistory]:
+        """
+        Returns queryset of row history entries for the provided
+        workspace, table_id and row_id.
+        """
+
+        queryset = RowHistory.objects.filter(table_id=table_id, row_id=row_id).order_by(
             "-action_timestamp", "-id"
         )
+
+        for op_type in change_row_history_registry.get_all():
+            queryset = op_type.apply_to_list_queryset(
+                queryset, workspace, table_id, row_id
+            )
+
+        return queryset
+
+    @classmethod
+    def delete_entries_older_than(cls, cutoff: datetime):
+        """
+        Deletes all row history entries that are older than the given cutoff date.
+
+        :param cutoff: The date and time before which all entries will be deleted.
+        """
+
+        delete_qs = RowHistory.objects.filter(action_timestamp__lt=cutoff)
+        delete_qs._raw_delete(delete_qs.db)
 
 
 ROW_HISTORY_ACTIONS = {
@@ -178,7 +215,7 @@ def on_action_done_update_row_history(
     action_uuid,
     **kwargs,
 ):
-    if "row_history" not in settings.FEATURE_FLAGS:
+    if settings.BASEROW_ROW_HISTORY_RETENTION_DAYS == 0:
         return
 
     if action_type and action_type.type in ROW_HISTORY_ACTIONS:

@@ -1,18 +1,28 @@
+import json
+from typing import Any, Dict, Optional, Type
+
 from django.utils.functional import lazy
 
 from drf_spectacular.openapi import OpenApiTypes
 from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
+from baserow.api.utils import serialize_validation_errors_recursive
 from baserow.contrib.database.api.constants import PUBLIC_PLACEHOLDER_ENTITY_ID
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.serializers import TableSerializer
+from baserow.contrib.database.fields.field_filters import (
+    FILTER_TYPE_AND,
+    FILTER_TYPE_OR,
+)
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
     View,
     ViewDecoration,
     ViewFilter,
+    ViewFilterGroup,
+    ViewGroupBy,
     ViewSort,
 )
 from baserow.contrib.database.views.registries import (
@@ -22,6 +32,8 @@ from baserow.contrib.database.views.registries import (
     view_ownership_type_registry,
     view_type_registry,
 )
+
+from .exceptions import FiltersParamValidationException
 
 
 class ListQueryParamatersSerializer(serializers.Serializer):
@@ -121,10 +133,27 @@ class ViewFilterSerializer(serializers.ModelSerializer):
         "a value is provided.",
         read_only=True,
     )
+    group = serializers.IntegerField(
+        source="group_id",
+        allow_null=True,
+        required=False,
+        help_text=(
+            "The id of the filter group this filter belongs to. "
+            "If this is null, the filter is not part of a filter group."
+        ),
+    )
 
     class Meta:
         model = ViewFilter
-        fields = ("id", "view", "field", "type", "value", "preload_values")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "type",
+            "value",
+            "preload_values",
+            "group",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 
@@ -133,10 +162,19 @@ class CreateViewFilterSerializer(serializers.ModelSerializer):
         choices=lazy(view_filter_type_registry.get_types, list)(),
         help_text=ViewFilter._meta.get_field("type").help_text,
     )
+    group = serializers.IntegerField(
+        allow_null=True,
+        required=False,
+        help_text=(
+            "The id of the filter group the new filter will belong to. "
+            "If this is null, the filter will not be part of a filter group, "
+            "but directly part of the view."
+        ),
+    )
 
     class Meta:
         model = ViewFilter
-        fields = ("field", "type", "value")
+        fields = ("field", "type", "value", "group")
         extra_kwargs = {"value": {"default": ""}}
 
 
@@ -151,6 +189,28 @@ class UpdateViewFilterSerializer(serializers.ModelSerializer):
         model = ViewFilter
         fields = ("field", "type", "value")
         extra_kwargs = {"field": {"required": False}, "value": {"required": False}}
+
+
+class ViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("id", "filter_type", "view")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
+class CreateViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("filter_type",)
+        extra_kwargs = {
+            "filter_type": {"required": False},
+        }
+
+
+class UpdateViewFilterGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewFilterGroup
+        fields = ("filter_type",)
 
 
 class ViewSortSerializer(serializers.ModelSerializer):
@@ -172,6 +232,29 @@ class CreateViewSortSerializer(serializers.ModelSerializer):
 class UpdateViewSortSerializer(serializers.ModelSerializer):
     class Meta(CreateViewFilterSerializer.Meta):
         model = ViewSort
+        fields = ("field", "order")
+        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+
+
+class ViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewGroupBy
+        fields = ("id", "view", "field", "order")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
+class CreateViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ViewGroupBy
+        fields = ("field", "order")
+        extra_kwargs = {
+            "order": {"default": ViewGroupBy._meta.get_field("order").default},
+        }
+
+
+class UpdateViewGroupBySerializer(serializers.ModelSerializer):
+    class Meta(CreateViewFilterSerializer.Meta):
+        model = ViewGroupBy
         fields = ("field", "order")
         extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
 
@@ -262,7 +345,11 @@ class ViewSerializer(serializers.ModelSerializer):
     type = serializers.SerializerMethodField()
     table = TableSerializer()
     filters = ViewFilterSerializer(many=True, source="viewfilter_set", required=False)
+    filter_groups = ViewFilterGroupSerializer(many=True, required=False)
     sortings = ViewSortSerializer(many=True, source="viewsort_set", required=False)
+    group_bys = ViewGroupBySerializer(
+        many=True, source="viewgroupby_set", required=False
+    )
     decorations = ViewDecorationSerializer(
         many=True, source="viewdecoration_set", required=False
     )
@@ -281,7 +368,9 @@ class ViewSerializer(serializers.ModelSerializer):
             "table",
             "filter_type",
             "filters",
+            "filter_groups",
             "sortings",
+            "group_bys",
             "decorations",
             "filters_disabled",
             "public_view_has_password",
@@ -302,6 +391,7 @@ class ViewSerializer(serializers.ModelSerializer):
         context["include_filters"] = kwargs.pop("filters", False)
         context["include_sortings"] = kwargs.pop("sortings", False)
         context["include_decorations"] = kwargs.pop("decorations", False)
+        context["include_group_bys"] = kwargs.pop("group_bys", False)
         super().__init__(*args, **kwargs)
 
     def to_representation(self, instance):
@@ -312,12 +402,16 @@ class ViewSerializer(serializers.ModelSerializer):
         # specification.
         if not self.context["include_filters"]:
             self.fields.pop("filters", None)
+            self.fields.pop("filter_groups", None)
 
         if not self.context["include_sortings"]:
             self.fields.pop("sortings", None)
 
         if not self.context["include_decorations"]:
             self.fields.pop("decorations", None)
+
+        if not self.context["include_group_bys"]:
+            self.fields.pop("group_bys", None)
 
         return super().to_representation(instance)
 
@@ -399,6 +493,15 @@ class PublicViewSortSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"read_only": True}}
 
 
+class PublicViewGroupBySerializer(serializers.ModelSerializer):
+    view = serializers.SlugField(source="view.slug")
+
+    class Meta:
+        model = ViewGroupBy
+        fields = ("id", "view", "field", "order")
+        extra_kwargs = {"id": {"read_only": True}}
+
+
 class PublicViewTableSerializer(serializers.Serializer):
     id = serializers.SerializerMethodField()
     database_id = serializers.SerializerMethodField()
@@ -417,6 +520,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
     table = PublicViewTableSerializer()
     type = serializers.SerializerMethodField()
     sortings = serializers.SerializerMethodField()
+    group_bys = serializers.SerializerMethodField()
     show_logo = serializers.BooleanField(required=False)
 
     @extend_schema_field(PublicViewSortSerializer(many=True))
@@ -426,6 +530,20 @@ class PublicViewSerializer(serializers.ModelSerializer):
             many=True,
         )
         return sortings.data
+
+    @extend_schema_field(PublicViewGroupBySerializer(many=True))
+    def get_group_bys(self, instance):
+        view_type = view_type_registry.get_by_model(instance.specific_class)
+        if view_type.can_group_by:
+            group_bys = PublicViewGroupBySerializer(
+                instance=instance.viewgroupby_set.filter(
+                    field__in=self.context["fields"]
+                ),
+                many=True,
+            )
+            return group_bys.data
+        else:
+            return []
 
     @extend_schema_field(OpenApiTypes.STR)
     def get_type(self, instance):
@@ -440,6 +558,7 @@ class PublicViewSerializer(serializers.ModelSerializer):
             "order",
             "type",
             "sortings",
+            "group_bys",
             "public",
             "slug",
             "show_logo",
@@ -486,10 +605,88 @@ class PublicViewInfoSerializer(serializers.Serializer):
 
 class FieldWithFiltersAndSortsSerializer(FieldSerializer):
     filters = ViewFilterSerializer(many=True, source="viewfilter_set")
+    groups = ViewFilterGroupSerializer(many=True, source="filter_groups")
     sortings = ViewSortSerializer(many=True, source="viewsort_set")
+    group_bys = ViewGroupBySerializer(many=True, source="viewgroupby_set")
 
     class Meta(FieldSerializer.Meta):
-        fields = FieldSerializer.Meta.fields + (
-            "filters",
-            "sortings",
+        fields = FieldSerializer.Meta.fields + ("filters", "sortings", "group_bys")
+
+
+class PublicViewFilterSerializer(serializers.Serializer):
+    field = serializers.IntegerField(help_text="The id of the field to filter on.")
+    type = serializers.CharField(help_text="The filter type.")
+    value = serializers.CharField(allow_blank=True, help_text="The filter value.")
+
+
+class PublicViewFilterUserFieldNamesSerializer(PublicViewFilterSerializer):
+    field = serializers.CharField(help_text="The name of the field to filter on.")
+
+
+class RecursiveField(serializers.Serializer):
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
+    def to_internal_value(self, data):
+        serializer = self.parent.parent.__class__(data=data, context=self.context)
+        serializer.is_valid(raise_exception=True)
+        return serializer.validated_data
+
+
+class PublicViewFiltersSerializer(serializers.Serializer):
+    filter_type = serializers.ChoiceField(choices=[FILTER_TYPE_AND, FILTER_TYPE_OR])
+    filters = serializers.ListField(
+        child=PublicViewFilterSerializer(),
+        required=False,
+        allow_empty=True,
+        help_text="The list of filters that should be applied in this group/public "
+        "view.",
+    )
+    groups = RecursiveField(many=True, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.context.get("user_field_names", False):
+            self.fields["filters"].child = PublicViewFilterUserFieldNamesSerializer()
+
+
+def validate_api_grouped_filters(
+    serialized_api_filters: str,
+    exception_to_raise: Type[Exception] = FiltersParamValidationException,
+    user_field_names: Optional[bool] = False,
+) -> Dict[str, Any]:
+    """
+    Validates the provided serialized view filters and returns the validated
+    data. The serialized view filters should be a JSON string that can be
+    deserialized into a list of filters and/or group of filters. Group of
+    filters can nest other groups of filters. Look at
+    `PublicViewFiltersSerializer` for more info about the structure.
+
+    :param serialized_api_filters: The serialized view filters that need to be
+        validated.
+    :param exception_to_raise: The exception that should be raised if the
+        provided filters are not valid.
+    :param user_field_names: Use field names instead of field ids in the
+        serialized filters.
+    :return: The validated dict containing the filters and the filter groups.
+    """
+
+    try:
+        advanced_filters = json.loads(serialized_api_filters)
+    except json.JSONDecodeError:
+        raise exception_to_raise(
+            {
+                "error": "The provided filters are not valid JSON.",
+                "code": "invalid_json",
+            }
         )
+
+    serializer = PublicViewFiltersSerializer(
+        data=advanced_filters, context={"user_field_names": user_field_names}
+    )
+    if not serializer.is_valid():
+        detail = serialize_validation_errors_recursive(serializer.errors)
+        raise exception_to_raise(detail)
+
+    return serializer.validated_data

@@ -3,6 +3,7 @@ import _ from 'lodash'
 
 import { clone } from '@baserow/modules/core/utils/object'
 import { notifyIf } from '@baserow/modules/core/utils/error'
+import BigNumber from 'bignumber.js'
 
 export default {
   inject: ['builder', 'page'],
@@ -34,19 +35,27 @@ export default {
       actionDebouncedUpdateSelectedElement: 'element/debouncedUpdateSelected',
     }),
     async onChange(newValues) {
-      const oldValues = this.element
-
       if (!this.$refs.panelForm.isFormValid()) {
         return
       }
 
-      if (!_.isEqual(newValues, oldValues)) {
+      const differences = Object.fromEntries(
+        Object.entries(newValues).filter(
+          ([key, value]) => !_.isEqual(value, this.element[key])
+        )
+      )
+
+      if (newValues.order) {
+        newValues.order = new BigNumber(newValues.order)
+      }
+
+      if (Object.keys(differences).length > 0) {
         try {
           await this.actionDebouncedUpdateSelectedElement({
             page: this.page,
             // Here we clone the values to prevent
             // "modification outside of the store" error
-            values: clone(newValues),
+            values: clone(differences),
           })
         } catch (error) {
           // Restore the previous saved values from the store

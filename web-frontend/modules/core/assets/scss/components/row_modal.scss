@@ -11,7 +11,7 @@
 
 .row-modal__field-item-handle {
   width: 12px;
-  height: 14px;
+  height: 16px;
   position: relative;
   top: 1px;
   display: inline-block;
@@ -19,6 +19,7 @@
   background-image: radial-gradient($color-neutral-200 40%, transparent 40%);
   background-size: 4px 4px;
   background-repeat: repeat;
+  cursor: grab;
 
   &:hover {
     background-image: radial-gradient($color-neutral-500 40%, transparent 40%);
@@ -58,4 +59,20 @@
   & i {
     margin-left: 10px;
   }
+}
+
+.row-modal__add-field {
+  display: inline-block;
+  margin: 12px 0 6px 4px;
+
+  @include flex-align-items(4px);
+
+  &:hover {
+    text-decoration: none;
+    color: $color-neutral-900;
+  }
+}
+
+.row-modal__add-field-icon {
+  font-size: 20px;
 }

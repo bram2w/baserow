@@ -137,10 +137,14 @@ class DatabaseConfig(AppConfig):
             CreateDecorationActionType,
             CreateViewActionType,
             CreateViewFilterActionType,
+            CreateViewFilterGroupActionType,
+            CreateViewGroupByActionType,
             CreateViewSortActionType,
             DeleteDecorationActionType,
             DeleteViewActionType,
             DeleteViewFilterActionType,
+            DeleteViewFilterGroupActionType,
+            DeleteViewGroupByActionType,
             DeleteViewSortActionType,
             DuplicateViewActionType,
             OrderViewsActionType,
@@ -149,6 +153,8 @@ class DatabaseConfig(AppConfig):
             UpdateViewActionType,
             UpdateViewFieldOptionsActionType,
             UpdateViewFilterActionType,
+            UpdateViewFilterGroupActionType,
+            UpdateViewGroupByActionType,
             UpdateViewSortActionType,
         )
 
@@ -163,11 +169,17 @@ class DatabaseConfig(AppConfig):
         action_type_registry.register(CreateViewSortActionType())
         action_type_registry.register(UpdateViewSortActionType())
         action_type_registry.register(DeleteViewSortActionType())
+        action_type_registry.register(CreateViewGroupByActionType())
+        action_type_registry.register(UpdateViewGroupByActionType())
+        action_type_registry.register(DeleteViewGroupByActionType())
         action_type_registry.register(RotateViewSlugActionType())
         action_type_registry.register(UpdateViewFieldOptionsActionType())
         action_type_registry.register(CreateDecorationActionType())
         action_type_registry.register(UpdateDecorationActionType())
         action_type_registry.register(DeleteDecorationActionType())
+        action_type_registry.register(CreateViewFilterGroupActionType())
+        action_type_registry.register(UpdateViewFilterGroupActionType())
+        action_type_registry.register(DeleteViewFilterGroupActionType())
 
         from .airtable.registry import airtable_column_type_registry
         from .export.registries import table_exporter_registry
@@ -300,6 +312,7 @@ class DatabaseConfig(AppConfig):
             EmptyViewFilterType,
             EqualViewFilterType,
             FilenameContainsViewFilterType,
+            FilesLowerThanViewFilterType,
             HasFileTypeViewFilterType,
             HigherThanViewFilterType,
             IsEvenAndWholeViewFilterType,
@@ -322,6 +335,7 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(EqualViewFilterType())
         view_filter_type_registry.register(NotEqualViewFilterType())
         view_filter_type_registry.register(FilenameContainsViewFilterType())
+        view_filter_type_registry.register(FilesLowerThanViewFilterType()),
         view_filter_type_registry.register(HasFileTypeViewFilterType())
         view_filter_type_registry.register(ContainsViewFilterType())
         view_filter_type_registry.register(ContainsNotViewFilterType())
@@ -403,10 +417,11 @@ class DatabaseConfig(AppConfig):
 
         application_type_registry.register(DatabaseApplicationType())
 
-        from .ws.pages import PublicViewPageType, TablePageType
+        from .ws.pages import PublicViewPageType, RowPageType, TablePageType
 
         page_registry.register(TablePageType())
         page_registry.register(PublicViewPageType())
+        page_registry.register(RowPageType())
 
         from .export.table_exporters.csv_table_exporter import CsvTableExporter
 
@@ -515,7 +530,9 @@ class DatabaseConfig(AppConfig):
         from .tokens.object_scopes import TokenObjectScopeType
         from .views.object_scopes import (
             DatabaseViewDecorationObjectScopeType,
+            DatabaseViewFilterGroupObjectScopeType,
             DatabaseViewFilterObjectScopeType,
+            DatabaseViewGroupByObjectScopeType,
             DatabaseViewObjectScopeType,
             DatabaseViewSortObjectScopeType,
         )
@@ -526,7 +543,9 @@ class DatabaseConfig(AppConfig):
         object_scope_type_registry.register(DatabaseViewObjectScopeType())
         object_scope_type_registry.register(DatabaseViewDecorationObjectScopeType())
         object_scope_type_registry.register(DatabaseViewSortObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewGroupByObjectScopeType())
         object_scope_type_registry.register(DatabaseViewFilterObjectScopeType())
+        object_scope_type_registry.register(DatabaseViewFilterGroupObjectScopeType())
         object_scope_type_registry.register(TokenObjectScopeType())
 
         from baserow.contrib.database.views.operations import (
@@ -581,30 +600,39 @@ class DatabaseConfig(AppConfig):
             CreateAndUsePersonalViewOperationType,
             CreatePublicViewOperationType,
             CreateViewDecorationOperationType,
+            CreateViewFilterGroupOperationType,
             CreateViewFilterOperationType,
+            CreateViewGroupByOperationType,
             CreateViewOperationType,
             CreateViewSortOperationType,
             DeleteViewDecorationOperationType,
+            DeleteViewFilterGroupOperationType,
             DeleteViewFilterOperationType,
+            DeleteViewGroupByOperationType,
             DeleteViewOperationType,
             DeleteViewSortOperationType,
             DuplicateViewOperationType,
             ListAggregationsViewOperationType,
             ListViewDecorationOperationType,
             ListViewFilterOperationType,
+            ListViewGroupByOperationType,
             ListViewsOperationType,
             ListViewSortOperationType,
             OrderViewsOperationType,
             ReadAggregationsViewOperationType,
             ReadViewDecorationOperationType,
             ReadViewFieldOptionsOperationType,
+            ReadViewFilterGroupOperationType,
             ReadViewFilterOperationType,
+            ReadViewGroupByOperationType,
             ReadViewOperationType,
             ReadViewsOrderOperationType,
             ReadViewSortOperationType,
             RestoreViewOperationType,
             UpdateViewDecorationOperationType,
+            UpdateViewFilterGroupOperationType,
             UpdateViewFilterOperationType,
+            UpdateViewGroupByOperationType,
             UpdateViewOperationType,
             UpdateViewPublicOperationType,
             UpdateViewSlugOperationType,
@@ -635,6 +663,9 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(CreateViewSortOperationType())
         operation_type_registry.register(ReadViewSortOperationType())
         operation_type_registry.register(UpdateViewSortOperationType())
+        operation_type_registry.register(CreateViewGroupByOperationType())
+        operation_type_registry.register(ReadViewGroupByOperationType())
+        operation_type_registry.register(UpdateViewGroupByOperationType())
         operation_type_registry.register(CreateFieldOperationType())
         operation_type_registry.register(ReadFieldOperationType())
         operation_type_registry.register(UpdateFieldOperationType())
@@ -643,6 +674,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(DuplicateFieldOperationType())
         operation_type_registry.register(UpdateViewFieldOptionsOperationType())
         operation_type_registry.register(DeleteViewSortOperationType())
+        operation_type_registry.register(DeleteViewGroupByOperationType())
         operation_type_registry.register(UpdateViewSlugOperationType())
         operation_type_registry.register(UpdateViewPublicOperationType())
         operation_type_registry.register(ReadViewsOrderOperationType())
@@ -685,6 +717,7 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ReadViewDecorationOperationType())
         operation_type_registry.register(UpdateViewDecorationOperationType())
         operation_type_registry.register(ListViewSortOperationType())
+        operation_type_registry.register(ListViewGroupByOperationType())
         operation_type_registry.register(ReadViewFieldOptionsOperationType())
         operation_type_registry.register(MoveRowDatabaseRowOperationType())
         operation_type_registry.register(CreateTokenOperationType())
@@ -692,6 +725,10 @@ class DatabaseConfig(AppConfig):
         operation_type_registry.register(ListenToAllDatabaseTableEventsOperationType())
         operation_type_registry.register(UseTokenOperationType())
         operation_type_registry.register(UpdateTokenOperationType())
+        operation_type_registry.register(CreateViewFilterGroupOperationType())
+        operation_type_registry.register(UpdateViewFilterGroupOperationType())
+        operation_type_registry.register(DeleteViewFilterGroupOperationType())
+        operation_type_registry.register(ReadViewFilterGroupOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -723,6 +760,7 @@ class DatabaseConfig(AppConfig):
 
         import baserow.contrib.database.fields.tasks  # noqa: F401
         import baserow.contrib.database.rows.history  # noqa: F401
+        import baserow.contrib.database.rows.tasks  # noqa: F401
         import baserow.contrib.database.search.tasks  # noqa: F401
         import baserow.contrib.database.views.tasks  # noqa: F401
 

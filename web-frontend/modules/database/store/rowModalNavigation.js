@@ -37,6 +37,7 @@ export const mutations = {
     state.row = row
   },
   SET_FAILED_TO_FETCH_TABLE_ROW_ID(state, tableAndRowId) {
+    state.row = null
     state.failedToFetchTableRowId = tableAndRowId
   },
 }

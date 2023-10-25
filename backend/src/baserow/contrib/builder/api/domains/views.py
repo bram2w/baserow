@@ -10,29 +10,42 @@ from rest_framework.status import HTTP_202_ACCEPTED
 from rest_framework.views import APIView
 
 from baserow.api.applications.errors import ERROR_APPLICATION_DOES_NOT_EXIST
-from baserow.api.decorators import map_exceptions, validate_body
+from baserow.api.decorators import (
+    map_exceptions,
+    validate_body,
+    validate_body_custom_fields,
+)
 from baserow.api.jobs.serializers import JobSerializer
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
-from baserow.api.utils import DiscriminatorCustomFieldsMappingSerializer
-from baserow.contrib.builder.api.data_sources.serializers import DataSourceSerializer
+from baserow.api.utils import (
+    DiscriminatorCustomFieldsMappingSerializer,
+    type_from_data_or_registry,
+    validate_data_custom_fields,
+)
 from baserow.contrib.builder.api.domains.errors import (
     ERROR_DOMAIN_DOES_NOT_EXIST,
+    ERROR_DOMAIN_NAME_NOT_UNIQUE,
     ERROR_DOMAIN_NOT_IN_BUILDER,
+    ERROR_SUB_DOMAIN_HAS_INVALID_DOMAIN_NAME,
 )
 from baserow.contrib.builder.api.domains.serializers import (
     CreateDomainSerializer,
     DomainSerializer,
     OrderDomainsSerializer,
     PublicBuilderSerializer,
+    UpdateDomainSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
+    DomainNameNotUniqueError,
     DomainNotInBuilder,
+    SubDomainHasInvalidDomainName,
 )
 from baserow.contrib.builder.domains.handler import DomainHandler
 from baserow.contrib.builder.domains.models import Domain
+from baserow.contrib.builder.domains.registries import domain_type_registry
 from baserow.contrib.builder.domains.service import DomainService
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -66,9 +79,13 @@ class DomainsView(APIView):
         tags=["Builder domains"],
         operation_id="create_builder_domain",
         description="Creates a new domain for an application builder",
-        request=CreateDomainSerializer,
+        request=DiscriminatorCustomFieldsMappingSerializer(
+            domain_type_registry, CreateDomainSerializer, request=True
+        ),
         responses={
-            200: DomainSerializer,
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                domain_type_registry, DomainSerializer
+            ),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -82,17 +99,22 @@ class DomainsView(APIView):
     @map_exceptions(
         {
             ApplicationDoesNotExist: ERROR_APPLICATION_DOES_NOT_EXIST,
+            SubDomainHasInvalidDomainName: ERROR_SUB_DOMAIN_HAS_INVALID_DOMAIN_NAME,
         }
     )
-    @validate_body(CreateDomainSerializer)
+    @validate_body_custom_fields(
+        domain_type_registry, base_serializer_class=CreateDomainSerializer
+    )
     def post(self, request, data: Dict, builder_id: int):
         builder = BuilderHandler().get_builder(builder_id)
+        type_name = data.pop("type")
 
+        domain_type = domain_type_registry.get(type_name)
         domain = DomainService().create_domain(
-            request.user, builder, data["domain_name"]
+            request.user, domain_type, builder, **data
         )
 
-        serializer = DomainSerializer(domain)
+        serializer = domain_type_registry.get_serializer(domain, DomainSerializer)
         return Response(serializer.data)
 
     @extend_schema(
@@ -109,7 +131,9 @@ class DomainsView(APIView):
         operation_id="get_builder_domains",
         description="Gets all the domains of a builder",
         responses={
-            200: DomainSerializer(many=True),
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                domain_type_registry, DomainSerializer, many=True
+            ),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -132,9 +156,12 @@ class DomainsView(APIView):
             builder,
         )
 
-        serializer = DomainSerializer(domains, many=True)
+        data = [
+            domain_type_registry.get_serializer(domain, DomainSerializer).data
+            for domain in domains
+        ]
 
-        return Response(serializer.data)
+        return Response(data)
 
 
 class DomainView(APIView):
@@ -151,9 +178,11 @@ class DomainView(APIView):
         tags=["Builder domains"],
         operation_id="update_builder_domain",
         description="Updates an existing domain of an application builder",
-        request=CreateDomainSerializer,
+        request=UpdateDomainSerializer,
         responses={
-            200: DomainSerializer,
+            200: DiscriminatorCustomFieldsMappingSerializer(
+                domain_type_registry, DomainSerializer
+            ),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -167,19 +196,35 @@ class DomainView(APIView):
     @map_exceptions(
         {
             DomainDoesNotExist: ERROR_DOMAIN_DOES_NOT_EXIST,
+            DomainNameNotUniqueError: ERROR_DOMAIN_NAME_NOT_UNIQUE,
+            SubDomainHasInvalidDomainName: ERROR_SUB_DOMAIN_HAS_INVALID_DOMAIN_NAME,
         }
     )
-    @validate_body(CreateDomainSerializer)
-    def patch(self, request, data: Dict, domain_id: int):
-        base_queryset = Domain.objects.select_for_update(of=("self",))
+    def patch(self, request, domain_id: int):
+        base_queryset = Domain.objects
 
-        domain = DomainService().get_domain(
-            request.user, domain_id, base_queryset=base_queryset
+        domain = (
+            DomainService()
+            .get_domain(request.user, domain_id, base_queryset=base_queryset)
+            .specific
+        )
+        domain_type = type_from_data_or_registry(
+            request.data, domain_type_registry, domain
+        )
+
+        data = validate_data_custom_fields(
+            domain_type.type,
+            domain_type_registry,
+            request.data,
+            base_serializer_class=UpdateDomainSerializer,
+            partial=True,
         )
 
         domain_updated = DomainService().update_domain(request.user, domain, **data)
 
-        serializer = DomainSerializer(domain_updated)
+        serializer = domain_type_registry.get_serializer(
+            domain_updated, DomainSerializer
+        )
         return Response(serializer.data)
 
     @extend_schema(
@@ -470,7 +515,7 @@ class PublicDataSourcesView(APIView):
         ),
         responses={
             200: DiscriminatorCustomFieldsMappingSerializer(
-                service_type_registry, DataSourceSerializer, many=True
+                service_type_registry, PublicDataSourceSerializer, many=True
             ),
             404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
         },

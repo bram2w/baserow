@@ -10,6 +10,9 @@ import JavascriptExecutor from '@baserow/modules/core/formula/parser/javascriptE
  * @returns the result of the formula in the given context.
  */
 export const resolveFormula = (formula, functions, RuntimeFormulaContext) => {
+  if (!formula) {
+    return ''
+  }
   const tree = parseBaserowFormula(formula)
   const result = new JavascriptExecutor(functions, RuntimeFormulaContext).visit(
     tree

@@ -175,6 +175,11 @@
   }
 }
 
+.data-table__table-cell-head-sort-icon {
+  font-size: 14px;
+  @include flex-align-items(4px);
+}
+
 .data-table__more-wrapper {
   width: 100%;
   text-align: right;
@@ -183,12 +188,16 @@
 .data-table__more {
   color: $color-neutral-900;
   text-decoration: none;
-
-  @include center-text(32px, 16px);
+  display: flex;
+  justify-content: flex-end;
 
   &:hover {
     color: $color-neutral-600;
   }
+}
+
+.data-table__more-icon {
+  font-size: 18px;
 }
 
 .data-table__footer {

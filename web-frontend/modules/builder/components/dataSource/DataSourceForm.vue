@@ -7,11 +7,9 @@
           class="data-source-form__name-input"
           :placeholder="$t('dataSourceForm.namePlaceholder')"
         />
-        <!-- TODO This and it's corresponding prop will be removed in the data
-         explorer MR -->
-        ({{ id }})
         <Dropdown
           v-model="values.type"
+          fixed-items
           class="data-source-form__type-dropdown"
           :placeholder="$t('dataSourceForm.servicePlaceholder')"
         >
@@ -30,6 +28,7 @@
         </Dropdown>
         <Dropdown
           v-model="values.integration_id"
+          fixed-items
           class="data-source-form__integration-dropdown"
           :disabled="!values.type"
           :placeholder="
@@ -40,10 +39,10 @@
           show-footer
         >
           <DropdownItem
-            v-for="integration in integrations"
-            :key="integration.id"
-            :name="integration.name"
-            :value="integration.id"
+            v-for="integrationItem in integrations"
+            :key="integrationItem.id"
+            :name="integrationItem.name"
+            :value="integrationItem.id"
           />
           <template #emptyState>
             {{ $t('dataSourceForm.noIntegrations') }}
@@ -53,7 +52,7 @@
               class="select__footer-button"
               @click="$refs.IntegrationCreateEditModal.show()"
             >
-              <i class="fas fa-plus"></i>
+              <i class="iconoir-plus"></i>
               {{ $t('dataSourceForm.addIntegration') }}
             </a>
             <IntegrationCreateEditModal
@@ -66,18 +65,21 @@
             />
           </template>
         </Dropdown>
-        <Button icon="trash" type="light" @click="$emit('delete')" />
+        <Button icon="iconoir-bin" type="light" @click="$emit('delete')" />
       </div>
       <div v-if="headerError" class="error">
         {{ headerError }}
       </div>
     </div>
-    <template v-if="serviceType">
+    <div v-if="loading" class="loading margin-bottom-1"></div>
+    <template v-if="serviceType && integration && !loading">
       <component
         :is="serviceType.formComponent"
         ref="subForm"
         :builder="builder"
+        :data-source="dataSource"
         :default-values="defaultValues"
+        :context-data="integration.context_data"
         @values-changed="emitChange($event)"
       />
     </template>
@@ -98,6 +100,10 @@ export default {
       type: Object,
       required: true,
     },
+    dataSource: {
+      type: Object,
+      required: true,
+    },
     page: {
       type: Object,
       required: true,
@@ -110,6 +116,11 @@ export default {
       type: Number,
       required: true,
     },
+    loading: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
   },
   data() {
     return {
@@ -118,6 +129,11 @@ export default {
     }
   },
   computed: {
+    integration() {
+      return this.integrations.find(
+        (integration) => integration.id === this.values.integration_id
+      )
+    },
     serviceTypes() {
       return this.$registry.getOrderedList('service')
     },

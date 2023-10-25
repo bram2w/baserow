@@ -5,8 +5,10 @@
       v-for="(item, index) in props.value || []"
       :key="index"
       :field="props.field"
-      :value="item && item.value"
+      :value="$options.methods.getValue(props.field, parent.$registry, item)"
       :selected="props.selected"
+      :index="index"
+      v-on="listeners"
     ></component>
   </div>
 </template>
@@ -21,6 +23,15 @@ export default {
         field.array_formula_type
       )
       return formulaType.getFunctionalGridViewFieldArrayComponent()
+    },
+    getValue(field, $registry, item) {
+      const formulaType = $registry.get(
+        'formula_type',
+        field.array_formula_type
+      )
+      return formulaType.getItemIsInNestedValueObjectWhenInArray()
+        ? item && item.value
+        : item
     },
   },
 }

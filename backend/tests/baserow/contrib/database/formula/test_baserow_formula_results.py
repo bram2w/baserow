@@ -218,6 +218,7 @@ VALID_FORMULA_TESTS = [
     ("round(1234.5678, tonumber('invalid'))", "NaN"),
     ("round(1/0, 1/0)", "NaN"),
     ("round(1/0, 2)", "NaN"),
+    ("round(trunc(10), 5)", "10.00000"),
     ("round(tonumber('invalid'), 2)", "NaN"),
     ("trunc(1.1234)", "1"),
     ("trunc(1.56)", "1"),
@@ -353,6 +354,7 @@ VALID_FORMULA_TESTS = [
     ("get_link_url(link('https://www.google.com'))", "https://www.google.com"),
     ("get_link_label(button('1', 'l'))", "l"),
     ("get_link_url(button('a' + 'b', 'l' + 'a'))", "ab"),
+    ("lower(tovarchar('AB'))", "ab"),
     (
         "encode_uri('http://example.com/wiki/Señor')",
         "http://example.com/wiki/Se%c3%b1or",
@@ -483,6 +485,17 @@ def test_can_compare_a_datetime_field_and_text_with_eu_formatting(data_fixture):
         given_field_has_rows=["2020-02-01T00:10:00Z", "2020-02-01T02:00:00Z", None],
         when_created_formula_is="field('date')='01/02/2020 00:10'",
         then_formula_values_are=[True, False, False],
+    )
+
+
+@pytest.mark.django_db
+def test_can_upper_an_email_field(data_fixture):
+    assert_formula_results_are_case(
+        data_fixture,
+        given_field_in_table=data_fixture.create_email_field(name="email"),
+        given_field_has_rows=["test@test.com", "other@das.c", None],
+        when_created_formula_is="upper(field('email'))",
+        then_formula_values_are=["TEST@TEST.COM", "OTHER@DAS.C", ""],
     )
 
 
@@ -802,6 +815,11 @@ INVALID_FORMULA_TESTS = [
             "was "
             "of type text but the only usable type for this argument is link."
         ),
+    ),
+    (
+        "second(today())",
+        "ERROR_WITH_FORMULA",
+        "Error with formula: cannot extract seconds from a date without time.",
     ),
 ]
 
@@ -1153,6 +1171,52 @@ def test_can_make_joining_nested_aggregation(
         [[{"id": 1, "value": "c_1b_1,b_2"}]],
         [[{"id": 1, "value": "c_1b_2"}, {"id": 2, "value": "c_2b_2"}]],
     ]
+
+
+@pytest.mark.django_db
+def test_date_formulas(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_date_field(table=table)
+
+    formula_field_1 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{date_field.name}") + date_interval("1 day")',
+    )
+
+    assert formula_field_1.error is None
+
+    formula_field_2 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{formula_field_1.name}") - field("{date_field.name}")',
+    )
+
+    assert formula_field_2.error is None
+
+
+@pytest.mark.django_db
+def test_date_formulas_unwrapping_works(data_fixture, django_assert_num_queries):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    date_field = data_fixture.create_date_field(table=table)
+
+    formula_field_1 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{date_field.name}") - date_interval("1 day")',
+    )
+
+    assert formula_field_1.error is None
+
+    formula_field_2 = data_fixture.create_formula_field(
+        user=user,
+        table=table,
+        formula=f'field("{formula_field_1.name}") - field("{date_field.name}")',
+    )
+
+    assert formula_field_2.error is None
 
 
 NULLABLE_FORMULA_TESTS = [

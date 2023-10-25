@@ -51,7 +51,8 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="openRowEditModal($event.id)"
+      @edit-modal="openRowEditModal($event)"
+      @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, 0)"
     >
       <template #foot>
@@ -118,7 +119,8 @@
       @selected="selectedCell"
       @unselected="unselectedCell"
       @select-next="selectNextCell"
-      @edit-modal="openRowEditModal($event.id)"
+      @edit-modal="openRowEditModal($event)"
+      @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     >
     </GridViewSection>
@@ -139,7 +141,7 @@
       <ul v-show="isMultiSelectActive" class="context__menu">
         <li>
           <a @click=";[copySelection(), $refs.rowContext.hide()]">
-            <i class="context__menu-icon fas fa-fw fa-copy"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridView.copyCells') }}
           </a>
         </li>
@@ -157,7 +159,7 @@
             :class="{ 'context__menu-item--loading': deletingRow }"
             @click.stop="deleteRowsFromMultipleCellSelection()"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRows') }}
           </a>
         </li>
@@ -167,7 +169,7 @@
           <a
             @click=";[selectRow($event, selectedRow), $refs.rowContext.hide()]"
           >
-            <i class="context__menu-icon fas fa-fw fa-check-square"></i>
+            <i class="context__menu-icon iconoir-check-circle"></i>
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
@@ -182,7 +184,7 @@
           "
         >
           <a @click="addRowAboveSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-arrow-up"></i>
+            <i class="context__menu-icon iconoir-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
@@ -197,7 +199,7 @@
           "
         >
           <a @click="addRowBelowSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-arrow-down"></i>
+            <i class="context__menu-icon iconoir-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
@@ -212,23 +214,19 @@
           "
         >
           <a @click="duplicateSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-clone"></i>
+            <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
         <li v-if="!readOnly">
           <a @click="copyLinkToSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-link"></i>
+            <i class="context__menu-icon iconoir-link"></i>
             {{ $t('gridView.copyRowURL') }}
           </a>
         </li>
         <li>
-          <a
-            @click="
-              ;[openRowEditModal(selectedRow.id), $refs.rowContext.hide()]
-            "
-          >
-            <i class="context__menu-icon fas fa-fw fa-expand"></i>
+          <a @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]">
+            <i class="context__menu-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
@@ -243,7 +241,7 @@
           "
         >
           <a @click="deleteRow(selectedRow)">
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRow') }}
           </a>
         </li>
@@ -257,6 +255,8 @@
       :visible-fields="allVisibleFields"
       :hidden-fields="hiddenFields"
       :rows="allRows"
+      :sortable="true"
+      :can-modify-fields="true"
       :read-only="
         readOnly ||
         !$hasPermission(
@@ -286,6 +286,7 @@
       @field-created="fieldCreated"
       @navigate-previous="$emit('navigate-previous', $event, activeSearchTerm)"
       @navigate-next="$emit('navigate-next', $event, activeSearchTerm)"
+      @refresh-row="refreshRow"
     ></RowEditModal>
   </div>
 </template>
@@ -433,9 +434,23 @@ export default {
     },
     row: {
       deep: true,
-      handler(row) {
-        if (row !== null && this.$refs.rowEditModal) {
-          this.populateAndEditRow(row)
+      handler(newRow, prevRow) {
+        if (newRow !== null && this.$refs.rowEditModal) {
+          this.populateAndEditRow(newRow)
+        }
+        // `refreshRow` doesn't immediately hide a row not matching filters if a
+        // user open the modal for that row to solve
+        // https://gitlab.com/baserow/baserow/-/issues/1765. This handler ensure
+        // the row is correctly refreshed if the user open another row using the
+        // navigation buttons in the modal.
+        const prevRowId = prevRow?.id
+        if (prevRowId !== undefined && prevRowId !== newRow?.id) {
+          this.$store.dispatch(this.storePrefix + 'view/grid/refreshRowById', {
+            grid: this.view,
+            fields: this.fields,
+            rowId: prevRowId,
+            getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
+          })
         }
       },
     },
@@ -635,6 +650,24 @@ export default {
       // When anything related to the fields has been updated, it could be that it
       // doesn't fit in two columns anymore. Calling this method checks that.
       this.checkCanFitInTwoColumns()
+    },
+    /**
+     * Calls action in the store to refresh row directly from the backend - f. ex.
+     * when editing row from a different table, when editing is complete, we need
+     * to refresh the 'main' row that's 'under' the RowEdit modal.
+     */
+    async refreshRow(row) {
+      try {
+        await this.$store.dispatch(
+          this.storePrefix + 'view/grid/refreshRowFromBackend',
+          {
+            table: this.table,
+            row,
+          }
+        )
+      } catch (error) {
+        notifyIf(error, 'row')
+      }
     },
     /**
      * Called when a cell value has been updated. This can for example happen via the
@@ -871,21 +904,21 @@ export default {
         return
       }
 
-      this.$store.dispatch(this.storePrefix + 'view/grid/refreshRow', {
+      this.$store.dispatch(this.storePrefix + 'view/grid/refreshRowById', {
         grid: this.view,
         fields: this.fields,
-        row,
+        rowId: row.id,
         getScrollTop: () => this.$refs.left.$refs.body.scrollTop,
       })
     },
     /**
-     * When the row edit modal is opened we notifiy
+     * When the row edit modal is opened we notify
      * the Table component that a new row has been selected,
      * such that we can update the path to include the row id.
      */
-    openRowEditModal(rowId) {
-      this.$refs.rowEditModal.show(rowId)
-      this.$emit('selected-row', rowId)
+    openRowEditModal(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
     },
     /**
      * Populates a new row and opens the row edit modal
@@ -951,6 +984,7 @@ export default {
             row,
             field,
             getScrollTop,
+            isRowOpenedInModal: this.rowOpenedInModal?.id === row.id,
           }
         )
       })

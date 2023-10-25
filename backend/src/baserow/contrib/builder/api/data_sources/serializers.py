@@ -54,6 +54,18 @@ class DataSourceSerializer(ServiceSerializer):
     def get_order(self, instance):
         return self.context["data_source"].order
 
+    @extend_schema_field(OpenApiTypes.OBJECT)
+    def get_schema(self, instance):
+        # We generate the service schema using a `Service` instance.
+        # If the `instance` is a `DataSource` instance, traverse its
+        # 1-1 relation to `Service` and serialize it.
+        service_instance = (
+            instance.service if isinstance(instance, DataSource) else instance
+        )
+        if service_instance:
+            return super().get_schema(service_instance)
+        return None
+
     class Meta(ServiceSerializer.Meta):
         fields = ServiceSerializer.Meta.fields + ("name", "page_id", "order")
         extra_kwargs = {

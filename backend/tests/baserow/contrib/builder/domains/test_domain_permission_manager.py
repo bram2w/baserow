@@ -22,10 +22,10 @@ def test_allow_public_builder_manager_type(data_fixture):
     user = data_fixture.create_user()
     builder = data_fixture.create_builder_application(user=user)
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
-    domain2 = data_fixture.create_builder_domain(builder=builder)
+    domain2 = data_fixture.create_builder_custom_domain(builder=builder)
 
     public_page = data_fixture.create_builder_page(builder=builder_to)
     non_public_page = data_fixture.create_builder_page(builder=builder)

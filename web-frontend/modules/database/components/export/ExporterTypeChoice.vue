@@ -6,14 +6,15 @@
       :class="{ active, disabled }"
       @click="select(exporterType)"
     >
-      <i
-        class="choice-items__icon fas"
-        :class="'fa-' + exporterType.iconClass"
-      ></i>
-      {{ exporterType.getName() }}
+      <i class="choice-items__icon" :class="exporterType.iconClass"></i>
+      <span>{{ exporterType.getName() }}</span>
       <div v-if="deactivated" class="deactivated-label">
-        <i class="fas fa-lock"></i>
+        <i class="iconoir-lock"></i>
       </div>
+      <i
+        v-if="active"
+        class="choice-items__icon-active iconoir-check-circle"
+      ></i>
     </a>
     <component
       :is="deactivatedClickModal"

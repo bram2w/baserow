@@ -67,12 +67,18 @@ class ChangelogHandler:
         entries = {entry_type: [] for entry_type in changelog_entry_types.keys()}
 
         for category_dir_name in os.listdir(base_path):
+            if category_dir_name == ".gitkeep":
+                continue
+
             category_dir = f"{base_path}/{category_dir_name}"
 
             entry_file_names = os.listdir(category_dir)
             entry_file_names.sort()
 
             for entry_file_name in entry_file_names:
+                if entry_file_name == ".gitkeep":
+                    continue
+
                 entry_file_path = f"{category_dir}/{entry_file_name}"
 
                 with open(entry_file_path, "r") as entry_file:

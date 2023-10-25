@@ -1,0 +1,9 @@
+.local-baserow-table-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.local-baserow-table-selector__input {
+  flex-basis: 100%;
+  max-width: 33%;
+}

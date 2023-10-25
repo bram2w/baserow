@@ -10,9 +10,9 @@
     <i
       v-for="index in props.readOnly ? props.value : props.maxValue"
       :key="index"
-      class="fas rating__star"
+      class="rating__star"
       :class="{
-        [`fa-${props.ratingStyle}`]: true,
+        [`baserow-icon-${props.ratingStyle}`]: true,
         'rating__star--selected': index <= props.value,
       }"
       @click="

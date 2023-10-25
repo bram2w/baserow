@@ -29,34 +29,51 @@ a {
 p {
   @extend %first-last-no-margin;
 
-  color: $palette-neutral-1300;
+  color: $palette-neutral-900;
   line-height: 170%;
   margin-bottom: 30px;
+}
+
+strong {
+  color: $palette-neutral-1200;
 }
 
 h1,
 .heading-1 {
   @extend %first-last-no-margin;
 
-  font-size: 33px;
-  line-height: 130%;
+  font-size: 24px;
+  line-height: 1.333;
   margin: 30px 0;
+  font-weight: 600;
 }
 
 h2,
 .heading-2 {
   @extend %first-last-no-margin;
 
-  font-size: 22px;
-  line-height: 130%;
+  font-size: 20px;
+  line-height: 1.4;
   margin: 20px 0;
+  font-weight: 600;
 }
 
 h3,
 .heading-3 {
   @extend %first-last-no-margin;
 
-  font-size: 14px;
-  line-height: 130%;
+  font-size: 18px;
+  line-height: 1.333;
   margin: 10px 0;
+  font-weight: 600;
+}
+
+h4,
+.heading-4 {
+  @extend %first-last-no-margin;
+
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 10px 0;
+  font-weight: 500;
 }

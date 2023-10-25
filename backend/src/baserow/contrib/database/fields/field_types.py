@@ -78,8 +78,12 @@ from baserow.contrib.database.formula import (
     FormulaHandler,
 )
 from baserow.contrib.database.models import Table
+from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
-from baserow.core.db import collate_expression
+from baserow.core.db import (
+    CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
+    collate_expression,
+)
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.formula import BaserowFormulaException
 from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
@@ -90,6 +94,10 @@ from baserow.core.user_files.exceptions import UserFileDoesNotExist
 from baserow.core.user_files.handler import UserFileHandler
 from baserow.core.utils import list_to_comma_separated_string
 
+from ..formula.types.formula_types import (
+    BaserowFormulaArrayType,
+    BaserowFormulaSingleFileType,
+)
 from ..search.handler import SearchHandler
 from .constants import UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
@@ -281,6 +289,8 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
           altering a column to being an email type.
     """
 
+    _can_group_by = True
+
     @property
     @abstractmethod
     def max_length(self):
@@ -309,6 +319,7 @@ class TextFieldType(CollationSortMixin, FieldType):
     model_class = TextField
     allowed_fields = ["text_default"]
     serializer_field_names = ["text_default"]
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -352,6 +363,7 @@ class TextFieldType(CollationSortMixin, FieldType):
 class LongTextFieldType(CollationSortMixin, FieldType):
     type = "long_text"
     model_class = LongTextField
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.get("required", False)
@@ -392,6 +404,7 @@ class LongTextFieldType(CollationSortMixin, FieldType):
 class URLFieldType(CollationSortMixin, TextFieldMatchingRegexFieldType):
     type = "url"
     model_class = URLField
+    _can_group_by = True
 
     @property
     def regex(self):
@@ -423,6 +436,7 @@ class NumberFieldType(FieldType):
         ),
         "_spectacular_annotation": {"exclude_fields": ["number_type"]},
     }
+    _can_group_by = True
 
     def prepare_value_for_db(self, instance, value):
         if value is not None:
@@ -545,17 +559,17 @@ class NumberFieldType(FieldType):
         )
 
     def serialize_metadata_for_row_history(
-        self, field: Field, new_value: Any, old_value: Any
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata,
     ) -> Dict[str, Any]:
-        """
-        Serializes the metadata for the row history.
-        """
-
-        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
             **base,
             "number_decimal_places": field.number_decimal_places,
+            "number_negative": field.number_negative,
         }
 
 
@@ -564,6 +578,7 @@ class RatingFieldType(FieldType):
     model_class = RatingField
     allowed_fields = ["max_value", "color", "style"]
     serializer_field_names = ["max_value", "color", "style"]
+    _can_group_by = True
 
     def prepare_value_for_db(self, instance, value):
         if not value:
@@ -682,6 +697,7 @@ class RatingFieldType(FieldType):
 class BooleanFieldType(FieldType):
     type = "boolean"
     model_class = BooleanField
+    _can_group_by = True
 
     # lowercase serializers.BooleanField.TRUE_VALUES + "checked" keyword
     # WARNING: these values are prone to SQL injection
@@ -765,6 +781,7 @@ class DateFieldType(FieldType):
     api_exceptions_map = {
         DateForceTimezoneOffsetValueError: ERROR_DATE_FORCE_TIMEZONE_OFFSET_ERROR
     }
+    _can_group_by = True
 
     def can_represent_date(self, field):
         return True
@@ -1096,6 +1113,20 @@ class DateFieldType(FieldType):
             "date_include_time", old_field.date_include_time
         )
         return old_field.date_include_time and not new_date_include_time
+
+    def serialize_metadata_for_row_history(
+        self, field: Field, new_value: Any, old_value: Any
+    ) -> Dict[str, Any]:
+        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+
+        return {
+            **base,
+            "date_format": field.date_format,
+            "date_include_time": field.date_include_time,
+            "date_time_format": field.date_time_format,
+            "date_show_tzinfo": field.date_show_tzinfo,
+            "date_force_timezone": field.date_force_timezone,
+        }
 
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
@@ -2238,6 +2269,37 @@ class LinkRowFieldType(FieldType):
             via_path_to_starting_table,
         )
 
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_linked_rows = {}
+        if metadata and metadata.get("linked_rows"):
+            already_serialized_linked_rows = metadata["linked_rows"]
+
+        new_serialized_linked_rows = getattr(row, field.db_column).all()
+        new_serialized_linked_rows = {
+            linked_row.id: {
+                "value": str(linked_row),
+            }
+            for linked_row in new_serialized_linked_rows
+        }
+
+        return {
+            **base,
+            "linked_rows": {
+                **already_serialized_linked_rows,
+                **new_serialized_linked_rows,
+            },
+        }
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return set(value1) == set(value2)
+
 
 class EmailFieldType(CollationSortMixin, CharFieldMatchingRegexFieldType):
     type = "email"
@@ -2277,6 +2339,12 @@ class FileFieldType(FieldType):
     model_class = FileField
     can_be_in_form_view = True
     can_get_unique_values = False
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaArrayType(BaserowFormulaSingleFileType(nullable=True))
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        return self.model_class()
 
     def get_search_expression(self, field: FileField, queryset: QuerySet) -> Expression:
         """
@@ -2564,6 +2632,9 @@ class FileFieldType(FieldType):
 
         setattr(row, field_name, files)
 
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return {v["name"] for v in value1} == {v["name"] for v in value2}
+
 
 class SelectOptionBaseFieldType(FieldType):
     can_have_select_options = True
@@ -2572,6 +2643,7 @@ class SelectOptionBaseFieldType(FieldType):
     serializer_field_overrides = {
         "select_options": SelectOptionSerializer(many=True, required=False)
     }
+    _can_group_by = True
 
     def before_create(
         self, table, primary, allowed_field_values, order, user, field_kwargs
@@ -2603,6 +2675,37 @@ class SelectOptionBaseFieldType(FieldType):
         # If there are any deleted options we need to backup
         return old_field.select_options.exclude(id__in=updated_ids).exists()
 
+    def enhance_queryset_in_bulk(self, queryset, field_objects):
+        existing_multi_field_prefetches = queryset.get_multi_field_prefetches()
+        select_model_prefetch = None
+
+        # Check if the queryset already contains a multi field prefetch for the same
+        # target, and use that one if so. This can happen if the `single_select` or
+        # `multiple_select` field has already called this method.
+        for prefetch in existing_multi_field_prefetches:
+            if (
+                isinstance(
+                    prefetch, CombinedForeignKeyAndManyToManyMultipleFieldPrefetch
+                )
+                and prefetch.target_model == SelectOption
+            ):
+                select_model_prefetch = prefetch
+                break
+
+        if not select_model_prefetch:
+            select_model_prefetch = CombinedForeignKeyAndManyToManyMultipleFieldPrefetch(
+                SelectOption,
+                # Must skip because the multiple_select works with dynamically
+                # generated models.
+                skip_target_check=True,
+            )
+            queryset = queryset.multi_field_prefetch(select_model_prefetch)
+
+        field_names = [field_object["name"] for field_object in field_objects]
+        select_model_prefetch.add_field_names(field_names)
+
+        return queryset
+
 
 class SingleSelectFieldType(SelectOptionBaseFieldType):
     type = "single_select"
@@ -2631,9 +2734,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
-        return queryset.prefetch_related(
-            models.Prefetch(name, queryset=SelectOption.objects.using("default").all())
-        )
+        # It's important that this individual enhance_queryset method exists, even
+        # though the enhance queryset in bulk exists, because the link_row field can
+        # prefetch the data individually.
+        return queryset.select_related(name)
 
     def get_value_for_filter(self, row: "GeneratedTableModel", field) -> int:
         value = getattr(row, field.db_column)
@@ -2687,8 +2791,10 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         invalid_values_by_index.update(invalid_values_by_index)
 
         # Query database with all these gathered values
-        select_options = SelectOption.objects.filter(field=instance).filter(
-            Q(id__in=unique_ids) | Q(value__in=unique_names)
+        select_options = list(
+            SelectOption.objects.filter(field=instance).filter(
+                Q(id__in=unique_ids) | Q(value__in=unique_names)
+            )
         )
 
         # Create a map {id|value -> option}
@@ -2724,6 +2830,38 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
                 values_by_row[row_index] = option_map[value]
 
         return values_by_row
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return value.id
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_option = {}
+        if metadata and metadata.get("select_options"):
+            already_serialized_option = metadata["select_options"]
+
+        select_option = getattr(row, field.db_column)
+        new_serialized_option = {}
+        if select_option is not None:
+            new_serialized_option[select_option.id] = {
+                "id": select_option.id,
+                "value": select_option.value,
+                "color": select_option.color,
+            }
+
+        return {
+            **base,
+            "select_options": {
+                **already_serialized_option,
+                **new_serialized_option,
+            },
+        }
 
     def get_serializer_help_text(self, instance):
         return (
@@ -2899,6 +3037,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     model_class = MultipleSelectField
     can_get_unique_values = False
     is_many_to_many_field = True
+    _can_group_by = True
 
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
@@ -2937,6 +3076,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         )
 
     def enhance_queryset(self, queryset, field, name):
+        # It's important that this individual enhance_queryset method exists, even
+        # though the enhance queryset in bulk exists, because the link_row field can
+        # prefetch the data individually.
         return queryset.prefetch_related(name)
 
     def get_search_expression(self, field: MultipleSelectField, queryset) -> Expression:
@@ -3173,7 +3315,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
         mapped_values = [
-            id_mapping["database_field_select_options"][item] for item in value
+            id_mapping["database_field_select_options"][item]
+            for item in value
+            if item in id_mapping["database_field_select_options"]
         ]
         getattr(row, field_name).set(mapped_values)
 
@@ -3243,6 +3387,39 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         through_model_fields = through_model._meta.get_fields()
         option_field_name = through_model_fields[2].name
         through_model.objects.filter(**{f"{option_field_name}__in": to_delete}).delete()
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_options = {}
+        if metadata and metadata.get("select_options"):
+            already_serialized_options = metadata["select_options"]
+
+        new_select_options = getattr(row, field.db_column).all()
+        new_serialized_options = {
+            option.id: {
+                "id": option.id,
+                "value": option.value,
+                "color": option.color,
+            }
+            for option in new_select_options
+        }
+
+        return {
+            **base,
+            "select_options": {
+                **already_serialized_options,
+                **new_serialized_options,
+            },
+        }
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return set(value1) == set(value2)
 
 
 class PhoneNumberFieldType(CharFieldMatchingRegexFieldType):
@@ -3332,6 +3509,10 @@ class FormulaFieldType(ReadOnlyFieldType):
         return self.to_baserow_formula_type(field.specific).is_searchable(field)
 
     @staticmethod
+    def array_of(formula_type: str):
+        return BaserowFormulaArrayType.formula_array_type_as_str(formula_type)
+
+    @staticmethod
     def compatible_with_formula_types(*compatible_formula_types: List[str]):
         def checker(field) -> bool:
             from baserow.contrib.database.fields.registries import field_type_registry
@@ -3339,7 +3520,7 @@ class FormulaFieldType(ReadOnlyFieldType):
             field_type = field_type_registry.get_by_model(field.specific_class)
             if isinstance(field_type, FormulaFieldType):
                 formula_type = field.specific.cached_formula_type
-                return formula_type.type in compatible_formula_types
+                return formula_type.check_if_compatible_with(compatible_formula_types)
             else:
                 return False
 
@@ -3762,6 +3943,9 @@ class FormulaFieldType(ReadOnlyFieldType):
 
     def check_can_order_by(self, field):
         return self.to_baserow_formula_type(field.specific).can_order_by
+
+    def check_can_group_by(self, field):
+        return self.to_baserow_formula_type(field.specific).can_group_by
 
     def get_order(
         self, field, field_name, order_direction
@@ -4432,6 +4616,50 @@ class MultipleCollaboratorsFieldType(FieldType):
         if len(export_value) == 0:
             return ""
         return ", ".join(export_value)
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        already_serialized_collaborators = {}
+        if metadata and metadata.get("collaborators"):
+            already_serialized_collaborators = metadata["collaborators"]
+
+        new_collaborators = getattr(row, field.db_column).all()
+        new_serialized_collaborators = {
+            collaborator.id: {
+                "id": collaborator.id,
+                "name": collaborator.first_name,
+            }
+            for collaborator in new_collaborators
+        }
+
+        return {
+            **base,
+            "collaborators": {
+                **already_serialized_collaborators,
+                **new_serialized_collaborators,
+            },
+        }
+
+    def are_row_values_equal(self, value1: any, value2: any) -> bool:
+        return {v["id"] for v in value1} == {v["id"] for v in value2}
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        if value is None or len(value) == 0:
+            return []
+
+        serialized = [
+            {
+                "id": user_id,
+            }
+            for user_id in value
+        ]
+        return serialized
 
     def get_model_field(self, instance, **kwargs):
         return None

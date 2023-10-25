@@ -10,12 +10,12 @@
     <div>
       <Alert
         v-if="actualIntegrationType.warning"
-        icon="exclamation"
+        icon="iconoir-warning-triangle"
         type="warning"
         :title="$t('integrationCreateEditModal.warningTitle')"
         simple
       >
-        {{ actualIntegrationType.warning }}
+        <p>{{ actualIntegrationType.warning }}</p>
       </Alert>
       <IntegrationEditForm
         ref="form"

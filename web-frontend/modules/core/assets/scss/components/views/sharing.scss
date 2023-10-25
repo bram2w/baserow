@@ -6,6 +6,7 @@
   padding: 0 20px;
   color: $color-neutral-900;
   @include rounded($rounded-md);
+  @include flex-align-items(20px);
 
   &:hover {
     text-decoration: none;
@@ -23,8 +24,8 @@
 }
 
 .view-sharing__create-link-icon {
-  margin-right: 20px;
   color: $color-warning-500;
+  font-size: 20px;
 
   .view-sharing__create-link--disabled & {
     color: $color-neutral-500;
@@ -66,7 +67,7 @@
   margin-left: 8px;
   line-height: 32px;
   color: $color-neutral-900;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
   @include rounded($rounded);
 
@@ -105,6 +106,8 @@
 }
 
 .view-sharing__shared-link-disable {
+  @include flex-align-items(4px);
+
   color: $color-error-500;
 }
 
@@ -114,13 +117,16 @@
 }
 
 .view-sharing__option {
-  display: flex;
-  align-items: center;
+  @include flex-align-items(4px);
 
   &--disabled {
     cursor: pointer;
     color: $color-neutral-500;
   }
+}
+
+.view-sharing__option-icon {
+  font-size: 14px;
 }
 
 p.box__description {
@@ -129,13 +135,10 @@ p.box__description {
 
 .view-sharing__option-change-password {
   margin-left: 12px;
+  @include flex-align-items(4px);
 
   &:hover {
     text-decoration: none;
     color: $color-neutral-900;
-  }
-
-  i {
-    margin-left: 5px;
   }
 }

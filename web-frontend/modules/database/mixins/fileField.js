@@ -1,4 +1,4 @@
-import { mimetype2fa } from '@baserow/modules/core/utils/fontawesome'
+import { mimetype2icon } from '@baserow/modules/core/utils/fileTypeToIcon'
 
 export default {
   methods: {
@@ -47,7 +47,7 @@ export default {
       return true
     },
     getIconClass(mimeType) {
-      return mimetype2fa(mimeType)
+      return mimetype2icon(mimeType)
     },
   },
 }

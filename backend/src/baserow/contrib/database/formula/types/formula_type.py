@@ -172,6 +172,15 @@ class BaserowFormulaType(abc.ABC):
 
         pass
 
+    @property
+    @abc.abstractmethod
+    def can_group_by(self) -> bool:
+        """
+        Return True if a formula field of this type can be grouped or False if not.
+        """
+
+        pass
+
     def get_order(
         self, field, field_name, order_direction
     ) -> OptionallyAnnotatedOrderBy:
@@ -224,6 +233,10 @@ class BaserowFormulaType(abc.ABC):
     @property
     def can_represent_date(self) -> bool:
         return False
+
+    @property
+    def item_is_in_nested_value_object_when_in_array(self) -> bool:
+        return True
 
     @property
     @abc.abstractmethod
@@ -399,6 +412,9 @@ class BaserowFormulaType(abc.ABC):
 
         return Value(None)
 
+    def check_if_compatible_with(self, compatible_formula_types: List[str]):
+        return self.type in compatible_formula_types
+
     def __str__(self) -> str:
         return self.type
 
@@ -430,6 +446,7 @@ class BaserowFormulaType(abc.ABC):
 class BaserowFormulaInvalidType(BaserowFormulaType):
     is_valid = False
     can_order_by = False
+    can_group_by = False
     comparable_types = []
     limit_comparable_types = []
     type = "invalid"
@@ -472,7 +489,10 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
             formula_function_registry,
         )
 
-        func = formula_function_registry.get("array_agg")
+        if self.item_is_in_nested_value_object_when_in_array:
+            func = formula_function_registry.get("array_agg")
+        else:
+            func = formula_function_registry.get("array_agg_no_nesting")
         return func(expr)
 
     def raise_if_invalid(self):

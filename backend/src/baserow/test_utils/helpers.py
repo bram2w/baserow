@@ -427,7 +427,7 @@ def assert_undo_redo_actions_are_valid(
     for action, expected_action_type in zip(actions, expected_action_types):
         assert (
             action.type == expected_action_type.type
-        ), f"Action expected of type {expected_action_type} but got {action.type}"
+        ), f"Action expected of type {expected_action_type} but got {action}"
         assert (
             action is not None
         ), f"Action is None, but should be of type {expected_action_type}"
@@ -518,6 +518,16 @@ class AnyInt(int):
 
     def __eq__(self, other):
         return isinstance(other, int)
+
+
+class AnyStr(str):
+    """
+    A class that can be used to check if a value is an str. Useful in tests when
+    you don't care about a string, but you want to check all other values.
+    """
+
+    def __eq__(self, other):
+        return isinstance(other, str)
 
 
 def load_test_cases(name: str) -> Union[List, Dict]:

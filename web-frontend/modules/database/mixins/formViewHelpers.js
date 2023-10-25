@@ -53,7 +53,10 @@ export default {
             return true
           }
           const fieldType = this.$registry.get('field', field.type)
-          return fieldType.getFormViewFieldComponent() !== null
+          return (
+            Object.keys(fieldType.getFormViewFieldComponents(field, this))
+              .length > 0
+          )
         })
         .forEach((field) => {
           newFieldOptions[field.id] = values

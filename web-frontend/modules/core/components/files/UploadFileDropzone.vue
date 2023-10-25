@@ -18,7 +18,7 @@
       @dragleave.prevent="dragging = false"
     >
       <div class="upload-files__dropzone-content">
-        <i class="upload-files__dropzone-icon fas fa-cloud-upload-alt"></i>
+        <i class="upload-files__dropzone-icon iconoir-cloud-upload"></i>
         <div class="upload-files__dropzone-text">
           <template v-if="dragging"
             >{{ $t('uploadFileDropzone.drop') }}

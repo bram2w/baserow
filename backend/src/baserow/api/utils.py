@@ -42,23 +42,28 @@ ExceptionMappingType = Dict[
 ]
 
 
-def apply_exception_mapping(mapping, exc):
+def apply_exception_mapping(mapping, exc, with_fallback=False):
     value = _search_up_class_hierarchy_for_mapping(exc, mapping)
     status_code = status.HTTP_400_BAD_REQUEST
     detail = ""
 
     if callable(value):
         value = value(exc)
+        error = value
         if value is None:
             return None
     if isinstance(value, str):
         error = value
-    if isinstance(value, tuple):
+    elif isinstance(value, tuple):
         error = value[0]
         if len(value) > 1 and value[1] is not None:
             status_code = value[1]
         if len(value) > 2 and value[2] is not None:
             detail = value[2].format(e=exc)
+    elif value is None and with_fallback:
+        error = "UNKNOWN_ERROR"
+        status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
+        detail = f"{exc}"
 
     return status_code, error, detail
 
@@ -148,6 +153,18 @@ def _search_up_class_hierarchy_for_mapping(e, mapping):
     return None
 
 
+def serialize_validation_errors_recursive(error):
+    if isinstance(error, dict):
+        return {
+            key: serialize_validation_errors_recursive(errors)
+            for key, errors in error.items()
+        }
+    elif isinstance(error, list):
+        return [serialize_validation_errors_recursive(errors) for errors in error]
+    else:
+        return {"error": force_str(error), "code": error.code}
+
+
 def validate_data(
     serializer_class: Type[ModelSerializer],
     data: Dict[str, Any],
@@ -171,19 +188,9 @@ def validate_data(
     :return: The data after being validated by the serializer.
     """
 
-    def serialize_errors_recursive(error):
-        if isinstance(error, dict):
-            return {
-                key: serialize_errors_recursive(errors) for key, errors in error.items()
-            }
-        elif isinstance(error, list):
-            return [serialize_errors_recursive(errors) for errors in error]
-        else:
-            return {"error": force_str(error), "code": error.code}
-
     serializer = serializer_class(data=data, partial=partial, many=many)
     if not serializer.is_valid():
-        detail = serialize_errors_recursive(serializer.errors)
+        detail = serialize_validation_errors_recursive(serializer.errors)
         raise exception_to_raise(detail)
 
     if return_validated:

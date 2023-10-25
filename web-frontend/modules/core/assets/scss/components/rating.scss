@@ -1,6 +1,5 @@
 .rating__star {
-  font-size: 18px;
-  padding-left: 2px;
+  font-size: 22px;
   pointer-events: initial;
 }
 
@@ -8,9 +7,10 @@
   @extend %ellipsis;
 
   display: block;
-  min-height: 18px;
+  height: 100%;
   user-select: none;
   pointer-events: none;
+  @include flex-align-items(2px);
 
   & > .rating__star:first-child {
     padding-left: 0;

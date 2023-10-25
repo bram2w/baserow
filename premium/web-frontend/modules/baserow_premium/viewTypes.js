@@ -30,7 +30,7 @@ export class KanbanViewType extends PremiumViewType {
   }
 
   getIconClass() {
-    return 'trello fab'
+    return 'baserow-icon-kanban'
   }
 
   getColorClass() {
@@ -219,7 +219,7 @@ export class CalendarViewType extends PremiumViewType {
   }
 
   getIconClass() {
-    return 'calendar'
+    return 'baserow-icon-calendar'
   }
 
   getColorClass() {

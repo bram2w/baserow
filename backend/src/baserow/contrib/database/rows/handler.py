@@ -145,7 +145,7 @@ RowId = NewType("RowId", int)
 class UpdatedRowsWithOldValuesAndMetadata(NamedTuple):
     updated_rows: List[GeneratedTableModelForUpdate]
     original_rows_values_by_id: Dict[RowId, RowValues]
-    updated_row_fields_metadata_by_row_id: Dict[RowId, FieldsMetadata]
+    updated_fields_metadata_by_row_id: Dict[RowId, FieldsMetadata]
 
 
 class RowM2MChangeTracker:
@@ -501,20 +501,20 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         previous_fields = {}
         # Append view sorting
         if view:
-            for view_sort in view.viewsort_set.all():
-                field = view_sort.field
+            for view_sort_or_group_by in view.get_all_sorts():
+                field = view_sort_or_group_by.field
                 field_name = field.db_column
                 field_type = field_type_registry.get_by_model(
-                    view_sort.field.specific_class
+                    view_sort_or_group_by.field.specific_class
                 )
 
                 if previous:
-                    if view_sort.order == "DESC":
+                    if view_sort_or_group_by.order == "DESC":
                         order_direction = "ASC"
                     else:
                         order_direction = "DESC"
                 else:
-                    order_direction = view_sort.order
+                    order_direction = view_sort_or_group_by.order
 
                 order_direction_suffix = "__gt" if order_direction == "ASC" else "__lt"
 
@@ -773,6 +773,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         fields = []
         update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         field_ids = []
         for field_object in model._field_objects.values():
             field_type: FieldType = field_object["type"]
@@ -969,6 +970,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,
@@ -1142,6 +1144,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             table, starting_row_ids=[row.id for row in inserted_rows]
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         field_ids = []
         for field_object in model._field_objects.values():
             field_type = field_object["type"]
@@ -1433,12 +1436,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         return created_rows, error_report.to_dict()
 
-    def _get_fields_metadata_for_row_history(
+    def get_fields_metadata_for_row_history(
         self,
-        model: GeneratedTableModel,
-        updated_field_ids: Set[int],
-        new_row_values: Dict[str, Any],
-        original_row_values: Dict[str, Any],
+        row: GeneratedTableModelForUpdate,
+        updated_fields: List["Field"],
+        metadata,
     ) -> FieldsMetadata:
         """
         Serializes the metadata for the fields that have changed for a given
@@ -1446,59 +1448,44 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         to reconstruct the row fields values as they were before.
         """
 
-        fields_metadata: FieldsMetadata = {"id": original_row_values["id"]}
-        new_row_values_keys = set(new_row_values.keys())
-        for field_id in updated_field_ids:
-            field_name = f"field_{field_id}"
-            field_object = model.get_field_object(field_name)
-            field_type = field_object["type"]
-            if field_name not in new_row_values_keys:
-                continue
-            field_metadata = field_type.serialize_metadata_for_row_history(
-                field_object["field"],
-                new_row_values[field_name],
-                original_row_values.get(field_name, None),
-            )
-            fields_metadata[field_name] = field_metadata
-        return fields_metadata
+        fields_metadata = metadata or {}
+        for field in updated_fields:
+            if hasattr(row, field.db_column):
+                field_type = field_type_registry.get_by_model(field)
+                field_metadata = field_type.serialize_metadata_for_row_history(
+                    field, row, fields_metadata.get(f"field_{field.id}", None)
+                )
+                fields_metadata[f"field_{field.id}"] = field_metadata
+        return {"id": row.id, **fields_metadata}
 
-    def _get_values_and_fields_metadata_for_rows(
+    def get_fields_metadata_for_rows(
         self,
-        model: GeneratedTableModel,
-        rows_to_update: List[GeneratedTableModelForUpdate],
-        updated_field_ids: Set[int],
-        new_rows_values_by_id: Dict[int, Dict[str, Any]],
-    ) -> Tuple[Dict[RowId, RowValues], Dict[RowId, FieldsMetadata]]:
+        rows: List[GeneratedTableModelForUpdate],
+        updated_fields: List["Field"],
+        fields_metadata_by_row_id=None,
+    ) -> Dict[RowId, FieldsMetadata]:
         """
-        Return the list of original values for each row in rows_to_update and
-        each field whose id is present in the updated_field_ids list. For each
-        row, a dictionary containing the metadata of the modified fields is also
-        returned, allowing the modified value to be reconstructed later.
-
-        :param model: The model of the table.
-        :param updated_field_ids: The ids of the fields that have changed.
-        :param rows_to_update: The rows that will be updated with
-            new_rows_values.
-        :param new_rows_values: The new values for the rows that have been
-            updated.
-        :return: A tuple containing the row values and the fields metadata for
-            the fields provided as updated_field_ids.
+        For each row, return a dictionary containing the metadata of the
+        modified fields, allowing the modified value to be
+        reconstructed later.
         """
 
-        rows_values_by_id: Dict[RowId, RowValues] = {}
-        fields_metadata_by_row_id: Dict[RowId, FieldsMetadata] = {}
-        for row in rows_to_update:
-            values = self.get_internal_values_for_fields(row, updated_field_ids)
-            values["id"] = row.id
+        rows_by_id = {row.id: row for row in rows}
 
-            updated_row_fields_metadata = self._get_fields_metadata_for_row_history(
-                model, updated_field_ids, new_rows_values_by_id[row.id], values
+        if fields_metadata_by_row_id is None:
+            fields_metadata_by_row_id: Dict[RowId, FieldsMetadata] = {}
+        else:
+            fields_metadata_by_row_id = deepcopy(fields_metadata_by_row_id)
+
+        for row_id, original_row in rows_by_id.items():
+            fields_metadata = self.get_fields_metadata_for_row_history(
+                original_row,
+                updated_fields,
+                fields_metadata_by_row_id.get(row_id, None),
             )
+            fields_metadata_by_row_id[row_id] = fields_metadata
 
-            rows_values_by_id[row.id] = values
-            fields_metadata_by_row_id[row.id] = updated_row_fields_metadata
-
-        return rows_values_by_id, fields_metadata_by_row_id
+        return fields_metadata_by_row_id
 
     def update_rows(
         self,
@@ -1558,6 +1545,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             db_rows_ids = [db_row.id for db_row in rows_to_update]
             raise RowDoesNotExist(sorted(list(set(row_ids) - set(db_rows_ids))))
 
+        updated_fields = [o["field"] for o in model._field_objects.values()]
+        fields_metadata_by_row_id = self.get_fields_metadata_for_rows(
+            rows_to_update, updated_fields, None
+        )
+
         updated_field_ids = set()
         field_name_to_field = dict()
         for obj in rows_to_update:
@@ -1567,16 +1559,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 if field_id in row_values or field["name"] in row_values:
                     updated_field_ids.add(field_id)
 
-        rows_values_by_id = {rv["id"]: rv for rv in rows_values}
-        (
-            original_row_values_by_id,
-            row_fields_metadata_by_row_id,
-        ) = self._get_values_and_fields_metadata_for_rows(
-            model,
-            rows_to_update,
-            updated_field_ids,
-            rows_values_by_id,
-        )
+        original_row_values_by_id = {}
+        for row in rows_to_update:
+            values = self.get_internal_values_for_fields(row, updated_field_ids)
+            values["id"] = row.id
+            original_row_values_by_id[row.id] = values
 
         before_rows_values = serialize_rows_for_response(rows_to_update, model)
 
@@ -1694,10 +1681,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # fields can't see the relations.
         for field_name, values in many_to_many.items():
             through = getattr(model, field_name).through
-            filter = {
+            filters = {
                 f"{row_column_name}__in": row_ids_change_m2m_per_field[field_name]
             }
-            delete_qs = through.objects.all().filter(**filter)
+            delete_qs = through.objects.all().filter(**filters)
             delete_qs._raw_delete(delete_qs.db)
             through.objects.bulk_create([v for v in values if v is not None])
 
@@ -1725,6 +1712,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             deleted_m2m_rels_per_link_field=m2m_change_tracker.get_deleted_link_row_rels_for_update_collector(),
         )
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,
@@ -1746,7 +1734,6 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        updated_fields = [o["field"] for o in model._field_objects.values()]
         ViewHandler().field_value_updated(updated_fields)
         SearchHandler.field_value_updated_or_created(table)
 
@@ -1765,10 +1752,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             m2m_change_tracker=m2m_change_tracker,
         )
 
+        fields_metadata_by_row_id = self.get_fields_metadata_for_rows(
+            updated_rows_to_return, updated_fields, fields_metadata_by_row_id
+        )
+
         return UpdatedRowsWithOldValuesAndMetadata(
             updated_rows_to_return,
             original_row_values_by_id,
-            row_fields_metadata_by_row_id,
+            fields_metadata_by_row_id,
         )
 
     def get_rows_for_update(
@@ -1855,6 +1846,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         updated_field_ids = []
         updated_fields = []
         for field_id, field_object in model._field_objects.items():
@@ -1963,6 +1955,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=[row.id])
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         updated_field_ids = []
         updated_fields = []
 
@@ -2067,6 +2060,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
         field_cache = FieldCache()
+        field_cache.cache_model(model)
         for (
             dependant_field,
             dependant_field_type,

@@ -6,10 +6,15 @@ from baserow.contrib.builder.elements.models import (
     Element,
     HeadingElement,
     ParagraphElement,
+    TableElement,
 )
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
+from baserow.contrib.builder.workflow_actions.models import EventTypes
 from baserow.core.db import specific_iterator
 from baserow.core.registries import ImportExportConfig
 from baserow.core.trash.handler import TrashHandler
@@ -61,11 +66,23 @@ def test_builder_application_export(data_fixture):
         page=page2, user=user, name="source 3", integration=integration
     )
 
+    element4 = data_fixture.create_builder_table_element(
+        page=page2, data_source=datasource3, items_per_page=42
+    )
+
+    workflow_action_1 = data_fixture.create_notification_workflow_action(
+        page=page1,
+        element=element1,
+        event=EventTypes.CLICK,
+        description="hello",
+        title="there",
+    )
+
     serialized = BuilderApplicationType().export_serialized(
         builder, ImportExportConfig(include_permission_data=True)
     )
 
-    assert serialized == {
+    reference = {
         "pages": [
             {
                 "id": page1.id,
@@ -73,6 +90,17 @@ def test_builder_application_export(data_fixture):
                 "order": page1.order,
                 "path": page1.path,
                 "path_params": page1.path_params,
+                "workflow_actions": [
+                    {
+                        "id": workflow_action_1.id,
+                        "type": "notification",
+                        "element_id": element1.id,
+                        "event": EventTypes.CLICK.value,
+                        "page_id": page1.id,
+                        "description": "hello",
+                        "title": "there",
+                    }
+                ],
                 "data_sources": [
                     {
                         "id": datasource1.id,
@@ -81,8 +109,10 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource1.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
                             "row_id": "",
                             "view_id": None,
+                            "table_id": None,
                             "search_query": "",
                             "type": "local_baserow_get_row",
                         },
@@ -140,6 +170,7 @@ def test_builder_application_export(data_fixture):
                 "order": page2.order,
                 "path": page2.path,
                 "path_params": page2.path_params,
+                "workflow_actions": [],
                 "data_sources": [
                     {
                         "id": datasource2.id,
@@ -148,8 +179,10 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource2.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
                             "row_id": "",
                             "view_id": None,
+                            "table_id": None,
                             "search_query": "",
                             "type": "local_baserow_get_row",
                         },
@@ -161,7 +194,10 @@ def test_builder_application_export(data_fixture):
                         "service": {
                             "id": datasource3.service.id,
                             "integration_id": integration.id,
+                            "filters": [],
+                            "sortings": [],
                             "view_id": None,
+                            "table_id": None,
                             "search_query": "",
                             "type": "local_baserow_list_rows",
                         },
@@ -178,6 +214,21 @@ def test_builder_application_export(data_fixture):
                         "style_padding_bottom": 10,
                         "value": element3.value,
                         "level": element3.level,
+                    },
+                    {
+                        "id": element4.id,
+                        "type": "table",
+                        "order": str(element4.order),
+                        "parent_element_id": None,
+                        "place_in_container": None,
+                        "items_per_page": 42,
+                        "style_padding_top": 10,
+                        "style_padding_bottom": 10,
+                        "data_source_id": element4.data_source.id,
+                        "fields": [
+                            {"name": f.name, "value": f.value}
+                            for f in element4.fields.all()
+                        ],
                     },
                 ],
             },
@@ -207,6 +258,8 @@ def test_builder_application_export(data_fixture):
         "type": "builder",
     }
 
+    assert serialized == reference
+
 
 IMPORT_REFERENCE = {
     "pages": [
@@ -216,6 +269,16 @@ IMPORT_REFERENCE = {
             "order": 1,
             "path": "/test",
             "path_params": {},
+            "workflow_actions": [
+                {
+                    "id": 123,
+                    "page_id": 999,
+                    "element_id": 998,
+                    "type": "notification",
+                    "description": "hello",
+                    "title": "there",
+                }
+            ],
             "elements": [
                 {
                     "id": 998,
@@ -233,6 +296,29 @@ IMPORT_REFERENCE = {
                     "place_in_container": None,
                     "order": 2,
                     "value": "",
+                },
+                {
+                    "id": 1000,
+                    "type": "table",
+                    "parent_element_id": None,
+                    "place_in_container": None,
+                    "items_per_page": 42,
+                    "order": 2.5,
+                    "data_source_id": 5,
+                    "fields": [
+                        {"name": "F 1", "value": "get('test1')"},
+                        {"name": "F 2", "value": "get('test2')"},
+                    ],
+                },
+                {
+                    "id": 502,
+                    "type": "paragraph",
+                    "parent_element_id": 500,
+                    "place_in_container": "1",
+                    "style_padding_top": 10,
+                    "style_padding_bottom": 10,
+                    "order": 1.5,
+                    "value": "test",
                 },
                 {
                     "id": 500,
@@ -272,6 +358,7 @@ IMPORT_REFERENCE = {
                         "id": 17,
                         "integration_id": None,
                         "view_id": None,
+                        "table_id": None,
                         "search_query": "",
                         "type": "local_baserow_list_rows",
                     },
@@ -284,6 +371,7 @@ IMPORT_REFERENCE = {
             "order": 2,
             "path": "/test2",
             "path_params": {},
+            "workflow_actions": [],
             "elements": [
                 {
                     "id": 997,
@@ -305,6 +393,7 @@ IMPORT_REFERENCE = {
                         "integration_id": 42,
                         "row_id": "",
                         "view_id": None,
+                        "table_id": None,
                         "search_query": "",
                         "type": "local_baserow_get_row",
                     },
@@ -317,6 +406,7 @@ IMPORT_REFERENCE = {
                         "id": 2,
                         "integration_id": 42,
                         "view_id": None,
+                        "table_id": None,
                         "search_query": "",
                         "type": "local_baserow_list_rows",
                     },
@@ -369,7 +459,7 @@ def test_builder_application_import(data_fixture):
 
     [page1, page2] = builder.page_set.all()
 
-    assert page1.element_set.count() == 4
+    assert page1.element_set.count() == 6
     assert page2.element_set.count() == 1
 
     assert page1.datasource_set.count() == 2
@@ -392,25 +482,38 @@ def test_builder_application_import(data_fixture):
     [
         element1,
         element_inside_container,
+        element_inside_container2,
         element2,
+        table_element,
         container_element,
     ] = specific_iterator(page1.element_set.all())
 
     assert isinstance(element1, HeadingElement)
     assert isinstance(element2, ParagraphElement)
     assert isinstance(container_element, ColumnElement)
+    assert isinstance(table_element, TableElement)
+
+    assert table_element.fields.count() == 2
+    assert table_element.items_per_page == 42
 
     assert element1.order == 1
     assert element1.level == 2
 
     assert element_inside_container.parent_element.specific == container_element
+    assert element_inside_container2.parent_element.specific == container_element
+
+    [workflow_action] = BuilderWorkflowActionHandler().get_workflow_actions(page1)
+
+    assert workflow_action.element_id == element1.id
+    assert workflow_action.description == "hello"
+    assert workflow_action.title == "there"
 
 
 @pytest.mark.django_db
 def test_delete_builder_application_with_published_builder(data_fixture):
     builder = data_fixture.create_builder_application()
     builder_to = data_fixture.create_builder_application(workspace=None)
-    domain1 = data_fixture.create_builder_domain(
+    domain1 = data_fixture.create_builder_custom_domain(
         builder=builder, published_to=builder_to
     )
 

@@ -12,7 +12,7 @@
           "
         >
           <a @click="handleEditClick(team)">
-            <i class="context__menu-icon fas fa-fw fa-pen"></i>
+            <i class="context__menu-icon iconoir-edit-pencil"></i>
             {{ $t('editTeamContext.edit') }}
           </a>
         </li>
@@ -32,7 +32,7 @@
             class="color-error"
             @click.prevent="remove(team)"
           >
-            <i class="context__menu-icon fas fa-fw fa-trash"></i>
+            <i class="context__menu-icon iconoir-bin"></i>
             {{ $t('editTeamContext.remove') }}
           </a>
         </li>

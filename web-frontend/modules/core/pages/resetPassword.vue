@@ -15,12 +15,12 @@
         <Alert
           simple
           type="error"
-          icon="exclamation"
+          icon="iconoir-warning-triangle"
           :title="$t('resetPassword.disabled')"
-          >{{ $t('resetPassword.disabledMessage') }}</Alert
-        >
+          ><p>{{ $t('resetPassword.disabledMessage') }}</p>
+        </Alert>
         <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
-          <i class="fas fa-arrow-left"></i>
+          <i class="iconoir-arrow-left"></i>
           {{ $t('action.backToLogin') }}
         </nuxt-link>
       </template>
@@ -75,7 +75,7 @@
             <ul class="auth__action-links">
               <li>
                 <nuxt-link :to="{ name: 'login' }">
-                  <i class="fas fa-arrow-left"></i>
+                  <i class="iconoir-arrow-left"></i>
                   {{ $t('action.backToLogin') }}
                 </nuxt-link>
               </li>
@@ -86,11 +86,11 @@
     </div>
     <div v-if="success" class="box__message">
       <div class="box__message-icon">
-        <i class="fas fa-check"></i>
+        <i class="iconoir-check"></i>
       </div>
       <h1 class="box__message-title">{{ $t('resetPassword.changed') }}</h1>
       <nuxt-link :to="{ name: 'login' }" class="button button--large">
-        <i class="fas fa-arrow-left"></i>
+        <i class="iconoir-arrow-left"></i>
         {{ $t('action.backToLogin') }}
       </nuxt-link>
     </div>

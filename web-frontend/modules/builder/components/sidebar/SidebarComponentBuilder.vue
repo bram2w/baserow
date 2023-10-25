@@ -17,7 +17,7 @@
           "
         >
           <a @click="settingsClicked">
-            <i class="context__menu-icon fas fa-fw fa-cog"></i>
+            <i class="context__menu-icon iconoir-settings"></i>
             {{ $t('sidebarComponentBuilder.settings') }}
           </a>
         </li>
@@ -63,7 +63,7 @@
           class="tree__sub-add"
           @click="$refs.createPageModal.show()"
         >
-          <i class="fas fa-plus"></i>
+          <i class="iconoir-plus"></i>
           {{ $t('sidebarComponentBuilder.createPage') }}
         </a>
         <CreatePageModal

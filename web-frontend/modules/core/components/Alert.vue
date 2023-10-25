@@ -9,21 +9,23 @@
       'alert--minimal': minimal,
     }"
   >
-    <a v-if="closeButton" class="alert__close" @click="$emit('close')">
-      <i class="fas fa-times"></i>
-    </a>
-
     <div v-if="loading" class="alert__icon">
       <div class="loading alert__icon-loading"></div>
     </div>
 
     <div v-if="icon && !loading" class="alert__icon">
-      <i v-if="icon" class="fas" :class="`fa-${icon}`" />
+      <i v-if="icon" :class="icon" />
     </div>
 
-    <div v-if="!minimal && title" class="alert__title">{{ title }}</div>
+    <div>
+      <div v-if="!minimal && title" class="alert__title">{{ title }}</div>
 
-    <p class="alert__content"><slot /></p>
+      <div class="alert__content"><slot /></div>
+    </div>
+
+    <a v-if="closeButton" class="alert__close" @click="$emit('close')">
+      <i class="iconoir-cancel"></i>
+    </a>
   </div>
 </template>
 
