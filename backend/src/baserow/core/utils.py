@@ -12,6 +12,7 @@ from collections import namedtuple
 from decimal import Decimal
 from fractions import Fraction
 from itertools import islice
+from numbers import Number
 from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 from django.db import transaction
@@ -923,3 +924,27 @@ def transaction_on_commit_if_not_already(func):
     funcs = set(func for _, func in get_connection().run_on_commit or [])
     if func not in funcs:
         transaction.on_commit(func)
+
+
+def escape_csv_cell(payload):
+    """
+    Prevents CSV injection for a cell in a CSV file.
+
+    Copied from: https://github.com/raphaelm/defusedcsv/blob/master/defusedcsv/csv.py.
+    More about this topic: https://owasp.org/www-community/attacks/CSV_Injection
+    """
+
+    if payload is None:
+        return ""
+    if isinstance(payload, Number):
+        return payload
+
+    payload = str(payload)
+    if (
+        payload
+        and payload[0] in ("@", "+", "-", "=", "|", "%")
+        and not re.match("^-?[0-9,\\.]+$", payload)
+    ):
+        payload = payload.replace("|", "\\|")
+        payload = "'" + payload
+    return payload
