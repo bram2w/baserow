@@ -16,6 +16,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from baserow.core.models import UserLogEntry
 from baserow.core.registries import Plugin, plugin_registry
+from baserow.core.user.handler import UserHandler
 
 User = get_user_model()
 
@@ -306,6 +307,39 @@ def test_token_refresh(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_refresh_token_is_invalidated_after_password_change(api_client, data_fixture):
+    with freeze_time("2020-01-01 12:00"):
+        user = data_fixture.create_user(
+            email="test@test.nl",
+            password="password",
+            first_name="Test1",
+            is_active=True,
+        )
+
+        response = api_client.post(
+            reverse("api:user:token_auth"),
+            {"email": "test@test.nl", "password": "password"},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        refresh_token = response_json["refresh_token"]
+
+    with freeze_time("2020-01-01 12:01"):
+        UserHandler().change_password(user, "password", "test1234")
+
+    with freeze_time("2020-01-01 12:02"):
+        response = api_client.post(
+            reverse("api:user:token_refresh"),
+            {"refresh_token": refresh_token},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"
+
+
+@pytest.mark.django_db
 def test_token_verify(api_client, data_fixture):
     class TmpPlugin(Plugin):
         type = "tmp_plugin"
@@ -347,3 +381,37 @@ def test_token_verify(api_client, data_fixture):
             json={"refresh_token": str(RefreshToken.for_user(user))},
         )
         assert response.status_code == HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db
+def test_verify_token_is_invalidated_after_password_change(api_client, data_fixture):
+    with freeze_time("2020-01-01 12:00"):
+        user = data_fixture.create_user(
+            email="test@test.nl",
+            password="password",
+            first_name="Test1",
+            is_active=True,
+        )
+
+        response = api_client.post(
+            reverse("api:user:token_auth"),
+            {"email": "test@test.nl", "password": "password"},
+            format="json",
+        )
+        response_json = response.json()
+        assert response.status_code == HTTP_200_OK
+        refresh_token = response_json["refresh_token"]
+
+    with freeze_time("2020-01-01 12:01"):
+        UserHandler().change_password(user, "password", "test1234")
+
+    with freeze_time("2020-01-01 12:02"):
+        response = api_client.post(
+            reverse("api:user:token_verify"),
+            {"refresh_token": refresh_token},
+            format="json",
+        )
+        response_json = response.json()
+        print(response_json)
+        assert response.status_code == HTTP_401_UNAUTHORIZED
+        assert response_json["error"] == "ERROR_INVALID_REFRESH_TOKEN"

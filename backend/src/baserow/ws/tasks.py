@@ -3,6 +3,34 @@ from typing import Any, Dict, Iterable, List, Optional
 from baserow.config.celery import app
 
 
+@app.task(bind=True)
+def force_disconnect_users(
+    self, user_ids: List[int], ignore_web_socket_ids: Optional[List[str]] = None
+):
+    """
+    This task can be executed if the users matching the provided ids must be
+    disconnected.
+
+    :param user_ids: The ids of the users that must be disconnected.
+    :param ignore_web_socket_ids: An optional list of web socket id which will
+        not be sent the payload if provided.
+    """
+
+    from asgiref.sync import async_to_sync
+    from channels.layers import get_channel_layer
+
+    channel_layer = get_channel_layer()
+    async_to_sync(send_message_to_channel_group)(
+        channel_layer,
+        "users",
+        {
+            "type": "force_disconnect_users",
+            "user_ids": user_ids,
+            "ignore_web_socket_ids": ignore_web_socket_ids,
+        },
+    )
+
+
 async def send_message_to_channel_group(
     channel_layer, channel_group_name: str, message: dict
 ):

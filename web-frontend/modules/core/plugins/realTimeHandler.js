@@ -1,4 +1,5 @@
 import { isSecureURL } from '@baserow/modules/core/utils/string'
+import { logoutAndRedirectToLogin } from '@baserow/modules/core/utils/auth'
 
 export class RealTimeHandler {
   constructor(context) {
@@ -398,6 +399,11 @@ export class RealTimeHandler {
 
     this.registerEvent('all_notifications_cleared', ({ store }) => {
       store.dispatch('notification/forceClearAll')
+    })
+
+    this.registerEvent('force_disconnect', ({ store }) => {
+      this.reconnect = false
+      logoutAndRedirectToLogin(this.context.app.router, store, false, true)
     })
   }
 }

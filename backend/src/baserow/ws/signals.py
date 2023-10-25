@@ -24,6 +24,7 @@ from baserow.core.operations import (
     ReadApplicationOperationType,
 )
 from baserow.core.registries import object_scope_type_registry
+from baserow.core.user import signals as user_signals
 from baserow.core.utils import generate_hash
 
 from .tasks import (
@@ -32,6 +33,7 @@ from .tasks import (
     broadcast_to_groups,
     broadcast_to_permitted_users,
     broadcast_to_users,
+    force_disconnect_users,
 )
 
 
@@ -369,5 +371,15 @@ def notify_workspace_invitation_rejected(sender, invitation, user, **kwargs):
                 "type": "workspace_invitation_rejected",
                 "invitation": serialized_data,
             },
+        )
+    )
+
+
+@receiver(user_signals.user_password_changed)
+def user_password_changed(sender, user, ignore_web_socket_id=None, **kwargs):
+    transaction.on_commit(
+        lambda: force_disconnect_users.delay(
+            [user.id],
+            [ignore_web_socket_id],
         )
     )

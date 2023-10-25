@@ -10,7 +10,50 @@ from baserow.ws.tasks import (
     broadcast_to_groups,
     broadcast_to_users,
     broadcast_to_users_individual_payloads,
+    force_disconnect_users,
 )
+
+
+@pytest.mark.asyncio
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.websockets
+async def test_force_disconnect_users(data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+
+    communicator_1 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_1}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_1.connect()
+    response_1 = await communicator_1.receive_json_from()
+    response_1["web_socket_id"]
+
+    communicator_2 = WebsocketCommunicator(
+        application,
+        f"ws/core/?jwt_token={token_2}",
+        headers=[(b"origin", b"http://localhost")],
+    )
+    await communicator_2.connect()
+    response_2 = await communicator_2.receive_json_from()
+    response_2["web_socket_id"]
+
+    await sync_to_async(force_disconnect_users)([user_1.id])
+    await communicator_2.receive_nothing(0.1)
+
+    payload = await communicator_1.receive_output(0.1)
+    assert payload["type"] == "websocket.send"
+    assert payload["text"] == '{"type": "force_disconnect"}'
+
+    payload = await communicator_1.receive_output(0.1)
+    assert payload["type"] == "websocket.close"
+
+    assert communicator_1.output_queue.qsize() == 0
+    assert communicator_2.output_queue.qsize() == 0
+
+    await communicator_1.disconnect()
+    await communicator_2.disconnect()
 
 
 @pytest.mark.asyncio

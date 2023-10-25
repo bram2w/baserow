@@ -25,7 +25,9 @@ class JSONWebTokenAuthentication(JWTAuthentication):
             raise InvalidToken(_("Token contained no recognizable user identification"))
 
         try:
-            user = self.user_model.objects.get(**{jwt_settings.USER_ID_FIELD: user_id})
+            user = self.user_model.objects.select_related("profile").get(
+                **{jwt_settings.USER_ID_FIELD: user_id}
+            )
         except self.user_model.DoesNotExist:
             raise exceptions.AuthenticationFailed(
                 _("User not found"), code="user_not_found"
@@ -47,6 +49,9 @@ class JSONWebTokenAuthentication(JWTAuthentication):
             if auth_response is None:
                 return None
             user, token = auth_response
+
+            if not user.profile.is_jwt_token_valid(token):
+                raise InvalidToken
 
             if not user.is_active:
                 raise DeactivatedUserException()

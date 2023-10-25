@@ -241,6 +241,10 @@
         "title": "Session expired",
         "content": "You were logged out because your authentication token has expired. Please login again."
     },
+    "userPasswordChangedToast": {
+        "title": "Password changed",
+        "content": "Your password has been changed. Please login again."
+    },
     "restoreToast": {
         "restore": "Restore deleted {type}"
     },

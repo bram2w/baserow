@@ -485,3 +485,17 @@ def test_duplicate_application(mock_broadcast_to_permitted_users, data_fixture):
     mock_broadcast_to_permitted_users.delay.assert_called_once()
     args = mock_broadcast_to_permitted_users.delay.call_args
     assert args[0][0] == application_clone.id
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.signals.force_disconnect_users")
+@pytest.mark.websockets
+def test_user_password_changed(mock_force_disconnect_user, data_fixture):
+    user = data_fixture.create_user(password="password")
+
+    with transaction.atomic():
+        UserHandler().change_password(user, "password", "newpassword")
+
+    mock_force_disconnect_user.delay.assert_called_once()
+    args = mock_force_disconnect_user.delay.call_args
+    assert args[0][0] == [user.id]
