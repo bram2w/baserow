@@ -8,6 +8,7 @@ from baserow.contrib.database.api.export.serializers import (
 from baserow.contrib.database.export.file_writer import FileWriter, QuerysetSerializer
 from baserow.contrib.database.export.registries import TableExporter
 from baserow.contrib.database.views.view_types import GridViewType
+from baserow.core.utils import escape_csv_cell
 
 
 class CsvTableExporter(TableExporter):
@@ -82,7 +83,7 @@ class CsvQuerysetSerializer(QuerysetSerializer):
             data = {}
             for field_serializer in self.field_serializers:
                 field_database_name, _, field_human_value = field_serializer(row)
-                data[field_database_name] = str(field_human_value)
+                data[field_database_name] = escape_csv_cell(str(field_human_value))
 
             csv_dict_writer.writerow(data)
 
