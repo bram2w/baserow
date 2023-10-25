@@ -17,7 +17,7 @@
         "duplicate": "Duplikuj"
     },
     "sidebar": {
-        "createWorkspace": "Utwórz grupę",
+        "createWorkspace": "Utwórz obszar roboczy",
         "inviteOthers": "Zaproś innych",
         "logoff": "Wyloguj",
         "errorNoWorkspace": "Nie masz żadnych grup.",
@@ -25,7 +25,8 @@
         "dashboard": "Pulpit",
         "trash": "Śmieci",
         "settings": "Ustawienia",
-        "members": "Członkowie"
+        "members": "Członkowie",
+        "notifications": "Powiadomienia"
     },
     "accountForm": {
         "nameLabel": "Twoje imię",
@@ -94,7 +95,7 @@
         "passwordRepeat": "Powtórz hasło"
     },
     "invitationTitle": "Zaproszenie",
-    "invitationMessage": "{invitedBy} zaprosił Cię do dołączenia do {group}.",
+    "invitationMessage": "{invitedBy} zaprosił Cię do dołączenia do {workspace}.",
     "workspaceForm": {
         "nameLabel": "Nazwa"
     },
@@ -131,14 +132,15 @@
     "workspacesContext": {
         "search": "Wyszukaj grupy",
         "noResults": "Nie znaleziono wyników",
-        "createWorkspace": "Utwórz grupę"
+        "createWorkspace": "Utwórz obszar roboczy"
     },
     "workspaceContext": {
         "renameWorkspace": "Zmień nazwę grupy",
         "members": "Członkowie",
         "viewTrash": "Wyświetl kosz",
         "leaveWorkspace": "Opuść grupę",
-        "deleteWorkspace": "Usuń grupę"
+        "deleteWorkspace": "Usuń grupę",
+        "auditLog": "Dziennik inspekcji"
     },
     "createWorkspaceModal": {
         "createNew": "Utwórz nową grupę",
@@ -182,9 +184,9 @@
         "unnamed": "Nienazwany {type} {id}"
     },
     "trashModal": {
-        "emptyTitle": "Nie znaleziono grup",
-        "emptyMessage": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
-        "emptyMessageWithoutCreatePermission": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć, musisz najpierw zostać zaproszony do grupy przez administratora."
+        "emptyTitle": "Nie znaleziono obszarów roboczych",
+        "emptyMessage": "Nie jesteś członkiem żadnego obszaru roboczego. Aplikacje takie jak bazy danych należą do obszaru roboczego, więc aby je utworzyć, należy utworzyć obszar roboczy.",
+        "emptyMessageWithoutCreatePermission": "Nie jesteś członkiem żadnego obszaru roboczego. Aplikacje takie jak bazy danych należą do obszaru roboczego, więc aby je utworzyć, musisz najpierw zostać zaproszony do obszaru roboczego przez administratora."
     },
     "uploadViaURLUserFileUpload": {
         "title": "Prześlij z adresu URL",
@@ -266,7 +268,7 @@
         "redditTitle": "'Baserow - Baza danych open source bez kodu",
         "noWorkspaceTitle": "Nie znaleziono grup",
         "noWorkspaceText": "Nie jesteś członkiem żadnej grupy. Aplikacje takie jak bazy danych należą do grupy, więc aby je stworzyć musisz stworzyć grupę.",
-        "createWorkspace": "Utwórz grupę",
+        "createWorkspace": "Utwórz obszar roboczy",
         "becomeGithubSponsor": "Zostań sponsorem GitHub",
         "starOnGitlab": "Oznacz nas gwiazdką na GitLab",
         "shareOnTwitter": "Tweetuj o Baserow",
@@ -448,10 +450,10 @@
     "membersSettings": {
         "membersTable": {
             "actions": {
-                "remove": "Usuń z grupy",
+                "remove": "Usuń z obszaru roboczego",
                 "copyEmail": "Skopiuj e-mail"
             },
-            "title": "{userAmount} Członkowie w grupie {groupName}",
+            "title": "{userAmount} Członkowie w {workspaceName}",
             "inviteMember": "Zaproś członka",
             "columns": {
                 "email": "Email",
@@ -459,11 +461,11 @@
                 "role": "Domyślna rola",
                 "teams": "Zespoły",
                 "highestRole": "Najwyższa rola",
-                "highestRoleHelpText": "Najwyższa rola przypisana temu użytkownikowi bezpośrednio lub z zespołu, na czymkolwiek w tej grupie"
+                "highestRoleHelpText": "Najwyższa rola przypisana temu użytkownikowi bezpośrednio lub przez zespół do czegokolwiek w tym obszarze roboczym"
             }
         },
         "invitesTable": {
-            "title": "{invitesAmount} Oczekujące zaproszenia w grupie {groupName}",
+            "title": "{invitesAmount} Oczekujące zaproszenia w {workspaceName}",
             "columns": {
                 "email": "Email",
                 "message": "Wiadomość",
@@ -483,8 +485,8 @@
                     "title": "Użytkownik jest już w grupie."
                 }
             },
-            "title": "Zaproś członków grupy",
-            "helpIconText": "Wybrana rola będzie domyślną rolą użytkownika w tej grupie."
+            "title": "Zapraszanie członków obszaru roboczego",
+            "helpIconText": "Wybrana rola będzie domyślną rolą użytkownika w tym obszarze roboczym."
         },
         "membersTabTitle": "Członkowie"
     },
@@ -519,5 +521,126 @@
     },
     "highestPaidRoleField": {
         "billable": "Płatny"
+    },
+    "notificationPanel": {
+        "title": "Powiadomienia",
+        "markAllAsRead": "Oznacz wszystko jako przeczytane",
+        "clearAll": "Wyczyść wszystko",
+        "noNotificationTitle": "Nie masz żadnych powiadomień",
+        "noNotification": "Powiadomimy Cię o ważnych aktualizacjach i za każdym razem, gdy zostaniesz wspomniany w Baserow.",
+        "newNotificationsAvailable": "Dostępne nowe powiadomienia",
+        "refresh": "Odświeżanie"
+    },
+    "connectingToast": {
+        "content": "Ponowne łączenie z serwerem.",
+        "title": "Ponowne łączenie"
+    },
+    "undoRedoToast": {
+        "undoingTitle": "Cofanie...",
+        "undoingText": "Cofanie twojego działania",
+        "redoingTitle": "Przerabianie...",
+        "undoneTitle": "Cofnąć",
+        "undoneText": "Akcja została cofnięta",
+        "noMoreUndo": "Nie ma więcej czynności do cofnięcia",
+        "skippingUndoDueToError": "Cofnięcie nie powiodło się z powodu nieznanego błędu. Pomijam go.",
+        "redoingText": "Ponawiam działanie",
+        "redoneTitle": "Przerobione",
+        "redoneText": "Akcja została wykonana ponownie",
+        "noMoreRedo": "Brak akcji do ponownego przetworzenia",
+        "skippingRedoDueToError": "Cofnięcie nie powiodło się z powodu nieznanego błędu. Pomijam go.",
+        "failed": "Nie powiodło się"
+    },
+    "permissionsUpdatedToast": {
+        "title": "Zaktualizowano uprawnienia",
+        "content": "Może to mieć wpływ na to, do czego masz dostęp, przeładuj stronę.",
+        "action": "Przeładuj"
+    },
+    "clearAllNotificationsConfirmModal": {
+        "title": "Czy na pewno chcesz wyczyścić wszystkie powiadomienia?",
+        "message": "Wszystkie powiadomienia zostaną trwale usunięte i nie będzie można ich ponownie zobaczyć."
+    },
+    "uploadFileDropzone": {
+        "drop": "Upuść tutaj",
+        "clickOrDrop": "Kliknij lub upuść pliki tutaj",
+        "errorTooManyFilesTitle": "Zbyt wiele plików",
+        "errorTooManyFilesMessage": "Można przesłać tylko jeden plik",
+        "errorWrongFileTypeTitle": "Nieprawidłowy typ pliku",
+        "errorWrongFileTypeMessage": "Nie można przesłać pliku typu {type}"
+    },
+    "failedConnectingToast": {
+        "title": "Nie udało się",
+        "content": "Połączenie z serwerem nie powiodło się. Proszę odświeżyć stronę.",
+        "action": "Odśwież stronę"
+    },
+    "authorizationErrorToast": {
+        "title": "Błąd autoryzacji",
+        "content": "Wygląda na to, że nie masz uprawnień do wyświetlania tego zasobu.",
+        "action": "Odśwież stronę"
+    },
+    "userSessionExpiredToast": {
+        "title": "Sesja wygasła",
+        "content": "Zostałeś wylogowany, ponieważ token uwierzytelniający wygasł. Zaloguj się ponownie."
+    },
+    "restoreToast": {
+        "restore": "Przywróć usunięte {type}"
+    },
+    "copyingToast": {
+        "title": "Kopiowanie...",
+        "content": "Przygotowuję Twoje dane"
+    },
+    "PastingToast": {
+        "title": "Wklejanie...",
+        "content": "Przygotowuję Twoje dane"
+    },
+    "clearingToast": {
+        "title": "Czyszczenie...",
+        "content": "Przygotowuję Twoje dane"
+    },
+    "workspaceInvitationAcceptedNotification": {
+        "title": "{sender} zaakceptował Twoje zaproszenie do {workspaceName}"
+    },
+    "workspaceInvitationRejectedNotification": {
+        "title": "{sender} odrzucił Twoje zaproszenie do {workspaceName}"
+    },
+    "workspaceInvitationCreatedNotification": {
+        "title": "{sender} zaprasza Cię do {workspaceName}"
+    },
+    "versionUpgradeNotification": {
+        "title": "{version} już jest! Sprawdź, co nowego."
+    },
+    "integrationCreateEditModal": {
+        "createTitle": "Nowa integracja",
+        "editTitle": "Edytuj integrację",
+        "warningTitle": "Ostrzeżenie"
+    },
+    "integrationEditForm": {
+        "name": "Nazwa integracji",
+        "namePlaceholder": "Wprowadź nazwę integracji..."
+    },
+    "dropdown": {
+        "empty": "Brak dostępnych elementów"
+    },
+    "styleSidePanel": {
+        "paddingTop": "Odstęp górny",
+        "paddingBottom": "Odstęp dolny"
+    },
+    "styleBoxForm": {
+        "paddingError": "Wartość musi być liczbą całkowitą z przedziału od 0 do 200."
+    },
+    "richTextEditorMentionsList": {
+        "notFound": "Nie znaleziono użytkowników"
+    },
+    "emailNotifications": {
+        "label": "Wzmianki, komentarze i inne powiadomienia",
+        "title": "Powiadomienia e-mail",
+        "submitButton": "Częstotliwość aktualizacji",
+        "daily": "Codziennie",
+        "never": "Nigdy",
+        "weekly": "Co tydzień",
+        "description": "Skonfiguruj częstotliwość wysyłania wiadomości e-mail do skrzynki odbiorczej.",
+        "instant": "Natychmiastowy"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "Formuła jest nieprawidłowa."
     }
 }

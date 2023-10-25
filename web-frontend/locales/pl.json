@@ -31,10 +31,13 @@
         "deactivate": "Dezaktywuj",
         "remove": "Usuń",
         "login": "Zaloguj sie",
-        "download": "Pobierz"
+        "download": "Pobierz",
+        "copyToClipboard": "Skopiuj do schowka",
+        "reset": "Resetowanie"
     },
     "adminType": {
-        "settings": "Ustawienia"
+        "settings": "Ustawienia",
+        "health": "Zdrowie"
     },
     "applicationType": {
         "database": "Baza danych",
@@ -50,7 +53,8 @@
         "account": "Konto",
         "password": "Password",
         "tokens": "Tokeny bazy danych",
-        "deleteAccount": "Usuń konto"
+        "deleteAccount": "Usuń konto",
+        "emailNotifications": "Powiadomienia e-mail"
     },
     "userFileUploadType": {
         "file": "moje urządzenie",
@@ -65,11 +69,14 @@
         "minLength": "Wymagana jest tutaj {min} ilość znaków.",
         "maxLength": "W tym miejscu dozwolone jest maksymalnie {max} znaków.",
         "minMaxLength": "Dozwolone jest tu minimum {min} i maksimum {max} znaków.",
-        "requiredField": "To pole jest wymagane."
+        "requiredField": "To pole jest wymagane.",
+        "integerField": "Pole musi być liczbą całkowitą.",
+        "minValueField": "Pole musi być większe lub równe {min}.",
+        "maxValueField": "Pole musi być mniejsze lub równe {max}."
     },
     "permission": {
         "admin": "Administrator",
-        "adminDescription": "Potrafi w pełni skonfigurować i edytować grupy i aplikacje.",
+        "adminDescription": "Potrafi w pełni konfigurować i edytować obszary robocze i aplikacje.",
         "member": "Członek",
         "memberDescription": "Potrafi w pełni skonfigurować i edytować aplikacje."
     },
@@ -91,7 +98,9 @@
         "phoneNumber": "Numer telefonu",
         "formula": "Formuła",
         "lookup": "Wyszukiwania",
-        "multipleCollaborators": "Współpracownicy"
+        "multipleCollaborators": "Współpracownicy",
+        "count": "Liczba",
+        "rollup": "Podsumowanie"
     },
     "fieldErrors": {
         "invalidNumber": "Nieprawidłowy numer",
@@ -125,8 +134,10 @@
         "multipleSelect": "Przyjmuje tablicę mieszanych liczb całkowitych lub wartości tekstowych, z których każda reprezentuje wybrany id lub wartość opcji select. W przypadku wartości tekstowej, wybierana jest pierwsza pasująca opcja.",
         "phoneNumber": "Akceptuje numer telefonu o maksymalnej długości 100 znaków składający się wyłącznie z cyfr, spacji i następujących znaków: Nx,._+*()#=;/- .",
         "formula": "Pole tylko do odczytu zdefiniowane przez formułę napisaną w języku formuł Baserow.",
-        "lookup": "Pole tylko do odczytu połączone z polem wiersza powiązanego, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola lookup w tabeli powiązanej.",
-        "multipleCollaborators": "Przyjmuje tablicę obiektów, gdzie każdy obiekt zawiera id użytkownika."
+        "lookup": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca tablicę wartości i identyfikatorów wierszy z wybranego pola odnośnika w połączonej tabeli.",
+        "multipleCollaborators": "Przyjmuje tablicę obiektów, gdzie każdy obiekt zawiera id użytkownika.",
+        "rollup": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca wartości z wybranego pola odnośnika w połączonej tabeli.",
+        "count": "Pole tylko do odczytu połączone z polem łącza do tabeli, które zwraca liczbę relacji."
     },
     "viewFilter": {
         "contains": "zawiera",
@@ -157,7 +168,14 @@
         "beforeToday": "jest przed dniem dzisiejszym",
         "afterToday": "jest po dzisiejszym dniu",
         "containsWord": "zawiera słowo",
-        "doesntContainWord": "nie zawiera słowa"
+        "doesntContainWord": "nie zawiera słowa",
+        "isWithinDays": "jest w ciągu dni",
+        "isAfterOrEqualDate": "jest po lub w tym samym dniu",
+        "isAfterDaysAgo": "jest po dniach",
+        "isWithinWeeks": "w ciągu tygodni",
+        "isWithinMonths": "jest w ciągu miesięcy",
+        "isBeforeOrEqualDate": "jest przed lub w tym samym dniu",
+        "isEvenAndWhole": "jest równy i cały"
     },
     "viewType": {
         "grid": "Siatka",
@@ -245,7 +263,7 @@
         "failedToUndoRedoDueToConflictTitle": "Nie można cofnąć/ponowić",
         "failedToUndoRedoDueToConflictDescription": "Trwa inna operacja blokująca cofnięcie lub ponowne wykonanie, proszę poczekać na jej zakończenie przed ponowną próbą.",
         "maximumSnapshotsReachedTitle": "Osiągnięto limit migawek",
-        "maximumSnapshotsReachedDescription": "Osiągnięto maksymalną liczbę migawek w grupie.",
+        "maximumSnapshotsReachedDescription": "Osiągnięto maksymalną liczbę migawek w obszarze roboczym.",
         "snapshotBeingCreatedTitle": "Migawka jest już tworzona",
         "snapshotBeingCreatedDescription": "Nie ma możliwości tworzenia wielu migawek jednocześnie.",
         "snapshotBeingRestoredTitle": "Migawka jest przywracana",
@@ -258,10 +276,12 @@
         "snapshotOperationLimitExceededDescription": "Osiągnięto limit liczby uruchomionych operacji migawek. Poczekaj na zakończenie poprzedniej operacji.",
         "disabledPasswordProviderTitle": "Uwierzytelnianie hasłem jest wyłączone.",
         "disabledPasswordProviderMessage": "Użyj innego dostawcy uwierzytelniania.",
-        "lastAdminTitle": "Nie można usunąć ostatniego administratora grupy",
-        "lastAdminMessage": "Grupa musi mieć co najmniej jednego administratora.",
+        "lastAdminTitle": "Nie można usunąć ostatniego administratora obszaru roboczego",
+        "lastAdminMessage": "Obszar roboczy musi mieć co najmniej jednego administratora.",
         "maxLocksPerTransactionExceededTitle": "Wykryto problem z PostgreSQL",
-        "maxLocksPerTransactionExceededDescription": "Baserow próbował trwale usunąć wyrzucone elementy, ale przekroczył dostępne blokady określone w `max_locks_per_transaction`."
+        "maxLocksPerTransactionExceededDescription": "Baserow próbował trwale usunąć wyrzucone elementy, ale przekroczył dostępne blokady określone w `max_locks_per_transaction`.",
+        "notificationDoesNotExistTitle": "Powiadomienie nie istnieje.",
+        "notificationDoesNotExistDescription": "Akcja nie mogła zostać ukończona, ponieważ powiązany element już nie istnieje."
     },
     "importerType": {
         "csv": "Importuj plik CSV",
@@ -324,10 +344,10 @@
         "equalDescription": "Zwraca, jeśli jej dwa argumenty mają tę samą wartość.",
         "ifDescription": "Jeśli pierwszy argument jest prawdziwy, to zwraca drugi argument, w przeciwnym razie zwraca trzeci.",
         "toTextDescription": "Konwertuje dane wejściowe na tekst.",
-        "datetimeFormatDescription": "Konwertuje datę na tekst, biorąc pod uwagę sposób formatowania daty.",
+        "datetimeFormatDescription": "Konwertuje datę na tekst, biorąc pod uwagę sposób formatowania daty. Zawsze w UTC. Użyj `datetime_format_tz` by określić strefę czasową.",
         "toNumberDescription": "Konwertuje dane wejściowe na liczbę, jeśli to możliwe.",
         "fieldDescription": "Zwraca pole nazwane przez pojedynczy argument tekstowy.",
-        "lookupDescription": "Wyszukuje wartości z pola w innej tabeli dla wierszy w polu wiersza powiązanego. Pierwszy argument powinien być nazwą pola wiersza łącza w bieżącej tabeli, a drugi nazwą pola w połączonej tabeli.",
+        "lookupDescription": "Wyszukuje wartości z pola w innej tabeli dla wierszy w polu łącza do tabeli. Pierwszy argument powinien być nazwą pola łącza do tabeli w bieżącej tabeli, a drugi powinien być nazwą pola w połączonej tabeli.",
         "isBlankDescription": "Zwraca true jeśli argument jest null, empty lub blank, false w przeciwnym wypadku.",
         "tDescription": "Zwraca wartość argumentów, jeśli jest to tekst, a w przeciwnym razie ''.",
         "notDescription": "Zwraca false jeśli argument jest true i true jeśli argument jest false.",
@@ -335,7 +355,7 @@
         "greaterThanOrEqualDescription": "Zwraca true jeśli pierwszy argument jest większy lub równy drugiemu, w przeciwnym razie false.",
         "lessThanDescription": "Zwraca wartość true, jeśli pierwszy argument jest mniejszy od drugiego, w przeciwnym razie false.",
         "lessThanOrEqualDescription": "Zwraca prawdę, jeśli pierwszy argument jest mniejszy lub równy drugiemu, w przeciwnym razie fałsz.",
-        "toDateDescription": "Zwraca pierwszy argument przekonwertowany na datę, podając jako drugi argument ciąg formatu daty.",
+        "toDateDescription": "Zwraca pierwszy argument przekonwertowany na datę, podając ciąg formatu daty jako drugi argument. Zawsze w UTC. Użyj `to_date_tz` aby określić strefę czasową.",
         "dayDescription": "Zwraca dzień miesiąca jako liczbę od 1 do 31 z argumentu.",
         "dateDiffDescription": "Biorąc pod uwagę jednostkę daty do pomiaru jako pierwszy argument ('rok', 'miesiąc', 'tydzień', 'dzień', 'godzina', 'minuta', 'sekundy') oblicza i zwraca liczbę jednostek z drugiego argument do trzeciego.",
         "andDescription": "Zwraca logiczną wartość pierwszego i drugiego argumentu, więc jeśli oba są prawdziwe, wynik jest prawdziwy, w przeciwnym razie jest fałszywy.",
@@ -396,7 +416,10 @@
         "todayDescription": "Zwraca bieżącą datę w formacie utc.",
         "whenNanDescription": "Zwraca pierwszy argument, jeśli nie jest to „NaN”. Zwraca drugi argument, jeśli pierwszym argumentem jest „NaN”",
         "nowDescription": "Zwraca bieżącą datę i czas w formacie utc.",
-        "toDateTzDescription": "Zwraca pierwszy argument przekonwertowany na datę podaną jako łańcuch formatu daty jako drugi argument i strefę czasową podaną jako trzeci argument."
+        "toDateTzDescription": "Zwraca pierwszy argument przekonwertowany na datę podaną jako łańcuch formatu daty jako drugi argument i strefę czasową podaną jako trzeci argument.",
+        "datetimeFormatTzDescription": "Konwertuje datę na tekst, podając sposób formatowania daty w określonej strefie czasowej.",
+        "encodeUriComponentDescription": "Zwraca zakodowany komponent ciągu URI na podstawie podanego argumentu.",
+        "encodeUriDescription": "Zwraca zakodowany ciąg URI z podanego argumentu."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "nienazwany wiersz {value}"
@@ -404,5 +427,17 @@
     "urlCheck": {
         "invalidUrlEnvVarTitle": "Nieprawidłowy {name}",
         "invalidUrlEnvVarDescription": "Zmienna środowiskowa {name} została ustawiona na nieprawidłową wartość. Administrator Twojej witryny musi zmienić {name} na prawidłowy adres URL zaczynający się od http:// lub https://, a następnie ponownie uruchomić Baserow, aby naprawić ten błąd."
+    },
+    "health": {
+        "description": "Te kontrole pokazują aktualny stan instalacji Baserow.",
+        "title": "Kontrole stanu Baserow"
+    },
+    "emailTester": {
+        "title": "Tester e-maili",
+        "targetEmailLabel": "Docelowy adres e-mail",
+        "invalidTargetEmail": "Nieprawidłowy adres e-mail",
+        "submit": "Wyślij testową wiadomość e-mail",
+        "success": "E-mail testowy został pomyślnie wysłany",
+        "configLink": "Pomoc w konfiguracji poczty e-mail"
     }
 }

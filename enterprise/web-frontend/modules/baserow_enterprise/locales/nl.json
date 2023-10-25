@@ -76,13 +76,16 @@
         "exportToCsv": "Exporteren naar CSV",
         "exportModalTitle": "Exporteren naar CSV",
         "allWorkspaces": "Alle werkruimtes",
-        "allActionTypes": "Alle soorten events"
+        "allActionTypes": "Alle soorten events",
+        "workspaceTitle": "Audit log - {workspaceName}",
+        "adminTitle": "Audit log"
     },
     "auditLogExportModal": {
         "cancelledTitle": "Export mislukt",
         "cancelledDescription": "Er is iets misgegaan bij het exporteren van de audit log. Probeer het opnieuw.",
         "title": "Exporteren naar CSV",
-        "exportFilename": "Audit Log Export - {date}"
+        "exportFilename": "Audit Log Export - {date}",
+        "exportWorkspaceFilename": " Werkruimte ({workspaceId}) Audit Log Export - {date}"
     },
     "authProviders": {
         "title": "Authenticatie Providers",
@@ -275,5 +278,9 @@
     },
     "snapshotModalWarning": {
         "message": "Houd er rekening mee dat een momentopname alle machtigingen bevat die zijn ingesteld voor de applicatie en de bijbehorende tabellen."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Audit log",
+        "deactivated": "Beschikbaar in advanced/enterprise"
     }
 }

@@ -139,12 +139,14 @@
         "userFieldNames": "Quand une valeur est fournie pour le paramètre GET `user_field_names`, les noms des champs du résultat seront ceux définis par l'utilisateur.\n\n Si le paramêtre `user_field_names` n'est pas défini, alors les noms des champs seront `field_` suivis par l'identifiant du champ. Par exemple `field_1` fait référence au champ avec l'identifiant `1`.\n\n De plus, quand `user_field_names` est défini, vous devez également fournir les noms définis par l'utilisateur pour les paramètres `order_by`, `include` et `exclude`.",
         "search": "Quand ce paramètre est défini, seules les lignes qui satisfont la recherche seront retournées.",
         "orderBy": "Ce paramètre permet d'ordonner les lignes du résultat à l'aide d'une liste de champs séparés par une virgule. Par défaut ou s'il est préfixé par un `+` un champ est ordonné par ordre croissant (A-Z), en le préfixant par un `-` il sera ordonné par ordre décroissant (Z-A).\n\n #### Avec `user_field_names` :\n\n `order_by` doit être une liste de noms définis par l'utilisateur des champs sur lesquels s'appuient l'ordre séparés par des virgules. Par exemple si vous fournissez la valeur suivante `order_by=Mon champ,-Mon champ 2` les lignes seront ordonnées par le champ appelé `Mon champ` par ordre croissant. Si certaines lignes ont la même valeur pour `Mon champ` ce sous ensemble sera ordonné par la valeur du champ `Mon champ 2` par ordre décroissant.\n\n Assurez vous que les champs qui commencent par un `+` ou un `-` soit explicitement préfixés par un autre `+` ou `-`. Ex : `+-Nom`.\n\n Le nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n #### Sans `user_field_names` :\n\n `order_by` doit être une liste de `field_` suivi par l'identifiant du champ à ordonner, séparés par des virgules. Par exemple si vous fournissez la valeur suivante pour ce paramètre `order_by=field_1,-field_2` les lignes seront ordonnées par le champ `field_1` par ordre croissant. Si certaines lignes ont la même valeur pour ce champ, ce sous ensemble sera ordonné par la valeur du champ `field_2` par ordre décroissant.",
-        "filter": "Ce paramètre permet de filtrer les lignes avec les même filtres que ceux disponibles dans les vues. Plusieurs filtres peuvent être définis simultanéement s'il suivent le même format. La variable `field` permet d'indiquer le champ à filtrer, tandis que `filter` permet de choiser le type de filtre.\n\n Par exemple si vous utilisez la valeur suivante : `filter__field_1__equal=test`, seule les lignes pour lesquelles la valeur du champ `field_1` est égale à *test* seront retournées.",
+        "filter": "Ce paramètre permet de filtrer les lignes avec les même filtres que ceux disponibles pour les vues. Plusieurs filtres peuvent être définis simultanéement s'il suivent le même format. La variable `field` permet d'indiquer le champ à filtrer, tandis que `filter` permet de choiser le type de filtre.\n\n#### Avec l'option `user_field_names` :\n\nPar exemple si vous utilisez la valeur suivante : `filter__Nom__equal=test`, seule les lignes pour lesquelles la valeur du champ nommé `Nom` est égale à *test* seront retournées. Cette méthode est rétro-compatible et test également en utilisant `field_id` si le test échoue pour le champ `Nom`.\n\n#### Sans l'option `user_field_names` :\n\nPar exemple si vous utilisez la valeur suivante : `filter__field_1__equal=test`, seule les lignes pour lesquelles la valeur du champ `field_1` est égale à *test* seront retournées.\n\nVeuillez notez que si le paramètre `filters` est fournie, ce paramètre sera ignoré. ",
         "filterLink": "Une liste des filtres disponibles peut être consultée ici.",
         "filterType": "- `AND` : indique que les lignes doivent satisfaire tous les filtres définis.\n- `OR` : indique que les lignes doivent satisfaire au moins l'un des filtres définis pour être retournées.\n\n Cela fonctionne uniquement quand au moins 2 filtres sont définis.",
-        "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `exclude=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
+        "include": "Par défaut, tous les champs de la table sont retournés. Vous pouvez définir le sous ensemble des champs qui seront dans les résultats en fournissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`include` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez conserver, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante `include=Mon champ,-Mon champ 2` alors seul ces champs seront retournés dans les résultats (sauf si vous les avez explicitement exclus avec le paramètre suivant).\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`include` doit être une liste de `field_` suivis par l'identifiant d'un champ à inclure dans le résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante `include=field_1,field_2` alors les champs d'identifiant `1` et `2` seront les champs présents dans le résultat (sauf si vous les avez explicitement exclus avec le paramètre suivant).",
         "exclude": "Par défaut, tous les champs de la table sont retournés dans les résultats. Vous pouvez choisir un sous ensemble de champs qui seront exclus des résultats en définissant une valeur pour ce paramètre.\n\n#### Avec `user_field_names` :\n\n`exclude` doit être une liste des noms définis par l'utilisateur des champs que vous souhaitez exclure, séparés par une virgule. Par exemple, si vous fournissez la valeur suivante : `exclude=Mon champ,-Mon champ 2` alors ces deux champs seront exclus des résultats.\n\nLe nom des champs contenant des virgules doit être entouré par des guillemets : `\"Nom ,\"`. Si le nom des champs contient des guillemets, ceux-ci doivent être protégés en utilisant le caractère `\\`. Ex : `Nom \\\"`.\n\n#### Sans `user_field_names` :\n\n`exclude` doit être une liste de `field_` suivis par l'identifiant d'un champ à exclure du résultat, séparé par des virgules. Par exemple, si vous fournissez la valeur suivante : `exclude=field_1,field_2` alors les champs avec l'identifiant `1` et `2` seront exclus.",
-        "viewId": "Par défaut, aucun des filtres et tris autres que ceux définis dans les paramètres de la requête ne sont appliqués. Vous pouvez définir les filtres et les tris d'une vue en fournissant son `id` dans le paramètre GET `view_id`. Par exemple, si vous fournissez le paramètre GET suivant `view_id=1`, les filtres et les tris définis dans la vue avec l'id `1` seront appliqués. Vous pouvez trouver le `view_id` dans le menu contextuel d'une vue donnée. Il s'agit du nombre entre parenthèses derrière le nom de la vue. \n\n #### Avec `filter__{field}__{filter}` \n\n Le filtre fourni dans le paramètre de la requête et les filtres définis dans la vue seront appliqués.\n\n #### Avec `order_by` \n\n Si `order_by` est fourni, le tri défini dans la vue sera ignoré."
+        "viewId": "Par défaut, aucun des filtres et tris autres que ceux définis dans les paramètres de la requête ne sont appliqués. Vous pouvez définir les filtres et les tris d'une vue en fournissant son `id` dans le paramètre GET `view_id`. Par exemple, si vous fournissez le paramètre GET suivant `view_id=1`, les filtres et les tris définis dans la vue avec l'id `1` seront appliqués. Vous pouvez trouver le `view_id` dans le menu contextuel d'une vue donnée. Il s'agit du nombre entre parenthèses derrière le nom de la vue. \n\n #### Avec `filter__{field}__{filter}` \n\n Le filtre fourni dans le paramètre de la requête et les filtres définis dans la vue seront appliqués.\n\n #### Avec `order_by` \n\n Si `order_by` est fourni, le tri défini dans la vue sera ignoré.",
+        "filtersBuilder": "Ouvrir le générateur de filtres",
+        "filters": "Les lignes peuvent être filtrées en utilisant les mêmes filtres que ceux disponibles pour les vues. Ce paramètre accepte une chaîne sérialisée en JSON contenant l'arbre de filtre à appliquer pour cette vue. L'arbre de filtre est une structure imbriquée contenant les filtres qui doivent être appliqués.\n\n#### Avec `user_field_names` :\n\nUn exemple d'arbre de filtre valide est le suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": \"Name\", \"type\": \"equal\", \"value\": \"test\"}]}`\n\n#### Sans `user_field_names` :\n\nPar exemple, si vous fournissez le paramètre GET suivant : `{\"filter_type\": \"AND\", \"filters\": [{\"field\": 1, \"type\": \"equal\", \"value\": \"test\"}]}`\n\nVeuillez noter que si ce paramètre est fourni, tous les autres `filter__{field}__{filter}` seront ignorés, ainsi que le paramètre `filter_type`."
     },
     "apiDocsIntro": {
         "intro": "L'API de la base {name} offre un moyen simple d'intégrer des données provenant d'un système externe. L'API suit les principes d'architecture REST, utilise le format JSON pour encoder les données, s'appuie sur les codes HTTP standards et propose des messages d'erreurs à la fois techniques mais également lisibles par les humains pour signaler les dysfonctionnements.",
@@ -397,7 +399,8 @@
         "filterTypeNotFound": "Le filtre n'est pas compatible.",
         "relatedFieldNotFound": "Le champ associé n'a pas était trouvé.",
         "noCompatibleFilterTypesErrorTitle": "Aucun filtre compatible",
-        "noCompatibleFilterTypesErrorMessage": "Aucun de vos champs n'a de filtre compatible"
+        "noCompatibleFilterTypesErrorMessage": "Aucun de vos champs n'a de filtre compatible",
+        "addFilterGroup": "Ajouter un groupe de filtres"
     },
     "viewFilterTypeFileTypeDropdown": {
         "image": "Image",
@@ -405,7 +408,7 @@
     },
     "createViewModal": {
         "createNew": "Créer une vue {view}",
-        "add": "Créer une vue {view}"
+        "add": "Ajouter {view}"
     },
     "shareViewLink": {
         "shareView": "Partager {viewTypeSharingLinkName}",
@@ -494,7 +497,10 @@
         "copyCells": "Copier les cellules",
         "deleteRows": "Supprimer les lignes",
         "hiddenRowsInsertedTitle": "Lignes ajoutées",
-        "hiddenRowsInsertedMessage": "{number} nouvelles lignes ont été ajoutées, mais ne sont pas visibles en raison des filtres actifs."
+        "hiddenRowsInsertedMessage": "{number} nouvelles lignes ont été ajoutées, mais ne sont pas visibles en raison des filtres actifs.",
+        "copiedRowURLMessage": "L'URL de la ligne {id} a été copiée.",
+        "copiedRowURL": "URL de la ligne copiée",
+        "copyRowURL": "Copier l'URL de la ligne"
     },
     "gridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"
@@ -610,7 +616,7 @@
         "changePasswordSave": "Modifier le mot de passe"
     },
     "viewDecoratorContext": {
-        "addDecorator": "ajouter un décorateur"
+        "addDecorator": "Ajouter un décorateur"
     },
     "shareViewDisablePasswordModal": {
         "title": "Désactiver la protection par mot de passe",
@@ -653,10 +659,12 @@
         "includeRowId": "Utilisez {row_id} pour inclure l'identifiant de la ligne a créer dans l'URL."
     },
     "formViewField": {
-        "required": "Obligatoire",
+        "required": "obligatoire",
         "showWhenMatchingConditions": "afficher lorsque les conditions sont remplies",
         "addCondition": "Ajouter une condition",
-        "descriptionPlaceholder": "Description"
+        "descriptionPlaceholder": "Description",
+        "addConditionGroup": "Ajouter un groupe de conditions",
+        "showFieldAs": "Afficher le champ comme"
     },
     "duplicateFieldContext": {
         "duplicate": "Dupliquer le champ",
@@ -783,5 +791,35 @@
     "fieldSelectThroughFieldSubForm": {
         "noTable": "Vous avez besoin d’au moins un champ te type « lien vers une table » pour créer ce champ.",
         "selectThroughFieldLabel": "Sélectionner un champ « lien vers une table »"
+    },
+    "apiDocsFiltersBuilderModal": {
+        "userFieldNames": "Noms de champs utilisateur",
+        "json": "JSON",
+        "title": "Générateur de filtres",
+        "queryParameter": "Paramètre de requête"
+    },
+    "viewGroupBy": {
+        "groupBy": "Grouper | Regroupé par 1 champ | Regroupé par {count} champs"
+    },
+    "rowHistorySidebar": {
+        "you": "Vous",
+        "name": "Historique",
+        "empty": "Aucun changement pour l'instant. Vous pourrez suivre les modifications apportées à cette ligne ici."
+    },
+    "viewGroupByContext": {
+        "groupBy": "Grouper par",
+        "thenBy": "Puis par",
+        "addGroupBy": "choisissez un champ de regroupement",
+        "noGroupByTitle": "Vous n'avez créé aucun groupe",
+        "noGroupByText": "Regroupez les lignes par un champ."
+    },
+    "collaboratorAddedToRowNotification": {
+        "title": "{sender} vous a assigné à {fieldName} dans la ligne {rowId} de la table {tableName}"
+    },
+    "fieldCollaboratorSubForm": {
+        "notifyUserWhenAdded": "Notifier l'utilisateur lorsqu'il est ajouté"
+    },
+    "viewFieldConditionsForm": {
+        "addCondition": "Ajouter une condition"
     }
 }
