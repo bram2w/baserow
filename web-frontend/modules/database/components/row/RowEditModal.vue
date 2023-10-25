@@ -236,10 +236,15 @@ export default {
       return activeSidebarTypes.length > 0
     },
     canSubscribeToRowUpdates() {
-      return this.$hasPermission(
-        'database.table.listen_to_all',
-        this.table,
-        this.database.workspace.id
+      return (
+        this.$hasPermission(
+          'database.table.listen_to_all',
+          this.table,
+          this.database.workspace.id
+        ) &&
+        // If the row ID is not an integer, it could mean that the row hasn't been
+        // created in the backend yet.
+        Number.isInteger(this.rowId)
       )
     },
   },
