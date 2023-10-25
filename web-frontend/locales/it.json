@@ -32,7 +32,8 @@
         "remove": "Rimuovi",
         "login": "Login",
         "download": "Download",
-        "copyToClipboard": "Copia nella clipboard"
+        "copyToClipboard": "Copia nella clipboard",
+        "reset": "Reset"
     },
     "adminType": {
         "settings": "Impostazioni",
@@ -52,7 +53,8 @@
         "account": "Account",
         "password": "Password",
         "tokens": "Database Token",
-        "deleteAccount": "Elimina account"
+        "deleteAccount": "Elimina account",
+        "emailNotifications": "Notifiche email"
     },
     "userFileUploadType": {
         "file": "il mio dispositivo",
@@ -67,7 +69,10 @@
         "minLength": "È obbligatorio un minimo di {min} caratteri.",
         "maxLength": "È consentito un massimo di {max} caratteri.",
         "minMaxLength": "È consentito un minimo di {min} e un massimo di {max} caratteri.",
-        "requiredField": "Questo campo è obbligatorio."
+        "requiredField": "Questo campo è obbligatorio.",
+        "integerField": "Il campo deve essere un intero.",
+        "minValueField": "Il campo deve essere maggior o uguale a {min}.",
+        "maxValueField": "Il campo deve essere minore o uguale a {max}."
     },
     "permission": {
         "admin": "Admin",
@@ -95,7 +100,10 @@
         "lookup": "Cerca",
         "multipleCollaborators": "Collaboratori",
         "count": "Conteggio",
-        "rollup": "Rollup"
+        "rollup": "Rollup",
+        "linkRowMultiple": "Multiple",
+        "defaultFormViewComponent": "Default",
+        "linkRowSingle": "Singolo"
     },
     "fieldErrors": {
         "invalidNumber": "Numero non valido",
@@ -168,7 +176,10 @@
         "isBeforeOrEqualDate": "È prima o lo stesso giorno",
         "isWithinWeeks": "È entro un numero di settimane",
         "isWithinDays": "È entro un numero di giorni",
-        "isWithinMonths": "È entro un numero di mesi"
+        "isWithinMonths": "È entro un numero di mesi",
+        "isEvenAndWhole": "è pari ed intero",
+        "filesLowerThan": "file minore di",
+        "isAfterDaysAgo": "è dopo giorni fa"
     },
     "viewType": {
         "grid": "Griglia",
@@ -277,7 +288,9 @@
         "maxLocksPerTransactionExceededDescription": "Baserow ha cercato di eliminare definitivamente gli oggetti nel cestino, ma il limite`max_locks_per_transaction` del database è stato superato.",
         "maxLocksPerTransactionExceededTitle": "Problema imprevisto con il database PostgreSQL",
         "notificationDoesNotExistDescription": "L'azione non può essere completata perchè la relativa notifica non esiste più.",
-        "notificationDoesNotExistTitle": "La notifica non esiste."
+        "notificationDoesNotExistTitle": "La notifica non esiste.",
+        "adminAlreadyExistsDescription": "Il nome utente non può essere usato perché esiste già.",
+        "adminAlreadyExistsTitle": "Non puoi usare questo nome utente"
     },
     "importerType": {
         "csv": "Importa un file CSV",
@@ -412,7 +425,18 @@
         "toDateTzDescription": "Ritorna il primo argomento convertito in una data a partire dal una stringa per il formato come secondo argomento e un fuso orario come terzo argomento.",
         "isNanDescription": "Ritorna true se l'argomento è 'NaN', falso altrimenti.",
         "whenNanDescription": "Ritorna il primo argomento se l'argomento non è 'NaN',il secondo argomento altrimenti",
-        "datetimeFormatTzDescription": "Converte la data in test dato un formato per la data."
+        "datetimeFormatTzDescription": "Converte la data in test dato un formato per la data.",
+        "getFileVisibleNameDescription": "Ritorna il nome del file. Utilizzare la funzione index per estrarre un singolo file da un campo file.",
+        "indexDescription": "Ritorna un singolo file da un campo file, dalla posizione richiesta.",
+        "getFileSizeDescription": "Ritorna la dimensione del file. Utilizzare la funzione index per estrarre un singolo file da un campo file.",
+        "encodeUriComponentDescription": "Ritorna un URI codificato a partire dalla stringa data.",
+        "getImageWidthDescription": "Ritorna la larghezza dell'immagine. Utilizzare la funzione index per estrarre una singola immagine da un campo file.",
+        "getImageHeightDescription": "Ritorna l'altezza dell'immagine. Utilizzare la funzione index per estrarre una singola immagine da un campo file.",
+        "splitPartDescription": "Divide un stringa in segmenti in base al delimitatore passato come argomento e ritorna il segmento nella posizione dell'argomento indice",
+        "getFileCountDescription": "Ritorna il numero di file presenti nel campo file",
+        "encodeUriDescription": "Ritorna un URI codificato a partire dalla stringa data.",
+        "getIsImageDescription": "Ritorna vero se il file è un'immagine, falso altrimenti. Utilizzare la funzione index per estrarre una singola immagine da un campo file.",
+        "getFileMimeTypeDescription": "Ritorna il mime type del file. Utilizzare la funzione index per estrarre un singolo file da un campo file."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "riga {value} senza nome"

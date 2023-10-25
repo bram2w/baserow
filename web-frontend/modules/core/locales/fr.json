@@ -119,7 +119,8 @@
         "members": "Membres",
         "viewTrash": "Voir la corbeille",
         "leaveWorkspace": "Quitter le projet",
-        "deleteWorkspace": "Supprimer le projet"
+        "deleteWorkspace": "Supprimer le projet",
+        "auditLog": "Journal d'audit"
     },
     "createWorkspaceModal": {
         "createNew": "Nouveau projet",
@@ -526,7 +527,9 @@
         "clearAll": "Effacer tout",
         "markAllAsRead": "Marquer tout comme lu",
         "noNotificationTitle": "Vous n'avez aucune notification",
-        "noNotification": "Nous vous informerons des mises à jour importantes et à chaque fois que vous serez mentionné sur Baserow."
+        "noNotification": "Nous vous informerons des mises à jour importantes et à chaque fois que vous serez mentionné sur Baserow.",
+        "newNotificationsAvailable": "Nouvelles notifications disponibles",
+        "refresh": "Actualiser"
     },
     "clearAllNotificationsConfirmModal": {
         "title": "Êtes-vous sûr·e de vouloir supprimer toutes les notifications ?",
@@ -626,5 +629,21 @@
     },
     "workspaceInvitationRejectedNotification": {
         "title": "{sender} a rejeté votre invitation à rejoindre {workspaceName}"
+    },
+    "emailNotifications": {
+        "submitButton": "Mise à jour de la fréquence",
+        "label": "Mentions, commentaires et autres notifications",
+        "daily": "Tous les jours",
+        "title": "Notifications par courriel",
+        "never": "Jamais",
+        "weekly": "Chaque semaine",
+        "description": "Configurez la fréquence d'envoi des courriels dans votre boîte de réception.",
+        "instant": "Instantanée"
+    },
+    "dataExplorer": {
+        "emptyText": "Aucune donnée disponible"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "La formule est invalide."
     }
 }

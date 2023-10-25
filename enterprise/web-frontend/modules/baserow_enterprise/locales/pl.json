@@ -4,9 +4,9 @@
         "sidebarTooltip": "Twoje konto ma globalny dostęp do funkcji korporacyjnych",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Dostępne w wersji enterprise",
-        "licenseDescription": "Przeglądarki są bezpłatne w Baserow Enterprise. Jeśli użytkownik ma jakąkolwiek inną rolę, w jakiejkolwiek grupie, wtedy automatycznie użyje płatnego miejsca.",
-        "overflowWarning": "Masz zbyt wielu użytkowników niebędących widzami i wykorzystałeś wszystkie swoje płatne miejsca. Zmień użytkowników na widzów na stronie członków każdej grupy."
+        "deactivated": "Dostępne w wersji zaawansowanej/korporacyjnej",
+        "licenseDescription": "Widzowie są bezpłatni w Baserow Enterprise. Jeśli użytkownik ma jakąkolwiek inną rolę, w jakiejkolwiek grupie, wtedy automatycznie użyje płatnego miejsca.",
+        "overflowWarning": "Masz zbyt wielu użytkowników niebędących widzami i wykorzystałeś wszystkie swoje płatne miejsca. Zmień użytkowników na widzów na stronie członków każdej przestrzeni roboczej."
     },
     "clientHandler": {
         "cannotDisableAllAuthProvidersTitle": "Ostatni włączony dostawca",
@@ -15,7 +15,7 @@
     "updateTeamModal": {
         "title": "Aktualizacja {teamName}",
         "invalidNameTitle": "Użyj innej nazwy",
-        "invalidNameMessage": "Ta nazwa zespołu jest już używana w określonej grupie."
+        "invalidNameMessage": "Ta nazwa zespołu jest już używana w określonym obszarze roboczym."
     },
     "manageTeamForm": {
         "nameTitle": "Nazwa",
@@ -31,7 +31,7 @@
         "remove": "Usuń zespół"
     },
     "teamsTable": {
-        "title": "{teamCount} zespoły w {groupName}",
+        "title": "{teamCount} zespołów w {workspaceName}",
         "createNew": "Utwórz zespół",
         "nameColumn": "Nazwa",
         "createdColumn": "Utworzono dnia",
@@ -61,7 +61,7 @@
         "exportToCsv": "Eksportuj do CSV",
         "exportModalTitle": "Eksportuj do CSV",
         "allUsers": "Wszyscy użytkownicy",
-        "allWorkspaces": "Wszystkie grupy",
+        "allWorkspaces": "Wszystkie obszary robocze",
         "allActionTypes": "Wszystkie rodzaje zdarzeń",
         "filterFromTimestamp": "Od daty",
         "filterToTimestampTitle": "Do dnia",
@@ -69,7 +69,9 @@
         "user": "Użytkownik",
         "workspace": "Grupa",
         "timestamp": "Znacznik czasu",
-        "clearFilters": "Wyczyść"
+        "clearFilters": "Wyczyść",
+        "workspaceTitle": "Dziennik inspekcji - {workspaceName}",
+        "adminTitle": "Dziennik inspekcji"
     },
     "manageTeamModals": {
         "subheading": "Zespoły pozwalają na masowe nadawanie lub ograniczanie uprawnień wielu osobom."
@@ -80,13 +82,14 @@
     "createTeamModal": {
         "title": "Utwórz zespół",
         "invalidNameTitle": "Proszę użyć innej nazwy",
-        "invalidNameMessage": "Nazwa zespołu jest już używana w określonej grupie."
+        "invalidNameMessage": "Ta nazwa zespołu jest już używana w określonym obszarze roboczym."
     },
     "auditLogExportModal": {
         "title": "Eksportuj do CSV",
         "cancelledTitle": "Eksport nie powiódł się",
-        "exportFilename": "Eksport dziennika kontroli – {data}",
-        "cancelledDescription": "Coś poszło nie tak podczas eksportowania dziennika audytu. Proszę spróbować ponownie."
+        "exportFilename": "Eksport dziennika inspekcji administratora - {data}",
+        "cancelledDescription": "Coś poszło nie tak podczas eksportowania dziennika audytu. Proszę spróbować ponownie.",
+        "exportWorkspaceFilename": " Obszar roboczy ({workspaceId}) Eksport dziennika inspekcji - {data}"
     },
     "authProviders": {
         "title": "Dostawcy uwierzytelniania",
@@ -151,7 +154,7 @@
         },
         "admin": {
             "name": "Admin",
-            "description": "Może w pełni konfigurować i edytować grupy i aplikacje."
+            "description": "Potrafi w pełni konfigurować i edytować obszary robocze i aplikacje."
         },
         "builder": {
             "name": "Budowniczy",
@@ -159,7 +162,7 @@
         },
         "editor": {
             "name": "Edytor",
-            "description": "Może w pełni edytować dane, ale nie może konfigurować aplikacji lub grup."
+            "description": "Może w pełni edytować dane, ale nie może konfigurować aplikacji ani obszarów roboczych."
         },
         "viewer": {
             "name": "Widz",
@@ -167,7 +170,7 @@
         },
         "noRoleLowPriority": {
             "name": "Brak roli",
-            "description": "Pobierz domyślną rolę grupową od swoich zespołów."
+            "description": "Uzyskaj domyślną rolę obszaru roboczego od swoich zespołów."
         }
     },
     "memberRolesModal": {
@@ -185,8 +188,8 @@
             "onlyYouHaveAccess": "Tylko ty masz dostęp do tej bazy danych.",
             "warningTitle": "Inni użytkownicy mogą dziedziczyć dostęp!",
             "everyoneHasAccess": "Każdy w obszarze roboczym {name} ma dostęp do tej bazy danych.",
-            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp poprzez swoje role w grupie nadrzędnej.",
-            "headerTooltip": "Rola baz danych przejmuje role grupowe."
+            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp za pośrednictwem odpowiednich ról w nadrzędnym obszarze roboczym.",
+            "headerTooltip": "Role bazy danych zastąpią role przestrzeni roboczej."
         },
         "table": {
             "title": "Tabela {name}",
@@ -194,8 +197,8 @@
             "onlyYouHaveAccess": "Tylko ty masz dostęp do tej tabeli.",
             "warningTitle": "Inni użytkownicy mogą dziedziczyć dostęp!",
             "everyoneHasAccess": "Każdy w obszarze roboczym {name} ma dostęp do tej bazy danych.",
-            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp za pośrednictwem swoich ról w nadrzędnej bazie danych lub grupie.",
-            "headerTooltip": "Role tabel zastąpią role grup i baz danych."
+            "warningMessage": "Inni użytkownicy mogą dziedziczyć dostęp za pośrednictwem odpowiednich ról w nadrzędnej bazie danych lub przestrzeni roboczej.",
+            "headerTooltip": "Role tabeli zastępują role przestrzeni roboczej i bazy danych."
         }
     },
     "memberRolesShareToggle": {
@@ -211,7 +214,8 @@
     "memberRolesMembersList": {
         "teamMembersCount": "{count} członków zespołu",
         "remove": "Usuń",
-        "adminHelpText": "Administratorzy mogą ograniczać role innych administratorów."
+        "adminHelpText": "Administratorzy mogą ograniczać role innych administratorów.",
+        "noMembers": "Nie wybrano żadnego członka. Użyj przycisku wyboru, aby go dodać."
     },
     "selectMembersList": {
         "searchPlaceholder": "Znajdź członków...",
@@ -271,5 +275,12 @@
     },
     "userTeamsField": {
         "no_records": "Brak zespołów"
+    },
+    "snapshotModalWarning": {
+        "message": "Należy pamiętać, że migawka będzie zawierać wszelkie uprawnienia ustawione dla aplikacji i jej tabel."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Dziennik inspekcji",
+        "deactivated": "Dostępne w wersji zaawansowanej/korporacyjnej"
     }
 }

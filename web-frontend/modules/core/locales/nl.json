@@ -119,7 +119,8 @@
         "members": "Leden",
         "viewTrash": "Bekijk Prullenbak",
         "leaveWorkspace": "Verlaat werkruimte",
-        "deleteWorkspace": "werkruimte verwijderen"
+        "deleteWorkspace": "werkruimte verwijderen",
+        "auditLog": "Audit log"
     },
     "createWorkspaceModal": {
         "createNew": "Nieuwe werkruimte aanmaken",
@@ -530,7 +531,9 @@
         "markAllAsRead": "Alles markeren als gelezen",
         "clearAll": "Alles wissen",
         "noNotification": "We zullen u op de hoogte brengen van belangrijke updates en wanneer u op Baserow wordt vermeld.",
-        "noNotificationTitle": "Je hebt geen meldingen"
+        "noNotificationTitle": "Je hebt geen meldingen",
+        "newNotificationsAvailable": "Nieuwe meldingen beschikbaar",
+        "refresh": "Vernieuwen"
     },
     "uploadFileDropzone": {
         "drop": "Laat hier los",
@@ -626,5 +629,25 @@
     },
     "versionUpgradeNotification": {
         "title": "{version} is hier! Bekijk wat er nieuw is."
+    },
+    "emailNotifications": {
+        "submitButton": "Frequentie bijwerken",
+        "label": "Vermeldingen, commentaar en andere berichten",
+        "daily": "Dagelijks",
+        "title": "E-mail notificaties",
+        "never": "Nooit",
+        "weekly": "Wekelijks",
+        "description": "Configureer de frequentie waarmee e-mails naar uw Postvak IN worden verzonden.",
+        "instant": "Direct"
+    },
+    "dataExplorer": {
+        "emptyText": "Geen data gevonden"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "De formule is ongeldig."
+    },
+    "userPasswordChangedToast": {
+        "title": "Wachtwoord veranderd",
+        "content": "Je wachtwoord is gewijzigd. Log alsjeblieft nogmaals in."
     }
 }

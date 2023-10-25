@@ -3,7 +3,7 @@
         "license": "Enterprise",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Disponible dans la version entreprise",
+        "deactivated": "Disponible dans la version avancée/entreprise",
         "licenseDescription": "Avoir le rôle de spectateur est inclus dans Baserow Entreprise. Si un utilisateur a un tout autre role, dans n'importe quel projet, il utilisera automatiquement un siège payant.",
         "sidebarTooltip": "Votre compte a un accès global aux fonctions entreprise",
         "overflowWarning": "Vous avez trop d'utilisateurs non-spectateurs et avez utilisé tous vos sièges payants. Changez les utilisateurs pour qu'ils deviennent des spectateurs sur la page des membres de chaque projet."
@@ -70,7 +70,9 @@
         "exportModalTitle": "Exporter vers CSV",
         "allUsers": "Tous les utilisateurs",
         "allWorkspaces": "Tous les projets",
-        "allActionTypes": "Tous les types d'événements"
+        "allActionTypes": "Tous les types d'événements",
+        "workspaceTitle": "Journal d'audit - {workspaceName}",
+        "adminTitle": "Journal d'audit"
     },
     "clientHandler": {
         "cannotDisableAllAuthProvidersTitle": "Dernier fournisseur activé",
@@ -83,10 +85,11 @@
         "teamsTabTitle": "Équipes"
     },
     "auditLogExportModal": {
-        "exportFilename": "Exporter le journal d'audit - {date}",
+        "exportFilename": "Journal Audit Admin Export - {date}",
         "cancelledTitle": "Échec de l'export",
         "title": "Exporter vers CSV",
-        "cancelledDescription": "Un problème est survenu lors de l'export du journal d'audit. Veuillez réessayer."
+        "cancelledDescription": "Un problème est survenu lors de l'export du journal d'audit. Veuillez réessayer.",
+        "exportWorkspaceFilename": " Exportation du journal d'audit du projet ({workspaceId}) - {date}"
     },
     "authProviders": {
         "title": "Fournisseurs d’authentification",
@@ -275,5 +278,9 @@
     },
     "snapshotModalWarning": {
         "message": "Veuillez noter qu’une sauvegarde inclura toutes les autorisations définies sur l’application et ses tables."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Journal d’audit",
+        "deactivated": "Disponible en version avancée/entreprise"
     }
 }

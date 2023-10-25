@@ -41,7 +41,8 @@
         "labelElements": "Éléments"
     },
     "elementsContext": {
-        "searchPlaceholder": "Chercher des éléments"
+        "searchPlaceholder": "Chercher des éléments",
+        "noElements": "Aucun élément trouvé"
     },
     "elementType": {
         "heading": "Titre",
@@ -51,11 +52,21 @@
         "link": "Lien",
         "linkDescription": "Un lien vers une page/URL",
         "image": "Image",
-        "imageDescription": "Affiche une image"
+        "imageDescription": "Affiche une image",
+        "inputText": "Saisie de texte",
+        "inputTextDescription": "Un champ de saisie de texte",
+        "columnDescription": "Conteneur multi-colonnes",
+        "column": "Colonnes",
+        "table": "Table",
+        "tableDescription": "Une table de données",
+        "button": "Bouton",
+        "buttonDescription": "Un bouton"
     },
     "elementMenu": {
         "moveDown": "Descendre",
-        "moveUp": "Monter"
+        "moveUp": "Monter",
+        "moveRight": "Déplacer à droite",
+        "moveLeft": "Déplacer à gauche"
     },
     "addElementButton": {
         "label": "Élément"
@@ -111,7 +122,8 @@
         "openInNewTab": "Ouvrir dans un nouvel onglet",
         "title": "Publication",
         "noDomain": "Vous devez disposer d’au moins un domaine pour publier votre application.",
-        "description": "Mettez votre application en ligne en publiant sur l’un des domaines. Notez que votre application peut avoir plusieurs domaines, chacun avec une version différente de l’application."
+        "description": "Mettez votre application en ligne en publiant sur l’un des domaines. Notez que votre application peut avoir plusieurs domaines, chacun avec une version différente de l’application.",
+        "importingState": "Import en cours…"
     },
     "pageActionTypes": {
         "preview": "Aperçu",
@@ -123,7 +135,8 @@
     },
     "elementForms": {
         "textInputPlaceholder": "Saisissez un texte...",
-        "urlInputPlaceholder": "Saisissez une URL..."
+        "urlInputPlaceholder": "Saisissez une URL...",
+        "invalidFormula": "La formule est invalide"
     },
     "imageElement": {
         "emptyState": "Aucun texte alternatif défini..."
@@ -160,7 +173,9 @@
         "detailLabel": "Afficher les détails"
     },
     "domainTypes": {
-        "customName": "Domaine personnalisé"
+        "customName": "Domaine personnalisé",
+        "subDomain": "Sous-domaine de {domain}",
+        "subDomainName": "Sous-domaine"
     },
     "linkElement": {
         "noValue": "Sans nom..."
@@ -214,7 +229,7 @@
     "dataSourceForm": {
         "namePlaceholder": "Nom de la source",
         "addIntegration": "Ajouter une intégration",
-        "noIntegrations": "Vous n’avez aucune d’intégration",
+        "noIntegrations": "Aucune intégration trouvée.",
         "selectTypeFirst": "Sélectionnez d'abord le service",
         "servicePlaceholder": "Sélectionnez un service",
         "errorUniqueName": "Le nom de la source de données doit être unique.",
@@ -223,9 +238,120 @@
     "dataSourceContext": {
         "addDataSource": "Ajouter une source de données",
         "noDataSourceMessage": "Les source de données peuvent être utilisées pour récupérer des données à partir de sources internes ou externes et les afficher sur la page.",
-        "noDataSourceTitle": "Vous n’avez pas encore ajouté de source de données"
+        "noDataSourceTitle": "Vous n’avez pas encore ajouté de source de données."
     },
     "pageSettingsTypes": {
         "pageName": "Page"
+    },
+    "verticalAlignmentSelector": {
+        "alignmentTop": "En haut",
+        "alignmentBottom": "En bas",
+        "alignmentCenter": "Au milieu",
+        "alignment": "Alignement vertical"
+    },
+    "horizontalAlignmentSelector": {
+        "alignmentLeft": "À gauche",
+        "alignmentRight": "À droite",
+        "alignment": "Alignement horizontal",
+        "alignmentCenter": "Centré"
+    },
+    "inputTextElementForm": {
+        "placeholderPlaceholder": "Entrez un texte provisoire (optionnel)",
+        "valueTitle": "Valeur par défaut",
+        "valuePlaceholder": "Entrez une valeur par défaut (optionnel)",
+        "placeholderTitle": "Texte provisoire",
+        "requiredTitle": "Obligatoire"
+    },
+    "columnElementForm": {
+        "columnGapPlaceholder": "Entrez l'espace entre les colonnes...",
+        "columnGapTitle": "Espace entre colonnes",
+        "columnAmountTitle": "Mise en page",
+        "columnAmountName": "pas de colonnes | 1 colonne | {columnAmount} colonnes"
+    },
+    "tableElementForm": {
+        "addField": "ajouter un champ",
+        "itemsPerPage": "Lignes par page",
+        "fieldValueLabel": "Valeur",
+        "dataSource": "Source de données",
+        "fieldValuePlaceholder": "Saisir la valeur...",
+        "itemsPerPagePlaceholder": "Saisir la valeur...",
+        "fields": "Colonnes"
+    },
+    "mainThemeConfigBlock": {
+        "colorsLabel": "Couleurs",
+        "primaryColor": "Primaire",
+        "headingValue": "Titre <h{i}>",
+        "typography": "Typographie",
+        "fontSizeError": "La valeur doit être comprise entre 1 et 100.",
+        "headingLabel": "Titre {i} (h{i})",
+        "secondaryColor": "Secondaire"
+    },
+    "widthSelector": {
+        "widthFull": "Pleine largeur",
+        "widthAuto": "Auto",
+        "width": "Largeur"
+    },
+    "defaultStyleForm": {
+        "boxTop": "Espacement supérieur",
+        "boxBottom": "Espacement inférieur"
+    },
+    "buttonElementForm": {
+        "valuePlaceholder": "Saisir le texte...",
+        "valueLabel": "Texte"
+    },
+    "subDomainDetails": {
+        "text": "Les paramètres DNS du domaine ont déjà été configurés et vérifiés. Cela fonctionne sans qu'il soit nécessaire d'apporter des modifications supplémentaires."
+    },
+    "notificationWorkflowActionForm": {
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Saisir le texte...",
+        "titleLabel": "Titre",
+        "titlePlaceholder": "Saisir le texte..."
+    },
+    "currentRecordDataProviderType": {
+        "index": "indice",
+        "firstPartName": "Source de données : {nom}"
+    },
+    "domainForm": {
+        "notUniqueDomain": "Le domaine fourni est déjà utilisé",
+        "invalidDomain": "Le nom de domaine fourni est invalide"
+    },
+    "dataProviderType": {
+        "currentRecord": "Source de données",
+        "pageParameter": "Paramètre",
+        "dataSource": "Données"
+    },
+    "openPageWorkflowActionForm": {
+        "urlLabel": "URL",
+        "urlPlaceholder": "Saisir le texte..."
+    },
+    "event": {
+        "addAction": "Ajouter une action"
+    },
+    "buttonElement": {
+        "noValue": "Sans nom..."
+    },
+    "tableElement": {
+        "empty": "Aucun résultat n'a été trouvée.",
+        "showMore": "Afficher plus"
+    },
+    "fontSidePanelForm": {
+        "label": "Police"
+    },
+    "styleBoxForm": {
+        "paddingError": "La valeur doit être comprise entre 0 et 200."
+    },
+    "subDomainForm": {
+        "domainNameLabel": "Nom de domaine"
+    },
+    "workflowActionTypes": {
+        "notificationLabel": "Afficher une notification",
+        "openPageLabel": "Ouvrir une page"
+    },
+    "getFormulaComponent": {
+        "errorTooltip": "Référence invalide"
+    },
+    "eventTypes": {
+        "clickLabel": "Au clic"
     }
 }

@@ -13,7 +13,8 @@
             "licenses": "Licencje"
         },
         "viewType": {
-            "kanban": "Tablica Kanban"
+            "kanban": "Tablica Kanban",
+            "calendar": "Kalendarz"
         },
         "exporterType": {
             "json": "Eksport do JSON",
@@ -32,11 +33,21 @@
         "noComment": "Brak jeszcze komentarzy dla tego wiersza. Użyj poniższego formularza, aby dodać komentarz.",
         "comment": "Komentarz",
         "more": "Więcej informacji",
-        "name": "Komentarze do wierszy"
+        "name": "Komentarze"
     },
     "rowComment": {
         "you": "Ty",
-        "anonymous": "Anonimowy"
+        "anonymous": "Anonimowy",
+        "created": "utworzono",
+        "edited": "edytowany",
+        "commentTrashed": "Ten komentarz został usunięty.",
+        "errorUserNotCommentAuthorTitle": "Nie można zaktualizować ani usunąć.",
+        "creating": "tworzenie",
+        "updating": "aktualizuje",
+        "deleting": "usuwanie",
+        "errorUserNotCommentAuthor": "Tylko autor komentarza może go zaktualizować lub usunąć.",
+        "errorInvalidCommentMentionTitle": "Nieprawidłowa wzmianka",
+        "errorInvalidCommentMention": "Wspomniany użytkownik nie istnieje."
     },
     "registerLicenseModal": {
         "titleRegisterLicense": "Zarejestruj licencję",
@@ -119,7 +130,7 @@
         "warning": {
             "changeEmail": "Zmiana adresu e-mail użytkownika oznacza, że kiedy zaloguje się on do systemu, będzie musiał użyć nowego adresu e-mail. Musi to zostać zakomunikowane temu użytkownikowi.",
             "inactiveUser": "Kiedy użytkownik jest oznaczony jako nieaktywny, nie może się zalogować.",
-            "userStaff": "Uczynienie użytkownika personelem daje mu dostęp administratora do wszystkich użytkowników, wszystkich grup i możliwość cofnięcia także Twoich własnych uprawnień przynależnych do personelu."
+            "userStaff": "Nadanie użytkownikowi statusu pracownika daje mu dostęp administratora do wszystkich użytkowników, wszystkich obszarów roboczych i możliwość odebrania uprawnień pracownikom."
         },
         "error": {
             "invalidName": "Podaj prawidłowe imię i nazwisko, musi mieć więcej niż 2 litery i mniej niż 150.",
@@ -132,7 +143,7 @@
     "deleteUserModal": {
         "title": "Usuń {username}",
         "confirmation": "Czy na pewno chcesz usunąć użytkownika: {name}?",
-        "comment1": "Konto użytkownika zostanie usunięte, jednak grupy, których członkiem jest ten użytkownik, będą nadal istnieć. Grupa użytkowników nie zostanie usunięta, nawet jeśli ten użytkownik jest ostatnim użytkownikiem w grupie. Usunięcie ostatniego użytkownika w grupie uniemożliwia każdemu dostęp do tej grupy.",
+        "comment1": "Konto użytkownika zostanie usunięte, jednak obszary robocze, których użytkownik jest członkiem, będą nadal istnieć. Obszar roboczy użytkownika nie zostanie usunięty, nawet jeśli ten użytkownik jest ostatnim użytkownikiem w obszarze roboczym. Usunięcie ostatniego użytkownika w obszarze roboczym uniemożliwia każdemu dostęp do tego obszaru roboczego.",
         "comment2": "Po usunięciu użytkownika możliwe jest, że nowy użytkownik zarejestruje się ponownie używając adresu e-mail usuniętego użytkownika. Aby uniemożliwić im ponowne zarejestrowanie się, należy dezaktywować użytkownika i nie usuwać go.",
         "delete": "Usuń użytkownika {username}"
     },
@@ -194,7 +205,8 @@
         "rowColoring": "Kolorowanie wierszy",
         "surveyForm": "Formularz ankiety",
         "publicLogoRemoval": "Usunięcie logo publicznego",
-        "personalViews": "Osobiste widoki"
+        "personalViews": "Osobiste widoki",
+        "calendarView": "Widok kalendarza"
     },
     "licenses": {
         "titleNoLicenses": "Nie znaleziono licencji",
@@ -294,5 +306,37 @@
     },
     "viewsContext": {
         "personal": "Osobisty"
+    },
+    "rowCommentMentionNotification": {
+        "title": "{sender} wspomniał o Tobie w wierszu {row} w {table}"
+    },
+    "rowCommentContext": {
+        "edit": "Edytuj komentarz",
+        "delete": "Usuń komentarz"
+    },
+    "trashType": {
+        "row_comment": "komentarz wiersza"
+    },
+    "calendarViewHeader": {
+        "displayBy": "Wyświetlanie przez",
+        "displayedBy": "Wyświetlane przez pole \"{fieldName}\"",
+        "labels": "Etykiety"
+    },
+    "calendarDateSelector": {
+        "today": "Dzisiaj"
+    },
+    "calendarMonthDay": {
+        "hiddenRowsCount": "0 | 1 więcej... | {hiddenRowsCount} więcej..."
+    },
+    "calendarMonthDayExpanded": {
+        "tryAgain": "spróbuj ponownie"
+    },
+    "dateFieldSelectForm": {
+        "dateField": "Które pole ma być używane w tym widoku?",
+        "noCompatibleDateFields": "W tej tabeli nie ma pól daty, należy je najpierw utworzyć."
+    },
+    "selectDateFieldModal": {
+        "chooseDateField": "Wybierz pole daty",
+        "save": "Zapisz"
     }
 }
