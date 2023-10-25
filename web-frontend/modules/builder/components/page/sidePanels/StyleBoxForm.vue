@@ -48,7 +48,7 @@ export default {
      */
     error() {
       if (this.$v.values.padding.$error) {
-        return this.$t('styleBoxForm.paddingError')
+        return this.$t('error.minMaxLength', { min: 0, max: 200 })
       } else {
         return ''
       }

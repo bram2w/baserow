@@ -132,7 +132,7 @@
               v-if="$v.builder.theme[`heading_${i}_font_size`].$error"
               class="error"
             >
-              {{ $t('mainThemeConfigBlock.fontSizeError') }}
+              {{ $t('error.minMaxLength', { min: 1, max: 100 }) }}
             </div>
           </div>
         </div>
