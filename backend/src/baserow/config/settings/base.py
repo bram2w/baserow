@@ -250,71 +250,57 @@ CACHES = {
 }
 
 
-def install_cachalot():
-    global CACHALOT_ONLY_CACHABLE_TABLES
-    global CACHALOT_UNCACHABLE_TABLES
-    global CACHALOT_TIMEOUT
-    global INSTALLED_APPS
+CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
+BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
+    "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+)
+BASEROW_CACHALOT_MODE = os.getenv("BASEROW_CACHALOT_MODE", "default")
+if BASEROW_CACHALOT_MODE == "full":
+    CACHALOT_ONLY_CACHABLE_TABLES = []
 
-    INSTALLED_APPS.append("cachalot")
+elif BASEROW_CACHALOT_ONLY_CACHABLE_TABLES:
+    # Please avoid to add tables with more than 50 modifications per minute
+    # to this list, as described here:
+    # https://django-cachalot.readthedocs.io/en/latest/limits.html
+    CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
+else:
+    CACHALOT_ONLY_CACHABLE_TABLES = [
+        "auth_user",
+        "django_content_type",
+        "core_settings",
+        "core_userprofile",
+        "core_application",
+        "core_operation",
+        "core_template",
+        "core_trashentry",
+        "core_workspace",
+        "core_workspaceuser",
+        "core_workspaceuserinvitation",
+        "core_authprovidermodel",
+        "core_passwordauthprovidermodel",
+        "database_database",
+        "database_table",
+        "database_field",
+        "database_fieldependency",
+        "database_linkrowfield",
+        "database_selectoption",
+        "baserow_premium_license",
+        "baserow_premium_licenseuser",
+        "baserow_enterprise_role",
+        "baserow_enterprise_roleassignment",
+        "baserow_enterprise_team",
+        "baserow_enterprise_teamsubject",
+    ]
 
-    BASEROW_CACHALOT_ONLY_CACHABLE_TABLES = os.getenv(
-        "BASEROW_CACHALOT_ONLY_CACHABLE_TABLES", None
+# This list will have priority over CACHALOT_ONLY_CACHABLE_TABLES.
+BASEROW_CACHALOT_UNCACHABLE_TABLES = os.getenv(
+    "BASEROW_CACHALOT_UNCACHABLE_TABLES", None
+)
+
+if BASEROW_CACHALOT_UNCACHABLE_TABLES:
+    CACHALOT_UNCACHABLE_TABLES = list(
+        filter(bool, BASEROW_CACHALOT_UNCACHABLE_TABLES.split(","))
     )
-
-    # This list will have priority over CACHALOT_ONLY_CACHABLE_TABLES.
-    BASEROW_CACHALOT_UNCACHABLE_TABLES = os.getenv(
-        "BASEROW_CACHALOT_UNCACHABLE_TABLES", None
-    )
-
-    BASEROW_CACHALOT_MODE = os.getenv("BASEROW_CACHALOT_MODE", "default")
-
-    if BASEROW_CACHALOT_MODE == "full":
-        CACHALOT_ONLY_CACHABLE_TABLES = []
-
-    elif BASEROW_CACHALOT_ONLY_CACHABLE_TABLES:
-        # Please avoid to add tables with more than 50 modifications per minute
-        # to this list, as described here:
-        # https://django-cachalot.readthedocs.io/en/latest/limits.html
-        CACHALOT_ONLY_CACHABLE_TABLES = BASEROW_CACHALOT_ONLY_CACHABLE_TABLES.split(",")
-    else:
-        CACHALOT_ONLY_CACHABLE_TABLES = [
-            "auth_user",
-            "django_content_type",
-            "core_settings",
-            "core_userprofile",
-            "core_application",
-            "core_operation",
-            "core_template",
-            "core_trashentry",
-            "core_workspace",
-            "core_workspaceuser",
-            "core_workspaceuserinvitation",
-            "core_authprovidermodel",
-            "core_passwordauthprovidermodel",
-            "database_database",
-            "database_table",
-            "database_field",
-            "database_fieldependency",
-            "database_linkrowfield",
-            "database_selectoption",
-            "baserow_premium_license",
-            "baserow_premium_licenseuser",
-            "baserow_enterprise_role",
-            "baserow_enterprise_roleassignment",
-            "baserow_enterprise_team",
-            "baserow_enterprise_teamsubject",
-        ]
-
-    if BASEROW_CACHALOT_UNCACHABLE_TABLES:
-        CACHALOT_UNCACHABLE_TABLES += list(
-            filter(bool, BASEROW_CACHALOT_UNCACHABLE_TABLES.split(","))
-        )
-
-    CACHALOT_TIMEOUT = int(os.getenv("BASEROW_CACHALOT_TIMEOUT", 60 * 60 * 24 * 7))
-
-    patch_cachalot_for_baserow()
-
 
 CACHALOT_ENABLED = os.getenv("BASEROW_CACHALOT_ENABLED", "false") == "true"
 CACHALOT_CACHE = "cachalot"
@@ -324,6 +310,15 @@ CACHALOT_UNCACHABLE_TABLES = [
     "database_token",
     "baserow_enterprise_auditlogentry",
 ]
+
+
+def install_cachalot():
+    global INSTALLED_APPS
+
+    INSTALLED_APPS.append("cachalot")
+
+    patch_cachalot_for_baserow()
+
 
 if CACHALOT_ENABLED:
     install_cachalot()
