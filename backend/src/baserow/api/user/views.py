@@ -11,7 +11,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken
+from rest_framework_simplejwt.tokens import RefreshToken, TokenError
+from rest_framework_simplejwt.utils import datetime_from_epoch
 from rest_framework_simplejwt.views import (
+    TokenBlacklistView,
     TokenObtainPairView,
     TokenRefreshView,
     TokenVerifyView,
@@ -60,6 +63,7 @@ from baserow.core.user.exceptions import (
     DeactivatedUserException,
     DisabledSignupError,
     InvalidPassword,
+    RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
@@ -78,11 +82,13 @@ from .errors import (
     ERROR_INVALID_CREDENTIALS,
     ERROR_INVALID_OLD_PASSWORD,
     ERROR_INVALID_REFRESH_TOKEN,
+    ERROR_REFRESH_TOKEN_ALREADY_BLACKLISTED,
     ERROR_UNDO_REDO_LOCK_CONFLICT,
     ERROR_USER_IS_LAST_ADMIN,
     ERROR_USER_NOT_FOUND,
 )
 from .exceptions import ClientSessionIdHeaderNotSetException
+from .jwt import get_user_from_token
 from .schemas import (
     authenticate_user_schema,
     create_user_response_schema,
@@ -95,6 +101,7 @@ from .serializers import (
     RegisterSerializer,
     ResetPasswordBodyValidationSerializer,
     SendResetPasswordEmailBodyValidationSerializer,
+    TokenBlacklistSerializer,
     TokenObtainPairWithUserSerializer,
     TokenRefreshWithUserSerializer,
     TokenVerifyWithUserSerializer,
@@ -180,6 +187,38 @@ class VerifyJSONWebToken(TokenVerifyView):
     @map_exceptions({InvalidToken: ERROR_INVALID_REFRESH_TOKEN})
     def post(self, *args, **kwargs):
         return super().post(*args, **kwargs)
+
+
+class BlacklistJSONWebToken(TokenBlacklistView):
+    permission_classes = ()
+    authentication_classes = ()
+
+    @extend_schema(
+        tags=["User"],
+        operation_id="token_blacklist",
+        description=(
+            "Blacklists the provided token. This can be used the sign the user off."
+        ),
+        responses={
+            204: None,
+            401: {"description": "The JWT refresh token is invalid or expired."},
+        },
+        auth=[],
+    )
+    @map_exceptions(
+        {
+            InvalidToken: ERROR_INVALID_REFRESH_TOKEN,
+            TokenError: ERROR_INVALID_REFRESH_TOKEN,
+            RefreshTokenAlreadyBlacklisted: ERROR_REFRESH_TOKEN_ALREADY_BLACKLISTED,
+        }
+    )
+    @validate_body(TokenBlacklistSerializer)
+    def post(self, request, data):
+        refresh_token = data["refresh_token"]
+        user = get_user_from_token(refresh_token, token_class=RefreshToken)
+        expires_at = datetime_from_epoch(RefreshToken(refresh_token)["exp"])
+        UserHandler().blacklist_refresh_token(user, refresh_token, expires_at)
+        return Response(status=204)
 
 
 class UserView(APIView):

@@ -291,7 +291,9 @@ class TokenRefreshWithUserSerializer(TokenRefreshSerializer):
         attrs["refresh"] = attrs.pop("refresh_token", attrs.get("token"))
         super().validate(attrs)
 
-        user = get_user_from_token(attrs["refresh"], RefreshToken)
+        user = get_user_from_token(
+            attrs["refresh"], RefreshToken, check_if_refresh_token_is_blacklisted=True
+        )
         data = generate_session_tokens_for_user(user)
         data.update(**get_all_user_data_serialized(user, self.context["request"]))
         token_refreshes_counter.add(1)
@@ -312,8 +314,18 @@ class TokenVerifyWithUserSerializer(TokenVerifySerializer):
         refresh_token = attrs["token"] = attrs.pop("refresh_token", attrs.get("token"))
         super().validate(attrs)
 
-        user = get_user_from_token(refresh_token, token_class=RefreshToken)
+        user = get_user_from_token(
+            refresh_token,
+            token_class=RefreshToken,
+            check_if_refresh_token_is_blacklisted=True,
+        )
         return get_all_user_data_serialized(user, self.context["request"])
+
+
+class TokenBlacklistSerializer(serializers.Serializer):
+    refresh_token = serializers.CharField(
+        required=True, help_text="The fresh token that must be blacklisted."
+    )
 
 
 class DashboardSerializer(serializers.Serializer):

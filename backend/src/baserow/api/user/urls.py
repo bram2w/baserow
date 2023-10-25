@@ -2,6 +2,7 @@ from django.urls import re_path
 
 from .views import (
     AccountView,
+    BlacklistJSONWebToken,
     ChangePasswordView,
     DashboardView,
     ObtainJSONWebToken,
@@ -27,6 +28,9 @@ urlpatterns = [
     re_path(r"^token-auth/$", ObtainJSONWebToken.as_view(), name="token_auth"),
     re_path(r"^token-refresh/$", RefreshJSONWebToken.as_view(), name="token_refresh"),
     re_path(r"^token-verify/$", VerifyJSONWebToken.as_view(), name="token_verify"),
+    re_path(
+        r"^token-blacklist/$", BlacklistJSONWebToken.as_view(), name="token_blacklist"
+    ),
     re_path(
         r"^send-reset-password-email/$",
         SendResetPasswordEmailView.as_view(),

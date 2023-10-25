@@ -157,8 +157,17 @@ export const actions = {
    * Logs off the user by removing the token as a cookie and clearing the user
    * data.
    */
-  logoff({ dispatch }) {
+  logoff({ getters, dispatch }, { invalidateToken = false }) {
+    const refreshToken = getters.refreshToken
+
     dispatch('forceLogoff')
+
+    if (invalidateToken) {
+      // Invalidate the token async because we don't have to wait for that.
+      setTimeout(() => {
+        AuthService(this.$client).blacklistToken(refreshToken)
+      })
+    }
   },
   forceLogoff({ commit }) {
     unsetToken(this.app)

@@ -512,7 +512,13 @@ export default {
     },
     logoff() {
       this.logoffLoading = true
-      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
+      logoutAndRedirectToLogin(
+        this.$nuxt.$router,
+        this.$store,
+        false,
+        false,
+        true
+      )
     },
     /**
      * Called when the user clicks on the admin menu. Because there isn't an

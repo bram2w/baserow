@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Expires the refresh token on log out.",
+  "issue_number": 2045,
+  "bullet_points": [],
+  "created_at": "2023-10-24"
+}

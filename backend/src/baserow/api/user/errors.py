@@ -56,3 +56,9 @@ ERROR_AUTH_PROVIDER_DISABLED = (
     HTTP_401_UNAUTHORIZED,
     "Authentication provider is disabled.",
 )
+
+ERROR_REFRESH_TOKEN_ALREADY_BLACKLISTED = (
+    "ERROR_REFRESH_TOKEN_ALREADY_BLACKLISTED",
+    HTTP_400_BAD_REQUEST,
+    "The provided refresh token is already blacklisted.",
+)
