@@ -109,6 +109,13 @@ export default {
           this.account.oldPassword,
           this.account.newPassword
         )
+        // Changing the password invalidates all the refresh and access token, so we
+        // have to log in again. This can be done with the new password we still have
+        // in memory.
+        await this.$store.dispatch('auth/login', {
+          email: this.$store.getters['auth/getUsername'],
+          password: this.account.newPassword,
+        })
         this.success = true
         this.loading = false
       } catch (error) {

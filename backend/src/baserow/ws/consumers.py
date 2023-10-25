@@ -332,6 +332,29 @@ class CoreConsumer(AsyncJsonWebsocketConsumer):
 
     # Event handlers
 
+    async def force_disconnect_users(self, event):
+        """
+        Closes the connection with this user if their user id is in the provided
+        list.
+
+        :param event: The event containing the payload: the user ids that must
+            be disconnected and optionally the web socket ids to ignore from
+            disconnection.
+        """
+
+        disconnect_user_ids = event["user_ids"]
+        ignore_web_socket_ids = event["ignore_web_socket_ids"] or []
+
+        user_id = self.scope["user"].id
+        web_socket_id = self.scope["web_socket_id"]
+
+        if (
+            user_id in disconnect_user_ids
+            and web_socket_id not in ignore_web_socket_ids
+        ):
+            await self.send_json({"type": "force_disconnect"})
+            return await self.close()
+
     async def broadcast_to_users(self, event):
         """
         Broadcasts a message to all the users that are in the provided user_ids list.

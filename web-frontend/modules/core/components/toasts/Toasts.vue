@@ -6,6 +6,9 @@
       <UserSessionExpiredToast
         v-if="isUserSessionExpired"
       ></UserSessionExpiredToast>
+      <UserPasswordChangedToast
+        v-if="isUserPasswordChanged"
+      ></UserPasswordChangedToast>
       <FailedConnectingToast v-if="failedConnecting"></FailedConnectingToast>
       <AuthorizationErrorToast v-if="unauthorized"></AuthorizationErrorToast>
       <Toast
@@ -43,6 +46,7 @@ import PastingToast from '@baserow/modules/core/components/toasts/PastingToast'
 import ClearingToast from '@baserow/modules/core/components/toasts/ClearingToast'
 import AuthorizationErrorToast from '@baserow/modules/core/components/toasts/AuthorizationErrorToast'
 import UserSessionExpiredToast from '@baserow/modules/core/components/toasts/UserSessionExpiredToast'
+import UserPasswordChangedToast from '@baserow/modules/core/components/toasts/UserPasswordChangedToast'
 import UndoRedoToast from '@baserow/modules/core/components/toasts/UndoRedoToast'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 import PermissionsUpdatedToast from '@baserow/modules/core/components/toasts/PermissionsUpdatedToast'
@@ -61,6 +65,7 @@ export default {
     AuthorizationErrorToast,
     UndoRedoToast,
     UserSessionExpiredToast,
+    UserPasswordChangedToast,
   },
   computed: {
     undoRedoIsNotHidden() {
@@ -82,6 +87,7 @@ export default {
       toasts: (state) => state.toast.items,
       undoRedoState: (state) => state.toast.undoRedoState,
       isUserSessionExpired: (state) => state.toast.userSessionExpired,
+      isUserPasswordChanged: (state) => state.toast.userPasswordChanged,
       permissionsUpdated: (state) => state.toast.permissionsUpdated,
     }),
     ...mapGetters({ isAuthenticated: 'auth/isAuthenticated' }),

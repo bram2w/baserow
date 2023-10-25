@@ -11,6 +11,7 @@ from django.db import connections
 import pytest
 from freezegun import freeze_time
 from itsdangerous.exc import BadSignature, SignatureExpired
+from pytz import timezone
 
 from baserow.contrib.database.fields.models import SelectOption
 from baserow.contrib.database.models import (
@@ -379,6 +380,9 @@ def test_reset_password(data_fixture):
     with freeze_time("2020-01-02 12:00"):
         user = handler.reset_password(token, valid_password)
         assert user.check_password(valid_password)
+        assert user.profile.last_password_change == datetime.datetime(
+            2020, 1, 2, 12, 00, tzinfo=timezone("UTC")
+        )
 
 
 @pytest.mark.django_db
@@ -421,8 +425,12 @@ def test_change_password(data_fixture):
     user.refresh_from_db()
     assert user.check_password(valid_password)
 
-    user = handler.change_password(user, valid_password, valid_new_password)
-    assert user.check_password(valid_new_password)
+    with freeze_time("2020-01-01 12:00"):
+        user = handler.change_password(user, valid_password, valid_new_password)
+        assert user.check_password(valid_new_password)
+        assert user.profile.last_password_change == datetime.datetime(
+            2020, 1, 1, 12, 00, tzinfo=timezone("UTC")
+        )
 
 
 @pytest.mark.django_db

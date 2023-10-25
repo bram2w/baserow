@@ -56,6 +56,7 @@ from .exceptions import (
     UserIsLastAdmin,
     UserNotFound,
 )
+from .signals import user_password_changed
 from .utils import normalize_email_address
 
 User = get_user_model()
@@ -88,7 +89,7 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         if not user_id and not email:
             raise ValueError("Either a user id or email must be provided.")
 
-        query = User.objects.filter(is_active=True)
+        query = User.objects.filter(is_active=True).select_related("profile")
         if exclude_users_scheduled_to_be_deleted:
             query = query.filter(profile__to_be_deleted=False)
 
@@ -372,6 +373,15 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
         user.set_password(password)
         user.save()
 
+        # Update the last password change timestamp to invalidate old authentication
+        # tokens.
+        user.profile.last_password_change = timezone.now()
+        user.profile.save()
+
+        user_password_changed.send(
+            self, user=user, ignore_web_socket_id=getattr(user, "web_socket_id", None)
+        )
+
         return user
 
     def change_password(
@@ -402,6 +412,15 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
 
         user.set_password(new_password)
         user.save()
+
+        # Update the last password change timestamp to invalidate old authentication
+        # tokens.
+        user.profile.last_password_change = timezone.now()
+        user.profile.save()
+
+        user_password_changed.send(
+            self, user=user, ignore_web_socket_id=getattr(user, "web_socket_id", None)
+        )
 
         return user
 

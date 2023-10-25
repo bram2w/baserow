@@ -25,7 +25,8 @@ def get_user_from_token(
 
     TokenClass = token_class or AccessToken
     try:
-        user_id = TokenClass(token)[jwt_settings.USER_ID_CLAIM]
+        token = TokenClass(token)
+        user_id = token[jwt_settings.USER_ID_CLAIM]
     except KeyError:
         raise InvalidToken("Token contained no recognizable user identification")
     try:
@@ -38,6 +39,9 @@ def get_user_from_token(
     except UserNotFound:
         # It could happen if the user was deleted after the token was issued.
         raise InvalidToken("User does not exist.")
+
+    if not user.profile.is_jwt_token_valid(token):
+        raise InvalidToken("Token is invalidated.")
 
     if not user.is_active:
         raise InvalidToken("User is not active.")

@@ -157,7 +157,10 @@ export const actions = {
    * Logs off the user by removing the token as a cookie and clearing the user
    * data.
    */
-  logoff({ commit }) {
+  logoff({ dispatch }) {
+    dispatch('forceLogoff')
+  },
+  forceLogoff({ commit }) {
     unsetToken(this.app)
     unsetWorkspaceCookie(this.app)
     commit('LOGOFF')
