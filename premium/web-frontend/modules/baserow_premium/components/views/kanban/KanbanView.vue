@@ -256,9 +256,9 @@ export default {
      * the Table component that a new row has been selected,
      * such that we can update the path to include the row id.
      */
-    openRowEditModal(rowId) {
-      this.$refs.rowEditModal.show(rowId)
-      this.$emit('selected-row', rowId)
+    openRowEditModal(row) {
+      this.$refs.rowEditModal.show(row.id)
+      this.$emit('selected-row', row)
     },
     openCreateRowModal(event) {
       const defaults = {}

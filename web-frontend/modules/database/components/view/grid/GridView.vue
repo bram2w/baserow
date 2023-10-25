@@ -224,7 +224,7 @@
             {{ $t('gridView.copyRowURL') }}
           </a>
         </li>
-        <li>
+        <li v-if="selectedRow !== null && !selectedRow._.loading">
           <a @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]">
             <i class="context__menu-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
@@ -917,6 +917,12 @@ export default {
      * such that we can update the path to include the row id.
      */
     openRowEditModal(row) {
+      // The row edit modal doesn't support a row that doesn't yet have a row ID, so we
+      // don't do anything in that case.
+      if (row._.loading) {
+        return
+      }
+
       this.$refs.rowEditModal.show(row.id)
       this.$emit('selected-row', row)
     },

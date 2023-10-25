@@ -128,10 +128,16 @@ export default {
       try {
         const tableId = this.table.id
         const rowId = this.row.id
-        await this.$store.dispatch('rowHistory/fetchInitial', {
-          tableId,
-          rowId,
-        })
+
+        // If the row is not an integer, it can mean that the row hasn't been created
+        // in the backend yet. It's fine to not do anything then, because there is no
+        // history available anyway.
+        if (Number.isInteger(rowId)) {
+          await this.$store.dispatch('rowHistory/fetchInitial', {
+            tableId,
+            rowId,
+          })
+        }
       } catch (e) {
         notifyIf(e, 'application')
       }

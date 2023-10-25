@@ -63,6 +63,7 @@
             ></div>
             <component
               :is="rowExpandButton"
+              v-if="!row._.loading"
               :row="row"
               :workspace-id="workspaceId"
               :table="view.table"
