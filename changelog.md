@@ -1,5 +1,12 @@
 # Changelog
 
+## Released 1.21.1
+
+### Bug fixes
+* Fixed an issue that prevented the kanban view from subscribing to row events.
+* Prevent incorrect requests when opening row that has not yet been created.
+
+
 ## Released 1.21.0
 
 ### New features
