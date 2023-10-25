@@ -50,6 +50,7 @@ __all__ = [
     "Integration",
     "Service",
     "Notification",
+    "BlacklistedToken",
 ]
 
 
@@ -197,6 +198,12 @@ class UserProfile(models.Model):
 
     def is_jwt_token_valid(self, token):
         return not self.iat_before_last_password_change(token["iat"])
+
+
+class BlacklistedToken(CreatedAndUpdatedOnMixin, models.Model):
+    hashed_token = models.CharField(max_length=64, db_index=True, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    expires_at = models.DateTimeField()
 
 
 class Workspace(HierarchicalModelMixin, TrashableModelMixin, CreatedAndUpdatedOnMixin):

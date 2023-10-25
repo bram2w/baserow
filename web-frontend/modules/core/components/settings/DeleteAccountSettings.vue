@@ -131,7 +131,13 @@ export default {
   },
   methods: {
     logoff() {
-      logoutAndRedirectToLogin(this.$nuxt.$router, this.$store)
+      logoutAndRedirectToLogin(
+        this.$nuxt.$router,
+        this.$store,
+        false,
+        false,
+        true
+      )
       this.$store.dispatch('toast/success', {
         title: this.$t('deleteAccountSettings.accountDeletedSuccessTitle'),
         message: this.$t('deleteAccountSettings.accountDeletedSuccessMessage'),

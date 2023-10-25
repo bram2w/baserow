@@ -32,3 +32,7 @@ class ResetPasswordDisabledError(Exception):
 
 class DeactivatedUserException(Exception):
     pass
+
+
+class RefreshTokenAlreadyBlacklisted(Exception):
+    """Raised when the provided refresh token is already blacklisted."""

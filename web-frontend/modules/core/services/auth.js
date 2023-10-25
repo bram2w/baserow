@@ -3,6 +3,11 @@ export default (client) => {
     login(email, password) {
       return client.post('/user/token-auth/', { email, password })
     },
+    blacklistToken(refreshToken) {
+      return client.post('/user/token-blacklist/', {
+        refresh_token: refreshToken,
+      })
+    },
     refresh(refreshToken) {
       return client.post(
         '/user/token-refresh/',

@@ -1,3 +1,4 @@
+import datetime
 from datetime import timedelta
 from typing import Optional
 from urllib.parse import urljoin, urlparse
@@ -9,6 +10,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count, Q, QuerySet
+from django.db.utils import IntegrityError
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _
 
@@ -23,6 +25,7 @@ from baserow.core.exceptions import (
 )
 from baserow.core.handler import CoreHandler
 from baserow.core.models import (
+    BlacklistedToken,
     Template,
     UserLogEntry,
     UserProfile,
@@ -38,6 +41,7 @@ from baserow.core.signals import (
     user_updated,
 )
 from baserow.core.trash.handler import TrashHandler
+from baserow.core.utils import generate_hash
 
 from ..telemetry.utils import baserow_trace_methods
 from .emails import (
@@ -51,6 +55,7 @@ from .exceptions import (
     DisabledSignupError,
     InvalidPassword,
     PasswordDoesNotMatchValidation,
+    RefreshTokenAlreadyBlacklisted,
     ResetPasswordDisabledError,
     UserAlreadyExist,
     UserIsLastAdmin,
@@ -590,3 +595,38 @@ class UserHandler(metaclass=baserow_trace_methods(tracer)):
             profile__to_be_deleted=False,
             is_active=True,
         )
+
+    def blacklist_refresh_token(
+        self, user: AbstractUser, refresh_token: str, expires_at: datetime.datetime
+    ):
+        """
+        Blacklists the provided refresh token. This results in not being able to
+        generate access tokens anymore. The access does remain working until it expires.
+
+        :param user: The user that owns the refresh token.
+        :param refresh_token: The raw refresh token that must be blacklisted.
+        :param expires_at: Date when the token expires, this will be used when
+            cleaning up.
+        """
+
+        hashed_token = generate_hash(refresh_token)
+
+        try:
+            BlacklistedToken.objects.create(
+                user=user,
+                hashed_token=hashed_token,
+                expires_at=expires_at,
+            )
+        except IntegrityError:
+            raise RefreshTokenAlreadyBlacklisted
+
+    def refresh_token_is_blacklisted(self, refresh_token: str) -> bool:
+        """
+        Checks if the provided refresh token is blacklisted.
+
+        :param refresh_token: The refresh token that must be checked.
+        :return: Whether the token is blacklisted.
+        """
+
+        hashed_token = generate_hash(refresh_token)
+        return BlacklistedToken.objects.filter(hashed_token=hashed_token).exists()
