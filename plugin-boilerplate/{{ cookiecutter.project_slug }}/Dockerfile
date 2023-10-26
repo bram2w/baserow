@@ -1,4 +1,4 @@
-FROM baserow/baserow:1.21.1
+FROM baserow/baserow:1.21.2
 
 COPY ./plugins/{{ cookiecutter.project_module }}/ /baserow/plugins/{{ cookiecutter.project_module }}/
 RUN /baserow/plugins/install_plugin.sh --folder /baserow/plugins/{{ cookiecutter.project_module }}

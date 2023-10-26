@@ -1,5 +1,11 @@
 # Changelog
 
+## Released 1.21.2
+
+### Bug fixes
+* Fixed redirect problem in the additional importer.
+
+
 ## Released 1.21.1
 
 ### Bug fixes
