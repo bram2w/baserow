@@ -627,13 +627,17 @@ export default {
           database: this.database,
           data: table,
         })
+
+        if (this.errorReport.length === 0) {
+          this.openTable()
+        }
       } else {
         this.$bus.$emit('table-refresh', {
           tableId: this.job.table_id,
         })
-      }
-      if (this.errorReport.length === 0) {
-        this.openTable()
+        if (this.errorReport.length === 0) {
+          this.hide()
+        }
       }
     },
     onJobFailed() {
