@@ -24,7 +24,6 @@
 .sortings__item {
   position: relative;
   padding: 6px 0;
-  margin-left: 5px;
   @include rounded($rounded);
   @include flex-align-items(10px);
 
@@ -46,9 +45,10 @@
 }
 
 .sortings__remove {
-  font-size: 18px;
+  font-size: 20px;
   color: $color-neutral-900;
   justify-content: center;
+  width: 22px;
 
   @include flex-align-items();
 
@@ -66,7 +66,6 @@
   flex: 0 0 50px;
   width: 50px;
   margin-right: 10px;
-  margin-left: 14px;
 
   span {
     padding-left: 12px;
