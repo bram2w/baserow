@@ -140,7 +140,7 @@
     >
       <ul v-show="isMultiSelectActive" class="context__menu">
         <li>
-          <a @click=";[copySelection(), $refs.rowContext.hide()]">
+          <a @click=";[copySelection($event), $refs.rowContext.hide()]">
             <i class="context__menu-icon iconoir-copy"></i>
             {{ $t('gridView.copyCells') }}
           </a>
