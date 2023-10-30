@@ -40,8 +40,15 @@ class ElementSerializer(serializers.ModelSerializer):
             "order",
             "parent_element_id",
             "place_in_container",
+            "style_border_top_color",
+            "style_border_top_size",
             "style_padding_top",
+            "style_border_bottom_color",
+            "style_border_bottom_size",
             "style_padding_bottom",
+            "style_background",
+            "style_background_color",
+            "style_width",
         )
         extra_kwargs = {
             "id": {"read_only": True},
@@ -82,8 +89,15 @@ class CreateElementSerializer(serializers.ModelSerializer):
             "type",
             "parent_element_id",
             "place_in_container",
+            "style_border_top_color",
+            "style_border_top_size",
             "style_padding_top",
+            "style_border_bottom_color",
+            "style_border_bottom_size",
             "style_padding_bottom",
+            "style_background",
+            "style_background_color",
+            "style_width",
         )
 
 
@@ -91,8 +105,15 @@ class UpdateElementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Element
         fields = (
+            "style_border_top_color",
+            "style_border_top_size",
             "style_padding_top",
+            "style_border_bottom_color",
+            "style_border_bottom_size",
             "style_padding_bottom",
+            "style_background",
+            "style_background_color",
+            "style_width",
         )
 
 

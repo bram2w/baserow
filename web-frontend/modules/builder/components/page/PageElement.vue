@@ -1,5 +1,5 @@
 <template>
-  <div :style="baseStyles">
+  <div class="element__wrapper" :style="wrapperStyles">
     <component
       :is="component"
       :element="element"

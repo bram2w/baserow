@@ -1,3 +1,26 @@
+.element__wrapper {
+  padding: var(--padding-top, 0) 0 var(--padding-bottom, 0) 0;
+
+  &--normal-width {
+    margin: 0 auto;
+    padding-left: 20px;
+    padding-right: 20px;
+    max-width: $builder-page-max-width;
+  }
+
+  &--full-width {
+    max-width: 100%;
+  }
+
+  &--medium-width {
+    max-width: 960px;
+  }
+
+  &--small-width {
+    max-width: 680px;
+  }
+}
+
 .element {
   // this is a placeholder, the class will be added to every element component.
 }

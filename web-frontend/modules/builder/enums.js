@@ -62,6 +62,18 @@ export const WIDTHS = {
   FULL: { value: 'full', name: 'widthSelector.widthFull' },
 }
 
+export const BACKGROUND_TYPES = {
+  NONE: { value: 'none', name: 'backgroundTypes.none' },
+  COLOR: { value: 'color', name: 'backgroundTypes.color' },
+}
+
+export const WIDTH_TYPES = {
+  FULL: { value: 'full', name: 'widthTypes.full' },
+  NORMAL: { value: 'normal', name: 'widthTypes.normal' },
+  MEDIUM: { value: 'medium', name: 'widthTypes.medium' },
+  SMALL: { value: 'small', name: 'widthTypes.small' },
+}
+
 /**
  * A list of all the data providers that can be used in the formula field on the right
  * sidebar in the application builder.

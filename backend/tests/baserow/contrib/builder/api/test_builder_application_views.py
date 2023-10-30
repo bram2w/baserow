@@ -122,6 +122,7 @@ def test_list_builder_applications_theme(
     assert response_json[0]["theme"] == {
         "primary_color": "#ccccccff",
         "secondary_color": "#000000ff",
+        "border_color": "#d3d3d3ff",
         "heading_1_font_size": 24,
         "heading_1_color": "#000000ff",
         "heading_2_font_size": 20,
@@ -132,6 +133,7 @@ def test_list_builder_applications_theme(
     assert response_json[1]["theme"] == {
         "primary_color": "#000000ff",
         "secondary_color": "#000000ff",
+        "border_color": "#d3d3d3ff",
         "heading_1_font_size": 24,
         "heading_1_color": "#000000ff",
         "heading_2_font_size": 20,
