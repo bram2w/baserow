@@ -23,6 +23,7 @@ from baserow.contrib.database.formula import (
 from baserow.contrib.database.formula.ast.function_defs import (
     Baserow2dArrayAgg,
     BaserowAggJoin,
+    BaserowArrayAggNoNesting,
 )
 from baserow.contrib.database.formula.ast.tree import (
     BaserowFieldReference,
@@ -915,8 +916,12 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
 
     fill_table_rows(10, table_b)
 
+    # These functions are not supposed to be directly used by the user, but only
+    # internally from some formula types to manage aggregations correctly.
+    function_exceptions = {Baserow2dArrayAgg.type, BaserowArrayAggNoNesting.type}
+
     for formula_func in formula_function_registry.get_all():
-        if not formula_func.aggregate or formula_func.type == "array_agg_unnesting":
+        if not formula_func.aggregate or formula_func.type in function_exceptions:
             continue
 
         field_refs = [
@@ -945,7 +950,13 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
                 name=f"{formula_func.type} ref",
                 formula=f"field('{f.name}')",
             )
-            RowHandler().create_row(user, table, {})
+            try:
+                RowHandler().create_row(user, table, {})
+            except Exception as exc:
+                assert False, (
+                    f"Function {formula_func.type} with formula "
+                    f"{formula} crashed with exception: {exc}"
+                )
             url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
             response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
             response_json = response.json()
