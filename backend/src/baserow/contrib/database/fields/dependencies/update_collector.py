@@ -72,7 +72,11 @@ class PathBasedUpdateStatementCollector:
                 )
             else:
                 if update_statement is not None:
-                    self.update_statements[field.db_column] = update_statement
+                    # Value(None) is a valid update statement, but it doesn't work
+                    # with the exclude method, so we need to convert it to None.
+                    self.update_statements[field.db_column] = (
+                        update_statement if update_statement != Value(None) else None
+                    )
                 if self.table.needs_background_update_column_added:
                     self.update_statements[
                         ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
@@ -120,11 +124,12 @@ class PathBasedUpdateStatementCollector:
         starting_row_ids: StartingRowIdsType = None,
         path_to_starting_table: StartingRowIdsType = None,
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]] = None,
-    ):
+    ) -> int:
+        updated_rows = 0
         path_to_starting_table = path_to_starting_table or []
         if self.connection_here is not None:
             path_to_starting_table = [self.connection_here] + path_to_starting_table
-        self._execute_pending_update_statements(
+        updated_rows += self._execute_pending_update_statements(
             field_cache,
             path_to_starting_table,
             starting_row_ids,
@@ -132,12 +137,13 @@ class PathBasedUpdateStatementCollector:
         )
 
         for sub_path in self.sub_paths.values():
-            sub_path.execute_all(
+            updated_rows += sub_path.execute_all(
                 starting_row_ids=starting_row_ids,
                 path_to_starting_table=path_to_starting_table,
                 field_cache=field_cache,
                 deleted_m2m_rels_per_link_field=deleted_m2m_rels_per_link_field,
             )
+        return updated_rows
 
     def _execute_pending_update_statements(
         self,
@@ -145,7 +151,7 @@ class PathBasedUpdateStatementCollector:
         path_to_starting_table: List[LinkRowField],
         starting_row_ids: StartingRowIdsType,
         deleted_m2m_rels_per_link_field: Optional[Dict[int, Set[int]]],
-    ):
+    ) -> int:
         model = field_cache.get_model(self.table)
         qs = model.objects_and_trash
         # If the connection is broken back to the starting table then there is no
@@ -171,7 +177,13 @@ class PathBasedUpdateStatementCollector:
             # We aren't updating individual rows but instead entire columns, so don't
             # set this per row attribute.
             self.update_statements.pop(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, None)
-        qs.update(**self.update_statements)
+
+        updated_rows = 0
+        if self.update_statements:
+            updated_rows = qs.exclude(**self.update_statements).update(
+                **self.update_statements
+            )
+        return updated_rows
 
     def _include_rows_connected_to_deleted_m2m_relationships(
         self,
@@ -317,6 +329,18 @@ class FieldUpdateCollector:
             field, via_path_to_starting_table
         )
 
+    def apply_updates(self, field_cache: FieldCache) -> int:
+        """
+        Triggers all update statements to be executed in the correct order in as few
+        update queries as possible and return the number of updated rows.
+        """
+
+        return self._update_statement_collector.execute_all(
+            field_cache,
+            self._starting_row_ids,
+            deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
+        )
+
     def apply_updates_and_get_updated_fields(
         self, field_cache: FieldCache, skip_search_updates=False
     ) -> List[Field]:
@@ -326,11 +350,7 @@ class FieldUpdateCollector:
         :return: The list of all fields which have been updated in the starting table.
         """
 
-        self._update_statement_collector.execute_all(
-            field_cache,
-            self._starting_row_ids,
-            deleted_m2m_rels_per_link_field=self._deleted_m2m_rels_per_link_field,
-        )
+        self.apply_updates(field_cache)
 
         if not skip_search_updates:
             for table in self._updated_tables.values():

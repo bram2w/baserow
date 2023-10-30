@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.db.models import Value
+from django.db.models import Case, Value, When
 
 import pytest
 
@@ -350,3 +350,55 @@ def test_update_statements_at_the_same_path_node_are_grouped_into_one(
         assert send_mock.call_args[1]["field"].id == first_table_primary_field.id
         assert send_mock.call_args[1]["user"] is None
         assert send_mock.call_args[1]["related_fields"] == [first_table_other_field]
+
+
+@pytest.mark.django_db
+def test_update_statements_only_update_rows_where_values_change(data_fixture):
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+    text_field = data_fixture.create_text_field(name="text", table=table)
+    table_model = table.get_model()
+
+    row_1 = table_model.objects.create(**{f"field_{text_field.id}": "a"})
+    row_2 = table_model.objects.create(**{f"field_{text_field.id}": "a"})
+    row_3 = table_model.objects.create(**{f"field_{text_field.id}": "b"})
+
+    def execute_update_statement(update_statement):
+        update_collector = FieldUpdateCollector(table)
+        field_cache = FieldCache()
+        via_path_to_starting_table = []
+
+        update_collector.add_field_with_pending_update_statement(
+            text_field,
+            update_statement,
+            via_path_to_starting_table,
+        )
+        field_cache.cache_model(table_model)
+        updated_rows = update_collector.apply_updates(field_cache)
+        return updated_rows
+
+    def assert_all_rows_have_value(value):
+        for row in table_model.objects.all():
+            assert getattr(row, f"field_{text_field.id}") == value
+
+    # only the row with value "b" should be updated
+    assert execute_update_statement(Value("a")) == 1
+    assert_all_rows_have_value("a")
+
+    row_4 = table_model.objects.create(**{f"field_{text_field.id}": "b"})
+    row_5 = table_model.objects.create(**{f"field_{text_field.id}": "b"})
+
+    func_update_statement = Case(
+        When(
+            **{"id__in": [row_1.id, row_2.id, row_3.id, row_4.id, row_5.id]},
+            then=Value("a"),
+        ),
+        default=Value("b"),
+    )
+
+    # Only row_4 and row_5 should be updated, the others already have the value "a"
+    assert execute_update_statement(func_update_statement) == 2
+    assert_all_rows_have_value("a")
