@@ -55,7 +55,18 @@ export class ElementType extends Registerable {
   }
 
   get stylesAll() {
-    return ['style_padding_top', 'style_padding_bottom']
+    return [
+      'style_border_top_color',
+      'style_border_top_size',
+      'style_padding_top',
+      'style_border_bottom_color',
+      'style_border_bottom_size',
+      'style_padding_bottom',
+      'style_padding_bottom',
+      'style_background',
+      'style_background_color',
+      'style_width',
+    ]
   }
 
   get styles() {
@@ -153,6 +164,18 @@ export class ColumnElementType extends ContainerElementType {
     return this.elementTypesAll.filter(
       (elementType) => elementType instanceof ContainerElementType
     )
+  }
+
+  get childStylesForbidden() {
+    return [
+      'style_border_top_color',
+      'style_border_top_size',
+      'style_border_bottom_color',
+      'style_border_bottom_size',
+      'style_background',
+      'style_background_color',
+      'style_width',
+    ]
   }
 
   get defaultPlaceInContainer() {

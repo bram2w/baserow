@@ -1,7 +1,10 @@
 import _ from 'lodash'
 import form from '@baserow/modules/core/mixins/form'
+import { resolveColor } from '@baserow/modules/core/utils/colors'
+import { themeToColorVariables } from '@baserow/modules/builder/utils/theme'
 
 export default {
+  inject: ['builder'],
   props: {
     element: {
       type: Object,
@@ -24,6 +27,11 @@ export default {
       ),
     }
   },
+  computed: {
+    colorVariables() {
+      return themeToColorVariables(this.builder.theme)
+    },
+  },
   watch: {
     boxStyles: {
       deep: true,
@@ -35,15 +43,22 @@ export default {
     },
   },
   methods: {
+    resolveColor,
     isStyleAllowed(style) {
       return this.allowedValues.includes(style)
     },
     getBoxStyleValue(pos) {
-      return { padding: this.defaultValues[`style_padding_${pos}`] }
+      return {
+        padding: this.defaultValues[`style_padding_${pos}`],
+        border_color: this.defaultValues[`style_border_${pos}_color`],
+        border_size: this.defaultValues[`style_border_${pos}_size`],
+      }
     },
     setBoxStyleValue(pos, newValue) {
       if (newValue.padding !== undefined) {
         this.values[`style_padding_${pos}`] = newValue.padding
+        this.values[`style_border_${pos}_color`] = newValue.border_color
+        this.values[`style_border_${pos}_size`] = newValue.border_size
       }
     },
     getAllowedValues() {

@@ -18,6 +18,7 @@ class MainThemeConfigBlock(ThemeConfigBlock):
     # colors
     primary_color = models.CharField(max_length=9, default="#000000ff")
     secondary_color = models.CharField(max_length=9, default="#000000ff")
+    border_color = models.CharField(max_length=9, default="#d3d3d3ff")
     # headings
     heading_1_font_size = models.SmallIntegerField(default=24)
     heading_1_color = models.CharField(max_length=9, default="#000000ff")

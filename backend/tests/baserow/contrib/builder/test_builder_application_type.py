@@ -251,6 +251,7 @@ def test_builder_application_export(data_fixture):
             "heading_3_font_size": 16,
             "primary_color": "#000000ff",
             "secondary_color": "#000000ff",
+            "border_color": "#d3d3d3ff",
         },
         "id": builder.id,
         "name": builder.name,

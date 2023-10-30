@@ -35,6 +35,18 @@ class WIDTHS(models.TextChoices):
     FULL = "full"
 
 
+class BackgroundTypes(models.TextChoices):
+    NONE = "none"
+    COLOR = "color"
+
+
+class WidthTypes(models.TextChoices):
+    FULL = "full"
+    NORMAL = "normal"
+    MEDIUM = "medium"
+    SMALL = "small"
+
+
 def get_default_element_content_type():
     return ContentType.objects.get_for_model(Element)
 
@@ -87,8 +99,51 @@ class Element(
         help_text="The place in the container.",
     )
 
-    style_padding_top = models.PositiveIntegerField(default=10)
-    style_padding_bottom = models.PositiveIntegerField(default=10)
+    style_border_top_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Top border color.",
+    )
+    style_border_top_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the top border."
+    )
+    style_padding_top = models.PositiveIntegerField(
+        default=10, help_text="Padding height of the top border."
+    )
+
+    style_border_bottom_color = models.CharField(
+        max_length=20,
+        default="border",
+        blank=True,
+        help_text="Bottom border color",
+    )
+    style_border_bottom_size = models.PositiveIntegerField(
+        default=0, help_text="Pixel height of the bottom border."
+    )
+    style_padding_bottom = models.PositiveIntegerField(
+        default=10, help_text="Padding height of the bottom border."
+    )
+
+    style_background = models.CharField(
+        choices=BackgroundTypes.choices,
+        default=BackgroundTypes.NONE,
+        help_text="What type of background the element should have.",
+        max_length=20,
+    )
+    style_background_color = models.CharField(
+        max_length=20,
+        default="#ffffffff",
+        blank=True,
+        help_text="The background color if `style_background` is color.",
+    )
+
+    style_width = models.CharField(
+        choices=WidthTypes.choices,
+        default=WidthTypes.NORMAL,
+        help_text="Indicates the width of the element.",
+        max_length=20,
+    )
 
     class Meta:
         ordering = ("order", "id")

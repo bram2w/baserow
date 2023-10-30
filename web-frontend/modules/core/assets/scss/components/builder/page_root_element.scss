@@ -1,5 +1,5 @@
 .page-root-element__inner {
-  padding: 0 20px;
-  margin: 0 auto;
-  max-width: $builder-page-max-width;
+  background-color: var(--background-color, $black);
+  border-top: var(--border-top, none);
+  border-bottom: var(--border-bottom, none);
 }

@@ -26,15 +26,29 @@ class ElementHandler:
     allowed_fields_create = [
         "parent_element_id",
         "place_in_container",
+        "style_border_top_color",
+        "style_border_top_size",
         "style_padding_top",
+        "style_border_bottom_color",
+        "style_border_bottom_size",
         "style_padding_bottom",
+        "style_background",
+        "style_background_color",
+        "style_width",
     ]
 
     allowed_fields_update = [
         "parent_element_id",
         "place_in_container",
+        "style_border_top_color",
+        "style_border_top_size",
         "style_padding_top",
+        "style_border_bottom_color",
+        "style_border_bottom_size",
         "style_padding_bottom",
+        "style_background",
+        "style_background_color",
+        "style_width",
     ]
 
     def get_element(
