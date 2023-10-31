@@ -263,7 +263,7 @@ class DataSourceHandler:
         Dispatch the service related to the data_sources.
 
         :param data_sources: The data sources to be dispatched.
-        :param runtime_formula_context: The context used to resolve formulas.
+        :param dispatch_context: The context used for the dispatch.
         :return: The result of dispatching the data source mapped by data source ID.
             If an Exception occurred during the dispatch the exception is return as
             result for this data source.
@@ -291,7 +291,7 @@ class DataSourceHandler:
         Dispatch the service related to the data_source.
 
         :param data_source: The data source to be dispatched.
-        :param runtime_formula_context: The context used to resolve formulas.
+        :param dispatch_context: The context used for the dispatch.
         :raises DataSourceImproperlyConfigured: If the data source is
           not properly configured.
         :return: The result of dispatching the data source.
