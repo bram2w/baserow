@@ -80,7 +80,6 @@ class BuilderWorkflowActionService:
             ListBuilderWorkflowActionsPageOperationType.type,
             BuilderWorkflowAction.objects.all(),
             workspace=page.builder.workspace,
-            context=page,
         )
 
         return self.handler.get_workflow_actions(

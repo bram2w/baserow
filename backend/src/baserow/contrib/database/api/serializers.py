@@ -43,7 +43,6 @@ class DatabaseSerializer(ApplicationSerializer):
                 ListTablesDatabaseTableOperationType.type,
                 tables,
                 workspace=instance.workspace,
-                context=instance,
                 allow_if_template=True,
             )
 

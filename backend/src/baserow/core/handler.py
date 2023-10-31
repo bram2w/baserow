@@ -424,7 +424,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional[Workspace] = None,
-        context: Optional[ContextObject] = None,
         allow_if_template: Optional[bool] = False,
     ) -> QuerySet:
         """
@@ -441,7 +440,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             object that are in the same `ObjectScopeType` as the one described in the
             `OperationType` corresponding to the given `operation_name`.
         :param workspace: An optional workspace into which the operation occurs.
-        :param context: The optional context of the operation.
         :param allow_if_template: If true and if the workspace is related to a template,
             then we don't want to filter on the queryset.
         :return: The queryset, potentially filtered.
@@ -458,7 +456,7 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
                 continue
 
             queryset = permission_manager_type.filter_queryset(
-                actor, operation_name, queryset, workspace=workspace, context=context
+                actor, operation_name, queryset, workspace=workspace
             )
 
         return queryset
@@ -1457,7 +1455,6 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
             OrderApplicationsOperationType.type,
             all_applications,
             workspace=workspace,
-            context=workspace,
         )
 
         users_application_ids = users_applications.values_list("id", flat=True)

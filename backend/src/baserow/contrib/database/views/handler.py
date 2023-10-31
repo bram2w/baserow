@@ -88,6 +88,7 @@ from baserow.contrib.database.views.view_filter_groups import (
 )
 from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import (
@@ -505,7 +506,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             views,
             table.database.workspace,
-            context=table,
             allow_if_template=True,
         )
         views = views.select_related("content_type", "table")
@@ -531,6 +531,68 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             views = views[:limit]
 
         views = specific_iterator(views)
+        return views
+
+    def list_workspace_views(
+        self,
+        user: AbstractUser,
+        workspace: Workspace,
+        filters: bool = False,
+        sortings: bool = False,
+        decorations: bool = False,
+        group_bys: bool = False,
+        limit: int = None,
+        specific: bool = True,
+        base_queryset: QuerySet = None,
+    ) -> Iterable[View]:
+        """
+        Lists available views for a user/workspace combination.
+
+        :user: The user on whose behalf we want to return views.
+        :workspace: The workspace for which the views should be returned.
+        :filters: If filters should be prefetched.
+        :sortings: If sorts should be prefetched.
+        :decorations: If view decorations should be prefetched.
+        :limit: To limit the number of returned views.
+        :specific: set `True` to return specific instances.
+        :base_queryset: specify a base queryset to use.
+        :return: Iterator over returned views.
+        """
+
+        views = base_queryset if base_queryset else View.objects.all()
+
+        views = views.filter(table__database__workspace=workspace)
+
+        views = views.select_related(
+            "table", "table__database", "table__database__workspace"
+        )
+
+        if filters:
+            views = views.prefetch_related("viewfilter_set", "filter_groups")
+
+        if sortings:
+            views = views.prefetch_related("viewsort_set")
+
+        if decorations:
+            views = views.prefetch_related("viewdecoration_set")
+
+        if group_bys:
+            views = views.prefetch_related("viewgroupby_set")
+
+        if limit:
+            views = views[:limit]
+
+        views = CoreHandler().filter_queryset(
+            user,
+            ListViewsOperationType.type,
+            views,
+            workspace,
+        )
+
+        if specific:
+            views = views.select_related("content_type")
+            return specific_iterator(views)
+
         return views
 
     def get_view_as_user(
@@ -899,7 +961,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             all_views,
             workspace=workspace,
-            context=table,
         )
 
         view_ids = user_views.values_list("id", flat=True)
@@ -943,7 +1004,6 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             ListViewsOperationType.type,
             queryset,
             table.database.workspace,
-            context=table,
         )
 
         order = queryset.values_list("id", flat=True)

@@ -76,7 +76,6 @@ class ElementService:
             ListElementsPageOperationType.type,
             Element.objects.all(),
             workspace=page.builder.workspace,
-            context=page,
         )
 
         return self.handler.get_elements(page, base_queryset=user_elements)

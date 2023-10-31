@@ -654,7 +654,6 @@ class PermissionManagerType(abc.ABC, Instance):
         operation_name: str,
         queryset: QuerySet,
         workspace: Optional["Workspace"] = None,
-        context: Optional[Any] = None,
     ) -> QuerySet:
         """
         This method allows a permission manager to filter a given queryset accordingly
@@ -669,7 +668,6 @@ class PermissionManagerType(abc.ABC, Instance):
         :param queryset: The base queryset where the permission filter must be
             applied to.
         :param workspace: An optional workspace into which the operation takes place.
-        :param context: An optional context object related to the current operation.
         :return: The queryset potentially filtered.
         """
 

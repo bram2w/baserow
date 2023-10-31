@@ -4,6 +4,7 @@ from django.urls import reverse
 
 import pytest
 from rest_framework.status import HTTP_200_OK
+from tqdm import tqdm
 
 from baserow.contrib.integrations.local_baserow.integration_types import (
     LocalBaserowIntegrationType,
@@ -72,7 +73,6 @@ def test_get_local_baserow_databases(data_fixture):
 
     assert databases[1].id == database_2.id
     assert len(databases[1].tables) == 2
-    print(databases[1].tables)
     assert databases[1].tables[0].id == table_2.id
     assert databases[1].tables[1].id == table_3.id
 
@@ -106,12 +106,63 @@ def test_get_local_baserow_databases_number_of_queries(
 
 
 @pytest.mark.django_db
+@pytest.mark.disabled_in_ci
+# You must add --run-disabled-in-ci -s to pytest to run this test, you can do this in
+# intellij by editing the run config for this test and adding --run-disabled-in-ci -s
+# to additional args.
+# pytest -k "test_get_local_baserow_databases_performance" -s --run-disabled-in-ci
+# 3.500s for 30 x 999 table/views on Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz -
+# 7200 bogomips
+def test_get_local_baserow_databases_performance(data_fixture, api_client, profiler):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    builder = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(
+        authorized_user=user, application=builder
+    )
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+
+    table_amount = 30
+    views_per_table_amount = 999
+
+    for i in tqdm(range(table_amount), desc="Tables creation"):
+        table = data_fixture.create_database_table(database=database, name=i)
+
+        for j in range(int(views_per_table_amount / 3)):
+            data_fixture.create_grid_view(table=table, name=j)
+
+        for j in range(int(views_per_table_amount / 3)):
+            data_fixture.create_gallery_view(table=table, name=j)
+
+        for j in range(int(views_per_table_amount / 3)):
+            data_fixture.create_form_view(table=table, name=j)
+
+    print("------TYPE FUNCTION-------")
+    with profiler(html_report_name="get_local_baserow_databases_function"):
+        LocalBaserowIntegrationType.get_local_baserow_databases(integration)
+
+    print("------SERIALIZATION-------")
+    url = reverse("api:integrations:list", kwargs={"application_id": builder.id})
+    with profiler(html_report_name="get_local_baserow_databases_serialization"):
+        api_client.get(
+            url,
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+
+@pytest.mark.django_db
 def test_get_integrations_serializer(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
+    view = data_fixture.create_grid_view(table=table, order=2)
+    not_sortable_view = data_fixture.create_gallery_view(table=table, order=1)
+    not_filterable_and_sortable_view = data_fixture.create_form_view(
+        table=table, order=3
+    )
     data_fixture.create_local_baserow_integration(application=application)
 
     url = reverse("api:integrations:list", kwargs={"application_id": application.id})
@@ -126,6 +177,7 @@ def test_get_integrations_serializer(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 1
+
     assert response_json[0]["context_data"] == {
         "databases": [
             {
@@ -143,13 +195,26 @@ def test_get_integrations_serializer(api_client, data_fixture):
                         "database_id": table.database_id,
                     }
                 ],
+                "views": [
+                    {
+                        "id": not_sortable_view.id,
+                        "name": not_sortable_view.name,
+                        "table_id": table.id,
+                    },
+                    {"id": view.id, "name": view.name, "table_id": table.id},
+                ],
             },
         ]
     }
 
+    # If we add more views or table we should have the same amount of query
     database_2 = data_fixture.create_database_application(workspace=workspace)
+    table_2 = data_fixture.create_database_table(database=database_2)
     data_fixture.create_database_table(database=database_2)
-    data_fixture.create_database_table(database=database_2)
+
+    data_fixture.create_grid_view(table=table_2, order=2)
+    data_fixture.create_gallery_view(table=table_2, order=1)
+    data_fixture.create_form_view(table=table_2, order=3)
 
     with CaptureQueriesContext(connection) as queries_2:
         api_client.get(
@@ -157,5 +222,8 @@ def test_get_integrations_serializer(api_client, data_fixture):
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
+
+    for q in queries_2.captured_queries:
+        print(q, "/n")
 
     assert len(queries.captured_queries) == len(queries_2.captured_queries)
