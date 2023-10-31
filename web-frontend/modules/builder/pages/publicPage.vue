@@ -126,15 +126,15 @@ export default {
         mode: this.mode,
       }
     },
-    backendContext() {
-      return DataProviderType.getAllBackendContext(
+    dispatchContext() {
+      return DataProviderType.getAllDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )
     },
   },
   watch: {
-    backendContext: {
+    dispatchContext: {
       deep: true,
       /**
        * Update data source content on backend context changes

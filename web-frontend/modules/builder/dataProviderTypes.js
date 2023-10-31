@@ -30,7 +30,7 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/fetchPageDataSourceContent',
       {
         page: applicationContext.page,
-        data: DataProviderType.getAllBackendContext(
+        data: DataProviderType.getAllDispatchContext(
           this.app.$registry.getAll('builderDataProvider'),
           applicationContext
         ),
@@ -160,7 +160,7 @@ export class PageParameterDataProviderType extends DataProviderType {
     return _.get(content, path.join('.'))
   }
 
-  getBackendContext(applicationContext) {
+  getDispatchContext(applicationContext) {
     return this.getDataContent(applicationContext)
   }
 
@@ -218,7 +218,7 @@ export class CurrentRecordDataProviderType extends DataProviderType {
             'dataSource/getPageDataSourceById'
           ](page, element.data_source_id)
 
-          const dispatchContext = DataProviderType.getAllBackendContext(
+          const dispatchContext = DataProviderType.getAllDispatchContext(
             this.app.$registry.getAll('builderDataProvider'),
             { ...applicationContext, element }
           )

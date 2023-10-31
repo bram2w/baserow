@@ -51,12 +51,12 @@ export class DataProviderType extends Registerable {
     )
   }
 
-  static getAllBackendContext(dataProviders, applicationContext) {
+  static getAllDispatchContext(dataProviders, applicationContext) {
     return Object.fromEntries(
       Object.values(dataProviders).map((dataProvider) => {
         return [
           dataProvider.type,
-          dataProvider.getBackendContext(applicationContext),
+          dataProvider.getDispatchContext(applicationContext),
         ]
       })
     )
@@ -68,7 +68,7 @@ export class DataProviderType extends Registerable {
    * @param {Object} applicationContext the application context.
    * @returns An object if the dataProvider wants to send something to the backend.
    */
-  getBackendContext(applicationContext) {
+  getDispatchContext(applicationContext) {
     return null
   }
 

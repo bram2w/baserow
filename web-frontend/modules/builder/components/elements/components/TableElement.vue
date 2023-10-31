@@ -142,7 +142,7 @@ export default {
       clearElementContent: 'elementContent/clearElementContent',
     }),
     async fetchContent(range, replace) {
-      const dispatchContext = DataProviderType.getAllBackendContext(
+      const dispatchContext = DataProviderType.getAllDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )

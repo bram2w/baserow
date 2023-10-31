@@ -94,8 +94,8 @@ export default {
     dataSources() {
       return this.$store.getters['dataSource/getPageDataSources'](this.page)
     },
-    backendContext() {
-      return DataProviderType.getAllBackendContext(
+    dispatchContext() {
+      return DataProviderType.getAllDispatchContext(
         this.$registry.getAll('builderDataProvider'),
         this.applicationContext
       )
@@ -112,12 +112,12 @@ export default {
           'dataSourceContent/debouncedFetchPageDataSourceContent',
           {
             page: this.page,
-            data: this.backendContext,
+            data: this.dispatchContext,
           }
         )
       },
     },
-    backendContext: {
+    dispatchContext: {
       deep: true,
       /**
        * Update data source content on backend context changes

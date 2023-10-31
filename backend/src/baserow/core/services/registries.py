@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
-from baserow.core.formula.runtime_formula_context import RuntimeFormulaContext
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.registry import (
@@ -15,6 +14,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.services.dispatch_context import DispatchContext
 
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
@@ -123,33 +123,31 @@ class ServiceType(
     def dispatch_data(
         self,
         service: ServiceSubClass,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Responsible for executing the service's principle task.
 
         :param service: The service instance to dispatch with.
-        :param runtime_formula_context: The runtime_formula_context instance used to
-            resolve formulas (if any).
+        :param dispatch_context: The context used for the dispatch.
         :return: The service `dispatch_data` result if any.
         """
 
     def dispatch(
         self,
         service: ServiceSubClass,
-        runtime_formula_context: RuntimeFormulaContext,
+        dispatch_context: DispatchContext,
     ) -> Any:
         """
         Responsible for calling `dispatch_data` and `dispatch_transform` to execute
         the service's task, and generating the dispatch's response, respectively.
 
         :param service: The service instance to dispatch with.
-        :param runtime_formula_context: The runtime_formula_context instance used to
-            resolve formulas (if any).
+        :param dispatch_context: The context used for the dispatch.
         :return: The service dispatch result if any.
         """
 
-        data = self.dispatch_data(service, runtime_formula_context)
+        data = self.dispatch_data(service, dispatch_context)
         return self.dispatch_transform(data)
 
     def get_property_for_serialization(self, service: Service, prop_name: str):
