@@ -6,6 +6,7 @@ from faker import Faker
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.contrib.builder.domains.models import CustomDomain
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.models import CollectionField
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.handler import PageHandler
@@ -65,6 +66,7 @@ def load_test_data():
 
     heading_element_type = element_type_registry.get("heading")
     paragraph_element_type = element_type_registry.get("paragraph")
+    table_element_type = element_type_registry.get("table")
     link_element_type = element_type_registry.get("link")
 
     try:
@@ -178,6 +180,7 @@ def load_test_data():
     )
     field_name = Field.objects.get(table=table, name="Name")
     field_notes = Field.objects.get(table=table, name="Notes")
+    field_category = Field.objects.get(table=table, name="Category")
 
     try:
         product_detail = Page.objects.get(name="Product detail", builder=builder)
@@ -249,33 +252,43 @@ def load_test_data():
             heading_element_type, products, value='"All products"', level=1
         )
 
-        for i in range(3):
-            ElementHandler().create_element(
-                link_element_type,
-                products,
-                value=f'concat("Product {i+1} - ", get("data_source.{products_data_source.id}.{i}.{field_name.db_column}"))',
-                variant="button",
-                alignment="left",
-                navigation_type="page",
-                navigate_to_page=product_detail,
-                page_parameters=[
-                    {"name": "id", "value": f"{i+1}"},
-                    {
-                        "name": "name",
-                        "value": f'get("data_source.{products_data_source.id}.{i}.{field_name.db_column}")',
-                    },
-                ],
-            )
-
-        ElementHandler().create_element(
-            link_element_type,
+        table_element = ElementHandler().create_element(
+            table_element_type,
             products,
-            value=f'concat("Product 4 - ", get("data_source.{products_data_source.id}.3.{field_name.db_column}"))',
-            variant="button",
-            alignment="left",
-            navigation_type="custom",
-            navigate_to_url=f'concat("/product/4/", get("data_source.{products_data_source.id}.3.{field_name.db_column}"))',
+            data_source=products_data_source,
+            items_per_page=5,
         )
+
+        fields = [
+            {
+                "name": "Name",
+                "type": "text",
+                "value": f"get('current_record.{field_name.db_column}')",
+            },
+            {
+                "name": "Category",
+                "type": "text",
+                "value": f"get('current_record.{field_category.db_column}.value')",
+            },
+            {
+                "name": "Notes",
+                "type": "text",
+                "value": f"get('current_record.{field_name.db_column}')",
+            },
+            {
+                "name": "Details",
+                "type": "link",
+                "value": f"concat('/product/', get('current_record.id'), '/', get('current_record.{field_name.db_column}'))",
+            },
+        ]
+        created_fields = CollectionField.objects.bulk_create(
+            [
+                CollectionField(**field, order=index)
+                for index, field in enumerate(fields)
+            ]
+        )
+        table_element.fields.clear()
+        table_element.fields.add(*created_fields)
 
         ElementHandler().create_element(
             link_element_type,

@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from baserow.contrib.builder.elements.models import (
     ButtonElement,
-    CollectionElementField,
+    CollectionField,
     ColumnElement,
     HeadingElement,
     ImageElement,
@@ -53,9 +53,9 @@ class ElementFixtures:
         element = self.create_builder_element(TableElement, user, page, **kwargs)
 
         if fields:
-            created_fields = CollectionElementField.objects.bulk_create(
+            created_fields = CollectionField.objects.bulk_create(
                 [
-                    CollectionElementField(**field, order=index)
+                    CollectionField(**field, order=index)
                     for index, field in enumerate(fields)
                 ]
             )

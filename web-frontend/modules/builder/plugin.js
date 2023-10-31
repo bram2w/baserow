@@ -80,6 +80,11 @@ import {
   OpenPageWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
+import {
+  TextCollectionFieldType,
+  LinkCollectionFieldType,
+} from '@baserow/modules/builder/collectionFieldTypes'
+
 export default (context) => {
   const { store, app, isDev } = context
 
@@ -205,5 +210,14 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new OpenPageWorkflowActionType(context)
+  )
+
+  app.$registry.register(
+    'collectionField',
+    new TextCollectionFieldType(context)
+  )
+  app.$registry.register(
+    'collectionField',
+    new LinkCollectionFieldType(context)
   )
 }

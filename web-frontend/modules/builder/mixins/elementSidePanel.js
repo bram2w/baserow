@@ -35,6 +35,10 @@ export default {
       actionDebouncedUpdateSelectedElement: 'element/debouncedUpdateSelected',
     }),
     async onChange(newValues) {
+      if (newValues.order) {
+        newValues.order = new BigNumber(newValues.order)
+      }
+
       if (!this.$refs.panelForm.isFormValid()) {
         return
       }
@@ -44,10 +48,6 @@ export default {
           ([key, value]) => !_.isEqual(value, this.element[key])
         )
       )
-
-      if (newValues.order) {
-        newValues.order = new BigNumber(newValues.order)
-      }
 
       if (Object.keys(differences).length > 0) {
         try {

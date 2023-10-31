@@ -7,7 +7,7 @@ from rest_framework import serializers
 from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
 )
-from baserow.contrib.builder.elements.models import CollectionElementField, Element
+from baserow.contrib.builder.elements.models import CollectionField, Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.types import ElementsAndWorkflowActions
 from baserow.contrib.builder.workflow_actions.registries import (
@@ -173,9 +173,10 @@ class CollectionElementFieldSerializer(serializers.ModelSerializer):
     value = FormulaSerializerField(allow_blank=True)
 
     class Meta:
-        model = CollectionElementField
+        model = CollectionField
         fields = (
             "id",
             "name",
+            "type",
             "value",
         )
