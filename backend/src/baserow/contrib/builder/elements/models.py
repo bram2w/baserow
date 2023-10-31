@@ -477,7 +477,7 @@ class ButtonElement(Element):
     )
 
 
-class CollectionElementField(models.Model):
+class CollectionField(models.Model):
     """
     A field of a Collection element
     """
@@ -486,6 +486,11 @@ class CollectionElementField(models.Model):
     name = models.CharField(
         max_length=225,
         help_text="The name of the field.",
+    )
+    type = models.CharField(
+        default="text",
+        max_length=225,
+        help_text="The type of the field.",
     )
     value = FormulaField(default="", help_text="The value of the field.")
 
@@ -512,7 +517,7 @@ class CollectionElement(Element):
     )
 
     fields = models.ManyToManyField(
-        CollectionElementField, help_text="Fields of the collection element."
+        CollectionField, help_text="Fields of the collection element."
     )
 
     class Meta:

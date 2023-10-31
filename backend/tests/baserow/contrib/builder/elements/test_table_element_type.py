@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.exceptions import ValidationError
 
-from baserow.contrib.builder.elements.models import CollectionElementField, Element
+from baserow.contrib.builder.elements.models import CollectionField, Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
 
@@ -169,8 +169,8 @@ def test_delete_table_element_remove_fields(data_fixture):
 
     table_element = data_fixture.create_builder_table_element(page=page)
 
-    assert CollectionElementField.objects.count() == 3
+    assert CollectionField.objects.count() == 3
 
     ElementService().delete_element(user, table_element)
 
-    assert CollectionElementField.objects.count() == 0
+    assert CollectionField.objects.count() == 0

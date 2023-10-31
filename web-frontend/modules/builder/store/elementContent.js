@@ -48,7 +48,7 @@ const actions = {
     { commit, getters },
     { element, dataSource, range, data: dispatchContext, replace = false }
   ) {
-    if (!dataSource.type) {
+    if (!dataSource?.type) {
       return
     }
 

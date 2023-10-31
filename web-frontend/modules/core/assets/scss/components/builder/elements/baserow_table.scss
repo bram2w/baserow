@@ -1,0 +1,29 @@
+.baserow-table {
+  width: 100%;
+  border: 1px solid $black;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 12px;
+}
+
+.baserow-table__header-row {
+  background-color: $palette-neutral-200;
+}
+
+.baserow-table__header-cell,
+.baserow-table__cell {
+  padding: 12px 20px 10px 20px;
+}
+
+.baserow-table__header-cell {
+  font-weight: 600;
+  border-bottom: 1px solid $black;
+}
+
+.baserow-table__cell {
+  border-bottom: 1px solid $black;
+
+  .baserow-table__row:last-child & {
+    border-bottom: none;
+  }
+}

@@ -226,7 +226,7 @@ def test_builder_application_export(data_fixture):
                         "style_padding_bottom": 10,
                         "data_source_id": element4.data_source.id,
                         "fields": [
-                            {"name": f.name, "value": f.value}
+                            {"name": f.name, "value": f.value, "type": "text"}
                             for f in element4.fields.all()
                         ],
                     },

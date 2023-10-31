@@ -14,7 +14,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import (
     WIDTHS,
     ButtonElement,
-    CollectionElementField,
+    CollectionField,
     ColumnElement,
     ContainerElement,
     Element,
@@ -169,9 +169,9 @@ class CollectionElementType(ElementType, ABC):
 
         fields = values.get("fields", default_fields)
 
-        created_fields = CollectionElementField.objects.bulk_create(
+        created_fields = CollectionField.objects.bulk_create(
             [
-                CollectionElementField(**field, order=index)
+                CollectionField(**field, order=index)
                 for index, field in enumerate(fields)
             ]
         )
@@ -182,9 +182,9 @@ class CollectionElementType(ElementType, ABC):
             # Remove previous fields
             instance.fields.clear()
 
-            created_fields = CollectionElementField.objects.bulk_create(
+            created_fields = CollectionField.objects.bulk_create(
                 [
-                    CollectionElementField(**field, order=index)
+                    CollectionField(**field, order=index)
                     for index, field in enumerate(values["fields"])
                 ]
             )
@@ -200,7 +200,10 @@ class CollectionElementType(ElementType, ABC):
         """
 
         if prop_name == "fields":
-            return [{"name": f.name, "value": f.value} for f in element.fields.all()]
+            return [
+                {"name": f.name, "value": f.value, "type": f.type}
+                for f in element.fields.all()
+            ]
 
         return super().get_property_for_serialization(element, prop_name)
 
@@ -217,9 +220,9 @@ class CollectionElementType(ElementType, ABC):
         instance = super().import_serialized(page, serialized_copy, id_mapping)
 
         # Create fields
-        created_fields = CollectionElementField.objects.bulk_create(
+        created_fields = CollectionField.objects.bulk_create(
             [
-                CollectionElementField(**field, order=index)
+                CollectionField(**field, order=index)
                 for index, field in enumerate(fields)
             ]
         )
