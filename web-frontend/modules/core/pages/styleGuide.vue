@@ -602,18 +602,13 @@
           <Button size="tiny" append-icon="baserow-icon-lock-open"
             >button</Button
           >
-          <Button size="tiny" type="link" prepend-icon="arrow-left">
-            button
-          </Button>
           <Button size="tiny" type="ghost">button.button-ghost</Button>
-          <Button size="tiny" type="link">button.button-link</Button>
           <Button size="tiny" icon="iconoir-verified-user"></Button>
           <Button
             size="tiny"
             icon="iconoir-verified-user"
             type="ghost"
           ></Button>
-          <Button size="tiny" icon="iconoir-verified-user" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -628,35 +623,27 @@
           <Button tag="a" type="warning">a.button.button-warning</Button>
           <Button tag="a" type="error">a.button.button-error</Button>
           <Button tag="a" append-icon="baserow-icon-lock-open">a.button</Button>
-          <Button tag="a" type="link" prepend-icon="iconoir-nav-arrow-left"
-            >a.button</Button
-          >
           <Button tag="a" type="ghost">a.button.button-ghost</Button>
-          <Button tag="a" type="link">a.button.button-link</Button>
           <Button tag="a" icon="iconoir-verified-user"></Button>
           <Button tag="a" icon="iconoir-verified-user" type="ghost"></Button>
-          <Button tag="a" icon="iconoir-verified-user" type="link"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
           <h3>Normal button</h3>
-          <Button>button.button</Button>
+          <Button append-icon="iconoir-plus">button.button</Button>
           <Button disabled>button[disabled]</Button>
           <Button type="success">button.button-success</Button>
           <Button type="warning">button.button-warning</Button>
           <Button type="error">button.button-error</Button>
-          <Button append-icon="lbaserow-icon-lock-open">button</Button>
-          <Button type="link" prepend-icon="arrow-left">button</Button>
+          <Button append-icon="baserow-icon-lock-open">button</Button>
           <Button type="ghost">button.button-ghost</Button>
-          <Button type="link">button.button-link</Button>
           <Button icon="iconoir-verified-user"></Button>
           <Button icon="iconoir-verified-user" type="ghost"></Button>
           <Button type="light">button.light</Button>
           <Button type="light" active>button.light.active</Button>
           <Button type="light" icon="iconoir-bin"></Button>
-          <Button type="link" icon="iconoir-bin"></Button>
         </div>
         <div
           class="margin-bottom-3 style-guide__buttons"
@@ -674,17 +661,11 @@
           >
           <Button size="large" prepend-icon="arrow-left">button</Button>
           <Button size="large" type="ghost">button.button-ghost</Button>
-          <Button size="large" type="link">button.button-link</Button>
           <Button size="large" icon="iconoir-verified-user"></Button>
           <Button
             size="large"
             icon="iconoir-verified-user"
             type="ghost"
-          ></Button>
-          <Button
-            size="large"
-            icon="iconoir-verified-user"
-            type="link"
           ></Button>
         </div>
         <div
@@ -694,18 +675,48 @@
           <h3>Loading</h3>
           <Button size="tiny" loading>Loading</Button>
           <Button loading>Loading</Button>
+          <Button disabled loading>Disabled & loading</Button>
+          <Button type="success" loading>Success loading</Button>
           <Button append-icon="search" loading>Loading</Button>
-          <Button type="link" loading>Loading</Button>
+
           <Button size="large" loading>Loading</Button>
           <Button size="large" type="ghost" loading>Loading</Button>
           <Button size="large" icon="iconoir-verified-user" loading></Button>
           <Button type="light" loading>button.light.loading</Button>
-          <Button type="link" loading>button.link.loading</Button>
+
           <Button type="light" active loading>
             button.light.active.loading
           </Button>
-          <Button type="link" icon="iconoir-bin" loading />
         </div>
+
+        <div
+          class="margin-bottom-3"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Link button</h3>
+          <Button type="link" prepend-icon="iconoir-nav-arrow-left"
+            >button.link.loading</Button
+          >
+          <Button type="link">button.link</Button>
+          <Button type="link" loading>button.link.loading</Button>
+          <Button type="link" prepend-icon="iconoir-bin" disabled
+            >button.link.disabled</Button
+          >
+          <Button tag="a" icon="iconoir-verified-user" type="link"
+            >button.link.atag</Button
+          >
+          <Button type="link" size="tiny" prepend-icon="iconoir-nav-arrow-left"
+            >button.link.tiny</Button
+          >
+          <Button
+            type="link"
+            size="tiny"
+            loading
+            prepend-icon="iconoir-nav-arrow-left"
+            >button.link.tiny.loading.icon</Button
+          >
+        </div>
+
         <div
           class="margin-bottom-3"
           style="background-color: #ffffff; padding: 20px"
@@ -1170,7 +1181,7 @@
         </div>
         <div class="margin-bottom-3">
           <Button
-            append-icon="pencil"
+            append-icon="iconoir-edit-pencil"
             @click="$refs.context1.toggle($event.target)"
           >
             Toggle context
@@ -1200,7 +1211,7 @@
                     <Modal ref="modal1">
                       <h2 class="box__title">Modal inside a context</h2>
                       <Button
-                        icon="pencil"
+                        icon="iconoir-edit-pencil"
                         @click="$refs.context3.toggle($event.target)"
                         >Toggle context</Button
                       >

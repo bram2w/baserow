@@ -133,7 +133,7 @@
         <div class="align-right">
           <button
             v-if="dataLoaded && !(jobIsFinished || importInProgress)"
-            class="button button--large button--ghost"
+            class="button button--large button--ghost margin-right-1"
             @click=";[(importer = ''), reset()]"
           >
             <i class="button__icon iconoir-arrow-left"></i>

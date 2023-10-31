@@ -9,7 +9,7 @@
     v-on="$listeners"
   >
     <i v-if="prependIcon" class="button__icon" :class="prependIcon" />
-    <slot />
+    <slot></slot>
     <i
       v-if="appendIcon || icon"
       class="button__icon"
@@ -98,8 +98,7 @@ export default {
         [`button--${this.type}`]: this.type,
         'button--primary': !this.type,
         'button--full-width': this.fullWidth,
-        'button--icon': hasIcon,
-        'button--icon-only': hasIcon && this.$children.length === 0,
+        'button--icon-only': hasIcon && !this.$slots.default,
         'button--loading': this.loading,
         disabled: this.disabled,
         active: this.active,
