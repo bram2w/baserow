@@ -341,7 +341,7 @@ def test_list_views_doesnt_include_personal_views_the_user_used_to_have(data_fix
         collab_view.id,
     }
 
-    # Now they loose the ability to make and user personal views
+    # Now they loose the ability to make and use personal views
     RoleAssignmentHandler().assign_role(
         user, table.database.workspace, role=editor, scope=table
     )

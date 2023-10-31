@@ -26,6 +26,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.operations import (
     CreateTableDatabaseTableOperationType,
+    ListTablesDatabaseTableOperationType,
     OrderTablesDatabaseTableOperationType,
 )
 from baserow.contrib.database.rows.handler import RowHandler
@@ -62,6 +63,34 @@ tracer = trace.get_tracer(__name__)
 
 
 class TableHandler(metaclass=baserow_trace_methods(tracer)):
+    def list_workspace_tables(
+        self, user: AbstractUser, workspace, include_trashed=False, base_queryset=None
+    ) -> QuerySet[Table]:
+        """
+        Lists available tables for a user/workspace combination.
+
+        :user: The user on whose behalf we want to return tables.
+        :workspace: The workspace for which the tables should be returned.
+        :base_queryset: specify a base queryset to use.
+        :return: Iterator over returned tables.
+        """
+
+        table_qs = base_queryset if base_queryset else Table.objects.all()
+
+        table_qs = table_qs.filter(database__workspace=workspace).select_related(
+            "database", "database__workspace"
+        )
+
+        if not include_trashed:
+            table_qs = table_qs.filter(database__workspace__trashed=False)
+
+        return CoreHandler().filter_queryset(
+            user,
+            ListTablesDatabaseTableOperationType.type,
+            table_qs,
+            workspace=workspace,
+        )
+
     def get_table(
         self, table_id: int, base_queryset: Optional[QuerySet] = None
     ) -> Table:
@@ -425,7 +454,6 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             OrderTablesDatabaseTableOperationType.type,
             all_tables,
             workspace=database.workspace,
-            context=database,
         )
 
         table_ids = user_tables.values_list("id", flat=True)

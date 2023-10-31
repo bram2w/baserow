@@ -74,7 +74,6 @@ class IntegrationService:
             ListIntegrationsApplicationOperationType.type,
             Integration.objects.all(),
             workspace=application.workspace,
-            context=application,
         )
 
         return self.handler.get_integrations(

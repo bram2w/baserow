@@ -40,7 +40,6 @@ class CoreService:
             ListApplicationsWorkspaceOperationType.type,
             base_queryset,
             workspace=workspace,
-            context=workspace,
         )
 
         return self.handler.list_applications_in_workspace(workspace_id, base_queryset)

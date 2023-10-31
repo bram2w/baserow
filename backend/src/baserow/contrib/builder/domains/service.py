@@ -93,7 +93,6 @@ class DomainService:
             ListDomainsBuilderOperationType.type,
             queryset=queryset,
             workspace=builder.workspace,
-            context=builder,
         )
 
         return DomainHandler().get_domains(builder, queryset)
@@ -222,7 +221,6 @@ class DomainService:
             OrderDomainsBuilderOperationType.type,
             all_domains,
             workspace=builder.workspace,
-            context=builder,
         )
 
         full_order = self.handler.order_domains(builder, order, user_domains)

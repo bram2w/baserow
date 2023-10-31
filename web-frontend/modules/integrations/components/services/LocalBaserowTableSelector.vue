@@ -2,7 +2,7 @@
   <div class="local-baserow-table-selector">
     <FormElement class="control local-baserow-table-selector__input">
       <label class="control__label control__label--small">
-        {{ $t('localBaserowListRowsForm.databaseFieldLabel') }}
+        {{ $t('localBaserowTableSelector.databaseFieldLabel') }}
       </label>
       <Dropdown v-model="databaseSelectedId" :show-search="false">
         <DropdownItem
@@ -17,7 +17,7 @@
     </FormElement>
     <FormElement class="control local-baserow-table-selector__input">
       <label class="control__label control__label--small">
-        {{ $t('localBaserowListRowsForm.tableFieldLabel') }}
+        {{ $t('localBaserowTableSelector.tableFieldLabel') }}
       </label>
       <Dropdown
         :value="value"
@@ -35,17 +35,31 @@
         </DropdownItem>
       </Dropdown>
     </FormElement>
-    <FormInput
-      class="local-baserow-table-selector__input"
-      type="number"
-      small-label
-      :value="viewId"
-      :label="$t('localBaserowListRowsForm.viewFieldLabel')"
-      :placeholder="$t('localBaserowListRowsForm.viewFieldPlaceHolder')"
-      :from-value="(value) => (value ? value : '')"
-      :to-value="(value) => (value ? value : null)"
-      @input="$emit('update:view-id', parseInt($event))"
-    />
+    <FormElement class="control local-baserow-table-selector__input">
+      <label class="control__label control__label--small">
+        {{ $t('localBaserowTableSelector.viewFieldLabel') }}
+      </label>
+      <Dropdown
+        :value="viewId"
+        :show-search="false"
+        :disabled="value === null"
+        @input="$emit('update:view-id', $event)"
+      >
+        <DropdownItem
+          :name="$t('localBaserowTableSelector.chooseNoView')"
+          :value="null"
+          >{{ $t('localBaserowTableSelector.chooseNoView') }}</DropdownItem
+        >
+        <DropdownItem
+          v-for="view in views"
+          :key="view.id"
+          :name="view.name"
+          :value="view.id"
+        >
+          {{ view.name }}
+        </DropdownItem>
+      </Dropdown>
+    </FormElement>
   </div>
 </template>
 
@@ -81,6 +95,13 @@ export default {
     },
     tables() {
       return this.databaseSelected?.tables || []
+    },
+    views() {
+      return (
+        this.databaseSelected?.views.filter(
+          (view) => view.table_id === this.value
+        ) || []
+      )
     },
   },
   watch: {

@@ -1,17 +1,16 @@
-from typing import Any, Dict, Optional
+from collections import defaultdict
+from typing import Any, Dict, List, Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
-from django.db.models import QuerySet
 
 from baserow.api.user.serializers import SubjectUserSerializer
-from baserow.contrib.database.models import Table
-from baserow.contrib.database.operations import ListTablesDatabaseTableOperationType
+from baserow.contrib.database.table.handler import TableHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.api.local_baserow.serializers import (
     LocalBaserowContextDataSerializer,
 )
 from baserow.contrib.integrations.local_baserow.models import LocalBaserowIntegration
-from baserow.core.handler import CoreHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import IntegrationType
 from baserow.core.integrations.types import IntegrationDict
@@ -108,7 +107,7 @@ class LocalBaserowIntegrationType(IntegrationType):
         }
 
     @staticmethod
-    def get_local_baserow_databases(integration: LocalBaserowIntegration) -> QuerySet:
+    def get_local_baserow_databases(integration: LocalBaserowIntegration) -> List:
         """
         This method returns the databases that the user has access to in a query
         efficient way while also checking for permissions. It will do so by fetching
@@ -118,34 +117,40 @@ class LocalBaserowIntegrationType(IntegrationType):
         in this list.
         """
 
-        databases = []
-
         if (
-            integration.application.workspace_id is not None
-            and integration.specific.authorized_user is not None
+            not integration.application.workspace_id
+            or not integration.specific.authorized_user
         ):
-            user = integration.specific.authorized_user
-            workspace = integration.application.workspace
+            return []
 
-            tables_queryset = Table.objects.filter(
-                database__workspace_id=workspace.id, database__workspace__trashed=False
-            ).select_related("database", "database__workspace")
+        user = integration.specific.authorized_user
+        workspace = integration.application.workspace
 
-            tables = CoreHandler().filter_queryset(
-                user,
-                ListTablesDatabaseTableOperationType.type,
-                tables_queryset,
-                workspace=integration.application.workspace,
-                context=None,
-            )
+        tables = TableHandler().list_workspace_tables(user, workspace)
 
-            for table in tables:
-                if table.database not in databases:
-                    table.database.tables = []
-                    databases.append(table.database)
-                database = databases[databases.index(table.database)]
-                database.tables.append(table)
+        views = ViewHandler().list_workspace_views(user, workspace)
 
-            databases.sort(key=lambda x: x.order)
+        views_by_table = defaultdict(list)
+        [
+            views_by_table[view.table_id].append(view)
+            for view in views
+            if view.get_type().can_filter or view.get_type().can_sort
+        ]
+
+        database_map = {}
+        for table in tables:
+            if table.database not in database_map:
+                database_map[table.database] = table.database
+                database_map[table.database].tables = []
+                database_map[table.database].views = []
+
+            database_map[table.database].tables.append(table)
+            database_map[table.database].views += views_by_table.get(table.id, [])
+
+        databases = list(database_map.values())
+        databases.sort(key=lambda x: x.order)
+
+        # Sort views. Tables are already sorted.
+        [db.views.sort(key=lambda x: x.order) for db in databases]
 
         return databases

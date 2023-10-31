@@ -1145,7 +1145,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListTablesDatabaseTableOperationType.type,
         table_1_queryset,
         workspace=workspace_1,
-        context=database_1,
     )
 
     assert list(admin_table_queryset) == [table_1_1, table_1_2]
@@ -1155,7 +1154,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListTablesDatabaseTableOperationType.type,
         table_2_queryset,
         workspace=workspace_2,
-        context=database_2,
     )
 
     assert list(admin_table_queryset_2) == []
@@ -1165,7 +1163,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListTablesDatabaseTableOperationType.type,
         table_1_queryset,
         workspace=workspace_1,
-        context=database_1,
     )
 
     assert list(no_access_table_queryset) == []
@@ -1175,7 +1172,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListTablesDatabaseTableOperationType.type,
         table_2_queryset,
         workspace=workspace_2,
-        context=database_2,
     )
 
     assert list(builder_table_queryset) == [table_2_1]
@@ -1192,7 +1188,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
         workspace=workspace_2,
-        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [database_2.application_ptr]
@@ -1208,7 +1203,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
         workspace=workspace_2,
-        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [
@@ -1230,7 +1224,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
         workspace=workspace_2,
-        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [
@@ -1249,7 +1242,6 @@ def test_filter_queryset(data_fixture, enterprise_data_fixture):
         ListApplicationsWorkspaceOperationType.type,
         application_2_queryset,
         workspace=workspace_2,
-        context=workspace_2,
     )
 
     assert list(builder_application_queryset) == [

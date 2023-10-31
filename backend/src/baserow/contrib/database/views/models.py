@@ -25,6 +25,7 @@ from baserow.core.mixins import (
     OrderableMixin,
     PolymorphicContentTypeMixin,
     TrashableModelMixin,
+    WithRegistry,
 )
 from baserow.core.models import UserFile
 from baserow.core.utils import get_model_reference_field_name
@@ -62,6 +63,7 @@ class View(
     OrderableMixin,
     PolymorphicContentTypeMixin,
     models.Model,
+    WithRegistry,
 ):
     table = models.ForeignKey("database.Table", on_delete=models.CASCADE)
     order = models.PositiveIntegerField()
@@ -125,6 +127,12 @@ class View(
         help_text="The name of the database index that is used to speed up the "
         "filtering of the view.",
     )
+
+    @staticmethod
+    def get_type_registry():
+        """Returns the registry related to this model class."""
+
+        return view_type_registry
 
     @property
     def public_view_has_password(self) -> bool:

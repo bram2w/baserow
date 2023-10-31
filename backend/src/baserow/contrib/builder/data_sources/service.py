@@ -79,7 +79,6 @@ class DataSourceService:
             ListDataSourcesPageOperationType.type,
             DataSource.objects.filter(page=page),
             workspace=page.builder.workspace,
-            context=page,
         )
 
         return self.handler.get_data_sources(page, base_queryset=user_data_sources)
