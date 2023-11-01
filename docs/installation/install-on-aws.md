@@ -165,6 +165,13 @@ access this cluster.
 Baserow uses PostgreSQL heavily so scaling the RDS cluster up will be needed for larger
 deployments.
 
+> You should not put an RDS Proxy in front of the RDS instance. This is because the
+> proxy causes a transaction to end after a definition language (DDL) statement
+> completes. Baserow is therefore incompatible because it makes schema changes, and if
+> anything goes wrong the after a schema migration, the transaction isn't rolled back,
+> and results in data inconsistencies. More information:
+> https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.howitworks.html#rds-proxy-transactions
+
 #### 3) Provisioning a Redis using Elasticache
 
 Baserow uses Redis as a cache, for real-time collaboration over WebSockets and async
