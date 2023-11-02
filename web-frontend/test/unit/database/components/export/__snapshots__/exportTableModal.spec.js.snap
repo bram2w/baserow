@@ -1495,7 +1495,12 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
                   <i
                     class="checkbox__checked-icon iconoir-check"
                   />
-                   common.yes
+                   
+                  <label
+                    class="checkbox__label"
+                  >
+                    common.yes
+                  </label>
                 </div>
               </div>
             </div>
@@ -3026,7 +3031,12 @@ exports[`Preview exportTableModal Modal with view 1`] = `
                   <i
                     class="checkbox__checked-icon iconoir-check"
                   />
-                   common.yes
+                   
+                  <label
+                    class="checkbox__label"
+                  >
+                    common.yes
+                  </label>
                 </div>
               </div>
             </div>

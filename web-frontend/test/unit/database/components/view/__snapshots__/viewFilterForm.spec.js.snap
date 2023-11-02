@@ -1048,7 +1048,11 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
       <div
         class="switch switch--has-content"
       >
-        viewFilterContext.disableAllFilters
+        <label
+          class="switch__label"
+        >
+          viewFilterContext.disableAllFilters
+        </label>
       </div>
     </div>
   </div>
@@ -1466,7 +1470,11 @@ exports[`ViewFilterForm component Test rating filter 1`] = `
       <div
         class="switch switch--has-content"
       >
-        viewFilterContext.disableAllFilters
+        <label
+          class="switch__label"
+        >
+          viewFilterContext.disableAllFilters
+        </label>
       </div>
     </div>
   </div>
@@ -1884,7 +1892,11 @@ exports[`ViewFilterForm component Test rating filter 2`] = `
       <div
         class="switch switch--has-content"
       >
-        viewFilterContext.disableAllFilters
+        <label
+          class="switch__label"
+        >
+          viewFilterContext.disableAllFilters
+        </label>
       </div>
     </div>
   </div>

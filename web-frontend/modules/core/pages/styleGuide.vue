@@ -229,16 +229,19 @@
             <div class="control__elements">
               value: {{ switchValue }}
               <br />
-              <br />
               <SwitchInput v-model="switchValue"></SwitchInput>
               <SwitchInput v-model="switchValue">With text</SwitchInput>
               <SwitchInput v-model="switchUnknown">With text</SwitchInput>
-              <SwitchInput v-model="switchValue" :large="true"></SwitchInput>
-              <SwitchInput v-model="switchValue" :large="true">
-                With text
+              <SwitchInput v-model="switchUnknown" large>With text</SwitchInput>
+              <SwitchInput v-model="switchValue" large></SwitchInput>
+              <SwitchInput v-model="switchValue" large>
+                Large with text
               </SwitchInput>
-              <SwitchInput v-model="switchUnknown" :large="true">
-                With text
+              <SwitchInput v-model="switchUnknown" disabled>
+                Disabled
+              </SwitchInput>
+              <SwitchInput v-model="switchUnknown" disabled large>
+                Large disabled
               </SwitchInput>
             </div>
           </div>
@@ -1634,10 +1637,7 @@
                       class="data-table__table-cell data-table__table-cell--sticky-left data-table__table-cell--header"
                     >
                       <div class="data-table__table-cell-head">
-                        <Checkbox
-                          v-model="checkbox"
-                          class="checkbox--small"
-                        ></Checkbox>
+                        <Checkbox v-model="checkbox"></Checkbox>
                       </div>
                     </th>
                     <th
@@ -1695,10 +1695,7 @@
                       class="data-table__table-cell data-table__table-cell--sticky-left"
                     >
                       <div class="data-table__table-cell-content">
-                        <Checkbox
-                          v-model="checkbox"
-                          class="checkbox--small"
-                        ></Checkbox>
+                        <Checkbox v-model="checkbox"></Checkbox>
                       </div>
                     </td>
                     <td class="data-table__table-cell">
