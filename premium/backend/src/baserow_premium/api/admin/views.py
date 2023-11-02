@@ -21,6 +21,7 @@ from baserow.api.mixins import (
 )
 from baserow.api.pagination import PageNumberPagination
 from baserow.api.schemas import get_error_schema
+from baserow.api.serializers import get_example_pagination_serializer_class
 
 
 class APIListingView(
@@ -137,7 +138,7 @@ class APIListingView(
                 *(extra_parameters or []),
             ],
             "responses": {
-                200: serializer_class(many=True),
+                200: get_example_pagination_serializer_class(serializer_class),
                 400: get_error_schema(
                     [
                         "ERROR_PAGE_SIZE_LIMIT",
