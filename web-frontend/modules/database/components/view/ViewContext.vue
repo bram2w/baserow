@@ -44,7 +44,10 @@
           )
         "
       >
-        <a @click="duplicateView()">
+        <a
+          :class="{ 'context__menu-item--loading': duplicateLoading }"
+          @click="duplicateView()"
+        >
           <i class="context__menu-icon iconoir-copy"></i>
           {{ $t('viewContext.duplicateView') }}
         </a>
@@ -86,7 +89,10 @@
           )
         "
       >
-        <a @click="deleteView()">
+        <a
+          :class="{ 'context__menu-item--loading': deleteLoading }"
+          @click="deleteView()"
+        >
           <i class="context__menu-icon iconoir-bin"></i>
           {{ $t('viewContext.deleteView') }}
         </a>
@@ -136,6 +142,12 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      duplicateLoading: false,
+      deleteLoading: false,
+    }
+  },
   computed: {
     hasValidExporter() {
       return viewTypeHasExporterTypes(this.view.type, this.$registry)
@@ -145,15 +157,12 @@ export default {
     }),
   },
   methods: {
-    setLoading(view, value) {
-      this.$store.dispatch('view/setItemLoading', { view, value })
-    },
     enableRename() {
       this.$refs.context.hide()
       this.$emit('enable-rename')
     },
     async deleteView() {
-      this.setLoading(this.view, true)
+      this.deleteLoading = true
 
       try {
         await this.$store.dispatch('view/delete', this.view)
@@ -161,10 +170,10 @@ export default {
         this.handleError(error, 'view')
       }
 
-      this.setLoading(this.view, false)
+      this.deleteLoading = false
     },
     async duplicateView() {
-      this.setLoading(this.view, true)
+      this.duplicateLoading = true
       let newView
 
       try {
@@ -174,7 +183,7 @@ export default {
       }
 
       this.$refs.context.hide()
-      this.setLoading(this.view, false)
+      this.duplicateLoading = false
 
       // Redirect to the newly created view.
       this.$nuxt.$router.push({
