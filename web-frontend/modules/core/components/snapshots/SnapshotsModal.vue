@@ -106,9 +106,9 @@ export default {
     this.stopPollIfRunning()
   },
   methods: {
-    async show(...args) {
+    show(...args) {
       this.hideError()
-      await this.loadSnapshots()
+      this.loadSnapshots()
       modal.methods.show.bind(this)(...args)
     },
     async submitted(values) {
