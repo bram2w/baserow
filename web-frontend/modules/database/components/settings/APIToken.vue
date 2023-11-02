@@ -117,10 +117,9 @@
           :key="operation"
           class="api-token__permission"
         >
-          {{ operationName }}
+          <span>{{ operationName }}</span>
           <SwitchInput
             :value="isActive(operation)"
-            :large="true"
             @input="toggle(operation, $event)"
           ></SwitchInput>
         </div>
@@ -140,7 +139,6 @@
             >
               <SwitchInput
                 :value="isDatabaseActive(database, operation)"
-                :large="true"
                 @input="toggleDatabase(database, databases, operation, $event)"
               ></SwitchInput>
             </div>

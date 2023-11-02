@@ -1,6 +1,6 @@
 <template>
   <div class="switch" :class="classNames" @click="toggle(value)">
-    <slot></slot>
+    <label v-if="hasSlot" class="switch__label"> <slot></slot></label>
   </div>
 </template>
 
@@ -36,6 +36,9 @@ export default {
         active: this.value === true,
         unknown: this.value !== true && this.value !== false,
       }
+    },
+    hasSlot() {
+      return !!this.$slots.default
     },
   },
   methods: {
