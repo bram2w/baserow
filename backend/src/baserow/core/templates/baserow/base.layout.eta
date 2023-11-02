@@ -37,21 +37,21 @@
               name="title"
               font-size="22px"
               color="#070810"
-              font-family="Inter"
+              font-family="Inter,sans-serif"
               font-weight="600"
       />
       <mj-class
               name="text"
               font-size="13px"
               color="#070810"
-              font-family="Inter"
+              font-family="Inter,sans-serif"
               line-height="170%"
       />
       <mj-class
               name="button"
               font-size="15px"
               color="#ffffff"
-              font-family="Inter"
+              font-family="Inter,sans-serif"
               font-weight="600"
               align="left"
               background-color="#5190ef"
@@ -62,13 +62,13 @@
               name="button-url"
               font-size="12px"
               color="#9c9c9f"
-              font-family="Inter"
+              font-family="Inter,sans-serif"
       />
       <mj-class
               name="notification-description"
               font-size="12px"
               color="#838387"
-              font-family="Inter"
+              font-family="Inter,sans-serif"
       />
       <mj-class
               name="mb-20"
