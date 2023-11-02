@@ -103,7 +103,9 @@
         "multipleCollaborators": "Collaborators",
         "defaultFormViewComponent": "Default",
         "linkRowSingle": "Single",
-        "linkRowMultiple": "Multiple"
+        "linkRowMultiple": "Multiple",
+        "singleSelectDropdown": "Dropdown",
+        "singleSelectRadios": "Radios"
     },
     "fieldErrors": {
         "invalidNumber": "Invalid number",

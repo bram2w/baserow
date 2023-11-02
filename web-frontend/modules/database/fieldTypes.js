@@ -94,6 +94,7 @@ import RowHistoryFieldLinkRow from '@baserow/modules/database/components/row/Row
 
 import FormViewFieldLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldLinkRow'
 import FormViewFieldMultipleLinkRow from '@baserow/modules/database/components/view/form/FormViewFieldMultipleLinkRow'
+import FormViewFieldSingleSelectRadios from '@baserow/modules/database/components/view/form/FormViewFieldSingleSelectRadios'
 
 import { trueString } from '@baserow/modules/database/utils/constants'
 import {
@@ -2263,9 +2264,18 @@ export class SingleSelectFieldType extends FieldType {
   }
 
   getFormViewFieldComponents(field) {
+    const { i18n } = this.app
     const components = super.getFormViewFieldComponents(field)
+    components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].name = i18n.t(
+      'fieldType.singleSelectDropdown'
+    )
     components[DEFAULT_FORM_VIEW_FIELD_COMPONENT_KEY].properties = {
       'allow-create-options': false,
+    }
+    components.radios = {
+      name: i18n.t('fieldType.singleSelectRadios'),
+      component: FormViewFieldSingleSelectRadios,
+      properties: {},
     }
     return components
   }
