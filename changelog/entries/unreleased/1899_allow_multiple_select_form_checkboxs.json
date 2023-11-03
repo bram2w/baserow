@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Allow choosing a checkbox input option for the multiple select field in the form view.",
+  "issue_number": 1899,
+  "bullet_points": [],
+  "created_at": "2023-10-28"
+}
