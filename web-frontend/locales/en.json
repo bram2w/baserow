@@ -104,6 +104,8 @@
         "defaultFormViewComponent": "Default",
         "linkRowSingle": "Single",
         "linkRowMultiple": "Multiple",
+        "multipleSelectDropdown": "Dropdown",
+        "multipleSelectCheckboxes": "Checkboxes",
         "singleSelectDropdown": "Dropdown",
         "singleSelectRadios": "Radios"
     },
