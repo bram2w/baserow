@@ -288,6 +288,31 @@ def test_update_data_source_change_type(api_client, data_fixture):
 
 
 @pytest.mark.django_db
+def test_update_data_source_with_service_type_for_different_dispatch_type(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page
+    )
+
+    url = reverse(
+        "api:builder:data_source:item", kwargs={"data_source_id": data_source.id}
+    )
+
+    response = api_client.patch(
+        url,
+        {"type": "local_baserow_upsert_row"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE"
+
+
+@pytest.mark.django_db
 def test_update_data_source_compatible_integration_is_persisted(
     api_client, data_fixture
 ):
@@ -461,6 +486,25 @@ def test_move_data_source_before_not_in_same_page(api_client, data_fixture):
 
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response.json()["error"] == "ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE"
+
+
+@pytest.mark.django_db
+def test_create_data_source_with_service_type_for_different_dispatch_type(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    url = reverse("api:builder:data_source:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {"type": "local_baserow_upsert_row"},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response.json()["error"] == "ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE"
 
 
 @pytest.mark.django_db
