@@ -24,6 +24,7 @@ from baserow.api.utils import (
 )
 from baserow.contrib.builder.api.data_sources.errors import (
     ERROR_DATA_DOES_NOT_EXIST,
+    ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE,
     ERROR_DATA_SOURCE_DOES_NOT_EXIST,
     ERROR_DATA_SOURCE_IMPROPERLY_CONFIGURED,
     ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
@@ -49,7 +50,11 @@ from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.core.exceptions import PermissionException
-from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
+from baserow.core.services.exceptions import (
+    DoesNotExist,
+    InvalidServiceTypeDispatchSource,
+    ServiceImproperlyConfigured,
+)
 from baserow.core.services.registries import service_type_registry
 
 
@@ -145,6 +150,7 @@ class DataSourcesView(APIView):
         {
             PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
             DataSourceNotInSamePage: ERROR_DATA_SOURCE_NOT_IN_SAME_PAGE,
+            InvalidServiceTypeDispatchSource: ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE,
         }
     )
     @validate_body_custom_fields(
@@ -219,6 +225,7 @@ class DataSourceView(APIView):
     @map_exceptions(
         {
             DataSourceDoesNotExist: ERROR_DATA_SOURCE_DOES_NOT_EXIST,
+            InvalidServiceTypeDispatchSource: ERROR_DATA_SOURCE_CANNOT_USE_SERVICE_TYPE,
         }
     )
     def patch(self, request, data_source_id: int):

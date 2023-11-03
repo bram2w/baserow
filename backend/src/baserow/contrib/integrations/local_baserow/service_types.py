@@ -27,6 +27,7 @@ from baserow.contrib.database.api.rows.serializers import (
 )
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.handler import TableHandler
@@ -49,6 +50,7 @@ from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowListRows,
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
+    LocalBaserowUpsertRow,
 )
 from baserow.core.formula import resolve_formula
 from baserow.core.formula.registries import formula_runtime_function_registry
@@ -57,7 +59,7 @@ from baserow.core.formula.validator import ensure_integer
 from baserow.core.handler import CoreHandler
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
-from baserow.core.services.registries import ServiceType
+from baserow.core.services.registries import DispatchTypes, ServiceType
 from baserow.core.services.types import (
     ServiceDict,
     ServiceFilterDictSubClass,
@@ -65,8 +67,6 @@ from baserow.core.services.types import (
     ServiceSubClass,
 )
 from baserow.core.utils import atomic_if_not_already
-
-LocalBaserowTableServiceSubClass = Union[LocalBaserowGetRow, LocalBaserowListRows]
 
 
 class LocalBaserowServiceType(ServiceType):
@@ -152,88 +152,34 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     The `ServiceType` for `LocalBaserowTableService` subclasses.
     """
 
-    # All `LocalBaserowTableService` subclasses share these allowed fields.
-    base_allowed_fields = [
-        "table",
-        "view",
-        "filter_type",
-        "search_query",
-    ]
+    def before_dispatch(
+        self,
+        service: ServiceSubClass,
+        dispatch_context: DispatchContext,
+    ):
+        """
+        A hook called before the `LocalBaserowTableServiceType` subclass dispatch
+        calls. It ensures we check the service has a `Table` before execution.
 
-    # Overriden by child classes to add their specific fields.
-    child_allowed_fields = []
+        :param service: A `LocalBaserowTableService` instance.
+        :param dispatch_context: The dispatch_context instance used to
+            resolve formulas (if any).
+        :raises ServiceImproperlyConfigured: When we try and dispatch a service that
+            has no `Table` associated with it.
+        """
 
-    # All `LocalBaserowTableService` subclasses share these serializer field names.
-    base_serializer_field_names = [
-        "table_id",
-        "filters",
-        "sortings",
-        "view_id",
-        "filter_type",
-        "search_query",
-    ]
-
-    # Overriden by child classes to add their specific field names.
-    child_serializer_field_names = []
-
-    serializer_field_overrides = {
-        "filters": LocalBaserowTableServiceFilterSerializer(
-            many=True, source="service_filters", required=False
-        ),
-        "sortings": LocalBaserowTableServiceSortSerializer(
-            many=True, source="service_sorts", required=False
-        ),
-    }
-
-    base_request_serializer_field_overrides = {
-        "table_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow table we want the data for.",
-        ),
-        "view_id": serializers.IntegerField(
-            required=False,
-            allow_null=True,
-            help_text="The id of the Baserow view we want the data for.",
-        ),
-        "search_query": serializers.CharField(
-            required=False,
-            allow_blank=True,
-            help_text="Any search queries to apply to the "
-            "service when it is dispatched.",
-        ),
-    } | serializer_field_overrides
-
-    # Overriden by child classes to add their specific field names.
-    child_request_serializer_field_overrides = {}
-
-    @property
-    def allowed_fields(self) -> List[str]:
-        return self.base_allowed_fields + self.child_allowed_fields
-
-    @property
-    def serializer_field_names(self) -> List[str]:
-        return self.base_serializer_field_names + self.child_serializer_field_names
-
-    @property
-    def request_serializer_field_overrides(self) -> Dict[str, Serializer]:
-        return (
-            self.base_request_serializer_field_overrides
-            | self.child_request_serializer_field_overrides
-        )
+        if service.table is None:
+            raise ServiceImproperlyConfigured("The table property is missing.")
 
     def transform_serialized_value(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
     ):
         """
-        Get the view, table and field IDs from the mapping if they exists.
+        Get the table and field IDs from the mapping if they exist.
         """
 
         if prop_name == "table_id" and "database_tables" in id_mapping:
             return id_mapping["database_tables"].get(value, None)
-
-        if prop_name == "view_id" and "database_views" in id_mapping:
-            return id_mapping["database_views"].get(value, None)
 
         if "database_fields" in id_mapping and prop_name in ["filters", "sortings"]:
             return [
@@ -322,7 +268,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
     def update_service_sortings(
         self,
-        service: LocalBaserowTableServiceSubClass,
+        service: Union[LocalBaserowGetRow, LocalBaserowListRows],
         service_sorts: Optional[List[ServiceSortDictSubClass]] = None,
     ):
         with atomic_if_not_already():
@@ -338,7 +284,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
     def update_service_filters(
         self,
-        service: LocalBaserowTableServiceSubClass,
+        service: Union[LocalBaserowGetRow, LocalBaserowListRows],
         service_filters: Optional[List[ServiceFilterDictSubClass]] = None,
     ):
         with atomic_if_not_already():
@@ -354,7 +300,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
     def after_update(
         self,
-        instance: LocalBaserowTableServiceSubClass,
+        instance: ServiceSubClass,
         values: Dict,
         changes: Dict[str, Tuple],
     ) -> None:
@@ -381,6 +327,98 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                 self.update_service_filters(instance, values["service_filters"])
             if "service_sorts" in values:
                 self.update_service_sortings(instance, values["service_sorts"])
+
+    def prepare_values(
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: Optional[ServiceSubClass] = None,
+    ) -> Dict[str, Any]:
+        """Load the table instance instead of the ID."""
+
+        if "table_id" in values:
+            table_id = values.pop("table_id")
+            if table_id is not None:
+                table = TableHandler().get_table(table_id)
+                values["table"] = table
+            else:
+                values["table"] = None
+
+        return super().prepare_values(values, user)
+
+    def generate_schema(self, service: ServiceSubClass) -> Optional[Dict[str, Any]]:
+        """
+        Responsible for generating a dictionary in the JSON Schema spec. This helps
+        inform the frontend data source form and data explorer about the type of
+        schema the service is interacting with.
+
+        :param service: A `LocalBaserowTableService` subclass.
+        :return: A schema dictionary, or None if no `Table` has been applied.
+        """
+
+        table = service.table
+        if not table:
+            return None
+
+        properties = {"id": {"type": "number", "title": "ID"}}
+        fields = FieldHandler().get_fields(table, specific=True)
+        for field in fields:
+            field_type = field_type_registry.get_by_model(field)
+            # Only `TextField` has a default value at the moment.
+            default_value = getattr(field, "text_default", None)
+            field_serializer = field_type.get_serializer(field, FieldSerializer)
+            properties[field.db_column] = {
+                "title": field.name,
+                "default": default_value,
+                "original_type": field_type.type,
+                "metadata": field_serializer.data,
+            } | self.get_json_type_from_response_serializer_field(field, field_type)
+
+        return self.get_schema_for_return_type(service, properties)
+
+    def get_schema_name(self, service: ServiceSubClass) -> str:
+        """
+        The default `LocalBaserowTableService` schema name.
+
+        :param service: The service we want to generate a schema `title` with.
+        :return: A string.
+        """
+
+        return f"Table{service.table_id}Schema"
+
+    def get_json_type_from_response_serializer_field(
+        self, field, field_type
+    ) -> Dict[str, Any]:
+        """
+        Responsible for taking a `Field` and `FieldType`, getting the field type's
+        response serializer field, and passing it into our serializer to JSON type
+        mapping method, `guess_json_type_from_response_serialize_field`.
+
+        :param field: The Baserow Field we want a type for.
+        :param field_type: The Baserow FieldType we want a type for.
+        :return: A dictionary to add to our schema.
+        """
+
+        serializer_field = field_type.get_response_serializer_field(field)
+        return self.guess_json_type_from_response_serialize_field(serializer_field)
+
+
+class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
+    """
+    The `ServiceType` for `LocalBaserowViewService` subclasses.
+    """
+
+    def transform_serialized_value(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+    ):
+        """
+        Get the view ID from the mapping if it exists.
+        """
+
+        if prop_name == "view_id" and "database_views" in id_mapping:
+            return id_mapping["database_views"].get(value, None)
+
+        return super().transform_serialized_value(prop_name, value, id_mapping)
 
     def prepare_values(
         self,
@@ -440,67 +478,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
 
         return super().prepare_values(values, user)
 
-    def generate_schema(
-        self, service: LocalBaserowTableServiceSubClass
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Responsible for generating a dictionary in the JSON Schema spec. This helps
-        inform the frontend data source form and data explorer about the type of
-        schema the service is interacting with.
-
-        :param service: A `LocalBaserowTableService` subclass.
-        :return: A schema dictionary, or None if no `Table` has been applied.
-        """
-
-        table = service.table
-        if not table:
-            return None
-
-        properties = {"id": {"type": "number", "title": "ID"}}
-        fields = FieldHandler().get_fields(table, specific=True)
-        for field in fields:
-            field_type = field_type_registry.get_by_model(field)
-            # Only `TextField` has a default value at the moment.
-            default_value = getattr(field, "text_default", None)
-            field_serializer = field_type.get_serializer(field, FieldSerializer)
-            properties[field.db_column] = {
-                "title": field.name,
-                "default": default_value,
-                "original_type": field_type.type,
-                "metadata": field_serializer.data,
-            } | self.get_json_type_from_response_serializer_field(field, field_type)
-
-        return self.get_schema_for_return_type(service, properties)
-
-    def get_schema_name(self, service: LocalBaserowTableServiceSubClass) -> str:
-        """
-        The default `LocalBaserowTableService` schema name.
-
-        :param service: The service we want to generate a schema `title` with.
-        :return: A string.
-        """
-
-        return f"Table{service.table_id}Schema"
-
-    def get_json_type_from_response_serializer_field(
-        self, field, field_type
-    ) -> Dict[str, Any]:
-        """
-        Responsible for taking a `Field` and `FieldType`, getting the field type's
-        response serializer field, and passing it into our serializer to JSON type
-        mapping method, `guess_json_type_from_response_serialize_field`.
-
-        :param field: The Baserow Field we want a type for.
-        :param field_type: The Baserow FieldType we want a type for.
-        :return: A dictionary to add to our schema.
-        """
-
-        serializer_field = field_type.get_response_serializer_field(field)
-        return self.guess_json_type_from_response_serialize_field(serializer_field)
-
 
 class LocalBaserowListRowsUserServiceType(
-    LocalBaserowTableServiceType,
+    LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSortableMixin,
     LocalBaserowTableServiceSearchableMixin,
@@ -515,6 +495,48 @@ class LocalBaserowListRowsUserServiceType(
     model_class = LocalBaserowListRows
     max_result_limit = 200
     returns_list = True
+    dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
+
+    allowed_fields = [
+        "search_query",
+        "table",
+        "view",
+        "filter_type",
+    ]
+    serializer_field_names = [
+        "table_id",
+        "view_id",
+        "filter_type",
+        "search_query",
+        "sortings",
+        "filters",
+    ]
+    serializer_field_overrides = {
+        "filters": LocalBaserowTableServiceFilterSerializer(
+            many=True, source="service_filters", required=False
+        ),
+        "sortings": LocalBaserowTableServiceSortSerializer(
+            many=True, source="service_sorts", required=False
+        ),
+    }
+    request_serializer_field_overrides = {
+        "table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow table we want the data for.",
+        ),
+        "view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow view we want the data for.",
+        ),
+        "search_query": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            help_text="Any search queries to apply to the "
+            "service when it is dispatched.",
+        ),
+    } | serializer_field_overrides
 
     class SerializedDict(ServiceDict):
         table_id: int
@@ -542,15 +564,11 @@ class LocalBaserowListRowsUserServiceType(
 
         :param service: the local baserow get row service.
         :param dispatch_context: The context used for the dispatch.
-        :raise ServiceImproperlyConfigured: if the table property is missing.
         :return: The list of rows.
         """
 
-        integration = service.integration.specific
-
         table = service.table
-        if table is None:
-            raise ServiceImproperlyConfigured("The table property is missing.")
+        integration = service.integration.specific
 
         CoreHandler().check_permissions(
             integration.authorized_user,
@@ -601,7 +619,6 @@ class LocalBaserowListRowsUserServiceType(
         Given the rows found in `dispatch_data`, serializes them.
 
         :param dispatch_data: The data generated by `dispatch_data`.
-        :raise ServiceImproperlyConfigured: if the table property is missing.
         :return: The list of rows.
         """
 
@@ -618,7 +635,7 @@ class LocalBaserowListRowsUserServiceType(
 
 
 class LocalBaserowGetRowUserServiceType(
-    LocalBaserowTableServiceType,
+    LocalBaserowViewServiceType,
     LocalBaserowTableServiceFilterableMixin,
     LocalBaserowTableServiceSearchableMixin,
 ):
@@ -630,16 +647,51 @@ class LocalBaserowGetRowUserServiceType(
     integration_type = LocalBaserowIntegrationType.type
     type = "local_baserow_get_row"
     model_class = LocalBaserowGetRow
+    dispatch_type = DispatchTypes.DISPATCH_DATA_SOURCE
 
-    child_allowed_fields = ["row_id"]
-    child_serializer_field_names = ["row_id"]
-    child_request_serializer_field_overrides = {
+    allowed_fields = [
+        "row_id",
+        "search_query",
+        "table",
+        "view",
+        "filter_type",
+    ]
+    serializer_field_names = [
+        "row_id",
+        "table_id",
+        "view_id",
+        "filter_type",
+        "search_query",
+        "filters",
+    ]
+    serializer_field_overrides = {
+        "filters": LocalBaserowTableServiceFilterSerializer(
+            many=True, source="service_filters", required=False
+        ),
+    }
+    request_serializer_field_overrides = {
         "row_id": FormulaSerializerField(
             required=False,
             allow_blank=True,
             help_text="A formula for defining the intended row.",
         ),
-    }
+        "table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow table we want the data for.",
+        ),
+        "view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow view we want the data for.",
+        ),
+        "search_query": serializers.CharField(
+            required=False,
+            allow_blank=True,
+            help_text="Any search queries to apply to the "
+            "service when it is dispatched.",
+        ),
+    } | serializer_field_overrides
 
     class SerializedDict(ServiceDict):
         table_id: int
@@ -688,11 +740,8 @@ class LocalBaserowGetRowUserServiceType(
         :return: The rows.
         """
 
-        integration = service.integration.specific
-
         table = service.table
-        if table is None:
-            raise ServiceImproperlyConfigured("The table property is missing.")
+        integration = service.integration.specific
 
         try:
             row_id = ensure_integer(
@@ -736,3 +785,84 @@ class LocalBaserowGetRowUserServiceType(
             return {"data": row, "baserow_table_model": model}
         except model.DoesNotExist:
             raise DoesNotExist()
+
+
+class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
+    """
+    A `LocalBaserow` service type which will create or update rows in
+    the service's target table when it is used in conjunction with
+    workflow actions.
+    """
+
+    integration_type = LocalBaserowIntegrationType.type
+    type = "local_baserow_upsert_row"
+    model_class = LocalBaserowUpsertRow
+    dispatch_type = DispatchTypes.DISPATCH_WORKFLOW_ACTION
+
+    allowed_fields = ["table"]
+    serializer_field_names = ["table_id"]
+    request_serializer_field_overrides = {
+        "table_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow table we want the data for.",
+        ),
+    }
+
+    class SerializedDict(ServiceDict):
+        table_id: int
+
+    def enhance_queryset(self, queryset):
+        return queryset.select_related("table")
+
+    def dispatch_transform(
+        self,
+        dispatch_data: Dict[str, Any],
+    ) -> Any:
+        """
+        Responsible for serializing the `dispatch_data` row.
+
+        :param dispatch_data: The `dispatch_data` result.
+        :return:
+        """
+
+        serializer = get_row_serializer_class(
+            dispatch_data["baserow_table_model"], RowSerializer, is_response=True
+        )
+        serialized_row = serializer(dispatch_data["data"]).data
+
+        return serialized_row
+
+    def dispatch_data(
+        self,
+        service: LocalBaserowUpsertRow,
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        Responsible for creating a new row, or updating an existing row if a row ID has
+        been provided, in this `LocalBaserowUpsertRow` service's table.
+
+        :param service: the local baserow upsert row service.
+        :param dispatch_context: the context used for formula resolution.
+        :return: The created or updated rows.
+        """
+
+        table = service.table
+        integration = service.integration.specific
+
+        field_values = {}
+        for field_mapping in service.field_mappings.all():
+            resolved_value = resolve_formula(
+                field_mapping.value,
+                formula_runtime_function_registry,
+                dispatch_context,
+            )
+            field_values[field_mapping.field.db_column] = resolved_value
+
+        row = RowHandler().create_row(
+            user=integration.authorized_user,
+            table=table,
+            values=field_values,
+        )
+
+        return {"data": row, "baserow_table_model": table.get_model()}

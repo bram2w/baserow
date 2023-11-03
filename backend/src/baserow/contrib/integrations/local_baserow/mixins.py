@@ -8,6 +8,7 @@ from baserow.contrib.database.views.registries import view_filter_type_registry
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
+    LocalBaserowViewService,
 )
 
 if TYPE_CHECKING:
@@ -17,8 +18,9 @@ if TYPE_CHECKING:
 
 class LocalBaserowTableServiceFilterableMixin:
     """
-    A mixin for LocalBaserowTableService services so that when they dispatch, filters
-    applied to their service's table, and possibly view, are applied to the queryset.
+    A mixin for LocalBaserow{Table,View}Service services so that when they dispatch,
+    filters applied to their service's table, and possibly view, are applied to
+    the queryset.
     """
 
     def get_dispatch_filters(
@@ -39,11 +41,11 @@ class LocalBaserowTableServiceFilterableMixin:
 
         :param service: The `LocalBaserow` service we're dispatching.
         :param queryset: The queryset we want to filter upon.
-        :param model: The `service.view.table`'s `GeneratedTableModel`.
+        :param model: The `service.table`'s `GeneratedTableModel`.
         :return: A queryset with any applicable view/service filters applied to it.
         """
 
-        if service.view:
+        if isinstance(service, LocalBaserowViewService) and service.view_id:
             view_filter_builder = ViewHandler().get_filter_builder(service.view, model)
             queryset = view_filter_builder.apply_to_queryset(queryset)
 

@@ -11,8 +11,9 @@ from baserow.contrib.builder.data_sources.exceptions import (
 from baserow.contrib.builder.data_sources.models import DataSource
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.core.exceptions import PermissionException
+from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
 from baserow.core.services.models import Service
-from baserow.core.services.registries import service_type_registry
+from baserow.core.services.registries import DispatchTypes, service_type_registry
 
 
 @pytest.mark.django_db
@@ -68,6 +69,23 @@ def test_create_data_source_before_not_same_page(data_fixture):
     with pytest.raises(DataSourceNotInSamePage):
         DataSourceService().create_data_source(
             user, service_type=service_type, page=page, before=data_source3
+        )
+
+
+@pytest.mark.django_db
+def test_create_data_source_with_service_type_for_different_dispatch_type(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+
+    service_type = service_type_registry.get("local_baserow_upsert_row")
+
+    assert service_type.dispatch_type != DispatchTypes.DISPATCH_DATA_SOURCE
+
+    with pytest.raises(InvalidServiceTypeDispatchSource):
+        DataSourceService().create_data_source(
+            user, service_type=service_type, page=page
         )
 
 
@@ -257,6 +275,22 @@ def test_update_data_source_permission_denied(data_fixture, stub_check_permissio
         PermissionException
     ):
         DataSourceService().update_data_source(user, data_source, value="newValue")
+
+
+@pytest.mark.django_db
+def test_update_data_source_with_service_type_for_different_dispatch_type(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    data_source = data_fixture.create_builder_data_source(user=user)
+
+    new_service_type = service_type_registry.get("local_baserow_upsert_row")
+    assert new_service_type.dispatch_type != DispatchTypes.DISPATCH_DATA_SOURCE
+
+    with pytest.raises(InvalidServiceTypeDispatchSource):
+        DataSourceService().update_data_source(
+            user, data_source, new_service_type=new_service_type
+        )
 
 
 @pytest.mark.django_db

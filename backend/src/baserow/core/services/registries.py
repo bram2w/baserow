@@ -1,4 +1,5 @@
 from abc import ABC
+from enum import Enum
 from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
@@ -18,6 +19,13 @@ from baserow.core.services.dispatch_context import DispatchContext
 
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
+
+
+class DispatchTypes(str, Enum):
+    # A `ServiceType` which is used by a `WorkflowAction`.
+    DISPATCH_WORKFLOW_ACTION = "dispatch-action"
+    # A `ServiceType` which is used by a `DataSource`.
+    DISPATCH_DATA_SOURCE = "dispatch-data-source"
 
 
 class ServiceType(
@@ -45,6 +53,12 @@ class ServiceType(
 
     # Does this service return a list of record?
     returns_list = False
+
+    # What parent object is responsible for dispatching this `ServiceType`?
+    # It could be via a `DataSource`, in which case `DISPATCH_DATA_SOURCE`
+    # should be chosen, or via a `WorkflowAction`, in which case
+    # `DISPATCH_WORKFLOW_ACTION` should be chosen.
+    dispatch_type = None
 
     def prepare_values(
         self,
@@ -108,6 +122,19 @@ class ServiceType(
         :param instance: The to be deleted service instance.
         """
 
+    def before_dispatch(
+        self, service: ServiceSubClass, dispatch_context: DispatchContext
+    ):
+        """
+        A hook called before a `ServiceType.dispatch` is executed. This allows
+        us to perform a validation step before the service type's task is executed.
+
+        :param service: The service instance we want to use in the hook.
+        :param dispatch_context: The runtime_formula_context instance used to
+            resolve formulas (if any).
+        :return: Any
+        """
+
     def dispatch_transform(
         self,
         data: Any,
@@ -147,6 +174,7 @@ class ServiceType(
         :return: The service dispatch result if any.
         """
 
+        self.before_dispatch(service, dispatch_context)
         data = self.dispatch_data(service, dispatch_context)
         return self.dispatch_transform(data)
 

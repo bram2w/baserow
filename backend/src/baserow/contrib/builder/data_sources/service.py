@@ -29,7 +29,8 @@ from baserow.contrib.builder.data_sources.types import DataSourceForUpdate
 from baserow.contrib.builder.pages.models import Page
 from baserow.core.exceptions import CannotCalculateIntermediateOrder
 from baserow.core.handler import CoreHandler
-from baserow.core.services.registries import ServiceType
+from baserow.core.services.exceptions import InvalidServiceTypeDispatchSource
+from baserow.core.services.registries import DispatchTypes, ServiceType
 from baserow.core.types import PermissionCheck
 
 
@@ -115,6 +116,9 @@ class DataSourceService:
             raise DataSourceNotInSamePage()
 
         if service_type:
+            # Verify the `service_type` is dispatch-able by DISPATCH_DATA_SOURCE.
+            if service_type.dispatch_type != DispatchTypes.DISPATCH_DATA_SOURCE:
+                raise InvalidServiceTypeDispatchSource()
             prepared_values = service_type.prepare_values(kwargs, user)
         else:
             prepared_values = kwargs
@@ -180,6 +184,12 @@ class DataSourceService:
             workspace=data_source.page.builder.workspace,
             context=data_source,
         )
+
+        new_service_type = kwargs.get("new_service_type", None)
+        if new_service_type:
+            # Verify the new `service_type` is dispatch-able by DISPATCH_DATA_SOURCE.
+            if new_service_type.dispatch_type != DispatchTypes.DISPATCH_DATA_SOURCE:
+                raise InvalidServiceTypeDispatchSource()
 
         if service_type:
             service = data_source.service.specific if data_source.service_id else None

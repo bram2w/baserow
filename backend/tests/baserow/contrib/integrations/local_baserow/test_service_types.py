@@ -14,6 +14,9 @@ from rest_framework.fields import (
 )
 from rest_framework.serializers import ListSerializer, Serializer
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.models import SORT_ORDER_ASC, SORT_ORDER_DESC
@@ -26,6 +29,7 @@ from baserow.contrib.integrations.local_baserow.service_types import (
     LocalBaserowListRowsUserServiceType,
     LocalBaserowServiceType,
     LocalBaserowTableServiceType,
+    LocalBaserowUpsertRowServiceType,
 )
 from baserow.core.exceptions import PermissionException
 from baserow.core.services.dispatch_context import DispatchContext
@@ -293,7 +297,7 @@ def test_local_baserow_list_rows_service_dispatch_data_permission_denied(
 
 
 @pytest.mark.django_db
-def test_local_baserow_list_rows_service_dispatch_data_validation_error(data_fixture):
+def test_local_baserow_list_rows_service_before_dispatch_validation_error(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     integration = data_fixture.create_local_baserow_integration(
@@ -304,7 +308,7 @@ def test_local_baserow_list_rows_service_dispatch_data_validation_error(data_fix
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        LocalBaserowListRowsUserServiceType().dispatch_data(
+        LocalBaserowListRowsUserServiceType().before_dispatch(
             service, FakeDispatchContext()
         )
 
@@ -584,7 +588,7 @@ def test_local_baserow_get_row_service_dispatch_data_permission_denied(
 
 
 @pytest.mark.django_db
-def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixture):
+def test_local_baserow_get_row_service_dispatch_validation_error(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
     table = data_fixture.create_database_table(user=user)
@@ -598,21 +602,21 @@ def test_local_baserow_get_row_service_dispatch_data_validation_error(data_fixtu
     service_type = LocalBaserowGetRowUserServiceType()
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, FakeDispatchContext())
+        service_type.dispatch(service, FakeDispatchContext())
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="get('test2')"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, FakeDispatchContext())
+        service_type.dispatch(service, FakeDispatchContext())
 
     service = data_fixture.create_local_baserow_get_row_service(
         integration=integration, table=table, row_id="wrong formula"
     )
 
     with pytest.raises(ServiceImproperlyConfigured):
-        service_type.dispatch_data(service, FakeDispatchContext())
+        service_type.dispatch(service, FakeDispatchContext())
 
 
 @pytest.mark.django_db
@@ -911,6 +915,17 @@ def test_local_baserow_list_rows_service_dispatch_data_with_pagination(
 
     assert len(dispatch_data["results"]) == 5
     assert dispatch_data["has_next_page"] is False
+
+
+@pytest.mark.django_db
+def test_local_baserow_table_service_before_dispatch_validation_error(
+    data_fixture,
+):
+    service = Mock(table=None)
+    cls = LocalBaserowTableServiceType
+    cls.model_class = Mock()
+    with pytest.raises(ServiceImproperlyConfigured):
+        cls().before_dispatch(service, FakeDispatchContext())
 
 
 @pytest.mark.django_db
@@ -1518,3 +1533,89 @@ def test_local_baserow_table_service_type_after_update_table_change_deletes_filt
     service_type.after_update(mock_instance, {}, change_table_from_Table_to_Table)
     assert mock_instance.service_filters.all.return_value.delete.called
     assert mock_instance.service_sorts.all.return_value.delete.called
+
+
+@pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_data(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Ingredient", "text", {}),
+        ],
+    )
+    ingredient = table.field_set.get(name="Ingredient")
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+    service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
+
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": 2}}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_data = LocalBaserowUpsertRowServiceType().dispatch_data(
+        service, dispatch_context
+    )
+
+    assert (
+        getattr(dispatch_data["data"], ingredient.db_column)
+        == fake_request.data["page_parameter"]["id"]
+    )
+
+
+@pytest.mark.django_db
+def test_local_baserow_upsert_row_service_dispatch_transform(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        application=page.builder, user=user
+    )
+    database = data_fixture.create_database_application(
+        workspace=page.builder.workspace
+    )
+    table = TableHandler().create_table_and_fields(
+        user=user,
+        database=database,
+        name=data_fixture.fake.name(),
+        fields=[
+            ("Ingredient", "text", {}),
+        ],
+    )
+    ingredient = table.field_set.get(name="Ingredient")
+
+    service = data_fixture.create_local_baserow_upsert_row_service(
+        integration=integration,
+        table=table,
+    )
+    service.field_mappings.create(field=ingredient, value='get("page_parameter.id")')
+
+    service_type = LocalBaserowUpsertRowServiceType()
+
+    fake_request = Mock()
+    fake_request.data = {"page_parameter": {"id": 2}}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+    dispatch_data = service_type.dispatch_data(service, dispatch_context)
+
+    serialized_row = service_type.dispatch_transform(dispatch_data)
+    assert dict(serialized_row) == {
+        "id": dispatch_data["data"].id,
+        "order": "1.00000000000000000000",
+        ingredient.db_column: str(fake_request.data["page_parameter"]["id"]),
+    }
