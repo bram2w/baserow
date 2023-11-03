@@ -680,6 +680,38 @@ def test_duplicate_interesting_table(data_fixture):
 
 
 @pytest.mark.django_db()
+def test_duplicate_table_after_link_row_field_moved_to_another_table(data_fixture):
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    _, table_b, link_field = data_fixture.create_two_linked_tables(
+        user=user, database=database
+    )
+    table_c = data_fixture.create_database_table(user=user, database=database)
+
+    grid_view = data_fixture.create_grid_view(table=table_b)
+
+    assert grid_view.get_field_options().count() == 2
+
+    FieldHandler().update_field(
+        user,
+        link_field,
+        name=link_field.name,
+        new_type_name="link_row",
+        link_row_table_id=table_c.id,
+        link_row_table=table_c,
+        has_related_field=True,
+    )
+
+    # the field option should be removed from the grid view
+    assert grid_view.get_field_options().count() == 1
+
+    try:
+        TableHandler().duplicate_table(user, table_b)
+    except Exception as exc:
+        pytest.fail("Duplicating table failed: %s" % exc)
+
+
+@pytest.mark.django_db()
 def test_create_needs_background_update_column(data_fixture):
     system_updated_on_columns = [
         ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,

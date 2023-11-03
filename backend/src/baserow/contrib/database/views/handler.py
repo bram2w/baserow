@@ -1190,6 +1190,18 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         view_field_options_updated.send(self, view=view, user=user)
 
+    def after_field_moved_between_tables(self, field: Field, original_table_id: int):
+        """
+        This method is called to properly update the view field options when a field
+        is moved between tables.
+
+        :param field: The new field object.
+        :param original_table_id: The id of the table where the field was moved from.
+        """
+
+        for view_type in view_type_registry.get_all():
+            view_type.after_field_moved_between_tables(field, original_table_id)
+
     def field_type_changed(self, field: Field):
         """
         This method is called by the FieldHandler when the field type of a field has

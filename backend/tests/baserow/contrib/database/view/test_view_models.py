@@ -1,7 +1,10 @@
+from unittest.mock import patch
+
 from django.db import IntegrityError
 
 import pytest
 
+from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.views.models import (
     FormViewFieldOptions,
     GalleryViewFieldOptions,
@@ -10,6 +13,7 @@ from baserow.contrib.database.views.models import (
     ViewFilter,
     ViewSort,
 )
+from baserow.contrib.database.views.view_types import GridViewType
 
 
 @pytest.mark.django_db
@@ -367,3 +371,47 @@ def test_migration_remove_duplicate_fieldoptions(
 
     with pytest.raises(IntegrityError):
         GalleryViewFieldOptions.objects.create(gallery_view=gallery_view, field=field)
+
+
+@pytest.mark.once_per_day_in_ci
+@patch.object(GridViewType, "after_field_moved_between_tables")
+def test_migration_remove_stale_fieldoptions(
+    mocked_func, data_fixture, migrator, teardown_table_metadata
+):
+    # The correct behavior for after_field_moved_between_tables has been implemented in
+    # the same MR when the migrations was added, so let's just mock it out to make sure
+    # we create the data the migration expects to delete.
+
+    migrate_from = [
+        ("database", "0133_formviewfieldoptions_field_component"),
+    ]
+    migrate_to = [("database", "0134_delete_stale_fieldoptions")]
+
+    migrator.migrate(migrate_from)
+
+    user = data_fixture.create_user()
+    database = data_fixture.create_database_application(user=user)
+    _, table_b, link_field = data_fixture.create_two_linked_tables(
+        user=user, database=database
+    )
+    table_c = data_fixture.create_database_table(user=user, database=database)
+
+    grid_view = data_fixture.create_grid_view(table=table_b)
+
+    FieldHandler().update_field(
+        user,
+        link_field,
+        name=link_field.name,
+        new_type_name="link_row",
+        link_row_table_id=table_c.id,
+        link_row_table=table_c,
+        has_related_field=True,
+    )
+
+    assert GridViewFieldOptions.objects.filter(grid_view=grid_view).count() == 2
+    assert mocked_func.call_count == 1
+
+    migrator.migrate(migrate_to)
+
+    # Only the stale field option should be deleted.
+    assert GridViewFieldOptions.objects.filter(grid_view=grid_view).count() == 1
