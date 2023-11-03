@@ -269,7 +269,9 @@ class View(
 
         def get_queryset():
             return view_type.enhance_field_options_queryset(
-                through_model.objects.filter(**{field_name: self})
+                through_model.objects.filter(
+                    **{field_name: self, "field__table_id": self.table_id}
+                )
             )
 
         field_options = get_queryset()

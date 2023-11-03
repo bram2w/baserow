@@ -1078,6 +1078,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         # its old model cache as this will not happen automatically.
         invalidate_table_in_model_cache(original_table_id)
         SearchHandler.after_field_moved_between_tables(field_to_move, original_table_id)
+        ViewHandler().after_field_moved_between_tables(field_to_move, original_table_id)
 
     def get_unique_row_values(
         self, field: Field, limit: int, split_comma_separated: bool = False

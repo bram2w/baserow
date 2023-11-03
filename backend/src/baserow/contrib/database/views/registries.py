@@ -36,6 +36,7 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
+from baserow.core.utils import get_model_reference_field_name
 
 from .exceptions import (
     AggregationTypeAlreadyRegistered,
@@ -749,6 +750,28 @@ class ViewType(
             "An exportable or publicly sharable view must implement "
             "`get_hidden_fields`"
         )
+
+    def after_field_moved_between_tables(self, field: "Field", original_table_id: int):
+        """
+        This hook is called after a field has been moved between tables. It gives the
+        view type the opportunity to react on the move to, for example, remove the
+        field options have been created for the original table but are not needed
+        anymore.
+
+        :param field: The field that has been moved.
+        :param original_table_id: The id of the table where the field was moved from.
+        """
+
+        from baserow.contrib.database.views.models import View
+
+        field_options_model = self.field_options_model_class
+        field_name = get_model_reference_field_name(field_options_model, View)
+        field_options_model.objects.filter(
+            **{
+                f"{field_name}__table_id": original_table_id,
+                "field_id": field.id,
+            }
+        ).delete()
 
 
 class ViewTypeRegistry(
