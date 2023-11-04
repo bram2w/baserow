@@ -557,6 +557,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('previous direction', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 1
@@ -567,6 +568,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'previous',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -582,6 +584,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('next direction', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 1
@@ -592,6 +595,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'next',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -607,6 +611,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('above direction', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 1
@@ -617,6 +622,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'above',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -632,6 +638,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('below direction', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 1
@@ -642,6 +649,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'below',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -657,6 +665,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('previous direction at the edge', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 0
@@ -667,6 +676,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'previous',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -682,6 +692,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('next direction at the edge', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 14
       state.multiSelectHeadFieldIndex = 2
@@ -692,6 +703,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'next',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -707,6 +719,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('above direction at the edge', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 9
       state.multiSelectHeadFieldIndex = 1
@@ -717,6 +730,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'above',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
@@ -732,6 +746,7 @@ describe('Grid view multiple select', () => {
     })
 
     test('below direction at the edge', async () => {
+      const fields = []
       state.multiSelectActive = false
       state.multiSelectHeadRowIndex = 17
       state.multiSelectHeadFieldIndex = 1
@@ -742,6 +757,7 @@ describe('Grid view multiple select', () => {
 
       await store.dispatch('grid/setSelectedCellCancelledMultiSelect', {
         direction: 'below',
+        fields,
       })
 
       expect(store.getters['grid/getMultiSelectHeadRowIndex']).toBe(-1)
