@@ -54,6 +54,7 @@
       @edit-modal="openRowEditModal($event)"
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, 0)"
+      @cell-selected="cellSelected"
     >
       <template #foot>
         <div class="grid-view__foot-info">
@@ -122,6 +123,7 @@
       @edit-modal="openRowEditModal($event)"
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, $event.pixelX)"
+      @cell-selected="cellSelected"
     >
     </GridViewSection>
     <GridViewRowDragging
@@ -368,11 +370,16 @@ export default {
     ...mapGetters({
       row: 'rowModalNavigation/getRow',
     }),
+    /**
+     * Returns all visible fields no matter in what section they
+     * belong.
+     */
     allVisibleFields() {
       return this.leftFields.concat(this.visibleFields)
     },
     /**
-     * Returns only the visible fields in the correct order. Primary must always be
+     * Returns only the visible fields in the correct order that are in
+     * the right section of the grid. Primary must always be
      * first if in that list.
      */
     visibleFields() {
@@ -777,7 +784,7 @@ export default {
           rowHeadIndex: rowIndex,
           rowTailIndex: rowIndex,
           fieldHeadIndex: 0,
-          fieldTailIndex: this.visibleFields.length,
+          fieldTailIndex: this.allVisibleFields.length - 1,
         }
       )
     },
@@ -1049,6 +1056,14 @@ export default {
       this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
         rowId: nextRowId,
         fieldId: nextFieldId,
+        fields: this.fields,
+      })
+    },
+    cellSelected({ fieldId, rowId }) {
+      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
+        rowId,
+        fieldId,
+        fields: this.fields,
       })
     },
     /**
@@ -1070,8 +1085,7 @@ export default {
         this.storePrefix + 'view/grid/multiSelectShiftClick',
         {
           rowId: row.id,
-          fieldIndex:
-            this.visibleFields.findIndex((f) => f.id === field.id) + 1,
+          fieldIndex: this.allVisibleFields.findIndex((f) => f.id === field.id),
         }
       )
     },
@@ -1081,8 +1095,9 @@ export default {
      * selected cell.
      */
     multiSelectStart({ event, row, field }) {
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
 
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectStart', {
         rowId: row.id,
@@ -1095,8 +1110,9 @@ export default {
      * with the last cell hovered over.
      */
     multiSelectHold({ event, row, field }) {
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
 
       this.$store.dispatch(this.storePrefix + 'view/grid/multiSelectHold', {
         rowId: row.id,
@@ -1186,20 +1202,18 @@ export default {
           scrollDirection = 'vertical'
         }
 
-        const fieldId =
-          this.$store.getters[this.storePrefix + 'view/grid/getFieldIdByIndex'](
-            fieldIndex
-          )
+        const fieldId = this.$store.getters[
+          this.storePrefix + 'view/grid/getFieldIdByIndex'
+        ](fieldIndex, this.fields)
         if (fieldId === -1) {
           return
         }
         const field = this.$store.getters['field/get'](fieldId)
         const verticalContainer = this.$refs.right.$refs.body
         const horizontalContainer = this.$refs.right.$el
-        const visibleFieldOptions =
-          this.$store.getters[
-            this.storePrefix + 'view/grid/getOrderedVisibleFieldOptions'
-          ]
+        const visibleFieldOptions = this.$store.getters[
+          this.storePrefix + 'view/grid/getOrderedVisibleFieldOptions'
+        ](this.fields)
         let elementRight = -horizontalContainer.scrollLeft
         for (let i = 0; i < visibleFieldOptions.length; i++) {
           const fieldOption = visibleFieldOptions[i]
@@ -1238,6 +1252,7 @@ export default {
             this.storePrefix + 'view/grid/setSelectedCellCancelledMultiSelect',
             {
               direction: arrowShiftKeysMapping[key],
+              fields: this.fields,
             }
           )
         }
@@ -1280,8 +1295,9 @@ export default {
       const rowIndex = this.$store.getters[
         this.storePrefix + 'view/grid/getRowIndexById'
       ](row.id)
-      let fieldIndex = this.visibleFields.findIndex((f) => f.id === field.id)
-      if (this.canFitInTwoColumns) fieldIndex += 1
+      const fieldIndex = this.allVisibleFields.findIndex(
+        (f) => f.id === field.id
+      )
       await this.pasteData(textData, jsonData, rowIndex, fieldIndex)
     },
     /**

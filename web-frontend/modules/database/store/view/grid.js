@@ -1222,24 +1222,26 @@ export const actions = {
   setAddRowHover({ commit }, value) {
     commit('SET_ADD_ROW_HOVER', value)
   },
-  setSelectedCell({ commit, getters, rootGetters }, { rowId, fieldId }) {
+  setSelectedCell(
+    { commit, getters, rootGetters },
+    { rowId, fieldId, fields }
+  ) {
     commit('SET_SELECTED_CELL', { rowId, fieldId })
 
     const rowIndex = getters.getRowIndexById(rowId)
 
     if (rowIndex !== -1) {
       commit('SET_MULTISELECT_START_ROW_INDEX', rowIndex)
-
-      const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+      const visibleFieldOptions = getters.getOrderedVisibleFieldOptions(fields)
       commit(
         'SET_MULTISELECT_START_FIELD_INDEX',
-        visibleFieldEntries.findIndex((f) => parseInt(f[0]) === fieldId)
+        visibleFieldOptions.findIndex((f) => parseInt(f[0]) === fieldId)
       )
     }
   },
   setSelectedCellCancelledMultiSelect(
     { commit, getters, rootGetters, dispatch },
-    { direction }
+    { direction, fields }
   ) {
     const rowIndex = getters.getMultiSelectStartRowIndex
     const fieldIndex = getters.getMultiSelectStartFieldIndex
@@ -1249,7 +1251,7 @@ export const actions = {
     )
 
     const rows = getters.getAllRows
-    const visibleFieldEntries = getters.getOrderedVisibleFieldOptions
+    const visibleFieldEntries = getters.getOrderedVisibleFieldOptions(fields)
     const row = rows[newRowIndex - getters.getBufferStartIndex]
     const field = visibleFieldEntries[newFieldIndex]
 
@@ -1257,6 +1259,7 @@ export const actions = {
       dispatch('setSelectedCell', {
         rowId: row.id,
         fieldId: parseInt(field[0]),
+        fields,
       })
     } else {
       const oldRow = rows[rowIndex - getters.getBufferStartIndex]
@@ -1266,6 +1269,7 @@ export const actions = {
         dispatch('setSelectedCell', {
           rowId: oldRow.id,
           fieldId: parseInt(oldField[0]),
+          fields,
         })
       }
     }
@@ -1415,7 +1419,6 @@ export const actions = {
     const rowIndex = getters.getRowIndexById(rowId)
     const startRowIndex = getters.getMultiSelectStartRowIndex
     const startFieldIndex = getters.getMultiSelectStartFieldIndex
-
     const newHeadRowIndex = Math.min(startRowIndex, rowIndex)
     const newHeadFieldIndex = Math.min(startFieldIndex, fieldIndex)
     const newTailRowIndex = Math.max(startRowIndex, rowIndex)
@@ -1700,6 +1703,7 @@ export const actions = {
       await dispatch('setSelectedCell', {
         rowId: rowsPopulated[0].id,
         fieldId: primaryField.id,
+        fields,
       })
     }
 
@@ -2738,24 +2742,38 @@ export const getters = {
   getAllFieldOptions(state) {
     return state.fieldOptions
   },
-  getOrderedFieldOptions(state, getters) {
+  getOrderedFieldOptions: (state, getters) => (fields) => {
+    const primaryField = fields.find((f) => f.primary === true)
+    const primaryFieldId = primaryField?.id || -1
+
     return Object.entries(getters.getAllFieldOptions)
       .map(([fieldIdStr, options]) => [parseInt(fieldIdStr), options])
       .sort(([a, { order: orderA }], [b, { order: orderB }]) => {
-        // First by order.
+        const isAPrimary = a === primaryFieldId
+        const isBPrimary = b === primaryFieldId
+
+        // Place primary field first
+        if (isAPrimary === true && !isBPrimary) {
+          return -1
+        } else if (isBPrimary === true && !isAPrimary) {
+          return 1
+        }
+
+        // Then by order
         if (orderA > orderB) {
           return 1
         } else if (orderA < orderB) {
           return -1
         }
 
+        // Finally by id if order is the same
         return a - b
       })
   },
-  getOrderedVisibleFieldOptions(state, getters) {
-    return getters.getOrderedFieldOptions.filter(
-      ([fieldId, options]) => options.hidden === false
-    )
+  getOrderedVisibleFieldOptions: (state, getters) => (fields) => {
+    return getters
+      .getOrderedFieldOptions(fields)
+      .filter(([fieldId, options]) => options.hidden === false)
   },
   getNumberOfVisibleFields(state) {
     return Object.values(state.fieldOptions).filter((fo) => fo.hidden === false)
@@ -2849,8 +2867,8 @@ export const getters = {
     }
     return -1
   },
-  getFieldIdByIndex: (state, getters) => (fieldIndex) => {
-    const orderedFieldOptions = getters.getOrderedVisibleFieldOptions
+  getFieldIdByIndex: (state, getters) => (fieldIndex, fields) => {
+    const orderedFieldOptions = getters.getOrderedVisibleFieldOptions(fields)
     if (orderedFieldOptions[fieldIndex]) {
       return orderedFieldOptions[fieldIndex][0]
     }

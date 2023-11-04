@@ -265,10 +265,7 @@ export default {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
     },
     selectCell(fieldId, rowId = this.row.id) {
-      this.$store.dispatch(this.storePrefix + 'view/grid/setSelectedCell', {
-        rowId,
-        fieldId,
-      })
+      this.$emit('cell-selected', { fieldId, rowId })
     },
     // Return an object that represents if a cell is selected,
     // and it's current position in the selection grid
