@@ -7,6 +7,7 @@ from baserow.contrib.builder.api.domains.views import (
     OrderDomainsView,
     PublicBuilderByDomainNameView,
     PublicBuilderByIdView,
+    PublicBuilderWorkflowActionsView,
     PublicDataSourcesView,
     PublicElementsView,
 )
@@ -48,5 +49,10 @@ urlpatterns_without_builder_id = [
         r"published/page/(?P<page_id>[0-9]+)/data_sources/$",
         PublicDataSourcesView.as_view(),
         name="list_data_sources",
+    ),
+    re_path(
+        r"published/page/(?P<page_id>[0-9]+)/workflow_actions/$",
+        PublicBuilderWorkflowActionsView.as_view(),
+        name="list_workflow_actions",
     ),
 ]

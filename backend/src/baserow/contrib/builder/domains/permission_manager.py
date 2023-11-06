@@ -10,6 +10,7 @@ from baserow.core.operations import ReadApplicationOperationType
 from baserow.core.registries import PermissionManagerType, operation_type_registry
 from baserow.core.subjects import AnonymousUserSubjectType, UserSubjectType
 
+from ..workflow_actions.operations import ListBuilderWorkflowActionsPageOperationType
 from .models import Domain
 
 User = get_user_model()
@@ -25,6 +26,7 @@ class AllowPublicBuilderManagerType(PermissionManagerType):
     page_level_operations = [
         ListElementsPageOperationType.type,
         ListDataSourcesPageOperationType.type,
+        ListBuilderWorkflowActionsPageOperationType.type,
     ]
     sub_page_level_operations = [DispatchDataSourceOperationType.type]
     application_level_operations = [ReadApplicationOperationType.type]

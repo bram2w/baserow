@@ -1,10 +1,13 @@
 <template>
-  <PageContent
-    :page="page"
-    :path="path"
-    :params="params"
-    :elements="elements"
-  />
+  <div>
+    <Toasts></Toasts>
+    <PageContent
+      :page="page"
+      :path="path"
+      :params="params"
+      :elements="elements"
+    />
+  </div>
 </template>
 
 <script>
@@ -12,9 +15,10 @@ import PageContent from '@baserow/modules/builder/components/page/PageContent'
 import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
 
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import Toasts from '@baserow/modules/core/components/toasts/Toasts'
 
 export default {
-  components: { PageContent },
+  components: { PageContent, Toasts },
   provide() {
     return { builder: this.builder, page: this.page, mode: this.mode }
   },
@@ -82,6 +86,7 @@ export default {
         page,
       }),
       store.dispatch('element/fetchPublished', { page }),
+      store.dispatch('workflowAction/fetchPublished', { page }),
     ])
 
     await DataProviderType.initAll($registry.getAll('builderDataProvider'), {
