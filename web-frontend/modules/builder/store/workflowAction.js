@@ -1,4 +1,5 @@
 import WorkflowActionService from '@baserow/modules/builder/services/workflowAction'
+import PublishedBuilderService from '@baserow/modules/builder/services/publishedBuilder'
 
 const updateContext = {
   updateTimeout: null,
@@ -66,6 +67,13 @@ const actions = {
     const { data: workflowActions } = await WorkflowActionService(
       this.$client
     ).fetchAll(page.id)
+
+    commit('SET_ITEMS', { page, workflowActions })
+  },
+  async fetchPublished({ commit }, { page }) {
+    const { data: workflowActions } = await PublishedBuilderService(
+      this.$client
+    ).fetchWorkflowActions(page.id)
 
     commit('SET_ITEMS', { page, workflowActions })
   },

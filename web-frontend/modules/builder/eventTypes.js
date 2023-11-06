@@ -5,8 +5,9 @@
  * registry required.
  */
 export class Event {
-  constructor({ i18n }) {
+  constructor({ i18n, $registry }) {
     this.$i18n = i18n
+    this.$registry = $registry
   }
 
   static getType() {
@@ -21,8 +22,22 @@ export class Event {
     return null
   }
 
-  fire(eventContext) {
-    console.log(`Fired an event of type: "${this.getType()}"`)
+  async fire({ workflowActions, applicationContext, resolveFormula }) {
+    const additionalContext = {}
+    for (let i = 0; i < workflowActions.length; i += 1) {
+      const workflowAction = workflowActions[i]
+      const workflowActionType = this.$registry.get(
+        'workflowAction',
+        workflowAction.type
+      )
+
+      additionalContext[workflowAction.id] = await workflowActionType.execute({
+        workflowAction,
+        additionalContext,
+        applicationContext,
+        resolveFormula,
+      })
+    }
   }
 }
 

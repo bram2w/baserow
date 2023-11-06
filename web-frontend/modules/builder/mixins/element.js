@@ -59,7 +59,15 @@ export default {
     },
     fireEvent(EventType) {
       if (this.mode !== 'editing') {
-        new EventType(this).fire({ element: this.element })
+        const workflowActions = this.$store.getters[
+          'workflowAction/getElementWorkflowActions'
+        ](this.page, this.element.id)
+
+        new EventType(this).fire({
+          workflowActions,
+          resolveFormula: this.resolveFormula,
+          applicationContext: this.applicationContext,
+        })
       }
     },
     fireClickEvent() {
