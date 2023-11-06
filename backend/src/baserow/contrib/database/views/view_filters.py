@@ -37,6 +37,7 @@ from baserow.contrib.database.fields.field_types import (
     SingleSelectFieldType,
     TextFieldType,
     URLFieldType,
+    UUIDFieldType,
 )
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
@@ -85,6 +86,7 @@ class EqualViewFilterType(ViewFilterType):
         RatingFieldType.type,
         EmailFieldType.type,
         PhoneNumberFieldType.type,
+        UUIDFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

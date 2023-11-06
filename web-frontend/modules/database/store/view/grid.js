@@ -1715,7 +1715,11 @@ export const actions = {
       )
 
       const fieldsToFinalize = fields
-        .filter((field) => field.read_only)
+        .filter(
+          (field) =>
+            field.read_only ||
+            this.$registry.get('field', field._.type.type).isReadOnly
+        )
         .map((field) => `field_${field.id}`)
       commit('FINALIZE_ROWS_IN_BUFFER', {
         oldRows: rowsPopulated,

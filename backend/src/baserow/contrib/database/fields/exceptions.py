@@ -246,3 +246,11 @@ class DateForceTimezoneOffsetValueError(ValueError):
     """
     Raised when the force_timezone_offset value offset cannot be set.
     """
+
+
+class ReadOnlyFieldHasNoInternalDbValueError(Exception):
+    """
+    Raised when a read only field is trying to get its internal db value.
+    This is because there is no valid value that can be returned which can then pass
+    through "prepare_value_for_db" for a read_only field."
+    """

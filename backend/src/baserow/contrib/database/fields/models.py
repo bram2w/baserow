@@ -674,6 +674,10 @@ class MultipleCollaboratorsField(Field):
         return f"{self.THROUGH_DATABASE_TABLE_PREFIX}{self.id}"
 
 
+class UUIDField(Field):
+    pass
+
+
 class DuplicateFieldJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):

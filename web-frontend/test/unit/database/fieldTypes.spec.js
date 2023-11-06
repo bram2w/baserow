@@ -190,6 +190,14 @@ const mockedFields = {
     table_id: 42,
     type: 'rollup',
   },
+  uuid: {
+    id: 20,
+    name: 'uuid',
+    order: 20,
+    primary: false,
+    table_id: 42,
+    type: 'uuid',
+  },
 }
 
 const valuesToCall = [null, undefined]

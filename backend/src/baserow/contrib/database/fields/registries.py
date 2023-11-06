@@ -36,7 +36,11 @@ from baserow.core.registry import (
 )
 
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
-from .exceptions import FieldTypeAlreadyRegistered, FieldTypeDoesNotExist
+from .exceptions import (
+    FieldTypeAlreadyRegistered,
+    FieldTypeDoesNotExist,
+    ReadOnlyFieldHasNoInternalDbValueError,
+)
 from .fields import DurationFieldUsingPostgresFormatting
 from .models import Field, LinkRowField, SelectOption
 
@@ -115,6 +119,13 @@ class FieldType(
     read_only = False
     """Indicates whether the field allows inserting/updating row values or if it is
     read only."""
+
+    keep_data_on_duplication = True
+    """
+    Indicates whether the data must be kept when duplicating the field. We typically
+    don't want to do this when the field is read_only, but there are exceptions with
+    the read-only UUID field type for example
+    """
 
     field_data_is_derived_from_attrs = False
     """Set this to True if your field can completely reconstruct it's data just from
@@ -1630,16 +1641,9 @@ class FieldType(
         return value1 == value2
 
 
-class ReadOnlyFieldHasNoInternalDbValueError(Exception):
-    """
-    Raised when a read only field is trying to get its internal db value.
-    This is because there is no valid value that can be returned which can then pass
-    through "prepare_value_for_db" for a read_only field."
-    """
-
-
 class ReadOnlyFieldType(FieldType):
     read_only = True
+    keep_data_on_duplication = False
 
     def get_internal_value_from_db(
         self, row: "GeneratedTableModel", field_name: str
@@ -1648,7 +1652,10 @@ class ReadOnlyFieldType(FieldType):
         Called when a read only field is trying to get its internal db value.
         """
 
-        raise ReadOnlyFieldHasNoInternalDbValueError
+        if not self.keep_data_on_duplication:
+            raise ReadOnlyFieldHasNoInternalDbValueError
+
+        return super().get_internal_value_from_db(row, field_name)
 
     def prepare_value_for_db(self, instance: Field, value: Any) -> NoReturn:
         """
@@ -1668,9 +1675,13 @@ class ReadOnlyFieldType(FieldType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ) -> None:
-        """
-        Since this is a read only field, no value should be prepared for export.
-        """
+        # Since this is a read only field, no value should be prepared for export,
+        # except when we explicitly want to keep the data on duplication like for
+        # example with the UUID field type.
+        if self.keep_data_on_duplication:
+            return super().get_export_serialized_value(
+                row, field_name, cache, files_zip, storage
+            )
 
     def set_import_serialized_value(
         self,
@@ -1682,9 +1693,13 @@ class ReadOnlyFieldType(FieldType):
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
     ):
-        """
-        Since this is a read only field, no value should be set with import.
-        """
+        # Since this is a read only field, no value be set with export, except when we
+        # explicitly want to keep the data on duplication like for example with the
+        # UUID field type.
+        if self.keep_data_on_duplication:
+            return super().set_import_serialized_value(
+                row, field_name, value, id_mapping, cache, files_zip, storage
+            )
 
 
 class FieldTypeRegistry(

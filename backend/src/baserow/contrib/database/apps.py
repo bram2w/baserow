@@ -218,6 +218,7 @@ class DatabaseConfig(AppConfig):
             SingleSelectFieldType,
             TextFieldType,
             URLFieldType,
+            UUIDFieldType,
         )
 
         field_type_registry.register(TextFieldType())
@@ -240,6 +241,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(RollupFieldType())
         field_type_registry.register(LookupFieldType())
         field_type_registry.register(MultipleCollaboratorsFieldType())
+        field_type_registry.register(UUIDFieldType())
 
         from .fields.field_converters import (
             FileFieldConverter,

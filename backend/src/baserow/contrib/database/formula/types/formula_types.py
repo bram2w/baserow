@@ -98,15 +98,27 @@ class BaserowFormulaTextType(
     baserow_field_type = "text"
     can_order_by_in_array = True
 
+    def __init__(self, *args, **kwargs):
+        unwrap_cast_to_text = kwargs.pop("unwrap_cast_to_text", True)
+        self.unwrap_cast_to_text = unwrap_cast_to_text
+        super().__init__(*args, **kwargs)
+
     def cast_to_text(
         self,
         to_text_func_call: "BaserowFunctionCall[UnTyped]",
         arg: "BaserowExpression[BaserowFormulaValidType]",
     ) -> "BaserowExpression[BaserowFormulaType]":
-        # Explicitly unwrap the func_call here and just return the arg as it is already
-        # in the text type and we don't want to return to_text(arg) but instead just
-        # arg.
-        return arg
+        if self.unwrap_cast_to_text:
+            # Explicitly unwrap the func_call here and just return the arg as it is
+            # already in the text type and we don't want to return to_text(arg) but
+            # instead just arg.
+            return arg
+        else:
+            # In some cases, we're using the `text` formula type for types that are
+            # not necessarily already in the text format. In that case, we do want to
+            # cast it to the text type. This is for example the case with the UUID
+            # field type.
+            return super().cast_to_text(to_text_func_call, arg)
 
     def get_order_by_in_array_expr(self, field, field_name, order_direction):
         return JSONBSingleKeyArrayExpression(

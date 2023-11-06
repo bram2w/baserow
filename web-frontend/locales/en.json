@@ -104,6 +104,7 @@
         "defaultFormViewComponent": "Default",
         "linkRowSingle": "Single",
         "linkRowMultiple": "Multiple",
+        "uuid": "UUID",
         "multipleSelectDropdown": "Dropdown",
         "multipleSelectCheckboxes": "Checkboxes",
         "singleSelectDropdown": "Dropdown",
@@ -144,7 +145,8 @@
         "count": "A read-only field connected to a link to table field which returns the number of relations.",
         "rollup": "A read-only field connected to a link to table field which returns rolls up the values from the chosen lookup field in the linked table.",
         "lookup": "A read-only field connected to a link to table field which returns an array of values and row ids from the chosen lookup field in the linked table.",
-        "multipleCollaborators": "Accepts an array of objects where each object contains a user's id."
+        "multipleCollaborators": "Accepts an array of objects where each object contains a user's id.",
+        "uuid": "A read-only unique and persistent uuid."
     },
     "viewFilter": {
         "contains": "contains",
