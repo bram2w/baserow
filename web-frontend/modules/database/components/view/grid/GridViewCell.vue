@@ -22,6 +22,7 @@
       'grid-view__column--multi-select-left': props.multiSelectPosition.left,
       'grid-view__column--multi-select-bottom':
         props.multiSelectPosition.bottom,
+      'grid-view__column--group-end': props.groupEnd,
     }"
     :style="data.style"
     @click.exact="$options.methods.select($event, parent, props.field.id)"

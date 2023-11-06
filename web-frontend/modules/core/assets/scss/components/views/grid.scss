@@ -118,6 +118,10 @@
   }
 }
 
+.grid-view__head-group {
+  width: 100px; // must be replaced with dynamic value later.
+}
+
 .grid-view__body {
   position: absolute;
   left: 0;
@@ -176,11 +180,18 @@
   background-size: 66px 66px;
 }
 
+.grid-view__placeholder-groups {
+  @include absolute(0, auto, 0, 0);
+
+  background-color: $color-neutral-50;
+}
+
 .grid-view__placeholder-column {
   @include absolute(0, auto, 0, auto);
 
   border-right: 1px solid $color-neutral-200;
 
+  &.grid-view__placeholder-column--no-border-right,
   .grid-view__left & {
     border-right: none;
   }
@@ -229,6 +240,11 @@
   }
 }
 
+.grid-view__row-placeholder {
+  height: 32px + 1px;
+  width: 1px;
+}
+
 .grid-view__row-warning {
   @include absolute(auto, auto, -20px, 0);
   @include fixed-height(20px, 12px);
@@ -257,11 +273,13 @@
     border-bottom: 0;
   }
 
+  &.grid-view__column--no-border-right,
   .grid-view__left & {
     border-right: none;
   }
 
   &.grid-view__column--sorted::after,
+  &.grid-view__column--grouped::after,
   &.grid-view__column--filtered::after {
     content: '';
 
@@ -272,9 +290,70 @@
     background-color: rgba($color-warning-100, 0.8);
   }
 
+  &.grid-view__column--grouped::after {
+    background-color: rgba($color-purple-100, 0.5);
+  }
+
   &.grid-view__column--filtered::after {
     background-color: rgba($color-success-100, 0.5);
   }
+
+  &.grid-view__column--group-end::before {
+    @include absolute(auto, auto, -1px, 0);
+
+    content: '';
+    height: 1px;
+    background-color: $color-neutral-400;
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+.grid-view__group-by-divider {
+  @include absolute(0, auto, 0, auto);
+
+  z-index: 3;
+  width: 1px;
+  background-color: $color-neutral-400;
+}
+
+.grid-view__group {
+  position: relative;
+  background-color: $color-neutral-50;
+
+  &.grid-view__group--end::after {
+    @include absolute(auto, auto, 0, 0);
+
+    content: '';
+    height: 1px;
+    background-color: $color-neutral-400;
+    width: 100%;
+    pointer-events: none;
+  }
+}
+
+.grid-view__group-cell {
+  display: flex;
+  height: 33px;
+  align-items: center;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.grid-view__group-name {
+  @extend %ellipsis;
+
+  max-width: 50%;
+  line-height: 33px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.grid-view__group-value {
+  min-width: 0;
+  width: 100%;
+  margin-left: 8px;
 }
 
 .grid-view__row-info {
@@ -581,6 +660,7 @@
 .grid-view__add-row {
   color: $color-neutral-900;
   background-color: $white;
+  padding-left: 8px;
   height: 100%;
 
   @include flex-align-items();
@@ -591,10 +671,6 @@
 
   &.hover {
     background-color: $color-primary-100;
-  }
-
-  .grid-view__left & {
-    padding-left: 8px;
   }
 }
 

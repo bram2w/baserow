@@ -10,6 +10,8 @@ exports[`GridViewRows component Default component 1`] = `
   >
     <!---->
      
+    <!---->
+     
     <div
       class="grid-view__column"
       style="width: 200px;"
@@ -44,6 +46,8 @@ exports[`GridViewRows component Default component 1`] = `
   >
     <!---->
      
+    <!---->
+     
     <div
       class="grid-view__column"
       style="width: 200px;"
@@ -76,6 +80,8 @@ exports[`GridViewRows component Default component 1`] = `
   <div
     class="grid-view__row"
   >
+    <!---->
+     
     <!---->
      
     <div
@@ -120,8 +126,10 @@ exports[`GridViewRows component With row details 1`] = `
   >
     <!---->
      
+    <!---->
+     
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div
@@ -185,8 +193,10 @@ exports[`GridViewRows component With row details 1`] = `
   >
     <!---->
      
+    <!---->
+     
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div
@@ -250,8 +260,10 @@ exports[`GridViewRows component With row details 1`] = `
   >
     <!---->
      
+    <!---->
+     
     <div
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       style="width: 72px;"
     >
       <div

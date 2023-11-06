@@ -82,8 +82,9 @@ describe('GridViewRows component', () => {
 
     const wrapper1 = await mountComponent({
       view,
-      fields,
-      allFields: fields,
+      renderedFields: fields,
+      visibleFields: fields,
+      allFieldsInTable: fields,
       leftOffset: 0,
       readOnly: false,
       includeRowDetails: false,
@@ -100,8 +101,9 @@ describe('GridViewRows component', () => {
 
     const wrapper1 = await mountComponent({
       view,
-      fields,
-      allFields: fields,
+      renderedFields: fields,
+      visibleFields: fields,
+      allFieldsInTable: fields,
       leftOffset: 0,
       readOnly: false,
       includeRowDetails: true,

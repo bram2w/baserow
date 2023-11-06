@@ -5,6 +5,9 @@
       'grid-view__column--filtered':
         !view.filters_disabled &&
         view.filters.findIndex((filter) => filter.field === field.id) !== -1,
+      'grid-view__column--grouped':
+        view.group_bys.findIndex((groupBy) => groupBy.field === field.id) !==
+        -1,
       'grid-view__column--sorted':
         view.sortings.findIndex((sort) => sort.field === field.id) !== -1,
     }"

@@ -13,6 +13,7 @@ import {
   getRowSortFunction,
   matchSearchFilters,
   getFilters,
+  getGroupBy,
   getOrderBy,
 } from '@baserow/modules/database/utils/view'
 import { RefreshCancelledError } from '@baserow/modules/core/errors'
@@ -125,6 +126,7 @@ export const state = () => ({
   // have any matching cells will still be displayed.
   hideRowsNotMatchingSearch: true,
   fieldAggregationData: {},
+  activeGroupBys: [],
 })
 
 export const mutations = {
@@ -141,6 +143,9 @@ export const mutations = {
     state.addRowHover = false
     state.activeSearchTerm = ''
     state.hideRowsNotMatchingSearch = true
+  },
+  SET_ACTIVE_GROUP_BYS(state, groupBys) {
+    state.activeGroupBys = groupBys
   },
   SET_SEARCH(state, { activeSearchTerm, hideRowsNotMatchingSearch }) {
     state.activeSearchTerm = activeSearchTerm.trim()
@@ -614,6 +619,7 @@ export const actions = {
           searchMode: getDefaultSearchModeFromEnv(this.$config),
           publicUrl: rootGetters['page/view/public/getIsPublic'],
           publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+          groupBy: getGroupBy(rootGetters, getters.getLastGridId),
           orderBy: getOrderBy(rootGetters, getters.getLastGridId),
           filters: getFilters(rootGetters, getters.getLastGridId),
         })
@@ -775,6 +781,7 @@ export const actions = {
       searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
       filters: getFilters(rootGetters, getters.getLastGridId),
     })
@@ -849,6 +856,7 @@ export const actions = {
             searchMode: getDefaultSearchModeFromEnv(this.$config),
             publicUrl: rootGetters['page/view/public/getIsPublic'],
             publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+            groupBy: getGroupBy(rootGetters, getters.getLastGridId),
             orderBy: getOrderBy(rootGetters, getters.getLastGridId),
             filters: getFilters(rootGetters, getters.getLastGridId),
           })
@@ -897,6 +905,9 @@ export const actions = {
         }
       })
     return lastRefreshRequest
+  },
+  updateActiveGroupBys({ commit }, groupBys) {
+    commit('SET_ACTIVE_GROUP_BYS', groupBys)
   },
   /**
    * Updates the field options of a given field and also makes an API request to the
@@ -1525,6 +1536,7 @@ export const actions = {
       searchMode: getDefaultSearchModeFromEnv(this.$config),
       publicUrl: rootGetters['page/view/public/getIsPublic'],
       publicAuthToken: rootGetters['page/view/public/getAuthToken'],
+      groupBy: getGroupBy(rootGetters, getters.getLastGridId),
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
       filters: getFilters(rootGetters, getters.getLastGridId),
       includeFields: fields,
@@ -2905,6 +2917,9 @@ export const getters = {
     return state.rows.some((row) => {
       return row._.selected && row._.selectedFieldId !== -1
     })
+  },
+  getActiveGroupBys(state) {
+    return state.activeGroupBys
   },
 }
 

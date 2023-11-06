@@ -152,10 +152,10 @@ export default {
 
         const index = this.loadings.findIndex((l) => l.id === id)
         this.loadings.splice(index, 1)
-
-        // Indicates that this component can be destroyed if it is not selected.
-        this.$emit('remove-keep-alive')
       }
+
+      // Indicates that this component can be destroyed if it is not selected.
+      this.$emit('remove-keep-alive')
     },
     select() {
       // While the field is selected we want to open the select row toast by pressing

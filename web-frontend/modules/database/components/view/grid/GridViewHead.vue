@@ -1,8 +1,13 @@
 <template>
   <div class="grid-view__head">
     <div
+      v-for="groupBy in includeGroupBy ? view.group_bys : []"
+      :key="'field-group-' + groupBy.field"
+      class="grid-view__head-group"
+    ></div>
+    <div
       v-if="includeRowDetails"
-      class="grid-view__column"
+      class="grid-view__column grid-view__column--no-border-right"
       :style="{ width: gridViewRowDetailsWidth + 'px' }"
     >
       <GridViewRowIdentifierDropdown
@@ -19,7 +24,7 @@
       ></GridViewRowIdentifierDropdown>
     </div>
     <GridViewFieldType
-      v-for="field in fields"
+      v-for="field in visibleFields"
       :key="'field-type-' + field.id"
       :database="database"
       :table="table"
@@ -80,7 +85,7 @@ export default {
   },
   mixins: [gridViewHelpers],
   props: {
-    fields: {
+    visibleFields: {
       type: Array,
       required: true,
     },
@@ -102,6 +107,11 @@ export default {
       default: () => false,
     },
     includeRowDetails: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
+    includeGroupBy: {
       type: Boolean,
       required: false,
       default: () => false,

@@ -3159,6 +3159,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         search: str = None,
         search_mode: Optional[SearchModes] = None,
         order_by: str = None,
+        group_by: str = None,
         include_fields: str = None,
         exclude_fields: str = None,
         filter_type: str = None,
@@ -3179,6 +3180,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param search: A string to search for in the rows.
         :param search_mode: The type of search to perform.
         :param order_by: A string to order the rows by.
+        :param group_by: A string group the rows by.
         :param include_fields: A comma separated list of field_ids to include.
         :param exclude_fields: A comma separated list of field_ids to exclude.
         :param filter_type: The type of filter to apply.
@@ -3222,7 +3224,19 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         queryset = table_model.objects.all().enhance_by_fields()
         queryset = self.apply_filters(view, queryset)
 
-        if order_by:
+        if view_type.can_group_by:
+            # If both the group by and order by string is set, then we must merge the
+            # two so that it will be sorted the right way because the grouping is
+            # basically just sorting for the backend. However, the group by will take
+            # precedence.
+            if group_by is not None and order_by is not None:
+                order_by = f"{group_by},{order_by}"
+            # If only the group_by is set, then we can simply replace the order_by
+            # because that must be applied to the queryset.
+            elif group_by is not None:
+                order_by = group_by
+
+        if order_by is not None:
             queryset = queryset.order_by_fields_string(
                 order_by, False, publicly_visible_field_ids
             )

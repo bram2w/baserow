@@ -425,6 +425,19 @@ export function newFieldMatchesActiveSearchTerm(
   return false
 }
 
+export function getGroupBy(rootGetters, viewId) {
+  if (rootGetters['page/view/public/getIsPublic']) {
+    const view = rootGetters['view/get'](viewId)
+    return view.group_bys
+      .map((groupBy) => {
+        return `${groupBy.order === 'DESC' ? '-' : ''}field_${groupBy.field}`
+      })
+      .join(',')
+  } else {
+    return ''
+  }
+}
+
 export function getOrderBy(rootGetters, viewId) {
   if (rootGetters['page/view/public/getIsPublic']) {
     const view = rootGetters['view/get'](viewId)

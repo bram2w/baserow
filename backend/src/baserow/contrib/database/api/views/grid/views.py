@@ -673,6 +673,15 @@ class PublicGridViewRowsView(APIView):
                 "descending (Z-A).",
             ),
             OpenApiParameter(
+                name="group_by",
+                location=OpenApiParameter.QUERY,
+                type=OpenApiTypes.STR,
+                description="Optionally the rows can be grouped by provided field ids "
+                "separated by comma. By default no groups are applied. This doesn't "
+                "actually responds with the rows groups, this is just what's needed "
+                "for the Baserow group by feature.",
+            ),
+            OpenApiParameter(
                 name="filters",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
@@ -823,6 +832,7 @@ class PublicGridViewRowsView(APIView):
         search = query_params.get("search")
         search_mode = query_params.get("search_mode")
         order_by = request.GET.get("order_by")
+        group_by = request.GET.get("group_by")
         include_fields = request.GET.get("include_fields")
         exclude_fields = request.GET.get("exclude_fields")
         filter_type = (
@@ -859,6 +869,7 @@ class PublicGridViewRowsView(APIView):
             search=search,
             search_mode=search_mode,
             order_by=order_by,
+            group_by=group_by,
             include_fields=include_fields,
             exclude_fields=exclude_fields,
             filter_type=filter_type,

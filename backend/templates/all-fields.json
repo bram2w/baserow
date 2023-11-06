@@ -1,0 +1,877 @@
+{
+  "baserow_template_version": 1,
+  "name": "All fields",
+  "icon": "iconoir-input-field",
+  "keywords": [
+    "All",
+    "Fields",
+    "Baserow"
+  ],
+  "categories": [
+    "Baserow"
+  ],
+  "export": [
+    {
+      "id": 131,
+      "name": "All field types",
+      "order": 1,
+      "type": "database",
+      "tables": [
+        {
+          "id": 538,
+          "name": "All field types",
+          "order": 1,
+          "fields": [
+            {
+              "id": 4664,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 4665,
+              "type": "long_text",
+              "name": "Notes",
+              "order": 1,
+              "primary": false
+            },
+            {
+              "id": 4666,
+              "type": "number",
+              "name": "Number",
+              "order": 2,
+              "primary": false,
+              "number_decimal_places": 0,
+              "number_negative": false
+            },
+            {
+              "id": 4667,
+              "type": "rating",
+              "name": "Rating",
+              "order": 3,
+              "primary": false,
+              "max_value": 5,
+              "color": "dark-orange",
+              "style": "star"
+            },
+            {
+              "id": 4668,
+              "type": "boolean",
+              "name": "Boolean",
+              "order": 4,
+              "primary": false
+            },
+            {
+              "id": 4669,
+              "type": "date",
+              "name": "Date european",
+              "order": 5,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": false,
+              "date_time_format": "24",
+              "date_show_tzinfo": false,
+              "date_force_timezone": null
+            },
+            {
+              "id": 4670,
+              "type": "date",
+              "name": "Date us include time",
+              "order": 6,
+              "primary": false,
+              "date_format": "US",
+              "date_include_time": true,
+              "date_time_format": "12",
+              "date_show_tzinfo": false,
+              "date_force_timezone": null
+            },
+            {
+              "id": 4671,
+              "type": "last_modified",
+              "name": "Last modified",
+              "order": 7,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": true,
+              "date_time_format": "24",
+              "date_show_tzinfo": true,
+              "date_force_timezone": null
+            },
+            {
+              "id": 4672,
+              "type": "created_on",
+              "name": "Created on",
+              "order": 8,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": true,
+              "date_time_format": "24",
+              "date_show_tzinfo": true,
+              "date_force_timezone": null
+            },
+            {
+              "id": 4673,
+              "type": "url",
+              "name": "URL",
+              "order": 9,
+              "primary": false
+            },
+            {
+              "id": 4674,
+              "type": "email",
+              "name": "Email",
+              "order": 10,
+              "primary": false
+            },
+            {
+              "id": 4675,
+              "type": "file",
+              "name": "File",
+              "order": 11,
+              "primary": false
+            },
+            {
+              "id": 4676,
+              "type": "single_select",
+              "name": "Single select",
+              "order": 12,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 2492,
+                  "value": "Option 1",
+                  "color": "green",
+                  "order": 0
+                },
+                {
+                  "id": 2493,
+                  "value": "Option 2",
+                  "color": "cyan",
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 4677,
+              "type": "multiple_select",
+              "name": "Multiple select",
+              "order": 13,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 2494,
+                  "value": "Option A",
+                  "color": "red",
+                  "order": 0
+                },
+                {
+                  "id": 2495,
+                  "value": "Option B",
+                  "color": "green",
+                  "order": 1
+                },
+                {
+                  "id": 2496,
+                  "value": "Option C",
+                  "color": "blue",
+                  "order": 2
+                }
+              ]
+            },
+            {
+              "id": 4678,
+              "type": "phone_number",
+              "name": "Phone number",
+              "order": 14,
+              "primary": false
+            },
+            {
+              "id": 4679,
+              "type": "formula",
+              "name": "Formula text",
+              "order": 15,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": null,
+              "formula": "field(\"Name\")",
+              "formula_type": "text"
+            },
+            {
+              "id": 4680,
+              "type": "formula",
+              "name": "Formula file",
+              "order": 16,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": "single_file",
+              "formula": "field(\"File\")",
+              "formula_type": "array"
+            },
+            {
+              "id": 4686,
+              "type": "link_row",
+              "name": "Related",
+              "order": 17,
+              "primary": false,
+              "link_row_table_id": 539,
+              "link_row_related_field_id": null,
+              "has_related_field": false
+            },
+            {
+              "id": 4687,
+              "type": "lookup",
+              "name": "Lookup text",
+              "order": 18,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": "text",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4681,
+              "target_field_name": "Name"
+            },
+            {
+              "id": 4688,
+              "type": "lookup",
+              "name": "Lookup number",
+              "order": 19,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": 0,
+              "date_time_format": null,
+              "array_formula_type": "number",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4684,
+              "target_field_name": "Number"
+            },
+            {
+              "id": 4689,
+              "type": "lookup",
+              "name": "Lookup single select",
+              "order": 20,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": true,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": "single_select",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4685,
+              "target_field_name": "Single select"
+            },
+            {
+              "id": 4691,
+              "type": "lookup",
+              "name": "Lookup",
+              "order": 21,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": false,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": null,
+              "array_formula_type": "boolean",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4690,
+              "target_field_name": "Boolean"
+            },
+            {
+              "id": 4693,
+              "type": "lookup",
+              "name": "Lookup date",
+              "order": 22,
+              "primary": false,
+              "error": null,
+              "date_include_time": false,
+              "nullable": true,
+              "date_show_tzinfo": false,
+              "date_format": "EU",
+              "date_force_timezone": null,
+              "number_decimal_places": null,
+              "date_time_format": "24",
+              "array_formula_type": "date",
+              "through_field_id": 4686,
+              "through_field_name": "Related",
+              "target_field_id": 4692,
+              "target_field_name": "Date"
+            },
+            {
+              "id": 4694,
+              "type": "count",
+              "name": "Count",
+              "order": 23,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": false,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": 0,
+              "date_time_format": null,
+              "array_formula_type": null,
+              "through_field_id": 4686
+            },
+            {
+              "id": 4695,
+              "type": "rollup",
+              "name": "Rollup sum",
+              "order": 24,
+              "primary": false,
+              "error": null,
+              "date_include_time": null,
+              "nullable": false,
+              "date_show_tzinfo": null,
+              "date_format": null,
+              "date_force_timezone": null,
+              "number_decimal_places": 0,
+              "date_time_format": null,
+              "array_formula_type": null,
+              "through_field_id": 4686,
+              "target_field_id": 4684,
+              "rollup_function": "sum"
+            },
+            {
+              "id": 4696,
+              "type": "multiple_collaborators",
+              "name": "Collaborators",
+              "order": 25,
+              "primary": false,
+              "notify_user_when_added": false
+            },
+            {
+              "id": 4697,
+              "type": "number",
+              "name": "Price",
+              "order": 26,
+              "primary": false,
+              "number_decimal_places": 2,
+              "number_negative": false
+            }
+          ],
+          "views": [
+            {
+              "id": 2169,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "ownership_type": "collaborative",
+              "created_by": "bram@baserow.io",
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "filter_groups": [],
+              "sortings": [],
+              "group_bys": [],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "count",
+              "field_options": [
+                {
+                  "id": 14321,
+                  "field_id": 4664,
+                  "width": 148,
+                  "hidden": false,
+                  "order": 0,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14319,
+                  "field_id": 4665,
+                  "width": 191,
+                  "hidden": false,
+                  "order": 1,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14320,
+                  "field_id": 4666,
+                  "width": 125,
+                  "hidden": false,
+                  "order": 2,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14351,
+                  "field_id": 4697,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 3,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14341,
+                  "field_id": 4686,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 4,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14322,
+                  "field_id": 4667,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 5,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14323,
+                  "field_id": 4668,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 6,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14324,
+                  "field_id": 4669,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 7,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14325,
+                  "field_id": 4670,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 8,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14326,
+                  "field_id": 4671,
+                  "width": 216,
+                  "hidden": false,
+                  "order": 9,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14327,
+                  "field_id": 4672,
+                  "width": 236,
+                  "hidden": false,
+                  "order": 10,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14333,
+                  "field_id": 4673,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 11,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14334,
+                  "field_id": 4674,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 12,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14335,
+                  "field_id": 4675,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 13,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14336,
+                  "field_id": 4676,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 14,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14337,
+                  "field_id": 4677,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 15,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14338,
+                  "field_id": 4678,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 16,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14348,
+                  "field_id": 4694,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 17,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14349,
+                  "field_id": 4695,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 18,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14339,
+                  "field_id": 4679,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 19,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14340,
+                  "field_id": 4680,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 20,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14342,
+                  "field_id": 4687,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 21,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14343,
+                  "field_id": 4688,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 22,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14344,
+                  "field_id": 4689,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 23,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14346,
+                  "field_id": 4691,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 24,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14347,
+                  "field_id": 4693,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 25,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14350,
+                  "field_id": 4696,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 26,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "created_on": "2023-10-25T19:04:55.554233+00:00",
+              "updated_on": "2023-10-25T19:14:16.559135+00:00",
+              "field_4664": "First row",
+              "field_4665": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In pretium sem id tellus ultricies fringilla. Vivamus vel lorem et lacus luctus pretium. Vestibulum ut tellus at ipsum faucibus venenatis sed vel diam. Cras sit amet leo neque. Nulla efficitur sit amet sapien et hendrerit. Praesent eu elit eu lorem consequat porta molestie in dui. Sed pellentesque urna ipsum, posuere tristique mauris vestibulum ac. Nam malesuada nisl non risus condimentum rutrum. Aliquam suscipit, lectus ut euismod euismod, nibh justo dictum ligula, nec lacinia augue nisi vel arcu.",
+              "field_4666": "100",
+              "field_4667": 4,
+              "field_4668": "true",
+              "field_4669": "2023-10-01",
+              "field_4670": "2023-10-02T19:11:26+00:00",
+              "field_4671": null,
+              "field_4672": null,
+              "field_4673": "https://baserow.io",
+              "field_4674": "bram@baserow.io",
+              "field_4675": [
+                {
+                  "name": "1eOyNhZSuyOoGtr7cIuKnqzzofEQLv3N_45e07cf623e634b96b3e82aeaf7ecc74efd03a05808bf1eb69ceef8a9df7d135.doc",
+                  "visible_name": "file-sample_100kB.doc",
+                  "original_name": "file-sample_100kB.doc"
+                },
+                {
+                  "name": "NPE5TiPZyWUiep1sav7XmQpIb5TDKWvf_771b2e98db13f1f683eaf37dd65364a9297ad32679301947f4bea68c3e625244.xls",
+                  "visible_name": "file_example_XLS_10.xls",
+                  "original_name": "file_example_XLS_10.xls"
+                },
+                {
+                  "name": "cFVB2dLV1KGLadXeS6L74H0FXQWvHjQX_71944d7430c461f0cd6e7fd10cee7eb72786352a3678fc7bc0ae3d410f72aece.mp4",
+                  "visible_name": "file_example_MP4_480_1_5MG.mp4",
+                  "original_name": "file_example_MP4_480_1_5MG.mp4"
+                },
+                {
+                  "name": "ZSIWNqJTojLUEvo91Qr4IQVfhosEdUy6_9a2270d5964f64981fb1e91dd13e5941262817bdce873cf357c92adbef906b5d.mp3",
+                  "visible_name": "file_example_MP3_700KB.mp3",
+                  "original_name": "file_example_MP3_700KB.mp3"
+                },
+                {
+                  "name": "ZommpPn0tOFo8q8ISZON8YBGEIGGM8Yx_88aeb1f4467bd1e50cf624de972fbf3f40801632fedb64aaa7b1a8a9ef786fc6.jpg",
+                  "visible_name": "file_example_JPG_100kB.jpg",
+                  "original_name": "file_example_JPG_100kB.jpg"
+                },
+                {
+                  "name": "IyUZDvME0a9RreFstg2Zc7nBTgl46zQd_38c9792d725c45dd431699e6a3b0f0f8e17c63c9ac7331387ee30dcc6e42a511.pdf",
+                  "visible_name": "file-sample_150kB.pdf",
+                  "original_name": "file-sample_150kB.pdf"
+                }
+              ],
+              "field_4676": 2492,
+              "field_4677": [
+                2494,
+                2495
+              ],
+              "field_4678": "+12345678",
+              "field_4679": null,
+              "field_4680": null,
+              "field_4686": [
+                1,
+                2
+              ],
+              "field_4687": null,
+              "field_4688": null,
+              "field_4689": null,
+              "field_4691": null,
+              "field_4693": null,
+              "field_4694": null,
+              "field_4695": null,
+              "field_4696": [
+                "bram@baserow.io"
+              ],
+              "field_4697": "100.00"
+            }
+          ]
+        },
+        {
+          "id": 539,
+          "name": "Related",
+          "order": 2,
+          "fields": [
+            {
+              "id": 4681,
+              "type": "text",
+              "name": "Name",
+              "order": 0,
+              "primary": true,
+              "text_default": ""
+            },
+            {
+              "id": 4684,
+              "type": "number",
+              "name": "Number",
+              "order": 1,
+              "primary": false,
+              "number_decimal_places": 0,
+              "number_negative": false
+            },
+            {
+              "id": 4685,
+              "type": "single_select",
+              "name": "Single select",
+              "order": 2,
+              "primary": false,
+              "select_options": [
+                {
+                  "id": 2497,
+                  "value": "1",
+                  "color": "dark-orange",
+                  "order": 0
+                },
+                {
+                  "id": 2498,
+                  "value": "2",
+                  "color": "green",
+                  "order": 1
+                }
+              ]
+            },
+            {
+              "id": 4690,
+              "type": "boolean",
+              "name": "Boolean",
+              "order": 3,
+              "primary": false
+            },
+            {
+              "id": 4692,
+              "type": "date",
+              "name": "Date",
+              "order": 4,
+              "primary": false,
+              "date_format": "EU",
+              "date_include_time": true,
+              "date_time_format": "24",
+              "date_show_tzinfo": false,
+              "date_force_timezone": null
+            }
+          ],
+          "views": [
+            {
+              "id": 2170,
+              "type": "grid",
+              "name": "Grid",
+              "order": 1,
+              "ownership_type": "collaborative",
+              "created_by": "bram@baserow.io",
+              "filter_type": "AND",
+              "filters_disabled": false,
+              "filters": [],
+              "filter_groups": [],
+              "sortings": [],
+              "group_bys": [],
+              "decorations": [],
+              "public": false,
+              "row_identifier_type": "id",
+              "field_options": [
+                {
+                  "id": 14330,
+                  "field_id": 4681,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14331,
+                  "field_id": 4684,
+                  "width": 184,
+                  "hidden": false,
+                  "order": 32767,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14332,
+                  "field_id": 4685,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                },
+                {
+                  "id": 14345,
+                  "field_id": 4690,
+                  "width": 200,
+                  "hidden": false,
+                  "order": 32767,
+                  "aggregation_type": "",
+                  "aggregation_raw_type": ""
+                }
+              ]
+            }
+          ],
+          "rows": [
+            {
+              "id": 1,
+              "order": "1.00000000000000000000",
+              "created_on": "2023-10-25T19:09:50.671242+00:00",
+              "updated_on": "2023-10-25T19:12:42.182580+00:00",
+              "field_4681": "Row 1",
+              "field_4684": "1",
+              "field_4685": 2497,
+              "field_4690": "true",
+              "field_4692": "2023-10-01T19:12:41+00:00"
+            },
+            {
+              "id": 2,
+              "order": "2.00000000000000000000",
+              "created_on": "2023-10-25T19:09:50.671294+00:00",
+              "updated_on": "2023-10-25T19:12:45.338599+00:00",
+              "field_4681": "Row 2",
+              "field_4684": "2",
+              "field_4685": 2498,
+              "field_4690": "true",
+              "field_4692": "2023-10-02T19:12:44+00:00"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
