@@ -216,6 +216,15 @@ export class FieldType extends Registerable {
   }
 
   /**
+   * This component should represent the grouped by field's value in the grid view. To
+   * improve performance, this component should be a functional component. The card
+   * component almost always compatible here, so we're returning that one by default.
+   */
+  getGroupByComponent() {
+    return this.getCardComponent()
+  }
+
+  /**
    * This component displays row change difference for values of the field type.
    */
   getRowHistoryEntryComponent() {
@@ -254,6 +263,14 @@ export class FieldType extends Registerable {
       return value.trim() === ''
     }
     return [null, false].includes(value)
+  }
+
+  /**
+   * Should return true if both provided values are equal. This is used to determine
+   * whether they both belong in the same group for example.
+   */
+  isEqual(field, value1, value2) {
+    return JSON.stringify(value1) === JSON.stringify(value2)
   }
 
   /**
@@ -1692,6 +1709,21 @@ class BaseDateFieldType extends FieldType {
 
   getCanGroupByInView(field) {
     return true
+  }
+
+  isEqual(field, value1, value2) {
+    if (field.date_include_time) {
+      // Seconds are visually ignored for a field that includes the time, so we'd
+      // have to compare the values without them. A date is normally `null` or
+      // `2023-10-27T18:17:00.758266Z`, and if you only take the first 16
+      // characters, it's the value without the seconds.
+      return (
+        ('' + value1).substring(0, 16) ===
+        ('' + value2).toString().substring(0, 16)
+      )
+    } else {
+      return super.isEqual(field, value1, value2)
+    }
   }
 }
 

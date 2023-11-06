@@ -8,6 +8,7 @@ import FormView from '@baserow/modules/database/components/view/form/FormView'
 import FormViewHeader from '@baserow/modules/database/components/view/form/FormViewHeader'
 import { FileFieldType } from '@baserow/modules/database/fieldTypes'
 import { newFieldMatchesActiveSearchTerm } from '@baserow/modules/database/utils/view'
+import { clone } from '@baserow/modules/core/utils/object'
 
 export const maxPossibleOrderValue = 32767
 
@@ -366,6 +367,13 @@ export class GridViewType extends ViewType {
       gridId: view.id,
       fields,
     })
+    // The grid view store keeps a copy of the group bys that must only be updated
+    // after the refresh of the page. This is because the group by depends on the rows
+    // being sorted, and this will only be the case after a refresh.
+    await store.dispatch(
+      storePrefix + 'view/grid/updateActiveGroupBys',
+      clone(view.group_bys)
+    )
   }
 
   async refresh(

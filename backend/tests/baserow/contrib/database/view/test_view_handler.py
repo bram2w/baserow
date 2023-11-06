@@ -2205,6 +2205,51 @@ def test_get_public_rows_queryset_and_field_ids_view_order_by(data_fixture):
 
 
 @pytest.mark.django_db
+def test_get_public_rows_queryset_and_field_ids_view_group_by(data_fixture):
+    grid_view = data_fixture.create_grid_view(public=True)
+    field = data_fixture.create_number_field(table=grid_view.table)
+    field_2 = data_fixture.create_number_field(table=grid_view.table)
+
+    model = grid_view.table.get_model()
+    row_1 = model.objects.create(**{f"field_{field.id}": 1, f"field_{field_2.id}": 4})
+    row_2 = model.objects.create(**{f"field_{field.id}": 2, f"field_{field_2.id}": 3})
+    row_3 = model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": 2})
+    row_4 = model.objects.create(**{f"field_{field.id}": 3, f"field_{field_2.id}": 1})
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, group_by=f"-field_{field.id}"
+    )
+
+    assert queryset.count() == 4
+    assert list(queryset.values_list("pk", flat=True)) == [
+        row_3.id,
+        row_4.id,
+        row_2.id,
+        row_1.id,
+    ]
+
+    (
+        queryset,
+        field_ids,
+        publicly_visible_field_options,
+    ) = ViewHandler().get_public_rows_queryset_and_field_ids(
+        grid_view, group_by=f"field_{field.id}", order_by=f"field_{field_2.id}"
+    )
+
+    assert queryset.count() == 4
+    assert list(queryset.values_list("pk", flat=True)) == [
+        row_1.id,
+        row_2.id,
+        row_4.id,
+        row_3.id,
+    ]
+
+
+@pytest.mark.django_db
 def test_get_public_rows_queryset_and_field_ids_include_exclude_fields(data_fixture):
     grid_view = data_fixture.create_grid_view(public=True)
     field = data_fixture.create_number_field(table=grid_view.table)

@@ -10,6 +10,7 @@ export default {
   data() {
     return {
       gridViewRowDetailsWidth: 72,
+      groupWidth: 200,
     }
   },
   beforeCreate() {
@@ -19,6 +20,8 @@ export default {
         fieldOptions:
           this.$options.propsData.storePrefix + 'view/grid/getAllFieldOptions',
         publicGrid: 'page/view/public/getIsPublic',
+        activeGroupBys:
+          this.$options.propsData.storePrefix + 'view/grid/getActiveGroupBys',
       }),
     }
   },

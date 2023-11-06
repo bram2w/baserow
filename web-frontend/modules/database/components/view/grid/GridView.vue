@@ -15,14 +15,16 @@
     <GridViewSection
       ref="left"
       class="grid-view__left"
-      :fields="leftFields"
+      :visible-fields="leftFields"
+      :all-fields-in-table="fields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
       :table="table"
       :view="view"
       :include-field-width-handles="false"
-      :include-row-details="true"
-      :include-grid-view-identifier-dropdown="true"
+      :include-row-details="!viewHasGroupBys"
+      :include-grid-view-identifier-dropdown="!viewHasGroupBys"
+      :include-group-by="true"
       :read-only="
         readOnly ||
         !$hasPermission(
@@ -55,13 +57,7 @@
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, 0)"
       @cell-selected="cellSelected"
-    >
-      <template #foot>
-        <div class="grid-view__foot-info">
-          {{ $tc('gridView.rowCount', count, { count }) }}
-        </div>
-      </template>
-    </GridViewSection>
+    ></GridViewSection>
     <GridViewRowsAddContext ref="rowsAddContext" @add-rows="addRows" />
     <div
       ref="divider"
@@ -69,7 +65,7 @@
       :style="{ left: leftWidth + 'px' }"
     ></div>
     <GridViewFieldWidthHandle
-      v-if="canFitInTwoColumns"
+      v-if="primaryFieldIsSticky"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
       :database="database"
@@ -85,12 +81,15 @@
     <GridViewSection
       ref="right"
       class="grid-view__right"
-      :fields="visibleFields"
+      :visible-fields="rightVisibleFields"
+      :all-fields-in-table="fields"
       :decorations-by-place="decorationsByPlace"
       :database="database"
-      :can-fit-in-two-columns="canFitInTwoColumns"
+      :primary-field-is-sticky="primaryFieldIsSticky"
       :table="table"
       :view="view"
+      :include-row-details="viewHasGroupBys"
+      :include-grid-view-identifier-dropdown="viewHasGroupBys"
       :include-add-field="true"
       :can-order-fields="true"
       :read-only="
@@ -113,6 +112,7 @@
       @update="updateValue"
       @paste="multiplePasteFromCell"
       @edit="editValue"
+      @row-dragging="rowDragStart"
       @cell-mousedown-left="multiSelectStart"
       @cell-mouseover="multiSelectHold"
       @cell-mouseup-left="multiSelectStop"
@@ -124,14 +124,14 @@
       @refresh-row="refreshRow"
       @scroll="scroll($event.pixelY, $event.pixelX)"
       @cell-selected="cellSelected"
-    >
-    </GridViewSection>
+    ></GridViewSection>
     <GridViewRowDragging
       ref="rowDragging"
       :table="table"
       :view="view"
       :fields="allVisibleFields"
       :store-prefix="storePrefix"
+      :offset="activeGroupBys.length * groupWidth"
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewRowDragging>
@@ -375,14 +375,14 @@ export default {
      * belong.
      */
     allVisibleFields() {
-      return this.leftFields.concat(this.visibleFields)
+      return this.leftFields.concat(this.rightVisibleFields)
     },
     /**
      * Returns only the visible fields in the correct order that are in
      * the right section of the grid. Primary must always be
      * first if in that list.
      */
-    visibleFields() {
+    rightVisibleFields() {
       const fieldOptions = this.fieldOptions
       return this.rightFields
         .filter(filterVisibleFieldsFunction(fieldOptions))
@@ -397,15 +397,21 @@ export default {
         .filter(filterHiddenFieldsFunction(fieldOptions))
         .sort(sortFieldsByOrderAndIdFunction(fieldOptions))
     },
+    viewHasGroupBys() {
+      return this.activeGroupBys.length > 0
+    },
+    primaryFieldIsSticky() {
+      return this.canFitInTwoColumns && !this.viewHasGroupBys
+    },
     leftFields() {
-      if (this.canFitInTwoColumns) {
+      if (this.primaryFieldIsSticky) {
         return this.fields.filter((field) => field.primary)
       } else {
         return []
       }
     },
     rightFields() {
-      if (this.canFitInTwoColumns) {
+      if (this.primaryFieldIsSticky) {
         return this.fields.filter((field) => !field.primary)
       } else {
         return this.fields
@@ -418,7 +424,12 @@ export default {
       )
     },
     leftWidth() {
-      return this.leftFieldsWidth + this.gridViewRowDetailsWidth
+      return (
+        this.leftFieldsWidth +
+        (this.viewHasGroupBys ? 0 : this.gridViewRowDetailsWidth) +
+        // 100 must be replaced with the dynamic width
+        this.activeGroupBys.length * this.groupWidth
+      )
     },
     activeSearchTerm() {
       return this.$store.getters[
@@ -467,7 +478,6 @@ export default {
       ...(this.$options.computed || {}),
       ...mapGetters({
         allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
-        count: this.$options.propsData.storePrefix + 'view/grid/getCount',
         isMultiSelectActive:
           this.$options.propsData.storePrefix + 'view/grid/isMultiSelectActive',
       }),
@@ -572,7 +582,7 @@ export default {
 
       if (scrollDirection !== 'vertical') {
         const fieldPrimary = field.primary
-        if (elementLeft < 0 && (!this.canFitInTwoColumns || !fieldPrimary)) {
+        if (elementLeft < 0 && (!this.primaryFieldIsSticky || !fieldPrimary)) {
           // If the field isn't visible in the viewport we need to scroll left in order
           // to show it.
           this.horizontalScroll(
@@ -581,7 +591,7 @@ export default {
           this.$refs.scrollbars.updateHorizontal()
         } else if (
           elementRight > horizontalContainerWidth &&
-          (!this.canFitInTwoColumns || !fieldPrimary)
+          (!this.primaryFieldIsSticky || !fieldPrimary)
         ) {
           // If the field isn't visible in the viewport we need to scroll right in order
           // to show it.
@@ -635,10 +645,13 @@ export default {
       const filterIndex = this.view.filters.findIndex((filter) => {
         return filter.field === field.id
       })
+      const groupIndex = this.view.group_bys.findIndex((group) => {
+        return group.field === field.id
+      })
       const sortIndex = this.view.sortings.findIndex((sort) => {
         return sort.field === field.id
       })
-      if (filterIndex > -1 || sortIndex > -1) {
+      if (filterIndex > -1 || groupIndex > -1 || sortIndex > -1) {
         this.$emit('refresh')
       }
     },
@@ -1075,6 +1088,13 @@ export default {
       await this.$store.dispatch(
         this.storePrefix + 'view/grid/visibleByScrollTop',
         this.$refs.right.$refs.body.scrollTop
+      )
+      // The grid view store keeps a copy of the group bys that must only be updated
+      // after the refresh of the page. This is because the group by depends on the rows
+      // being sorted, and this will only be the case after a refresh.
+      await this.$store.dispatch(
+        this.storePrefix + 'view/grid/updateActiveGroupBys',
+        clone(this.view.group_bys)
       )
       this.$nextTick(() => {
         this.fieldsUpdated()

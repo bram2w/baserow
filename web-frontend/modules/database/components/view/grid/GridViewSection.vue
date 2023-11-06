@@ -11,12 +11,18 @@
       },
     }"
   >
+    <div
+      v-for="(left, index) in groupByDividers"
+      :key="'group-by-divider-' + index"
+      class="grid-view__group-by-divider"
+      :style="{ left: left + 'px' }"
+    ></div>
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
         :database="database"
         :table="table"
         :view="view"
-        :fields="fields"
+        :visible-fields="visibleFields"
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
         :include-add-field="includeAddField"
@@ -48,20 +54,24 @@
       >
         <div class="grid-view__body-inner">
           <GridViewPlaceholder
-            :fields="fields"
+            :visible-fields="visibleFields"
+            :view="view"
             :include-row-details="includeRowDetails"
+            :include-group-by="includeGroupBy"
             :store-prefix="storePrefix"
           ></GridViewPlaceholder>
           <GridViewRows
             ref="rows"
             :view="view"
-            :fields="fieldsToRender"
+            :rendered-fields="fieldsToRender"
+            :visible-fields="visibleFields"
+            :all-fields-in-table="allFieldsInTable"
             :workspace-id="database.workspace.id"
-            :all-fields="fields"
             :decorations-by-place="decorationsByPlace"
             :left-offset="fieldsLeftOffset"
-            :can-fit-in-two-columns="canFitInTwoColumns"
+            :primary-field-is-sticky="primaryFieldIsSticky"
             :include-row-details="includeRowDetails"
+            :include-group-by="includeGroupBy"
             :read-only="readOnly"
             :store-prefix="storePrefix"
             v-on="$listeners"
@@ -69,24 +79,28 @@
           <GridViewRowAdd
             v-if="
               !readOnly &&
+              (includeRowDetails || visibleFields.length > 0) &&
               $hasPermission(
                 'database.table.create_row',
                 table,
                 database.workspace.id
               )
             "
-            :fields="fields"
+            :visible-fields="visibleFields"
             :include-row-details="includeRowDetails"
             :store-prefix="storePrefix"
             v-on="$listeners"
           ></GridViewRowAdd>
+          <div v-else class="grid-view__row-placeholder"></div>
         </div>
       </div>
       <div class="grid-view__foot">
-        <slot name="foot"></slot>
+        <div v-if="includeRowDetails" class="grid-view__foot-info">
+          {{ $tc('gridView.rowCount', count, { count }) }}
+        </div>
         <template v-if="!publicGrid">
           <div
-            v-for="field in fields"
+            v-for="field in visibleFields"
             :key="field.id"
             :style="{ width: getFieldWidth(field.id) + 'px' }"
           >
@@ -144,7 +158,11 @@ export default {
     }
   },
   props: {
-    fields: {
+    visibleFields: {
+      type: Array,
+      required: true,
+    },
+    allFieldsInTable: {
       type: Array,
       required: true,
     },
@@ -174,6 +192,11 @@ export default {
       required: false,
       default: () => false,
     },
+    includeGroupBy: {
+      type: Boolean,
+      required: false,
+      default: () => false,
+    },
     includeAddField: {
       type: Boolean,
       required: false,
@@ -189,7 +212,7 @@ export default {
       required: false,
       default: () => false,
     },
-    canFitInTwoColumns: {
+    primaryFieldIsSticky: {
       type: Boolean,
       required: false,
       default: () => true,
@@ -203,7 +226,7 @@ export default {
     return {
       // Render the first 20 fields by default so that there's at least some data when
       // the page is server side rendered.
-      fieldsToRender: this.fields.slice(0, 20),
+      fieldsToRender: this.visibleFields.slice(0, 20),
       // Indicates the offset
       fieldsLeftOffset: 0,
     }
@@ -214,7 +237,7 @@ export default {
      * given options.
      */
     width() {
-      let width = Object.values(this.fields).reduce(
+      let width = Object.values(this.visibleFields).reduce(
         (value, field) => this.getFieldWidth(field.id) + value,
         0
       )
@@ -231,12 +254,32 @@ export default {
       return width
     },
     draggingFields() {
-      return this.fields.filter((f) => !f.primary)
+      return this.visibleFields.filter((f) => !f.primary)
     },
     draggingOffset() {
-      return this.fields
+      let offset = this.visibleFields
         .filter((f) => f.primary)
         .reduce((sum, f) => sum + this.getFieldWidth(f.id), 0)
+
+      if (this.includeRowDetails) {
+        offset += this.gridViewRowDetailsWidth
+      }
+
+      return offset
+    },
+    groupByDividers() {
+      if (!this.includeGroupBy) {
+        return []
+      }
+
+      let last = 0
+      const dividers = this.activeGroupBys
+        .filter((groupBy, index) => index < this.activeGroupBys.length - 1)
+        .map(() => {
+          last += this.groupWidth
+          return last
+        })
+      return dividers
     },
   },
   watch: {
@@ -246,7 +289,7 @@ export default {
         this.updateVisibleFieldsInRow()
       },
     },
-    fields: {
+    visibleFields: {
       deep: true,
       handler() {
         this.updateVisibleFieldsInRow()
@@ -260,6 +303,7 @@ export default {
         isMultiSelectHolding:
           this.$options.propsData.storePrefix +
           'view/grid/isMultiSelectHolding',
+        count: this.$options.propsData.storePrefix + 'view/grid/getCount',
       }),
     }
   },
@@ -332,7 +376,7 @@ export default {
 
       // Create an array containing the fields that are currently visible in the
       // viewport and must be rendered.
-      const fieldsToRender = this.fields.filter((field) => {
+      const fieldsToRender = this.visibleFields.filter((field) => {
         const width = this.getFieldWidth(field.id)
         const right = left + width
         const visible = right >= viewportStart && left <= viewportEnd
