@@ -346,6 +346,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "label": "label",
                     "url": "https://google.com",
                 },
+                "uuid": "00000000-0000-0000-0000-000000000000",
             }
         )
     )

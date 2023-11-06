@@ -10,6 +10,7 @@ from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.models import GridView
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -33,6 +34,8 @@ def test_can_export_every_interesting_different_field_to_json(
         {"exporter_type": "json"},
         user_kwargs={"has_active_premium_license": True},
     )
+    model = GridView.objects.all().first().table.get_model(attribute_names=True)
+    uuid = model.objects.all().first().uuid
     assert (
         contents
         == """[
@@ -91,7 +94,8 @@ def test_can_export_every_interesting_different_field_to_json(
     },
     "count": 0,
     "rollup": "0.000",
-    "lookup": []
+    "lookup": [],
+    "uuid": "%(uuid)s"
 },
 {
     "id": 2,
@@ -189,10 +193,12 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_1",
         "linked_row_2",
         ""
-    ]
+    ],
+    "uuid": "00000000-0000-0000-0000-000000000000"
 }
 ]
 """
+        % {"uuid": uuid}
     )
 
 
@@ -267,6 +273,8 @@ def test_can_export_every_interesting_different_field_to_xml(
         {"exporter_type": "xml"},
         user_kwargs={"has_active_premium_license": True},
     )
+    model = GridView.objects.all().first().table.get_model(attribute_names=True)
+    uuid = model.objects.all().first().uuid
     expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
 <rows>
    <row>
@@ -325,6 +333,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <count>0</count>
       <rollup>0.000</rollup>
       <lookup/>
+      <uuid>{uuid}</uuid>
    </row>
    <row>
       <id>2</id>
@@ -423,6 +432,7 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item>linked_row_2</item>
          <item/>
       </lookup>
+      <uuid>00000000-0000-0000-0000-000000000000</uuid>
    </row>
 </rows>
 """

@@ -700,7 +700,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         )
         progress.increment()
 
-        if duplicate_data and not field_type.read_only:
+        if duplicate_data and field_type.keep_data_on_duplication:
             FieldDataBackupHandler.duplicate_field_data(field, new_field)
         progress.increment()
 

@@ -36,6 +36,7 @@ import GridViewFieldSingleSelect from '@baserow/modules/database/components/view
 import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
+import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -50,6 +51,7 @@ import FunctionalGridViewFieldMultipleSelect from '@baserow/modules/database/com
 import FunctionalGridViewFieldFormula from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldFormula'
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
+import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -66,6 +68,7 @@ import RowEditFieldSingleSelect from '@baserow/modules/database/components/row/R
 import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row/RowEditFieldMultipleSelect'
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
+import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -81,6 +84,7 @@ import RowCardFieldSingleSelect from '@baserow/modules/database/components/card/
 import RowCardFieldText from '@baserow/modules/database/components/card/RowCardFieldText'
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
+import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
@@ -3239,5 +3243,80 @@ export class MultipleCollaboratorsFieldType extends FieldType {
       return ''
     }
     return this._collaboratorCellValueToListOfNames(value).join(delimiter)
+  }
+}
+
+export class UUIDFieldType extends FieldType {
+  static getType() {
+    return 'uuid'
+  }
+
+  getIconClass() {
+    return 'iconoir-fingerprint'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.uuid')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldUUID
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldUUID
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldUUID
+  }
+
+  getCardComponent() {
+    return RowCardFieldUUID
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const stringA = a[name] === null ? '' : '' + a[name]
+      const stringB = b[name] === null ? '' : '' + b[name]
+      return collatedStringCompare(stringA, stringB, order)
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'uuid'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.uuid')
+  }
+
+  getDocsRequestExample(field) {
+    return '00000000-0000-0000-0000-000000000000'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getContainsWordFilterFunction(field) {
+    return genericContainsWordFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
   }
 }

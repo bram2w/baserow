@@ -161,6 +161,7 @@ export class EqualViewFilterType extends ViewFilterType {
       'number',
       'rating',
       'phone_number',
+      'uuid',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
@@ -203,6 +204,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
       'number',
       'rating',
       'phone_number',
+      'uuid',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }

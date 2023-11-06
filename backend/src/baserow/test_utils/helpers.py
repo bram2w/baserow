@@ -213,6 +213,7 @@ def setup_interesting_test_table(
         "formula_email": "test@example.com",
         "formula_link_url_only": "",
         "formula_link_with_label": "",
+        "uuid": "00000000-0000-0000-0000-000000000000",
     }
 
     with freeze_time("2020-02-01 01:23"):

@@ -1,4 +1,5 @@
 import re
+import uuid
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from copy import deepcopy
@@ -62,6 +63,7 @@ from baserow.contrib.database.api.fields.serializers import (
     MustBeEmptyField,
     SelectOptionSerializer,
 )
+from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.formula import (
@@ -77,6 +79,7 @@ from baserow.contrib.database.formula import (
     BaserowFormulaType,
     FormulaHandler,
 )
+from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.models import Table
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
@@ -163,6 +166,7 @@ from .models import (
     SingleSelectField,
     TextField,
     URLField,
+    UUIDField,
 )
 from .operations import CreateFieldOperationType, DeleteRelatedLinkRowFieldOperationType
 from .registries import (
@@ -4828,3 +4832,86 @@ class MultipleCollaboratorsFieldType(FieldType):
         values = [related_object.first_name for related_object in related_objects.all()]
         value = list_to_comma_separated_string(values)
         return value
+
+
+class UUIDFieldType(ReadOnlyFieldType):
+    """
+    The UUIDFieldType is ReadOnly, but does not extend the `ReadOnlyFieldType` class
+    because the value should persistent on export/import and field duplication.
+    """
+
+    type = "uuid"
+    model_class = UUIDField
+    can_get_unique_values = False
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.UUIDField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return "Contains a unique and persistent UUID for every row."
+
+    def get_model_field(self, instance, **kwargs):
+        return models.UUIDField(
+            default=uuid.uuid4,
+            null=True,
+            **kwargs,
+        )
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        model.objects.all().update(**{f"{field.db_column}": RandomUUID()})
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(**{f"{to_field.db_column}": RandomUUID()})
+
+    def prepare_value_for_db(self, instance: Field, value):
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> None:
+        return str(
+            super().get_export_serialized_value(
+                row, field_name, cache, files_zip, storage
+            )
+        )
+
+    def get_export_value(self, value, field_object, rich_value=False) -> str:
+        return "" if value is None else str(value)
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def to_baserow_formula_expression(self, field):
+        # Cast the uuid to text, to make it compatible with all the text related
+        # functions.
+        totext = formula_function_registry.get("totext")
+        return totext(super().to_baserow_formula_expression(field))
+
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaTextType(nullable=True, unwrap_cast_to_text=False)
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaTextType
+    ) -> UUIDField:
+        return UUIDField()

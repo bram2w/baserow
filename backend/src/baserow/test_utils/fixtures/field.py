@@ -21,6 +21,7 @@ from baserow.contrib.database.fields.models import (
     SingleSelectField,
     TextField,
     URLField,
+    UUIDField,
 )
 from baserow.contrib.database.formula import FormulaHandler
 
@@ -330,5 +331,15 @@ class FieldFixtures:
 
         if setup_dependencies:
             FieldDependencyHandler().rebuild_dependencies(field, FieldCache())
+
+        return field
+
+    def create_uuid_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = UUIDField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
 
         return field

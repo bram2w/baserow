@@ -206,6 +206,7 @@ def construct_all_possible_field_kwargs(
                 "target_field_name": "text_field",
             }
         ],
+        "uuid": [{"name": "uuid"}],
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs

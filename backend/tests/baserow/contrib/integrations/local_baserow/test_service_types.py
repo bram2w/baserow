@@ -1391,6 +1391,13 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
                 },
             },
         },
+        field_db_column_by_name["uuid"]: {
+            "title": "uuid",
+            "default": None,
+            "original_type": "uuid",
+            "metadata": {},
+            "type": "string",
+        },
         "id": {"metadata": {}, "type": "number", "title": "ID"},
     }
 

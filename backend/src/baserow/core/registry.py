@@ -427,7 +427,7 @@ class Registry(Generic[InstanceSubClass]):
         """
 
         if not isinstance(instance, Instance):
-            raise ValueError(f"The {self.name} must be an instance of " f"Instance.")
+            raise ValueError(f"The {self.name} must be an instance of Instance.")
 
         if instance.type in self.registry:
             raise self.already_registered_exception_class(
