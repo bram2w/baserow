@@ -711,7 +711,19 @@ class Progress:
             "Downloading files."
         """
 
-        self.progress += by
+        self.set_progress(self.progress + by, state)
+
+    def set_progress(self, progress: int, state: Optional[str] = None):
+        """
+        Manually set the progress value.
+
+        :param progress: What the new process should be. If the total is
+            `100` and we set the progress to `50`, it will be 50%.
+        :param state: A descriptive name of the state. This could for example be
+            "Downloading files."
+        """
+
+        self.progress = progress
 
         if self.parent is not None:
             if self.progress >= self.total:
@@ -722,7 +734,7 @@ class Progress:
                 )
             diff = new_parent_progress - self.last_parent_progress
             self.last_parent_progress = new_parent_progress
-            if diff > 0:
+            if diff != 0:
                 self.parent.increment(diff, state)
 
         percentage = math.ceil(Decimal(self.progress) / self.total * 100)
