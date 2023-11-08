@@ -1,3 +1,4 @@
+import math
 import os
 import re
 import sys
@@ -15,10 +16,13 @@ from faker import Faker
 from tqdm import tqdm
 
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.search.exceptions import (
+    PostgresFullTextSearchDisabledException,
+)
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.management.utils import run_command_concurrently
-from baserow.core.utils import grouper
+from baserow.core.utils import Progress, grouper
 
 
 def underscore(word: str) -> str:
@@ -62,6 +66,11 @@ class Command(BaseCommand):
             help="How many rows should be inserted in a single query.",
             default=-1,
         )
+        parser.add_argument(
+            "--update-tsvectors",
+            action="store_true",
+            help="If true, the ts vector cell values will be updated as well.",
+        )
 
     def handle(self, *args, **options):
         table_id = options["table_id"]
@@ -70,6 +79,7 @@ class Command(BaseCommand):
         limit = options["limit"]
         concurrency = options["concurrency"]
         batch_size = options["batch_size"]
+        update_tsvectors = options.get("update_tsvectors", False)
 
         tick = time.time()
         if concurrency == 1:
@@ -135,32 +145,41 @@ class Command(BaseCommand):
                     self.stdout.write(self.style.ERROR(e.args[0]))
                     sys.exit(1)
 
-            fill_table_rows(
-                limit,
-                table,
-                batch_size,
-                source_table_model=source_table_model,
-                replicated_table_models=replicated_table_models,
-            )
-
-            SearchHandler.update_tsvector_columns(
-                table, update_tsvectors_for_changed_rows_only=False
-            )
+            try:
+                fill_table_rows(
+                    limit,
+                    table,
+                    batch_size,
+                    source_table_model=source_table_model,
+                    replicated_table_models=replicated_table_models,
+                    update_tsvectors=update_tsvectors,
+                )
+            except PostgresFullTextSearchDisabledException:
+                self.stdout.write(
+                    self.style.ERROR(
+                        "Your Baserow installation has Postgres full-text "
+                        "search disabled. To use full-text, ensure that "
+                        "BASEROW_USE_PG_FULLTEXT_SEARCH=true."
+                    )
+                )
 
         else:
+            concurrency_args = [
+                "./baserow",
+                "fill_table_rows",
+                str(table_id),
+                str(int(limit / concurrency)),
+                "--replicate-to-table-ids",
+                *replicate_to_table_ids,
+                "--concurrency",
+                "1",
+                "--batch-size",
+                str(batch_size),
+            ]
+            if update_tsvectors:
+                concurrency_args += ["--update-tsvectors"]
             run_command_concurrently(
-                [
-                    "./baserow",
-                    "fill_table_rows",
-                    str(table_id),
-                    str(int(limit / concurrency)),
-                    "--replicate-to-table-ids",
-                    *replicate_to_table_ids,
-                    "--concurrency",
-                    "1",
-                    "--batch-size",
-                    str(batch_size),
-                ],
+                concurrency_args,
                 concurrency,
             )
 
@@ -317,7 +336,12 @@ def bulk_create_rows(model, rows):
 
 
 def fill_table_rows(
-    limit, table, batch_size=-1, source_table_model=None, replicated_table_models=None
+    limit,
+    table,
+    batch_size=-1,
+    source_table_model=None,
+    replicated_table_models=None,
+    update_tsvectors=False,
 ):
     fake = Faker()
     cache = {}
@@ -334,10 +358,21 @@ def fill_table_rows(
     if batch_size <= 0:
         batch_size = limit
 
+    tsvector_limit = math.ceil(limit / 100 * 20)
+
     with tqdm(
-        total=limit,
+        total=limit + tsvector_limit if update_tsvectors else limit,
         desc=f"Adding {limit} rows to table {table.pk} in worker {os.getpid()}",
     ) as pbar:
+        progress = Progress(limit + tsvector_limit if update_tsvectors else limit)
+
+        def progress_updated(percentage, state=None):
+            if state:
+                pbar.set_description(state)
+            pbar.update(progress.progress - pbar.n)
+
+        progress.register_updated_event(progress_updated)
+
         for group in grouper(batch_size, range(limit)):
             rows = defaultdict(list)
             for _ in group:
@@ -355,8 +390,18 @@ def fill_table_rows(
                         order,
                     )
                     rows[model.baserow_table_id].append((instance, relations))
-                    pbar.update(1)
+                    progress.increment(1)
 
             for model in models:
                 pbar.refresh()
                 bulk_create_rows(model, rows[model.baserow_table_id])
+
+        if update_tsvectors:
+            progress.increment(0, state="Updating tsvector")
+            SearchHandler.update_tsvector_columns_locked(
+                table,
+                update_tsvectors_for_changed_rows_only=True,
+                progress_builder=progress.create_child_builder(
+                    represents_progress=tsvector_limit
+                ),
+            )

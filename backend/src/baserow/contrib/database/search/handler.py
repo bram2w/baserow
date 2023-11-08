@@ -1,3 +1,4 @@
+import math
 import traceback
 from enum import Enum
 from typing import TYPE_CHECKING, List, NamedTuple, Optional, Type
@@ -5,13 +6,15 @@ from typing import TYPE_CHECKING, List, NamedTuple, Optional, Type
 from django.conf import settings
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchVector
-from django.db import connection
+from django.core.cache import cache
+from django.db import connection, transaction
 from django.db.models import Expression, Func, Q, QuerySet, TextField, Value
 from django.utils.encoding import force_str
 
 from loguru import logger
 from opentelemetry import trace
 from psycopg2 import sql
+from redis.exceptions import LockNotOwnedError
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
 from baserow.contrib.database.search.exceptions import (
@@ -28,7 +31,7 @@ from baserow.contrib.database.table.constants import (
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
 from baserow.core.telemetry.utils import baserow_trace_methods
-from baserow.core.utils import exception_capturer
+from baserow.core.utils import ChildProgressBuilder, exception_capturer
 
 if TYPE_CHECKING:
     from baserow.contrib.database.fields.models import Field
@@ -325,14 +328,24 @@ class SearchHandler(
         return table
 
     @classmethod
-    def update_tsvector_columns(
+    def get_update_changed_rows_only_lock_key(cls, table):
+        return (
+            f"_update_tsvector_columns_update_tsvectors_for_changed_rows_only"
+            f"_{table.id}_lock"
+        )
+
+    @classmethod
+    def update_tsvector_columns_locked(
         cls,
         table: "Table",
         update_tsvectors_for_changed_rows_only: bool,
         field_ids_to_restrict_update_to: Optional[List[int]] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ):
         """
-        Responsible for updating a table's `tsvector` columns.
+        Takes out a lock on the table what being updated if the
+        `update_tsvectors_for_changed_rows_only` argument is `True`. If there is a
+        lock, it won't do anything
 
         :param table: The table which we're going to update.
         :param update_tsvectors_for_changed_rows_only: If set to `True`, will only
@@ -340,6 +353,74 @@ class SearchHandler(
             If set to `False`, will update all rows.
         :param field_ids_to_restrict_update_to: If provided only the fields matching the
             provided ids will have their tsv columns updated.
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
+        """
+
+        use_lock = hasattr(cache, "lock")
+        used_lock = False
+        if update_tsvectors_for_changed_rows_only and use_lock:
+            # If the `update_tsvectors_for_changed_rows_only` is True, the update
+            # statement will loop for as long as there are rows with
+            # `needs_background_update` equals to `True`. This method can be called
+            # while that process is running.
+            cache_lock = cache.lock(
+                cls.get_update_changed_rows_only_lock_key(table), timeout=60 * 60
+            )
+
+            # If the lock already exists, it means that another worker is already
+            # updating the rows where `needs_background_update` equals `True`,
+            # so we don't have to do anything.
+            if cache_lock.locked():
+                # This will make the progressbar skip this step.
+                ChildProgressBuilder.build(progress_builder, child_total=1).increment()
+                return
+
+            cache_lock.acquire(blocking=True)
+            used_lock = True
+
+        try:
+            cls.update_tsvector_columns(
+                table,
+                update_tsvectors_for_changed_rows_only,
+                field_ids_to_restrict_update_to,
+                progress_builder,
+            )
+        finally:
+            # The lock must be released if anything goes wrong during the update or
+            # when it's finished, otherwise it won't be possible to update the tsv
+            # cells for another 60 minutes until the lock times out.
+            if used_lock:
+                try:
+                    cache_lock.release()
+                except LockNotOwnedError:
+                    # If the lock release fails, it might be because of the timeout,
+                    # and it's been stolen, so we don't really care.
+                    pass
+
+    @classmethod
+    def update_tsvector_columns(
+        cls,
+        table: "Table",
+        update_tsvectors_for_changed_rows_only: bool,
+        field_ids_to_restrict_update_to: Optional[List[int]] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ):
+        """
+        Responsible for updating a table's `tsvector` columns. If the caller is
+        requesting that all changed rows are updated
+        (`update_tsvectors_for_changed_rows_only=True`), then it's recommended to call
+        `update_tsvector_columns_locked` instead, as it will prevent multiple
+        concurrent tsvector UPDATE queries from being executed.
+
+        :param table: The table which we're going to update.
+        :param update_tsvectors_for_changed_rows_only: If set to `True`, will only
+            update the tsvector in rows which have changed since their last update.
+            If set to `False`, will update all rows.
+        :param field_ids_to_restrict_update_to: If provided only the fields matching the
+            provided ids will have their tsv columns updated.
+        :param progress_builder: If provided will be used to build a child progress bar
+            and report on this methods progress to the parent of the progress_builder.
         :return: None
         """
 
@@ -357,18 +438,31 @@ class SearchHandler(
                 "with needs_background_update=True."
             )
 
-        # Fetch our model and collect the `SearchVector` for each supported `FieldType`.
         model = table.get_model()
         qs = model.objects.all()
 
-        # Narrow down our queryset based on the provided kwargs.
-        # If `update_tsvectors_for_changed_rows_only` is `True` when they'll
-        # only update rows where `last_updated__lte=now()
+        # Narrow down our queryset based on the provided kwargs. If
+        # `update_tsvectors_for_changed_rows_only` is `True` when they'll only update
+        # rows where `last_updated__lte=now()
         if update_tsvectors_for_changed_rows_only:
             qs = qs.filter(Q(**{f"{ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME}": True}))
 
         collected_vectors = cls._collect_search_vectors(
             model, qs, field_ids_to_restrict_update_to
+        )
+
+        # If we've updated the entire `tsvector` column, issue a vacuum to clear dead
+        # tuples immediately.
+        was_full_column_update = not update_tsvectors_for_changed_rows_only
+        must_vacuum = (
+            was_full_column_update
+            and collected_vectors
+            and settings.AUTO_VACUUM_AFTER_SEARCH_UPDATE
+            and not settings.TESTS
+        )
+
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=1000 if must_vacuum else 800
         )
 
         rows_updated_count = cls.run_tsvector_update_statement(
@@ -377,18 +471,14 @@ class SearchHandler(
             # If we are updating all field ids, then we can safely unset the needs
             # background update.
             set_background_updated_false=field_ids_to_restrict_update_to is None,
+            update_tsvectors_for_changed_rows_only=update_tsvectors_for_changed_rows_only,
+            progress_builder=progress.create_child_builder(represents_progress=800),
         )
 
-        # If we've updated the entire `tsvector` column, issue a vacuum to
-        # clear dead tuples immediately.
-        was_full_column_update = not update_tsvectors_for_changed_rows_only
-        if (
-            was_full_column_update
-            and collected_vectors
-            and settings.AUTO_VACUUM_AFTER_SEARCH_UPDATE
-            and not settings.TESTS
-        ):
+        if must_vacuum:
+            progress.increment(state="Vacuuming")
             cls.vacuum_table(table)
+            progress.increment(200)
             logger.info(
                 "Updated table {table_id}'s tsvs for all rows with optional field "
                 "filter of {field_ids}.",
@@ -413,25 +503,133 @@ class SearchHandler(
             cursor.execute(query)  # type: ignore
 
     @classmethod
-    def run_tsvector_update_statement(
-        cls, collected_vectors, qs, set_background_updated_false
+    def split_update_into_chunks_by_ranges(
+        cls,
+        qs,
+        update_query,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ) -> Optional[int]:
+        """
+        Split the queryset up into chunks based on the count, and update the tsv
+        cells for the rows in the chunk. It will stop when max number of
+        precalculated iterations is reached.
+        """
+
+        total_count = qs.count()
+
+        # There can be an edge case where the row has already bee updated. To prevent
+        # division by zero exceptions, we don't have to do anything here.
+        if total_count == 0:
+            return 0
+
+        total_iterations = math.ceil(total_count / settings.TSV_UPDATE_CHUNK_SIZE)
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=total_iterations
+        )
+        total_updated = 0
+        for i in range(0, total_count, settings.TSV_UPDATE_CHUNK_SIZE):
+            with transaction.atomic():
+                next_ids = qs.order_by("id").values_list("id", flat=True)[
+                    i : i + settings.TSV_UPDATE_CHUNK_SIZE
+                ]
+                next_chunk = qs.filter(id__in=next_ids).select_for_update(of=("self",))
+                total_updated += next_chunk.update(**update_query)
+            progress.increment()
+        return total_updated
+
+    @classmethod
+    def split_update_into_chunks_until_all_background_done(
+        cls,
+        qs,
+        update_query,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Optional[int]:
+        """
+        This method keeps iterating over the provided row queryset, fetch the not
+        updated rows in chunks, and update the tsv cells of those chunks. It will
+        keep going until none are left.
+        """
+
+        estimated_count = qs.count()
+
+        # There can be an edge case where the row has already been updated. To prevent
+        # division by zero exceptions, we don't have to do anything here.
+        if estimated_count == 0:
+            return 0
+
+        estimated_iterations = math.ceil(
+            estimated_count / settings.TSV_UPDATE_CHUNK_SIZE
+        )
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=estimated_iterations
+        )
+        total_updated = 0
+        while True:
+            with transaction.atomic():
+                next_ids = qs.order_by("id").values_list("id", flat=True)[
+                    0 : settings.TSV_UPDATE_CHUNK_SIZE
+                ]
+                next_ids = list(next_ids)
+                next_chunk = qs.filter(id__in=next_ids)
+                this_chunk_updated = next_chunk.update(**update_query)
+                progress.increment()
+                total_updated += 0
+                if this_chunk_updated == 0:
+                    return total_updated
+
+    @classmethod
+    def run_tsvector_update_statement(
+        cls,
+        collected_vectors: List,
+        qs: QuerySet,
+        set_background_updated_false: bool,
+        update_tsvectors_for_changed_rows_only: bool,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> Optional[int]:
+        progress = ChildProgressBuilder.build(progress_builder, child_total=1000)
+
         try:
             update_query = {
                 cv.field_tsv_db_column: cv.search_vector for cv in collected_vectors
             }
             if set_background_updated_false:
                 update_query[ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME] = Value(False)
-            return qs.update(**update_query)
+            if update_tsvectors_for_changed_rows_only:
+                return cls.split_update_into_chunks_until_all_background_done(
+                    qs,
+                    update_query,
+                    progress_builder=progress.create_child_builder(
+                        represents_progress=1000
+                    ),
+                )
+            else:
+                return cls.split_update_into_chunks_by_ranges(
+                    qs,
+                    update_query,
+                    progress_builder=progress.create_child_builder(
+                        represents_progress=1000
+                    ),
+                )
         except Exception as e:
+            progress.set_progress(0)
+
             logger.error(
                 "Failed to do full update search vector because of {e}. "
                 "Attempting to do per field updates one by one instead...",
                 e=str(e),
             )
             exception_capturer(e)
+            # Reset the original progress because we're going to start from scratch
+            # again.
+            progress.increment(-progress.progress)
             cls.try_slower_but_best_effort_tsv_update(
-                collected_vectors, qs, set_background_updated_false
+                collected_vectors,
+                qs,
+                set_background_updated_false,
+                update_tsvectors_for_changed_rows_only,
+                progress_builder=progress.create_child_builder(
+                    represents_progress=1000
+                ),
             )
 
     @classmethod
@@ -440,6 +638,8 @@ class SearchHandler(
         collected_vectors: List[FieldWithSearchVector],
         qs: QuerySet,
         set_background_updated_false,
+        update_tsvectors_for_changed_rows_only,
+        progress_builder: Optional[ChildProgressBuilder] = None,
     ):
         """
         Given the complexity of all possible field configurations in Baserow there is
@@ -451,13 +651,33 @@ class SearchHandler(
 
         from baserow.contrib.database.fields.handler import FieldHandler
 
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=len(collected_vectors) * 1000 + 1000
+        )
+        progress.increment(state="Slower update")
+
         num_worked = 0
         for cv in collected_vectors:
             try:
                 # re-fetch the fields incase they changed since we got the model
                 refetched_field = FieldHandler().get_field(cv.field.id).specific
                 cv = cls._get_field_with_vector_from_field(refetched_field, qs)
-                qs.update(**{cv.field_tsv_db_column: cv.search_vector})
+                if update_tsvectors_for_changed_rows_only:
+                    cls.split_update_into_chunks_until_all_background_done(
+                        qs,
+                        {cv.field_tsv_db_column: cv.search_vector},
+                        progress_builder=progress.create_child_builder(
+                            represents_progress=1000
+                        ),
+                    )
+                else:
+                    cls.split_update_into_chunks_by_ranges(
+                        qs,
+                        {cv.field_tsv_db_column: cv.search_vector},
+                        progress_builder=progress.create_child_builder(
+                            represents_progress=1000
+                        ),
+                    )
                 num_worked += 1
             except Exception as another_e:
                 field = cv.field
@@ -476,7 +696,15 @@ class SearchHandler(
             # If more than half managed to work then it's better to mark them as
             # having worked compared to the table filling up with more and more rows
             # that never get marked as having had a background update.
-            qs.update(**{ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME: Value(False)})
+            cls.split_update_into_chunks_by_ranges(
+                qs,
+                {ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME: Value(False)},
+                progress_builder=progress.create_child_builder(
+                    represents_progress=1000
+                ),
+            )
+        else:
+            progress.increment(1000)
 
     @classmethod
     def field_value_updated_or_created(

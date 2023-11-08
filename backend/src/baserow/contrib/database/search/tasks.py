@@ -35,7 +35,7 @@ def async_update_tsvector_columns(
 
     table = TableHandler().get_table(table_id)
     try:
-        SearchHandler.update_tsvector_columns(
+        SearchHandler.update_tsvector_columns_locked(
             table, update_tsvs_for_changed_rows_only, field_ids_to_restrict_update_to
         )
     except PostgresFullTextSearchDisabledException:
