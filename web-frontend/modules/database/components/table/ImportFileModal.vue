@@ -606,29 +606,29 @@ export default {
       }
       return translations[jobState]
     },
-    openTable() {
+    async openTable() {
       // Redirect to the newly created table.
-      this.$nuxt.$router
-        .push({
+      try {
+        await this.$nuxt.$router.push({
           name: 'database-table',
           params: {
             databaseId: this.database.id,
             tableId: this.job.table_id,
           },
         })
-        .catch((error) => {
-          // When redirecting to the `database-table`, it can happen that it redirects
-          // to another view. For some reason, this is causing the router throw an
-          // error. In our case, it's perfectly fine, so we're suppressing this error
-          // here. More information:
-          // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
-          // error-redirected-from-login-to-via-a
-          const { isNavigationFailure, NavigationFailureType } = VueRouter
-          if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
-            throw error
-          }
-        })
-      this.hide()
+        this.hide()
+      } catch (error) {
+        // When redirecting to the `database-table`, it can happen that it redirects
+        // to another view. For some reason, this is causing the router throw an
+        // error. In our case, it's perfectly fine, so we're suppressing this error
+        // here. More information:
+        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
+        // error-redirected-from-login-to-via-a
+        const { isNavigationFailure, NavigationFailureType } = VueRouter
+        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
+          throw error
+        }
+      }
     },
     async onJobDone() {
       if (this.isTableCreation) {
@@ -643,7 +643,7 @@ export default {
         })
 
         if (this.errorReport.length === 0) {
-          this.openTable()
+          await this.openTable()
         }
       } else {
         this.$bus.$emit('table-refresh', {
