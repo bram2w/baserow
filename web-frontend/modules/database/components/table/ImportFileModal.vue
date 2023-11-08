@@ -616,7 +616,6 @@ export default {
             tableId: this.job.table_id,
           },
         })
-        this.hide()
       } catch (error) {
         // When redirecting to the `database-table`, it can happen that it redirects
         // to another view. For some reason, this is causing the router throw an
@@ -629,6 +628,7 @@ export default {
           throw error
         }
       }
+      this.hide()
     },
     async onJobDone() {
       if (this.isTableCreation) {
