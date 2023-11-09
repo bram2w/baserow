@@ -276,8 +276,8 @@ IMPORT_REFERENCE = {
                     "page_id": 999,
                     "element_id": 998,
                     "type": "notification",
-                    "description": "hello",
-                    "title": "there",
+                    "description": "'hello'",
+                    "title": "'there'",
                 }
             ],
             "elements": [
@@ -287,7 +287,7 @@ IMPORT_REFERENCE = {
                     "parent_element_id": None,
                     "place_in_container": None,
                     "order": 1,
-                    "value": "foo",
+                    "value": "'foo'",
                     "level": 2,
                 },
                 {
@@ -307,8 +307,8 @@ IMPORT_REFERENCE = {
                     "order": 2.5,
                     "data_source_id": 5,
                     "fields": [
-                        {"name": "F 1", "value": "get('test1')"},
-                        {"name": "F 2", "value": "get('test2')"},
+                        {"name": "F 1", "value": "1"},
+                        {"name": "F 2", "value": "2"},
                     ],
                 },
                 {
@@ -319,7 +319,7 @@ IMPORT_REFERENCE = {
                     "style_padding_top": 10,
                     "style_padding_bottom": 10,
                     "order": 1.5,
-                    "value": "test",
+                    "value": "'test'",
                 },
                 {
                     "id": 500,
@@ -341,7 +341,7 @@ IMPORT_REFERENCE = {
                     "style_padding_top": 10,
                     "style_padding_bottom": 10,
                     "order": 1,
-                    "value": "test",
+                    "value": "'test'",
                 },
             ],
             "data_sources": [
@@ -419,7 +419,7 @@ IMPORT_REFERENCE = {
         {
             "authorized_user_username": "test@baserow.io",
             "id": 42,
-            "name": "test",
+            "name": "'test'",
             "order": "1.00000000000000000000",
             "type": "local_baserow",
         },
@@ -506,8 +506,8 @@ def test_builder_application_import(data_fixture):
     [workflow_action] = BuilderWorkflowActionHandler().get_workflow_actions(page1)
 
     assert workflow_action.element_id == element1.id
-    assert workflow_action.description == "hello"
-    assert workflow_action.title == "there"
+    assert workflow_action.description == "'hello'"
+    assert workflow_action.title == "'there'"
 
 
 @pytest.mark.django_db
@@ -525,7 +525,7 @@ def test_delete_builder_application_with_published_builder(data_fixture):
 
 @pytest.mark.django_db
 def test_import_element(data_fixture):
-    element = data_fixture.create_builder_paragraph_element(value="test")
+    element = data_fixture.create_builder_paragraph_element(value="'test'")
     element_type = element_type_registry.get_by_model(element)
     element_serialized = element_type.export_serialized(element)
     serialized_page = {

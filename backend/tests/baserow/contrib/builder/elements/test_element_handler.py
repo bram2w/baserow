@@ -366,7 +366,7 @@ def test_before_places_in_container_removed_no_change(data_fixture):
 
 @pytest.mark.django_db
 def test_duplicate_element_single_element(data_fixture):
-    element = data_fixture.create_builder_paragraph_element(value="test")
+    element = data_fixture.create_builder_paragraph_element(value="'test'")
 
     [element_duplicated] = ElementHandler().duplicate_element(element)["elements"]
 
@@ -379,10 +379,10 @@ def test_duplicate_element_single_element(data_fixture):
 def test_duplicate_element_multiple_elements(data_fixture):
     container_element = data_fixture.create_builder_column_element(column_amount=12)
     child = data_fixture.create_builder_paragraph_element(
-        value="test", parent_element=container_element, page=container_element.page
+        value="'test'", parent_element=container_element, page=container_element.page
     )
     child_two = data_fixture.create_builder_paragraph_element(
-        value="test2", parent_element=container_element, page=container_element.page
+        value="'test2'", parent_element=container_element, page=container_element.page
     )
 
     [

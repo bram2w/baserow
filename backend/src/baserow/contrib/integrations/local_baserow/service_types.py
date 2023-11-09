@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
@@ -172,7 +172,11 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
             raise ServiceImproperlyConfigured("The table property is missing.")
 
     def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[str, Any]], str],
     ):
         """
         Get the table and field IDs from the mapping if they exist.
@@ -409,7 +413,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
     """
 
     def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], import_formula
     ):
         """
         Get the view ID from the mapping if it exists.
@@ -418,7 +422,9 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         if prop_name == "view_id" and "database_views" in id_mapping:
             return id_mapping["database_views"].get(value, None)
 
-        return super().transform_serialized_value(prop_name, value, id_mapping)
+        return super().transform_serialized_value(
+            prop_name, value, id_mapping, import_formula
+        )
 
     def prepare_values(
         self,
@@ -553,6 +559,19 @@ class LocalBaserowListRowsUserServiceType(
             "table__field_set",
             "view__viewgroupby_set",
         )
+
+    def import_path(self, path, id_mapping):
+        """
+        Updates the field ids in the path.
+        """
+
+        row, field_dbname, *rest = path
+
+        original_field_id = int(field_dbname[6:])
+        field_id = id_mapping.get("database_fields", {}).get(
+            original_field_id, original_field_id
+        )
+        return [row, f"field_{field_id}", *rest]
 
     def dispatch_data(
         self,
@@ -703,6 +722,39 @@ class LocalBaserowGetRowUserServiceType(
     def enhance_queryset(self, queryset):
         return queryset.select_related(
             "table", "table__database", "table__database__workspace", "view"
+        )
+
+    def import_path(self, path, id_mapping):
+        """
+        Updates the field ids in the path.
+        """
+
+        field_dbname, *rest = path
+        original_field_id = int(field_dbname[6:])
+
+        field_id = id_mapping.get("database_fields", {}).get(
+            original_field_id, original_field_id
+        )
+
+        return [f"field_{field_id}", *rest]
+
+    def transform_serialized_value(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[str, Any]], str],
+    ):
+        """
+        Get the view & table ID from the mapping if it exists and also updates the
+        row_id formula.
+        """
+
+        if prop_name == "row_id":
+            return import_formula(value, id_mapping)
+
+        return super().transform_serialized_value(
+            prop_name, value, id_mapping, import_formula
         )
 
     def dispatch_transform(

@@ -172,7 +172,7 @@ def test_domain_publishing(data_fixture):
     page2 = data_fixture.create_builder_page(builder=builder)
 
     element1 = data_fixture.create_builder_heading_element(
-        page=page1, level=2, value="foo"
+        page=page1, level=2, value="'foo'"
     )
     element2 = data_fixture.create_builder_paragraph_element(page=page1)
     element3 = data_fixture.create_builder_heading_element(page=page2)

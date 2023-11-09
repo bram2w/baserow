@@ -132,6 +132,17 @@ def mutable_notification_type_registry():
 
 
 @pytest.fixture()
+def mutable_builder_data_provider_registry():
+    from baserow.contrib.builder.data_providers.registries import (
+        builder_data_provider_type_registry,
+    )
+
+    before = builder_data_provider_type_registry.registry.copy()
+    yield builder_data_provider_type_registry
+    builder_data_provider_type_registry.registry = before
+
+
+@pytest.fixture()
 def patch_filefield_storage(tmpdir):
     """
     Patches all filefield storages from all models with the one given in parameter

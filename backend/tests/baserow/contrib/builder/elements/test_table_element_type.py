@@ -1,6 +1,7 @@
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import CollectionField, Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.service import ElementService
@@ -174,3 +175,39 @@ def test_delete_table_element_remove_fields(data_fixture):
     ElementService().delete_element(user, table_element)
 
     assert CollectionField.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_duplicate_table_element_with_current_record_formulas(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=table, page=page
+    )
+
+    table_element = data_fixture.create_builder_table_element(
+        page=page,
+        data_source=data_source1,
+        fields=[
+            {"name": "Field 1", "value": "get('current_record.id')"},
+            {"name": "Field 2", "value": f"get('current_record.field_{fields[0].id}')"},
+        ],
+    )
+
+    result = ElementHandler().duplicate_element(table_element)
+
+    assert [f.value for f in result["elements"][0].fields.all()] == [
+        "get('current_record.id')",
+        f"get('current_record.field_{fields[0].id}')",
+    ]

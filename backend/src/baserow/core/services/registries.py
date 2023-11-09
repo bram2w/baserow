@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
@@ -228,7 +228,7 @@ class ServiceType(
         return serialized
 
     def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], import_formula
     ):
         """
         This hooks allow to customize the deserialization of a property.
@@ -255,8 +255,18 @@ class ServiceType(
         integration: Integration,
         serialized_values: Dict[str, Any],
         id_mapping: Dict[str, Any],
+        import_formula: Callable[[str, Dict[int, int]], str],
     ) -> Service:
-        """Import a previously serialized service."""
+        """
+        Import a previously serialized service.
+
+        :param integration: the integration the new service must be linked to.
+        :param serialized_values: the dict of imported values.
+        :param id_mapping: the map if old->new ids.
+        :param import_formula: the import_formula function to use when a service needs
+          to import a formula value.
+        :return: the created service.
+        """
 
         if "services" not in id_mapping:
             id_mapping["services"] = {}
@@ -274,7 +284,7 @@ class ServiceType(
         for name in property_names:
             if name in serialized_copy:
                 serialized_copy[name] = self.transform_serialized_value(
-                    name, serialized_copy[name], id_mapping
+                    name, serialized_copy[name], id_mapping, import_formula
                 )
 
         # Remove extra keys
@@ -286,6 +296,17 @@ class ServiceType(
         id_mapping["services"][service_exported_id] = service.id
 
         return service
+
+    def import_path(self, path: List[str], id_mapping: Dict[int, int]):
+        """
+        Allows to hook into the path import resolution when a path concern this service.
+
+        :param path: the path part list.
+        :param id_mapping: The id_mapping of the process import.
+        :return: The updated path.
+        """
+
+        return path
 
     def enhance_queryset(self, queryset):
         """

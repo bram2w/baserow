@@ -32,7 +32,7 @@ export class BuilderApplicationType extends ApplicationType {
 
   populate(application) {
     const values = super.populate(application)
-    values.pages.forEach((object, pages) => populatePage(object))
+    values.pages = values.pages.map(populatePage)
     return values
   }
 

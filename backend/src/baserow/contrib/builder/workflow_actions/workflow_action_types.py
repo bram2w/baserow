@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING, Any, Dict
 
 from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.workflow_actions.models import (
     BuilderWorkflowAction,
     NotificationWorkflowAction,
@@ -89,6 +90,25 @@ class NotificationWorkflowActionType(BuilderWorkflowActionType):
     def allowed_fields(self):
         return super().allowed_fields + ["title", "description"]
 
+    def import_serialized(
+        self, page: "Page", serialized_values: Dict[str, Any], id_mapping: Dict
+    ) -> BuilderWorkflowAction:
+        """
+        Migrate the formulas.
+        """
+
+        if "title" in serialized_values:
+            serialized_values["title"] = import_formula(
+                serialized_values["title"], id_mapping
+            )
+
+        if "description" in serialized_values:
+            serialized_values["description"] = import_formula(
+                serialized_values["description"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_values, id_mapping)
+
     def get_sample_params(self) -> Dict[str, Any]:
         return {"title": "'hello'", "description": "'there'"}
 
@@ -112,6 +132,20 @@ class OpenPageWorkflowActionType(BuilderWorkflowActionType):
     @property
     def allowed_fields(self):
         return super().allowed_fields + ["url"]
+
+    def import_serialized(
+        self, page: "Page", serialized_values: Dict[str, Any], id_mapping: Dict
+    ) -> BuilderWorkflowAction:
+        """
+        Migrate the formulas.
+        """
+
+        if "url" in serialized_values:
+            serialized_values["url"] = import_formula(
+                serialized_values["url"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_values, id_mapping)
 
     def get_sample_params(self) -> Dict[str, Any]:
         return {"url": "'hello'"}

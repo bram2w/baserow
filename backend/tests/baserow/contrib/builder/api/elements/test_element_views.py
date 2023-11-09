@@ -419,7 +419,7 @@ def test_can_move_element_inside_container(api_client, data_fixture):
 @pytest.mark.django_db
 def test_duplicate_element(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
-    element = data_fixture.create_builder_heading_element(user=user, value="test")
+    element = data_fixture.create_builder_heading_element(user=user, value="'test'")
 
     url = reverse("api:builder:element:duplicate", kwargs={"element_id": element.id})
     response = api_client.post(url, HTTP_AUTHORIZATION=f"JWT {token}")
