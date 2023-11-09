@@ -1,3 +1,4 @@
+from collections import defaultdict
 from unittest.mock import MagicMock
 
 import pytest
@@ -9,8 +10,10 @@ from baserow.contrib.builder.data_providers.data_provider_types import (
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
+from baserow.core.utils import MirrorDict
 
 
 class FakeDispatchContext(DispatchContext):
@@ -421,3 +424,115 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource_
         data_source_provider.get_data_chunk(
             dispatch_context, [data_source.id, fields[1].db_column]
         )
+
+
+@pytest.mark.django_db
+def test_data_source_formula_import_only_datasource(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        row_id="",
+        name="Item",
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        row_id="",
+        name="Item",
+    )
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {data_source.id: data_source2.id}
+
+    result = import_formula(f"get('data_source.{data_source.id}.field_10')", id_mapping)
+
+    assert result == f"get('data_source.{data_source2.id}.field_10')"
+
+
+@pytest.mark.django_db
+def test_data_source_formula_import_get_row_datasource_and_field(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        row_id="",
+        name="Item",
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_get_row_data_source(
+        row_id="",
+        name="Item",
+    )
+    field_1 = data_fixture.create_text_field(order=1)
+    field_2 = data_fixture.create_text_field(order=2)
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {data_source.id: data_source2.id}
+    id_mapping["database_fields"] = {field_1.id: field_2.id}
+
+    result = import_formula(
+        f"get('data_source.{data_source.id}.field_{field_1.id}')", id_mapping
+    )
+
+    assert result == f"get('data_source.{data_source2.id}.field_{field_2.id}')"
+
+
+@pytest.mark.django_db
+def test_data_source_formula_import_list_row_datasource_and_field(data_fixture):
+    data_source = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        name="Item",
+    )
+    data_source2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        name="Item",
+    )
+    field_1 = data_fixture.create_text_field(order=1)
+    field_2 = data_fixture.create_text_field(order=2)
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {data_source.id: data_source2.id}
+    id_mapping["database_fields"] = {field_1.id: field_2.id}
+
+    result = import_formula(
+        f"get('data_source.{data_source.id}.10.field_{field_1.id}')", id_mapping
+    )
+
+    assert result == f"get('data_source.{data_source2.id}.10.field_{field_2.id}')"
+
+
+@pytest.mark.django_db
+def test_table_element_formula_migration_with_current_row_provider(data_fixture):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+
+    page = data_fixture.create_builder_page(user=user)
+
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        page=page,
+        table=table,
+    )
+
+    data_source2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=table2,
+    )
+
+    id_mapping = defaultdict(lambda: MirrorDict())
+    id_mapping["builder_data_sources"] = {data_source.id: data_source2.id}
+    id_mapping["database_fields"] = {fields[0].id: fields2[0].id}
+
+    result = import_formula(
+        f"get('current_record.field_{fields[0].id}')",
+        id_mapping,
+        data_source_id=data_source2.id,
+    )
+
+    assert result == f"get('current_record.field_{fields2[0].id}')"

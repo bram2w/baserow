@@ -15,6 +15,7 @@ from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.elements.registries import element_type_registry
 from baserow.contrib.builder.elements.types import ElementDictSubClass
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.models import Builder
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.pages.service import PageService
@@ -367,6 +368,7 @@ class BuilderApplicationType(ApplicationType):
                         integration,
                         serialized_service,
                         id_mapping,
+                        import_formula,
                     )
 
                 # Then create the data source with the service

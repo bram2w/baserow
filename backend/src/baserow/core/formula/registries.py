@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, Optional, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar
 
 from baserow.core.formula.argument_types import BaserowRuntimeFormulaArgumentType
 from baserow.core.formula.parser.exceptions import (
@@ -148,6 +148,19 @@ class DataProviderType(
         Returns data designated by the path parameter. Usually use some of the
         context created by the get_context method and stored in the context.
         """
+
+    def import_path(
+        self, path: List[str], id_mapping: Dict[int, int], **kwargs
+    ) -> List[str]:
+        """
+        Allows to hook into the path import resolution.
+
+        :param path: the path part list.
+        :param id_mapping: The id_mapping of the process import.
+        :return: The updated path.
+        """
+
+        return path
 
 
 DataProviderTypeSubClass = TypeVar("DataProviderTypeSubClass", bound=DataProviderType)

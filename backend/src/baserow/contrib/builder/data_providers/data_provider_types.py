@@ -84,3 +84,62 @@ class DataSourceDataProviderType(DataProviderType):
         )
 
         return get_nested_value_from_dict(dispatch_result, rest)
+
+    def import_path(self, path, id_mapping, **kwargs):
+        """
+        Update the data_source_id of the path and also apply the data_source type
+        update when importing a path.
+
+        :param path: the path part list.
+        :param id_mapping: The id_mapping of the process import.
+        :return: The updated path.
+        """
+
+        data_source_id, *rest = path
+
+        if "builder_data_sources" in id_mapping:
+            data_source_id = str(
+                id_mapping["builder_data_sources"].get(
+                    int(data_source_id), int(data_source_id)
+                )
+            )
+
+            data_source = DataSourceHandler().get_data_source(data_source_id)
+            service_type = data_source.service.specific.get_type()
+            rest = service_type.import_path(rest, id_mapping)
+
+        return [str(data_source_id), *rest]
+
+
+class CurrentRecordDataProviderType(DataProviderType):
+    """
+    The frontend data provider to get the current row content
+    """
+
+    type = "current_record"
+
+    def get_data_chunk(self, dispatch_context: BuilderDispatchContext, path: List[str]):
+        """Doesn't make sense in the backend yet"""
+
+        return None
+
+    def import_path(self, path, id_mapping, data_source_id=None, **kwargs):
+        """
+        Applies the updates of the related data_source.
+
+        :param path: the path part list.
+        :param id_mapping: The id_mapping of the process import.
+        :param data_source_id: The id of the data_source related to this data provider.
+        :return: The updated path.
+        """
+
+        # We don't need to import the id
+        if len(path) == 1 and path[0] == "id":
+            return path
+
+        data_source = DataSourceHandler().get_data_source(data_source_id)
+        service_type = data_source.service.specific.get_type()
+        # Here we add a fake row part to make it match the usual shape for this path
+        _, *rest = service_type.import_path([0, *path], id_mapping)
+
+        return rest

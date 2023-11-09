@@ -29,6 +29,7 @@ from baserow.contrib.builder.elements.models import (
 )
 from baserow.contrib.builder.elements.registries import ElementType
 from baserow.contrib.builder.elements.signals import elements_moved
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
@@ -222,7 +223,19 @@ class CollectionElementType(ElementType, ABC):
         # Create fields
         created_fields = CollectionField.objects.bulk_create(
             [
-                CollectionField(**field, order=index)
+                CollectionField(
+                    **{
+                        **field,
+                        "value": import_formula(
+                            field["value"],
+                            id_mapping,
+                            # We need to add the data_source_id for the current row
+                            # provider.
+                            data_source_id=serialized_copy["data_source_id"],
+                        ),
+                    },
+                    order=index,
+                )
                 for index, field in enumerate(fields)
             ]
         )
@@ -345,9 +358,18 @@ class HeadingElementType(ElementType):
 
     def get_sample_params(self):
         return {
-            "value": "Corporis perspiciatis",
+            "value": "'Corporis perspiciatis'",
             "level": 2,
         }
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["value"]:
+            serialized_copy["value"] = import_formula(
+                serialized_copy["value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
 
 
 class ParagraphElementType(ElementType):
@@ -365,11 +387,11 @@ class ParagraphElementType(ElementType):
 
     def get_sample_params(self):
         return {
-            "value": "Suscipit maxime eos ea vel commodi dolore. "
+            "value": "'Suscipit maxime eos ea vel commodi dolore. "
             "Eum dicta sit rerum animi. Sint sapiente eum cupiditate nobis vel. "
             "Maxime qui nam consequatur. "
             "Asperiores corporis perspiciatis nam harum veritatis. "
-            "Impedit qui maxime aut illo quod ea molestias."
+            "Impedit qui maxime aut illo quod ea molestias.'"
         }
 
     @property
@@ -384,6 +406,15 @@ class ParagraphElementType(ElementType):
                 default="",
             ),
         }
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["value"]:
+            serialized_copy["value"] = import_formula(
+                serialized_copy["value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
 
 
 class LinkElementType(ElementType):
@@ -436,6 +467,23 @@ class LinkElementType(ElementType):
                 serialized_copy["navigate_to_page_id"],
                 serialized_copy["navigate_to_page_id"],
             )
+
+        if serialized_copy["value"]:
+            serialized_copy["value"] = import_formula(
+                serialized_copy["value"], id_mapping
+            )
+
+        if serialized_copy["navigate_to_url"]:
+            serialized_copy["navigate_to_url"] = import_formula(
+                serialized_copy["navigate_to_url"], id_mapping
+            )
+
+        if serialized_copy["page_parameters"]:
+            params = serialized_copy["page_parameters"]
+            serialized_copy["page_parameters"] = [
+                {**p, "value": import_formula(p["value"], id_mapping)} for p in params
+            ]
+
         return super().import_serialized(page, serialized_copy, id_mapping)
 
     @property
@@ -499,7 +547,7 @@ class LinkElementType(ElementType):
 
     def get_sample_params(self):
         return {
-            "value": "test",
+            "value": "'test'",
             "navigation_type": "custom",
             "navigate_to_page_id": None,
             "navigate_to_url": '"http://example.com"',
@@ -674,11 +722,20 @@ class InputTextElementType(InputElementType):
 
         return overrides
 
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["default_value"]:
+            serialized_copy["default_value"] = import_formula(
+                serialized_copy["default_value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
     def get_sample_params(self):
         return {
             "required": False,
             "placeholder": "",
-            "default_value": "Corporis perspiciatis",
+            "default_value": "'Corporis perspiciatis'",
         }
 
 
@@ -718,8 +775,17 @@ class ButtonElementType(ElementType):
 
         return overrides
 
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["value"]:
+            serialized_copy["value"] = import_formula(
+                serialized_copy["value"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
+
     def get_sample_params(self) -> Dict[str, Any]:
-        return {"value": "Some value"}
+        return {"value": "'Some value'"}
 
 
 class TableElementType(CollectionElementType):

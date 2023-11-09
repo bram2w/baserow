@@ -4,17 +4,17 @@ import PageService from '@baserow/modules/builder/services/page'
 import { generateHash } from '@baserow/modules/core/utils/hashing'
 
 export function populatePage(page) {
-  page._ = {
-    selected: false,
-    dataSourceContentLoading: false,
-    dataSourceLoading: false,
+  return {
+    ...page,
+    _: {
+      selected: false,
+      dataSourceContentLoading: false,
+      dataSourceLoading: false,
+    },
+    dataSources: [],
+    elements: [],
+    workflowActions: [],
   }
-
-  page.dataSources = []
-  page.elements = []
-  page.workflowActions = []
-
-  return page
 }
 
 const state = {
@@ -27,8 +27,7 @@ const state = {
 
 const mutations = {
   ADD_ITEM(state, { builder, page }) {
-    populatePage(page)
-    builder.pages.push(page)
+    builder.pages.push(populatePage(page))
   },
   UPDATE_ITEM(state, { page, values }) {
     Object.assign(page, page, values)
