@@ -227,7 +227,7 @@
   color: $color-neutral-600;
   font-size: 17px;
 
-  @include absolute(2px, 0, auto, auto);
+  @include absolute(0, 0, auto, auto);
 
   &:hover {
     color: $color-neutral-800;
