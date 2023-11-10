@@ -17,3 +17,5 @@ def get_tsv_vector_field_name(field_id) -> str:
 # search tsv update.
 ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME = "needs_background_update"
 TSV_FIELD_PREFIX = "tsv_field"
+
+LAST_MODIFIED_BY_COLUMN_NAME = "last_modified_by"

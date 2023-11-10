@@ -1,18 +1,27 @@
+import os
 from datetime import datetime
+from unittest.mock import patch
+
+from django.core.files.storage import FileSystemStorage
 
 import pytest
 from freezegun import freeze_time
 from pytz import UTC
 
 from baserow.contrib.database.fields.models import FormulaField, TextField
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.models import Table
 from baserow.core.handler import CoreHandler
+from baserow.core.models import Template
 from baserow.core.registries import ImportExportConfig, application_type_registry
 
 
 @pytest.mark.django_db
 def test_import_export_database(data_fixture):
-    database = data_fixture.create_database_application()
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace()
+    workspace_user = data_fixture.create_user_workspace(workspace=workspace, user=user)
+    database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
     text_field = data_fixture.create_text_field(table=table, name="text")
     formula_field = data_fixture.create_formula_field(
@@ -26,7 +35,9 @@ def test_import_export_database(data_fixture):
     data_fixture.create_view_filter(view=view, field=text_field, value="Test")
     data_fixture.create_view_sort(view=view, field=text_field)
     model = table.get_model()
-    row = model.objects.create(**{f"field_{text_field.id}": "Test"})
+    row = model.objects.create(
+        **{f"field_{text_field.id}": "Test", "last_modified_by": workspace_user.user}
+    )
     model.objects.create(**{f"field_{text_field.id}": "Test 2"})
     model.objects.filter(id=row.id).update(
         created_on=datetime(2021, 1, 1, 12, 30, tzinfo=UTC),
@@ -44,6 +55,9 @@ def test_import_export_database(data_fixture):
     del serialized["tables"][0]["rows"][1]["updated_on"]
 
     imported_workspace = data_fixture.create_workspace()
+    imported_workspace_user = data_fixture.create_user_workspace(
+        workspace=imported_workspace, user=user
+    )
     id_mapping = {}
 
     with freeze_time("2022-01-01 12:00"):
@@ -88,6 +102,7 @@ def test_import_export_database(data_fixture):
     assert imported_row.order == row.order
     assert imported_row.created_on == datetime(2021, 1, 1, 12, 30, tzinfo=UTC)
     assert imported_row.updated_on == datetime(2021, 1, 2, 13, 30, tzinfo=UTC)
+    assert imported_row.last_modified_by == row.last_modified_by
     assert getattr(
         imported_row, f'field_{id_mapping["database_fields"][text_field.id]}'
     ) == (getattr(row, f"field_{text_field.id}"))
@@ -124,3 +139,37 @@ def test_create_application_and_init_with_data(data_fixture):
         user, workspace, "database", "Database 2", init_with_data=True
     )
     assert Table.objects.filter(database=database_2).count() == 1
+
+
+@pytest.mark.django_db
+@patch("baserow.core.signals.application_created.send")
+def test_install_template_sets_last_modified_by_none(
+    send_mock, tmpdir, data_fixture, settings
+):
+    settings.APPLICATION_TEMPLATES_DIR = os.path.join(
+        settings.BASE_DIR, "../../../tests/templates"
+    )
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
+
+    handler = CoreHandler()
+    handler.sync_templates(storage=storage)
+
+    template = Template.objects.get(slug="example-template")
+    applications, id_mapping = handler.install_template(
+        user, workspace, template, storage=storage
+    )
+
+    assert len(applications) == 1
+    assert applications[0].workspace_id == workspace.id
+    assert applications[0].name == "Event marketing"
+
+    template_tables = TableHandler().list_workspace_tables(
+        workspace=workspace, user=user
+    )
+    template_example_table = template_tables[0]
+    table_model = template_example_table.get_model()
+    assert table_model.objects.all()[0].last_modified_by is None
+    assert table_model.objects.all()[1].last_modified_by is None

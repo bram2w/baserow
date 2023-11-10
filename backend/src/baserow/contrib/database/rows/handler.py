@@ -57,7 +57,10 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from ..search.handler import SearchHandler
-from ..table.constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME
+from ..table.constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+)
 from .constants import ROW_IMPORT_CREATION, ROW_IMPORT_VALIDATION
 from .error_report import RowErrorReport
 from .exceptions import RowDoesNotExist, RowIdsNotUnique
@@ -759,6 +762,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             prepared_values, model
         )
         row_values["order"] = self.get_unique_orders_before_row(before, model)[0]
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            row_values[LAST_MODIFIED_BY_COLUMN_NAME] = (
+                user if user and user.id else None
+            )
         instance = model.objects.create(**row_values)
         rows_created_counter.add(1)
 
@@ -961,6 +968,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             )
             getattr(row, name).set(value)
 
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            setattr(row, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
+
         row.save()
         rows_updated_counter.add(1)
 
@@ -1074,6 +1084,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         ):
             row_values, manytomany_values = self.extract_manytomany_values(row, model)
             row_values["order"] = unique_orders[index]
+            if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+                row_values[LAST_MODIFIED_BY_COLUMN_NAME] = user if user.id else None
             instance = model(**row_values)
 
             relations = {
@@ -1594,6 +1606,9 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             for name, value in row_values.items():
                 setattr(obj, name, value)
 
+            if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+                setattr(obj, LAST_MODIFIED_BY_COLUMN_NAME, user if user.id else None)
+
             relations = {
                 field_name: value
                 for field_name, value in manytomany_values.items()
@@ -1689,6 +1704,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             through.objects.bulk_create([v for v in values if v is not None])
 
         bulk_update_fields = ["updated_on"]
+
+        if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
+            bulk_update_fields.append(LAST_MODIFIED_BY_COLUMN_NAME)
+
         if table.needs_background_update_column_added:
             bulk_update_fields.append(ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME)
         for field in model._field_objects.values():

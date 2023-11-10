@@ -64,7 +64,10 @@ def update_view_index_if_view_sort_changes(sender, view_sort, **kwargs):
 
 
 @receiver(view_loaded)
-def schedule_view_index_creation_if_needed(sender, view, table_model, **kwargs):
+def view_loaded_create_indexes_and_columns(sender, view, table_model, **kwargs):
+    from baserow.contrib.database.table.tasks import setup_last_modified_by_column
     from baserow.contrib.database.views.handler import ViewIndexingHandler
 
     ViewIndexingHandler.schedule_index_creation_if_needed(view, table_model)
+    if not view.table.last_modified_by_column_added:
+        setup_last_modified_by_column.delay(table_id=view.table.id)

@@ -381,7 +381,9 @@ class SnapshotHandler:
 
         application_type = application_type_registry.get_by_model(application)
         snapshot_import_export_config = ImportExportConfig(
-            include_permission_data=True, reduce_disk_space_usage=True
+            include_permission_data=True,
+            reduce_disk_space_usage=True,
+            workspace_for_user_references=workspace,
         )
         try:
             exported_application = application_type.export_serialized(

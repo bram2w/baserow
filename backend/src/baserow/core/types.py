@@ -1,6 +1,8 @@
 from typing import TYPE_CHECKING, Any, NamedTuple, Optional, TypedDict, Union
 
 if TYPE_CHECKING:
+    from django.contrib.auth.models import AbstractUser  # noqa: F401
+
     from baserow.contrib.builder.models import Builder
     from baserow.contrib.database.models import Database, Table
 
@@ -30,3 +32,7 @@ class PermissionCheck(NamedTuple):
 class PermissionObjectResult(TypedDict):
     name: str
     permissions: Any
+
+
+Email = str
+UserEmailMapping = dict[Email, "AbstractUser"]

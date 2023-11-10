@@ -83,6 +83,12 @@ class ImportExportConfig:
     """
     reduce_disk_space_usage: bool = False
 
+    """
+    Determines an alternative workspace to search for user references
+    during imports.
+    """
+    workspace_for_user_references: "Workspace" = None
+
 
 class Plugin(APIUrlsInstanceMixin, Instance):
     """

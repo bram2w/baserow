@@ -49,7 +49,7 @@ def test_workspace_user_get_next_order(data_fixture):
 
 @pytest.mark.django_db
 def test_get_table_model(data_fixture):
-    default_model_fields_count = 5
+    default_model_fields_count = 6
     table = data_fixture.create_database_table(name="Cars")
     text_field = data_fixture.create_text_field(
         table=table, order=0, name="Color", text_default="white"
@@ -179,7 +179,14 @@ def test_get_table_model_with_fulltext_search_enabled(data_fixture):
     full_text_search_fields = [
         ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
     ]
-    base_fields = ["id", "created_on", "updated_on", "trashed", "order"]
+    base_fields = [
+        "id",
+        "created_on",
+        "updated_on",
+        "trashed",
+        "order",
+        "last_modified_by",
+    ]
     added_fields = [
         text_field.db_column,
         text_field.tsv_db_column,

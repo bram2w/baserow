@@ -170,3 +170,15 @@ def setup_new_background_update_and_search_columns(self, table_id: int):
         )
     except PostgresFullTextSearchDisabledException:
         logger.debug(f"Postgres full-text search is disabled.")
+
+
+@app.task(
+    bind=True,
+    queue="export",
+)
+def setup_last_modified_by_column(self, table_id: int):
+    from baserow.contrib.database.table.handler import TableHandler
+
+    with transaction.atomic():
+        table = TableHandler().get_table_for_update(table_id)
+        TableHandler().create_last_modified_by_field(table)

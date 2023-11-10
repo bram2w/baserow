@@ -1575,10 +1575,12 @@ def test_submit_form_view(send_mock, data_fixture):
     assert len(all) == 2
     assert getattr(all[0], f"field_{text_field.id}") == "Text value"
     assert getattr(all[0], f"field_{number_field.id}") is None
+    assert all[0].last_modified_by is None
     assert not getattr(all[0], f"field_{boolean_field.id}")
     assert getattr(all[1], f"field_{text_field.id}") == "Another value"
     assert getattr(all[1], f"field_{number_field.id}") == 10
     assert not getattr(all[1], f"field_{boolean_field.id}")
+    assert all[1].last_modified_by == user
 
 
 @pytest.mark.django_db

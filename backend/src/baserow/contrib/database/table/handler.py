@@ -38,7 +38,11 @@ from baserow.core.telemetry.utils import baserow_trace_methods
 from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
-from .constants import ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, TABLE_CREATION
+from .constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
+    ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
+    TABLE_CREATION,
+)
 from .exceptions import (
     FailedToLockTableDueToConflict,
     InitialTableDataDuplicateName,
@@ -733,3 +737,23 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
             schema_editor.add_index(model, get_row_needs_background_update_index(table))
 
         table.save(update_fields=("needs_background_update_column_added",))
+
+    def create_last_modified_by_field(self, table: "Table") -> None:
+        """
+        Creates last_modified_by field for the provided table if
+        it has not yet been created.
+
+        :param table: Table that should have last_modified_by field.
+        """
+
+        if table.last_modified_by_column_added:
+            return
+
+        table.last_modified_by_column_added = True
+        model = table.get_model(use_cache=False)
+
+        with safe_django_schema_editor(atomic=False) as schema_editor:
+            last_modified_by_field = model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
+            schema_editor.add_field(model, last_modified_by_field)
+
+        table.save(update_fields=["last_modified_by_column_added"])
