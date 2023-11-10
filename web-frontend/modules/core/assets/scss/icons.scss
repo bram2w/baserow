@@ -21,3 +21,8 @@
     @include baserow-icon($icon);
   }
 }
+
+*[class^='iconoir-'],
+*[class*=' iconoir-'] {
+  vertical-align: middle;
+}
