@@ -1,6 +1,8 @@
 import contextlib
 from unittest.mock import patch
 
+from django.db import transaction
+
 import pytest
 
 from baserow.core.action.registries import action_type_registry
@@ -77,7 +79,7 @@ def test_restore_snapshot_action_type(
     assert snapshot.snapshot_to_application.name == "test"
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 def test_delete_snapshot_action_type(data_fixture):
     user = data_fixture.create_user()
     workspace = data_fixture.create_workspace(user=user)
@@ -93,5 +95,8 @@ def test_delete_snapshot_action_type(data_fixture):
     )
 
     assert SnapshotHandler().list(from_application.id, user).count() == 1
-    action_type_registry.get(DeleteSnapshotActionType.type).do(user, snapshot.id)
+
+    with transaction.atomic():
+        action_type_registry.get(DeleteSnapshotActionType.type).do(user, snapshot.id)
+
     assert SnapshotHandler().list(from_application.id, user).count() == 0

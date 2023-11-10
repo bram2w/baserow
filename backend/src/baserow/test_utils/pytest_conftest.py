@@ -46,6 +46,18 @@ def async_event_loop():
 def data_fixture(fake):
     from .fixtures import Fixtures
 
+    # Foreign keys are typically created as deferred constraints
+    # that are checked only at the end of a transaction.
+    # However, such checks cannot be postponed to the end of a transaction
+    # if a table is manipulated in that transaction after rows with
+    # foreign keys are inserted.
+    # This is a workaround for our tests that make constraint checking
+    # immediate and hence allows tests to create table, insert rows
+    # with foreign keys and do ALTER TABLE on such table in the same
+    # transaction.
+    with connection.cursor() as cursor:
+        cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
     return Fixtures(fake)
 
 

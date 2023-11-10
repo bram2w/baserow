@@ -99,7 +99,14 @@ from .signals import (
 )
 from .telemetry.utils import baserow_trace_methods, disable_instrumentation
 from .trash.handler import TrashHandler
-from .types import Actor, ContextObject, PermissionCheck, PermissionObjectResult
+from .types import (
+    Actor,
+    ContextObject,
+    Email,
+    PermissionCheck,
+    PermissionObjectResult,
+    UserEmailMapping,
+)
 from .utils import (
     ChildProgressBuilder,
     atomic_if_not_already,
@@ -1188,6 +1195,22 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         invitation.delete()
 
         return workspace_user
+
+    @classmethod
+    def get_user_email_mapping(
+        cls, workspace_id: int, only_emails: list[Email]
+    ) -> UserEmailMapping:
+        workspace_users = WorkspaceUser.objects.filter(
+            workspace_id=workspace_id
+        ).select_related("user")
+
+        if only_emails:
+            workspace_users = workspace_users.filter(user__email__in=only_emails)
+
+        return {
+            workspace_user.user.email: workspace_user.user
+            for workspace_user in workspace_users
+        }
 
     def get_user_application(
         self,

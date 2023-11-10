@@ -6,12 +6,13 @@ from typing import Generator, Iterable, List, Optional, Type, TypedDict, Union
 
 from django.apps import apps
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.postgres.indexes import GinIndex
 from django.contrib.postgres.search import SearchQuery, SearchVectorField
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
 from django.db.models import Field as DjangoModelFieldClass
-from django.db.models import JSONField, Q, QuerySet, Value
+from django.db.models import ForeignKey, JSONField, Q, QuerySet, Value
 
 from loguru import logger
 from opentelemetry import trace
@@ -39,6 +40,7 @@ from baserow.contrib.database.table.cache import (
     set_cached_model_field_attrs,
 )
 from baserow.contrib.database.table.constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
     TSV_FIELD_PREFIX,
     USER_TABLE_DATABASE_NAME_PREFIX,
@@ -66,6 +68,9 @@ extract_filter_sections_regex = re.compile(r"filter__(.+)__(.+)$")
 field_id_regex = re.compile(r"field_(\d+)$")
 
 tracer = trace.get_tracer(__name__)
+
+
+User = get_user_model()
 
 
 def get_row_needs_background_update_index(table):
@@ -702,6 +707,12 @@ class Table(
         help_text="Indicates whether the table has had the background_update_needed "
         "column added.",
     )
+    last_modified_by_column_added = models.BooleanField(
+        default=True,
+        null=True,
+        help_text="Indicates whether the table has had the last_modified_by "
+        "column added.",
+    )
 
     class Meta:
         ordering = ("order",)
@@ -918,6 +929,9 @@ class Table(
         if self.needs_background_update_column_added:
             self._add_needs_background_update_column(field_attrs, indexes)
 
+        if self.last_modified_by_column_added:
+            self._add_last_modified_by(field_attrs, indexes)
+
         attrs.update(**field_attrs)
 
         # Create the model class.
@@ -961,6 +975,14 @@ class Table(
         )
 
         indexes.append(get_row_needs_background_update_index(self))
+
+    def _add_last_modified_by(self, field_attrs, indexes):
+        field_attrs[LAST_MODIFIED_BY_COLUMN_NAME] = ForeignKey(
+            User,
+            null=True,
+            on_delete=models.SET_NULL,
+            help_text="Stores information about the user that modified the row last.",
+        )
 
     @baserow_trace(tracer)
     def _after_model_generation(self, attrs, model):

@@ -20,6 +20,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.models import Database
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.registries import view_type_registry
+from baserow.core.handler import CoreHandler
 from baserow.core.models import Application, Workspace
 from baserow.core.registries import (
     ApplicationType,
@@ -108,6 +109,7 @@ class DatabaseApplicationType(ApplicationType):
                     order=str(row.order),
                     created_on=row.created_on.isoformat(),
                     updated_on=row.updated_on.isoformat(),
+                    last_modified_by=getattr(row, "last_modified_by", None),
                 )
                 for field_object in model._field_objects.values():
                     field_name = field_object["name"]
@@ -268,6 +270,23 @@ class DatabaseApplicationType(ApplicationType):
         if "workspace_id" not in id_mapping and database.workspace is not None:
             id_mapping["workspace_id"] = database.workspace.id
 
+        # Snapshots will provide a specific workspace to import user references from, so
+        # we need to use that instead of the workspace the database is in if provided.
+        workspace_for_user_references = (
+            import_export_config.workspace_for_user_references
+        )
+        workspace_id_for_user_references = (
+            workspace_for_user_references.id
+            if workspace_for_user_references is not None
+            else id_mapping.get("workspace_id", None)
+        )
+
+        user_email_mapping = {}
+        if workspace_id_for_user_references:
+            user_email_mapping = CoreHandler.get_user_email_mapping(
+                workspace_id_for_user_references, only_emails=[]
+            )
+
         imported_tables: List[Table] = []
 
         # First, we want to create all the table instances because it could be that
@@ -278,6 +297,7 @@ class DatabaseApplicationType(ApplicationType):
                 name=serialized_table["name"],
                 order=serialized_table["order"],
                 needs_background_update_column_added=True,
+                last_modified_by_column_added=True,
             )
             id_mapping["database_tables"][serialized_table["id"]] = table_instance.id
             serialized_table["_object"] = table_instance
@@ -421,11 +441,16 @@ class DatabaseApplicationType(ApplicationType):
                 else:
                     updated_on = timezone.now()
 
+                modified_by_email = serialized_row.get("last_modified_by", None)
+
                 row_instance = table_model(
                     id=serialized_row["id"],
                     order=serialized_row["order"],
                     created_on=created_on,
                     updated_on=updated_on,
+                    last_modified_by=user_email_mapping.get(modified_by_email, None)
+                    if modified_by_email
+                    else None,
                 )
 
                 for serialized_field in serialized_table["fields"]:

@@ -25,6 +25,7 @@ from baserow.contrib.database.fields.models import (
 )
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
 from baserow.contrib.database.table.constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
 from baserow.contrib.database.table.exceptions import (
@@ -138,6 +139,8 @@ def test_create_example_table(data_fixture):
     model = table.get_model(attribute_names=True)
 
     assert model.objects.count() == 2
+    assert model.objects.all()[0].last_modified_by == user
+    assert model.objects.all()[1].last_modified_by == user
 
 
 @pytest.mark.django_db(transaction=True)
@@ -734,3 +737,24 @@ def test_create_needs_background_update_column(data_fixture):
     model = table.get_model()
     for system_updated_on_column in system_updated_on_columns:
         model._meta.get_field(system_updated_on_column)
+
+
+@pytest.mark.django_db()
+def test_create_last_modified_by_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(
+        user,
+        last_modified_by_column_added=False,
+    )
+    model = table.get_model()
+
+    with pytest.raises(FieldDoesNotExist):
+        model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
+
+    TableHandler().create_last_modified_by_field(table)
+
+    table.refresh_from_db()
+    assert table.last_modified_by_column_added
+
+    model = table.get_model()
+    model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
