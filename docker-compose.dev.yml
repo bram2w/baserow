@@ -1,7 +1,6 @@
 version: "3.4"
 
 services:
-
   db:
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:${POSTGRES_PORT:-5432}:5432"
@@ -61,6 +60,7 @@ services:
         GID: $GID
     ports:
       - "${HOST_PUBLISH_IP:-127.0.0.1}:3000:3000"
+      - "${HOST_PUBLISH_IP:-127.0.0.1}:6006:6006" # Storybook
     volumes:
       - ./web-frontend:/baserow/web-frontend
       # Override the above mounts for node_modules so we use the node_modules built
@@ -166,7 +166,7 @@ services:
   mailhog:
     image: mailhog/mailhog
     logging:
-      driver: 'none' # disable saving logs
+      driver: "none" # disable saving logs
     ports:
       - "8025:8025" # web ui
     networks:
@@ -187,7 +187,7 @@ services:
 
   otel-collector:
     image: otel/opentelemetry-collector
-    command: [ "--config=/etc/otel-collector-config.yaml" ]
+    command: ["--config=/etc/otel-collector-config.yaml"]
     environment:
       HONEYCOMB_API_KEY:
       HONEYCOMB_METRICS_DATASET: baserow-dev-metrics
