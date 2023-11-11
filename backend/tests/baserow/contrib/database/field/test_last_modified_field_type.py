@@ -255,3 +255,43 @@ def test_last_modified_field_adjacent_row(data_fixture):
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id
+
+
+@pytest.mark.django_db
+def test_last_modified_field_can_be_looked_up(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_row = data_fixture.create_two_linked_tables(user=user)
+    last_modified_field = data_fixture.create_last_modified_field(table=table_a)
+    lookup_last_modified_field = data_fixture.create_formula_field(
+        table=table_b,
+        formula=f"lookup('{link_row.link_row_related_field.name}', '{last_modified_field.name}')",
+    )
+
+    row_handler = RowHandler()
+
+    row_b1, _ = row_handler.create_rows(user=user, table=table_b, rows_values=[{}, {}])
+
+    with freeze_time("2020-01-01 12:00"):
+        row_a1, _ = row_handler.create_rows(
+            user=user,
+            table=table_a,
+            rows_values=[{link_row.db_column: [row_b1.id]}, {}],
+        )
+
+    updated_row_b1 = row_handler.get_row(user=user, table=table_b, row_id=row_b1.id)
+    assert getattr(updated_row_b1, lookup_last_modified_field.db_column) == [
+        {"id": row_a1.id, "value": "2020-01-01T12:00:00+00:00"}
+    ]
+
+    table_a_primary = table_a.field_set.get(primary=True).specific
+    with freeze_time("2020-01-01 12:30"):
+        row_handler.update_rows(
+            user=user,
+            table=table_a,
+            rows_values=[{"id": row_a1.id, table_a_primary.db_column: "updated"}],
+        )
+
+    updated_row_b1 = row_handler.get_row(user=user, table=table_b, row_id=row_b1.id)
+    assert getattr(updated_row_b1, lookup_last_modified_field.db_column) == [
+        {"id": row_a1.id, "value": "2020-01-01T12:30:00+00:00"}
+    ]
