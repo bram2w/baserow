@@ -1595,6 +1595,14 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             obj.updated_on = model._meta.get_field("updated_on").pre_save(
                 obj, add=False
             )
+            # Add all last_modified fields to the updated fields list so that
+            # formulas referencing them will be updated correctly.
+            last_modified_field_type = field_type_registry.get("last_modified")
+            for field_object in model.get_field_objects_by_type(
+                last_modified_field_type.type
+            ):
+                updated_field_ids.add(field_object["field"].id)
+
             if table.needs_background_update_column_added:
                 setattr(obj, ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME, True)
 
