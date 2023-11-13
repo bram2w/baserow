@@ -1651,13 +1651,7 @@ export const actions = {
         ? getters.getBufferEndIndex
         : getters.getAllRows.findIndex((r) => r.id === before.id)
 
-    const rowsPrepared = rows.map((row) => {
-      row = { ...clone(fieldNewRowValueMap), ...row }
-      row = prepareRowForRequest(row, fields, this.$registry)
-      return row
-    })
-
-    const rowsPopulated = rowsPrepared.map((row) => {
+    const rowsPopulated = rows.map((row) => {
       row = { ...clone(fieldNewRowValueMap), ...row }
       row = populateRow(row)
       row.id = uuid()
@@ -1682,11 +1676,11 @@ export const actions = {
     } else {
       // When inserting multiple rows we will need to deal with filters, sorts or search
       // not matching. `createdNewRow` deals with exactly that for us.
-      for (let i = 0; i < rowsPopulated.length; i += 1) {
+      for (const rowPopulated of rowsPopulated) {
         await dispatch('createdNewRow', {
           view,
           fields,
-          values: rowsPopulated[i],
+          values: rowPopulated,
           metadata: {},
           populate: false,
         })
@@ -1718,6 +1712,15 @@ export const actions = {
         fields,
       })
     }
+
+    // The backend expects slightly different values than what we have in the row
+    // buffer. Therefore, we need to prepare the rows before we can send them to the
+    // backend.
+    const rowsPrepared = rows.map((row) => {
+      row = { ...clone(fieldNewRowValueMap), ...row }
+      row = prepareRowForRequest(row, fields, this.$registry)
+      return row
+    })
 
     try {
       const { data } = await RowService(this.$client).batchCreate(
@@ -1754,11 +1757,11 @@ export const actions = {
         // When we have multiple rows we will need to re-evaluate where the rest of the
         // rows are now positioned. Therefore, we need to call `deletedExistingRow` to
         // deal with all the potential edge cases
-        for (let i = 0; i < rowsPopulated.length; i += 1) {
+        for (const rowPopulated of rowsPopulated) {
           await dispatch('deletedExistingRow', {
             view,
             fields,
-            row: rowsPopulated[i],
+            row: rowPopulated,
           })
         }
       }
