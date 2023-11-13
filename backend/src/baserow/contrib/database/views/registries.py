@@ -22,6 +22,7 @@ from rest_framework.fields import CharField
 from rest_framework.serializers import Serializer
 
 from baserow.contrib.database.fields.field_filters import OptionallyAnnotatedQ
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.models import Workspace, WorkspaceUser
 from baserow.core.registries import OperationType
 from baserow.core.registry import (
@@ -211,7 +212,7 @@ class ViewType(
             "name": view.name,
             "order": view.order,
             "ownership_type": view.ownership_type,
-            "created_by": view.created_by.email if view.created_by else None,
+            "owned_by": view.owned_by.email if view.owned_by else None,
         }
 
         if self.can_filter:
@@ -314,26 +315,26 @@ class ViewType(
             id_mapping["database_view_group_bys"] = {}
             id_mapping["database_view_decorations"] = {}
 
-        if "created_by" not in id_mapping:
-            id_mapping["created_by"] = {}
+        if "owned_by" not in id_mapping:
+            id_mapping["owned_by"] = {}
 
-            created_by_workspace = table.database.workspace
+            owned_by_workspace = table.database.workspace
 
             if (
                 id_mapping.get("import_workspace_id", None) is not None
-                and created_by_workspace is None
+                and owned_by_workspace is None
             ):
-                created_by_workspace = Workspace.objects.get(
+                owned_by_workspace = Workspace.objects.get(
                     id=id_mapping["import_workspace_id"]
                 )
 
-            if created_by_workspace is not None:
+            if owned_by_workspace is not None:
                 workspaceusers_from_workspace = WorkspaceUser.objects.filter(
-                    workspace_id=created_by_workspace.id
+                    workspace_id=owned_by_workspace.id
                 ).select_related("user")
 
                 for workspaceuser in workspaceusers_from_workspace:
-                    id_mapping["created_by"][
+                    id_mapping["owned_by"][
                         workspaceuser.user.email
                     ] = workspaceuser.user
 
@@ -344,11 +345,17 @@ class ViewType(
         except view_ownership_type_registry.does_not_exist_exception_class:
             return None
 
+        # Backwards compatibility handling for case when serialized_values contains
+        # "created_by" and not "owned_by" (field was renamed):
+        if "owned_by" not in serialized_values:
+            serialized_values["owned_by"] = serialized_values.pop("created_by", None)
+
         if not ownership_type.can_import_view(serialized_values, id_mapping):
             return None
 
-        email = serialized_values.get("created_by", None)
-        serialized_values["created_by"] = id_mapping["created_by"].get(email, None)
+        email = serialized_values.get("owned_by", None)
+
+        serialized_values["owned_by"] = id_mapping["owned_by"].get(email, None)
 
         serialized_copy = serialized_values.copy()
         view_id = serialized_copy.pop("id")
@@ -688,6 +695,7 @@ class ViewType(
 
         values = {
             "name": view.name,
+            "ownership_type": view.ownership_type,
             "filter_type": view.filter_type,
             "filters_disabled": view.filters_disabled,
             "public_view_password": view.public_view_password,
@@ -1253,6 +1261,27 @@ class ViewOwnershipType(Instance):
         from .operations import CreateViewOperationType
 
         return CreateViewOperationType
+
+    def change_ownership_type(self, user: AbstractUser, view: "View") -> "View":
+        """
+        Changes the view `ownership_type` attribute and sets provided User as
+        the owner of the view (`View.owned_by`).
+
+        This method is usually overridden in classes that subclass this base
+        class (f. ex. `CollaborativeViewOwnershipType`,
+        `PersonalViewOwnershipType`), where additional required permissions to
+        change the ownership type for the view are checked (if needed).
+
+        For the above reason and to prioritize security, keep the system fuctional
+        in case of new `ownership_types` are added, this base class raises
+        `PermissionDenied` error by default.
+
+        :param user: The user who want to change the ownership type
+        :param view: The view whose ownership type is being changed
+        :return: The updated view
+        """
+
+        raise PermissionDenied()
 
 
 class ViewOwnershipTypeRegistry(Registry):

@@ -29,10 +29,11 @@ def test_when_view_filter_created_for_public_view_force_refresh_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {"type": "force_view_rows_refresh", "view_id": public_view.slug},
+                None,
                 None,
             ),
         ]
@@ -60,10 +61,11 @@ def test_when_view_filter_updated_for_public_view_force_refresh_event_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {"type": "force_view_rows_refresh", "view_id": public_view.slug},
+                None,
                 None,
             ),
         ]
@@ -91,10 +93,11 @@ def test_when_view_filter_deleted_for_public_view_force_refresh_event_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {"type": "force_view_rows_refresh", "view_id": public_view.slug},
+                None,
                 None,
             ),
         ]
@@ -143,8 +146,8 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_grid_view.slug}",
                 {
@@ -153,6 +156,7 @@ def test_when_field_hidden_in_public_view_field_force_refresh_sent(
                     "fields": [],
                     "view": view_serialized["view"],
                 },
+                None,
                 None,
             ),
         ]
@@ -201,8 +205,8 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_grid_view.slug}",
                 {
@@ -222,6 +226,7 @@ def test_when_field_unhidden_in_public_view_force_refresh_sent(
                     ],
                     "view": view_serialized["view"],
                 },
+                None,
                 None,
             ),
         ]
@@ -276,8 +281,8 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_grid_view.slug}",
                 {
@@ -297,6 +302,7 @@ def test_when_only_field_options_updated_in_public_grid_view_force_refresh_sent(
                     ],
                     "view": view_serialized["view"],
                 },
+                None,
                 None,
             ),
         ]

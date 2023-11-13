@@ -150,7 +150,7 @@ def test_create_grid_view(send_mock, data_fixture):
     assert grid.name == "Test grid"
     assert grid.order == 1
     assert grid.table == table
-    assert grid.created_by == user
+    assert grid.owned_by == user
     assert grid.filter_type == "AND"
     assert not grid.filters_disabled
 
@@ -2433,9 +2433,10 @@ def test_create_view_ownership_type(data_fixture):
 
 @pytest.mark.django_db
 @pytest.mark.view_ownership
-def test_update_view_ownership_type(data_fixture):
+def test_update_view_ownership_type_non_existing(data_fixture):
     """
-    Updating view.ownership_type is currently not allowed.
+    Updating view.ownership_type to a non-existing ownership type is currently
+    not allowed.
     """
 
     user = data_fixture.create_user()
@@ -2443,7 +2444,10 @@ def test_update_view_ownership_type(data_fixture):
     form = data_fixture.create_form_view(table=table)
     handler = ViewHandler()
 
-    handler.update_view(user=user, view=form, ownership_type="new_ownership_type")
+    with pytest.raises(PermissionDenied):
+        handler.update_view(
+            user=user, view=form, ownership_type="non_existing_ownership_type"
+        )
 
     form.refresh_from_db()
     assert form.ownership_type == OWNERSHIP_TYPE_COLLABORATIVE

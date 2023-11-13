@@ -61,6 +61,7 @@ debugpy==1.6.6
 decorator==5.1.1
     # via
     #   -c base.txt
+    #   ipdb
     #   ipython
 django==3.2.21
     # via
@@ -124,8 +125,12 @@ idna==3.4
     #   requests
 iniconfig==1.1.1
     # via pytest
-ipython==8.5.0
+ipdb==0.13.13
     # via -r dev.in
+ipython==8.5.0
+    # via
+    #   -r dev.in
+    #   ipdb
 isort==5.12.0
     # via -r dev.in
 jedi==0.18.1
@@ -319,6 +324,7 @@ tomli==1.2.3
     #   build
     #   coverage
     #   django-stubs
+    #   ipdb
     #   mypy
     #   pep517
     #   pytest

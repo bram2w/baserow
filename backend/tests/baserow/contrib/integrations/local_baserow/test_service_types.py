@@ -673,7 +673,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_fil
         ],
     )
 
-    view = data_fixture.create_grid_view(user, table=table, created_by=user)
+    view = data_fixture.create_grid_view(user, table=table, owned_by=user)
     data_fixture.create_view_filter(view=view, field=field, type="contains", value="Ch")
 
     service_type = LocalBaserowListRowsUserServiceType()
@@ -727,7 +727,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_varying_filter_types
     )
 
     view = data_fixture.create_grid_view(
-        user, table=table, created_by=user, filter_type="OR"
+        user, table=table, owned_by=user, filter_type="OR"
     )
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
@@ -801,7 +801,7 @@ def test_local_baserow_list_rows_service_dispatch_data_with_view_and_service_sor
             {f"field_{ingredients.id}": "Beef", f"field_{cost.id}": 250},
         ],
     )
-    view = data_fixture.create_grid_view(user, table=table, created_by=user)
+    view = data_fixture.create_grid_view(user, table=table, owned_by=user)
     service_type = LocalBaserowListRowsUserServiceType()
     service = data_fixture.create_local_baserow_list_rows_service(
         view=view, table=table, integration=integration

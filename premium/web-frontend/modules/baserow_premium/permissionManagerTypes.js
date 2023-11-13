@@ -27,7 +27,7 @@ export class ViewOwnershipPermissionManagerType extends PermissionManagerType {
       ) &&
       context.ownership_type === 'personal'
     ) {
-      return context.created_by_id === userId
+      return context.owned_by_id === userId
     }
   }
 }

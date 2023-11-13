@@ -110,7 +110,12 @@ class View(
         default=True,
         help_text="Indicates whether the logo should be shown in the public view.",
     )
-    created_by = models.ForeignKey(User, null=True, on_delete=models.SET_NULL)
+    owned_by = models.ForeignKey(
+        User,
+        null=True,
+        on_delete=models.SET_NULL,
+        db_column="created_by_id",
+    )
     ownership_type = models.CharField(
         max_length=255,
         default=DEFAULT_OWNERSHIP_TYPE,
