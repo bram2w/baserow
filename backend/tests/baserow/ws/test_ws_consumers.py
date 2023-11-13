@@ -399,6 +399,7 @@ def test_subscribed_pages_has_pages_with_permission_group(test_page_types):
     )
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
 @pytest.mark.websockets
 @pytest.mark.parametrize(
