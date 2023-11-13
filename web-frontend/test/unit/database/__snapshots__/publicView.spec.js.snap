@@ -262,14 +262,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                      
                   </div>
                    
+                  <!---->
+                   
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px);"
+                    style="transform: translateY(0px) translateX(0px); left: 0px;"
                   >
                     <div
                       class="grid-view__row"
                     >
-                       
                       <!---->
                        
                       <div
@@ -529,15 +530,15 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
                     />
                   </div>
                    
+                  <!---->
+                   
                   <div
                     class="grid-view__rows"
-                    style="transform: translateY(0px) translateX(0px);"
+                    style="transform: translateY(0px) translateX(0px); left: 0px;"
                   >
                     <div
                       class="grid-view__row"
                     >
-                      <!---->
-                       
                       <!---->
                        
                       <div

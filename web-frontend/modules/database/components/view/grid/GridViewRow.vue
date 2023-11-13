@@ -20,18 +20,6 @@
       @mouseleave="$emit('row-hover', { row, value: false })"
       @contextmenu.prevent="$emit('row-context', { row, event: $event })"
     >
-      <template v-if="includeGroupBy">
-        <GridViewRowGroup
-          v-for="group in groups"
-          :key="'group-' + group.id"
-          :width="groupWidth"
-          :start="group.start"
-          :end="group.end"
-          :group-by="group.groupBy"
-          :all-fields-in-table="allFieldsInTable"
-          :row="row"
-        ></GridViewRowGroup>
-      </template>
       <template v-if="includeRowDetails">
         <div
           v-if="
@@ -136,13 +124,10 @@ import GridViewCell from '@baserow/modules/database/components/view/grid/GridVie
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewRowExpandButton from '@baserow/modules/database/components/view/grid/GridViewRowExpandButton'
 import RecursiveWrapper from '@baserow/modules/database/components/RecursiveWrapper'
-import GridViewRowGroup from '@baserow/modules/database/components/view/grid/GridViewRowGroup.vue'
-import groupBy from '@baserow/modules/database/services/groupBy'
 
 export default {
   name: 'GridViewRow',
   components: {
-    GridViewRowGroup,
     GridViewRowExpandButton,
     GridViewCell,
     RecursiveWrapper,
@@ -166,9 +151,10 @@ export default {
       type: Object,
       required: true,
     },
-    groups: {
-      type: Array,
-      required: true,
+    groupEnd: {
+      type: Boolean,
+      required: false,
+      default: () => false,
     },
     renderedFields: {
       type: Array,
@@ -294,12 +280,8 @@ export default {
           return this.row.id
       }
     },
-    groupEnd() {
-      return this.groups.length > 0 && this.groups[this.groups.length - 1].end
-    },
   },
   methods: {
-    groupBy,
     isCellSelected(fieldId) {
       return this.row._.selected && this.row._.selectedFieldId === fieldId
     },

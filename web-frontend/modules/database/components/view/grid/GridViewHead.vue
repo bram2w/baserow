@@ -1,9 +1,10 @@
 <template>
   <div class="grid-view__head">
     <div
-      v-for="groupBy in includeGroupBy ? view.group_bys : []"
+      v-for="groupBy in includeGroupBy ? activeGroupBys : []"
       :key="'field-group-' + groupBy.field"
       class="grid-view__head-group"
+      :style="{ width: groupWidth + 'px' }"
     ></div>
     <div
       v-if="includeRowDetails"

@@ -90,6 +90,7 @@ describe('GridViewRows component', () => {
       includeRowDetails: false,
       storePrefix: 'page/',
       decorationsByPlace: {},
+      rowsAtEndOfGroups: new Set(),
       workspaceId: application.workspace.id,
     })
 
@@ -109,6 +110,7 @@ describe('GridViewRows component', () => {
       includeRowDetails: true,
       storePrefix: 'page/',
       decorationsByPlace: {},
+      rowsAtEndOfGroups: new Set(),
       workspaceId: application.workspace.id,
     })
 

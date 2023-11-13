@@ -60,14 +60,15 @@ exports[`GridView component with decoration Default component with first_cell de
              
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
             >
-               
               <!---->
                
               <div
@@ -338,15 +339,15 @@ exports[`GridView component with decoration Default component with first_cell de
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
             >
-              <!---->
-               
               <!---->
                
               <div
@@ -530,9 +531,11 @@ exports[`GridView component with decoration Default component with row wrapper d
              
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="test-wrapper"
@@ -767,9 +770,11 @@ exports[`GridView component with decoration Default component with row wrapper d
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="test-wrapper"
@@ -926,14 +931,15 @@ exports[`GridView component with decoration Default component with unavailable d
              
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
             >
-               
               <!---->
                
               <div
@@ -1198,15 +1204,15 @@ exports[`GridView component with decoration Default component with unavailable d
             />
           </div>
            
+          <!---->
+           
           <div
             class="grid-view__rows"
-            style="transform: translateY(0px) translateX(0px);"
+            style="transform: translateY(0px) translateX(0px); left: 0px;"
           >
             <div
               class="grid-view__row"
             >
-              <!---->
-               
               <!---->
                
               <div
