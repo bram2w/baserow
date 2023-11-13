@@ -3,12 +3,13 @@
     class="grid-view__rows"
     :style="{
       transform: `translateY(${rowsTop}px) translateX(${leftOffset || 0}px)`,
+      left: (includeGroupBy ? activeGroupBys.length * groupWidth : 0) + 'px',
     }"
   >
     <GridViewRow
       v-for="(row, index) in rows"
       :key="`row-${row._.persistentId}`"
-      :groups="groupsPerRow[row.id]"
+      :group-end="rowsAtEndOfGroups.has(row.id)"
       :view="view"
       :workspace-id="workspaceId"
       :row="row"
@@ -100,6 +101,10 @@ export default {
       required: false,
       default: () => true,
     },
+    rowsAtEndOfGroups: {
+      type: Set,
+      required: true,
+    },
   },
   computed: {
     fieldWidths() {
@@ -109,104 +114,17 @@ export default {
       })
       return fieldWidths
     },
-    /**
-     * This computed property prepares an array with clear instructions on the groups
-     * for each row. It will hold data whether the row is the start of a group, or the
-     * end, and for which group that is.
-     *
-     * We're calculating this for all the rows in the buffer because that way we can
-     * immediately render the correct borders of the rows, even if the user is
-     * scrolling fast through them.
-     *
-     * It returns a structure like:
-     *
-     * {
-     *   [rowId]: [
-     *     {
-     *       id: groupById,
-     *       start: false,
-     *       end: true,
-     *       groupBy: {}
-     *     }
-     *   ]
-     * }
-     */
-    groupsPerRow() {
-      const groupBys = this.activeGroupBys
-      const rows = this.allRows
-      const groups = {}
-      const fieldTypeMap = {}
-      const fieldMap = {}
-
-      rows.forEach((row, index) => {
-        const previousRow = rows[index - 1]
-        const nextRow = rows[index + 1]
-
-        let lastGroupStart = false
-        let lastGroupEnd = false
-
-        const startEndPerGroup = groupBys.map((groupBy) => {
-          let start = false // The start of a group based on the group by value.
-          let end = false // The end of a group based on the group by value.
-          let fieldType = fieldTypeMap[groupBy.field]
-          let field = fieldMap[groupBy.field]
-
-          if (fieldType === undefined) {
-            field = this.allFieldsInTable.find((f) => f.id === groupBy.field)
-            fieldType = this.$registry.get('field', field.type)
-            fieldMap[groupBy.field] = field
-            fieldTypeMap[groupBy.field] = fieldType
-          }
-
-          if (
-            previousRow === undefined ||
-            !fieldType.isEqual(
-              field,
-              previousRow[`field_${groupBy.field}`],
-              row[`field_${groupBy.field}`]
-            ) ||
-            lastGroupStart
-          ) {
-            start = true
-          }
-
-          if (
-            nextRow === undefined ||
-            !fieldType.isEqual(
-              field,
-              nextRow[`field_${groupBy.field}`],
-              row[`field_${groupBy.field}`]
-            ) ||
-            lastGroupEnd
-          ) {
-            end = true
-          }
-
-          lastGroupStart = start
-          lastGroupEnd = end
-
-          return {
-            id: groupBy.id,
-            start,
-            end,
-            groupBy,
-          }
-        })
-
-        groups[row.id] = startEndPerGroup
-      })
-      return groups
-    },
   },
   beforeCreate() {
     this.$options.computed = {
       ...(this.$options.computed || {}),
       ...mapGetters({
         rows: this.$options.propsData.storePrefix + 'view/grid/getRows',
-        allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
         rowsTop: this.$options.propsData.storePrefix + 'view/grid/getRowsTop',
         rowsStartIndex:
           this.$options.propsData.storePrefix + 'view/grid/getRowsStartIndex',
+        rowsEndIndex:
+          this.$options.propsData.storePrefix + 'view/grid/getRowsEndIndex',
         bufferStartIndex:
           this.$options.propsData.storePrefix + 'view/grid/getBufferStartIndex',
         activeGroupBys:

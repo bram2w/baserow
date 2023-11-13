@@ -119,7 +119,7 @@
 }
 
 .grid-view__head-group {
-  width: 100px; // must be replaced with dynamic value later.
+  height: 33px;
 }
 
 .grid-view__body {
@@ -317,11 +317,18 @@
   background-color: $color-neutral-400;
 }
 
-.grid-view__group {
-  position: relative;
+.grid-view__groups {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  display: flex;
   background-color: $color-neutral-50;
+}
 
-  &.grid-view__group--end::after {
+.grid-view__group-span {
+  position: relative;
+
+  &::after {
     @include absolute(auto, auto, 0, 0);
 
     content: '';
@@ -330,6 +337,13 @@
     width: 100%;
     pointer-events: none;
   }
+}
+
+.grid-view__group {
+  position: sticky;
+  top: 0;
+  background-color: $color-neutral-50;
+  width: 100%;
 }
 
 .grid-view__group-cell {
