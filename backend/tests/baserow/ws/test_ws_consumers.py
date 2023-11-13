@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from channels.testing import WebsocketCommunicator
@@ -397,3 +397,62 @@ def test_subscribed_pages_has_pages_with_permission_group(test_page_types):
         pages.has_pages_with_permission_group("permissions-different-perm-group-1")
         is False
     )
+
+
+@pytest.mark.asyncio
+@pytest.mark.websockets
+@pytest.mark.parametrize(
+    "ignore_web_socket_id, web_socket_id, user, exclude_user_ids, expect_call",
+    [
+        # Sending the message is expected:
+        # ...because `ignore_web_socket_id` is empty:
+        (None, "some_web_socket_id", Mock(id=1), [], True),
+        # ...or when socket_ids are not matching and user ID is not exluded:
+        ("some_web_socket_id", "another_web_socket_id", Mock(id=1), [], True),
+        # ...or when `ignore_web_socket_id` is empty and the user is not excluded:
+        (None, "some_web_socket_id", Mock(id=1), [2], True),
+        # Sending the message is NOT expected:
+        # ...because web socket IDs are matching and should be ignored:
+        ("some_web_socket_id", "some_web_socket_id", Mock(id=1), [], False),
+        # ...or when user_id is exluded:
+        (None, "some_web_socket_id", Mock(id=1), [1], False),
+        # ...or when user ID is excluded (within multiple IDs):
+        (None, "some_web_socket_id", Mock(id=1), [1, 2], False),
+        # ...or when user ID is excluded (within multiple IDs) and web socket
+        # IDs are not matching:
+        ("some_web_socket_id", "another_web_socket_id", Mock(id=1), [1, 2], False),
+    ],
+)
+async def test_core_consumer_broadcast_to_group(
+    data_fixture,
+    test_page_types,
+    ignore_web_socket_id,
+    web_socket_id,
+    user,
+    exclude_user_ids,
+    expect_call,
+):
+    consumer = CoreConsumer()
+
+    # Mock the required attributes and methods
+    consumer.scope = {
+        "web_socket_id": web_socket_id,
+        "user": user,
+    }
+    event = {
+        "payload": {
+            "message": "test message",
+        },
+        "ignore_web_socket_id": ignore_web_socket_id,
+        "exclude_user_ids": exclude_user_ids,
+    }
+
+    mock_send_json = AsyncMock()
+
+    consumer.send_json = mock_send_json
+    await consumer.broadcast_to_group(event)
+
+    if expect_call:
+        mock_send_json.assert_called_once_with(event["payload"])
+    else:
+        mock_send_json.assert_not_called()

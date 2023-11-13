@@ -38,6 +38,7 @@ from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchModes
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
+from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
 from baserow.contrib.database.views.operations import (
     CreatePublicViewOperationType,
     CreateViewDecorationOperationType,
@@ -87,6 +88,7 @@ from baserow.contrib.database.views.view_filter_groups import (
     construct_filter_builder_from_grouped_api_filters,
 )
 from baserow.core.db import specific_iterator
+from baserow.core.exceptions import PermissionDenied
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
 from baserow.core.telemetry.utils import baserow_trace_methods
@@ -751,7 +753,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         last_order = model_class.get_last_order(table)
 
         instance = model_class.objects.create(
-            table=table, order=last_order, created_by=user, **view_values
+            table=table, order=last_order, owned_by=user, **view_values
         )
 
         if instance.public:
@@ -887,6 +889,8 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             user, UpdateViewOperationType.type, workspace=workspace, context=view
         )
 
+        old_view = deepcopy(view)
+
         view_type = view_type_registry.get_by_model(view)
         view_type.before_view_update(data, view, user)
 
@@ -899,13 +903,32 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             "show_logo",
         ] + view_type.allowed_fields
 
-        changed_allowed_keys = extract_allowed(view_values, allowed_fields).keys()
+        changed_allowed_keys = set(extract_allowed(view_values, allowed_fields).keys())
         original_view_values = self._get_prepared_values_for_data(
             view_type, view, changed_allowed_keys
         )
 
+        ownership_type_key = "ownership_type"
+        new_ownership_type = view_values.get(ownership_type_key, None)
+        original_ownership_type = getattr(view, ownership_type_key)
+        if (
+            new_ownership_type is not None
+            and new_ownership_type != original_ownership_type
+        ):
+            try:
+                ownership_type = view_ownership_type_registry.get(new_ownership_type)
+            except ViewOwnershipTypeDoesNotExist:
+                raise PermissionDenied()
+
+            view = ownership_type.change_ownership_type(user, view)
+
+            # Add the change of ownership type to the tracked changes for undo/redo
+            original_view_values[ownership_type_key] = original_ownership_type
+            changed_allowed_keys.add(ownership_type_key)
+
         previous_public_value = view.public
         view = set_allowed_attrs(view_values, allowed_fields, view)
+
         if previous_public_value != view.public:
             CoreHandler().check_permissions(
                 user,
@@ -913,6 +936,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
                 workspace=workspace,
                 context=view,
             )
+
         view.save()
 
         new_view_values = self._get_prepared_values_for_data(
@@ -922,7 +946,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if "filters_disabled" in view_values:
             view_type.after_filter_update(view)
 
-        view_updated.send(self, view=view, user=user)
+        view_updated.send(self, view=view, user=user, old_view=old_view)
 
         return UpdatedViewWithChangedAttributes(
             updated_view_instance=view,
@@ -2887,11 +2911,12 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         CoreHandler().check_permissions(
             user, UpdateViewSlugOperationType.type, workspace=workspace, context=view
         )
+        old_view = deepcopy(view)
 
         view.slug = slug
         view.save()
 
-        view_updated.send(self, view=view, user=user)
+        view_updated.send(self, view=view, user=user, old_view=old_view)
 
         return view
 

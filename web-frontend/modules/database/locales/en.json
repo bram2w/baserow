@@ -542,6 +542,8 @@
         "exportView": "Export view",
         "duplicateView": "Duplicate view",
         "renameView": "Rename view",
+        "toPersonal": "To personal",
+        "toCollaborative": "To collaborative",
         "webhooks": "Webhooks",
         "importFile": "Import file",
         "deleteView": "Delete view"

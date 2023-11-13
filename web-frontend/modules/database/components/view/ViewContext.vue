@@ -53,6 +53,17 @@
         </a>
       </li>
       <li
+        v-for="(
+          changeViewOwnershipTypeComponent, index
+        ) in changeViewOwnershipTypeMenuItems"
+        :key="'view-ownership-type-' + index"
+      >
+        <component
+          :is="changeViewOwnershipTypeComponent"
+          :view="view"
+        ></component>
+      </li>
+      <li
         v-if="
           $hasPermission(
             'database.table.create_webhook',
@@ -117,17 +128,20 @@
 <script>
 import { mapGetters } from 'vuex'
 import context from '@baserow/modules/core/mixins/context'
-import error from '@baserow/modules/core/mixins/error'
 import viewTypeHasExporterTypes from '@baserow/modules/database/utils/viewTypeHasExporterTypes'
 import ImportFileModal from '@baserow/modules/database/components/table/ImportFileModal'
-
+import { notifyIf } from '@baserow/modules/core/utils/error'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal.vue'
 
 export default {
   name: 'ViewContext',
-  components: { ExportTableModal, WebhookModal, ImportFileModal },
-  mixins: [context, error],
+  components: {
+    ExportTableModal,
+    WebhookModal,
+    ImportFileModal,
+  },
+  mixins: [context],
   props: {
     database: {
       type: Object,
@@ -155,6 +169,20 @@ export default {
     ...mapGetters({
       fields: 'field/getAll',
     }),
+    changeViewOwnershipTypeMenuItems() {
+      const activeOwnershipTypes = Object.values(
+        this.$registry.getAll('viewOwnershipType')
+      ).filter(
+        (ownershipType) =>
+          !ownershipType.isDeactivated(this.database.workspace.id)
+      )
+
+      return activeOwnershipTypes
+        .map((viewOwnershipType) => {
+          return viewOwnershipType.getChangeOwnershipTypeMenuItemComponent()
+        })
+        .filter((component) => component !== null)
+    },
   },
   methods: {
     enableRename() {
@@ -167,7 +195,7 @@ export default {
       try {
         await this.$store.dispatch('view/delete', this.view)
       } catch (error) {
-        this.handleError(error, 'view')
+        notifyIf(error, 'view')
       }
 
       this.deleteLoading = false
@@ -179,7 +207,7 @@ export default {
       try {
         newView = await this.$store.dispatch('view/duplicate', this.view)
       } catch (error) {
-        this.handleError(error, 'view')
+        notifyIf(error, 'view')
       }
 
       this.$refs.context.hide()

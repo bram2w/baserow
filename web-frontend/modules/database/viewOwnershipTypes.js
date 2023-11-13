@@ -92,6 +92,15 @@ export class CollaborativeViewOwnershipType extends ViewOwnershipType {
     return false
   }
 
+  /**
+   * This should return nothing, because collaborative views should know nothing
+   * about other ownership types and if you're in a collaborative view, you
+   * should not be able to switch to a different view type.
+   */
+  getChangeOwnershipTypeMenuItemComponent() {
+    return null
+  }
+
   userCanTryCreate(table, workspaceId) {
     return this.app.$hasPermission(
       'database.table.create_view',

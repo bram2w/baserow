@@ -1143,6 +1143,7 @@ class UpdateViewActionType(UndoableActionType):
     class Params:
         view_id: int
         view_name: str
+        view_ownership_type: str
         table_id: int
         table_name: str
         database_id: int
@@ -1176,6 +1177,7 @@ class UpdateViewActionType(UndoableActionType):
             params=cls.Params(
                 view.id,
                 view.name,
+                view.ownership_type,
                 view.table.id,
                 view.table.name,
                 view.table.database.id,

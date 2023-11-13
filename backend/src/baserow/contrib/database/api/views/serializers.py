@@ -16,6 +16,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
 )
 from baserow.contrib.database.fields.registries import field_type_registry
+from baserow.contrib.database.views.exceptions import ViewOwnershipTypeDoesNotExist
 from baserow.contrib.database.views.models import (
     OWNERSHIP_TYPE_COLLABORATIVE,
     View,
@@ -355,7 +356,7 @@ class ViewSerializer(serializers.ModelSerializer):
     )
     show_logo = serializers.BooleanField(required=False)
     ownership_type = serializers.CharField()
-    created_by_id = serializers.IntegerField(required=False)
+    owned_by_id = serializers.IntegerField(required=False)
 
     class Meta:
         model = View
@@ -376,14 +377,14 @@ class ViewSerializer(serializers.ModelSerializer):
             "public_view_has_password",
             "show_logo",
             "ownership_type",
-            "created_by_id",
+            "owned_by_id",
         )
         extra_kwargs = {
             "id": {"read_only": True},
             "table_id": {"read_only": True},
             "public_view_has_password": {"read_only": True},
             "ownership_type": {"read_only": True},
-            "created_by_id": {"read_only": True},
+            "owned_by_id": {"read_only": True},
         }
 
     def __init__(self, *args, **kwargs):
@@ -457,10 +458,28 @@ class UpdateViewSerializer(serializers.ModelSerializer):
             representation["raw_public_view_password"] = public_view_password
         return representation
 
+    def validate_ownership_type(self, value):
+        try:
+            view_ownership_type_registry.get(value)
+        except ViewOwnershipTypeDoesNotExist:
+            allowed_ownerships = ",".join(
+                "'%s'" % v for v in view_ownership_type_registry.get_types()
+            )
+            raise serializers.ValidationError(
+                f"Ownership type must be one of the above: {allowed_ownerships}."
+            )
+        return value
+
     class Meta:
         ref_name = "view_update"
         model = View
-        fields = ("name", "filter_type", "filters_disabled", "public_view_password")
+        fields = (
+            "name",
+            "filter_type",
+            "filters_disabled",
+            "public_view_password",
+            "ownership_type",
+        )
         extra_kwargs = {
             "name": {"required": False},
             "filter_type": {"required": False},

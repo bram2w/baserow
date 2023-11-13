@@ -312,5 +312,5 @@ def delete_personal_views(user_id: int):
     """
 
     View.objects.filter(ownership_type=OWNERSHIP_TYPE_PERSONAL).filter(
-        created_by__id=user_id
+        owned_by__id=user_id
     ).delete()

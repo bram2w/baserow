@@ -49,7 +49,7 @@ def test_when_field_created_public_views_are_sent_field_created_with_restricted_
     new_field = FieldHandler().create_field(user, table, "text", name="a", order=1)
 
     expected_calls = [
-        call(f"table-{table.id}", ANY, ANY),
+        call(f"table-{table.id}", ANY, ANY, None),
     ]
     if public_realtime_view_tester.newly_created_field_visible_by_default:
         expected_calls.append(
@@ -74,6 +74,7 @@ def test_when_field_created_public_views_are_sent_field_created_with_restricted_
                         ),
                     ],
                 },
+                None,
                 None,
             ),
         )
@@ -110,7 +111,7 @@ def test_when_field_deleted_public_views_are_field_deleted_with_restricted_relat
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {
@@ -127,6 +128,7 @@ def test_when_field_deleted_public_views_are_field_deleted_with_restricted_relat
                         ),
                     ],
                 },
+                None,
                 None,
             ),
         ]
@@ -162,9 +164,9 @@ def test_when_field_restored_public_views_sent_event_with_restricted_related_fie
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
-            call(f"view-{public_view.slug}", ANY, ANY),
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
+            call(f"view-{public_view.slug}", ANY, ANY, None),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {
@@ -186,6 +188,7 @@ def test_when_field_restored_public_views_sent_event_with_restricted_related_fie
                         ),
                     ],
                 },
+                None,
                 None,
             ),
         ]
@@ -221,7 +224,7 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_view.slug}",
                 {
@@ -244,6 +247,7 @@ def test_when_field_updated_public_views_are_sent_event_with_restricted_related(
                         ),
                     ],
                 },
+                None,
                 None,
             ),
         ]
@@ -269,7 +273,7 @@ def test_cover_image_is_always_included_in_field_update_signal(
 
     assert mock_broadcast_to_channel_group.delay.mock_calls == (
         [
-            call(f"table-{table.id}", ANY, ANY),
+            call(f"table-{table.id}", ANY, ANY, None),
             call(
                 f"view-{public_gallery_view.slug}",
                 {
@@ -284,6 +288,7 @@ def test_cover_image_is_always_included_in_field_update_signal(
                     ),
                     "related_fields": [],
                 },
+                None,
                 None,
             ),
         ]

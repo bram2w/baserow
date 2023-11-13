@@ -81,9 +81,7 @@ export default {
       )
     },
     activeViewOwnershipTypes() {
-      return this.viewOwnershipTypes
-        .filter((t) => !t.isDeactivated(this.database.workspace.id))
-        .sort((a, b) => b.getListViewTypeSort() - a.getListViewTypeSort())
+      return this.sortOwnershipTypes(this.viewOwnershipTypes)
     },
   },
   mounted() {
@@ -92,6 +90,13 @@ export default {
       this.availableViewOwnershipTypesForCreation[0]?.getType()
     this.values.ownershipType =
       this.defaultValues.ownershipType || firstAndHenceDefaultOwnershipType
+  },
+  methods: {
+    sortOwnershipTypes(ownershipTypes) {
+      return ownershipTypes
+        .slice()
+        .sort((a, b) => b.getListViewTypeSort() - a.getListViewTypeSort())
+    },
   },
   validations: {
     values: {

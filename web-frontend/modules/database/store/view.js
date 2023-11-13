@@ -131,7 +131,8 @@ export const mutations = {
     view._.loading = value
   },
   ADD_ITEM(state, item) {
-    state.items = [...state.items, item].sort((a, b) => a.order - b.order)
+    if (!state.items.some((existingItem) => existingItem.id === item.id))
+      state.items = [...state.items, item].sort((a, b) => a.order - b.order)
   },
   UPDATE_ITEM(state, { id, values, repopulate }) {
     const index = state.items.findIndex((item) => item.id === id)
@@ -397,6 +398,7 @@ export const actions = {
    * Updates the values of the view with the provided id.
    */
   async update({ commit, dispatch }, { view, values, readOnly = false }) {
+    commit('SET_ITEM_LOADING', { view, value: true })
     const oldValues = {}
     const newValues = {}
     Object.keys(values).forEach((name) => {
@@ -426,11 +428,19 @@ export const actions = {
     dispatch('forceUpdate', { view, values: newValues })
     try {
       if (!readOnly) {
+        dispatch(
+          'undoRedo/updateCurrentScopeSet',
+          DATABASE_ACTION_SCOPES.view(view.id),
+          {
+            root: true,
+          }
+        )
         await ViewService(this.$client).update(view.id, values)
         updatePublicViewHasPassword()
       }
       commit('SET_ITEM_LOADING', { view, value: false })
     } catch (error) {
+      commit('SET_ITEM_LOADING', { view, value: false })
       dispatch('forceUpdate', { view, values: oldValues })
       throw error
     }

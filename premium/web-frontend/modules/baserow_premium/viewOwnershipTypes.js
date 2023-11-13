@@ -1,6 +1,7 @@
 import { ViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import PremiumFeatures from '@baserow_premium/features'
 import PremiumModal from '@baserow_premium/components/PremiumModal'
+import ViewOwnershipMenuLink from '@baserow_premium/components/views/ViewOwnershipMenuLink'
 
 export class PersonalViewOwnershipType extends ViewOwnershipType {
   static getType() {
@@ -35,6 +36,14 @@ export class PersonalViewOwnershipType extends ViewOwnershipType {
 
   getListViewTypeSort() {
     return 40
+  }
+
+  /**
+   * Returns the component that should be used in the menu for changing the
+   * ownership type for the view.
+   */
+  getChangeOwnershipTypeMenuItemComponent() {
+    return ViewOwnershipMenuLink
   }
 
   userCanTryCreate(table, workspaceId) {
