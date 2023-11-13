@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("database", "0136_alter_view_created_by"),
+        ("database", "0138_alter_view_created_by"),
     ]
 
     operations = [
