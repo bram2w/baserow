@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Introduced `BASEROW_FRONTEND_SAME_SITE_COOKIE` environment variable to change the cookie sameSite value.",
+  "issue_number": null,
+  "bullet_points": [],
+  "created_at": "2023-11-13"
+}

@@ -95,6 +95,8 @@ export default function CoreModule(options) {
     BASEROW_BUILDER_DOMAINS: process.env.BASEROW_BUILDER_DOMAINS
       ? process.env.BASEROW_BUILDER_DOMAINS.split(',')
       : [],
+    BASEROW_FRONTEND_SAME_SITE_COOKIE:
+      process.env.BASEROW_FRONTEND_SAME_SITE_COOKIE ?? 'lax',
   }
 
   const locales = [

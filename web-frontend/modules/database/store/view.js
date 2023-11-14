@@ -639,7 +639,7 @@ export const actions = {
       this.$cookies.set('defaultViewId', fittedList, {
         path: '/',
         maxAge: 60 * 60 * 24 * 365, // 1 year
-        sameSite: 'lax',
+        sameSite: this.$config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
         secure,
       })
       commit('SET_DEFAULT_VIEW', view.id)

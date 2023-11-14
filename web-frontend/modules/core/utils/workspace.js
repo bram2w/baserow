@@ -9,7 +9,7 @@ export const setWorkspaceCookie = (workspaceId, { $cookies, $config }) => {
   $cookies.set(cookieWorkspaceName, workspaceId, {
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
-    sameSite: 'lax',
+    sameSite: $config.BASEROW_FRONTEND_SAME_SITE_COOKIE,
     secure,
   })
 }
