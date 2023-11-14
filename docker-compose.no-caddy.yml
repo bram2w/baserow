@@ -205,6 +205,7 @@ services:
       BASEROW_UNIQUE_ROW_VALUES_SIZE_LIMIT:
       BASEROW_ROW_PAGE_SIZE_LIMIT:
       BASEROW_BUILDER_DOMAINS:
+      BASEROW_FRONTEND_SAME_SITE_COOKIE:
     depends_on:
       - backend
     networks:
