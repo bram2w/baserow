@@ -100,12 +100,16 @@
                 license.license_id
               }}</span>
             </div>
-            <div
+            <!-- <div
               class="license-plan margin-right-1"
-              :class="getLicenseType(license).getLicenseBadgeClass()"
+              :class="getLicenseType(license).getLicenseBadgeColor()"
             >
-              {{ getLicenseType(license).getName() }}
-            </div>
+             
+            </div> -->
+
+            <Badge :color="getLicenseType(license).getLicenseBadgeColor()" bold>
+              {{ getLicenseType(license).getName() }}</Badge
+            >
             <div
               v-if="!license.is_active"
               class="license-plan license-plan--expired"

@@ -34,12 +34,9 @@
               </div>
             </div>
             <div class="license-detail__item-value">
-              <div
-                class="license-plan license-plan--inline"
-                :class="licenseType.getLicenseBadgeClass()"
+              <Badge :color="licenseType.getLicenseBadgeColor()" bold>
+                {{ licenseType.getName() }}</Badge
               >
-                {{ licenseType.getName() }}
-              </div>
               <div
                 v-if="!license.is_active"
                 class="license-plan license-plan--inline license-plan--expired"

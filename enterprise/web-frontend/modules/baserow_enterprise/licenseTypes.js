@@ -13,8 +13,8 @@ export class EnterpriseWithoutSupportLicenseType extends LicenseType {
     return i18n.t('enterprise.license')
   }
 
-  getLicenseBadgeClass() {
-    return 'license-plan--enterprise'
+  getLicenseBadgeColor() {
+    return 'neutral'
   }
 
   getFeaturesDescription() {
