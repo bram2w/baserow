@@ -274,7 +274,7 @@ class ViewIndexingHandler(metaclass=baserow_trace_methods(tracer)):
         """
 
         view_type = view_type_registry.get_by_model(view)
-        if not view_type.can_sort:
+        if not view_type.can_sort and not view_type.can_group_by:
             return
 
         try:

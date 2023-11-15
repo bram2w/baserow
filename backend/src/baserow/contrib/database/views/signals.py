@@ -63,6 +63,19 @@ def update_view_index_if_view_sort_changes(sender, view_sort, **kwargs):
     ViewIndexingHandler.schedule_index_update(view_sort.view)
 
 
+@receiver(
+    [
+        view_group_by_created,
+        view_group_by_updated,
+        view_group_by_deleted,
+    ]
+)
+def update_view_index_if_view_group_by_changes(sender, view_group_by, **kwargs):
+    from baserow.contrib.database.views.handler import ViewIndexingHandler
+
+    ViewIndexingHandler.schedule_index_update(view_group_by.view)
+
+
 @receiver(view_loaded)
 def view_loaded_create_indexes_and_columns(sender, view, table_model, **kwargs):
     from baserow.contrib.database.table.tasks import setup_last_modified_by_column
