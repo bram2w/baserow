@@ -52,6 +52,7 @@
         <Dropdown
           class="dropdown--floating"
           :value="value.type"
+          small
           @input="
             $emit('input', {
               userFieldNames: value.userFieldNames,

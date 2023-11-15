@@ -15,9 +15,10 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
-        <a @click="exportView()">
-          <i class="context__menu-icon iconoir-share-ios"></i>
+        <a class="context__menu-item-link" @click="exportView()">
+          <i class="context__menu-item-icon iconoir-share-ios"></i>
           {{ $t('viewContext.exportView') }}
         </a>
       </li>
@@ -29,9 +30,10 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
-        <a @click="importFile()">
-          <i class="context__menu-icon iconoir-import"></i>
+        <a class="context__menu-item-link" @click="importFile()">
+          <i class="context__menu-item-icon iconoir-import"></i>
           {{ $t('viewContext.importFile') }}
         </a>
       </li>
@@ -43,12 +45,14 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
         <a
+          class="context__menu-item-link"
           :class="{ 'context__menu-item--loading': duplicateLoading }"
           @click="duplicateView()"
         >
-          <i class="context__menu-icon iconoir-copy"></i>
+          <i class="context__menu-item-icon iconoir-copy"></i>
           {{ $t('viewContext.duplicateView') }}
         </a>
       </li>
@@ -71,9 +75,10 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
-        <a @click="openWebhookModal()">
-          <i class="context__menu-icon iconoir-globe"></i>
+        <a class="context__menu-item-link" @click="openWebhookModal()">
+          <i class="context__menu-item-icon iconoir-globe"></i>
           {{ $t('viewContext.webhooks') }}
         </a>
       </li>
@@ -85,9 +90,10 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
-        <a @click="enableRename()">
-          <i class="context__menu-icon iconoir-edit-pencil"></i>
+        <a class="context__menu-item-link" @click="enableRename()">
+          <i class="context__menu-item-icon iconoir-edit-pencil"></i>
           {{ $t('viewContext.renameView') }}
         </a>
       </li>
@@ -99,12 +105,14 @@
             database.workspace.id
           )
         "
+        class="context__menu-item context-menu-item--with-separator"
       >
         <a
+          class="context__menu-item-link context__menu-item-link--delete"
           :class="{ 'context__menu-item--loading': deleteLoading }"
           @click="deleteView()"
         >
-          <i class="context__menu-icon iconoir-bin"></i>
+          <i class="context__menu-item-icon iconoir-bin"></i>
           {{ $t('viewContext.deleteView') }}
         </a>
       </li>

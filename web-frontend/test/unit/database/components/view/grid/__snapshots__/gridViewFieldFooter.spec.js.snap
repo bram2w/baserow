@@ -17,11 +17,15 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          common.none
+          <span
+            class="select__item-name-text"
+          >
+            common.none
+          </span>
         </div>
-         
-        <!---->
       </a>
+       
+      <!---->
     </li>
      
     <li
@@ -33,13 +37,15 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          
+          <span
+            class="select__item-name-text"
+          >
             viewAggregationType.emptyCount
-          
+          </span>
         </div>
-         
-        <!---->
       </a>
+       
+      <!---->
     </li>
     <li
       class="select__item select__item--no-options active"
@@ -50,15 +56,17 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          
+          <span
+            class="select__item-name-text"
+          >
             viewAggregationType.notEmptyCount
-          
+          </span>
         </div>
-         
-        <i
-          class="select__item-active-icon iconoir-check-circle"
-        />
       </a>
+       
+      <i
+        class="select__item-active-icon iconoir-check"
+      />
     </li>
     <li
       class="select__item select__item--no-options"
@@ -69,13 +77,15 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          
+          <span
+            class="select__item-name-text"
+          >
             viewAggregationType.emptyPercentage
-          
+          </span>
         </div>
-         
-        <!---->
       </a>
+       
+      <!---->
     </li>
     <li
       class="select__item select__item--no-options"
@@ -86,13 +96,15 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          
+          <span
+            class="select__item-name-text"
+          >
             viewAggregationType.notEmptyPercentage
-          
+          </span>
         </div>
-         
-        <!---->
       </a>
+       
+      <!---->
     </li>
     <li
       class="select__item select__item--no-options"
@@ -103,13 +115,15 @@ exports[`Field footer component Change type 1`] = `
         <div
           class="select__item-name"
         >
-          
+          <span
+            class="select__item-name-text"
+          >
             viewAggregationType.uniqueCount
-          
+          </span>
         </div>
-         
-        <!---->
       </a>
+       
+      <!---->
     </li>
   </ul>
 </div>

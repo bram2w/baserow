@@ -11,6 +11,7 @@
             :class="{ 'dropdown--error': $v.values.link_row_table_id.$error }"
             :fixed-items="true"
             :disabled="!isSelectedFieldAccessible"
+            small
             @hide="$v.values.link_row_table_id.$touch()"
           >
             <DropdownItem

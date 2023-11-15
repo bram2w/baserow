@@ -15,18 +15,20 @@
         <li
           v-for="option in options"
           :key="option"
-          class="select__item select__item-no-options"
+          class="select__item select__item--no-options"
           :class="{ active: option === rowIdentifierTypeSelected }"
         >
           <a class="select__item-link" @click="setRowIdentifierTypes(option)">
             <span class="select__item-name">
-              {{ $t(`gridViewIdentifierOptions.${option}`) }}
+              <span class="select__item-text">{{
+                $t(`gridViewIdentifierOptions.${option}`)
+              }}</span>
             </span>
-            <i
-              v-if="option === rowIdentifierTypeSelected"
-              class="select__item-active-icon iconoir-check-circle"
-            ></i>
           </a>
+          <i
+            v-if="option === rowIdentifierTypeSelected"
+            class="select__item-active-icon iconoir-check"
+          ></i>
         </li>
       </ul>
     </Context>

@@ -29,7 +29,7 @@
         {{ description }}
       </div>
     </a>
-    <i class="select__item-active-icon iconoir-check-circle"></i>
+    <i class="select__item-active-icon iconoir-check"></i>
   </li>
 </template>
 

@@ -2,7 +2,7 @@
   <a class="select__item-link" @click="$emit('click')">
     <span class="select__item-name">
       <i :class="`${elementType.iconClass} select__item-icon`"></i>
-      {{ elementType.name }}
+      <span class="select__item-name-text">{{ elementType.name }}</span>
     </span>
   </a>
 </template>

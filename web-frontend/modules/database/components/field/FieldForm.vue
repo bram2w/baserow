@@ -51,6 +51,7 @@
           v-model="values.type"
           :class="{ 'dropdown--error': $v.values.type.$error }"
           :fixed-items="true"
+          small
           @hide="$v.values.type.$touch()"
         >
           <DropdownItem

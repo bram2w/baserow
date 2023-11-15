@@ -326,6 +326,87 @@
             </div>
           </div>
           <div class="control">
+            <label class="control__label">Dropdown small</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" small>
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown disabled</label>
+            <div class="control__elements">
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" disabled>
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
             <label class="control__label">Dropdown</label>
             <div class="control__elements">
               value: {{ dropdown }}
@@ -450,18 +531,90 @@
                   <DropdownItem
                     name="Choice 2"
                     value="choice-2"
-                    icon="pencil"
+                    icon="iconoir-edit-pencil"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 3"
                     value="choice-3"
-                    icon="database"
+                    icon="iconoir-db"
                   ></DropdownItem>
                   <DropdownItem
                     name="Choice 4"
                     value="choice-4"
-                    icon="times"
+                    icon="iconoir-cancel"
                     :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown tiny</label>
+            <div class="control__elements">
+              value: {{ dropdown }}
+              <br />
+              <br />
+              <div style="width: 200px">
+                <Dropdown
+                  v-model="dropdown"
+                  :show-search="false"
+                  class="dropdown--tiny"
+                >
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                </Dropdown>
+              </div>
+            </div>
+          </div>
+          <div class="control">
+            <label class="control__label">Dropdown error</label>
+            <div class="control__elements">
+              <div style="width: 200px">
+                <Dropdown v-model="dropdown" class="dropdown--error">
+                  <DropdownItem name="Choice 1" value="choice-1"></DropdownItem>
+                  <DropdownItem
+                    name="Choice 2"
+                    value="choice-2"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 3"
+                    value="choice-3"
+                    icon="iconoir-db"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 4"
+                    value="choice-4"
+                    icon="iconoir-cancel"
+                    :disabled="true"
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 5"
+                    value="choice-5"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
+                  ></DropdownItem>
+                  <DropdownItem
+                    name="Choice 6"
+                    value="choice-6"
+                    icon="iconoir-edit-pencil"
+                    description="Lorem ipsum dolor sit amet, consectetur."
                   ></DropdownItem>
                 </Dropdown>
               </div>
@@ -710,6 +863,18 @@
           ></Button>
         </div>
         <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Overflow button</h3>
+          <Button overflow>Overflow</Button>
+
+          <button class="button button--large button--error button--overflow">
+            Remove
+          </button>
+        </div>
+
+        <div
           class="margin-bottom-3"
           :style="{ backgroundColor: 'white', padding: '5px' }"
         >
@@ -841,21 +1006,24 @@
           <div class="context">
             <div class="context__menu-title">Vehicles</div>
             <ul class="context__menu">
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-edit-pencil"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
                   Rename database
                 </a>
               </li>
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-bin"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   Delete table
                 </a>
               </li>
-              <li>
-                <a href="#" class="context__menu-item--loading">
-                  <i class="context__menu-icon iconoir-bin"></i>
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link context__menu-item-link--loading"
+                  href="#"
+                >
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   Loading
                 </a>
               </li>
@@ -864,20 +1032,35 @@
           <div class="context" style="max-width: 264px">
             <div class="context__menu-title">Workspace permissions</div>
             <ul class="context__menu context__menu--can-be-active">
-              <li>
-                <a href="#" class="context__menu-item-with-desc active">
+              <li class="context__menu-item">
+                <a
+                  href="#"
+                  class="context__menu-item-link context__menu-item-link--with-desc active"
+                >
                   <span class="context__menu-item-title">Admin</span>
                   <div class="context__menu-item-description">
                     Description of what an admin can or can’t do on the
                     workspace.
                   </div>
-                  <i class="context__menu-active-icon iconoir-check-circle"></i>
+                  <i class="context__menu-active-icon iconoir-check"></i>
                 </a>
               </li>
-              <li>
+              <li class="context__menu-item">
                 <a
                   href="#"
-                  class="context__menu-item-with-desc context__menu-item--loading"
+                  class="context__menu-item-link context__menu-item-link--with-desc disabled"
+                >
+                  <span class="context__menu-item-title">Admin</span>
+                  <div class="context__menu-item-description">
+                    Description of what an admin can or can’t do on the
+                    workspace.
+                  </div>
+                </a>
+              </li>
+              <li class="context__menu-item">
+                <a
+                  href="#"
+                  class="context__menu-item-link context__menu-item-link--with-desc context__menu-item-link--loading"
                 >
                   <span class="context__menu-item-title">Builder</span>
                   <div class="context__menu-item-description">
@@ -886,8 +1069,13 @@
                   </div>
                 </a>
               </li>
-              <li>
-                <a class="color-error" href="#"> Remove from workspace </a>
+              <li class="context__menu-item context__menu-item--with-separator">
+                <a
+                  class="context__menu-item-link context__menu-item-link--delete"
+                  href="#"
+                >
+                  Remove from workspace
+                </a>
               </li>
             </ul>
           </div>
@@ -904,8 +1092,8 @@
               <li class="select__item active">
                 <a href="#" class="select__item-link">
                   <div class="select__item-name">Workspace name 1</div>
-                  <i class="select__item-active-icon iconoir-check-circle"></i>
                 </a>
+                <i class="select__item-active-icon iconoir-check"></i>
                 <a href="#" class="select__item-options">
                   <i class="baserow-icon-more-vertical"></i>
                 </a>
@@ -928,7 +1116,7 @@
               </li>
               <li class="select__item">
                 <a href="#" class="select__item-link">
-                  <div class="select__item-name">roup name 4</div>
+                  <div class="select__item-name">Workspace name 4</div>
                 </a>
                 <a href="#" class="select__item-options">
                   <i class="baserow-icon-more-vertical"></i>
@@ -1230,22 +1418,30 @@
           <Context ref="context1">
             <div class="context__menu-title">Vehicles</div>
             <ul class="context__menu">
-              <li>
-                <a href="#">
-                  <i class="context__menu-icon iconoir-edit-pencil"></i>
+              <li class="context__menu-item">
+                <a class="context__menu-item-link" href="#">
+                  <i class="context__menu-item-icon iconoir-edit-pencil"></i>
                   This does nothing
                 </a>
               </li>
-              <li>
-                <a @click="$refs.context2.toggle($event.target)">
+              <li class="context__menu-item">
+                <a
+                  class="context__menu-item-link"
+                  @click="$refs.context2.toggle($event.target)"
+                >
                   Open another context
                 </a>
                 <Context ref="context2">
                   <div class="context__menu-title">Open modal</div>
                   <ul class="context__menu">
-                    <li>
-                      <a @click="$refs.modal1.show()">
-                        <i class="context__menu-icon iconoir-edit-pencil"></i>
+                    <li class="context__menu-item">
+                      <a
+                        class="context__menu-item-link"
+                        @click="$refs.modal1.show()"
+                      >
+                        <i
+                          class="context__menu-item-icon iconoir-edit-pencil"
+                        ></i>
                         Click to open modal
                       </a>
                     </li>
@@ -1259,25 +1455,30 @@
                       <Context ref="context3">
                         <div class="context__menu-title">Vehicles</div>
                         <ul class="context__menu">
-                          <li>
-                            <a href="#">
+                          <li class="context__menu-item">
+                            <a class="context__menu-item-link" href="#">
                               <i
-                                class="context__menu-icon iconoir-edit-pencil"
+                                class="context__menu-item-icon iconoir-edit-pencil"
                               ></i>
                               This does nothing
                             </a>
                           </li>
-                          <li>
-                            <a @click="$refs.context4.toggle($event.target)">
+                          <li class="context__menu-item">
+                            <a
+                              class="context__menu-item-link"
+                              @click="$refs.context4.toggle($event.target)"
+                            >
                               Open another context
                             </a>
                             <Context ref="context4">
                               <div class="context__menu-title">End!</div>
                             </Context>
                           </li>
-                          <li>
-                            <a href="#">
-                              <i class="context__menu-icon iconoir-bin"></i>
+                          <li class="context__menu-item">
+                            <a class="context__menu-item-link" href="#">
+                              <i
+                                class="context__menu-item-icon iconoir-bin"
+                              ></i>
                               This does nothing
                             </a>
                           </li>
@@ -1289,7 +1490,7 @@
               </li>
               <li>
                 <a href="#">
-                  <i class="context__menu-icon iconoir-bin"></i>
+                  <i class="context__menu-item-icon iconoir-bin"></i>
                   This does nothing
                 </a>
               </li>

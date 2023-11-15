@@ -9,9 +9,13 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
-        <a @click=";[$emit('create-row'), hide()]">
-          <i class="context__menu-icon iconoir-plus"></i>
+        <a
+          class="context__menu-item-link"
+          @click=";[$emit('create-row'), hide()]"
+        >
+          <i class="context__menu-item-icon iconoir-plus"></i>
           {{ $t('kanbanViewStackContext.createCard') }}
         </a>
       </li>
@@ -24,12 +28,14 @@
             database.workspace.id
           )
         "
+        class="context__menu-item"
       >
         <a
           ref="updateContextLink"
+          class="context__menu-item-link"
           @click="$refs.updateContext.toggle($refs.updateContextLink)"
         >
-          <i class="context__menu-icon iconoir-edit-pencil"></i>
+          <i class="context__menu-item-icon iconoir-edit-pencil"></i>
           {{ $t('kanbanViewStackContext.editStack') }}
         </a>
         <KanbanViewUpdateStackContext
@@ -49,9 +55,13 @@
             database.workspace.id
           )
         "
+        class="context__menu-item context__menu-item--with-separator"
       >
-        <a @click="$refs.deleteModal.show()">
-          <i class="context__menu-icon iconoir-bin"></i>
+        <a
+          class="context__menu-item-link context__menu-item-link--delete"
+          @click="$refs.deleteModal.show()"
+        >
+          <i class="context__menu-item-icon iconoir-bin"></i>
           {{ $t('kanbanViewStackContext.deleteStack') }}
         </a>
       </li>

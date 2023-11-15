@@ -25,6 +25,7 @@
           :class="{ 'dropdown--error': $v.values.style.$error }"
           :fixed-items="true"
           :show-search="false"
+          small
           @hide="$v.values.style.$touch()"
         >
           <DropdownItem
@@ -48,6 +49,7 @@
           :class="{ 'dropdown--error': $v.values.max_value.$error }"
           :show-search="false"
           :fixed-items="true"
+          small
           @hide="$v.values.max_value.$touch()"
         >
           <DropdownItem

@@ -16,7 +16,7 @@
       </p>
       <div class="actions">
         <div class="align-right">
-          <a
+          <button
             class="button button--large button--error button--overflow"
             :class="{ 'button--loading': loading }"
             :disabled="loading"
@@ -24,7 +24,7 @@
             @click.prevent="deleteUser()"
           >
             {{ $t('deleteUserModal.delete', user) }}
-          </a>
+          </button>
         </div>
       </div>
     </div>

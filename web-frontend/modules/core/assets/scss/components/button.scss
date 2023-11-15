@@ -277,6 +277,8 @@
   @extend %ellipsis;
 
   display: block;
+  width: 100%;
+  text-align: center;
 }
 
 .button--full-width {

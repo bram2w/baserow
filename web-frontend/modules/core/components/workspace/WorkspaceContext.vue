@@ -13,14 +13,21 @@
       class="loading margin-left-2 margin-top-2 margin-bottom-2 margin-bottom-2"
     ></div>
     <ul v-else class="context__menu">
-      <li v-if="$hasPermission('workspace.update', workspace, workspace.id)">
-        <a @click="$emit('rename')">
-          <i class="context__menu-icon iconoir-edit-pencil"></i>
+      <li
+        v-if="$hasPermission('workspace.update', workspace, workspace.id)"
+        class="context__menu-item"
+      >
+        <a class="context__menu-item-link" @click="$emit('rename')">
+          <i class="context__menu-item-icon iconoir-edit-pencil"></i>
           {{ $t('workspaceContext.renameWorkspace') }}
         </a>
       </li>
-      <li v-if="$hasPermission('invitation.read', workspace, workspace.id)">
+      <li
+        v-if="$hasPermission('invitation.read', workspace, workspace.id)"
+        class="context__menu-item"
+      >
         <a
+          class="context__menu-item-link"
           @click="
             $router.push({
               name: 'settings-members',
@@ -31,30 +38,38 @@
             hide()
           "
         >
-          <i class="context__menu-icon iconoir-community"></i>
+          <i class="context__menu-item-icon iconoir-community"></i>
           {{ $t('workspaceContext.members') }}
         </a>
       </li>
       <li
         v-if="$hasPermission('workspace.read_trash', workspace, workspace.id)"
+        class="context__menu-item"
       >
-        <a @click="showWorkspaceTrashModal">
-          <i class="context__menu-icon iconoir-refresh-double"></i>
+        <a class="context__menu-item-link" @click="showWorkspaceTrashModal">
+          <i class="context__menu-item-icon iconoir-refresh-double"></i>
           {{ $t('workspaceContext.viewTrash') }}
         </a>
       </li>
-      <li>
-        <a @click="$refs.leaveWorkspaceModal.show()">
-          <i class="context__menu-icon iconoir-log-out"></i>
+      <li class="context__menu-item">
+        <a
+          class="context__menu-item-link"
+          @click="$refs.leaveWorkspaceModal.show()"
+        >
+          <i class="context__menu-item-icon iconoir-log-out"></i>
           {{ $t('workspaceContext.leaveWorkspace') }}
         </a>
       </li>
-      <li v-if="$hasPermission('workspace.delete', workspace, workspace.id)">
+      <li
+        v-if="$hasPermission('workspace.delete', workspace, workspace.id)"
+        class="context__menu-item context__menu-item--with-separator"
+      >
         <a
-          :class="{ 'context__menu-item--loading': loading }"
+          class="context__menu-item-link context__menu-item-link--delete"
+          :class="{ 'context__menu-item-link--loading': loading }"
           @click="deleteWorkspace"
         >
-          <i class="context__menu-icon iconoir-bin"></i>
+          <i class="context__menu-item-icon iconoir-bin"></i>
           {{ $t('workspaceContext.deleteWorkspace') }}
         </a>
       </li>

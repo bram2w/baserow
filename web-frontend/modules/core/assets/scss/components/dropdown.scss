@@ -1,27 +1,30 @@
 .dropdown {
   position: relative;
   background-color: $white;
+  @include add-elevation($elevation-low);
+  @include rounded($rounded);
 }
 
 .dropdown__selected {
   position: relative;
   display: block;
   width: 100%;
-  border: 1px solid $color-neutral-400;
-  padding: 0 12px;
-  color: $color-neutral-900;
+  border: 1px solid $palette-neutral-400;
+  padding: 12px 16px;
+  box-sizing: border-box;
+  color: $palette-neutral-1200;
 
-  @include fixed-height(36px, 13px);
+  @include fixed-height(44px, 13px);
   @include rounded($rounded);
   @include flex-align-items(4px);
 
   &:hover {
     text-decoration: none;
-    border-color: $color-neutral-600;
+    border-color: $palette-neutral-500;
   }
 
   .dropdown--error & {
-    border-color: $color-error-500;
+    border-color: $palette-red-600;
   }
 
   .dropdown--tiny & {
@@ -30,13 +33,15 @@
   }
 
   .dropdown--disabled & {
-    background-color: $color-neutral-50;
-    color: $color-neutral-500;
+    background-color: $palette-neutral-100;
+    color: $palette-neutral-900;
     cursor: not-allowed;
+    border-color: $palette-neutral-600;
+  }
 
-    &:hover {
-      border-color: $color-neutral-400;
-    }
+  .dropdown.dropdown--small & {
+    padding: 8px 12px;
+    @include fixed-height(36px, 13px);
   }
 }
 
@@ -60,17 +65,17 @@
 
 .dropdown__toggle-icon {
   margin-left: auto;
+  color: $palette-neutral-600;
 }
 
 .dropdown__items {
-  border: 1px solid $color-primary-500;
+  border: 1px solid $palette-neutral-400;
   background-color: $white;
-  box-shadow: 0 2px 6px 0 rgba($black, 0.16);
   z-index: 1;
-  max-width: 500px;
 
   @include absolute(0, 0, auto, 0);
   @include rounded($rounded);
+  @include add-elevation($elevation-medium);
 
   &.dropdown__items--fixed {
     flex-direction: column;
@@ -82,22 +87,6 @@
     }
   }
 
-  .select__item:hover {
-    background-color: transparent;
-  }
-
-  .select__item.hover {
-    background-color: $color-neutral-100;
-  }
-
-  .select__item.active {
-    background-color: $color-primary-100;
-  }
-
-  .select__item.active:hover::after {
-    display: block;
-  }
-
   .dropdown--floating & {
     right: auto;
   }
@@ -106,4 +95,12 @@
     left: auto;
     right: 0;
   }
+}
+
+.dropdown__selected-placeholder {
+  color: $palette-neutral-700;
+}
+
+.dropdown__items--max-width {
+  max-width: 500px;
 }

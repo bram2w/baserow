@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div @click="() => $refs.modal.show()">
-      <a>
-        <i class="context__menu-icon iconoir-community"></i
+    <div class="context__menu-item" @click="() => $refs.modal.show()">
+      <a class="context__menu-item-link">
+        <i class="context__menu-item-icon iconoir-community"></i
         >{{ $t('memberRolesTableContexItem.label') }}</a
       >
     </div>

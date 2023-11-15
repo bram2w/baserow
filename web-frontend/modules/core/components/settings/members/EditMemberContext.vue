@@ -2,8 +2,8 @@
   <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <template v-if="Object.keys(member).length > 0">
       <ul class="context__menu">
-        <li>
-          <a @click.prevent="copyEmail(member)">
+        <li class="context__menu-item">
+          <a class="context__menu-item-link" @click.prevent="copyEmail(member)">
             <Copied ref="emailCopied"></Copied>
             {{ $t('membersSettings.membersTable.actions.copyEmail') }}
           </a>
@@ -13,9 +13,13 @@
             member.user_id !== userId &&
             $hasPermission('workspace_user.delete', member, workspace.id)
           "
+          class="context__menu-item context__menu-item--with-separator"
         >
-          <a class="color-error" @click.prevent="showRemoveModal">
-            <i class="context__menu-icon iconoir-bin"></i>
+          <a
+            class="context__menu-item-link context__menu-item-link--delete"
+            @click.prevent="showRemoveModal"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('membersSettings.membersTable.actions.remove') }}
           </a>
         </li>
