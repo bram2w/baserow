@@ -25,7 +25,7 @@
               }"
               type="email"
               :placeholder="$t('login.emailPlaceholder')"
-              class="input input--large"
+              class="input"
               @input="loginRequestError = null"
               @blur="$v.values.email.$touch()"
             />

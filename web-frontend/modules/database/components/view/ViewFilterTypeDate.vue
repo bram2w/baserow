@@ -5,7 +5,7 @@
         ref="date"
         v-model="dateString"
         type="text"
-        class="input filters__value-input"
+        class="input filters__value-input input--small"
         :disabled="disabled"
         :class="{ 'input--error': $v.dateString.$error }"
         :placeholder="getDatePlaceholder(field)"

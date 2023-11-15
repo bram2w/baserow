@@ -32,7 +32,7 @@
             v-model="values.targetEmail"
             :class="{ 'input--error': fieldHasErrors('targetEmail') }"
             type="text"
-            class="input input--large"
+            class="input"
             :disabled="loading"
             @blur="$v.values.targetEmail.$touch()"
           />

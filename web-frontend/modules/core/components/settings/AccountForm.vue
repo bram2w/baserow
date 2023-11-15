@@ -10,7 +10,7 @@
           v-model="values.first_name"
           :class="{ 'input--error': fieldHasErrors('first_name') }"
           type="text"
-          class="input input--large"
+          class="input"
           @blur="$v.values.first_name.$touch()"
         />
         <div v-if="!$v.values.first_name.required" class="error">

@@ -20,7 +20,7 @@
             v-model="account.oldPassword"
             :class="{ 'input--error': $v.account.oldPassword.$error }"
             type="password"
-            class="input input--large"
+            class="input"
             @blur="$v.account.oldPassword.$touch()"
           />
           <div v-if="$v.account.oldPassword.$error" class="error">
@@ -48,7 +48,7 @@
             v-model="account.passwordConfirm"
             :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
-            class="input input--large"
+            class="input"
             @blur="$v.account.passwordConfirm.$touch()"
           />
           <div v-if="$v.account.passwordConfirm.$error" class="error">

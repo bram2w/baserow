@@ -10,7 +10,7 @@
           v-model="values.license"
           :class="{ 'input--error': fieldHasErrors('license') }"
           type="text"
-          class="input input--large textarea--modal"
+          class="input textarea--modal"
           @blur="$v.values.license.$touch()"
         />
         <div v-if="fieldHasErrors('license')" class="error">

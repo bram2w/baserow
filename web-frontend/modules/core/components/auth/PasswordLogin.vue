@@ -27,7 +27,7 @@
             v-if="invitation !== null"
             ref="email"
             type="email"
-            class="input input--large"
+            class="input"
             disabled
             :value="values.email"
           />
@@ -39,7 +39,7 @@
             type="email"
             autocomplete="username"
             :placeholder="$t('login.emailPlaceholder')"
-            class="input input--large"
+            class="input"
             @blur="$v.values.email.$touch()"
           />
           <div class="auth__control-error">
@@ -61,7 +61,7 @@
             }"
             type="password"
             autocomplete="current-password"
-            class="input input--large"
+            class="input"
             :placeholder="$t('login.passwordPlaceholder')"
             @blur="$v.values.password.$touch()"
           />

@@ -8,7 +8,7 @@
           v-model="values.name"
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
-          class="input input--large"
+          class="input"
           @blur="$v.values.name.$touch()"
         />
         <div v-if="fieldHasErrors('name')" class="error">

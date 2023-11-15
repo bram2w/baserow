@@ -24,7 +24,7 @@
             <div class="control__elements">
               <input
                 v-model="values.name"
-                class="input"
+                class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('name') }"
                 @blur="$v.values.name.$touch()"
               />
@@ -71,7 +71,7 @@
               <input
                 v-model="values.url"
                 :placeholder="$t('webhookForm.inputLabels.url')"
-                class="input"
+                class="input input--small"
                 :class="{ 'input--error': fieldHasErrors('url') }"
                 @blur="$v.values.url.$touch()"
               />
@@ -145,7 +145,7 @@
             <div class="webhook__header-row">
               <input
                 v-model="header.name"
-                class="input webhook__header-key"
+                class="input input--small webhook__header-key"
                 :class="{
                   'input--error':
                     !lastHeader(index) && $v.headers.$each[index].name.$error,
@@ -160,7 +160,7 @@
               />
               <input
                 v-model="header.value"
-                class="input webhook__header-value"
+                class="input input--small webhook__header-value"
                 :class="{
                   'input--error':
                     !lastHeader(index) && $v.headers.$each[index].value.$error,

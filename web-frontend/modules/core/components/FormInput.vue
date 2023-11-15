@@ -23,11 +23,11 @@
             'form-input--with-icon-left': iconLeft,
             'form-input--with-icon-right': iconRight,
             'form-input--error': hasError,
-            'form-input--large': large,
             'form-input--monospace': monospace,
             'form-input--loading': loading,
             'form-input--disabled': disabled,
             'form-input--focus': focus,
+            'form-input--small': small,
           }"
         >
           <input
@@ -141,6 +141,11 @@ export default {
       type: String,
       required: false,
       default: null,
+    },
+    small: {
+      type: Boolean,
+      required: false,
+      default: false,
     },
   },
   data() {

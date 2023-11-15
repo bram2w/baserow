@@ -6,7 +6,7 @@
           ref="text_default"
           v-model="values.text_default"
           type="text"
-          class="input"
+          class="input input--small"
           :placeholder="$t('fieldTextSubForm.placeholder')"
         />
       </div>

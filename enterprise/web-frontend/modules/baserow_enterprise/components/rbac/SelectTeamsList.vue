@@ -4,7 +4,7 @@
       <input
         v-model="activeSearchTerm"
         type="text"
-        class="input input--large"
+        class="input"
         :placeholder="$t('selectTeamsList.searchPlaceholder')"
         @keyup="search(activeSearchTerm)"
       />
