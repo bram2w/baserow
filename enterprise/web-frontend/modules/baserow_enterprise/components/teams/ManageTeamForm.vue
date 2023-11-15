@@ -42,7 +42,7 @@
         </div>
         <FormElement class="control">
           <div class="control__elements">
-            <Dropdown v-model="values.default_role" :show-search="false">
+            <Dropdown v-model="values.default_role" :show-search="false" small>
               <DropdownItem
                 v-for="role in roles"
                 :key="role.uid"

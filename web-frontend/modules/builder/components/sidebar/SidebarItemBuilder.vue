@@ -35,9 +35,10 @@
           v-if="
             $hasPermission('builder.page.update', page, builder.workspace.id)
           "
+          class="context__menu-item"
         >
-          <a @click="enableRename()">
-            <i class="context__menu-icon iconoir-edit-pencil"></i>
+          <a class="context__menu-item-link" @click="enableRename()">
+            <i class="context__menu-item-icon iconoir-edit-pencil"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
@@ -45,15 +46,17 @@
           v-if="
             $hasPermission('builder.page.duplicate', page, builder.workspace.id)
           "
+          class="context__menu-item"
         >
           <a
             :class="{
-              'context__menu-item--loading': duplicateLoading,
+              'context__menu-item-link--loading': duplicateLoading,
               disabled: deleteLoading || duplicateLoading,
             }"
+            class="context__menu-item-link"
             @click="duplicatePage()"
           >
-            <i class="context__menu-icon iconoir-copy"></i>
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('action.duplicate') }}
           </a>
         </li>
@@ -61,12 +64,14 @@
           v-if="
             $hasPermission('builder.page.delete', page, builder.workspace.id)
           "
+          class="context__menu-item context__menu-item--with-separator"
         >
           <a
-            :class="{ 'context__menu-item--loading': deleteLoading }"
+            :class="{ 'context__menu-item-link--loading': deleteLoading }"
+            class="context__menu-item-link context__menu-link--delete"
             @click="deletePage()"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('action.delete') }}
           </a>
         </li>

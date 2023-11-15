@@ -5,7 +5,8 @@
     :value="copy"
     :show-empty-value="false"
     :fixed-items="true"
-    class="dropdown--floating filters__value-dropdown dropdown--tiny"
+    class="dropdown--floating filters__value-dropdown"
+    small
     @input="input"
   ></FieldCollaboratorDropdown>
 </template>

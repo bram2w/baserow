@@ -46,6 +46,7 @@
           <li
             v-for="(component, index) in additionalContextComponents"
             :key="index"
+            class="context__menu-item"
             @click="$refs.context.hide()"
           >
             <component :is="component" :application="application"></component>
@@ -59,9 +60,10 @@
                 application.workspace.id
               )
             "
+            class="context__menu-item"
           >
-            <a @click="enableRename()">
-              <i class="context__menu-icon iconoir-edit-pencil"></i>
+            <a class="context__menu-item-link" @click="enableRename()">
+              <i class="context__menu-item-icon iconoir-edit-pencil"></i>
               {{
                 $t('sidebarApplication.rename', {
                   type: application._.type.name.toLowerCase(),
@@ -77,6 +79,7 @@
                 application.workspace.id
               )
             "
+            class="context__menu-item"
           >
             <SidebarDuplicateApplicationContextItem
               :application="application"
@@ -92,9 +95,10 @@
                 application.workspace.id
               )
             "
+            class="context__menu-item"
           >
-            <a @click="openSnapshots">
-              <i class="context__menu-icon baserow-icon-history"></i>
+            <a class="context__menu-item-link" @click="openSnapshots">
+              <i class="context__menu-item-icon baserow-icon-history"></i>
               {{ $t('sidebarApplication.snapshots') }}
             </a>
           </li>
@@ -110,9 +114,13 @@
                 application.workspace.id
               )
             "
+            class="context__menu-item"
           >
-            <a @click="showApplicationTrashModal">
-              <i class="context__menu-icon iconoir-refresh-double"></i>
+            <a
+              class="context__menu-item-link"
+              @click="showApplicationTrashModal"
+            >
+              <i class="context__menu-item-icon iconoir-refresh-double"></i>
               {{ $t('sidebarApplication.viewTrash') }}
             </a>
           </li>
@@ -124,12 +132,14 @@
                 application.workspace.id
               )
             "
+            class="context__menu-item context__menu-item--with-separator"
           >
             <a
-              :class="{ 'context__menu-item--loading': deleting }"
+              class="context__menu-item-link context__menu-item-link--delete"
+              :class="{ 'context__menu-item-link--loading': deleting }"
               @click="deleteApplication()"
             >
-              <i class="context__menu-icon iconoir-bin"></i>
+              <i class="context__menu-item-icon iconoir-bin"></i>
               {{
                 $t('sidebarApplication.delete', {
                   type: application._.type.name.toLowerCase(),

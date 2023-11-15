@@ -1,8 +1,13 @@
 <template>
-  <a @click="changeOwnershipType(view.ownership_type)">
-    <i class="context__menu-icon iconoir-right-round-arrow"></i>
-    {{ changeOwnershipTypeText }}
-  </a>
+  <li class="context__menu-item">
+    <a
+      class="context__menu-item-link"
+      @click="changeOwnershipType(view.ownership_type)"
+    >
+      <i class="context__menu-item-icon iconoir-right-round-arrow"></i>
+      {{ changeOwnershipTypeText }}
+    </a>
+  </li>
 </template>
 
 <script>

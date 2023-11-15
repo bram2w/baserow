@@ -28,6 +28,7 @@
                 v-model="values.permissions"
                 class="group-invite-form__role-selector-dropdown"
                 :show-search="false"
+                small
               >
                 <DropdownItem
                   v-for="role in roles"

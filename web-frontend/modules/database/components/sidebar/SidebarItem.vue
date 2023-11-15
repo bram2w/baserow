@@ -34,6 +34,7 @@
         <li
           v-for="(component, index) in additionalContextComponents"
           :key="index"
+          class="context__menu-item"
           @click="$refs.context.hide()"
         >
           <component
@@ -50,9 +51,10 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="exportTable()">
-            <i class="context__menu-icon iconoir-share-ios"></i>
+          <a class="context__menu-item-link" @click="exportTable()">
+            <i class="context__menu-item-icon iconoir-share-ios"></i>
             {{ $t('sidebarItem.exportTable') }}
           </a>
         </li>
@@ -64,10 +66,11 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="openWebhookModal()">
-            <i class="context__menu-icon iconoir-globe"></i>
-            Webhooks
+          <a class="context__menu-item-link" @click="openWebhookModal()">
+            <i class="context__menu-item-icon iconoir-globe"></i>
+            {{ $t('sidebarItem.webhooks') }}
           </a>
         </li>
         <li
@@ -78,9 +81,10 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="enableRename()">
-            <i class="context__menu-icon iconoir-edit-pencil"></i>
+          <a class="context__menu-item-link" @click="enableRename()">
+            <i class="context__menu-item-icon iconoir-edit-pencil"></i>
             {{ $t('action.rename') }}
           </a>
         </li>
@@ -92,6 +96,7 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <SidebarDuplicateTableContextItem
             :database="database"
@@ -108,12 +113,14 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
-            :class="{ 'context__menu-item--loading': deleteLoading }"
+            class="context__menu-item-link context__menu-item-link--delete"
+            :class="{ 'context__menu-item-link--loading': deleteLoading }"
             @click="deleteTable()"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('action.delete') }}
           </a>
         </li>

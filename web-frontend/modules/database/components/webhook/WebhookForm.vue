@@ -52,7 +52,7 @@
               {{ $t('webhookForm.inputLabels.requestMethod') }}
             </div>
             <div class="control__elements">
-              <Dropdown v-model="values.request_method">
+              <Dropdown v-model="values.request_method" small>
                 <DropdownItem name="GET" value="GET"></DropdownItem>
                 <DropdownItem name="POST" value="POST"></DropdownItem>
                 <DropdownItem name="PATCH" value="PATCH"></DropdownItem>
@@ -197,6 +197,7 @@
               <Dropdown
                 v-model="exampleWebhookEventType"
                 class="dropdown--floating-left"
+                small
               >
                 <DropdownItem
                   v-for="webhookEvent in webhookEventTypes"

@@ -36,7 +36,8 @@
             :value="sort.field"
             :disabled="disableSort"
             :fixed-items="true"
-            class="dropdown--floating dropdown--tiny"
+            class="dropdown--floating"
+            small
             @input="updateSort(sort, { field: $event })"
           >
             <DropdownItem

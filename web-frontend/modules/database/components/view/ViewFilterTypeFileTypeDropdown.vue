@@ -3,7 +3,8 @@
     :value="filter.value"
     :show-search="false"
     :fixed-items="true"
-    class="filters__value-dropdown dropdown--tiny"
+    class="filters__value-dropdown"
+    small
     @input="$emit('input', $event)"
   >
     <DropdownItem

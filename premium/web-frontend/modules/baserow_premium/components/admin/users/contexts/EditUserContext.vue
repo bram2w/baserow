@@ -3,54 +3,66 @@
     <template v-if="Object.keys(user).length > 0">
       <div class="context__menu-title">{{ user.username }} ({{ user.id }})</div>
       <ul class="context__menu">
-        <li>
-          <a @click.prevent="showEditModal">
-            <i class="context__menu-icon iconoir-edit-pencil"></i>
+        <li class="context__menu-item">
+          <a class="context__menu-item-link" @click.prevent="showEditModal">
+            <i class="context__menu-item-icon iconoir-edit-pencil"></i>
             {{ $t('action.edit') }}
           </a>
         </li>
-        <li>
-          <a @click.prevent="showChangePasswordModal">
-            <i class="context__menu-icon iconoir-key-alt"></i>
+        <li class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click.prevent="showChangePasswordModal"
+          >
+            <i class="context__menu-item-icon iconoir-key-alt"></i>
             {{ $t('editUserContext.changePassword') }}
           </a>
         </li>
-        <li>
+        <li class="context__menu-item">
           <a
             v-if="user.is_active"
+            class="context__menu-item-link"
             :class="{
-              'context__menu-item--loading': loading,
+              'context__menu-item-link--loading': loading,
             }"
             @click.prevent="deactivate"
           >
-            <i class="context__menu-icon iconoir-cancel"></i>
+            <i class="context__menu-item-icon iconoir-cancel"></i>
             {{ $t('action.deactivate') }}
           </a>
           <a
             v-else
+            class="context__menu-item-link"
             :class="{
-              'context__menu-item--loading': loading,
+              'context__menu-item-link--loading': loading,
             }"
             @click.prevent="activate"
           >
-            <i class="context__menu-icon iconoir-check"></i>
+            <i class="context__menu-item-icon iconoir-check"></i>
             {{ $t('action.activate') }}
           </a>
         </li>
-        <li v-if="user.id !== userId && !user.is_staff">
+        <li
+          v-if="user.id !== userId && !user.is_staff"
+          class="context__menu-item"
+        >
           <a
+            class="context__menu-item-link"
             :class="{
-              'context__menu-item--loading': impersonateLoading,
+              'context__menu-item-link--loading': impersonateLoading,
             }"
             @click.prevent="impersonate"
           >
-            <i class="context__menu-icon iconoir-group"></i>
+            <i class="context__menu-item-icon iconoir-group"></i>
             {{ $t('editUserContext.impersonate') }}
           </a>
         </li>
-        <li>
-          <a @click.prevent="showDeleteModal">
-            <i class="context__menu-icon iconoir-bin"></i>
+        <li class="context__menu-item context__menu-item--with-separator">
+          <a
+            class="context__menu-item-link context__menu-item-link--delete"
+            @click.prevent="showDeleteModal"
+          >
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('editUserContext.delete') }}
           </a>
         </li>

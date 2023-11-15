@@ -4,6 +4,7 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--small': small,
     }"
     :tabindex="realTabindex"
     @focusin="show()"
@@ -27,7 +28,9 @@
       </template>
       <template v-else>
         <slot name="defaultValue">
-          {{ placeholder ? placeholder : $t('action.makeChoice') }}
+          <span class="dropdown__selected-placeholder">{{
+            placeholder ? placeholder : $t('action.makeChoice')
+          }}</span>
         </slot>
       </template>
       <i class="dropdown__toggle-icon iconoir-nav-arrow-down"></i>
@@ -38,6 +41,7 @@
       :class="{
         hidden: !open,
         'dropdown__items--fixed': fixedItemsImmutable,
+        'dropdown__items--max-width': maxWidth,
       }"
     >
       <div v-if="showSearch" class="select__search">

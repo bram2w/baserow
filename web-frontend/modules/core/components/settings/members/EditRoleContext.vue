@@ -21,9 +21,9 @@
         </div>
       </div>
       <ul class="context__menu context__menu--can-be-active">
-        <li v-for="role in roles" :key="role.uid">
+        <li v-for="role in roles" :key="role.uid" class="context__menu-item">
           <a
-            class="context__menu-item-with-desc"
+            class="context__menu-item-link context__menu-item-link--with-desc"
             :class="{ active: subject[roleValueColumn] === role.uid }"
             @click="roleUpdate(role.uid, subject)"
           >
@@ -33,22 +33,21 @@
                 >{{ $t('common.free') }}
               </Badge>
             </span>
-            <span
-              v-if="role.description"
-              class="context__menu-item-description"
-            >
+            <div v-if="role.description" class="context__menu-item-description">
               {{ role.description }}
-            </span>
+            </div>
             <i
               v-if="subject[roleValueColumn] === role.uid"
-              class="context__menu-active-icon iconoir-check-circle"
+              class="context__menu-active-icon iconoir-check"
             ></i>
           </a>
         </li>
-        <li>
+        <li
+          v-if="allowRemovingRole"
+          class="context__menu-item context__menu-item--with-separator"
+        >
           <a
-            v-if="allowRemovingRole"
-            class="context__menu-item--delete"
+            class="context__menu-item-link context__menu-item-link--delete"
             @click="$emit('delete')"
             >{{ $t('action.remove') }}</a
           >

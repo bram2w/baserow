@@ -5,7 +5,7 @@
     @selected="selected"
   >
     <template #context>
-      <li>
+      <li class="context__menu-item">
         <nuxt-link
           :to="{
             name: 'database-api-docs-detail',
@@ -13,8 +13,9 @@
               databaseId: application.id,
             },
           }"
+          class="context__menu-item-link"
         >
-          <i class="context__menu-icon iconoir-book"></i>
+          <i class="context__menu-item-icon iconoir-book"></i>
           {{ $t('sidebar.viewAPI') }}
         </nuxt-link>
       </li>

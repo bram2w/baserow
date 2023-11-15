@@ -141,9 +141,12 @@
       :max-height-if-outside-viewport="true"
     >
       <ul v-show="isMultiSelectActive" class="context__menu">
-        <li>
-          <a @click=";[copySelection($event), $refs.rowContext.hide()]">
-            <i class="context__menu-icon iconoir-copy"></i>
+        <li class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click=";[copySelection($event), $refs.rowContext.hide()]"
+          >
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.copyCells') }}
           </a>
         </li>
@@ -156,12 +159,14 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
           <a
-            :class="{ 'context__menu-item--loading': deletingRow }"
+            class="context__menu-item-link"
+            :class="{ 'context__menu-item-link--loading': deletingRow }"
             @click.stop="deleteRowsFromMultipleCellSelection()"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRows') }}
           </a>
         </li>
@@ -169,9 +174,10 @@
       <ul v-show="!isMultiSelectActive" class="context__menu">
         <li>
           <a
+            class="context__menu-item-link"
             @click=";[selectRow($event, selectedRow), $refs.rowContext.hide()]"
           >
-            <i class="context__menu-icon iconoir-check-circle"></i>
+            <i class="context__menu-item-icon iconoir-check-circle"></i>
             {{ $t('gridView.selectRow') }}
           </a>
         </li>
@@ -184,9 +190,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="addRowAboveSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-arrow-up"></i>
+          <a
+            class="context__menu-item-link"
+            @click="addRowAboveSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-arrow-up"></i>
             {{ $t('gridView.insertRowAbove') }}
           </a>
         </li>
@@ -199,9 +209,13 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="addRowBelowSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-arrow-down"></i>
+          <a
+            class="context__menu-item-link"
+            @click="addRowBelowSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-arrow-down"></i>
             {{ $t('gridView.insertRowBelow') }}
           </a>
         </li>
@@ -214,21 +228,34 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="duplicateSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-copy"></i>
+          <a
+            class="context__menu-item-link"
+            @click="duplicateSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-copy"></i>
             {{ $t('gridView.duplicateRow') }}
           </a>
         </li>
-        <li v-if="!readOnly">
-          <a @click="copyLinkToSelectedRow($event, selectedRow)">
-            <i class="context__menu-icon iconoir-link"></i>
+        <li v-if="!readOnly" class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click="copyLinkToSelectedRow($event, selectedRow)"
+          >
+            <i class="context__menu-item-icon iconoir-link"></i>
             {{ $t('gridView.copyRowURL') }}
           </a>
         </li>
-        <li v-if="selectedRow !== null && !selectedRow._.loading">
-          <a @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]">
-            <i class="context__menu-icon iconoir-expand"></i>
+        <li
+          v-if="selectedRow !== null && !selectedRow._.loading"
+          class="context__menu-item"
+        >
+          <a
+            class="context__menu-item-link"
+            @click=";[openRowEditModal(selectedRow), $refs.rowContext.hide()]"
+          >
+            <i class="context__menu-item-icon iconoir-expand"></i>
             {{ $t('gridView.enlargeRow') }}
           </a>
         </li>
@@ -241,9 +268,10 @@
               database.workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="deleteRow(selectedRow)">
-            <i class="context__menu-icon iconoir-bin"></i>
+          <a class="context__menu-item-link" @click="deleteRow(selectedRow)">
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('gridView.deleteRow') }}
           </a>
         </li>

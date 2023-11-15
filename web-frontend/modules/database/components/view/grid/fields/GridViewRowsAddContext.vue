@@ -4,8 +4,15 @@
       {{ $t('gridViewRowsAddContext.title') }}
     </div>
     <ul class="context__menu">
-      <li v-for="rowAmountChoice in rowAmountChoices" :key="rowAmountChoice">
-        <a @click="$emit('add-rows', rowAmountChoice)">
+      <li
+        v-for="rowAmountChoice in rowAmountChoices"
+        :key="rowAmountChoice"
+        class="context__menu-item"
+      >
+        <a
+          class="context__menu-item-link"
+          @click="$emit('add-rows', rowAmountChoice)"
+        >
           {{ $t('gridViewRowsAddContext.choice', { rowAmountChoice }) }}
         </a>
       </li>

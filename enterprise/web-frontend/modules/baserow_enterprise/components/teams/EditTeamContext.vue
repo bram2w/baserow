@@ -10,9 +10,10 @@
               workspace.id
             )
           "
+          class="context__menu-item"
         >
-          <a @click="handleEditClick(team)">
-            <i class="context__menu-icon iconoir-edit-pencil"></i>
+          <a class="context__menu-item-link" @click="handleEditClick(team)">
+            <i class="context__menu-item-icon iconoir-edit-pencil"></i>
             {{ $t('editTeamContext.edit') }}
           </a>
         </li>
@@ -24,15 +25,16 @@
               workspace.id
             )
           "
+          class="context__menu-item context__menu-item--with-separator"
         >
           <a
             :class="{
-              'context__menu-item--loading': removeLoading,
+              'context__menu-item-link--loading': removeLoading,
             }"
-            class="color-error"
+            class="context__menu-item-link context__menu-item-link--delete"
             @click.prevent="remove(team)"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('editTeamContext.remove') }}
           </a>
         </li>

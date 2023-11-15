@@ -1,12 +1,13 @@
 <template>
   <a
+    class="context__menu-item-link"
     :class="{
-      'context__menu-item--loading': duplicating,
+      'context__menu-item-link--loading': duplicating,
       disabled: disabled || duplicating,
     }"
     @click="duplicateTable()"
   >
-    <i class="context__menu-icon iconoir-copy"></i>
+    <i class="context__menu-item-icon iconoir-copy"></i>
     {{ $t('action.duplicate') }}
   </a>
 </template>

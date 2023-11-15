@@ -10,21 +10,23 @@
   >
     <a class="select__item-link" @click="selectWorkspace(workspace)">
       <div :title="workspace.name" class="select__item-name">
-        <Editable
-          ref="rename"
-          :value="workspace.name"
-          @change="renameWorkspace(workspace, $event)"
-        ></Editable>
+        <span class="select__item-name-text">
+          <Editable
+            ref="rename"
+            :value="workspace.name"
+            @change="renameWorkspace(workspace, $event)"
+          ></Editable>
+        </span>
         <span
           v-if="hasUnreadNotifications"
           class="sidebar__unread-notifications-icon"
         ></span>
       </div>
-      <i
-        v-if="workspace._.selected"
-        class="select__item-active-icon iconoir-check-circle"
-      ></i>
     </a>
+    <i
+      v-if="workspace._.selected"
+      class="select__item-active-icon iconoir-check"
+    ></i>
     <a
       ref="contextLink"
       class="select__item-options"

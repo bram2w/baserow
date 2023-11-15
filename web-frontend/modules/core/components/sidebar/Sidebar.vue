@@ -37,19 +37,23 @@
       >
         <div class="context__menu-title">{{ name }}</div>
         <ul class="context__menu">
-          <li>
-            <a @click=";[$refs.settingsModal.show(), $refs.userContext.hide()]">
-              <i class="context__menu-icon iconoir-settings"></i>
+          <li class="context__menu-item">
+            <a
+              class="context__menu-item-link"
+              @click=";[$refs.settingsModal.show(), $refs.userContext.hide()]"
+            >
+              <i class="context__menu-item-icon iconoir-settings"></i>
               {{ $t('sidebar.settings') }}
             </a>
             <SettingsModal ref="settingsModal"></SettingsModal>
           </li>
-          <li>
+          <li class="context__menu-item">
             <a
-              :class="{ 'context__menu-item--loading': logoffLoading }"
+              class="context__menu-item-link"
+              :class="{ 'context__menu-item-link--loading': logoffLoading }"
               @click="logoff()"
             >
-              <i class="context__menu-icon iconoir-log-out"></i>
+              <i class="context__menu-item-icon iconoir-log-out"></i>
               {{ $t('sidebar.logoff') }}
             </a>
           </li>

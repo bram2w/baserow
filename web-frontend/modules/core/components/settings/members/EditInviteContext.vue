@@ -2,21 +2,24 @@
   <Context :overflow-scroll="true" :max-height-if-outside-viewport="true">
     <template v-if="Object.keys(invitation).length > 0">
       <ul class="context__menu">
-        <li>
-          <a @click.prevent="copyEmail(invitation)">
+        <li class="context__menu-item">
+          <a
+            class="context__menu-item-link"
+            @click.prevent="copyEmail(invitation)"
+          >
             <Copied ref="emailCopied"></Copied>
             {{ $t('membersSettings.invitesTable.actions.copyEmail') }}
           </a>
         </li>
-        <li>
+        <li class="context__menu-item context__menu-item--with-separator">
           <a
             :class="{
-              'context__menu-item--loading': removeLoading,
+              'context__menu-item-link--loading': removeLoading,
             }"
-            class="color-error"
+            class="context__menu-item-link context__menu-item-link--delete"
             @click.prevent="remove(invitation)"
           >
-            <i class="context__menu-icon iconoir-bin"></i>
+            <i class="context__menu-item-icon iconoir-bin"></i>
             {{ $t('membersSettings.invitesTable.actions.remove') }}
           </a>
         </li>

@@ -8,7 +8,7 @@
       :value="filterType"
       :show-search="false"
       :fixed-items="true"
-      class="dropdown--tiny"
+      small
       @input="$emit('select-boolean-operator', $event)"
     >
       <DropdownItem

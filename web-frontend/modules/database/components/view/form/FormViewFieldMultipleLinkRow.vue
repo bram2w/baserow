@@ -10,7 +10,7 @@
           :fetch-page="fetchPage"
           :value="value[index].id"
           :initial-display-name="value[index].value"
-          class="dropdown--tiny"
+          small
           :class="{
             'dropdown--error':
               touched && !valid && isInvalidValue(value[index]),

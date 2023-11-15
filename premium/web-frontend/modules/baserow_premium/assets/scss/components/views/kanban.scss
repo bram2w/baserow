@@ -165,7 +165,9 @@
     transition-delay: 0s;
   }
 
-  &:not(.kanban-view__stack-card--disabled):not(.kanban-view__stack-card--dragging):hover {
+  &:not(.kanban-view__stack-card--disabled):not(
+      .kanban-view__stack-card--dragging
+    ):hover {
     cursor: pointer;
 
     @include add-elevation($elevation-medium);
@@ -186,8 +188,11 @@
   border: solid 1px $color-neutral-400;
   border-radius: 100%;
   color: $color-neutral-900;
+  width: 28px;
+  height: 28px;
+  justify-content: center;
 
-  @include center-text(28px, 12px);
+  @include flex-align-items();
 
   line-height: 26px;
 

@@ -22,10 +22,13 @@
       @update="$emit('field-updated', $event)"
       @delete="$emit('field-deleted')"
     >
-      <li v-if="canBeHidden">
-        <a @click="$emit('toggle-field-visibility', { field })">
+      <li v-if="canBeHidden" class="context__menu-item">
+        <a
+          class="context__menu-item-link"
+          @click="$emit('toggle-field-visibility', { field })"
+        >
           <i
-            class="context__menu-icon"
+            class="context__menu-item-icon"
             :class="[hidden ? 'iconoir-eye-empty' : 'iconoir-eye-off']"
           ></i>
           {{ $t(hidden ? 'fieldContext.showField' : 'fieldContext.hideField') }}

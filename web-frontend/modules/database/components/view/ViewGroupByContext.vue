@@ -43,7 +43,8 @@
             :value="groupBy.field"
             :disabled="disableGroupBy"
             :fixed-items="true"
-            class="dropdown--floating dropdown--tiny"
+            class="dropdown--floating"
+            small
             @input="updateGroupBy(groupBy, { field: $event })"
           >
             <DropdownItem
@@ -132,10 +133,11 @@
               v-for="field in fields"
               v-show="isFieldAvailable(field)"
               :key="field.id"
+              class="context__menu-item"
             >
-              <a @click="addGroupBy(field)">
+              <a class="context__menu-item-link" @click="addGroupBy(field)">
                 <i
-                  class="context__menu-icon"
+                  class="context__menu-item-icon"
                   :class="field._.type.iconClass"
                 ></i>
                 {{ field.name }}
