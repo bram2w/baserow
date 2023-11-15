@@ -9,7 +9,7 @@
         v-model="headerSearchTerm"
         type="text"
         :placeholder="$t('crudTableSearch.search')"
-        class="input input--large"
+        class="input"
         @keyup="searchIfChanged(headerSearchTerm, false)"
       />
       <i class="iconoir-search"></i>

@@ -1,17 +1,24 @@
 .form-input {
   display: flex;
   flex: 1;
-  border: 1px solid $color-neutral-400;
+  border: 1px solid $palette-neutral-400;
   position: relative;
+  height: 44px;
+  box-sizing: border-box;
+  @include add-elevation($elevation-low);
 
   @include rounded($rounded-md);
 
+  &.form-input--small {
+    height: 36px;
+  }
+
   &.form-input--focus {
-    border-color: $color-primary-500;
+    border-color: $palette-blue-500;
   }
 
   &.form-input--error {
-    border-color: $color-error-500;
+    border-color: $palette-red-600;
   }
 
   &.form-input--monospace {
@@ -20,13 +27,8 @@
 
   &.form-input--disabled {
     cursor: not-allowed;
-    color: $color-neutral-900;
-    background-color: $color-neutral-50;
-
-    &:active,
-    &:focus {
-      border-color: $color-neutral-400;
-    }
+    color: $palette-neutral-700;
+    box-shadow: none;
   }
 
   &.form-input--loading {
@@ -35,11 +37,11 @@
       margin-top: -7px;
 
       @include loading(14px);
-      @include absolute(50%, 10px, auto, auto);
+      @include absolute(50%, 16px, auto, auto);
     }
 
     &.form-input--with-icon-left::after {
-      left: 10px;
+      left: 16px;
       right: auto;
     }
   }
@@ -52,24 +54,29 @@
   outline: none;
   line-height: 100%;
   background: none;
-  padding: 8px 12px;
+  padding: 12px 16px;
   background-color: $white;
+
+  &::placeholder {
+    color: $palette-neutral-700;
+  }
 
   @include rounded($rounded-md);
 
-  .form-input--large & {
-    padding: 12px 12px;
-  }
-
   .form-input--disabled & {
     cursor: not-allowed;
+    background-color: $palette-neutral-100;
+  }
+
+  .form-input--small & {
+    padding: 8px 12px;
   }
 
   .form-input--with-icon-left & {
-    padding-left: 32px;
+    padding-left: 38px;
     padding-right: 8px;
 
-    .form-input--large & {
+    .form- & {
       padding-right: 12px;
     }
   }
@@ -80,10 +87,10 @@
   right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: $color-neutral-300;
+  color: $palette-neutral-600;
   font-size: 16px;
 
-  .form-input--large & {
+  .form- & {
     font-size: 16px;
     line-height: 16px;
   }
@@ -95,6 +102,18 @@
 
   .form-input--loading & {
     display: none;
+  }
+
+  .form-input--error & {
+    color: $palette-red-600;
+  }
+
+  .form-input--focus & {
+    color: $palette-blue-500;
+  }
+
+  .form-input--disabled & {
+    color: $palette-neutral-600;
   }
 }
 

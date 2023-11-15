@@ -134,7 +134,7 @@
 .filters__value-input {
   padding-top: 0;
   padding-bottom: 0;
-  line-height: 30px;
+  line-height: 36px;
 }
 
 .filters__combined_value-input {
@@ -156,9 +156,10 @@
 }
 
 .filters__value-rating {
-  border: solid 1px $color-neutral-400;
+  border: solid 1px $palette-neutral-400;
   padding: 6px 12px;
   @include rounded($rounded);
+  @include add-elevation($elevation-low);
 }
 
 .filters__value-link-row {
@@ -167,13 +168,14 @@
   display: block;
   position: relative;
   color: $color-neutral-900;
-  line-height: 30px;
-  height: 30px;
-  border: solid 1px $color-neutral-400;
+  line-height: 36px;
+  height: 36px;
+  border: 1px solid $palette-neutral-400;
   padding: 0 10px;
   background-color: $white;
   width: 100%;
   @include rounded($rounded);
+  @include add-elevation($elevation-low);
 
   &:hover {
     text-decoration: none;

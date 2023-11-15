@@ -15,7 +15,7 @@
           v-model="airtableUrl"
           :class="{ 'input--error': $v.airtableUrl.$error }"
           type="text"
-          class="input input--large"
+          class="input"
           :placeholder="$t('importFromAirtable.airtableShareLinkPaste')"
           @blur="$v.airtableUrl.$touch()"
         />

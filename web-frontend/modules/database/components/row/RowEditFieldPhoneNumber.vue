@@ -4,7 +4,7 @@
       ref="input"
       v-model="copy"
       type="tel"
-      class="input input--large"
+      class="input"
       :class="{ 'input--error': touched && !valid }"
       :disabled="readOnly"
       @keyup.enter="$refs.input.blur()"

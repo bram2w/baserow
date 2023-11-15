@@ -4,7 +4,7 @@
       ref="input"
       v-model="copy"
       type="text"
-      class="input input--large field-number"
+      class="input field-number"
       :class="{
         'input--error': (touched && !valid) || isInvalidNumber,
       }"

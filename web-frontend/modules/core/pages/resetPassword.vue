@@ -52,7 +52,7 @@
                 v-model="account.passwordConfirm"
                 :class="{ 'input--error': $v.account.passwordConfirm.$error }"
                 type="password"
-                class="input input--large"
+                class="input"
                 @blur="$v.account.passwordConfirm.$touch()"
               />
               <div class="auth__control-error">

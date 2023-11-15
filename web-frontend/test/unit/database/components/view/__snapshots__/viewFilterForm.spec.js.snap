@@ -542,7 +542,7 @@ exports[`ViewFilterForm component Full view filter component 1`] = `
             class="filters__value"
           >
             <input
-              class="input filters__value-input"
+              class="input filters__value-input input--small"
               type="text"
             />
           </div>

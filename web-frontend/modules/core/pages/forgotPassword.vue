@@ -43,7 +43,7 @@
                 v-model="account.email"
                 :class="{ 'input--error': $v.account.email.$error }"
                 type="text"
-                class="input input--large"
+                class="input"
                 :disabled="success"
                 @blur="$v.account.email.$touch()"
               />

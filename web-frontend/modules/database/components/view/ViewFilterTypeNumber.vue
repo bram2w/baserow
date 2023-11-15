@@ -3,7 +3,7 @@
     ref="input"
     v-model="copy"
     type="text"
-    class="input filters__value-input"
+    class="input filters__value-input input--small"
     :class="{ 'input--error': $v.copy.$error }"
     :disabled="disabled"
     @input="delayedUpdate($event.target.value)"

@@ -5,7 +5,7 @@
         ref="searchInput"
         v-model="activeSearchTerm"
         type="text"
-        class="input input--large"
+        class="input"
         :placeholder="$t('memberSelectionList.searchPlaceholder')"
       />
       <div class="margin-top-2">

@@ -12,7 +12,7 @@
             v-model="values.url"
             :class="{ 'input--error': $v.values.url.$error }"
             type="text"
-            class="input input--large"
+            class="input"
             @blur="$v.values.url.$touch()"
           />
           <div v-if="$v.values.url.$error" class="error">

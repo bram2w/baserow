@@ -26,6 +26,25 @@
           </p>
         </div>
         <div class="margin-bottom-3">
+          <div class="control">
+            <div class="control__elements">
+              <textarea
+                ref="input"
+                type="text"
+                class="input field-long-text"
+                placeholder="Enter something here"
+              />
+            </div>
+          </div>
+
+          <FormInput
+            v-model="input"
+            disabled
+            placeholder="Enter something here"
+            label="Small text field"
+            value="This is the value"
+            icon-right="iconoir-clock"
+          />
           <FormInput
             v-model="input"
             label="Small text field"
@@ -57,7 +76,7 @@
             v-model="input"
             label="Icon text field"
             placeholder="Enter something here"
-            icon-right="clock"
+            icon-right="iconoi-clock"
           />
           <FormInput
             v-model="input"
@@ -90,27 +109,30 @@
             v-model="input"
             label="Large text field"
             placeholder="Enter something here"
-            large
           />
           <FormInput
             v-model="input"
             label="Large password field"
             placeholder="Enter something here"
             type="password"
-            large
           />
           <FormInput
             v-model="input"
             label="Large icon field"
             placeholder="Enter something here"
-            large
             icon-right="iconoir-clock"
           />
           <FormInput
             v-model="input"
             label="Large icon field left"
             placeholder="Enter something here"
-            large
+            icon-left="iconoir-search"
+          />
+          <FormInput
+            v-model="input"
+            small
+            label="Reduced height field"
+            placeholder="Enter something here"
             icon-left="iconoir-search"
           />
           <FormInput
@@ -118,17 +140,33 @@
             horizontal
             label="Horizontal Large icon field left"
             placeholder="Enter something here"
-            large
             icon-left="iconoir-search"
           />
-          <FormInput
-            v-model="input"
-            horizontal-variable
-            label="Horizontal Large icon field left"
-            placeholder="Enter something here"
-            large
-            icon-left="iconoir-search"
-          />
+
+          <div class="control">
+            <label class="control__label">Native input</label>
+            <div class="control__elements">
+              <input
+                ref="name"
+                type="text"
+                class="input"
+                placeholder="Native input"
+              />
+            </div>
+          </div>
+
+          <div class="control">
+            <label class="control__label">Native input reduced height</label>
+            <div class="control__elements">
+              <input
+                ref="name"
+                type="text"
+                class="input input--small"
+                placeholder="Native input reduced height"
+              />
+            </div>
+          </div>
+
           <div class="control">
             <label class="control__label">Checkbox field</label>
             <div class="control__elements">
@@ -1620,7 +1658,7 @@
                   <input
                     type="text"
                     placeholder="Find member..."
-                    class="input input--large"
+                    class="input"
                   />
                   <i class="iconoir-search"></i>
                 </div>

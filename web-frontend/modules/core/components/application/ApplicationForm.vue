@@ -11,7 +11,7 @@
           v-model="values.name"
           :class="{ 'input--error': fieldHasErrors('name') }"
           type="text"
-          class="input input--large"
+          class="input"
           @focus.once="$event.target.select()"
           @blur="$v.values.name.$touch()"
         />

@@ -27,7 +27,7 @@
             v-if="invitation !== null"
             ref="email"
             type="email"
-            class="input input--large"
+            class="input"
             disabled
             :value="account.email"
           />
@@ -38,7 +38,7 @@
             :class="{ 'input--error': $v.account.email.$error }"
             type="text"
             autocomplete="username"
-            class="input input--large"
+            class="input"
             :placeholder="$t('signup.emailPlaceholder')"
             @blur="$v.account.email.$touch()"
           />
@@ -57,7 +57,7 @@
             v-model="account.name"
             :class="{ 'input--error': $v.account.name.$error }"
             type="text"
-            class="input input--large"
+            class="input"
             :placeholder="$t('signup.namePlaceholder')"
             @blur="$v.account.name.$touch()"
           />
@@ -90,7 +90,7 @@
             v-model="account.passwordConfirm"
             :class="{ 'input--error': $v.account.passwordConfirm.$error }"
             type="password"
-            class="input input--large"
+            class="input"
             :placeholder="$t('signup.passwordRepeatPlaceholder')"
             @blur="$v.account.passwordConfirm.$touch()"
           />

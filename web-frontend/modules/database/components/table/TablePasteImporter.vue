@@ -10,7 +10,7 @@
       <div class="control__elements">
         <textarea
           type="text"
-          class="input input--large textarea--modal"
+          class="input textarea--modal"
           @input="changed($event.target.value)"
         ></textarea>
         <div v-if="$v.content.$error" class="error">
