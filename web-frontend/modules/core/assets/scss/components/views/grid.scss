@@ -432,15 +432,18 @@
 
 .grid-view__row-more {
   padding: 2px;
-  @include center-text(18px, 14px);
-
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   color: $color-neutral-400;
   visibility: hidden;
   @include rounded($rounded);
 
+  @include flex-align-items();
+
   .grid-view__row--hover &,
   .grid-view__row--selected & {
-    display: block;
+    display: flex;
     visibility: visible;
   }
 

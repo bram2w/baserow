@@ -145,7 +145,7 @@
     @include absolute(9px, 9px, auto, auto);
   }
 
-  &.active {
+  &.active:not(.select__item--loading) {
     background-color: rgba($palette-neutral-1300, 0.04);
 
     .select__item-active-icon {

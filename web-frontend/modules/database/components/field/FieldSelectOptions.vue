@@ -27,7 +27,7 @@
         <input
           ref="inputs"
           v-model="item.value"
-          class="input select-options__value"
+          class="input input--small select-options__value"
           :class="{ 'input--error': $v.value.$each[index].value.$error }"
           @input="$emit('input', value)"
           @blur="$v.value.$each[index].value.$touch()"
