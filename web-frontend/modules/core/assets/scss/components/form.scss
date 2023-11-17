@@ -238,79 +238,140 @@
 }
 
 .radio {
-  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
   height: 28px;
   line-height: 28px;
-  padding-left: 18px;
+}
+
+.radio__label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  .radio.radio--disabled & {
+    color: $color-neutral-700;
+  }
+
+  *[class^='iconoir-'],
+  *[class*=' iconoir-'],
+  *[class^='baserow-icon-'],
+  *[class*=' baserow-icon-'] {
+    font-size: 14px;
+  }
+}
+
+.radio__input {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.radio__input input[type='radio'] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
   cursor: pointer;
+}
+
+.radio__input label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid $color-neutral-600;
+  box-shadow: 0 1px 2px 0 rgba(7, 8, 16, 0.1);
+  cursor: pointer;
+}
+
+.radio--error {
+  .radio__input label {
+    border: 1px solid $palette-red-600;
+  }
+}
+
+.radio__input input[type='radio']:disabled + label {
+  background-color: $palette-neutral-100;
+  box-shadow: none;
+}
+
+.radio__input input[type='radio']:checked + label {
+  // The filling color is hard coded here. we cannot set to $palette-blue-500 because of interpolation issue within a background-image property.
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" rx="8" fill="%235190ef"/><circle cx="8" cy="8" r="3" fill="white"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border: none;
+}
+
+.radio__input input[type='radio']:checked + label:hover {
+  // The filling color is hard coded here. we cannot set to $palette-blue-500 because of interpolation issue within a background-image property.
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" rx="8" fill="%234783db"/><circle cx="8" cy="8" r="3" fill="white"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border: none;
+}
+
+.radio__input input[type='radio']:disabled:checked + label {
+  // The filling color is hard coded here. we cannot set to $palette-blue-500 because of interpolation issue within a background-image property.
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none"><rect width="16" height="16" rx="8" fill="%23CDCECF"/><circle cx="8" cy="8" r="3" fill="white"/></svg>');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  border: none;
+}
+
+.radio__loading {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  position: relative;
+  cursor: wait;
   user-select: none;
-  @include flex-align-items(4px);
 
-  &.radio--has-content {
-    padding-left: 24px;
-
-    i {
-      font-size: 16px;
-    }
+  &:hover,
+  &:focus {
+    box-shadow: none;
   }
 
-  &::before {
-    @include absolute(5px, auto, 0, 0);
-
-    content: '';
-    font-size: 10px;
-    border: 1px solid $color-neutral-400;
-    border-radius: 100%;
-    width: 18px;
-    height: 18px;
-    line-height: 18px;
-    text-align: center;
-    background-color: $white;
-    color: $white;
-  }
-
-  &.selected::before {
-    background-color: $color-primary-500;
-    border-color: $color-primary-500;
-  }
-
-  &.radio--disabled {
-    cursor: inherit;
-    color: $color-neutral-600;
-
-    &::before {
-      background-color: $color-neutral-50;
-    }
-
-    &.selected::before {
-      background-color: $color-neutral-500;
-      border-color: $color-neutral-500;
-    }
-  }
-
-  .radio__checked-icon {
+  &::after {
+    content: ' ';
     position: absolute;
+    left: 50%;
     top: 50%;
-    left: 1px;
-    transform: translateY(-50%);
-    color: $white;
-    font-size: 16px;
+    margin: -7px;
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 0.2em solid;
+    border-color: $palette-blue-500 transparent $palette-blue-500 transparent;
+    animation: spin infinite 1800ms;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
   }
+}
 
-  &.radio--loading {
-    cursor: inherit;
-
-    &::before {
-      display: none;
-    }
-
-    &::after {
-      content: '';
-
-      @include loading(14px);
-      @include absolute(7px, auto, 0, 1px);
-    }
-  }
+.radio__input .radio__loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #007bff;
+  border-top-color: transparent;
+  animation: radio__loading 0.5s linear infinite;
 }
 
 .switch {

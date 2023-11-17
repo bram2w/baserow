@@ -1,10 +1,18 @@
 <template>
   <div class="radio" :class="classNames" @click="select(value)">
-    <i
-      v-if="modelValue === value"
-      class="radio__checked-icon iconoir-check"
-    ></i>
-    <slot></slot>
+    <div v-if="loading" class="radio__loading"></div>
+    <div v-else class="radio__input">
+      <input
+        type="radio"
+        :value="value"
+        :checked="modelValue === value"
+        :disabled="disabled || loading"
+      />
+      <label></label>
+    </div>
+    <div v-if="hasSlot" class="radio__label">
+      <slot></slot>
+    </div>
   </div>
 </template>
 
@@ -51,6 +59,9 @@ export default {
     },
     selected() {
       return this.modelValue === this.value
+    },
+    hasSlot() {
+      return !!this.$slots.default
     },
   },
   methods: {
