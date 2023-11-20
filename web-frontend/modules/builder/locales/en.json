@@ -351,7 +351,7 @@
       "urlPlaceholder": "Enter text..."
     },
     "event": {
-      "addAction": "Add action"
+      "addAction": "add action"
     },
     "collectionFieldType": {
       "text": "Text",

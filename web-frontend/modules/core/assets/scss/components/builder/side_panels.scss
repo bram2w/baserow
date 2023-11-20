@@ -6,3 +6,12 @@
 .side-panel {
   padding: 15px;
 }
+
+.side-panels__panel .button.button--link {
+  color: $palette-neutral-800;
+  margin-top: 6px;
+
+  &:hover {
+    color: $color-neutral-900;
+  }
+}
