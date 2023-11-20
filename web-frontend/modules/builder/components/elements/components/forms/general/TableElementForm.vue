@@ -113,7 +113,6 @@
         </Expandable>
       </div>
       <Button
-        class="table-element-form__add-field"
         prepend-icon="baserow-icon-plus"
         type="link"
         size="tiny"

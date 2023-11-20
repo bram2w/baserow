@@ -33,7 +33,6 @@
         type="link"
         prepend-icon="baserow-icon-plus"
         :loading="addingAction"
-        class="margin-top-1"
         @click="addWorkflowAction"
       >
         {{ $t('event.addAction') }}
