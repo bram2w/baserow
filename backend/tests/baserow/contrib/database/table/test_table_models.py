@@ -26,6 +26,7 @@ from baserow.contrib.database.search.handler import (
     SearchModes,
 )
 from baserow.contrib.database.table.constants import (
+    LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
 from baserow.contrib.database.table.models import Table
@@ -1137,3 +1138,19 @@ def test_can_still_move_rows_in_table_with_lookup_of_lookup(data_fixture):
     table_a_row_1 = RowHandler().create_row(user, table_a, {})
     table_a_row_2 = RowHandler().create_row(user, table_a, {})
     RowHandler().move_row(user, table_a, table_a_row_2, table_a_row_1)
+
+
+@pytest.mark.django_db
+def test_last_modified_by_reference_doesnt_prevent_user_deletion(data_fixture):
+    user = data_fixture.create_user()
+    user_id = user.id
+    table = data_fixture.create_database_table(name="db", user=user)
+    model = table.get_model()
+    row_data = {f"{LAST_MODIFIED_BY_COLUMN_NAME}": user}
+    row = model.objects.create(**row_data)
+    assert getattr(row, f"{LAST_MODIFIED_BY_COLUMN_NAME}_id") == user_id
+
+    user.delete()
+
+    row = model.objects.first()
+    assert getattr(row, f"{LAST_MODIFIED_BY_COLUMN_NAME}_id") == user_id

@@ -12,7 +12,7 @@ from django.contrib.postgres.search import SearchQuery, SearchVectorField
 from django.core.exceptions import FieldDoesNotExist as DjangoFieldDoesNotExist
 from django.db import models
 from django.db.models import Field as DjangoModelFieldClass
-from django.db.models import ForeignKey, JSONField, Q, QuerySet, Value
+from django.db.models import JSONField, Q, QuerySet, Value
 
 from loguru import logger
 from opentelemetry import trace
@@ -28,6 +28,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_OR,
     FilterBuilder,
 )
+from baserow.contrib.database.fields.fields import IgnoreMissingForeignKey
 from baserow.contrib.database.fields.models import (
     CreatedOnField,
     Field,
@@ -977,9 +978,12 @@ class Table(
         indexes.append(get_row_needs_background_update_index(self))
 
     def _add_last_modified_by(self, field_attrs, indexes):
-        field_attrs[LAST_MODIFIED_BY_COLUMN_NAME] = ForeignKey(
+        field_attrs[LAST_MODIFIED_BY_COLUMN_NAME] = IgnoreMissingForeignKey(
             User,
             null=True,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
             on_delete=models.SET_NULL,
             help_text="Stores information about the user that modified the row last.",
         )
