@@ -14,6 +14,7 @@ from typing import (
     Set,
     Tuple,
     TypeVar,
+    Union,
 )
 
 from django.conf import settings
@@ -70,49 +71,69 @@ T = TypeVar("T", bound=Model)
 
 
 def specific_iterator(
-    queryset: QuerySet[T],
-    per_content_type_queryset_hook: Callable = None,
+    queryset_or_list: Union[QuerySet[T], List],
+    per_content_type_queryset_hook: Optional[Callable] = None,
+    base_model: Optional[Model] = None,
+    select_related: Optional[List] = None,
 ) -> Iterable[T]:
     """
-    Iterates over the given queryset and finds the specific objects with the least
-    amount of queries. It respects the annotations, select related and prefetch
-    related of the provided query. This function is only compatible with models
-    having the `PolymorphicContentTypeMixin` and `content_type property.`
+    Iterates over the given queryset or list of model instances, and finds the specific
+    objects with the least amount of queries. If a queryset is provided respects the
+    annotations, select related and prefetch related of the provided query. This
+    function is only compatible with models having the `PolymorphicContentTypeMixin`
+    and `content_type property.`
 
     Can be used like:
 
     for specific_object in specific_iterator(Application.objects.all()):
         print(type(specific_object))  # Database
 
-    :param queryset: The queryset to the base model of which we want to select the
-        specific types from.
+    :param queryset_or_list: The queryset to the base model of which we want to select
+        the specific types from. Alternatively, a list of model instances can be
+        provided of they're already resolved. This can be useful if the instances are
+        fetched via a `select_related` for example.
     :param per_content_type_queryset_hook: If provided, it will be called for every
         specific queryset to allow extending it.
+    :param base_model: The base model must be provided if a list is provided in the
+        `queryset_or_list` argument.
+    :param select_related: A `select_related` list can optionally be provided if a list
+        is provided in the `queryset_or_list` argument. This should be used if the
+        instances provided in the list have select related objects.
     """
 
-    # Figure out beforehand what the annotation keys and select related keys are.
-    # This way, we can later set those properties on the specific objects.
-    annotation_keys = queryset.query.annotations.keys()
-    select_related = queryset.query.select_related
+    if isinstance(queryset_or_list, QuerySet):
+        # Figure out beforehand what the annotation keys and select related keys are.
+        # This way, we can later set those properties on the specific objects.
+        annotation_keys = queryset_or_list.query.annotations.keys()
+        select_related = queryset_or_list.query.select_related
 
-    if isinstance(select_related, bool):
-        select_related_keys = []
+        if isinstance(select_related, bool):
+            select_related_keys = []
+        else:
+            select_related_keys = select_related.keys()
+
+        # Nested prefetch result in cached objects to avoid additional queries. If
+        # they're present, they must be added to the `select_related_keys` to make sure
+        # they're correctly set on the specific objects.
+        for lookup in queryset_or_list._prefetch_related_lookups:
+            split_lookup = lookup.split(LOOKUP_SEP)[:-1]
+            if split_lookup and split_lookup[0] not in select_related_keys:
+                select_related_keys.append(split_lookup[0])
+
+        # The original queryset must resolved because we need the pk, content type,
+        # annotated data and selected related data. By forcing it to resolve early on,
+        # we prevent accidentally resolving it multiple times.
+        base_model = queryset_or_list.model
+        resolved_queryset = list(queryset_or_list)
     else:
-        select_related_keys = select_related.keys()
+        if base_model is None:
+            raise ValueError(
+                "The `base_model` must be provided if iterating over a list."
+            )
 
-    # Nested prefetch result in cached objects to avoid additional queries. If
-    # they're present, they must be added to the `select_related_keys` to make sure
-    # they're correctly set on the specific objects.
-    for lookup in queryset._prefetch_related_lookups:
-        split_lookup = lookup.split(LOOKUP_SEP)[:-1]
-        if split_lookup and split_lookup[0] not in select_related_keys:
-            select_related_keys.append(split_lookup[0])
-
-    # The original queryset must resolved because we need the pk, content type,
-    # annotated data and selected related data. By forcing it to resolve early on,
-    # we prevent accidentally resolving it multiple times.
-    base_model = queryset.model
-    resolved_queryset = list(queryset)
+        annotation_keys = []
+        select_related_keys = [] if select_related is None else select_related
+        resolved_queryset = queryset_or_list
 
     types_and_pks = defaultdict(list)
     for item in resolved_queryset:
@@ -123,7 +144,7 @@ def specific_iterator(
     # type and construct a mapping containing them by id.
     specific_objects = {}
     for content_type, pks in types_and_pks.items():
-        model = content_type.model_class() or queryset.model
+        model = content_type.model_class() or base_model
         # We deliberately want to use the `_base_manager` here so it's works exactly
         # the same as the `.specific` property and so that trashed objects will still
         # be fetched.

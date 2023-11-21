@@ -2310,3 +2310,72 @@ def test_lookup_field_type_sorting_array_numbers(
     expected.reverse()
 
     assert sorted_lookup_numbers == expected
+
+
+@pytest.mark.django_db
+def test_formula_referencing_lookup_with_same_name_field_in_linked_table_being_renamed(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table_1 = data_fixture.create_database_table(user=user, name="table_1")
+    table_2 = data_fixture.create_database_table(
+        user=user, database=table_1.database, name="table_2"
+    )
+
+    table_1_name = FieldHandler().create_field(
+        user,
+        table_1,
+        "text",
+        name="name",
+    )
+    table_1_formula = FieldHandler().create_field(
+        user, table_1, "formula", name="t1name", formula=f'field("{table_1_name.name}")'
+    )
+    table_2_name = FieldHandler().create_field(
+        user,
+        table_2,
+        "text",
+        name="name",
+    )
+    table_2_link = FieldHandler().create_field(
+        user,
+        table_2,
+        "link_row",
+        name="link",
+        link_row_table=table_1,
+    )
+    table_2_lookup = FieldHandler().create_field(
+        user,
+        table_2,
+        "lookup",
+        name="t1name",  # same name as `table_1_formula.name`
+        through_field_name=table_2_link.name,
+        target_field_name=table_1_formula.name,
+    )
+    table_2_formula = FieldHandler().create_field(
+        user, table_2, "formula", name="f", formula=f'field("{table_2_lookup.name}")'
+    )
+
+    table_1_formula = FieldHandler().update_field(
+        user,
+        table_1_formula,
+        name="t1",
+    )
+
+    table_2_lookup.refresh_from_db()
+    table_2_formula.refresh_from_db()
+
+    assert table_2_lookup.formula_type == BaserowFormulaInvalidType.type
+    assert table_2_formula.formula_type == BaserowFormulaInvalidType.type
+
+    table_1_formula = FieldHandler().update_field(
+        user,
+        table_1_formula,
+        name="t1name",
+    )
+
+    table_2_lookup.refresh_from_db()
+    table_2_formula.refresh_from_db()
+
+    assert table_2_lookup.error is None
+    assert table_2_formula.error is None

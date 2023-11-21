@@ -1135,7 +1135,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(2221),
-        "version": 13,
+        "version": 9,
     }
 
     update_value_of_table1(row2, 10000)
@@ -1149,13 +1149,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(2221),
-        "version": 13,
+        "version": 9,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 14
+        == 10
     )
 
     check_table_2_aggregation_values(
@@ -1183,7 +1183,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 15
+        == 11
     )
 
     check_table_2_aggregation_values(
@@ -1199,7 +1199,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22001),
-        "version": 15,
+        "version": 11,
     }
 
     # Restore delete row
@@ -1220,7 +1220,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 17
+        == 12
     )
 
     check_table_2_aggregation_values(
@@ -1232,7 +1232,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 17,
+        "version": 12,
     }
 
     # Update number field
@@ -1251,7 +1251,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 18
+        == 13
     )
 
     check_table_2_aggregation_values(
@@ -1262,7 +1262,7 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
 
     # Delete number field
@@ -1279,13 +1279,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
     check_table_2_aggregation_values({}, "after field deletion")
@@ -1295,13 +1295,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
     # Restore deleted field
@@ -1331,13 +1331,13 @@ def test_view_aggregations_cache_invalidation_with_dependant_fields(
         f"aggregation_value__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
     ) == {
         "value": Decimal(22201),
-        "version": 18,
+        "version": 13,
     }
     assert (
         cache.get(
             f"aggregation_version__{grid2.id}_{sum_formula_on_lookup_field.db_column}"
         )
-        == 19
+        == 14
     )
 
 

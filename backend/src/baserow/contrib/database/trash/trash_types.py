@@ -5,6 +5,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import connection
 
 from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
@@ -291,24 +292,26 @@ class RowTrashableItemType(TrashableItemType):
             table, starting_row_ids=[trashed_item.id]
         )
         updated_fields = [f["field"] for f in model._field_objects.values()]
-        for field in updated_fields:
-            for (
+        field_ids = [field.id for field in updated_fields]
+        dependant_fields = []
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
+            table.id, field_ids, field_cache, associated_relations_changed=True
+        ):
+            dependant_fields.append(dependant_field)
+            dependant_field_type.row_of_dependency_created(
                 dependant_field,
-                dependant_field_type,
+                trashed_item,
+                update_collector,
+                field_cache,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(
-                field_cache, associated_relation_changed=True
-            ):
-                dependant_field_type.row_of_dependency_created(
-                    dependant_field,
-                    trashed_item,
-                    update_collector,
-                    field_cache,
-                    path_to_starting_table,
-                )
+            )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         rows_created.send(
@@ -421,24 +424,26 @@ class RowsTrashableItemType(TrashableItemType):
             table, starting_row_ids=trashed_item.row_ids
         )
         updated_fields = [f["field"] for f in table_model._field_objects.values()]
-        for field in updated_fields:
-            for (
+        field_ids = [field.id for field in updated_fields]
+        dependant_fields = []
+        for (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
+            table.id, field_ids, field_cache, associated_relations_changed=True
+        ):
+            dependant_fields.append(dependant_field)
+            dependant_field_type.row_of_dependency_created(
                 dependant_field,
-                dependant_field_type,
+                rows_to_restore,
+                update_collector,
+                field_cache,
                 path_to_starting_table,
-            ) in field.dependant_fields_with_types(
-                field_cache, associated_relation_changed=True
-            ):
-                dependant_field_type.row_of_dependency_created(
-                    dependant_field,
-                    rows_to_restore,
-                    update_collector,
-                    field_cache,
-                    path_to_starting_table,
-                )
+            )
         update_collector.apply_updates_and_get_updated_fields(field_cache)
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         if len(rows_to_restore) < 50:

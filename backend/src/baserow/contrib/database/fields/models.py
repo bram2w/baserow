@@ -167,6 +167,22 @@ class Field(
     def invalidate_table_model_cache(self):
         invalidate_table_in_model_cache(self.table_id)
 
+    def all_dependant_fields_with_types(
+        self,
+        field_cache=None,
+        associated_relation_changed=False,
+    ) -> "FieldDependants":
+        from baserow.contrib.database.fields.dependencies.handler import (
+            FieldDependencyHandler,
+        )
+
+        return FieldDependencyHandler.get_all_dependent_fields_with_type(
+            self.table_id,
+            [self.id],
+            field_cache,
+            associated_relation_changed,
+        )
+
     def dependant_fields_with_types(
         self,
         field_cache=None,

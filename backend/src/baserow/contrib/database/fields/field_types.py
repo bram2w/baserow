@@ -3830,7 +3830,14 @@ class FormulaFieldType(ReadOnlyFieldType):
 
         old_name = updated_old_field.name
         new_name = updated_field.name
-        rename = old_name != new_name
+        rename = (
+            old_name != new_name
+            # Because the `rename_field_references_in_formula_string` only updates
+            # field references in the same table, there is no need to rename if the
+            # table id doesn't match because it can cause incorrect renames if fields
+            # have the same name in the two tables.
+            and field.table_id == updated_field.table_id
+        )
         if rename:
             field.formula = FormulaHandler.rename_field_references_in_formula_string(
                 field.formula, {old_name: new_name}
@@ -3859,19 +3866,6 @@ class FormulaFieldType(ReadOnlyFieldType):
         update_collector.add_field_with_pending_update_statement(
             field, expr, via_path_to_starting_table=via_path_to_starting_table
         )
-        for (
-            dependant_field,
-            dependant_field_type,
-            path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.field_dependency_updated(
-                dependant_field,
-                field,
-                old_field,
-                update_collector,
-                field_cache,
-                path_to_starting_table,
-            )
 
     def field_dependency_deleted(
         self,
