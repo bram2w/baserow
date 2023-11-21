@@ -2057,7 +2057,7 @@ export const actions = {
         position === 'head'
           ? getters.getMultiSelectTailRowIndex
           : getters.getMultiSelectHeadRowIndex
-      if (Math.abs(previousIndex - rowIndex) > limit) {
+      if (Math.abs(previousIndex - rowIndex) > limit - 1) {
         return
       }
     }

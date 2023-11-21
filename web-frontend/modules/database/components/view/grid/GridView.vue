@@ -1385,6 +1385,19 @@ export default {
         return
       }
 
+      // The backend will fail hard if it tries to update more rows than the limit, so
+      // we're slicing the data here.
+      const pageSizeLimit = this.$config.BASEROW_ROW_PAGE_SIZE_LIMIT
+      if (textData.length > pageSizeLimit) {
+        this.$store.dispatch('toast/info', {
+          title: this.$t('gridView.tooManyItemsTitle'),
+          message: this.$t('gridView.tooManyItemsDescription', {
+            limit: pageSizeLimit,
+          }),
+        })
+        textData = textData.slice(0, pageSizeLimit)
+      }
+
       this.$store.dispatch('toast/setPasting', true)
 
       try {
