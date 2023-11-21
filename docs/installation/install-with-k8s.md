@@ -31,7 +31,7 @@ metadata:
 type: Opaque
 stringData:
   SECRET_KEY: "TODO"
-  PRIVATE_BACKEND_URL: "http://backend"
+  PRIVATE_BACKEND_URL: "http://backend-wsgi"
   PUBLIC_BACKEND_URL: "TODO"
   PUBLIC_WEB_FRONTEND_URL: "TODO"
   DATABASE_HOST: "TODO"
