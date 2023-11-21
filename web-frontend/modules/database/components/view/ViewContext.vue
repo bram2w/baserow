@@ -65,6 +65,7 @@
         <component
           :is="changeViewOwnershipTypeComponent"
           :view="view"
+          :database="database"
         ></component>
       </li>
       <li
@@ -180,9 +181,6 @@ export default {
     changeViewOwnershipTypeMenuItems() {
       const activeOwnershipTypes = Object.values(
         this.$registry.getAll('viewOwnershipType')
-      ).filter(
-        (ownershipType) =>
-          !ownershipType.isDeactivated(this.database.workspace.id)
       )
 
       return activeOwnershipTypes

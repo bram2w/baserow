@@ -1,0 +1,7 @@
+{
+  "type": "feature",
+  "message": "Display 'available in premium version' message for non-premium users when switching view to Personal",
+  "issue_number": 2087,
+  "bullet_points": [],
+  "created_at": "2023-11-16"
+}

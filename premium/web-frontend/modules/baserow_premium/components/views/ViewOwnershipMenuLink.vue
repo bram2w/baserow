@@ -1,12 +1,30 @@
 <template>
   <li class="context__menu-item">
     <a
+      v-if="!changeOwnershipTypeIsDeactivated"
       class="context__menu-item-link"
       @click="changeOwnershipType(view.ownership_type)"
     >
       <i class="context__menu-item-icon iconoir-right-round-arrow"></i>
       {{ changeOwnershipTypeText }}
     </a>
+    <a
+      v-else
+      v-tooltip="$t('premium.deactivated')"
+      class="context__menu-item-link"
+      @click="$refs.premiumModal.show()"
+    >
+      <i class="context__menu-item-icon iconoir-right-round-arrow"></i>
+      {{ changeOwnershipTypeText }}
+      <div class="deactivated-label">
+        <i class="iconoir-lock"></i>
+      </div>
+    </a>
+    <PremiumModal
+      ref="premiumModal"
+      :name="$t('premiumFeatures.personalViews')"
+      :workspace="database.workspace"
+    ></PremiumModal>
   </li>
 </template>
 
@@ -14,34 +32,54 @@
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { PersonalViewOwnershipType } from '@baserow_premium/viewOwnershipTypes'
+import PremiumModal from '@baserow_premium/components/PremiumModal'
 
 export default {
   name: 'ViewOwnershipMenuLink',
+  components: {
+    PremiumModal,
+  },
   props: {
     view: {
+      type: Object,
+      required: true,
+    },
+    database: {
       type: Object,
       required: true,
     },
   },
   computed: {
     changeOwnershipTypeOptions() {
-      const collaborativeOwnershipType =
+      const collaborativeOwnershipType = this.$registry.get(
+        'viewOwnershipType',
         new CollaborativeViewOwnershipType().getType()
-      const personalOwnershipType = new PersonalViewOwnershipType().getType()
+      )
+      const personalOwnershipType = this.$registry.get(
+        'viewOwnershipType',
+        new PersonalViewOwnershipType().getType()
+      )
+      const workspaceId = this.database.workspace.id
 
       return {
-        [collaborativeOwnershipType]: {
+        [collaborativeOwnershipType.getType()]: {
           text: this.$t('viewContext.toPersonal'),
-          targetType: personalOwnershipType,
+          targetType: personalOwnershipType.getType(),
+          isDeactivated: personalOwnershipType.isDeactivated(workspaceId),
         },
-        [personalOwnershipType]: {
+        [personalOwnershipType.getType()]: {
           text: this.$t('viewContext.toCollaborative'),
-          targetType: collaborativeOwnershipType,
+          targetType: collaborativeOwnershipType.getType(),
+          isDeactivated: collaborativeOwnershipType.isDeactivated(workspaceId),
         },
       }
     },
     changeOwnershipTypeText() {
       return this.changeOwnershipTypeOptions[this.view.ownership_type].text
+    },
+    changeOwnershipTypeIsDeactivated() {
+      return this.changeOwnershipTypeOptions[this.view.ownership_type]
+        .isDeactivated
     },
   },
   methods: {
