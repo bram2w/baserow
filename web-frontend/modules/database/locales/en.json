@@ -595,7 +595,9 @@
     "copyCells": "Copy cells",
     "rowCount": "No rows | 1 row | {count} rows",
     "hiddenRowsInsertedTitle": "Rows added",
-    "hiddenRowsInsertedMessage": "{number} newly added rows have been added, but are not visible because of the active filters."
+    "hiddenRowsInsertedMessage": "{number} newly added rows have been added, but are not visible because of the active filters.",
+    "tooManyItemsTitle": "Too many items",
+    "tooManyItemsDescription": "It's not possible to update more than {limit} rows at once, so we've only updated the first."
   },
   "gridViewFieldFile": {
     "dropHere": "Drop here",
