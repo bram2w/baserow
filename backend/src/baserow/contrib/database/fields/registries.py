@@ -1268,23 +1268,6 @@ class FieldType(
             back to the starting table where the first row was changed.
         """
 
-        for (
-            dependant_field,
-            dependant_field_type,
-            dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.row_of_dependency_updated(
-                dependant_field,
-                starting_row,
-                update_collector,
-                field_cache,
-                dependant_path_to_starting_table,
-            )
-
-        from baserow.contrib.database.views.handler import ViewHandler
-
-        ViewHandler().field_value_updated(field)
-
     def row_of_dependency_deleted(
         self,
         field: Field,
@@ -1423,19 +1406,6 @@ class FieldType(
         )
 
         FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-        for (
-            dependant_field,
-            dependant_field_type,
-            dependant_path_to_starting_table,
-        ) in field.dependant_fields_with_types(field_cache, via_path_to_starting_table):
-            dependant_field_type.field_dependency_updated(
-                dependant_field,
-                field,
-                field,
-                update_collector,
-                field_cache,
-                dependant_path_to_starting_table,
-            )
 
         from baserow.contrib.database.views.handler import ViewHandler
 

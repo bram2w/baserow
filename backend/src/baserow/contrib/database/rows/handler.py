@@ -792,16 +792,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 field, [instance], update_collector, field_cache
             )
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_created(
                 dependant_field,
                 instance,
@@ -818,7 +820,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(fields)
+        ViewHandler().field_value_updated(fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         rows_created.send(
@@ -981,16 +983,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         field_cache = FieldCache()
         field_cache.cache_model(model)
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 row,
@@ -1006,7 +1010,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         rows_updated.send(
@@ -1167,16 +1171,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 field, inserted_rows, update_collector, field_cache
             )
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_created(
                 dependant_field,
                 inserted_rows,
@@ -1189,7 +1195,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         from baserow.contrib.database.views.handler import ViewHandler
 
         updated_fields = [o["field"] for o in model._field_objects.values()]
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         if not skip_search_update:
             SearchHandler.field_value_updated_or_created(table)
 
@@ -1740,16 +1746,19 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         )
         field_cache = FieldCache()
         field_cache.cache_model(model)
+
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_updated(
                 dependant_field,
                 rows_to_update,
@@ -1761,7 +1770,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
         SearchHandler.field_value_updated_or_created(table)
 
         updated_rows_to_return = list(
@@ -1881,16 +1890,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field = field_object["field"]
             updated_fields.append(field)
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_moved(
                 dependant_field,
                 row,
@@ -1902,7 +1913,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_updated.send(
             self,
@@ -1991,16 +2002,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             field = field_object["field"]
             updated_fields.append(field)
 
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_deleted(
                 dependant_field,
                 row,
@@ -2012,7 +2025,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_deleted.send(
             self,
@@ -2088,16 +2101,18 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         update_collector = FieldUpdateCollector(table, starting_row_ids=row_ids)
         field_cache = FieldCache()
         field_cache.cache_model(model)
+        dependant_fields = []
         for (
             dependant_field,
             dependant_field_type,
             path_to_starting_table,
-        ) in FieldDependencyHandler.get_dependant_fields_with_type(
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
             table.id,
             updated_field_ids,
+            field_cache,
             associated_relations_changed=True,
-            field_cache=field_cache,
         ):
+            dependant_fields.append(dependant_field)
             dependant_field_type.row_of_dependency_deleted(
                 dependant_field,
                 rows,
@@ -2109,7 +2124,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         from baserow.contrib.database.views.handler import ViewHandler
 
-        ViewHandler().field_value_updated(updated_fields)
+        ViewHandler().field_value_updated(updated_fields + dependant_fields)
 
         rows_deleted.send(
             self,

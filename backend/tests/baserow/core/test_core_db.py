@@ -291,6 +291,85 @@ def test_specific_iterator_per_content_type_with_nested_prefetch(
 
 
 @pytest.mark.django_db
+def test_specific_iterator_with_list(data_fixture, django_assert_num_queries):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    views = list(
+        View.objects.filter(
+            id__in=[
+                grid_view_1.id,
+                grid_view_2.id,
+                gallery_view_1.id,
+                gallery_view_2.id,
+            ]
+        )
+    )
+
+    with django_assert_num_queries(2):
+        specific_objects = list(specific_iterator(views, base_model=View))
+
+        assert isinstance(specific_objects[0], GridView)
+        assert specific_objects[0].id == grid_view_1.id
+
+        assert isinstance(specific_objects[1], GridView)
+        assert specific_objects[1].id == grid_view_2.id
+
+        assert isinstance(specific_objects[2], GalleryView)
+        assert specific_objects[2].id == gallery_view_1.id
+
+        assert isinstance(specific_objects[3], GalleryView)
+        assert specific_objects[3].id == gallery_view_2.id
+
+
+@pytest.mark.django_db
+def test_specific_iterator_with_list_without_providing_base_model(
+    data_fixture, django_assert_num_queries
+):
+    with pytest.raises(ValueError):
+        list(specific_iterator([]))
+
+
+@pytest.mark.django_db
+def test_specific_iterator_with_list_with_select_related_keys(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    data_fixture.create_text_field()
+    data_fixture.create_text_field()
+    grid_view_1 = data_fixture.create_grid_view(table=table)
+    grid_view_2 = data_fixture.create_grid_view(table=table)
+    gallery_view_1 = data_fixture.create_gallery_view(table=table)
+    gallery_view_2 = data_fixture.create_gallery_view(table=table)
+
+    views = list(
+        View.objects.filter(
+            id__in=[
+                grid_view_1.id,
+                grid_view_2.id,
+                gallery_view_1.id,
+                gallery_view_2.id,
+            ]
+        ).select_related("content_type")
+    )
+
+    with django_assert_num_queries(2):
+        specific_objects = list(
+            specific_iterator(views, base_model=View, select_related=["content_type"])
+        )
+
+        str(specific_objects[0].content_type.id)
+        str(specific_objects[1].content_type.id)
+        str(specific_objects[2].content_type.id)
+        str(specific_objects[3].content_type.id)
+
+
+@pytest.mark.django_db
 def test_multi_field_prefetch(data_fixture):
     data_fixture.create_workspace()
     data_fixture.create_workspace()

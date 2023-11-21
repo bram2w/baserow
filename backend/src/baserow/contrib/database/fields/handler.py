@@ -361,7 +361,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
-        ) in instance.dependant_fields_with_types(
+        ) in instance.all_dependant_fields_with_types(
             field_cache=field_cache, associated_relation_changed=True
         ):
             dependant_field_type.field_dependency_created(
@@ -610,8 +610,11 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
             dependant_field,
             dependant_field_type,
             via_path_to_starting_table,
-        ) in dependants_broken_due_to_type_change + field.dependant_fields_with_types(
-            field_cache=field_cache, associated_relation_changed=True
+        ) in (
+            dependants_broken_due_to_type_change
+            + field.all_dependant_fields_with_types(
+                field_cache=field_cache, associated_relation_changed=True
+            )
         ):
             dependant_field_type.field_dependency_updated(
                 dependant_field,
@@ -765,7 +768,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
         if field_cache is None:
             field_cache = FieldCache()
 
-        dependant_fields = field.dependant_fields_with_types(
+        dependant_fields = field.all_dependant_fields_with_types(
             field_cache=field_cache, associated_relation_changed=True
         )
 
@@ -1014,7 +1017,7 @@ class FieldHandler(metaclass=baserow_trace_methods(tracer)):
                 dependant_field,
                 dependant_field_type,
                 via_path_to_starting_table,
-            ) in field.dependant_fields_with_types(
+            ) in field.all_dependant_fields_with_types(
                 field_cache, associated_relation_changed=True
             ):
                 dependant_field_type.field_dependency_created(

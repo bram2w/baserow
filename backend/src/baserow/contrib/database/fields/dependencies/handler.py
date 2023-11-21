@@ -1,6 +1,8 @@
 from typing import Iterable, List, Optional, Tuple
 
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 
 from baserow.contrib.database.fields.dependencies.dependency_rebuilder import (
@@ -11,6 +13,7 @@ from baserow.contrib.database.fields.dependencies.dependency_rebuilder import (
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import Field, LinkRowField
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.core.db import specific_iterator
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Workspace
 from baserow.core.types import PermissionCheck
@@ -65,6 +68,199 @@ class FieldDependencyHandler:
         break_dependencies_for_field(field)
 
     @classmethod
+    def get_all_dependent_fields_with_type(
+        cls,
+        table_id: int,
+        field_ids: Iterable[int],
+        field_cache: FieldCache,
+        associated_relations_changed: bool,
+    ) -> FieldDependants:
+        """
+        Fetches field dependants recursive, and fetches the specific types in a query
+        efficient and performant manner.
+
+        :param table_id: The table that the provided field_ids are all part of.
+        :param field_ids: The field ids for which we need to find the dependent fields,
+            they must all be in the same table as specified by the table_id param.
+        :param field_cache: A field cache used to find and store the specific object
+            of the dependant.
+        :param associated_relations_changed: If true any relations associated
+           with any provided field ids will be treated as having changed also and
+           dependants on the relations themselves will be additionally returned.
+        :return: A list containing the dependant fields, their field type and the
+            path to starting table.
+        """
+
+        if len(field_ids) == 0:
+            return []
+
+        query_parameters = {
+            "pks": tuple(field_ids),
+            "max_depth": settings.MAX_FIELD_REFERENCE_DEPTH,
+            "table_id": table_id,
+        }
+        relationship_table = FieldDependency._meta.db_table
+        linkrowfield_table = LinkRowField._meta.db_table
+        field_table = Field._meta.db_table
+
+        if associated_relations_changed:
+            associated_relations_changed_query = f"""
+                OR (
+                    first.via_id IN %(pks)s
+                    OR linkrowfield.link_row_related_field_id IN %(pks)s
+                )
+                AND NOT (
+                    first.dependant_id IN %(pks)s
+                )
+            """
+        else:
+            associated_relations_changed_query = ""
+
+        # Raw query that traverses through the dependencies, and will find the
+        # dependants of the provided fields ids recursively.
+        raw_query = f"""
+            WITH RECURSIVE traverse(id, via_ids, depth) AS (
+                SELECT
+                    first.dependant_id,
+                    /*
+                    We only want to add via's to the path which are valid joins
+                    required to get from the dependant cell to the dependency. The
+                    queryset can return dependencies with via's for dependants in the
+                    same row, which don't need a join, so we filter those out here.
+                    */
+                    CASE
+                        WHEN (
+                            first.via_id IS NOT NULL
+                            AND (
+                                dependant.table_id != %(table_id)s
+                                OR dependency.table_id = %(table_id)s
+                            )
+                        ) THEN first.via_id::text
+                        ELSE ''
+                    END as via_id,
+                    1
+                FROM {relationship_table} AS first
+                LEFT OUTER JOIN {relationship_table} AS second
+                    ON first.dependant_id = second.dependency_id
+                LEFT OUTER JOIN {linkrowfield_table} as linkrowfield
+                    ON first.via_id = linkrowfield.field_ptr_id
+                LEFT OUTER JOIN {field_table} as dependant
+                    ON first.dependant_id = dependant.id
+                LEFT OUTER JOIN {field_table} as dependency
+                    ON first.dependency_id = dependency.id
+                WHERE
+                    first.dependency_id IN %(pks)s
+                    {associated_relations_changed_query}
+                -- LIMITING_FK_EDGES_CLAUSE_1
+                -- DISALLOWED_ANCESTORS_NODES_CLAUSE_1
+                -- ALLOWED_ANCESTORS_NODES_CLAUSE_1
+                UNION
+                SELECT DISTINCT
+                    dependant_id,
+                    coalesce(concat_ws('|', via_ids::text, via_id::text), ''),
+                    traverse.depth + 1
+                FROM traverse
+                INNER JOIN {relationship_table}
+                    ON {relationship_table}.dependency_id = traverse.id
+                WHERE 1 = 1
+                -- LIMITING_FK_EDGES_CLAUSE_2
+                -- DISALLOWED_ANCESTORS_NODES_CLAUSE_2
+                -- ALLOWED_ANCESTORS_NODES_CLAUSE_2
+            )
+            SELECT
+                traverse.id,
+                traverse.via_ids,
+                field.content_type_id
+            FROM traverse
+            LEFT OUTER JOIN {field_table} as field
+                ON traverse.id = field.id
+            WHERE depth <= %(max_depth)s
+            GROUP BY traverse.id, traverse.via_ids, field.content_type_id
+            ORDER BY MAX(depth) ASC, id ASC
+        """  # nosec b608
+
+        queryset = FieldDependency.objects.raw(raw_query, query_parameters)
+        link_row_field_content_type = ContentType.objects.get_for_model(LinkRowField)
+        fields_to_fetch = []
+
+        # Unpacks the dependant field id, the link row via fields, and adds them to the
+        # `fields_to_fetch` list, so that we can later query efficiently fetch the
+        # specific objects.
+        for dependency in queryset:
+            if dependency.via_ids:
+                dependency.via_ids = [
+                    int(v) for v in dependency.via_ids.split("|") if v
+                ]
+            else:
+                dependency.via_ids = []
+
+            field = Field(id=dependency.id, content_type_id=dependency.content_type_id)
+            if field not in fields_to_fetch:
+                fields_to_fetch.append(field)
+
+            for via_id in dependency.via_ids:
+                link_row_field = Field(
+                    id=via_id, content_type_id=link_row_field_content_type.id
+                )
+                if link_row_field not in fields_to_fetch:
+                    fields_to_fetch.append(link_row_field)
+
+        # This hook is called for every unique field type in the specific_iterator of
+        # the fields. The `table` and `link_row_table` references are later needed,
+        # so we're prefetching them here based on the type.
+        from baserow.contrib.database.fields.field_types import LinkRowFieldType
+
+        link_row_field_model = field_type_registry.get(
+            LinkRowFieldType.type
+        ).model_class
+
+        def queryset_hook(model, queryset):
+            queryset = queryset.select_related("table")
+            if model == link_row_field_model:
+                queryset = queryset.select_related("link_row_table")
+            return queryset
+
+        # Creates an object of specific field types, so that we don't have to execute
+        # unnecessary queries later on.
+        specific_fields = {
+            field.id: field
+            for field in specific_iterator(
+                fields_to_fetch,
+                base_model=Field,
+                per_content_type_queryset_hook=queryset_hook,
+            )
+        }
+
+        result: FieldDependants = []
+        for dependency in queryset:
+            dependant = specific_fields[dependency.id]
+            dependant_field = field_cache.lookup_specific(dependant)
+            if dependant_field is None:
+                # If somehow the dependant is trashed it will be None. We can't really
+                # trigger any updates for it so ignore it.
+                continue
+            dependant_field_type = field_type_registry.get_by_model(dependant_field)
+
+            # The first raw query has constructed a path of link row fields that lead
+            # back to the original table so that we can later efficiently update the
+            # correct rows.
+            #
+            # We only want to add via's to the path which are valid joins required to
+            # get from the dependant cell to the dependency. The queryset can return
+            # dependencies with via's for dependants in the same row, which don't need
+            # a join, so we filter those out here.
+            via_path_to_starting_table = [
+                field_cache.lookup_specific(specific_fields[via_id])
+                for via_id in dependency.via_ids
+            ] or None
+
+            result.append(
+                (dependant_field, dependant_field_type, via_path_to_starting_table)
+            )
+
+        return result
+
+    @classmethod
     def get_dependant_fields_with_type(
         cls,
         table_id: int,
@@ -106,13 +302,32 @@ class FieldDependencyHandler:
             ) & ~Q(dependant_id__in=field_ids)
         queryset = (
             FieldDependency.objects.filter(dependant_filter)
-            .select_related("dependant", "dependency", "via")
+            .select_related(
+                "dependant",
+                "dependant__table",
+                "dependency",
+                "via",
+                "via__table",
+                "via__link_row_table",
+            )
             .order_by("id")
         )
 
+        # Creates an object of specific field types, so that we don't have to execute
+        # unnecessary queries later on.
+        specific_dependants = {
+            field.id: field
+            for field in specific_iterator(
+                [dependency.dependant for dependency in queryset],
+                base_model=Field,
+                select_related=["table"],
+            )
+        }
+
         result: FieldDependants = []
         for field_dependency in queryset:
-            dependant_field = field_cache.lookup_specific(field_dependency.dependant)
+            dependant = specific_dependants[field_dependency.dependant_id]
+            dependant_field = field_cache.lookup_specific(dependant)
             if dependant_field is None:
                 # If somehow the dependant is trashed it will be None. We can't really
                 # trigger any updates for it so ignore it.
@@ -124,7 +339,7 @@ class FieldDependencyHandler:
             # dependencies with via's for dependants in the same row, which don't need
             # a join, so we filter those out here.
             if field_dependency.via is not None and (
-                field_dependency.dependant.table_id != table_id
+                dependant.table_id != table_id
                 or (
                     field_dependency.dependency
                     and field_dependency.dependency.table_id == table_id

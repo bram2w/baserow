@@ -1,3 +1,5 @@
+from django.contrib.contenttypes.models import ContentType
+
 import pytest
 from pytest_unordered import unordered
 
@@ -8,6 +10,7 @@ from baserow.contrib.database.fields.dependencies.handler import FieldDependency
 from baserow.contrib.database.fields.dependencies.models import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.handler import FieldHandler
+from baserow.contrib.database.fields.models import LinkRowField
 from baserow.contrib.database.fields.registries import field_type_registry
 
 
@@ -215,6 +218,227 @@ def a_field_update_for(field, via, then=None):
 
 @pytest.mark.django_db
 @pytest.mark.field_link_row
+def test_get_all_dependant_fields_with_type(data_fixture):
+    table = data_fixture.create_database_table()
+    text_field_1 = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    text_field_3 = data_fixture.create_text_field(table=table)
+
+    text_field_1_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_2 = data_fixture.create_text_field(table=table)
+
+    text_field_2_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_2_dependency_2 = data_fixture.create_text_field(table=table)
+    text_field_2_dependency_3 = data_fixture.create_text_field(table=table)
+
+    text_field_1_dependency_1_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_2_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_2_dependency_1_dependency_1 = data_fixture.create_text_field(table=table)
+
+    link_field_to_table = data_fixture.create_link_row_field(link_row_table=table)
+    text_field_1_and_2_dependency_1 = data_fixture.create_text_field(table=table)
+    other_table_field = data_fixture.create_text_field(
+        table=link_field_to_table.link_row_table
+    )
+
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_1
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_2
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_and_2_dependency_1
+    )
+
+    FieldDependency.objects.create(
+        dependency=text_field_2, dependant=text_field_2_dependency_1
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_2,
+        dependant=other_table_field,
+        via=link_field_to_table,
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_2, dependant=text_field_2_dependency_3
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_2, dependant=text_field_1_and_2_dependency_1
+    )
+
+    FieldDependency.objects.create(
+        dependency=text_field_1_dependency_1,
+        dependant=text_field_1_dependency_1_dependency_1,
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1_dependency_2,
+        dependant=text_field_1_dependency_2_dependency_1,
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_2_dependency_1,
+        dependant=text_field_2_dependency_1_dependency_1,
+    )
+
+    field_cache = FieldCache()
+    text_field_type = field_type_registry.get_by_model(text_field_1_dependency_1)
+
+    results = FieldDependencyHandler.get_all_dependent_fields_with_type(
+        table.id,
+        field_ids=[text_field_1.id],
+        field_cache=field_cache,
+        associated_relations_changed=True,
+    )
+    expected_text_field_1_dependants = [
+        (text_field_1_dependency_1, text_field_type, None),
+        (text_field_1_dependency_2, text_field_type, None),
+        (text_field_1_and_2_dependency_1, text_field_type, None),
+        (text_field_1_dependency_1_dependency_1, text_field_type, None),
+        (text_field_1_dependency_2_dependency_1, text_field_type, None),
+    ]
+    assert results == unordered(expected_text_field_1_dependants)
+
+    results = FieldDependencyHandler.get_all_dependent_fields_with_type(
+        table.id,
+        field_ids=[text_field_2.id],
+        field_cache=field_cache,
+        associated_relations_changed=True,
+    )
+    expected_text_field_2_dependants = [
+        (text_field_2_dependency_1, text_field_type, None),
+        (other_table_field, text_field_type, [link_field_to_table]),
+        (
+            text_field_2_dependency_3,
+            text_field_type,
+            None,
+        ),
+        (text_field_1_and_2_dependency_1, text_field_type, None),
+        (text_field_2_dependency_1_dependency_1, text_field_type, None),
+    ]
+    assert results == unordered(expected_text_field_2_dependants)
+
+    results = FieldDependencyHandler.get_all_dependent_fields_with_type(
+        table.id,
+        field_ids=[text_field_3.id],
+        field_cache=field_cache,
+        associated_relations_changed=True,
+    )
+    assert len(results) == 0
+
+    results = FieldDependencyHandler.get_all_dependent_fields_with_type(
+        table.id,
+        field_ids=[text_field_1.id, text_field_2.id, text_field_3.id],
+        field_cache=field_cache,
+        associated_relations_changed=True,
+    )
+    expected_text_field_1_2_3_dependants = [
+        # This is a combination of `expected_text_field_1_dependants` and
+        # `expected_text_field_2_dependants`, but without the duplicates.
+        (text_field_1_dependency_1, text_field_type, None),
+        (text_field_1_dependency_2, text_field_type, None),
+        (text_field_1_dependency_1_dependency_1, text_field_type, None),
+        (text_field_1_dependency_2_dependency_1, text_field_type, None),
+        (text_field_2_dependency_1, text_field_type, None),
+        (other_table_field, text_field_type, [link_field_to_table]),
+        (
+            text_field_2_dependency_3,
+            text_field_type,
+            None,
+        ),
+        (text_field_1_and_2_dependency_1, text_field_type, None),
+        (text_field_2_dependency_1_dependency_1, text_field_type, None),
+    ]
+    assert results == unordered(expected_text_field_1_2_3_dependants)
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_get_all_dependant_fields_with_type_num_queries(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    text_field_1 = data_fixture.create_text_field(table=table)
+
+    text_field_1_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_2 = data_fixture.create_number_field(table=table)
+    text_field_1_and_2_dependency_1 = data_fixture.create_text_field(table=table)
+
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_1
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_2
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_and_2_dependency_1
+    )
+
+    # This content type is fetched in the method, but it's also cached after.
+    # Fetching it in the test, ensures that we see a correct number of queries after.
+    ContentType.objects.get_for_model(LinkRowField)
+
+    with django_assert_num_queries(3):
+        FieldDependencyHandler.get_all_dependent_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            field_cache=FieldCache(),
+            associated_relations_changed=True,
+        )
+
+    text_field_1_dependency_3 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_4 = data_fixture.create_number_field(table=table)
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_3
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_4
+    )
+
+    with django_assert_num_queries(3):
+        FieldDependencyHandler.get_all_dependent_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            field_cache=FieldCache(),
+            associated_relations_changed=True,
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_get_all_dependant_fields_with_type_via_field_num_queries(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    table2 = data_fixture.create_database_table()
+    text_field_1 = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table2)
+    link_field_to_table = data_fixture.create_link_row_field(table=table)
+
+    FieldDependency.objects.create(
+        dependency=text_field_1,
+        dependant=text_field_2,
+        via=link_field_to_table,
+    )
+
+    with django_assert_num_queries(3):
+        dependant_fields = FieldDependencyHandler.get_all_dependent_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            field_cache=FieldCache(),
+            associated_relations_changed=True,
+        )
+
+        (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) = dependant_fields[0]
+        str(dependant_field.table.id)
+        str(path_to_starting_table[0].table.id)
+        str(path_to_starting_table[0].link_row_table.id)
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
 def test_get_dependant_fields_with_type(data_fixture):
     table = data_fixture.create_database_table()
     text_field_1 = data_fixture.create_text_field(table=table)
@@ -310,3 +534,85 @@ def test_get_dependant_fields_with_type(data_fixture):
     assert results == unordered(
         expected_text_field_1_dependants + expected_text_field_2_dependants
     )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_get_dependant_fields_with_type_num_queries(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    text_field_1 = data_fixture.create_text_field(table=table)
+
+    text_field_1_dependency_1 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_2 = data_fixture.create_number_field(table=table)
+    text_field_1_and_2_dependency_1 = data_fixture.create_text_field(table=table)
+
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_1
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_2
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_and_2_dependency_1
+    )
+
+    with django_assert_num_queries(3):
+        FieldDependencyHandler.get_dependant_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            associated_relations_changed=True,
+            field_cache=FieldCache(),
+        )
+
+    text_field_1_dependency_3 = data_fixture.create_text_field(table=table)
+    text_field_1_dependency_4 = data_fixture.create_number_field(table=table)
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_3
+    )
+    FieldDependency.objects.create(
+        dependency=text_field_1, dependant=text_field_1_dependency_4
+    )
+
+    with django_assert_num_queries(3):
+        FieldDependencyHandler.get_dependant_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            associated_relations_changed=True,
+            field_cache=FieldCache(),
+        )
+
+
+@pytest.mark.django_db
+@pytest.mark.field_link_row
+def test_get_dependant_fields_with_type_via_field_num_queries(
+    data_fixture, django_assert_num_queries
+):
+    table = data_fixture.create_database_table()
+    text_field_1 = data_fixture.create_text_field(table=table)
+    text_field_2 = data_fixture.create_text_field(table=table)
+    link_field_to_table = data_fixture.create_link_row_field(table=table)
+
+    FieldDependency.objects.create(
+        dependency=text_field_1,
+        dependant=text_field_2,
+        via=link_field_to_table,
+    )
+
+    with django_assert_num_queries(2):
+        dependant_fields = FieldDependencyHandler.get_dependant_fields_with_type(
+            table.id,
+            field_ids=[text_field_1.id],
+            associated_relations_changed=True,
+            field_cache=FieldCache(),
+        )
+
+        (
+            dependant_field,
+            dependant_field_type,
+            path_to_starting_table,
+        ) = dependant_fields[0]
+        str(dependant_field.table.id)
+        str(path_to_starting_table[0].table.id)
+        str(path_to_starting_table[0].link_row_table.id)
