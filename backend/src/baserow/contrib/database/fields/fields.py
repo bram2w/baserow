@@ -17,7 +17,7 @@ class BaserowLastModifiedField(SyncedDateTimeField):
     requires_refresh_after_update = True
 
 
-class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
+class IgnoreMissingForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
     def get_queryset(self, **hints):
         """
         We specifically want to return a new query set without the provided hints
@@ -42,7 +42,11 @@ class SingleSelectForwardManyToOneDescriptor(ForwardManyToOneDescriptor):
 
 
 class SingleSelectForeignKey(models.ForeignKey):
-    forward_related_accessor_class = SingleSelectForwardManyToOneDescriptor
+    forward_related_accessor_class = IgnoreMissingForwardManyToOneDescriptor
+
+
+class IgnoreMissingForeignKey(models.ForeignKey):
+    forward_related_accessor_class = IgnoreMissingForwardManyToOneDescriptor
 
 
 class MultipleSelectManyToManyDescriptor(ManyToManyDescriptor):
