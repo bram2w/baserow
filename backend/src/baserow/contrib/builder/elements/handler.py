@@ -1,6 +1,8 @@
 from collections import defaultdict
-from typing import Iterable, List, Optional, Union, cast
+from typing import Any, Dict, Iterable, List, Optional, Union, cast
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.elements.exceptions import (
@@ -412,7 +414,7 @@ class ElementHandler:
     def _duplicate_workflow_actions_of_element(
         self,
         element: Element,
-        id_mapping: MirrorDict,
+        id_mapping: Dict[str, Dict[int, int]],
     ) -> List[BuilderWorkflowAction]:
         """
         This helper function duplicates all the workflow actions associated with the
@@ -438,3 +440,44 @@ class ElementHandler:
             workflow_actions_duplicated.append(workflow_action_duplicated)
 
         return workflow_actions_duplicated
+
+    def export_element(
+        self,
+        element: Element,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Serializes the given element.
+
+        :param element: The instance to serialize.
+        :param files_zip: A zip file to store files in necessary.
+        :param storage: Storage to use.
+        :return: The serialized version.
+        """
+
+        return element.get_type().export_serialized(element)
+
+    def import_element(
+        self,
+        page: Page,
+        serialized_element: Dict[str, Any],
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Element:
+        """
+        Creates an instance using the serialized version previously exported with
+        `.export_element'.
+
+        :param page: The page instance the new element should belong to.
+        :param serialized_element: The serialized version of the element.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the newly created instance.
+        """
+
+        element_type = element_type_registry.get(serialized_element["type"])
+        return element_type.import_serialized(page, serialized_element, id_mapping)

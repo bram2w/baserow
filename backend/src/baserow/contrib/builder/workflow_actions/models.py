@@ -3,9 +3,6 @@ from django.db import models
 
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
-from baserow.contrib.builder.workflow_actions.registries import (
-    builder_workflow_action_type_registry,
-)
 from baserow.core.formula.field import FormulaField
 from baserow.core.registry import ModelRegistryMixin
 from baserow.core.workflow_actions.models import WorkflowAction
@@ -34,6 +31,10 @@ class BuilderWorkflowAction(WorkflowAction):
 
     @staticmethod
     def get_type_registry() -> ModelRegistryMixin:
+        from baserow.contrib.builder.workflow_actions.registries import (
+            builder_workflow_action_type_registry,
+        )
+
         return builder_workflow_action_type_registry
 
     def get_parent(self):

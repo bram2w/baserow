@@ -1,5 +1,7 @@
-from typing import Any, Dict, Iterable, Optional, Tuple, Union, cast
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union, cast
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.pages.models import Page
@@ -211,3 +213,21 @@ class ServiceHandler:
             raise ServiceImproperlyConfigured("The integration property is missing.")
 
         return service.get_type().dispatch(service, dispatch_context)
+
+    def export_service(self, service):
+        return service.get_type().export_serialized(service)
+
+    def import_service(
+        self,
+        integration,
+        serialized_service,
+        id_mapping,
+        import_formula: Optional[Callable[[str, Dict[str, Any]], str]] = None,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        service_type = service_type_registry.get(serialized_service["type"])
+
+        return service_type.import_serialized(
+            integration, serialized_service, id_mapping, import_formula=import_formula
+        )

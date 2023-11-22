@@ -12,8 +12,15 @@ class ElementDict(TypedDict):
     type: str
     parent_element_id: int
     place_in_container: str
+    style_border_top_color: str
+    style_border_top_size: int
     style_padding_top: int
+    style_border_bottom_color: str
+    style_border_bottom_size: int
     style_padding_bottom: int
+    style_background: str
+    style_background_color: str
+    style_width: str
 
 
 class DataSourceDict(TypedDict):

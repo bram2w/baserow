@@ -1,5 +1,8 @@
+from ast import Dict
 from typing import Iterable, Optional, Union, cast
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.core.db import specific_iterator
@@ -227,3 +230,27 @@ class IntegrationHandler:
         Integration.recalculate_full_orders(
             queryset=Integration.objects.filter(application=application)
         )
+
+    def export_integration(self, integration):
+        return integration.get_type().export_serialized(integration)
+
+    def import_integration(
+        self,
+        application,
+        serialized_integration,
+        id_mapping,
+        cache: Optional[Dict] = None,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        if "integrations" not in id_mapping:
+            id_mapping["integrations"] = {}
+
+        integration_type = integration_type_registry.get(serialized_integration["type"])
+        integration = integration_type.import_serialized(
+            application, serialized_integration, id_mapping, cache=cache
+        )
+
+        id_mapping["integrations"][serialized_integration["id"]] = integration.id
+
+        return integration

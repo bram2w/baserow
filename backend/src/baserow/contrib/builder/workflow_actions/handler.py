@@ -1,5 +1,7 @@
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.pages.models import Page
@@ -44,3 +46,31 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
             kwargs["event"] = workflow_action.event
 
         return super().update_workflow_action(workflow_action, **kwargs)
+
+    def import_workflow_action(
+        self,
+        page: Page,
+        serialized_workflow_action: Dict,
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Creates an instance using the serialized version previously exported with
+        `.export_workflow_action'.
+
+        :param page: The page instance the new  action should belong to.
+        :param serialized_workflow_action: The serialized version of the action.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the new action instance.
+        """
+
+        workflow_action_type = builder_workflow_action_type_registry.get(
+            serialized_workflow_action["type"]
+        )
+        return workflow_action_type.import_serialized(
+            page, serialized_workflow_action, id_mapping
+        )

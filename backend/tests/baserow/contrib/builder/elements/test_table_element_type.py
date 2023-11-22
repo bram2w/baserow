@@ -211,3 +211,59 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
         "get('current_record.id')",
         f"get('current_record.field_{fields[0].id}')",
     ]
+
+
+@pytest.mark.django_db
+def test_duplicate_table_element_with_current_record_formulas_with_update(data_fixture):
+    user = data_fixture.create_user()
+    page = data_fixture.create_builder_page(user=user)
+
+    table, fields, _ = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+        ],
+    )
+
+    data_source1 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        table=table, page=page
+    )
+
+    IMPORT_REF = {
+        "id": 42,
+        "order": "1.00000000000000000000",
+        "type": "table",
+        "parent_element_id": None,
+        "place_in_container": None,
+        "style_padding_top": 10,
+        "style_padding_bottom": 10,
+        "data_source_id": 42,
+        "items_per_page": 20,
+        "fields": [
+            {"name": "Field 1", "value": "get('current_record.id')", "type": "text"},
+            {
+                "name": "Field 2",
+                "value": "get('current_record.field_42')",
+                "type": "text",
+            },
+        ],
+    }
+
+    id_mapping = {
+        "database_fields": {42: fields[0].id},
+        "builder_data_sources": {42: data_source1.id},
+    }
+
+    ElementHandler().import_element(page, IMPORT_REF, id_mapping)
+
+    [imported_table_element] = page.element_set.all()
+
+    assert imported_table_element.specific.data_source_id == data_source1.id
+
+    assert [f.value for f in imported_table_element.specific.fields.all()] == [
+        "get('current_record.id')",
+        f"get('current_record.field_{fields[0].id}')",
+    ]
