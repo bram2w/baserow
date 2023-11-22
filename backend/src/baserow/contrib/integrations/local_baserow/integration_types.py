@@ -24,7 +24,7 @@ class LocalBaserowIntegrationType(IntegrationType):
     model_class = LocalBaserowIntegration
 
     class SerializedDict(IntegrationDict):
-        authorized_user_username: str
+        authorized_user: str
 
     serializer_field_names = ["context_data", "authorized_user"]
     allowed_fields = ["authorized_user"]
@@ -46,18 +46,18 @@ class LocalBaserowIntegrationType(IntegrationType):
 
         return super().prepare_values(values, user)
 
-    def get_property_for_serialization(self, integration: Integration, prop_name: str):
+    def serialize_property(self, integration: Integration, prop_name: str):
         """
         Replace the authorized user property with it's username. Better when loading the
         data later.
         """
 
-        if prop_name == "authorized_user_username":
+        if prop_name == "authorized_user":
             if integration.authorized_user:
                 return integration.authorized_user.username
             return None
 
-        return super().get_property_for_serialization(integration, prop_name)
+        return super().serialize_property(integration, prop_name)
 
     def import_serialized(
         self,
@@ -85,7 +85,7 @@ class LocalBaserowIntegrationType(IntegrationType):
                 )
             }
 
-        username = serialized_values.pop("authorized_user_username", None)
+        username = serialized_values.pop("authorized_user", None)
 
         if username:
             serialized_values["authorized_user"] = cache["workspace_users"].get(

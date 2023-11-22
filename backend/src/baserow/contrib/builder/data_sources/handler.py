@@ -1,5 +1,7 @@
-from typing import Any, Iterable, Optional, Union
+from typing import Any, Dict, Iterable, Optional, Union
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
@@ -10,7 +12,10 @@ from baserow.contrib.builder.data_sources.exceptions import (
     DataSourceImproperlyConfigured,
 )
 from baserow.contrib.builder.data_sources.models import DataSource
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.types import DataSourceDict
+from baserow.core.integrations.models import Integration
 from baserow.core.integrations.registries import integration_type_registry
 from baserow.core.services.handler import ServiceHandler
 from baserow.core.services.models import Service
@@ -350,3 +355,87 @@ class DataSourceHandler:
         DataSource.recalculate_full_orders(
             queryset=DataSource.objects.filter(page=page)
         )
+
+    def export_data_source(
+        self,
+        data_source: DataSource,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> DataSourceDict:
+        """
+        Serializes the given data source.
+
+        :param data_source: The data source instance to serialize.
+        :param files_zip: A zip file to store files in necessary.
+        :param storage: Storage to use.
+        :return: The serialized version.
+        """
+
+        serialized_service = None
+
+        if data_source.service:
+            serialized_service = ServiceHandler().export_service(data_source.service)
+
+        return DataSourceDict(
+            id=data_source.id,
+            name=data_source.name,
+            order=str(data_source.order),
+            service=serialized_service,
+        )
+
+    def import_data_source(
+        self,
+        page,
+        serialized_data_source: DataSourceDict,
+        id_mapping: Dict[str, Dict[int, int]],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Creates an instance using the serialized version previously exported with
+        `.export_data_source'.
+
+        :param page: The page instance the new data source should belong to.
+        :param serialized_data_source: The serialized version of the data source.
+        :param id_mapping: A map of old->new id per data type
+            when we have foreign keys that need to be migrated.
+        :param files_zip: Contains files to import if any.
+        :param storage: Storage to get the files from.
+        :return: the new data source instance.
+        """
+
+        # First we get the service if any
+        service = None
+        serialized_service = serialized_data_source.get("service", None)
+        if serialized_service:
+            # Get the integration if any
+            integration = None
+            integration_id = serialized_service.pop("integration_id", None)
+            if integration_id:
+                integration_id = id_mapping["integrations"].get(
+                    integration_id, integration_id
+                )
+                integration = Integration.objects.get(id=integration_id)
+
+            service = ServiceHandler().import_service(
+                integration,
+                serialized_service,
+                id_mapping,
+                files_zip=files_zip,
+                storage=storage,
+                import_formula=import_formula,
+            )
+
+        # Then create the data source with the service
+        data_source = DataSource.objects.create(
+            page=page,
+            service=service,
+            order=serialized_data_source["order"],
+            name=serialized_data_source["name"],
+        )
+
+        id_mapping["builder_data_sources"][
+            serialized_data_source["id"]
+        ] = data_source.id
+
+        return data_source

@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Iterable, Optional, Type, cast
+from zipfile import ZipFile
 
+from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
 from baserow.core.db import specific_iterator
@@ -127,3 +129,20 @@ class WorkflowActionHandler(ABC):
             workflow_action.save()
 
         return workflow_action.specific
+
+    def export_workflow_action(
+        self,
+        workflow_action,
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Serializes the given workflow action.
+
+        :param workflow_action: The action instance to serialize.
+        :param files_zip: A zip file to store files in necessary.
+        :param storage: Storage to use.
+        :return: The serialized version.
+        """
+
+        return workflow_action.get_type().export_serialized(workflow_action)

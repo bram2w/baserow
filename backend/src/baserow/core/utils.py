@@ -8,7 +8,7 @@ import os
 import random
 import re
 import string
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from decimal import Decimal
 from fractions import Fraction
 from itertools import islice
@@ -798,22 +798,25 @@ class ChildProgressBuilder:
             return Progress(child_total)
 
 
-class MirrorDict(dict):
+class MirrorDict(defaultdict):
     """
-    This dict will always return the same value as the key. It can be used to
-    replicate non existing mapping that must return the same values
+    This dict will return the same value as the key when the value is missing.
+    It can be used to replicate non existing mapping that must return the same values.
 
     d = MirrorDict()
     d['test'] == 'test'
     d[1] == 1
     d.get('test') == 'test'
+
+    d['test'] = 'foo'
+    d['test'] == 'foo'
     """
 
-    def __getitem__(self, key):
+    def __missing__(self, key):
         return key
 
     def get(self, key, default=None):
-        return key
+        return self[key]
 
 
 def atomic_if_not_already():

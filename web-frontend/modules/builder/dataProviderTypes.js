@@ -54,6 +54,10 @@ export class DataSourceDataProviderType extends DataProviderType {
       'dataSourceContent/getDataSourceContents'
     ](applicationContext.page)
 
+    if (!dataSource?.type) {
+      return null
+    }
+
     const serviceType = this.app.$registry.get('service', dataSource.type)
 
     if (serviceType.returnsList) {

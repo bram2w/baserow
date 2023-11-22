@@ -194,7 +194,7 @@ class CollectionElementType(ElementType, ABC):
     def before_delete(self, instance):
         instance.fields.all().delete()
 
-    def get_property_for_serialization(self, element: Element, prop_name: str):
+    def serialize_property(self, element: Element, prop_name: str):
         """
         You can customize the behavior of the serialization of a property with this
         hook.
@@ -206,34 +206,46 @@ class CollectionElementType(ElementType, ABC):
                 for f in element.fields.all()
             ]
 
-        return super().get_property_for_serialization(element, prop_name)
+        return super().serialize_property(element, prop_name)
 
-    def import_serialized(self, page, serialized_values, id_mapping):
-        serialized_copy = serialized_values.copy()
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        **kwargs,
+    ) -> Any:
+        if prop_name == "data_source_id" and value:
+            return id_mapping["builder_data_sources"][value]
 
-        if serialized_copy["data_source_id"]:
-            serialized_copy["data_source_id"] = id_mapping["builder_data_sources"][
-                serialized_copy["data_source_id"]
+        # Update the formulas in fields
+        if prop_name == "fields" and kwargs.get("data_source_id", None):
+            return [
+                {
+                    **f,
+                    "value": import_formula(
+                        f["value"],
+                        id_mapping,
+                        # We need to add the data_source_id for the current row
+                        # provider.
+                        data_source_id=kwargs["data_source_id"],
+                    ),
+                }
+                for f in value
             ]
 
-        fields = serialized_copy.pop("fields", [])
+        return super().deserialize_property(prop_name, value, id_mapping)
 
-        instance = super().import_serialized(page, serialized_copy, id_mapping)
+    def create_instance_from_serialized(self, serialized_values: Dict[str, Any]):
+        fields = serialized_values.pop("fields", [])
+
+        instance = super().create_instance_from_serialized(serialized_values)
 
         # Create fields
         created_fields = CollectionField.objects.bulk_create(
             [
                 CollectionField(
-                    **{
-                        **field,
-                        "value": import_formula(
-                            field["value"],
-                            id_mapping,
-                            # We need to add the data_source_id for the current row
-                            # provider.
-                            data_source_id=serialized_copy["data_source_id"],
-                        ),
-                    },
+                    **field,
                     order=index,
                 )
                 for index, field in enumerate(fields)
@@ -243,6 +255,35 @@ class CollectionElementType(ElementType, ABC):
         instance.fields.add(*created_fields)
 
         return instance
+
+    def import_serialized(
+        self,
+        parent: Any,
+        serialized_values: Dict[str, Any],
+        id_mapping: Dict[str, Any],
+        **kwargs,
+    ):
+        """
+        Here we add the data_source_id to the import process to be able to resolve
+        current_record formulas migration.
+        """
+
+        actual_data_source_id = None
+        if (
+            serialized_values.get("data_source_id", None)
+            and "builder_data_sources" in id_mapping
+        ):
+            actual_data_source_id = id_mapping["builder_data_sources"][
+                serialized_values["data_source_id"]
+            ]
+
+        return super().import_serialized(
+            parent,
+            serialized_values,
+            id_mapping,
+            data_source_id=actual_data_source_id,
+            **kwargs,
+        )
 
 
 class ColumnElementType(ContainerElementType):
@@ -460,31 +501,24 @@ class LinkElementType(ElementType):
         width: str
         alignment: str
 
-    def import_serialized(self, page, serialized_values, id_mapping):
-        serialized_copy = serialized_values.copy()
-        if serialized_copy["navigate_to_page_id"]:
-            serialized_copy["navigate_to_page_id"] = id_mapping["builder_pages"].get(
-                serialized_copy["navigate_to_page_id"],
-                serialized_copy["navigate_to_page_id"],
-            )
+    def deserialize_property(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any]
+    ) -> Any:
+        if prop_name == "navigate_to_page_id" and value:
+            return id_mapping["builder_pages"][value]
 
-        if serialized_copy["value"]:
-            serialized_copy["value"] = import_formula(
-                serialized_copy["value"], id_mapping
-            )
+        if prop_name == "value":
+            return import_formula(value, id_mapping)
 
-        if serialized_copy["navigate_to_url"]:
-            serialized_copy["navigate_to_url"] = import_formula(
-                serialized_copy["navigate_to_url"], id_mapping
-            )
+        if prop_name == "navigate_to_url":
+            return import_formula(value, id_mapping)
 
-        if serialized_copy["page_parameters"]:
-            params = serialized_copy["page_parameters"]
-            serialized_copy["page_parameters"] = [
-                {**p, "value": import_formula(p["value"], id_mapping)} for p in params
+        if prop_name == "page_parameters":
+            return [
+                {**p, "value": import_formula(p["value"], id_mapping)} for p in value
             ]
 
-        return super().import_serialized(page, serialized_copy, id_mapping)
+        return super().deserialize_property(prop_name, value, id_mapping)
 
     @property
     def serializer_field_overrides(self):

@@ -144,7 +144,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
     id_mapping = {}
 
     service: LocalBaserowListRows = service_type.import_serialized(  # type: ignore
-        integration, exported, id_mapping, fake_import_formula
+        integration, exported, id_mapping, import_formula=fake_import_formula
     )
 
     assert service.id != exported["id"]
@@ -176,7 +176,7 @@ def test_export_import_local_baserow_list_rows_service(data_fixture):
     id_mapping["database_fields"] = {field.id: field_2.id}  # type: ignore
     id_mapping["database_tables"] = {table.id: table_2.id}  # type: ignore
     service: LocalBaserowListRows = service_type.import_serialized(  # type: ignore
-        integration, exported, id_mapping, fake_import_formula
+        integration, exported, id_mapping, import_formula=fake_import_formula
     )
 
     assert service.view_id == view_2.id
@@ -396,7 +396,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
     id_mapping = {}
 
     service: LocalBaserowGetRow = service_type.import_serialized(  # type: ignore
-        integration, exported, id_mapping, fake_import_formula
+        integration, exported, id_mapping, import_formula=fake_import_formula
     )
 
     assert service.id != exported["id"]
@@ -424,7 +424,7 @@ def test_export_import_local_baserow_get_row_service(data_fixture):
     id_mapping["database_fields"] = {field.id: field_2.id}  # type: ignore
     id_mapping["database_tables"] = {table.id: table_2.id}  # type: ignore
     service: LocalBaserowGetRow = service_type.import_serialized(  # type: ignore
-        integration, exported, id_mapping, fake_import_formula
+        integration, exported, id_mapping, import_formula=fake_import_formula
     )
 
     assert service.view_id == view_2.id

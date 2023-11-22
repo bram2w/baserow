@@ -171,34 +171,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         if service.table is None:
             raise ServiceImproperlyConfigured("The table property is missing.")
 
-    def transform_serialized_value(
-        self,
-        prop_name: str,
-        value: Any,
-        id_mapping: Dict[str, Any],
-        import_formula: Callable[[str, Dict[str, Any]], str],
-    ):
-        """
-        Get the table and field IDs from the mapping if they exist.
-        """
-
-        if prop_name == "table_id" and "database_tables" in id_mapping:
-            return id_mapping["database_tables"].get(value, None)
-
-        if "database_fields" in id_mapping and prop_name in ["filters", "sortings"]:
-            return [
-                {
-                    **item,
-                    "field_id": id_mapping["database_fields"][item["field_id"]],
-                }
-                for item in value
-            ]
-
-        return value
-
-    def get_property_for_serialization(
-        self, service: LocalBaserowListRows, prop_name: str
-    ):
+    def serialize_property(self, service: LocalBaserowListRows, prop_name: str):
         """
         Responsible for serializing the `filters` and `sortings` properties.
 
@@ -225,9 +198,30 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
                 for s in service.service_sorts.all()
             ]
 
-        return super().get_property_for_serialization(service, prop_name)
+        return super().serialize_property(service, prop_name)
 
-    def create_instance_from_serialized(self, integration, serialized_values):
+    def deserialize_property(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+    ):
+        """
+        Get the view, table and field IDs from the mapping if they exists.
+        """
+
+        if prop_name == "table_id" and "database_tables" in id_mapping:
+            return id_mapping["database_tables"].get(value, None)
+
+        if "database_fields" in id_mapping and prop_name in ["filters", "sortings"]:
+            return [
+                {
+                    **item,
+                    "field_id": id_mapping["database_fields"][item["field_id"]],
+                }
+                for item in value
+            ]
+
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+
+    def create_instance_from_serialized(self, serialized_values):
         """
         Responsible for creating the `filters` and `sortings`.
 
@@ -240,9 +234,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         filters = serialized_values.pop("filters", [])
         sortings = serialized_values.pop("sortings", [])
 
-        service = super().create_instance_from_serialized(
-            integration, serialized_values
-        )
+        service = super().create_instance_from_serialized(serialized_values)
 
         # Create filters
         LocalBaserowTableServiceFilter.objects.bulk_create(
@@ -412,8 +404,12 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
     The `ServiceType` for `LocalBaserowViewService` subclasses.
     """
 
-    def transform_serialized_value(
-        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], import_formula
+    def deserialize_property(
+        self,
+        prop_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        **kwargs,
     ):
         """
         Get the view ID from the mapping if it exists.
@@ -422,9 +418,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
         if prop_name == "view_id" and "database_views" in id_mapping:
             return id_mapping["database_views"].get(value, None)
 
-        return super().transform_serialized_value(
-            prop_name, value, id_mapping, import_formula
-        )
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
 
     def prepare_values(
         self,
@@ -567,10 +561,14 @@ class LocalBaserowListRowsUserServiceType(
 
         row, field_dbname, *rest = path
 
+        if field_dbname == "id":
+            return path
+
         original_field_id = int(field_dbname[6:])
         field_id = id_mapping.get("database_fields", {}).get(
             original_field_id, original_field_id
         )
+
         return [row, f"field_{field_id}", *rest]
 
     def dispatch_data(
@@ -730,20 +728,24 @@ class LocalBaserowGetRowUserServiceType(
         """
 
         field_dbname, *rest = path
-        original_field_id = int(field_dbname[6:])
 
+        if field_dbname == "id":
+            return path
+
+        original_field_id = int(field_dbname[6:])
         field_id = id_mapping.get("database_fields", {}).get(
             original_field_id, original_field_id
         )
 
         return [f"field_{field_id}", *rest]
 
-    def transform_serialized_value(
+    def deserialize_property(
         self,
         prop_name: str,
         value: Any,
         id_mapping: Dict[str, Any],
-        import_formula: Callable[[str, Dict[str, Any]], str],
+        import_formula: Callable[[str, Dict[str, Any]], str] = lambda x, y: x,
+        **kwargs,
     ):
         """
         Get the view & table ID from the mapping if it exists and also updates the
@@ -753,8 +755,8 @@ class LocalBaserowGetRowUserServiceType(
         if prop_name == "row_id":
             return import_formula(value, id_mapping)
 
-        return super().transform_serialized_value(
-            prop_name, value, id_mapping, import_formula
+        return super().deserialize_property(
+            prop_name, value, id_mapping, import_formula=import_formula, **kwargs
         )
 
     def dispatch_transform(
@@ -803,15 +805,15 @@ class LocalBaserowGetRowUserServiceType(
                     dispatch_context,
                 )
             )
-        except ValidationError:
+        except ValidationError as exc:
             raise ServiceImproperlyConfigured(
                 "The result of the `row_id` formula must be an integer or convertible "
                 "to an integer."
-            )
-        except Exception as e:
+            ) from exc
+        except Exception as exc:
             raise ServiceImproperlyConfigured(
-                f"The `row_id` formula can't be resolved: {e}"
-            )
+                f"The `row_id` formula can't be resolved: {exc}"
+            ) from exc
 
         CoreHandler().check_permissions(
             integration.authorized_user,

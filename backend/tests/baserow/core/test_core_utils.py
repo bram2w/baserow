@@ -369,6 +369,11 @@ def test_mirror_dict():
     assert mirror_dict.get(1) == 1
     assert mirror_dict.get("test", default="abc") == "test"
 
+    mirror_dict["foo"] = "bar"
+    assert mirror_dict["foo"] == "bar"
+    assert mirror_dict.get("foo") == "bar"
+    assert mirror_dict.get("foo", default="abc") == "bar"
+
 
 @patch("django.db.transaction.atomic")
 @patch("django.db.transaction.get_autocommit", return_value=True)
