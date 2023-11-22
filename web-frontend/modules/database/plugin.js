@@ -16,6 +16,7 @@ import {
   BooleanFieldType,
   DateFieldType,
   LastModifiedFieldType,
+  LastModifiedByFieldType,
   FileFieldType,
   SingleSelectFieldType,
   MultipleSelectFieldType,
@@ -431,6 +432,7 @@ export default (context) => {
   app.$registry.register('field', new BooleanFieldType(context))
   app.$registry.register('field', new DateFieldType(context))
   app.$registry.register('field', new LastModifiedFieldType(context))
+  app.$registry.register('field', new LastModifiedByFieldType(context))
   app.$registry.register('field', new CreatedOnFieldType(context))
   app.$registry.register('field', new URLFieldType(context))
   app.$registry.register('field', new EmailFieldType(context))

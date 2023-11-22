@@ -60,7 +60,7 @@ def clean_registry_cache():
     yield
 
 
-@pytest.mark.django_db(transaction=True)
+@pytest.mark.django_db
 @pytest.mark.disabled_in_ci
 def test_can_convert_between_all_fields(data_fixture):
     """
@@ -124,7 +124,11 @@ def test_can_convert_between_all_fields(data_fixture):
                             user=user,
                             table=table,
                             row_id=row.id,
-                            values={f"field_{from_field.id}": random_value},
+                            values={
+                                f"field_{from_field.id}": field_type.serialize_to_input_value(
+                                    from_field, random_value
+                                )
+                            },
                         )
                     handler.update_field(
                         user=user,

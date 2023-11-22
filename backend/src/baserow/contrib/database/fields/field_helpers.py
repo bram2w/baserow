@@ -126,6 +126,11 @@ def construct_all_possible_field_kwargs(
                 "date_show_tzinfo": True,
             },
         ],
+        "last_modified_by": [
+            {
+                "name": "last_modified_by",
+            }
+        ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
             {

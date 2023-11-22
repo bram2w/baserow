@@ -1,0 +1,49 @@
+.field-last-modified-by {
+  height: 24px;
+  margin: 5px 4px 5px 4px;
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  right: auto;
+  padding: 0 4px;
+
+  &:not(:last-child) {
+    margin-right: 5px;
+  }
+}
+
+.field-last-modified-by--row-edit-field {
+  padding: 0;
+  margin-left: 0;
+}
+
+.field-last-modified-by--card {
+  padding: 0;
+  margin-left: 0;
+  height: 30px;
+}
+
+.field-last-modified-by__name {
+  @include flex-align-items(5px);
+  @include collaborator-style(flex, true);
+
+  max-width: 200px;
+}
+
+.field-last-modified-by__name-text {
+  @extend %ellipsis;
+}
+
+.field-last-modified-by__initials {
+  flex: 0 0 24px;
+  font-weight: bold;
+  color: $white;
+  background-color: $color-primary-500;
+  border-radius: 100%;
+  margin-left: 0;
+  margin-right: -14px;
+  z-index: 1;
+
+  @include center-text(24px, 12px);
+}

@@ -578,10 +578,14 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
         return field_objects
 
     @classmethod
-    def get_field_objects_by_type(cls, field_type: str, include_trash: bool = False):
-        field_objects = cls.get_field_objects(include_trash)
-
-        return filter(lambda f: f["type"].type == field_type, field_objects)
+    def get_field_objects_to_always_update(cls):
+        field_objects = cls.get_field_objects(True)
+        return [
+            field_object
+            for field_object in field_objects
+            if field_type_registry.get_by_type(field_object["type"]).update_always
+            is True
+        ]
 
     @classmethod
     def get_fields_missing_search_index(cls) -> List[Field]:

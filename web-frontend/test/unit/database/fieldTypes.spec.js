@@ -198,6 +198,14 @@ const mockedFields = {
     table_id: 42,
     type: 'uuid',
   },
+  last_modified_by: {
+    id: 21,
+    name: 'last_modified_by',
+    order: 21,
+    primary: false,
+    table_id: 42,
+    type: 'last_modified_by',
+  },
 }
 
 const valuesToCall = [null, undefined]

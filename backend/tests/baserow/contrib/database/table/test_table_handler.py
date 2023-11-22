@@ -624,10 +624,13 @@ def test_counting_many_rows_in_many_tables(data_fixture):
 
 @pytest.mark.django_db
 def test_get_total_row_count_of_workspace(data_fixture):
-    workspace = data_fixture.create_workspace()
+    user = data_fixture.create_user()
+    workspace = data_fixture.create_workspace(user=user)
     database = data_fixture.create_database_application(workspace=workspace)
     table = data_fixture.create_database_table(database=database)
-    table_not_in_workspace = data_fixture.create_database_table()
+
+    user2 = data_fixture.create_user()
+    table_not_in_workspace = data_fixture.create_database_table(user2)
 
     assert TableHandler.get_total_row_count_of_workspace(workspace.id) == 0
 

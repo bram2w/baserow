@@ -1,5 +1,6 @@
 import math
 import os
+import random
 import re
 import sys
 import time
@@ -21,6 +22,7 @@ from baserow.contrib.database.search.exceptions import (
 )
 from baserow.contrib.database.search.handler import SearchHandler
 from baserow.contrib.database.table.models import Table
+from baserow.core.handler import CoreHandler
 from baserow.core.management.utils import run_command_concurrently
 from baserow.core.utils import Progress, grouper
 
@@ -275,12 +277,16 @@ def generate_values_for_one_or_more_tables(models, fake, cache):
     return fields_grouped_by_table
 
 
-def create_row_instance_and_relations(values, model, fake, cache, order):
+def create_row_instance_and_relations(values, table, model, fake, cache, order):
     # Based on the random_value function we have for each type we can
     # build a dict with a random value for each field.
     values, manytomany_values = RowHandler().extract_manytomany_values(values, model)
 
     values["order"] = order
+
+    workspace = table.database.workspace
+    available_users = CoreHandler().get_users_in_workspace(workspace)
+    values["last_modified_by"] = random.choice(available_users)  # nosec
 
     # Prepare an array of objects that can later be inserted all at once.
     instance = model(**values)
@@ -384,6 +390,7 @@ def fill_table_rows(
                 for model in models:
                     instance, relations = create_row_instance_and_relations(
                         fields_grouped_by_table[model.baserow_table_id],
+                        table,
                         model,
                         fake,
                         cache,

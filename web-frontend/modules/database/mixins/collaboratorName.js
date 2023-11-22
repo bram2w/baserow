@@ -5,6 +5,15 @@ export default {
         store = this.$store
       }
 
+      // Workaround for field conversion not to produce console errors
+      if (
+        !collaboratorValue ||
+        typeof collaboratorValue !== 'object' ||
+        !collaboratorValue.id
+      ) {
+        return ''
+      }
+
       // If workspaces are unavailable, public views are served
       const workspaces = store.getters['workspace/getAll']
       if (workspaces.length === 0) {

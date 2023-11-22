@@ -1161,6 +1161,17 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["last_modified_by"]: {
+            "default": None,
+            "metadata": {},
+            "original_type": "last_modified_by",
+            "properties": {
+                "id": {"title": "id", "type": "number"},
+                "name": {"title": "name", "type": "string"},
+            },
+            "title": "last_modified_by",
+            "type": "object",
+        },
         field_db_column_by_name["link_row"]: {
             "title": "link_row",
             "default": None,

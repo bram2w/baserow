@@ -39,6 +39,10 @@ class CannotChangeFieldType(Exception):
     """Raised if the field type cannot be altered."""
 
 
+class CannotCreateFieldType(Exception):
+    """Raised if the field type cannot be created at the moment."""
+
+
 class LinkRowTableNotProvided(Exception):
     """
     Raised when a link row field is trying to be created without the provided link
