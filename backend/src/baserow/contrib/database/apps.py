@@ -205,6 +205,7 @@ class DatabaseConfig(AppConfig):
             EmailFieldType,
             FileFieldType,
             FormulaFieldType,
+            LastModifiedByFieldType,
             LastModifiedFieldType,
             LinkRowFieldType,
             LongTextFieldType,
@@ -230,6 +231,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(BooleanFieldType())
         field_type_registry.register(DateFieldType())
         field_type_registry.register(LastModifiedFieldType())
+        field_type_registry.register(LastModifiedByFieldType())
         field_type_registry.register(CreatedOnFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())

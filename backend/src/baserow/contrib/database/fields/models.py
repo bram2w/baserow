@@ -334,6 +334,10 @@ class LastModifiedField(Field, BaseDateMixin):
     pass
 
 
+class LastModifiedByField(Field):
+    pass
+
+
 class CreatedOnField(Field, BaseDateMixin):
     pass
 

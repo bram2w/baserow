@@ -234,6 +234,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 "last_modified_datetime_eu": "2021-01-02T12:00:00Z",
                 "last_modified_datetime_us": "2021-01-02T12:00:00Z",
                 "last_modified_datetime_eu_tzone": "2021-01-02T12:00:00Z",
+                "last_modified_by": {"id": user.id, "name": user.first_name},
                 "created_on_date_eu": "2021-01-02",
                 "created_on_date_us": "2021-01-02",
                 "created_on_datetime_eu": "2021-01-02T12:00:00Z",

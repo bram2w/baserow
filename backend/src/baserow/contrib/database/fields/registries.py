@@ -147,6 +147,12 @@ class FieldType(
     values without having to query the database.
     """
 
+    update_always = False
+    """
+    Set to True if the field value should be updated in update operations at
+    all times.
+    """
+
     def prepare_value_for_db(self, instance: Field, value: Any) -> Any:
         """
         When a row is created or updated all the values are going to be prepared for the

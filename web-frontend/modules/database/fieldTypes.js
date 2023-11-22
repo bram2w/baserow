@@ -37,6 +37,7 @@ import GridViewFieldMultipleSelect from '@baserow/modules/database/components/vi
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
 import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
+import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
@@ -52,6 +53,7 @@ import FunctionalGridViewFieldFormula from '@baserow/modules/database/components
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
 import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
+import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
 import RowEditFieldLongText from '@baserow/modules/database/components/row/RowEditFieldLongText'
@@ -69,6 +71,7 @@ import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
 import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
+import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
@@ -85,6 +88,7 @@ import RowCardFieldText from '@baserow/modules/database/components/card/RowCardF
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
+import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
@@ -1876,6 +1880,93 @@ export class CreatedOnFieldType extends CreatedOnLastModifiedBaseFieldType {
   getName() {
     const { i18n } = this.app
     return i18n.t('fieldType.createdOn')
+  }
+}
+
+export class LastModifiedByFieldType extends FieldType {
+  static getType() {
+    return 'last_modified_by'
+  }
+
+  getIconClass() {
+    return 'iconoir-user'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.lastModifiedBy')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLastModifiedBy
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLastModifiedBy
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldLastModifiedBy
+  }
+
+  getCardComponent() {
+    return RowCardFieldLastModifiedBy
+  }
+
+  getCanSortInView(field) {
+    return false
+  }
+
+  canBeReferencedByFormulaField() {
+    return false
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const workspaces = this.app.store.getters['workspace/getAll']
+    if (workspaces.length > 0) {
+      const workspaceUser = this.app.store.getters['workspace/getUserById'](
+        value.id
+      )
+      return workspaceUser.name
+    } else {
+      // public views
+      return value.name
+    }
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  getDocsDataType(field) {
+    return 'object'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.lastModifiedBy')
+  }
+
+  getDocsRequestExample() {
+    return {
+      id: 1,
+      name: 'John',
+    }
   }
 }
 

@@ -765,6 +765,12 @@ class CoreHandler(metaclass=baserow_trace_methods(tracer)):
         )
         return workspace_user_queryset.filter(user__in=users, workspace=workspace)
 
+    def get_users_in_workspace(self, workspace: Workspace) -> list[User]:
+        wk_users = WorkspaceUser.objects.filter(workspace=workspace).select_related(
+            "user"
+        )
+        return [wk_user.user for wk_user in wk_users]
+
     def update_workspace_user(
         self,
         user: AbstractUser,

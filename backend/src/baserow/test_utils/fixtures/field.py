@@ -8,6 +8,7 @@ from baserow.contrib.database.fields.models import (
     EmailField,
     FileField,
     FormulaField,
+    LastModifiedByField,
     LastModifiedField,
     LinkRowField,
     LongTextField,
@@ -243,6 +244,16 @@ class FieldFixtures:
         self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LastModifiedField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_last_modified_by_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = LastModifiedByField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

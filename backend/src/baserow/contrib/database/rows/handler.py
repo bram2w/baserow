@@ -1594,6 +1594,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             updated_field_ids=updated_field_ids,
         )
 
+        field_objects_to_always_update = model.get_field_objects_to_always_update()
         rows_relationships = []
         for obj in rows_to_update:
             # The `updated_on` field is not updated with `bulk_update`,
@@ -1601,12 +1602,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             obj.updated_on = model._meta.get_field("updated_on").pre_save(
                 obj, add=False
             )
-            # Add all last_modified fields to the updated fields list so that
-            # formulas referencing them will be updated correctly.
-            last_modified_field_type = field_type_registry.get("last_modified")
-            for field_object in model.get_field_objects_by_type(
-                last_modified_field_type.type
-            ):
+            # Add "always update" fields like last_modified or last modified by fields
+            # to the updated fields list so that formulas referencing them will
+            # be updated correctly.
+            for field_object in field_objects_to_always_update:
                 updated_field_ids.add(field_object["field"].id)
 
             if table.needs_background_update_column_added:
@@ -1718,6 +1717,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             through.objects.bulk_create([v for v in values if v is not None])
 
         bulk_update_fields = ["updated_on"]
+
+        # Add always update fields to update also fields that are trashed
+        for field_object in field_objects_to_always_update:
+            bulk_update_fields.append(field_object["name"])
 
         if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
             bulk_update_fields.append(LAST_MODIFIED_BY_COLUMN_NAME)

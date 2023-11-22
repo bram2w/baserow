@@ -89,6 +89,7 @@
         "boolean": "Boolean",
         "date": "Date",
         "lastModified": "Last modified",
+        "lastModifiedBy": "Last modified by",
         "createdOn": "Created on",
         "url": "URL",
         "email": "Email",
@@ -134,6 +135,7 @@
         "dateResponse": "The response will be a datetime in ISO format.",
         "dateTimeResponse": "The response will be a date in ISO format.",
         "lastModifiedReadOnly": "The last modified field is a read only field.",
+        "lastModifiedBy": "The last modified by field is a read only field.",
         "createdOnReadOnly": "The created on field is a read only field.",
         "url": "Accepts a string that must be a URL.",
         "email": "Accepts a string that must be an email address.",
@@ -294,7 +296,9 @@
         "lastAdminTitle": "Can't remove last workspace admin",
         "lastAdminMessage": "A workspace has to have at least one admin.",
         "adminAlreadyExistsTitle": "Can't use that username",
-        "adminAlreadyExistsDescription": "That username can't be used because it already exists."
+        "adminAlreadyExistsDescription": "That username can't be used because it already exists.",
+        "cannotCreateFieldTypeTitle": "Can't create field",
+        "cannotCreateFieldTypeDescription": "The requested field type cannot be created at the moment. It might be just a temporary problem with older tables. Please try again later."
     },
     "importerType": {
         "csv": "Import a CSV file",
