@@ -1,0 +1,7 @@
+{
+    "type": "bug",
+    "message": "Fix filename inconsistency for downloaded files",
+    "issue_number": 2096,
+    "bullet_points": [],
+    "created_at": "2023-11-16"
+}
