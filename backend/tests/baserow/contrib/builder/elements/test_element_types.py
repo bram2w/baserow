@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import pytest
 from rest_framework.exceptions import ValidationError
 
@@ -7,6 +9,7 @@ from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
 )
+from baserow.core.utils import MirrorDict
 
 
 def pytest_generate_tests(metafunc):
@@ -43,7 +46,7 @@ def test_import_element(data_fixture, element_type: ElementType):
     serialized = {"id": 9999, "order": 42, "type": element_type.type}
     serialized.update(element_type.get_sample_params())
 
-    id_mapping = {}
+    id_mapping = defaultdict(lambda: MirrorDict())
     element = element_type.import_serialized(page, serialized, id_mapping)
 
     assert element.id != 9999

@@ -93,7 +93,11 @@
                 {{ $t('tableElementForm.fieldType') }}
               </label>
               <div class="control__elements">
-                <Dropdown v-model="field.type" :show-search="false">
+                <Dropdown
+                  :value="field.type"
+                  :show-search="false"
+                  @input="changeFieldType(field, $event)"
+                >
                   <DropdownItem
                     v-for="collectionType in orderedCollectionTypes"
                     :key="collectionType.getType()"
@@ -225,7 +229,17 @@ export default {
         id: uuid(), // Temporary id
       })
     },
+    changeFieldType(fieldToUpdate, newType) {
+      console.log('newType', newType)
+      this.values.fields = this.values.fields.map((field) => {
+        if (field.id === fieldToUpdate.id) {
+          return { id: field.id, name: field.name, type: newType }
+        }
+        return field
+      })
+    },
     updateField(fieldToUpdate, values) {
+      console.log('field values', values)
       this.values.fields = this.values.fields.map((field) => {
         if (field.id === fieldToUpdate.id) {
           return { ...field, ...values }

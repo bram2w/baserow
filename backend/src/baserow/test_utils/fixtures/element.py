@@ -38,9 +38,21 @@ class ElementFixtures:
             "fields",
             deepcopy(
                 [
-                    {"name": "Field 1", "value": "get('test1')"},
-                    {"name": "Field 2", "value": "get('test2')"},
-                    {"name": "Field 3", "value": "get('test3')"},
+                    {
+                        "name": "Field 1",
+                        "type": "text",
+                        "config": {"value": "get('test1')"},
+                    },
+                    {
+                        "name": "Field 2",
+                        "type": "text",
+                        "config": {"value": "get('test2')"},
+                    },
+                    {
+                        "name": "Field 3",
+                        "type": "text",
+                        "config": {"value": "get('test3')"},
+                    },
                 ]
             ),
         )

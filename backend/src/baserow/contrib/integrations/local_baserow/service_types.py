@@ -356,7 +356,7 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         if not table:
             return None
 
-        properties = {"id": {"type": "number", "title": "ID"}}
+        properties = {"id": {"type": "number", "title": "Id"}}
         fields = FieldHandler().get_fields(table, specific=True)
         for field in fields:
             field_type = field_type_registry.get_by_model(field)

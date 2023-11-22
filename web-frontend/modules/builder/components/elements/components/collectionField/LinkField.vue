@@ -4,7 +4,7 @@
     v-bind="extraAttr"
     @click="onButtonFieldClick($event)"
   >
-    {{ $t('linkField.details') }}
+    {{ realLinkName }}
   </a>
 </template>
 
@@ -13,45 +13,49 @@ export default {
   name: 'LinkField',
   inject: ['mode', 'builder'],
   props: {
-    value: {
+    url: {
+      type: String,
+      required: true,
+    },
+    linkName: {
       type: String,
       required: true,
     },
   },
   computed: {
-    url() {
-      if (!this.value) {
+    realUrl() {
+      if (!this.url) {
         return ''
       }
 
-      if (this.value.startsWith('/') && this.mode === 'preview') {
-        return `/builder/${this.builder.id}/preview${this.value}`
+      if (this.url.startsWith('/') && this.mode === 'preview') {
+        return `/builder/${this.builder.id}/preview${this.url}`
       } else {
-        return this.value
+        return this.url
       }
     },
     isExternalLink() {
-      return !this.url.startsWith('/')
+      return !this.realUrl.startsWith('/')
     },
     extraAttr() {
       const attr = {}
-      if (this.url) {
-        attr.href = this.url
+      if (this.realUrl) {
+        attr.href = this.realUrl
       }
       if (this.isExternalLink) {
         attr.rel = 'noopener noreferrer'
       }
       return attr
     },
-  },
-  methods: {
-    toUrl(url) {
-      if (url.startsWith('/') && this.mode === 'preview') {
-        return `/builder/${this.builder.id}/preview${url}`
+    realLinkName() {
+      if (this.linkName) {
+        return this.linkName
       } else {
-        return url
+        return this.$t('linkField.details')
       }
     },
+  },
+  methods: {
     onButtonFieldClick(event) {
       if (this.mode === 'editing') {
         event.preventDefault()
@@ -62,7 +66,7 @@ export default {
         event.preventDefault()
       } else if (!this.isExternalLink) {
         event.preventDefault()
-        this.$router.push(this.url)
+        this.$router.push(this.realUrl)
       }
     },
   },

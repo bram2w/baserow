@@ -1,9 +1,19 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
-      v-model="values.value"
+      v-model="values.url"
       :label="$t('linkFieldForm.fieldValueLabel')"
       :placeholder="$t('linkFieldForm.fieldValuePlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      :application-context-additions="{
+        element,
+      }"
+      horizontal
+    />
+    <ApplicationBuilderFormulaInputGroup
+      v-model="values.link_name"
+      :label="$t('linkFieldForm.fieldLinkNameLabel')"
+      :placeholder="$t('linkFieldForm.fieldLinkNamePlaceholder')"
       :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
       :application-context-additions="{
         element,
@@ -30,9 +40,10 @@ export default {
   },
   data() {
     return {
-      allowedValues: ['value'],
+      allowedValues: ['url', 'link_name'],
       values: {
-        value: '',
+        url: '',
+        link_name: '',
       },
     }
   },

@@ -1,18 +1,25 @@
+from collections.abc import Mapping
+
 from django.utils.functional import lazy
 
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema_field
+from drf_spectacular.utils import extend_schema_field, extend_schema_serializer
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
 )
 from baserow.contrib.builder.elements.models import CollectionField, Element
-from baserow.contrib.builder.elements.registries import element_type_registry
+from baserow.contrib.builder.elements.registries import (
+    collection_field_type_registry,
+    element_type_registry,
+)
 from baserow.contrib.builder.elements.types import ElementsAndWorkflowActions
 from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
+from baserow.core.exceptions import InstanceTypeDoesNotExist
 from baserow.core.formula.serializers import FormulaSerializerField
 
 
@@ -169,14 +176,100 @@ class PageParameterValueSerializer(serializers.Serializer):
     value = FormulaSerializerField(allow_blank=True)
 
 
-class CollectionElementFieldSerializer(serializers.ModelSerializer):
-    value = FormulaSerializerField(allow_blank=True)
+@extend_schema_serializer(exclude_fields=("config",))
+class CollectionFieldSerializer(serializers.ModelSerializer):
+    """
+    This serializer transform the flat properties object from/to a config dict property.
+    This allows us to see the field on the frontend side as a simple polymorphic
+    object.
+    """
+
+    default_allowed_fields = ["name", "type", "id"]
+
+    config = serializers.DictField(
+        required=False,
+        help_text=CollectionField._meta.get_field("config").help_text,
+    )
+
+    def get_type_from_type_name(self, name):
+        return collection_field_type_registry.get(name)
+
+    def get_type_from_instance(self, instance):
+        return collection_field_type_registry.get(instance.type)
+
+    def get_type_from_mapping(self, mapping):
+        return collection_field_type_registry.get(mapping["type"])
+
+    def to_representation(self, instance):
+        """
+        Flatten the config dict to an object.
+        """
+
+        if isinstance(instance, Mapping):
+            instance_type = self.get_type_from_mapping(instance)
+        else:
+            instance_type = self.get_type_from_instance(instance)
+
+        serializer = instance_type.get_serializer(instance)
+
+        if isinstance(instance, Mapping):
+            ret = serializer.to_representation(instance["config"])
+        else:
+            ret = serializer.to_representation(instance.config)
+
+        result = super().to_representation(instance)
+        result.update(**ret)
+
+        del result["config"]
+
+        return result
+
+    def to_internal_value(self, data):
+        """
+        Transform the flat object received to a proper config dict.
+        """
+
+        try:
+            if self.partial and self.instance:
+                instance_type = self.get_type_from_instance(self.instance)
+            else:
+                instance_type = self.get_type_from_mapping(data)
+        except InstanceTypeDoesNotExist:
+            raise ValidationError(
+                "The given field type doesn't exist.", code="INVALID_FIELD_TYPE"
+            )
+
+        field_config_data = {}
+        for field_name in instance_type.serializer_field_names:
+            if field_name in data:
+                field_config_data[field_name] = data.pop(field_name)
+
+        # Check that we have only authorized field
+        for field_name in data.keys():
+            if field_name not in self.default_allowed_fields:
+                raise ValidationError(
+                    f"The property <{field_name}> doesn't exist for type <{instance_type.type}>",
+                    code="INVALID_FIELD_PROPERTY",
+                )
+
+        ret = instance_type.get_serializer(field_config_data).to_internal_value(
+            field_config_data
+        )
+
+        data["config"] = ret
+
+        return super().to_internal_value(data)
 
     class Meta:
         model = CollectionField
-        fields = (
-            "id",
-            "name",
-            "type",
-            "value",
-        )
+        exclude = ("order",)
+
+
+class UpdateCollectionFieldSerializer(serializers.ModelSerializer):
+    type = serializers.ChoiceField(
+        choices=lazy(collection_field_type_registry.get_types, list)(),
+        required=True,
+        help_text=CollectionField._meta.get_field("type").help_text,
+    )
+
+    value = FormulaSerializerField(allow_blank=True)

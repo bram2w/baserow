@@ -333,7 +333,7 @@
       "showMore": "Show more"
     },
     "currentRecordDataProviderType": {
-      "index": "index",
+      "index": "Index",
       "firstPartName": "Data source: {name}"
     },
     "workflowActionTypes": {
@@ -363,7 +363,9 @@
     },
     "linkFieldForm": {
       "fieldValueLabel": "Url",
-      "fieldValuePlaceholder": "Enter value..."
+      "fieldValuePlaceholder": "Enter value...",
+      "fieldLinkNameLabel": "Link text",
+      "fieldLinkNamePlaceholder": "Enter value..."
     },
     "linkField": {
       "details": "Details"
