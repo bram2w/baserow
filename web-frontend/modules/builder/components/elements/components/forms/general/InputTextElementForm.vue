@@ -1,21 +1,17 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
-    <FormInput
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
       :label="$t('inputTextElementForm.valueTitle')"
       :placeholder="$t('inputTextElementForm.valuePlaceholder')"
-    />
-    <FormInput
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    ></ApplicationBuilderFormulaInputGroup>
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.placeholder"
       :label="$t('inputTextElementForm.placeholderTitle')"
-      :error="
-        $v.values.placeholder.$dirty && !$v.values.placeholder.maxLength
-          ? $t('error.maxLength', { max: 255 })
-          : ''
-      "
       :placeholder="$t('inputTextElementForm.placeholderPlaceholder')"
-      @blur="$v.values.placeholder.$touch()"
-    />
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    ></ApplicationBuilderFormulaInputGroup>
     <FormElement class="control">
       <label class="control__label">
         {{ $t('inputTextElementForm.requiredTitle') }}
@@ -29,10 +25,12 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import { maxLength } from 'vuelidate/lib/validators'
+import { DATA_PROVIDERS_ALLOWED_ELEMENTS } from '@baserow/modules/builder/enums'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 
 export default {
   name: 'InputTextElementForm',
+  components: { ApplicationBuilderFormulaInputGroup },
   mixins: [form],
   data() {
     return {
@@ -43,21 +41,15 @@ export default {
       },
     }
   },
+  computed: {
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
+  },
   methods: {
     emitChange(newValues) {
       if (this.isFormValid()) {
         form.methods.emitChange.bind(this)(newValues)
       }
     },
-  },
-  validations() {
-    return {
-      values: {
-        placeholder: {
-          maxLength: maxLength(225),
-        },
-      },
-    }
   },
 }
 </script>
