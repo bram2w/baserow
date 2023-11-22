@@ -4,6 +4,7 @@
     :class="{
       'dropdown--floating': !showInput,
       'dropdown--disabled': disabled,
+      'dropdown--small': small,
     }"
     :tabindex="realTabindex"
     @contextmenu.stop
