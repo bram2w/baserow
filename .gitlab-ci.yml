@@ -456,6 +456,8 @@ build-all-in-one-image:
   needs:
     - job: build-final-web-frontend-image
     - job: build-final-backend-image
+  tags:
+    - saas-linux-medium-amd64
   only:
     variables:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME
@@ -475,6 +477,8 @@ build-cloudron-image:
   extends: .build-final-baserow-image
   needs:
     - job: build-all-in-one-image
+  tags:
+    - saas-linux-medium-amd64
   only:
     variables:
       - $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME && $CLOUDRON_IMAGE_NAME != "disable"
@@ -496,6 +500,8 @@ build-heroku-image:
   extends: .build-final-baserow-image
   needs:
     - job: build-all-in-one-image
+  tags:
+    - saas-linux-medium-amd64
   only:
     variables:
       - ( $CI_COMMIT_BRANCH == $MASTER_BRANCH_NAME || $CI_COMMIT_BRANCH == $DEVELOP_BRANCH_NAME ) && ( $BUILD_ALL_IN_ONE == "true" || $CI_COMMIT_MESSAGE =~ /\[build-all]/ ) && $HEROKU_IMAGE_NAME != "disable"
