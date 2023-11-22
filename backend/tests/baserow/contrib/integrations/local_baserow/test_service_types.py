@@ -1404,7 +1404,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
-        "id": {"metadata": {}, "type": "number", "title": "ID"},
+        "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 
     get_row_service_type = LocalBaserowGetRowUserServiceType()

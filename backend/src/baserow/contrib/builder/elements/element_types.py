@@ -35,6 +35,8 @@ from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.types import ElementDict
 from baserow.core.formula.types import BaserowFormula
 
+from .registries import collection_field_type_registry
+
 
 class ContainerElementType(ElementType, ABC):
     @abc.abstractmethod
@@ -50,8 +52,6 @@ class ContainerElementType(ElementType, ABC):
         :return: The new place in the container the elements can be moved to
         """
 
-        pass
-
     @abc.abstractmethod
     def get_places_in_container_removed(
         self, values: Dict, instance: ContainerElement
@@ -64,8 +64,6 @@ class ContainerElementType(ElementType, ABC):
         :param instance: The current state of the element
         :return: The places in the container that have been removed
         """
-
-        pass
 
     def apply_order_by_children(self, queryset: QuerySet[Element]) -> QuerySet[Element]:
         """
@@ -103,8 +101,6 @@ class ContainerElementType(ElementType, ABC):
         :raises ValidationError: If the place in container is invalid
         """
 
-        pass
-
 
 class CollectionElementType(ElementType, ABC):
     allowed_fields = ["data_source", "data_source_id", "items_per_page"]
@@ -118,10 +114,10 @@ class CollectionElementType(ElementType, ABC):
     @property
     def serializer_field_overrides(self):
         from baserow.contrib.builder.api.elements.serializers import (
-            CollectionElementFieldSerializer,
+            CollectionFieldSerializer,
         )
 
-        overrides = {
+        return {
             "data_source_id": serializers.IntegerField(
                 allow_null=True,
                 default=None,
@@ -133,12 +129,8 @@ class CollectionElementType(ElementType, ABC):
                 help_text=TableElement._meta.get_field("items_per_page").help_text,
                 required=False,
             ),
-            "fields": CollectionElementFieldSerializer(
-                many=True, required=False, help_text="The fields to show in the table."
-            ),
+            "fields": CollectionFieldSerializer(many=True, required=False),
         }
-
-        return overrides
 
     def prepare_value_for_db(
         self, values: Dict, instance: Optional[LinkElement] = None
@@ -163,9 +155,21 @@ class CollectionElementType(ElementType, ABC):
 
     def after_create(self, instance, values):
         default_fields = [
-            {"name": _("Column %(count)s") % {"count": 1}, "value": ""},
-            {"name": _("Column %(count)s") % {"count": 2}, "value": ""},
-            {"name": _("Column %(count)s") % {"count": 3}, "value": ""},
+            {
+                "name": _("Column %(count)s") % {"count": 1},
+                "type": "text",
+                "config": {"value": ""},
+            },
+            {
+                "name": _("Column %(count)s") % {"count": 2},
+                "type": "text",
+                "config": {"value": ""},
+            },
+            {
+                "name": _("Column %(count)s") % {"count": 3},
+                "type": "text",
+                "config": {"value": ""},
+            },
         ]
 
         fields = values.get("fields", default_fields)
@@ -202,7 +206,7 @@ class CollectionElementType(ElementType, ABC):
 
         if prop_name == "fields":
             return [
-                {"name": f.name, "value": f.value, "type": f.type}
+                collection_field_type_registry.get(f.type).export_serialized(f)
                 for f in element.fields.all()
             ]
 
@@ -218,39 +222,31 @@ class CollectionElementType(ElementType, ABC):
         if prop_name == "data_source_id" and value:
             return id_mapping["builder_data_sources"][value]
 
-        # Update the formulas in fields
-        if prop_name == "fields" and kwargs.get("data_source_id", None):
+        if prop_name == "fields":
             return [
-                {
-                    **f,
-                    "value": import_formula(
-                        f["value"],
-                        id_mapping,
-                        # We need to add the data_source_id for the current row
-                        # provider.
-                        data_source_id=kwargs["data_source_id"],
-                    ),
-                }
+                # We need to add the data_source_id for the current row
+                # provider.
+                collection_field_type_registry.get(f["type"]).import_serialized(
+                    f, id_mapping, data_source_id=kwargs["data_source_id"]
+                )
                 for f in value
             ]
 
         return super().deserialize_property(prop_name, value, id_mapping)
 
     def create_instance_from_serialized(self, serialized_values: Dict[str, Any]):
+        """Deals with the fields"""
+
         fields = serialized_values.pop("fields", [])
 
         instance = super().create_instance_from_serialized(serialized_values)
 
+        # Add the field order
+        for i, f in enumerate(fields):
+            f.order = i
+
         # Create fields
-        created_fields = CollectionField.objects.bulk_create(
-            [
-                CollectionField(
-                    **field,
-                    order=index,
-                )
-                for index, field in enumerate(fields)
-            ]
-        )
+        created_fields = CollectionField.objects.bulk_create(fields)
 
         instance.fields.add(*created_fields)
 

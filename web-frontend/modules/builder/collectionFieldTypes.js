@@ -3,6 +3,7 @@ import TextField from '@baserow/modules/builder/components/elements/components/c
 import LinkField from '@baserow/modules/builder/components/elements/components/collectionField/LinkField'
 import TextFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/TextFieldForm'
 import LinkFieldForm from '@baserow/modules/builder/components/elements/components/collectionField/form/LinkFieldForm'
+import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export class CollectionFieldType extends Registerable {
   get name() {
@@ -15,6 +16,10 @@ export class CollectionFieldType extends Registerable {
 
   get formComponent() {
     return null
+  }
+
+  getProps(field, { resolveFormula }) {
+    return {}
   }
 
   getOrder() {
@@ -39,6 +44,10 @@ export class TextCollectionFieldType extends CollectionFieldType {
     return TextFieldForm
   }
 
+  getProps(field, { resolveFormula }) {
+    return { value: ensureString(resolveFormula(field.value)) }
+  }
+
   getOrder() {
     return 10
   }
@@ -59,6 +68,13 @@ export class LinkCollectionFieldType extends CollectionFieldType {
 
   get formComponent() {
     return LinkFieldForm
+  }
+
+  getProps(field, { resolveFormula }) {
+    return {
+      url: ensureString(resolveFormula(field.url)),
+      linkName: ensureString(resolveFormula(field.link_name)),
+    }
   }
 
   getOrder() {

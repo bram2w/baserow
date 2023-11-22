@@ -47,8 +47,8 @@ def test_create_table_element_with_fields(data_fixture):
         page=page,
         data_source_id=data_source1.id,
         fields=[
-            {"name": "Field 1", "value": "get('test')"},
-            {"name": "Field 2", "value": "get('test')"},
+            {"name": "Field 1", "type": "text", "config": {"value": "get('test1')"}},
+            {"name": "Field 2", "type": "text", "config": {"value": "get('test1')"}},
         ],
     )
 
@@ -148,8 +148,16 @@ def test_update_table_element_with_fields(data_fixture):
         user,
         table_element,
         fields=[
-            {"name": "New field 1", "value": "get('test')"},
-            {"name": "New field 2", "value": "get('test')"},
+            {
+                "name": "New field 1",
+                "type": "text",
+                "config": {"value": "get('test1')"},
+            },
+            {
+                "name": "New field 2",
+                "type": "text",
+                "config": {"value": "get('test2')"},
+            },
         ],
     )
 
@@ -200,21 +208,35 @@ def test_duplicate_table_element_with_current_record_formulas(data_fixture):
         page=page,
         data_source=data_source1,
         fields=[
-            {"name": "Field 1", "value": "get('current_record.id')"},
-            {"name": "Field 2", "value": f"get('current_record.field_{fields[0].id}')"},
+            {
+                "name": "Field 1",
+                "type": "text",
+                "config": {"value": f"get('current_record.field_{fields[0].id}')"},
+            },
+            {
+                "name": "Field 2",
+                "type": "link",
+                "config": {
+                    "url": f"get('current_record.field_{fields[0].id}')",
+                    "link_name": f"get('current_record.field_{fields[0].id}')",
+                },
+            },
         ],
     )
 
     result = ElementHandler().duplicate_element(table_element)
 
-    assert [f.value for f in result["elements"][0].fields.all()] == [
-        "get('current_record.id')",
-        f"get('current_record.field_{fields[0].id}')",
+    assert [f.config for f in result["elements"][0].fields.all()] == [
+        {"value": f"get('current_record.field_{fields[0].id}')"},
+        {
+            "url": f"get('current_record.field_{fields[0].id}')",
+            "link_name": f"get('current_record.field_{fields[0].id}')",
+        },
     ]
 
 
 @pytest.mark.django_db
-def test_duplicate_table_element_with_current_record_formulas_with_update(data_fixture):
+def test_import_table_element_with_current_record_formulas_with_update(data_fixture):
     user = data_fixture.create_user()
     page = data_fixture.create_builder_page(user=user)
 
@@ -243,11 +265,18 @@ def test_duplicate_table_element_with_current_record_formulas_with_update(data_f
         "data_source_id": 42,
         "items_per_page": 20,
         "fields": [
-            {"name": "Field 1", "value": "get('current_record.id')", "type": "text"},
+            {
+                "name": "Field 1",
+                "config": {"value": f"get('current_record.field_42')"},
+                "type": "text",
+            },
             {
                 "name": "Field 2",
-                "value": "get('current_record.field_42')",
-                "type": "text",
+                "config": {
+                    "url": f"get('current_record.field_42')",
+                    "link_name": f"get('current_record.field_42')",
+                },
+                "type": "link",
             },
         ],
     }
@@ -263,7 +292,10 @@ def test_duplicate_table_element_with_current_record_formulas_with_update(data_f
 
     assert imported_table_element.specific.data_source_id == data_source1.id
 
-    assert [f.value for f in imported_table_element.specific.fields.all()] == [
-        "get('current_record.id')",
-        f"get('current_record.field_{fields[0].id}')",
+    assert [f.config for f in imported_table_element.specific.fields.all()] == [
+        {"value": f"get('current_record.field_{fields[0].id}')"},
+        {
+            "url": f"get('current_record.field_{fields[0].id}')",
+            "link_name": f"get('current_record.field_{fields[0].id}')",
+        },
     ]

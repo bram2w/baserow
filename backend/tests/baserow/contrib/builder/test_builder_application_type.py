@@ -266,7 +266,7 @@ def test_builder_application_export(data_fixture):
                         "items_per_page": 42,
                         "data_source_id": element4.data_source.id,
                         "fields": [
-                            {"name": f.name, "value": f.value, "type": "text"}
+                            {"name": f.name, "type": f.type, "config": f.config}
                             for f in element4.fields.all()
                         ],
                     },
@@ -368,8 +368,19 @@ IMPORT_REFERENCE = {
                     "order": 2.5,
                     "data_source_id": 5,
                     "fields": [
-                        {"name": "F 1", "value": "1"},
-                        {"name": "F 2", "value": "2"},
+                        {
+                            "name": "F 1",
+                            "type": "text",
+                            "config": {"value": "get('current_record.field_25')"},
+                        },
+                        {
+                            "name": "F 2",
+                            "type": "link",
+                            "config": {
+                                "url": "get('current_record.field_25')",
+                                "link_name": "'Test'",
+                            },
+                        },
                     ],
                 },
                 {

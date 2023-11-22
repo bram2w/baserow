@@ -215,6 +215,15 @@ class BuilderConfig(AppConfig):
         builder_workflow_action_type_registry.register(NotificationWorkflowActionType())
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
 
+        from .elements.collection_field_types import (
+            LinkCollectionFieldType,
+            TextCollectionFieldType,
+        )
+        from .elements.registries import collection_field_type_registry
+
+        collection_field_type_registry.register(TextCollectionFieldType())
+        collection_field_type_registry.register(LinkCollectionFieldType())
+
         from .domains.receivers import connect_to_domain_pre_delete_signal
 
         connect_to_domain_pre_delete_signal()

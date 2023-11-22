@@ -3,9 +3,8 @@
     <BaserowTable :fields="element.fields" :rows="rows">
       <template #cell-content="{ field, value }">
         <component
-          :is="collectionTypes[field.type].component"
-          :value="value"
-          :field="field"
+          :is="collectionFieldTypes[field.type].component"
+          v-bind="value"
         />
       </template>
       <template #empty-state>
@@ -35,7 +34,6 @@ import { uuid } from '@baserow/modules/core/utils/string'
 import { mapActions, mapGetters } from 'vuex'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import BaserowTable from '@baserow/modules/builder/components/elements/components/BaserowTable'
-import { ensureString } from '@baserow/modules/core/utils/validator'
 
 export default {
   name: 'TableElement',
@@ -98,10 +96,17 @@ export default {
     rows() {
       return this.elementContent.map((row, rowIndex) => {
         const newRow = Object.fromEntries(
-          this.fields.map(({ value, name }) => [
-            name,
-            ensureString(this.resolveRowFormula(value, rowIndex)),
-          ])
+          this.fields.map((field) => {
+            const { name, type } = field
+            const fieldType = this.collectionFieldTypes[type]
+            return [
+              name,
+              fieldType.getProps(field, {
+                resolveFormula: (formula) =>
+                  this.resolveRowFormula(formula, rowIndex),
+              }),
+            ]
+          })
         )
         newRow.__id__ = uuid()
         return newRow
@@ -116,7 +121,7 @@ export default {
     reset() {
       return this.getReset(this.element)
     },
-    collectionTypes() {
+    collectionFieldTypes() {
       return this.$registry.getAll('collectionField')
     },
   },

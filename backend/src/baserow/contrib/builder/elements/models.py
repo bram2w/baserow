@@ -487,12 +487,23 @@ class CollectionField(models.Model):
         max_length=225,
         help_text="The name of the field.",
     )
+
     type = models.CharField(
-        default="text",
         max_length=225,
         help_text="The type of the field.",
     )
-    value = FormulaField(default="", help_text="The value of the field.")
+
+    config = models.JSONField(
+        default=dict,
+        help_text="The configuration of the field.",
+    )
+
+    def get_type(self):
+        """Returns the type for this model instance"""
+
+        from .registries import collection_field_type_registry
+
+        return collection_field_type_registry.get(self.type)
 
     class Meta:
         ordering = ("order", "id")
@@ -516,9 +527,7 @@ class CollectionElement(Element):
         ],
     )
 
-    fields = models.ManyToManyField(
-        CollectionField, help_text="Fields of the collection element."
-    )
+    fields = models.ManyToManyField(CollectionField)
 
     class Meta:
         abstract = True

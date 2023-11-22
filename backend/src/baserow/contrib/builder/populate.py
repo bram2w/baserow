@@ -263,22 +263,31 @@ def load_test_data():
             {
                 "name": "Name",
                 "type": "text",
-                "value": f"get('current_record.{field_name.db_column}')",
+                "config": {
+                    "value": f"get('current_record.{field_name.db_column}')",
+                },
             },
             {
                 "name": "Category",
                 "type": "text",
-                "value": f"get('current_record.{field_category.db_column}.value')",
+                "config": {
+                    "value": f"get('current_record.{field_category.db_column}.value')",
+                },
             },
             {
                 "name": "Notes",
                 "type": "text",
-                "value": f"get('current_record.{field_name.db_column}')",
+                "config": {
+                    "value": f"get('current_record.{field_notes.db_column}')",
+                },
             },
             {
                 "name": "Details",
                 "type": "link",
-                "value": f"concat('/product/', get('current_record.id'), '/', get('current_record.{field_name.db_column}'))",
+                "config": {
+                    "url": f"concat('/product/', get('current_record.id'), '/', get('current_record.{field_name.db_column}'))",
+                    "link_name": f"get('current_record.{field_name.db_column}')",
+                },
             },
         ]
         created_fields = CollectionField.objects.bulk_create(
