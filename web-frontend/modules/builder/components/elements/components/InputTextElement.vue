@@ -3,9 +3,9 @@
     type="text"
     class="input-element"
     :readonly="isEditable"
-    :value="element.default_value"
+    :value="resolvedDefaultValue"
     :required="element.required"
-    :placeholder="element.placeholder"
+    :placeholder="resolvedPlaceholder"
   />
 </template>
 
@@ -25,6 +25,22 @@ export default {
     element: {
       type: Object,
       required: true,
+    },
+  },
+  computed: {
+    resolvedDefaultValue() {
+      try {
+        return this.resolveFormula(this.element.default_value)
+      } catch (e) {
+        return ''
+      }
+    },
+    resolvedPlaceholder() {
+      try {
+        return this.resolveFormula(this.element.placeholder)
+      } catch (e) {
+        return ''
+      }
     },
   },
 }
