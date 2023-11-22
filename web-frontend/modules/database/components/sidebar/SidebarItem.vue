@@ -136,6 +136,7 @@
 </template>
 
 <script>
+import VueRouter from 'vue-router'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import ExportTableModal from '@baserow/modules/database/components/export/ExportTableModal'
 import WebhookModal from '@baserow/modules/database/components/webhook/WebhookModal'
@@ -210,24 +211,31 @@ export default {
         value,
       })
     },
-    selectTable(database, table) {
+    async selectTable(database, table) {
       this.setLoading(database, true)
 
-      this.$nuxt.$router.push(
-        {
+      try {
+        await this.$nuxt.$router.push({
           name: 'database-table',
           params: {
             databaseId: database.id,
             tableId: table.id,
           },
-        },
-        () => {
-          this.setLoading(database, false)
-        },
-        () => {
-          this.setLoading(database, false)
+        })
+      } catch (error) {
+        // When redirecting to the `database-table`, it can happen that it redirects
+        // to another view. For some reason, this is causing the router throw an
+        // error. In our case, it's perfectly fine, so we're suppressing this error
+        // here. More information:
+        // https://stackoverflow.com/questions/62223195/vue-router-uncaught-in-promise-
+        // error-redirected-from-login-to-via-a
+        const { isNavigationFailure, NavigationFailureType } = VueRouter
+        if (!isNavigationFailure(error, NavigationFailureType.redirected)) {
+          throw error
         }
-      )
+      } finally {
+        this.setLoading(database, false)
+      }
     },
     exportTable() {
       this.$refs.context.hide()
