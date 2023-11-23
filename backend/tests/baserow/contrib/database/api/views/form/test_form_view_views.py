@@ -2611,3 +2611,80 @@ def test_submit_empty_form_view_for_interesting_test_table(api_client, data_fixt
     assert response.status_code == HTTP_200_OK, response.json()
     response_json = response.json()
     assert response_json["submit_action"] == "MESSAGE"
+
+
+@pytest.mark.django_db
+def test_user_can_update_form_to_receive_notification(api_client, data_fixture):
+    user_1, token_1 = data_fixture.create_user_and_token()
+    user_2, token_2 = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(users=[user_1, user_2])
+    database = data_fixture.create_database_application(workspace=workspace)
+    table = data_fixture.create_database_table(user=user_1, database=database)
+    form = data_fixture.create_form_view(table=table, public=True)
+
+    url = reverse("api:database:views:item", kwargs={"view_id": form.id})
+
+    # users_to_notify cannot be set directly
+    api_client.patch(
+        url,
+        {"users_to_notify_on_submit": [user_1.id]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert form.users_to_notify_on_submit.count() == 0
+
+    # The only way is via receive_notification_on_submit for the requesting user
+    response = api_client.patch(
+        url,
+        {"receive_notification_on_submit": True},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["receive_notification_on_submit"] is True
+    assert form.users_to_notify_on_submit.count() == 1
+
+    response = api_client.get(
+        reverse("api:database:tables:item", kwargs={"table_id": form.table_id}),
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token_1}",
+    )
+    assert response.status_code == HTTP_200_OK
+
+    # another user sees the notification setting as false
+    response = api_client.get(url, format="json", HTTP_AUTHORIZATION=f"JWT {token_2}")
+    assert response.status_code == HTTP_200_OK
+    assert response.json()["receive_notification_on_submit"] is False
+
+
+@pytest.mark.django_db()
+def test_loading_form_views_does_not_increase_the_number_of_queries(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+
+    workspace = data_fixture.create_workspace(user=user)
+    database = data_fixture.create_database_application(user=user, workspace=workspace)
+    table = data_fixture.create_database_table(database=database)
+
+    data_fixture.create_form_view(table=table, public=True)
+
+    with CaptureQueriesContext(connection) as captured_1:
+        api_client.get(
+            reverse("api:database:views:list", kwargs={"table_id": table.id}),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    data_fixture.create_form_view(table=table, public=True)
+    data_fixture.create_form_view(table=table, public=True)
+    data_fixture.create_form_view(table=table, public=True)
+
+    with CaptureQueriesContext(connection) as captured_2:
+        api_client.get(
+            reverse("api:database:views:list", kwargs={"table_id": table.id}),
+            format="json",
+            HTTP_AUTHORIZATION=f"JWT {token}",
+        )
+
+    assert len(captured_1) == len(captured_2)

@@ -200,20 +200,23 @@ def test_specific_iterator_with_prefetch_related(
     filter_2 = data_fixture.create_view_filter(view=gallery_view)
     filter_3 = data_fixture.create_view_filter(view=gallery_view)
 
-    base_queryset = View.objects.filter(
-        id__in=[
-            grid_view.id,
-            gallery_view.id,
-        ]
-    ).prefetch_related("viewfilter_set")
+    base_queryset = (
+        View.objects.filter(
+            id__in=[
+                grid_view.id,
+                gallery_view.id,
+            ]
+        )
+        .order_by("id")
+        .prefetch_related("viewfilter_set")
+    )
 
     with django_assert_num_queries(4):
         specific_objects = list(specific_iterator(base_queryset))
         all_1 = specific_objects[0].viewfilter_set.all()
-        assert all_1[0].id == filter_1.id
+        assert [f.id for f in all_1] == [filter_1.id]
         all_2 = specific_objects[1].viewfilter_set.all()
-        assert all_2[0].id == filter_2.id
-        assert all_2[1].id == filter_3.id
+        assert [f.id for f in all_2] == [filter_2.id, filter_3.id]
 
 
 @pytest.mark.django_db

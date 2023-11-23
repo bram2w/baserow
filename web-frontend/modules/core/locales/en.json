@@ -390,6 +390,7 @@
             "removeAll": "Remove all",
             "addField": "Add field"
         },
+        "notifyUserOnSubmit": "Receive notification on submit",
         "fieldsDescription": "All the fields are in the form.",
         "prefillOrHideInfoLink": "Prefill or hide dynamically",
         "modal": {

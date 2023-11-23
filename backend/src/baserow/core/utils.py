@@ -13,10 +13,10 @@ from decimal import Decimal
 from fractions import Fraction
 from itertools import islice
 from numbers import Number
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Optional, Tuple, Type, Union
 
 from django.db import transaction
-from django.db.models import ForeignKey
+from django.db.models import ForeignKey, ManyToManyField, Model
 from django.db.models.fields import NOT_PROVIDED
 from django.db.transaction import get_connection
 
@@ -41,6 +41,43 @@ RE_PROP_NAME = re.compile(
     # Or match "" as the space between consecutive dots or empty brackets.
     + r"(?=(?:\.|\[\])(?:\.|\[\]|$))"
 )
+
+
+def split_attrs_and_m2m_fields(
+    field_names: List[str], instance: Type[Model]
+) -> Tuple[List[str], List[str]]:
+    """
+    Separates the provided field names into attributes and m2m fields. The attributes
+    can be set directly on the instance using set_allowed_attrs while the m2m fields
+    need to be set using the set_allowed_m2m_fields function.
+    """
+
+    attrs, m2m_fields = [], []
+    for field_name in field_names:
+        field = instance._meta.get_field(field_name)
+        if isinstance(field, ManyToManyField):
+            m2m_fields.append(field_name)
+        else:
+            attrs.append(field_name)
+    return attrs, m2m_fields
+
+
+def set_allowed_m2m_fields(values, allowed_fields, instance):
+    """
+    Sets the attributes of the instance with the values of the key names that are in the
+    allowed_fields. The other keys are ignored. This function is specifically for
+    ManyToManyFields.
+
+    Notice that this function will make a update query to the database for each
+    ManyToManyField that needs to be updated. This is because the ManyToManyField
+    cannot be updated directly on the instance.
+    """
+
+    for field in allowed_fields:
+        if field in values:
+            getattr(instance, field).set(values[field])
+
+    return instance
 
 
 def extract_allowed(values, allowed_fields):

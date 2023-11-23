@@ -750,9 +750,13 @@ class DatabaseConfig(AppConfig):
         from baserow.contrib.database.fields.notification_types import (
             CollaboratorAddedToRowNotificationType,
         )
+        from baserow.contrib.database.views.notification_types import (
+            FormSubmittedNotificationType,
+        )
         from baserow.core.notifications.registries import notification_type_registry
 
         notification_type_registry.register(CollaboratorAddedToRowNotificationType())
+        notification_type_registry.register(FormSubmittedNotificationType())
 
         # The signals must always be imported last because they use the registries
         # which need to be filled first.

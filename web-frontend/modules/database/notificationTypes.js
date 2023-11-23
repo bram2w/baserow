@@ -1,6 +1,7 @@
 import { NotificationType } from '@baserow/modules/core/notificationTypes'
 import NotificationSenderInitialsIcon from '@baserow/modules/core/components/notifications/NotificationSenderInitialsIcon'
 import CollaboratorAddedToRowNotification from '@baserow/modules/database/components/notifications/CollaboratorAddedToRowNotification'
+import FormSubmittedNotification from '@baserow/modules/database/components/notifications/FormSubmittedNotification'
 
 export class CollaboratorAddedToRowNotificationType extends NotificationType {
   static getType() {
@@ -13,5 +14,19 @@ export class CollaboratorAddedToRowNotificationType extends NotificationType {
 
   getContentComponent() {
     return CollaboratorAddedToRowNotification
+  }
+}
+
+export class FormSubmittedNotificationType extends NotificationType {
+  static getType() {
+    return 'form_submitted'
+  }
+
+  getIconComponent() {
+    return null
+  }
+
+  getContentComponent() {
+    return FormSubmittedNotification
   }
 }

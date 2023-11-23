@@ -132,6 +132,7 @@
       <div class="form-view__body">
         <FormViewMetaControls
           :view="view"
+          :database="database"
           :read-only="readOnly"
           @updated-form="updateForm($event)"
         ></FormViewMetaControls>

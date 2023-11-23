@@ -107,10 +107,12 @@ class NotificationHandler:
 
     @classmethod
     @baserow_trace(tracer)
-    def all_notifications_for_user(cls, user, workspace: Optional[Workspace] = None):
+    def all_notifications_for_user(
+        cls, user, include_workspace: Optional[Workspace] = None
+    ):
         workspace_filter = Q(workspace_id=None)
-        if workspace:
-            workspace_filter |= Q(workspace_id=workspace.id)
+        if include_workspace is not None:
+            workspace_filter |= Q(workspace_id=include_workspace.id)
 
         direct = Q(broadcast=False, recipient=user, queued=False) & workspace_filter
         uncleared_broadcast = Q(broadcast=True, recipient=user, cleared=False)
@@ -580,6 +582,10 @@ class NotificationHandler:
             workspace=workspace,
             **kwargs,
         )
+
+        # Prefetch the user profiles if possible to avoid N+1 queries later
+        if isinstance(recipients, QuerySet) and issubclass(recipients.model, User):
+            recipients = recipients.select_related("profile")
 
         notification_recipients = NotificationRecipient.objects.bulk_create(
             [

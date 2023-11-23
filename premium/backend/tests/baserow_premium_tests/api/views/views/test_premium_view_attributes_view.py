@@ -8,10 +8,14 @@ from rest_framework.status import (
     HTTP_402_PAYMENT_REQUIRED,
 )
 
+from baserow.contrib.database.views.handler import ViewHandler
+from baserow.contrib.database.views.registries import view_type_registry
+
 
 @pytest.mark.django_db
 @override_settings(DEBUG=True)
-def test_premium_view_attributes_view(api_client, premium_data_fixture):
+@pytest.mark.parametrize("view_type", view_type_registry.registry.keys())
+def test_premium_view_attributes_view(view_type, api_client, premium_data_fixture):
     user, token = premium_data_fixture.create_user_and_token(
         email="test@test.nl",
         password="password",
@@ -19,7 +23,9 @@ def test_premium_view_attributes_view(api_client, premium_data_fixture):
         has_active_premium_license=True,
     )
     table = premium_data_fixture.create_database_table(user=user)
-    view = premium_data_fixture.create_grid_view(table=table)
+    view = ViewHandler().create_view(
+        user=user, table=table, type_name=view_type, name=view_type
+    )
 
     response = api_client.patch(
         reverse(

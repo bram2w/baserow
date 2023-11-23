@@ -167,8 +167,6 @@ class CustomFieldsInstanceMixin:
         else:
             field_names = self.serializer_field_names
 
-        mixins = [] if request_serializer else self.serializer_mixins
-
         # Prepend the word "Request" to the ref name, so that when this serializer is
         # generated for the request and response, it doesn't result in a name conflict.
         if request_serializer and meta_ref_name is None:
@@ -180,7 +178,7 @@ class CustomFieldsInstanceMixin:
             self.model_class,
             field_names,
             field_overrides=field_overrides,
-            base_mixins=mixins,
+            base_mixins=self.serializer_mixins,
             meta_extra_kwargs=self.serializer_extra_kwargs,
             meta_ref_name=meta_ref_name,
             base_class=base_class,

@@ -114,6 +114,12 @@
   color: $color-neutral-900;
 }
 
+.form-view__control-notification-on-submit {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .form-view__sidebar-prefill-or-hide-link {
   padding: 0 30px 30px 30px;
 }

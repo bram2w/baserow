@@ -17,7 +17,7 @@ from baserow.ws.registries import page_registry
 from baserow.ws.tasks import broadcast_to_users
 
 
-def generate_view_created_payload(view):
+def generate_view_created_payload(user, view):
     payload = {
         "type": "view_created",
         "view": view_type_registry.get_serializer(
@@ -27,6 +27,7 @@ def generate_view_created_payload(view):
             sortings=True,
             decorations=True,
             group_bys=True,
+            context={"user": user},
         ).data,
     }
     return payload
@@ -77,7 +78,7 @@ def broadcast_to(user, view, payload):
 
 @receiver(view_signals.view_created)
 def view_created(sender, view, user, **kwargs):
-    payload = generate_view_created_payload(view)
+    payload = generate_view_created_payload(user, view)
     broadcast_to(user, view, payload)
 
 
@@ -131,7 +132,7 @@ def broadcast_to_users_ownership_change(user, new_view, old_view, payload):
         # the view.
         transaction.on_commit(
             lambda: table_page_type.broadcast(
-                generate_view_created_payload(new_view),
+                generate_view_created_payload(user, new_view),
                 getattr(user, "web_socket_id", None),
                 table_id=new_view.table_id,
                 exclude_user_ids=old_view_user_ids,
@@ -160,6 +161,7 @@ def view_updated(sender, view, old_view, user, **kwargs):
             sortings=False,
             decorations=False,
             group_bys=False,
+            context={"user": user},
         ).data,
     }
 

@@ -10,6 +10,7 @@ view_created = Signal()
 view_updated = Signal()
 view_deleted = Signal()
 views_reordered = Signal()
+form_submitted = Signal()
 
 view_filter_created = Signal()
 view_filter_updated = Signal()

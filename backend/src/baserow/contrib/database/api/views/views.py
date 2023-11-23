@@ -302,10 +302,11 @@ class ViewsView(APIView):
             views_by_type[type(view)].append(view)
 
         serialized_views = []
-        for view_type, views in views_by_type.items():
+        for _, views in views_by_type.items():
             serialized_views += view_type_registry.get_serializer(
                 views,
                 ViewSerializer,
+                context={"user": request.user},
                 filters=filters,
                 sortings=sortings,
                 decorations=decorations,
@@ -365,7 +366,10 @@ class ViewsView(APIView):
     )
     @transaction.atomic
     @validate_body_custom_fields(
-        view_type_registry, base_serializer_class=CreateViewSerializer, partial=True
+        view_type_registry,
+        base_serializer_class=CreateViewSerializer,
+        partial=True,
+        return_validated=True,
     )
     @map_exceptions(
         {
@@ -399,6 +403,7 @@ class ViewsView(APIView):
         serializer = view_type_registry.get_serializer(
             view,
             ViewSerializer,
+            context={"user": request.user},
             filters=filters,
             sortings=sortings,
             decorations=decorations,
@@ -465,6 +470,7 @@ class ViewView(APIView):
             sortings=sortings,
             decorations=decorations,
             group_bys=group_bys,
+            context={"user": request.user},
         )
         return Response(serializer.data)
 
@@ -542,6 +548,7 @@ class ViewView(APIView):
             request.data,
             base_serializer_class=UpdateViewSerializer,
             partial=True,
+            return_validated=True,
         )
 
         with view_type.map_api_exceptions():
@@ -556,6 +563,7 @@ class ViewView(APIView):
             sortings=sortings,
             decorations=decorations,
             group_bys=group_bys,
+            context={"user": request.user},
         )
         return Response(serializer.data)
 
@@ -659,6 +667,7 @@ class DuplicateViewView(APIView):
             sortings=True,
             decorations=True,
             group_bys=True,
+            context={"user": request.user},
         )
         return Response(serializer.data)
 
@@ -1850,7 +1859,9 @@ class RotateViewSlugView(APIView):
             ViewHandler().get_view_for_update(request.user, view_id).specific,
         )
 
-        serializer = view_type_registry.get_serializer(view, ViewSerializer)
+        serializer = view_type_registry.get_serializer(
+            view, ViewSerializer, context={"user": request.user}
+        )
         return Response(serializer.data)
 
 
