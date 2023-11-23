@@ -448,15 +448,20 @@ class UpdateViewSerializer(serializers.ModelSerializer):
         "password from the view and make it publicly accessible again.",
     )
 
-    def to_representation(self, data):
-        representation = super().to_representation(data)
-        public_view_password = representation.pop("public_view_password", None)
-        if public_view_password is not None:
-            # Pass a differently named attribute down to the handler, so it knows
-            # the difference between the user setting a new raw password and/or
-            # someone directly changing the literal hashed and salted password value.
-            representation["raw_public_view_password"] = public_view_password
-        return representation
+    def to_internal_value(self, data):
+        internal_value = super().to_internal_value(data)
+
+        # Store the hashed password in the database if provided. An empty string
+        # means that the password protection is disabled.
+        raw_public_view_password = internal_value.pop("public_view_password", None)
+        if raw_public_view_password is not None or "public" in data:
+            internal_value["public_view_password"] = (
+                View.make_password(raw_public_view_password)
+                if raw_public_view_password
+                else ""  # nosec b105
+            )
+
+        return internal_value
 
     def validate_ownership_type(self, value):
         try:

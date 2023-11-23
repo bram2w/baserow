@@ -93,6 +93,16 @@
   }
 }
 
+.notification-panel__notification-content-desc {
+  line-height: 20px;
+  margin-bottom: 12px;
+}
+
+.notification-panel__notification-content-summary {
+  padding-left: 22px;
+  margin-bottom: 8px;
+}
+
 .notification-panel__notification-status {
   flex: 0 0 16px;
   text-align: right;

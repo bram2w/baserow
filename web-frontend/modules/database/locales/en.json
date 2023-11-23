@@ -803,6 +803,10 @@
   "collaboratorAddedToRowNotification": {
     "title": "{sender} assigned you to {fieldName} in row {rowId} in {tableName}"
   },
+  "formSubmittedNotification": {
+    "title": "{formName} has been submitted in table {tableName}:",
+    "moreValues": "0 | and 1 more field. | and {count} more fields."
+  },
   "rowHistorySidebar": {
     "name": "History",
     "empty": "No changes yet. You'll be able to track any changes to this row here.",

@@ -242,7 +242,10 @@ import {
 import { FormViewFormModeType } from '@baserow/modules/database/formViewModeTypes'
 import { CollaborativeViewOwnershipType } from '@baserow/modules/database/viewOwnershipTypes'
 import { DatabasePlugin } from '@baserow/modules/database/plugins'
-import { CollaboratorAddedToRowNotificationType } from '@baserow/modules/database/notificationTypes'
+import {
+  CollaboratorAddedToRowNotificationType,
+  FormSubmittedNotificationType,
+} from '@baserow/modules/database/notificationTypes'
 import { HistoryRowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 
 import en from '@baserow/modules/database/locales/en.json'
@@ -684,6 +687,10 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new CollaboratorAddedToRowNotificationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new FormSubmittedNotificationType(context)
   )
 
   app.$registry.register(

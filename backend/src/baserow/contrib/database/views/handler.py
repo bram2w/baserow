@@ -100,6 +100,8 @@ from baserow.core.utils import (
     find_unused_name,
     get_model_reference_field_name,
     set_allowed_attrs,
+    set_allowed_m2m_fields,
+    split_attrs_and_m2m_fields,
 )
 
 from .exceptions import (
@@ -143,6 +145,7 @@ from .registries import (
     view_type_registry,
 )
 from .signals import (
+    form_submitted,
     view_created,
     view_decoration_created,
     view_decoration_deleted,
@@ -532,7 +535,14 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         if limit:
             views = views[:limit]
 
-        views = specific_iterator(views)
+        views = specific_iterator(
+            views,
+            per_content_type_queryset_hook=(
+                lambda model, queryset: view_type_registry.get_by_model(
+                    model
+                ).enhance_queryset(queryset)
+            ),
+        )
         return views
 
     def list_workspace_views(
@@ -927,8 +937,10 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             changed_allowed_keys.add(ownership_type_key)
 
         previous_public_value = view.public
-        view = set_allowed_attrs(view_values, allowed_fields, view)
-
+        allowed_attrs, allowed_m2m_fields = split_attrs_and_m2m_fields(
+            allowed_fields, view
+        )
+        view = set_allowed_attrs(view_values, allowed_attrs, view)
         if previous_public_value != view.public:
             CoreHandler().check_permissions(
                 user,
@@ -938,6 +950,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
         view.save()
+        view = set_allowed_m2m_fields(view_values, allowed_m2m_fields, view)
 
         new_view_values = self._get_prepared_values_for_data(
             view_type, view, changed_allowed_keys
@@ -3041,7 +3054,11 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             raise ValidationError(field_errors)
 
         allowed_values = extract_allowed(values, allowed_field_names)
-        return RowHandler().force_create_row(user, table, allowed_values, model)
+        created_row = RowHandler().force_create_row(user, table, allowed_values, model)
+        form_submitted.send(
+            self, form=form, row=created_row, values=allowed_values, user=user
+        )
+        return created_row
 
     def get_public_views_row_checker(
         self,

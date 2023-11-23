@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-07 15:27+0000\n"
+"POT-Creation-Date: 2023-11-16 11:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -202,12 +202,12 @@ msgstr ""
 msgid "You have %(count)d new notifications - Baserow"
 msgstr ""
 
-#: src/baserow/core/notification_types.py:91
+#: src/baserow/core/notification_types.py:94
 #, python-format
 msgid "%(user)s accepted your invitation to collaborate to %(workspace_name)s."
 msgstr ""
 
-#: src/baserow/core/notification_types.py:132
+#: src/baserow/core/notification_types.py:135
 #, python-format
 msgid "%(user)s rejected your invitation to collaborate to %(workspace_name)s."
 msgstr ""
@@ -246,70 +246,70 @@ msgid ""
 "\"%(application_name)s\" (%(application_id)s)."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/group_invitation.html:146
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:146
+#: src/baserow/core/templates/baserow/core/group_invitation.html:144
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:144
 msgid "Invitation"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/group_invitation.html:151
+#: src/baserow/core/templates/baserow/core/group_invitation.html:149
 #, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
 "%(group_name)s</strong>."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/group_invitation.html:165
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:169
+#: src/baserow/core/templates/baserow/core/group_invitation.html:163
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:167
 msgid "Accept invitation"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/group_invitation.html:179
-#: src/baserow/core/templates/baserow/core/notifications_summary.html:214
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:156
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:161
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:179
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:183
+#: src/baserow/core/templates/baserow/core/group_invitation.html:177
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:212
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:154
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:154
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:159
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:177
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:181
 msgid ""
 "Baserow is an open source no-code database tool which allows you to "
 "collaborate on projects, customers and more. It gives you the powers of a "
 "developer without leaving your browser."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/notifications_summary.html:148
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:146
 #, python-format
 msgid "You have %(counter)s new notification"
 msgid_plural "You have %(counter)s new notifications"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/baserow/core/templates/baserow/core/notifications_summary.html:189
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:187
 #, python-format
 msgid "Plus %(counter)s more notification."
 msgid_plural "Plus %(counter)s more notifications."
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/baserow/core/templates/baserow/core/notifications_summary.html:200
+#: src/baserow/core/templates/baserow/core/notifications_summary.html:198
 msgid "View in Baserow"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:146
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:144
 msgid "Account permanently deleted"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deleted.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deleted.html:149
 #, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "has been permanently deleted."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:146
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:144
 msgid "Account deletion cancelled"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deletion_cancelled.html:149
 #, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
@@ -317,29 +317,29 @@ msgid ""
 "cancelled."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:146
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:144
 msgid "Account pending deletion"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:151
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:149
 #, python-format
 msgid ""
 "Your account (%(username)s) on Baserow (%(public_web_frontend_hostname)s) "
 "will be permanently deleted in %(days_left)s days."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:156
+#: src/baserow/core/templates/baserow/core/user/account_deletion_scheduled.html:154
 msgid ""
 "If you've changed your mind and want to cancel your account deletion, you "
 "just have to login again."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:146
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:165
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:144
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:163
 msgid "Reset password"
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:151
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:149
 #, python-format
 msgid ""
 "A password reset was requested for your account (%(username)s) on Baserow "
@@ -347,7 +347,7 @@ msgid ""
 "simply ignore this email."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/user/reset_password.html:156
+#: src/baserow/core/templates/baserow/core/user/reset_password.html:154
 #, python-format
 msgid ""
 "To continue with your password reset, simply click the button below, and you "
@@ -355,7 +355,7 @@ msgid ""
 "hours."
 msgstr ""
 
-#: src/baserow/core/templates/baserow/core/workspace_invitation.html:151
+#: src/baserow/core/templates/baserow/core/workspace_invitation.html:149
 #, python-format
 msgid ""
 "<strong>%(first_name)s</strong> has invited you to collaborate on <strong>"
@@ -411,62 +411,62 @@ msgstr ""
 msgid "User \"%(user_email)s\" (%(user_id)s) updated"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:162
+#: src/baserow/core/user/actions.py:163
 msgid "Schedule user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:164
+#: src/baserow/core/user/actions.py:165
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) scheduled to be deleted after grace "
 "time"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:195
+#: src/baserow/core/user/actions.py:196
 msgid "Cancel user deletion"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:197
+#: src/baserow/core/user/actions.py:198
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) logged in cancelling the deletion "
 "process"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:228
+#: src/baserow/core/user/actions.py:229
 msgid "Sign In User"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:230
+#: src/baserow/core/user/actions.py:231
 #, python-format
 msgid ""
 "User \"%(user_email)s\" (%(user_id)s) signed in via \"%(auth_provider_type)s"
 "\" (%(auth_provider_id)s) auth provider"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:282
+#: src/baserow/core/user/actions.py:283
 msgid "Send reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:283
+#: src/baserow/core/user/actions.py:284
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) requested to reset password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:313
+#: src/baserow/core/user/actions.py:314
 msgid "Change user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:314
+#: src/baserow/core/user/actions.py:315
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) changed password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:350
+#: src/baserow/core/user/actions.py:351
 msgid "Reset user password"
 msgstr ""
 
-#: src/baserow/core/user/actions.py:351
+#: src/baserow/core/user/actions.py:352
 #, python-format
 msgid "User \"%(user_email)s\" (%(user_id)s) reset password"
 msgstr ""
@@ -487,7 +487,7 @@ msgstr ""
 msgid "Account deletion cancelled - Baserow"
 msgstr ""
 
-#: src/baserow/core/user/handler.py:217
+#: src/baserow/core/user/handler.py:248
 #, python-format
 msgid "%(name)s's workspace"
 msgstr ""

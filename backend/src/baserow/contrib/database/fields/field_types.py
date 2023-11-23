@@ -1726,6 +1726,9 @@ class LinkRowFieldType(FieldType):
             )
         )
 
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return [v.id for v in value.all()]
+
     def _get_related_model_and_primary_field(self, instance):
         """
         Returns related model and primary field.
@@ -3412,6 +3415,9 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         export_value = self.get_export_value(value, field_object, rich_value=True)
 
         return ", ".join(export_value)
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return [v.id for v in value.all()]
 
     def get_model_field(self, instance, **kwargs):
         return None

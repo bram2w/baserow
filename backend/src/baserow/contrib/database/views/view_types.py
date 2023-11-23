@@ -8,7 +8,7 @@ from django.core.files.storage import Storage
 from django.db.models import Count, Q
 from django.urls import include, path
 
-from rest_framework.serializers import PrimaryKeyRelatedField
+from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileField
 from baserow.contrib.database.api.fields.errors import ERROR_FIELD_NOT_IN_TABLE
@@ -21,6 +21,7 @@ from baserow.contrib.database.api.views.form.exceptions import (
 )
 from baserow.contrib.database.api.views.form.serializers import (
     FormViewFieldOptionsSerializer,
+    FormViewNotifyOnSubmitSerializerMixin,
 )
 from baserow.contrib.database.api.views.gallery.serializers import (
     GalleryViewFieldOptionsSerializer,
@@ -323,7 +324,7 @@ class GalleryViewType(ViewType):
     field_options_allowed_fields = ["hidden", "order"]
     serializer_field_names = ["card_cover_image_field"]
     serializer_field_overrides = {
-        "card_cover_image_field": PrimaryKeyRelatedField(
+        "card_cover_image_field": serializers.PrimaryKeyRelatedField(
             queryset=FileField.objects.all(),
             required=False,
             default=None,
@@ -534,6 +535,7 @@ class FormViewType(ViewType):
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
+        "users_to_notify_on_submit",
     ]
     field_options_allowed_fields = [
         "name",
@@ -545,6 +547,7 @@ class FormViewType(ViewType):
         "order",
         "field_component",
     ]
+    serializer_mixins = [FormViewNotifyOnSubmitSerializerMixin]
     serializer_field_names = [
         "title",
         "description",
@@ -555,6 +558,7 @@ class FormViewType(ViewType):
         "submit_action",
         "submit_action_message",
         "submit_action_redirect_url",
+        "receive_notification_on_submit",  # from FormViewNotifyOnSubmitSerializerMixin
     ]
     serializer_field_overrides = {
         "cover_image": UserFileField(
@@ -1075,6 +1079,17 @@ class FormViewType(ViewType):
         mode_type = form_view_mode_registry.get(values.get("mode", view.mode))
         mode_type.before_form_update(values, view, user)
 
+        notify_on_submit = values.pop("receive_notification_on_submit", None)
+        if notify_on_submit is not None:
+            users_to_notify_on_submit = [
+                utn.id
+                for utn in view.users_to_notify_on_submit.all()
+                if utn.id != user.id
+            ]
+            if notify_on_submit:
+                users_to_notify_on_submit.append(user.id)
+            values["users_to_notify_on_submit"] = users_to_notify_on_submit
+
     def prepare_values(
         self, values: Dict[str, Any], table: Table, user: AbstractUser
     ) -> Dict[str, Any]:
@@ -1130,7 +1145,9 @@ class FormViewType(ViewType):
         return values
 
     def enhance_queryset(self, queryset):
-        return queryset.prefetch_related("formviewfieldoptions_set")
+        return queryset.prefetch_related(
+            "formviewfieldoptions_set", "users_to_notify_on_submit"
+        )
 
     def enhance_field_options_queryset(self, queryset):
         return queryset.prefetch_related("conditions", "condition_groups")

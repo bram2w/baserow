@@ -730,6 +730,10 @@ class FormView(View):
         f"then the visitors will be redirected to the this URL after submitting the "
         f"form.",
     )
+    users_to_notify_on_submit = models.ManyToManyField(
+        User,
+        help_text="The users that must be notified when the form is submitted.",
+    )
 
     @property
     def active_field_options(self):

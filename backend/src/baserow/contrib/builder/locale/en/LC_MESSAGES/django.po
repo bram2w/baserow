@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-10-06 15:56+0000\n"
+"POT-Creation-Date: 2023-11-16 11:09+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,17 +18,17 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/baserow/contrib/builder/application_types.py:59
+#: src/baserow/contrib/builder/application_types.py:66
 msgid "Homepage"
 msgstr ""
 
-#: src/baserow/contrib/builder/data_sources/service.py:125
+#: src/baserow/contrib/builder/data_sources/service.py:128
 msgid "Data source"
 msgstr ""
 
-#: src/baserow/contrib/builder/elements/element_types.py:718
-#: src/baserow/contrib/builder/elements/element_types.py:719
-#: src/baserow/contrib/builder/elements/element_types.py:720
+#: src/baserow/contrib/builder/elements/element_types.py:166
+#: src/baserow/contrib/builder/elements/element_types.py:167
+#: src/baserow/contrib/builder/elements/element_types.py:168
 #, python-format
 msgid "Column %(count)s"
 msgstr ""

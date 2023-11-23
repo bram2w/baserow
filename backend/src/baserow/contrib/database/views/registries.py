@@ -37,7 +37,10 @@ from baserow.core.registry import (
     ModelRegistryMixin,
     Registry,
 )
-from baserow.core.utils import get_model_reference_field_name
+from baserow.core.utils import (
+    get_model_reference_field_name,
+    split_attrs_and_m2m_fields,
+)
 
 from .exceptions import (
     AggregationTypeAlreadyRegistered,
@@ -599,17 +602,6 @@ class ViewType(
         :return: The updates values.
         """
 
-        from baserow.contrib.database.views.models import View
-
-        raw_public_view_password = values.get("raw_public_view_password", None)
-        if raw_public_view_password is not None:
-            if raw_public_view_password:
-                values["public_view_password"] = View.make_password(
-                    raw_public_view_password
-                )
-            else:
-                values["public_view_password"] = ""  # nosec b105
-
         return values
 
     def view_created(self, view: "View"):
@@ -702,7 +694,14 @@ class ViewType(
             "show_logo": view.show_logo,
         }
 
-        values.update({key: getattr(view, key) for key in self.allowed_fields})
+        allowed_attrs, m2m_fields = split_attrs_and_m2m_fields(
+            self.allowed_fields, view
+        )
+
+        values.update({key: getattr(view, key) for key in allowed_attrs})
+        values.update(
+            {key: [item.id for item in getattr(view, key).all()] for key in m2m_fields}
+        )
 
         return values
 

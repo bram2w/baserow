@@ -20,7 +20,7 @@ from typing import (
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q, QuerySet
+from django.db.models import Model, Q, QuerySet
 from django.db.models.fields.related import ForeignKey, ManyToManyField
 from django.utils.encoding import force_str
 
@@ -770,12 +770,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         rows_created_counter.add(1)
 
         m2m_change_tracker = RowM2MChangeTracker()
-        for name, value in manytomany_values.items():
-            field_object = model.get_field_object(name)
-            m2m_change_tracker.track_m2m_created_for_new_row(
-                instance, field_object["field"], value
+        for field_name, value in manytomany_values.items():
+            m2m_objects, _ = self._prepare_m2m_field_related_objects(
+                instance, field_name, value
             )
-            getattr(instance, name).set(value)
+            getattr(instance, field_name).through.objects.bulk_create(m2m_objects)
 
         fields = []
         update_collector = FieldUpdateCollector(table, starting_row_ids=[instance.id])
@@ -1110,42 +1109,10 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         for index, row in enumerate(inserted_rows):
             _, manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
-                through = getattr(model, field_name).through
-                through_fields = through._meta.get_fields()
-                value_column = None
-                row_column = None
-
-                model_field = model._meta.get_field(field_name)
-                is_referencing_the_same_table = (
-                    model_field.model == model_field.related_model
+                m2m_objects, _ = self._prepare_m2m_field_related_objects(
+                    row, field_name, value
                 )
-
-                # Figure out which field in the many to many through table holds the row
-                # value and which one contains the value.
-                for field in through_fields:
-                    if type(field) is not ForeignKey:
-                        continue
-
-                    if is_referencing_the_same_table:
-                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
-                        # columns for self-referencing many_to_many relations.
-                        row_column = field.get_attname_column()[1]
-                        value_column = row_column.replace("from", "to")
-                        break
-                    elif field.remote_field.model == model:
-                        row_column = field.get_attname_column()[1]
-                    else:
-                        value_column = field.get_attname_column()[1]
-
-                for i in value:
-                    many_to_many[field_name].append(
-                        getattr(model, field_name).through(
-                            **{
-                                row_column: row.id,
-                                value_column: i,
-                            }
-                        )
-                    )
+                many_to_many[field_name].extend(m2m_objects)
 
                 field_object = model.get_field_object(field_name)
                 m2m_change_tracker.track_m2m_created_for_new_row(
@@ -1229,6 +1196,52 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         if generate_error_report:
             return inserted_rows, report
         return rows_to_return
+
+    def _prepare_m2m_field_related_objects(
+        self, row: GeneratedTableModel, field_name: str, value: List[Any]
+    ) -> Tuple[List[Type[Model]], str]:
+        """
+        Prepares the many to many related objects for a given row and field
+        name, taking into account whether the field is self-referencing or not.
+
+        :param row: The row instance for which the related objects must be
+            prepared.
+        :param field_name: The name of the field for which the related objects
+            must be prepared.
+        :param value: The value of the field.
+        :return: A list of related objects and a string indicating the column
+            name of the row in the through table.
+        """
+
+        model = row._meta.model
+        through = getattr(model, field_name).through
+        through_fields = through._meta.get_fields()
+        value_column = None
+        row_column = None
+
+        model_field = model._meta.get_field(field_name)
+        is_referencing_the_same_table = model_field.model == model_field.related_model
+
+        # Figure out which field in the many to many through table holds the row
+        # value and which one contains the value.
+        for field in through_fields:
+            if type(field) is not ForeignKey:
+                continue
+
+            if is_referencing_the_same_table:
+                # django creates 'from_tableXmodel' and 'to_tableXmodel'
+                # columns for self-referencing many_to_many relations.
+                row_column = field.get_attname_column()[1]
+                value_column = row_column.replace("from", "to")
+                break
+            elif field.remote_field.model == model:
+                row_column = field.get_attname_column()[1]
+            else:
+                value_column = field.get_attname_column()[1]
+
+        return [
+            through(**{row_column: row.id, value_column: v}) for v in value
+        ], row_column
 
     def validate_rows(
         self,
@@ -1638,7 +1651,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 )
 
         many_to_many = defaultdict(list)
-        row_column_name = None
+        row_column_names: Dict[str, str] = {}
         row_ids_change_m2m_per_field = defaultdict(set)
 
         # This update can remove link row connections with other rows. We need to keep
@@ -1651,36 +1664,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         for index, row in enumerate(rows_to_update):
             manytomany_values = rows_relationships[index]
             for field_name, value in manytomany_values.items():
-                through = getattr(model, field_name).through
-                through_fields = through._meta.get_fields()
-                value_column = None
-                row_column = None
-
-                model_field = model._meta.get_field(field_name)
-                is_referencing_the_same_table = (
-                    model_field.model == model_field.related_model
-                )
-
-                # Figure out which field in the many to many through table holds the row
-                # value and which one contains the value.
-                for field in through_fields:
-                    if type(field) is not ForeignKey:
-                        continue
-
-                    row_ids_change_m2m_per_field[field_name].add(row.id)
-
-                    if is_referencing_the_same_table:
-                        # django creates 'from_tableXmodel' and 'to_tableXmodel'
-                        # columns for self-referencing many_to_many relations.
-                        row_column = field.get_attname_column()[1]
-                        row_column_name = row_column
-                        value_column = row_column.replace("from", "to")
-                        break
-                    elif field.remote_field.model == model:
-                        row_column = field.get_attname_column()[1]
-                        row_column_name = row_column
-                    else:
-                        value_column = field.get_attname_column()[1]
+                row_ids_change_m2m_per_field[field_name].add(row.id)
 
                 # If this m2m field is a link row we need to find out all connections
                 # which will be removed by this update. This is so we can update
@@ -1691,24 +1675,22 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                     field, field_name, row, value
                 )
 
+                m2m_objects, row_column_name = self._prepare_m2m_field_related_objects(
+                    row, field_name, value
+                )
+                row_column_names[field_name] = row_column_name
+
                 if len(value) == 0:
                     many_to_many[field_name].append(None)
                 else:
-                    for i in value:
-                        many_to_many[field_name].append(
-                            getattr(model, field_name).through(
-                                **{
-                                    row_column: row.id,
-                                    value_column: i,
-                                }
-                            )
-                        )
+                    many_to_many[field_name].extend(m2m_objects)
 
         # The many to many relations need to be updated first because they need to
         # exist when the rows are updated in bulk. Otherwise, the formula and lookup
         # fields can't see the relations.
         for field_name, values in many_to_many.items():
             through = getattr(model, field_name).through
+            row_column_name = row_column_names[field_name]
             filters = {
                 f"{row_column_name}__in": row_ids_change_m2m_per_field[field_name]
             }
