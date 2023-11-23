@@ -1404,21 +1404,22 @@ export const getters = {
   get: (state) => (id) => {
     return state.items.find((item) => item.id === id)
   },
-  first(state) {
-    const items = state.items
-      .map((item) => item)
-      .sort((a, b) => a.order - b.order)
+  first(state, getters) {
+    const items = getters.getAllOrdered
     return items.length > 0 ? items[0] : null
   },
   // currently only used during unit tests:
   defaultId: (state) => {
     return state.defaultViewId
   },
-  defaultOrFirst: (state, getters) => {
-    return getters.get(state.defaultViewId) || getters.first
+  default: (state, getters) => {
+    return getters.get(state.defaultViewId)
   },
   getAll(state) {
     return state.items
+  },
+  getAllOrdered(state) {
+    return state.items.map((item) => item).sort((a, b) => a.order - b.order)
   },
 }
 

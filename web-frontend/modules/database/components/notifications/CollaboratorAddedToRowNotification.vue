@@ -39,22 +39,10 @@ export default {
   },
   computed: {
     params() {
-      let viewId = null
-
-      if (
-        ['database-table-row', 'database-table'].includes(
-          this.$nuxt.$route.name
-        ) &&
-        this.$nuxt.$route.params.tableId === this.notification.data.table_id
-      ) {
-        viewId = this.$nuxt.$route.params.viewId
-      }
-
       return {
         databaseId: this.notification.data.database_id,
         tableId: this.notification.data.table_id,
         rowId: this.notification.data.row_id,
-        viewId,
       }
     },
     url() {

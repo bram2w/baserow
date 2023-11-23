@@ -68,6 +68,13 @@ export class ViewType extends Registerable {
     return false
   }
 
+  /**
+   * Indicates whether it is possible to show a modal when clicking on a row.
+   */
+  canShowRowModal() {
+    return false
+  }
+
   constructor(...args) {
     super(...args)
     this.type = this.getType()
@@ -355,6 +362,10 @@ export class GridViewType extends ViewType {
   }
 
   canShare() {
+    return true
+  }
+
+  canShowRowModal() {
     return true
   }
 
@@ -757,6 +768,10 @@ export class GalleryViewType extends BaseBufferedRowView {
   }
 
   canShare() {
+    return true
+  }
+
+  canShowRowModal() {
     return true
   }
 
