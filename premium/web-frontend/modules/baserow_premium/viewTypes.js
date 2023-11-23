@@ -54,6 +54,10 @@ export class KanbanViewType extends PremiumViewType {
     return true
   }
 
+  canShowRowModal() {
+    return true
+  }
+
   getPublicRoute() {
     return 'database-public-kanban-view'
   }
@@ -240,6 +244,10 @@ export class CalendarViewType extends PremiumViewType {
   }
 
   canShare() {
+    return true
+  }
+
+  canShowRowModal() {
     return true
   }
 
