@@ -92,6 +92,8 @@
                 :key="key"
                 :model-value="fieldOptions.field_component"
                 :value="key"
+                :disabled="readOnly"
+                class="margin-right-1"
                 @input="
                   $emit('updated-field-options', { field_component: $event })
                 "
