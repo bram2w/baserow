@@ -53,6 +53,39 @@ def test_create_last_modified_by_field(data_fixture):
 
 @pytest.mark.field_last_modified_by
 @pytest.mark.django_db
+def test_create_last_modified_by_field_force_create_last_modified_by_column(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(
+        user=user, last_modified_by_column_added=False
+    )
+    text_field = data_fixture.create_text_field(
+        table=table, order=1, name="name", primary=True
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    row_handler.create_row(
+        user=user, table=table, values={f"field_{text_field.id}": "Row 1"}, model=model
+    )
+
+    field_handler = FieldHandler()
+    field = field_handler.create_field(
+        user=user,
+        table=table,
+        type_name="last_modified_by",
+        name="last modified by",
+    )
+
+    model = table.get_model()
+    rows = list(model.objects.all())
+    assert getattr(rows[0], f"field_{field.id}") is None
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
 def test_create_row_last_modified_by(data_fixture):
     user = data_fixture.create_user()
     table = data_fixture.create_database_table(user=user)
