@@ -14,6 +14,7 @@ from rest_framework.status import HTTP_200_OK
 from baserow.contrib.database.fields.field_types import FileFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import FileField
+from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
@@ -255,7 +256,7 @@ def test_import_export_file_field(data_fixture, tmpdir):
         exported_applications[0]["tables"][0]["rows"][0][f"field_{field.id}"][0][
             "original_name"
         ]
-        == user_file.original_name
+        == user_file.name
     )
     assert exported_applications[0]["tables"][0]["rows"][1][f"field_{field.id}"] == []
     assert (
@@ -309,6 +310,68 @@ def test_import_export_file_field(data_fixture, tmpdir):
     file_path = tmpdir.join("user_files", imported_user_file.name)
     assert file_path.isfile()
     assert file_path.open().read() == "Hello World"
+
+
+@pytest.mark.django_db
+def test_get_set_export_serialized_value_file_field(
+    data_fixture, tmpdir, django_assert_num_queries
+):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    file_field = data_fixture.create_file_field(table=table)
+    file_field_name = f"field_{file_field.id}"
+    file_field_type = field_type_registry.get_by_model(file_field)
+
+    storage = FileSystemStorage(location=str(tmpdir), base_url="http://localhost")
+    handler = UserFileHandler()
+    user_file = handler.upload_user_file(
+        user, "test.txt", ContentFile(b"Hello World"), storage=storage
+    )
+
+    row_handler = RowHandler()
+    model = table.get_model()
+
+    row_1 = row_handler.create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{file_field.id}": [
+                {"name": user_file.name, "visible_name": "a.txt"}
+            ]
+        },
+        model=model,
+    )
+    row_2 = row_handler.create_row(
+        user=user,
+        table=table,
+        values={},
+        model=model,
+    )
+
+    with django_assert_num_queries(0):
+        serialized_value = file_field_type.get_export_serialized_value(
+            row_1, f"field_{file_field.id}", {}, files_zip=None, storage=None
+        )
+    assert serialized_value[0]["name"] == user_file.name
+    assert serialized_value[0]["visible_name"] == "a.txt"
+    assert serialized_value[0]["mime_type"] == "text/plain"
+
+    with django_assert_num_queries(0):
+        file_field_type.set_import_serialized_value(
+            row_2,
+            f"field_{file_field.id}",
+            serialized_value,
+            {},
+            {},
+            files_zip=None,
+            storage=None,
+        )
+    row_2.save()
+    row_2.refresh_from_db()
+
+    assert getattr(row_2, f"field_{file_field.id}")[0]["name"] == user_file.name
+    assert getattr(row_2, f"field_{file_field.id}")[0]["visible_name"] == "a.txt"
+    assert getattr(row_2, f"field_{file_field.id}")[0]["mime_type"] == "text/plain"
 
 
 @pytest.mark.django_db

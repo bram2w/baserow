@@ -1,3 +1,4 @@
+from collections import defaultdict
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 from zipfile import ZipFile
@@ -5,6 +6,7 @@ from zipfile import ZipFile
 from django.core.files.storage import Storage
 from django.core.management.color import no_style
 from django.db import connection, models
+from django.db.models import Prefetch
 from django.db.transaction import Atomic
 from django.urls import include, path
 from django.utils import timezone, translation
@@ -12,14 +14,16 @@ from django.utils.translation import gettext as _
 
 from baserow.contrib.database.api.serializers import DatabaseSerializer
 from baserow.contrib.database.db.schema import safe_django_schema_editor
+from baserow.contrib.database.fields.dependencies.handler import FieldDependencyHandler
 from baserow.contrib.database.fields.dependencies.update_collector import (
     FieldUpdateCollector,
 )
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.registries import field_type_registry
-from baserow.contrib.database.models import Database
+from baserow.contrib.database.models import Database, Field, View
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.views.registries import view_type_registry
+from baserow.core.db import specific_queryset
 from baserow.core.handler import CoreHandler
 from baserow.core.models import Application, Workspace
 from baserow.core.registries import (
@@ -103,7 +107,7 @@ class DatabaseApplicationType(ApplicationType):
 
             model = table.get_model(fields=fields, add_dependencies=False)
             serialized_rows = []
-            for row in model.objects.all():
+            for row in model.objects.all().select_related("last_modified_by"):
                 serialized_row = DatabaseExportSerializedStructure.row(
                     id=row.id,
                     order=str(row.order),
@@ -150,12 +154,19 @@ class DatabaseApplicationType(ApplicationType):
         """
 
         tables = database.table_set.all().prefetch_related(
-            "field_set",
-            "view_set",
+            Prefetch("field_set", queryset=specific_queryset(Field.objects.all())),
+            "field_set__select_options",
+            Prefetch(
+                "view_set",
+                queryset=specific_queryset(
+                    View.objects.all().select_related("owned_by")
+                ),
+            ),
             "view_set__viewfilter_set",
             "view_set__filter_groups",
             "view_set__viewsort_set",
             "view_set__viewgroupby_set",
+            "view_set__viewdecoration_set",
         )
 
         serialized_tables = self.export_tables_serialized(
@@ -340,12 +351,31 @@ class DatabaseApplicationType(ApplicationType):
             id_mapping["database_fields"]
         )
 
-        # From each field we call after_import_serialized which will recursively
-        # be called on all of its dependants. This ensures that formulas recalculate
-        # themselves now that all fields exist.
+        # For each field we call `after_import_serialized` which ensures that
+        # formulas recalculate themselves now that all fields exist.
         field_cache = FieldCache()
+        all_field_ids = []
         for field_type, field_instance in all_fields:
+            all_field_ids.append(field_instance.id)
             field_type.after_import_serialized(field_instance, field_cache, id_mapping)
+
+        # Also call the `after_import_serialized` for all the dependant fields so
+        # that these formulas are recalculated as well.
+        for (
+            dependant_field,
+            dependant_field_type,
+            via_path_to_starting_table,
+        ) in FieldDependencyHandler.get_all_dependent_fields_with_type(
+            # It's okay to set `table_id=0` here because that's only needed to
+            # calculate the correct path, which we don't need here anyway.
+            0,
+            all_field_ids,
+            field_cache,
+            associated_relations_changed=True,
+        ):
+            dependant_field_type.after_import_serialized(
+                dependant_field, field_cache, id_mapping
+            )
 
         # The loop above might have recalculated the formula fields in the list,
         # we need to refresh the instances we have as a result as they might be stale.
@@ -408,14 +438,14 @@ class DatabaseApplicationType(ApplicationType):
         # Now that everything is in place we can start filling the table with the rows
         # in an efficient matter by using the bulk_create functionality.
         table_cache: Dict[str, Any] = {}
-        # Similar to above but now instead of creating the m2m tables
-        # we will be inserting data into them. And so we don't want to do this twice
-        # so we keep track of m2m/through tables we've already inserted all the data
-        # for.
         already_filled_up_through_table_names = set()
         for serialized_table in serialized_tables:
             table_model = serialized_table["_model"]
             rows_to_be_inserted = []
+            # Holds a mapping where the key is a model, and the value a list of
+            # objects that must be inserted. These objects are returned by the
+            # `set_import_serialized_value`, and will typically hold m2m relationships.
+            additional_objects_to_be_inserted = defaultdict(list)
 
             m2m_fields_to_not_import_as_already_done = set()
             for field in table_model._meta.get_fields():
@@ -464,15 +494,23 @@ class DatabaseApplicationType(ApplicationType):
                         and new_field_name
                         not in m2m_fields_to_not_import_as_already_done
                     ):
-                        field_type.set_import_serialized_value(
-                            row_instance,
-                            new_field_name,
-                            serialized_row[field_name],
-                            id_mapping,
-                            table_cache,
-                            files_zip,
-                            storage,
+                        related_objects_to_save = (
+                            field_type.set_import_serialized_value(
+                                row_instance,
+                                new_field_name,
+                                serialized_row[field_name],
+                                id_mapping,
+                                table_cache,
+                                files_zip,
+                                storage,
+                            )
                         )
+
+                        if related_objects_to_save is not None:
+                            for additional_object in related_objects_to_save:
+                                additional_objects_to_be_inserted[
+                                    additional_object._meta.model
+                                ].append(additional_object)
 
                 rows_to_be_inserted.append(row_instance)
                 progress.increment(
@@ -488,6 +526,12 @@ class DatabaseApplicationType(ApplicationType):
                     len(chunk),
                     state=f"{IMPORT_SERIALIZED_IMPORTING_TABLE}{serialized_table['id']}",
                 )
+
+            # Every row import can have additional objects that must be inserted,
+            # like for example the m2m relationships. We want to efficiently import
+            # them in bulk here.
+            for model, objects in additional_objects_to_be_inserted.items():
+                model.objects.bulk_create(objects, batch_size=512)
 
             # When the rows are inserted we keep the provide the old ids and because of
             # that the auto increment is still set at `1`. This needs to be set to the

@@ -205,6 +205,56 @@ def specific_iterator(
     return ordered_specific_objects
 
 
+def specific_queryset(
+    queryset: QuerySet[T],
+    per_content_type_queryset_hook: Optional[Callable] = None,
+):
+    """
+    Applies an iterable to the queryset that calls the `specific_iterator` when the
+    queryset resolves. This allows for modifying the queryset, even after marking the
+    queryset as a specific.
+
+    This is particularly useful in combination with the `Prefetch` class for example.
+
+    Can be used like:
+
+    queryset = specific_queryset(
+        Field.objects.all()
+    ).filter(id__in=[1, 2])
+
+    :param queryset: The queryset which we want to select the specific types from.
+    :param per_content_type_queryset_hook: If provided, it will be called for every
+        specific queryset to allow extending it.
+    """
+
+    clone = queryset._clone()
+
+    class SpecificIterable(clone._iterable_class):
+        def __iter__(self):
+            queryset = self.queryset
+
+            select_related = queryset.query.select_related
+
+            if isinstance(select_related, bool):
+                select_related_keys = []
+            else:
+                select_related_keys = select_related.keys()
+
+            model = queryset.model
+            rows = list(super().__iter__())
+            for specific_row in specific_iterator(
+                queryset_or_list=rows,
+                per_content_type_queryset_hook=per_content_type_queryset_hook,
+                base_model=model,
+                select_related=select_related_keys,
+            ):
+                yield specific_row
+
+    clone._iterable_class = SpecificIterable
+
+    return clone
+
+
 class IsolationLevel:
     READ_COMMITTED = "READ COMMITTED"
     REPEATABLE_READ = "REPEATABLE READ"
