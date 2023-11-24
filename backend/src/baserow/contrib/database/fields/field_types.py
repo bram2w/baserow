@@ -2365,7 +2365,20 @@ class LinkRowFieldType(FieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        getattr(row, field_name).set(value)
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        return [
+            through_model(
+                **{
+                    f"{current_field_name}_id": row.id,
+                    f"{relation_field_name}_id": item,
+                }
+            )
+            for item in value
+        ]
 
     def get_other_fields_to_trash_restore_always_together(self, field) -> List[Field]:
         fields = []
@@ -2778,28 +2791,31 @@ class FileFieldType(FieldType):
             # it must be fetched and added to to it.
             cache_entry = f"user_file_{file['name']}"
             if cache_entry not in cache:
-                try:
-                    user_file = UserFile.objects.all().name(file["name"]).get()
-                except UserFile.DoesNotExist:
-                    continue
-
                 if files_zip is not None and file["name"] not in files_zip.namelist():
                     # Load the user file from the content and write it to the zip file
                     # because it might not exist in the environment that it is going
                     # to be imported in.
-                    file_path = user_file_handler.user_file_path(user_file.name)
+                    file_path = user_file_handler.user_file_path(file["name"])
                     with storage.open(file_path, mode="rb") as storage_file:
                         files_zip.writestr(file["name"], storage_file.read())
 
-                cache[cache_entry] = user_file
+                # This is just used to avoid writing the same file twice.
+                cache[cache_entry] = True
 
-            file_names.append(
-                DatabaseExportSerializedStructure.file_field_value(
-                    name=file["name"],
-                    visible_name=file["visible_name"],
-                    original_name=cache[cache_entry].original_name,
+            if files_zip is None:
+                # If the zip file is `None`, it means we're duplicating this row. To
+                # avoid unnecessary queries, we jump add the complete file, and will
+                # use that during import instead of fetching the user file object.
+                file_names.append(file)
+            else:
+                file_names.append(
+                    DatabaseExportSerializedStructure.file_field_value(
+                        name=file["name"],
+                        visible_name=file["visible_name"],
+                        original_name=file["name"],
+                    )
                 )
-            )
+
         return file_names
 
     def set_import_serialized_value(
@@ -2819,7 +2835,7 @@ class FileFieldType(FieldType):
             # files_zip could be None when files are in the same storage of the export
             # so no need to export/reimport files already present in the storage.
             if files_zip is None:
-                user_file = user_file_handler.get_user_file_by_name(file["name"])
+                files.append(file)
             else:
                 with files_zip.open(file["name"]) as stream:
                     # Try to upload the user file with the original name to make sure
@@ -2828,9 +2844,9 @@ class FileFieldType(FieldType):
                         None, file["original_name"], stream, storage=storage
                     )
 
-            value = user_file.serialize()
-            value["visible_name"] = file["visible_name"]
-            files.append(value)
+                value = user_file.serialize()
+                value["visible_name"] = file["visible_name"]
+                files.append(value)
 
         setattr(row, field_name, files)
 
@@ -3519,12 +3535,23 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     def set_import_serialized_value(
         self, row, field_name, value, id_mapping, cache, files_zip, storage
     ):
-        mapped_values = [
-            id_mapping["database_field_select_options"][item]
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        return [
+            through_model(
+                **{
+                    f"{current_field_name}_id": row.id,
+                    f"{relation_field_name}_id": id_mapping[
+                        "database_field_select_options"
+                    ][item],
+                }
+            )
             for item in value
             if item in id_mapping["database_field_select_options"]
         ]
-        getattr(row, field_name).set(mapped_values)
 
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
@@ -4972,13 +4999,27 @@ class MultipleCollaboratorsFieldType(FieldType):
             for workspaceuser in workspaceusers_from_workspace:
                 cache[cache_entry][workspaceuser.user.email] = workspaceuser.user.id
 
-        user_ids = []
+        through_model = row._meta.get_field(field_name).remote_field.through
+        through_model_fields = through_model._meta.get_fields()
+        current_field_name = through_model_fields[1].name
+        relation_field_name = through_model_fields[2].name
+
+        through_objects = []
         for email in value:
             user_id = cache[cache_entry].get(email, None)
             if user_id is not None:
-                user_ids.append(user_id)
+                through_objects.append(
+                    through_model(
+                        **{
+                            f"{current_field_name}_id": row.id,
+                            f"{relation_field_name}_id": cache[cache_entry].get(
+                                email, None
+                            ),
+                        }
+                    )
+                )
 
-        getattr(row, field_name).set(user_ids)
+        return through_objects
 
     def random_value(self, instance, fake, cache):
         """

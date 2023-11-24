@@ -1,5 +1,5 @@
 {
-  "type": "feature",
+  "type": "refactor",
   "message": "Improved performance of the field dependency updating.",
   "issue_number": null,
   "bullet_points": [],

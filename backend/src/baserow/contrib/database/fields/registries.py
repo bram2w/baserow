@@ -13,6 +13,7 @@ from django.db.models import (
     DurationField,
     Expression,
     JSONField,
+    Model,
     Q,
     QuerySet,
 )
@@ -933,14 +934,6 @@ class FieldType(
         )
 
         FieldDependencyHandler.rebuild_dependencies(field, field_cache)
-        for (
-            dependant_field,
-            dependant_field_type,
-            _,
-        ) in field.dependant_fields_with_types(field_cache):
-            dependant_field_type.after_import_serialized(
-                dependant_field, field_cache, id_mapping
-            )
 
     def after_rows_imported(
         self,
@@ -1021,7 +1014,7 @@ class FieldType(
         cache: Dict[str, Any],
         files_zip: Optional[ZipFile] = None,
         storage: Optional[Storage] = None,
-    ):
+    ) -> Optional[List[Model]]:
         """
         Sets an imported and serialized value on a row instance.
 
@@ -1038,6 +1031,9 @@ class FieldType(
         :param files_zip: A zip file buffer where the files related to the template
             must be copied into.
         :param storage: The storage where the files can be copied to.
+        :return: Optionally return with additional model objects that must be
+            inserted in bulk. This can be used to efficiently add m2m relationships,
+            for example.
         """
 
         setattr(row, field_name, value)
