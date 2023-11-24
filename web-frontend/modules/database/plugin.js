@@ -76,6 +76,8 @@ import {
   LinkRowNotContainsFilterType,
   ContainsWordViewFilterType,
   DoesntContainWordViewFilterType,
+  UserIsFilterType,
+  UserIsNotFilterType,
 } from '@baserow/modules/database/viewFilters'
 import {
   CSVImporterType,
@@ -421,6 +423,8 @@ export default (context) => {
   )
   app.$registry.register('viewFilter', new EmptyViewFilterType(context))
   app.$registry.register('viewFilter', new NotEmptyViewFilterType(context))
+  app.$registry.register('viewFilter', new UserIsFilterType(context))
+  app.$registry.register('viewFilter', new UserIsNotFilterType(context))
 
   app.$registry.register(
     'viewOwnershipType',

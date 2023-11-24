@@ -1579,6 +1579,70 @@ export class MultipleCollaboratorsHasNotFilterType extends ViewFilterType {
   }
 }
 
+export class UserIsFilterType extends ViewFilterType {
+  static getType() {
+    return 'user_is'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.is')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['last_modified_by']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue?.id === filterValueId
+  }
+}
+
+export class UserIsNotFilterType extends ViewFilterType {
+  static getType() {
+    return 'user_is_not'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('viewFilter.isNot')
+  }
+
+  getExample() {
+    return '1'
+  }
+
+  getInputComponent() {
+    return ViewFilterTypeCollaborators
+  }
+
+  getCompatibleFieldTypes() {
+    return ['last_modified_by']
+  }
+
+  matches(rowValue, filterValue, field, fieldType) {
+    if (!isNumeric(filterValue)) {
+      return true
+    }
+
+    const filterValueId = parseInt(filterValue)
+    return rowValue?.id !== filterValueId
+  }
+}
+
 export class BooleanViewFilterType extends ViewFilterType {
   static getType() {
     return 'boolean'
