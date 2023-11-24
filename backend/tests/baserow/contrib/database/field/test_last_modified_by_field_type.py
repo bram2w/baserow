@@ -10,6 +10,7 @@ from baserow.contrib.database.fields.deferred_field_fk_updater import (
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.handler import CoreHandler
 from baserow.core.registries import ImportExportConfig
 
@@ -391,3 +392,40 @@ def test_trash_restore_last_modified_by_field(data_fixture):
     assert getattr(rows[1], f"field_{field.id}") == user
     assert getattr(rows[2], f"field_{field.id}") == user
     assert getattr(rows[3], f"field_{field.id}") == user3
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.django_db
+def test_last_modified_by_field_type_sorting(data_fixture):
+    user_a = data_fixture.create_user(email="user1@baserow.io", first_name="User a")
+    user_b = data_fixture.create_user(email="user2@baserow.io", first_name="User b")
+    user_c = data_fixture.create_user(email="user3@baserow.io", first_name="User c")
+
+    database = data_fixture.create_database_application(user=user_a, name="Placeholder")
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_b)
+    data_fixture.create_user_workspace(workspace=database.workspace, user=user_c)
+    table = data_fixture.create_database_table(name="Example", database=database)
+    grid_view = data_fixture.create_grid_view(table=table)
+    field = data_fixture.create_last_modified_by_field(
+        user=user_a, table=table, name="Last modified by"
+    )
+    model = table.get_model()
+    view_handler = ViewHandler()
+
+    row1 = model.objects.create(last_modified_by=user_c)
+    row2 = model.objects.create(last_modified_by=user_b)
+    row3 = model.objects.create(last_modified_by=user_a)
+    row4 = model.objects.create(last_modified_by=user_c)
+    row5 = model.objects.create(last_modified_by=None)
+
+    sort = data_fixture.create_view_sort(view=grid_view, field=field, order="ASC")
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row5.id, row3.id, row2.id, row1.id, row4.id]
+
+    sort.order = "DESC"
+    sort.save()
+
+    rows = view_handler.apply_sorting(grid_view, model.objects.all())
+    row_ids = [row.id for row in rows]
+    assert row_ids == [row1.id, row4.id, row2.id, row3.id, row5.id]

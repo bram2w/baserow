@@ -1926,7 +1926,34 @@ export class LastModifiedByFieldType extends FieldType {
   }
 
   getCanSortInView(field) {
-    return false
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      let userNameA = a[name] === null ? '' : a[name].name
+      let userNameB = b[name] === null ? '' : b[name].name
+
+      const workspaces = this.app.store.getters['workspace/getAll']
+      const workspaceAvailable = workspaces.length > 0
+      if (workspaceAvailable) {
+        if (a[name] !== null) {
+          const workspaceUserA = this.app.store.getters[
+            'workspace/getUserById'
+          ](a[name].id)
+          userNameA = workspaceUserA ? workspaceUserA.name : userNameA
+        }
+
+        if (b[name] !== null) {
+          const workspaceUserB = this.app.store.getters[
+            'workspace/getUserById'
+          ](b[name].id)
+          userNameB = workspaceUserB ? workspaceUserB.name : userNameB
+        }
+      }
+
+      return collatedStringCompare(userNameA, userNameB, order)
+    }
   }
 
   canBeReferencedByFormulaField() {
@@ -1938,16 +1965,17 @@ export class LastModifiedByFieldType extends FieldType {
       return ''
     }
 
+    const name = value.name
+
     const workspaces = this.app.store.getters['workspace/getAll']
     if (workspaces.length > 0) {
       const workspaceUser = this.app.store.getters['workspace/getUserById'](
         value.id
       )
-      return workspaceUser.name
-    } else {
-      // public views
-      return value.name
+      return workspaceUser ? workspaceUser.name : name
     }
+
+    return name
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {
