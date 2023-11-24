@@ -1360,6 +1360,27 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         user = value
         return user.email if user else None
 
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        """
+        If the user wants to sort the results they expect them to be ordered
+        alphabetically based on the user's name.
+        """
+
+        name = f"{field_name}__first_name"
+        order = collate_expression(F(name))
+
+        if order_direction == "ASC":
+            order = order.asc(nulls_first=True)
+        else:
+            order = order.desc(nulls_last=True)
+        return OptionallyAnnotatedOrderBy(order=order)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return value
+
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         When converting to last modified by field type we won't preserve any
