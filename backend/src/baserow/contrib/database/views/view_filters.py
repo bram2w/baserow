@@ -26,6 +26,7 @@ from baserow.contrib.database.fields.field_types import (
     EmailFieldType,
     FileFieldType,
     FormulaFieldType,
+    LastModifiedByFieldType,
     LastModifiedFieldType,
     LinkRowFieldType,
     LongTextFieldType,
@@ -1295,6 +1296,66 @@ class MultipleCollaboratorsHasNotViewFilterType(
     """
 
     type = "multiple_collaborators_has_not"
+
+
+class UserIsViewFilterType(ViewFilterType):
+    """
+    The user is filter accepts the ID of the user to filter for
+    and filters the rows where the field has the provided user.
+    """
+
+    type = "user_is"
+    compatible_field_types = [LastModifiedByFieldType.type]
+
+    USER_KEY = f"users"
+
+    def get_filter(self, field_name, value, model_field, field):
+        value = value.strip()
+        return Q(**{f"{field_name}__id": int(value)})
+
+    def get_export_serialized_value(self, value, id_mapping):
+        if self.USER_KEY not in id_mapping:
+            workspace_id = id_mapping.get("workspace_id", None)
+            if workspace_id is None:
+                return value
+
+            id_mapping[self.USER_KEY] = defaultdict(list)
+
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
+            ).select_related("user")
+
+            for workspaceuser in workspaceusers_from_workspace:
+                id_mapping[self.USER_KEY][
+                    str(workspaceuser.user.id)
+                ] = workspaceuser.user.email
+
+        return id_mapping[self.USER_KEY].get(value, "")
+
+    def set_import_serialized_value(self, value, id_mapping):
+        workspace_id = id_mapping.get("workspace_id", None)
+        if workspace_id is None:
+            return ""
+
+        if self.USER_KEY not in id_mapping:
+            id_mapping[self.USER_KEY] = defaultdict(list)
+            workspaceusers_from_workspace = WorkspaceUser.objects.filter(
+                workspace_id=workspace_id
+            ).select_related("user")
+            for workspaceuser in workspaceusers_from_workspace:
+                id_mapping[self.USER_KEY][str(workspaceuser.user.email)] = str(
+                    workspaceuser.user.id
+                )
+        return id_mapping[self.USER_KEY].get(value, "")
+
+
+class UserIsNotViewFilterType(NotViewFilterTypeMixin, UserIsViewFilterType):
+    """
+    The user is not filter accepts the ID of the user to filter for
+    and filters the rows where the field does not have the provided user.
+    """
+
+    type = "user_is_not"
 
 
 class EmptyViewFilterType(ViewFilterType):

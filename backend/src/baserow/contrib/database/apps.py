@@ -334,6 +334,8 @@ class DatabaseConfig(AppConfig):
             NotEqualViewFilterType,
             SingleSelectEqualViewFilterType,
             SingleSelectNotEqualViewFilterType,
+            UserIsNotViewFilterType,
+            UserIsViewFilterType,
         )
 
         view_filter_type_registry.register(EqualViewFilterType())
@@ -382,6 +384,8 @@ class DatabaseConfig(AppConfig):
         view_filter_type_registry.register(MultipleSelectHasNotViewFilterType())
         view_filter_type_registry.register(MultipleCollaboratorsHasViewFilterType())
         view_filter_type_registry.register(MultipleCollaboratorsHasNotViewFilterType())
+        view_filter_type_registry.register(UserIsViewFilterType())
+        view_filter_type_registry.register(UserIsNotViewFilterType())
 
         from .views.view_aggregations import (
             AverageViewAggregationType,
