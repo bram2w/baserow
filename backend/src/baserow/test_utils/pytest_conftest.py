@@ -10,11 +10,16 @@ from django.core.files.storage import Storage
 from django.core.management import call_command
 from django.db import DEFAULT_DB_ALIAS, OperationalError, connection
 from django.db.migrations.executor import MigrationExecutor
+from django.test.utils import CaptureQueriesContext
 from django.utils.timezone import now
 
 import pytest
 from faker import Faker
+from pygments import highlight
+from pygments.formatters import TerminalFormatter
+from pygments.lexers import PostgresLexer
 from pyinstrument import Profiler
+from sqlparse import format
 
 from baserow.compat.api.conf import GROUP_DEPRECATION
 from baserow.contrib.database.application_types import DatabaseApplicationType
@@ -81,6 +86,16 @@ def environ():
     yield os.environ
     for key, value in original_env.items():
         os.environ[key] = value
+
+
+@pytest.fixture()
+def print_sql():
+    with CaptureQueriesContext(connection) as ctx:
+        yield
+        for query in ctx.captured_queries:
+            formatted_query = format(query.get("sql", ""), reindent=True)
+            print()
+            print(highlight(formatted_query, PostgresLexer(), TerminalFormatter()))
 
 
 @pytest.fixture()
