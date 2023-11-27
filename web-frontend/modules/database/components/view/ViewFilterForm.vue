@@ -56,12 +56,14 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import { uuid } from '@baserow/modules/core/utils/string'
 import ViewFieldConditionsForm from '@baserow/modules/database/components/view/ViewFieldConditionsForm'
 import { hasCompatibleFilterTypes } from '@baserow/modules/database/utils/field'
+import viewFilterTypes from '@baserow/modules/database/mixins/viewFilterTypes'
 
 export default {
   name: 'ViewFilterForm',
   components: {
     ViewFieldConditionsForm,
   },
+  mixins: [viewFilterTypes],
   props: {
     fields: {
       type: Array,
@@ -78,11 +80,6 @@ export default {
     disableFilter: {
       type: Boolean,
       required: true,
-    },
-  },
-  computed: {
-    filterTypes() {
-      return this.$registry.getAll('viewFilter')
     },
   },
   methods: {
