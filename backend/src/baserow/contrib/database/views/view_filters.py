@@ -1310,6 +1310,8 @@ class UserIsViewFilterType(ViewFilterType):
     USER_KEY = f"users"
 
     def get_filter(self, field_name, value, model_field, field):
+        if not value:
+            return Q()
         value = value.strip()
         return Q(**{f"{field_name}__id": int(value)})
 

@@ -105,6 +105,14 @@ export class ViewFilterType extends Registerable {
   }
 
   /**
+   * Determines whether the particular filter type will be available
+   * in public views.
+   */
+  isAllowedInPublicViews() {
+    return true
+  }
+
+  /**
    * Returns if a given field is compatible with this view filter or not. Uses the
    * list provided by getCompatibleFieldTypes to calculate this.
    */
@@ -1537,6 +1545,10 @@ export class MultipleCollaboratorsHasFilterType extends ViewFilterType {
     return ['multiple_collaborators']
   }
 
+  isAllowedInPublicViews() {
+    return false
+  }
+
   matches(rowValue, filterValue, field, fieldType) {
     if (!isNumeric(filterValue)) {
       return true
@@ -1567,6 +1579,10 @@ export class MultipleCollaboratorsHasNotFilterType extends ViewFilterType {
 
   getCompatibleFieldTypes() {
     return ['multiple_collaborators']
+  }
+
+  isAllowedInPublicViews() {
+    return false
   }
 
   matches(rowValue, filterValue, field, fieldType) {
@@ -1601,6 +1617,10 @@ export class UserIsFilterType extends ViewFilterType {
     return ['last_modified_by']
   }
 
+  isAllowedInPublicViews() {
+    return false
+  }
+
   matches(rowValue, filterValue, field, fieldType) {
     if (!isNumeric(filterValue)) {
       return true
@@ -1631,6 +1651,10 @@ export class UserIsNotFilterType extends ViewFilterType {
 
   getCompatibleFieldTypes() {
     return ['last_modified_by']
+  }
+
+  isAllowedInPublicViews() {
+    return false
   }
 
   matches(rowValue, filterValue, field, fieldType) {
