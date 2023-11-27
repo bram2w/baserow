@@ -82,6 +82,7 @@ from baserow.contrib.database.formula import (
 )
 from baserow.contrib.database.formula.registries import formula_function_registry
 from baserow.contrib.database.models import Table
+from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.types import SerializedRowHistoryFieldMetadata
 from baserow.contrib.database.validators import UnicodeRegexValidator
 from baserow.core.db import (
@@ -116,7 +117,6 @@ from .exceptions import (
     AllProvidedCollaboratorIdsMustBeValidUsers,
     AllProvidedMultipleSelectValuesMustBeSelectOption,
     AllProvidedValuesMustBeIntegersOrStrings,
-    CannotCreateFieldType,
     DateForceTimezoneOffsetValueError,
     FieldDoesNotExist,
     IncompatiblePrimaryFieldTypeError,
@@ -1262,13 +1262,13 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
     ):
         """
         If last_modified_by column is still not present on the table,
-        we cannot allow the field to be created yet.
+        we need to create it first.
         """
 
         if not table.last_modified_by_column_added:
-            raise CannotCreateFieldType(
-                "This field cannot be created yet. Please try again later."
-            )
+            table_to_update = TableHandler().get_table_for_update(table.id)
+            TableHandler().create_last_modified_by_field(table_to_update)
+            table.refresh_from_db()
 
     def after_create(self, field, model, user, connection, before, field_kwargs):
         """
