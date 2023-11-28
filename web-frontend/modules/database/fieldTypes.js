@@ -1982,6 +1982,14 @@ export class LastModifiedByFieldType extends FieldType {
     return this.prepareValueForCopy(field, value)
   }
 
+  toSearchableString(field, value, delimiter = ', ') {
+    return this.toHumanReadableString(field, value, delimiter)
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
   getDocsDataType(field) {
     return 'object'
   }

@@ -1381,6 +1381,22 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         value = getattr(row, field.db_column)
         return value
 
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__first_name")[
+                :1
+            ]
+        )
+
+    def is_searchable(self, field: Field) -> bool:
+        return True
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__first_name__icontains": value})
+
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         When converting to last modified by field type we won't preserve any

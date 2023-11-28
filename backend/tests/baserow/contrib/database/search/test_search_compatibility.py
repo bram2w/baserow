@@ -72,9 +72,14 @@ def test_search_compatibility_between_current_and_postgres(
             ["Cli", None],
             ["ClIvE    ", None],
         ],
+        "last_modified_by": [
+            ["John Smith", "John Smith"],
+            ["John Sm", "John Sm"],
+            ["joHn SM", "joHn SM"],
+        ],
     }
     with transaction.atomic():
-        user = data_fixture.create_user()
+        user = data_fixture.create_user(first_name="John Smith")
         database = data_fixture.create_database_application(user=user)
         table = TableHandler().create_table_and_fields(
             user=user,
@@ -96,6 +101,7 @@ def test_search_compatibility_between_current_and_postgres(
                     "multiple_collaborators",
                     {"notify_user_when_added": False},
                 ),
+                ("Last modified by", "last_modified_by", {}),
             ],
         )
 
