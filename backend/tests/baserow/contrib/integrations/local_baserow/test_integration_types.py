@@ -111,8 +111,8 @@ def test_get_local_baserow_databases_number_of_queries(
 # intellij by editing the run config for this test and adding --run-disabled-in-ci -s
 # to additional args.
 # pytest -k "test_get_local_baserow_databases_performance" -s --run-disabled-in-ci
-# 3.500s for 30 x 999 table/views on Intel(R) Core(TM) i9-9900K CPU @ 3.60GHz -
-# 7200 bogomips
+# 4.500s for 30 x 999 x 100 table/views/fields on Intel(R) Core(TM) i9-9900K
+# CPU @ 3.60GHz - # 7200 bogomips
 def test_get_local_baserow_databases_performance(data_fixture, api_client, profiler):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
@@ -124,6 +124,7 @@ def test_get_local_baserow_databases_performance(data_fixture, api_client, profi
 
     table_amount = 30
     views_per_table_amount = 999
+    field_amount_per_table = 100
 
     for i in tqdm(range(table_amount), desc="Tables creation"):
         table = data_fixture.create_database_table(database=database, name=i)
@@ -136,6 +137,9 @@ def test_get_local_baserow_databases_performance(data_fixture, api_client, profi
 
         for j in range(int(views_per_table_amount / 3)):
             data_fixture.create_form_view(table=table, name=j)
+
+        for j in range(field_amount_per_table):
+            data_fixture.create_text_field(table=table)
 
     print("------TYPE FUNCTION-------")
     with profiler(html_report_name="get_local_baserow_databases_function"):
@@ -157,7 +161,17 @@ def test_get_integrations_serializer(api_client, data_fixture):
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
     database = data_fixture.create_database_application(workspace=workspace)
-    table = data_fixture.create_database_table(database=database)
+    # table = data_fixture.create_database_table(database=database)
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        database=database,
+        columns=[
+            ("Name", "text"),
+        ],
+        rows=[
+            ["BMW"],
+        ],
+    )
     view = data_fixture.create_grid_view(table=table, order=2)
     not_sortable_view = data_fixture.create_gallery_view(table=table, order=1)
     not_filterable_and_sortable_view = data_fixture.create_form_view(
@@ -178,6 +192,8 @@ def test_get_integrations_serializer(api_client, data_fixture):
     assert response.status_code == HTTP_200_OK
     assert len(response_json) == 1
 
+    field = fields[0]
+
     assert response_json[0]["context_data"] == {
         "databases": [
             {
@@ -193,6 +209,14 @@ def test_get_integrations_serializer(api_client, data_fixture):
                         "name": table.name,
                         "order": table.order,
                         "database_id": table.database_id,
+                        "fields": [
+                            {
+                                "id": field.id,
+                                "name": field.name,
+                                "table_id": table.id,
+                                "type": "text",
+                            }
+                        ],
                     }
                 ],
                 "views": [
