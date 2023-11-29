@@ -2130,6 +2130,14 @@
             }"
           ></div>
         </div>
+        <div class="margin-bottom-3">
+          <h2>Call to action</h2>
+          <CallToAction> My call to action. Click me! </CallToAction>
+          <br />
+          <CallToAction icon="baserow-icon-plus">
+            Call to action with an icon
+          </CallToAction>
+        </div>
         <br /><br /><br />
         <br /><br /><br />
         <br /><br /><br />
