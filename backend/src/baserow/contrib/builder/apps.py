@@ -190,12 +190,14 @@ class BuilderConfig(AppConfig):
         from .data_providers.data_provider_types import (
             CurrentRecordDataProviderType,
             DataSourceDataProviderType,
+            FormDataProviderType,
             PageParameterDataProviderType,
         )
 
         builder_data_provider_type_registry.register(DataSourceDataProviderType())
         builder_data_provider_type_registry.register(PageParameterDataProviderType())
         builder_data_provider_type_registry.register(CurrentRecordDataProviderType())
+        builder_data_provider_type_registry.register(FormDataProviderType())
 
         from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 

@@ -5,7 +5,7 @@
     </div>
     <div ref="nodes">
       <Node
-        v-for="subNode in node.nodes"
+        v-for="subNode in sortNodes(node.nodes)"
         :key="subNode.identifier"
         :node="subNode"
         :node-selected="nodeSelected"
@@ -90,6 +90,9 @@ export default {
           .map((child) => this.getNodeElementByPath(child, path))
           .find((e) => e !== null) || null
       )
+    },
+    sortNodes(nodes) {
+      return nodes.sort((a, b) => (a.name > b.name ? 1 : -1))
     },
   },
 }

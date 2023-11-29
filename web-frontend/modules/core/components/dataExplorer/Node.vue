@@ -29,7 +29,7 @@
 
     <div v-if="props.openNodes.has(props.path)">
       <Node
-        v-for="subNode in props.node.nodes || []"
+        v-for="subNode in $options.methods.sortNodes(props.node.nodes || [])"
         :key="subNode.identifier"
         :node="subNode"
         :open-nodes="props.openNodes"
@@ -81,13 +81,15 @@ export default {
         })
       }
     },
-
     getIcon(node, isOpen) {
       if (!node.nodes?.length || node.nodes?.length < 1) {
         return node.icon
       }
 
       return isOpen ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
+    },
+    sortNodes(nodes) {
+      return nodes.sort((a, b) => (a.name > b.name ? 1 : -1))
     },
   },
 }

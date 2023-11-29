@@ -10,16 +10,17 @@
       :value="resolvedDefaultValue"
       :required="element.required"
       :placeholder="resolvedPlaceholder"
+      @input="setFormData($event.target.value)"
     />
   </div>
 </template>
 
 <script>
-import element from '@baserow/modules/builder/mixins/element'
+import formElement from '@baserow/modules/builder/mixins/formElement'
 
 export default {
   name: 'InputTextElement',
-  mixins: [element],
+  mixins: [formElement],
   props: {
     /**
      * @type {Object}
@@ -53,6 +54,11 @@ export default {
       } catch (e) {
         return ''
       }
+    },
+  },
+  watch: {
+    resolvedDefaultValue(value) {
+      this.setFormData(value)
     },
   },
 }

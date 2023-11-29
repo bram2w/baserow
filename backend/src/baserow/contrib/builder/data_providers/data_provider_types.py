@@ -9,6 +9,7 @@ from baserow.contrib.builder.data_sources.exceptions import (
 from baserow.contrib.builder.data_sources.handler import DataSourceHandler
 from baserow.core.formula.exceptions import FormulaRecursion
 from baserow.core.formula.registries import DataProviderType
+from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.utils import get_nested_value_from_dict
 
 
@@ -36,6 +37,40 @@ class PageParameterDataProviderType(DataProviderType):
         return dispatch_context.request.data.get("page_parameter", {}).get(
             first_part, None
         )
+
+
+class FormDataProviderType(DataProviderType):
+    type = "form_data"
+
+    def get_data_chunk(self, dispatch_context: DispatchContext, path: List[str]):
+        if len(path) != 1:
+            return None
+
+        first_part = path[0]
+
+        return (
+            dispatch_context.request.data.get("form_data", {})
+            .get(first_part, {})
+            .get("value", None)
+        )
+
+    def import_path(self, path, id_mapping, **kwargs):
+        """
+        Update the form element id of the path.
+
+        :param path: the path part list.
+        :param id_mapping: The id_mapping of the process import.
+        :return: The updated path.
+        """
+
+        form_element_id, *rest = path
+
+        if "builder_page_elements" in id_mapping:
+            form_element_id = id_mapping["builder_page_elements"].get(
+                int(form_element_id), form_element_id
+            )
+
+        return [str(form_element_id), *rest]
 
 
 class DataSourceDataProviderType(DataProviderType):
