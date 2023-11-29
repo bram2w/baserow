@@ -108,6 +108,9 @@
     "emptySidePanelState": {
         "message": "Click on one of the elements to see more details"
     },
+    "pagePreview": {
+        "emptyMessage": "Click to create first element"
+    },
     "elementForms": {
         "textInputPlaceholder": "Enter text...",
         "urlInputPlaceholder": "Enter url...",

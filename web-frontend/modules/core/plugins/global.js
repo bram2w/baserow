@@ -25,6 +25,7 @@ import Button from '@baserow/modules/core/components/Button'
 import Avatar from '@baserow/modules/core/components/Avatar'
 import Presentation from '@baserow/modules/core/components/Presentation'
 import FormInput from '@baserow/modules/core/components/FormInput'
+import CallToAction from '@baserow/modules/core/components/CallToAction.vue'
 
 import lowercase from '@baserow/modules/core/filters/lowercase'
 import uppercase from '@baserow/modules/core/filters/uppercase'
@@ -73,6 +74,7 @@ function setupVue(Vue) {
   Vue.component('Avatar', Avatar)
   Vue.component('Presentation', Presentation)
   Vue.component('FormInput', FormInput)
+  Vue.component('CallToAction', CallToAction)
 
   Vue.filter('lowercase', lowercase)
   Vue.filter('uppercase', uppercase)
