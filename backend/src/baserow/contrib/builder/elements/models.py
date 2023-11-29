@@ -445,6 +445,10 @@ class InputTextElement(InputElement):
     An input element of text type.
     """
 
+    label = FormulaField(
+        default="",
+        help_text="The text label for this input",
+    )
     default_value = FormulaField(
         default="", help_text="This text input's default value."
     )

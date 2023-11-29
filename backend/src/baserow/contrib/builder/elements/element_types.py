@@ -717,10 +717,11 @@ class InputElementType(ElementType, abc.ABC):
 class InputTextElementType(InputElementType):
     type = "input_text"
     model_class = InputTextElement
-    allowed_fields = ["default_value", "required", "placeholder"]
-    serializer_field_names = ["default_value", "required", "placeholder"]
+    allowed_fields = ["label", "default_value", "required", "placeholder"]
+    serializer_field_names = ["label", "default_value", "required", "placeholder"]
 
     class SerializedDict(ElementDict):
+        label: BaserowFormula
         required: bool
         placeholder: str
         default_value: BaserowFormula
@@ -730,6 +731,12 @@ class InputTextElementType(InputElementType):
         from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
+            "label": FormulaSerializerField(
+                help_text=InputTextElement._meta.get_field("label").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
             "default_value": FormulaSerializerField(
                 help_text=InputTextElement._meta.get_field("default_value").help_text,
                 required=False,

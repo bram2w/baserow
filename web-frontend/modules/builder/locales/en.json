@@ -141,6 +141,8 @@
         "uploadFileButton": "Upload file"
     },
     "inputTextElementForm": {
+        "labelTitle": "Label",
+        "labelPlaceholder": "Enter a label (optional)",
         "valueTitle": "Default value",
         "valuePlaceholder": "Enter a default value (optional)",
         "placeholderTitle": "Placeholder",

@@ -1,6 +1,12 @@
 <template>
   <form @submit.prevent @keydown.enter.prevent>
     <ApplicationBuilderFormulaInputGroup
+      v-model="values.label"
+      :label="$t('inputTextElementForm.labelTitle')"
+      :placeholder="$t('inputTextElementForm.labelPlaceholder')"
+      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+    ></ApplicationBuilderFormulaInputGroup>
+    <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"
       :label="$t('inputTextElementForm.valueTitle')"
       :placeholder="$t('inputTextElementForm.valuePlaceholder')"
@@ -35,6 +41,7 @@ export default {
   data() {
     return {
       values: {
+        label: '',
         default_value: '',
         required: false,
         placeholder: '',
