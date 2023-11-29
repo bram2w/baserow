@@ -1960,6 +1960,21 @@ export class LastModifiedByFieldType extends FieldType {
     return false
   }
 
+  _getCurrentUserValue() {
+    return {
+      id: this.app.store.getters['auth/getUserId'],
+      name: this.app.store.getters['auth/getName'],
+    }
+  }
+
+  getNewRowValue() {
+    return this._getCurrentUserValue()
+  }
+
+  onRowChange(row, currentField, currentFieldValue) {
+    return this._getCurrentUserValue()
+  }
+
   prepareValueForCopy(field, value) {
     if (value === undefined || value === null) {
       return ''
