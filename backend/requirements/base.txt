@@ -213,6 +213,10 @@ kombu==5.2.4
     # via celery
 loguru==0.6.0
     # via -r base.in
+markdown-it-py==3.0.0
+    # via rich
+mdurl==0.1.2
+    # via markdown-it-py
 monotonic==1.6
     # via posthog
 msgpack==1.0.4
@@ -347,6 +351,8 @@ pyasn1-modules==0.2.8
     #   service-identity
 pycparser==2.21
     # via cffi
+pygments==2.17.2
+    # via rich
 pyjwt==2.5.0
     # via djangorestframework-simplejwt
 pyopenssl==23.2.0
@@ -404,6 +410,8 @@ requests==2.31.0
     #   pysaml2
     #   requests-oauthlib
 requests-oauthlib==1.3.1
+    # via -r base.in
+rich==13.7.0
     # via -r base.in
 rsa==4.9
     # via google-auth

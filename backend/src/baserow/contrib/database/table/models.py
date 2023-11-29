@@ -515,6 +515,49 @@ class GeneratedTableModel(HierarchicalModelMixin, models.Model):
     like `isinstance(possible_baserow_model, GeneratedTableModel)`.
     """
 
+    @classmethod
+    def info(cls):
+        """
+        Print basic information about the generated table.
+
+        Use only in development.
+        """
+
+        from rich import box
+        from rich.console import Console
+        from rich.table import Table
+
+        table = Table(
+            title=f"{cls.baserow_table.name} ({cls.baserow_table.id})", box=box.ROUNDED
+        )
+        table.add_column("Name", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Column", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Type", style="magenta")
+        table.add_column("Order", style="grey84")
+        table.add_column("Trashed", justify="center", style="green")
+        table.add_column("TS vector column", style="yellow")
+
+        field_objects = cls.get_field_objects(include_trash=True)
+        for field_obj in field_objects:
+            primary = "(primary) " if field_obj["field"].primary else ""
+            name = f"{primary}{field_obj['field'].name}"
+            ts_vector_created = (
+                "✓" if field_obj["field"].tsvector_column_created else ""
+            )
+            ts_vector = f"{field_obj['field'].tsv_db_column} {ts_vector_created}"
+            trashed = "🗑️" if field_obj["field"].trashed else ""
+            table.add_row(
+                name,
+                field_obj["field"].db_column,
+                field_obj["type"].type,
+                str(field_obj["field"].order),
+                trashed,
+                ts_vector,
+            )
+
+        console = Console()
+        console.print(table)
+
     def _do_update(self, base_qs, using, pk_val, values, update_fields, forced_update):
         """
         We override this method to prevent safe and bulk save queries from setting
