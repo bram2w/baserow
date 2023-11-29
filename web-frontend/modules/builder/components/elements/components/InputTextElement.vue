@@ -1,12 +1,17 @@
 <template>
-  <input
-    type="text"
-    class="input-element"
-    :readonly="isEditable"
-    :value="resolvedDefaultValue"
-    :required="element.required"
-    :placeholder="resolvedPlaceholder"
-  />
+  <div>
+    <label v-if="element.label" class="control__label">
+      {{ resolvedLabelValue }}
+    </label>
+    <input
+      type="text"
+      class="input-element"
+      :readonly="isEditable"
+      :value="resolvedDefaultValue"
+      :required="element.required"
+      :placeholder="resolvedPlaceholder"
+    />
+  </div>
 </template>
 
 <script>
@@ -28,6 +33,13 @@ export default {
     },
   },
   computed: {
+    resolvedLabelValue() {
+      try {
+        return this.resolveFormula(this.element.label)
+      } catch (e) {
+        return ''
+      }
+    },
     resolvedDefaultValue() {
       try {
         return this.resolveFormula(this.element.default_value)
