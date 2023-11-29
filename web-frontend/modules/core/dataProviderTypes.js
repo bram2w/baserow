@@ -93,7 +93,7 @@ export class DataProviderType extends Registerable {
   /**
    * Return the schema of the data provided by this data provider
    * @param {Object} applicationContext the application context.
-   * @returns {{$schema: string}}
+   * @returns {{type: string, properties: object}}
    */
   getDataSchema(applicationContext) {
     throw new Error('.getDataSchema() must be set on the dataProviderType.')
@@ -230,8 +230,7 @@ export class DataProviderType extends Registerable {
    * ID to reference an item, but we want to show the name of the item to the user
    * instead.
    * @param {Object} applicationContext the application context.
-   * @param {String} part - raw path part as used by the formula
-   * @param {String} position - index of the part in the path
+   * @param {Array<string>} pathParts - the path
    * @returns {Array<String>} - modified path part as it should be displayed to the user
    */
   getPathTitle(applicationContext, pathParts) {

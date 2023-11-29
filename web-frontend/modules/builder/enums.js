@@ -6,6 +6,7 @@ import {
   DataSourceDataProviderType,
   PageParameterDataProviderType,
   CurrentRecordDataProviderType,
+  FormDataProviderType,
 } from '@baserow/modules/builder/dataProviderTypes'
 
 export const PLACEMENTS = {
@@ -84,6 +85,7 @@ export const DATA_PROVIDERS_ALLOWED_ELEMENTS = [
   CurrentRecordDataProviderType.getType(),
   PageParameterDataProviderType.getType(),
   DataSourceDataProviderType.getType(),
+  FormDataProviderType.getType(),
 ]
 
 /**

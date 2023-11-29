@@ -24,6 +24,8 @@ import { compile } from 'path-to-regexp'
 import ButtonElement from '@baserow/modules/builder/components/elements/components/ButtonElement'
 import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
+import { resolveFormula } from '@baserow/modules/core/formula'
 
 export class ElementType extends Registerable {
   get name() {
@@ -102,6 +104,51 @@ export class ElementType extends Registerable {
   }
 
   onElementEvent(event, params) {}
+
+  resolveFormula(formula, applicationContext) {
+    const formulaFunctions = {
+      get: (name) => {
+        return this.app.$registry.get('runtimeFormulaFunction', name)
+      },
+    }
+
+    const runtimeFormulaContext = new Proxy(
+      new RuntimeFormulaContext(
+        this.app.$registry.getAll('builderDataProvider'),
+        applicationContext
+      ),
+      {
+        get(target, prop) {
+          return target.get(prop)
+        },
+      }
+    )
+
+    return resolveFormula(formula, formulaFunctions, runtimeFormulaContext)
+  }
+
+  /**
+   * A hook that is triggered right after an element is created.
+   *
+   * @param element - The element that was just created
+   * @param page - The page the element belongs to
+   */
+  afterCreate(element, page) {}
+
+  /**
+   * A hook that is triggered right after an element is deleted.
+   *
+   * @param element - The element that was just deleted
+   * @param page - The page the element belongs to
+   */
+  afterDelete(element, page) {}
+
+  /**
+   * A hook that is trigger right after an element has been updated.
+   * @param element - The updated element
+   * @param page - The page the element belong to
+   */
+  afterUpdate(element, page) {}
 }
 
 export class ContainerElementType extends ElementType {
@@ -180,6 +227,106 @@ export class ColumnElementType extends ContainerElementType {
 
   get defaultPlaceInContainer() {
     return '0'
+  }
+}
+
+/**
+ * This class servers as a parent class for all form element types. Form element types
+ * are all elements that can be used as part of a form. So in simple terms, any element
+ * that can represents data in a way that is directly modifiable by an application user.
+ */
+export class FormElementType extends ElementType {
+  isFormElement = true
+
+  get formDataType() {
+    return null
+  }
+
+  /**
+   * Get the initial form data value of an element.
+   * @param element - The form element
+   * @param applicationContext - The context of the current application
+   * @returns {any} - The initial data that's supposed to be stored
+   */
+  getInitialFormDataValue(element, applicationContext) {
+    throw new Error('.getInitialFormData needs to be implemented')
+  }
+
+  /**
+   * This name is used by the data explorer to show the form element.
+   *
+   * @param element - The form element instance
+   * @param applicationContext - The context of the current application
+   * @returns {string} - The name of the form element
+   */
+  getFormDataName(element, applicationContext) {
+    const elements = this.app.store.getters['element/getElementsOrdered'](
+      applicationContext.page
+    )
+    const elementsOfSameType = elements.filter(
+      ({ type }) => type === element.type
+    )
+    const position =
+      elementsOfSameType.findIndex(({ id }) => id === element.id) + 1
+
+    return `${this.name} ${position}`
+  }
+
+  afterCreate(element, page) {
+    const payload = {
+      value: this.getInitialFormDataValue(element, { page }),
+      type: this.formDataType,
+    }
+
+    return this.app.store.dispatch('formData/setFormData', {
+      page,
+      payload,
+      elementId: element.id,
+    })
+  }
+
+  afterDelete(element, page) {
+    return this.app.store.dispatch('formData/removeFormData', {
+      page,
+      elementId: element.id,
+    })
+  }
+}
+
+export class InputTextElementType extends FormElementType {
+  getType() {
+    return 'input_text'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.inputText')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.inputTextDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-input-field'
+  }
+
+  get component() {
+    return InputTextElement
+  }
+
+  get generalFormComponent() {
+    return InputTextElementForm
+  }
+
+  get formDataType() {
+    return 'string'
+  }
+
+  getInitialFormDataValue(element, applicationContext) {
+    return this.resolveFormula(element.default_value, {
+      element,
+      ...applicationContext,
+    })
   }
 }
 
@@ -348,32 +495,6 @@ export class ImageElementType extends ElementType {
 
   get generalFormComponent() {
     return ImageElementForm
-  }
-}
-
-export class InputTextElementType extends ElementType {
-  getType() {
-    return 'input_text'
-  }
-
-  get name() {
-    return this.app.i18n.t('elementType.inputText')
-  }
-
-  get description() {
-    return this.app.i18n.t('elementType.inputTextDescription')
-  }
-
-  get iconClass() {
-    return 'iconoir-input-field'
-  }
-
-  get component() {
-    return InputTextElement
-  }
-
-  get generalFormComponent() {
-    return InputTextElementForm
   }
 }
 

@@ -66,15 +66,29 @@ const actions = {
   },
   forceCreate({ commit }, { page, element }) {
     commit('ADD_ITEM', { page, element })
+
+    const elementType = this.$registry.get('element', element.type)
+    elementType.afterCreate(element, page)
   },
   forceUpdate({ commit }, { page, element, values }) {
     commit('UPDATE_ITEM', { page, element, values })
+    const elementType = this.$registry.get('element', element.type)
+    elementType.afterUpdate(element, page)
   },
   forceDelete({ commit, getters }, { page, elementId }) {
+    const elementsOfPage = getters.getElements(page)
+    const elementIndex = elementsOfPage.findIndex(
+      (element) => element.id === elementId
+    )
+    const elementToDelete = elementsOfPage[elementIndex]
+
     if (getters.getSelected.id === elementId) {
       commit('SELECT_ITEM', { element: null })
     }
     commit('DELETE_ITEM', { page, elementId })
+
+    const elementType = this.$registry.get('element', elementToDelete.type)
+    elementType.afterDelete(elementToDelete, page)
   },
   forceMove(
     { commit, getters },

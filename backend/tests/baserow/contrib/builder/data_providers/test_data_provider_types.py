@@ -5,11 +5,13 @@ import pytest
 
 from baserow.contrib.builder.data_providers.data_provider_types import (
     DataSourceDataProviderType,
+    FormDataProviderType,
     PageParameterDataProviderType,
 )
 from baserow.contrib.builder.data_sources.builder_dispatch_context import (
     BuilderDispatchContext,
 )
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.core.services.dispatch_context import DispatchContext
 from baserow.core.services.exceptions import ServiceImproperlyConfigured
@@ -50,6 +52,20 @@ def test_page_parameter_data_provider_get_data_chunk():
         page_parameter_provider.get_data_chunk(dispatch_context, ["id", "test"]) is None
     )
     assert page_parameter_provider.get_data_chunk(dispatch_context, ["test"]) is None
+
+
+def test_form_data_provider_get_data_chunk():
+    form_data_provider = FormDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {"form_data": {"1": {"value": "hello"}}}
+
+    dispatch_context = BuilderDispatchContext(fake_request, None)
+
+    assert form_data_provider.get_data_chunk(dispatch_context, ["1"]) == "hello"
+    assert form_data_provider.get_data_chunk(dispatch_context, []) is None
+    assert form_data_provider.get_data_chunk(dispatch_context, ["1", "test"]) is None
+    assert form_data_provider.get_data_chunk(dispatch_context, ["test"]) is None
 
 
 @pytest.mark.django_db
@@ -536,3 +552,16 @@ def test_table_element_formula_migration_with_current_row_provider(data_fixture)
     )
 
     assert result == f"get('current_record.field_{fields2[0].id}')"
+
+
+@pytest.mark.django_db
+def test_form_data_provider_type_import_path(data_fixture):
+    element = data_fixture.create_builder_heading_element()
+    element_duplicated = ElementHandler().duplicate_element(element)["elements"][0]
+
+    id_mapping = {"builder_page_elements": {element.id: element_duplicated.id}}
+    path = [str(element.id), "test"]
+
+    path_imported = FormDataProviderType().import_path(path, id_mapping)
+
+    assert path_imported == [str(element_duplicated.id), "test"]

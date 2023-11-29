@@ -2,7 +2,11 @@
     "dataProviderType": {
         "dataSource": "Data",
         "pageParameter": "Parameter",
-        "currentRecord": "Data source"
+        "currentRecord": "Data source",
+        "formData": "Form data"
+    },
+    "formDataProviderType": {
+        "nodeMissing": "Missing"
     },
     "builderForm": {
         "submit": "Add application"
