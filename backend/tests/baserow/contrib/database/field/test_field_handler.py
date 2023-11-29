@@ -1,4 +1,3 @@
-from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
 
@@ -26,7 +25,30 @@ from baserow.contrib.database.fields.exceptions import (
 from baserow.contrib.database.fields.field_helpers import (
     construct_all_possible_field_kwargs,
 )
-from baserow.contrib.database.fields.field_types import LongTextFieldType, TextFieldType
+from baserow.contrib.database.fields.field_types import (
+    BooleanFieldType,
+    CountFieldType,
+    CreatedOnFieldType,
+    DateFieldType,
+    EmailFieldType,
+    FileFieldType,
+    FormulaFieldType,
+    LastModifiedByFieldType,
+    LastModifiedFieldType,
+    LinkRowFieldType,
+    LongTextFieldType,
+    LookupFieldType,
+    MultipleCollaboratorsFieldType,
+    MultipleSelectFieldType,
+    NumberFieldType,
+    PhoneNumberFieldType,
+    RatingFieldType,
+    RollupFieldType,
+    SingleSelectFieldType,
+    TextFieldType,
+    URLFieldType,
+    UUIDFieldType,
+)
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
     BooleanField,
@@ -60,18 +82,14 @@ def clean_registry_cache():
     yield
 
 
-@pytest.mark.django_db
-@pytest.mark.disabled_in_ci
-def test_can_convert_between_all_fields(data_fixture):
+def _test_can_convert_between_fields(data_fixture, field_type_to_test):
     """
-    A nuclear option test turned off by default to help verify changes made to
-    field conversions work in every possible conversion scenario. This test checks
-    is possible to convert from every possible field to every other possible field
-    including converting to themselves. It only checks that the conversion does not
-    raise any exceptions.
+    Tests that field conversion for the provided field_type_to_test works
+    in every possible conversion scenario. It only checks that the conversion
+    does not raise any exceptions.
     """
 
-    table, user, row, blank_row, context = setup_interesting_test_table(data_fixture)
+    table, user, row, _, _ = setup_interesting_test_table(data_fixture)
 
     handler = FieldHandler()
     row_handler = RowHandler()
@@ -91,66 +109,232 @@ def test_can_convert_between_all_fields(data_fixture):
     )
 
     i = 1
-    for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
-        for kwargs in all_possible_kwargs:
-            name = kwargs.pop("name")
-            for inner_field_type_name in field_type_registry.get_types():
-                for inner_kwargs in all_possible_kwargs_per_type[inner_field_type_name]:
-                    print(
-                        f"Converting num {i} from {field_type_name} to"
-                        f" {inner_field_type_name}",
-                        flush=True,
-                    )
-                    copy = dict(inner_kwargs)
-                    copy.pop("name", None)
-                    field_type = field_type_registry.get(field_type_name)
-                    new_name = f"{name}_to_{inner_field_type_name}_{i}"
-                    kwargs["primary"] = False
 
-                    from_field = handler.create_field(
-                        user=user,
-                        table=table,
-                        type_name=field_type_name,
-                        name=new_name,
-                        **kwargs,
+    def test_field_conversion(
+        field_name,
+        from_field_type_name,
+        from_field_kwargs,
+        to_field_type_name,
+        to_field_kwargs,
+    ):
+        nonlocal i
+
+        print(
+            f"Converting num {i} from {from_field_type_name} to"
+            f" {to_field_type_name}",
+            flush=True,
+        )
+
+        field_type = field_type_registry.get(from_field_type_name)
+        new_name = f"{field_name}_to_{to_field_type_name}_{i}"
+        from_field_kwargs["primary"] = False
+
+        from_field = handler.create_field(
+            user=user,
+            table=table,
+            type_name=from_field_type_name,
+            name=new_name,
+            **from_field_kwargs,
+        )
+        if not field_type.read_only:
+            random_field_value = field_type.random_value(from_field, fake, cache)
+            row_handler.update_row_by_id(
+                user=user,
+                table=table,
+                row_id=row.id,
+                values={
+                    f"field_{from_field.id}": field_type.serialize_to_input_value(
+                        from_field, random_field_value
                     )
-                    if not field_type.read_only:
-                        random_value = field_type.random_value(from_field, fake, cache)
-                        if isinstance(random_value, date):
-                            # Faker produces subtypes of date / datetime which baserow
-                            # does not want, instead just convert to str.
-                            random_value = str(random_value)
-                        row_handler.update_row_by_id(
-                            user=user,
-                            table=table,
-                            row_id=row.id,
-                            values={
-                                f"field_{from_field.id}": field_type.serialize_to_input_value(
-                                    from_field, random_value
-                                )
-                            },
-                        )
-                    handler.update_field(
-                        user=user,
-                        field=from_field,
-                        new_type_name=inner_field_type_name,
-                        **copy,
-                    )
-                    i = i + 1
-                    # Check the field metadata is as expected
-                    new_field_type = field_type_registry.get(inner_field_type_name)
-                    if not isinstance(new_field_type, type(field_type)):
-                        assert not field_type.model_class.objects.filter(
-                            id=from_field.id
-                        ).exists()
-                    assert new_field_type.model_class.objects.filter(
-                        id=from_field.id
-                    ).exists()
-                    # Ensure we can still delete the field afterwards, also by deleting
-                    # we speedup the test overall by not having a table with 900+
-                    # fields.
-                    handler.delete_field(user, from_field)
-                    TrashHandler.permanently_delete(from_field)
+                },
+            )
+
+        handler.update_field(
+            user=user,
+            field=from_field,
+            new_type_name=to_field_type_name,
+            **{k: v for k, v in to_field_kwargs.items() if k != "name"},
+        )
+
+        i += 1
+
+        # Check the field metadata is as expected
+        new_field_type = field_type_registry.get(to_field_type_name)
+        if not isinstance(new_field_type, type(field_type)):
+            assert not field_type.model_class.objects.filter(id=from_field.id).exists()
+        assert new_field_type.model_class.objects.filter(id=from_field.id).exists()
+
+        # Ensure we can still delete the field afterwards, also by
+        # deleting we speedup the test overall by not having a table
+        # with 900+ fields.
+        handler.delete_field(user, from_field)
+        TrashHandler.permanently_delete(from_field)
+
+    for from_field_kwargs in all_possible_kwargs_per_type[field_type_to_test]:
+        field_name = from_field_kwargs.pop("name")
+        for to_field_type_name, all_kwargs in all_possible_kwargs_per_type.items():
+            for to_field_kwargs in all_kwargs:
+                test_field_conversion(
+                    field_name,
+                    field_type_to_test,
+                    from_field_kwargs,
+                    to_field_type_name,
+                    to_field_kwargs,
+                )
+
+
+@pytest.mark.field_text
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_text(data_fixture):
+    _test_can_convert_between_fields(data_fixture, TextFieldType.type)
+
+
+@pytest.mark.field_long_text
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_long_text(data_fixture):
+    _test_can_convert_between_fields(data_fixture, LongTextFieldType.type)
+
+
+@pytest.mark.field_url
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_url(data_fixture):
+    _test_can_convert_between_fields(data_fixture, URLFieldType.type)
+
+
+@pytest.mark.field_number
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_number(data_fixture):
+    _test_can_convert_between_fields(data_fixture, NumberFieldType.type)
+
+
+@pytest.mark.field_rating
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_rating(data_fixture):
+    _test_can_convert_between_fields(data_fixture, RatingFieldType.type)
+
+
+@pytest.mark.field_boolean
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_boolean(data_fixture):
+    _test_can_convert_between_fields(data_fixture, BooleanFieldType.type)
+
+
+@pytest.mark.field_date
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_date(data_fixture):
+    _test_can_convert_between_fields(data_fixture, DateFieldType.type)
+
+
+@pytest.mark.field_created_on
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_created_on(data_fixture):
+    _test_can_convert_between_fields(data_fixture, CreatedOnFieldType.type)
+
+
+@pytest.mark.field_last_modified
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_last_modified(data_fixture):
+    _test_can_convert_between_fields(data_fixture, LastModifiedFieldType.type)
+
+
+@pytest.mark.field_email
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_email(data_fixture):
+    _test_can_convert_between_fields(data_fixture, EmailFieldType.type)
+
+
+@pytest.mark.field_phone_number
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_phone_number(data_fixture):
+    _test_can_convert_between_fields(data_fixture, PhoneNumberFieldType.type)
+
+
+@pytest.mark.field_count
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_count(data_fixture):
+    _test_can_convert_between_fields(data_fixture, CountFieldType.type)
+
+
+@pytest.mark.field_rollup
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_rollup(data_fixture):
+    _test_can_convert_between_fields(data_fixture, RollupFieldType.type)
+
+
+@pytest.mark.field_lookup
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_lookup(data_fixture):
+    _test_can_convert_between_fields(data_fixture, LookupFieldType.type)
+
+
+@pytest.mark.field_uuid
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_uuid(data_fixture):
+    _test_can_convert_between_fields(data_fixture, UUIDFieldType.type)
+
+
+@pytest.mark.field_file
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_file(data_fixture):
+    _test_can_convert_between_fields(data_fixture, FileFieldType.type)
+
+
+@pytest.mark.field_single_select
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_single_select(data_fixture):
+    _test_can_convert_between_fields(data_fixture, SingleSelectFieldType.type)
+
+
+@pytest.mark.field_multiple_select
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_multiple_select(data_fixture):
+    _test_can_convert_between_fields(data_fixture, MultipleSelectFieldType.type)
+
+
+@pytest.mark.field_link_row
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_link_row(data_fixture):
+    _test_can_convert_between_fields(data_fixture, LinkRowFieldType.type)
+
+
+@pytest.mark.field_formula
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_formula(data_fixture):
+    _test_can_convert_between_fields(data_fixture, FormulaFieldType.type)
+
+
+@pytest.mark.field_multiple_collaborators
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_multiple_collaborators(data_fixture):
+    _test_can_convert_between_fields(data_fixture, MultipleCollaboratorsFieldType.type)
+
+
+@pytest.mark.field_last_modified_by
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_last_modified_by(data_fixture):
+    _test_can_convert_between_fields(data_fixture, LastModifiedByFieldType.type)
 
 
 @pytest.mark.django_db
