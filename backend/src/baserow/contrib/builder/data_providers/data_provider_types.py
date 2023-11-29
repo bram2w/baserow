@@ -118,6 +118,9 @@ class DataSourceDataProviderType(DataProviderType):
             data_source, dispatch_context
         )
 
+        if data_source.service.get_type().returns_list:
+            dispatch_result = dispatch_result["results"]
+
         return get_nested_value_from_dict(dispatch_result, rest)
 
     def import_path(self, path, id_mapping, **kwargs):
