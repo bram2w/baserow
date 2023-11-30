@@ -404,6 +404,9 @@ class DataSourceHandler:
         :return: the new data source instance.
         """
 
+        if "builder_data_sources" not in id_mapping:
+            id_mapping["builder_data_sources"] = {}
+
         # First we get the service if any
         service = None
         serialized_service = serialized_data_source.get("service", None)

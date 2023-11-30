@@ -274,7 +274,7 @@ def test_import_element(data_fixture):
     elements_imported = PageHandler().import_elements(
         new_page,
         [element_serialized],
-        {"builder_page_elements": {}},
+        {},
     )
 
     assert len(elements_imported) == 1
@@ -302,7 +302,7 @@ def test_import_element_has_to_import_parent_first(data_fixture):
     [imported_column, imported_paragraph] = PageHandler().import_elements(
         new_page,
         [parent_serialized, element_serialized],
-        {"builder_page_elements": {}},
+        {},
     )
 
     assert isinstance(imported_column, ColumnElement)
@@ -332,7 +332,7 @@ def test_import_element_has_to_instance_already_created(data_fixture):
     [imported_column, imported_paragraph] = PageHandler().import_elements(
         new_page,
         [element_serialized, parent_serialized],
-        {"builder_page_elements": {}},
+        {},
     )
 
     assert isinstance(imported_column, ColumnElement)
