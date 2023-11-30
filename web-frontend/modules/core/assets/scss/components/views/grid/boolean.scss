@@ -17,10 +17,7 @@
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;
-
-    .grid-view__cell.active & {
-      background-color: $color-neutral-50;
-    }
+    background-color: $color-neutral-100;
   }
 
   .grid-view__cell.active & {

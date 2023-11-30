@@ -1,27 +1,25 @@
 .field-boolean__checkbox {
-  border: 1px solid $color-neutral-200;
   color: $color-success-600;
+  cursor: pointer;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  justify-content: center;
+  border: 1px solid $color-neutral-200;
 
-  @include center-text(18px, 11px);
   @include rounded($rounded);
-
-  &:not(.field-boolean__checkbox--disabled) {
-    cursor: pointer;
-  }
+  @include flex-align-items();
 
   &.field-boolean__checkbox--disabled {
-    background-color: $color-neutral-50;
+    cursor: initial;
+    background-color: $color-neutral-100;
   }
 
-  .field-boolean__checkbox.active & {
-    border-color: $color-neutral-300;
-  }
-
-  .check {
+  .field-boolean__checkbox-icon {
     visibility: hidden;
   }
 
-  &.active .check {
+  &.active .field-boolean__checkbox-icon {
     visibility: visible;
   }
 }
