@@ -152,6 +152,13 @@ class BaserowEnterpriseConfig(AppConfig):
             RoleAssignmentSerializationProcessorType()
         )
 
+        from baserow.core.user_sources.registries import user_source_type_registry
+        from baserow_enterprise.integrations.local_baserow.user_source_types import (
+            LocalBaserowUserSourceType,
+        )
+
+        user_source_type_registry.register(LocalBaserowUserSourceType())
+
         # Create default roles
         post_migrate.connect(sync_default_roles_after_migrate, sender=self)
 

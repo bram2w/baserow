@@ -22,6 +22,7 @@ from .templates import urls as templates_urls
 from .trash import urls as trash_urls
 from .user import urls as user_urls
 from .user_files import urls as user_files_urls
+from .user_sources import urls as user_source_urls
 from .workspaces import urls as workspace_urls
 
 app_name = "baserow.api"
@@ -68,5 +69,11 @@ if "builder" in settings.FEATURE_FLAGS:
         path(
             "",
             include(integrations_urls, namespace="integrations"),
+        )
+    )
+    urlpatterns.append(
+        path(
+            "",
+            include(user_source_urls, namespace="user_sources"),
         )
     )

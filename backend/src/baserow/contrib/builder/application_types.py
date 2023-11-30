@@ -21,6 +21,7 @@ from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.integrations.models import Integration
 from baserow.core.models import Application, Workspace
 from baserow.core.registries import ApplicationType, ImportExportConfig
+from baserow.core.user_sources.handler import UserSourceHandler
 from baserow.core.utils import ChildProgressBuilder
 
 
@@ -28,6 +29,7 @@ class BuilderApplicationType(ApplicationType):
     type = "builder"
     model_class = Builder
     supports_integrations = True
+    supports_user_sources = True
 
     # This lazy loads the serializer, which is needed because the `BuilderSerializer`
     # needs to decorate the `get_theme` with the `extend_schema_field` using a
@@ -71,6 +73,11 @@ class BuilderApplicationType(ApplicationType):
             for i in IntegrationHandler().get_integrations(builder)
         ]
 
+        serialized_user_sources = [
+            UserSourceHandler().export_user_source(us)
+            for us in UserSourceHandler().get_user_sources(builder)
+        ]
+
         pages = builder.page_set.all().prefetch_related("element_set", "datasource_set")
 
         serialized_pages = [PageHandler().export_page(p) for p in pages]
@@ -85,6 +92,7 @@ class BuilderApplicationType(ApplicationType):
             pages=serialized_pages,
             integrations=serialized_integrations,
             theme=serialized_theme,
+            user_sources=serialized_user_sources,
             **serialized_builder
         )
 
@@ -131,6 +139,48 @@ class BuilderApplicationType(ApplicationType):
 
         return imported_integrations
 
+    def import_user_sources_serialized(
+        self,
+        builder: Builder,
+        serialized_user_sources: List[Dict[str, Any]],
+        id_mapping: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+        progress_builder: Optional[ChildProgressBuilder] = None,
+    ) -> List[Page]:
+        """
+        Import user sources to builder.
+
+        :param builder: The builder the pages where exported from.
+        :param serialized_user_sources: The user sources that are supposed to be
+            imported.
+        :param progress_builder: A progress builder that allows for publishing progress.
+        :param files_zip: An optional zip file for the related files.
+        :param storage: The storage instance.
+        :return: The created user sources instances.
+        """
+
+        progress = ChildProgressBuilder.build(
+            progress_builder, child_total=len(serialized_user_sources)
+        )
+
+        imported_user_sources: List[Integration] = []
+
+        for serialized_user_source in serialized_user_sources:
+            integration = UserSourceHandler().import_user_source(
+                builder,
+                serialized_user_source,
+                id_mapping,
+                cache=self.cache,
+                files_zip=files_zip,
+                storage=storage,
+            )
+            imported_user_sources.append(integration)
+
+            progress.increment(state=IMPORT_SERIALIZED_IMPORTING)
+
+        return imported_user_sources
+
     def import_serialized(
         self,
         workspace: Workspace,
@@ -149,9 +199,15 @@ class BuilderApplicationType(ApplicationType):
 
         serialized_pages = serialized_values.pop("pages")
         serialized_integrations = serialized_values.pop("integrations")
+        serialized_user_sources = serialized_values.pop("user_sources")
         serialized_theme = serialized_values.pop("theme")
 
-        builder_progress, integration_progress, page_progress = 5, 15, 80
+        builder_progress, integration_progress, user_source_progress, page_progress = (
+            5,
+            10,
+            15,
+            80,
+        )
         progress = ChildProgressBuilder.build(
             progress_builder, child_total=builder_progress + page_progress
         )
@@ -186,6 +242,20 @@ class BuilderApplicationType(ApplicationType):
                 files_zip,
                 storage,
                 progress.create_child_builder(represents_progress=integration_progress),
+            )
+
+        if not serialized_user_sources:
+            progress.increment(
+                state=IMPORT_SERIALIZED_IMPORTING, by=user_source_progress
+            )
+        else:
+            self.import_user_sources_serialized(
+                builder,
+                serialized_user_sources,
+                id_mapping,
+                files_zip,
+                storage,
+                progress.create_child_builder(represents_progress=user_source_progress),
             )
 
         if not serialized_pages:

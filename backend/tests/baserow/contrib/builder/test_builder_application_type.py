@@ -54,6 +54,10 @@ def test_builder_application_export(data_fixture):
         application=builder, authorized_user=user, name="test"
     )
 
+    user_source = data_fixture.create_user_source_with_first_type(
+        application=builder, user=user, integration=integration
+    )
+
     datasource1 = data_fixture.create_builder_local_baserow_get_row_data_source(
         page=page1, user=user, name="source 1", integration=integration
     )
@@ -279,6 +283,18 @@ def test_builder_application_export(data_fixture):
                 "id": integration.id,
                 "name": "test",
                 "order": "1.00000000000000000000",
+                "type": "local_baserow",
+            },
+        ],
+        "user_sources": [
+            {
+                "email_field_id": None,
+                "id": user_source.id,
+                "integration_id": integration.id,
+                "name": "",
+                "name_field_id": None,
+                "order": "1.00000000000000000000",
+                "table_id": None,
                 "type": "local_baserow",
             },
         ],
@@ -519,8 +535,20 @@ IMPORT_REFERENCE = {
         {
             "authorized_user": "test@baserow.io",
             "id": 42,
-            "name": "'test'",
+            "name": "test",
             "order": "1.00000000000000000000",
+            "type": "local_baserow",
+        },
+    ],
+    "user_sources": [
+        {
+            "email_field_id": None,
+            "id": 42,
+            "integration_id": 42,
+            "name": "My user source",
+            "name_field_id": None,
+            "order": "1.00000000000000000000",
+            "table_id": None,
             "type": "local_baserow",
         },
     ],
@@ -557,6 +585,8 @@ def test_builder_application_import(data_fixture):
     assert builder.integrations.count() == 1
     first_integration = builder.integrations.first().specific
     assert first_integration.authorized_user.id == user.id
+
+    assert builder.user_sources.count() == 1
 
     [page1, page2] = builder.page_set.all()
 
