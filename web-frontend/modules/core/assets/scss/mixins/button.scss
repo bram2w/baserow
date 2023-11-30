@@ -14,14 +14,18 @@
     background-color: $hover-background;
   }
 
-  &:active {
+  &:active:not(.disabled) {
     background-color: $active-background;
     color: $color-active;
   }
 
-  &.button--loading {
+  &.button--loading:not(.button--link) {
     background-color: $active-background;
-    color: $active-background;
+    color: transparent;
+
+    &.disabled {
+      background: $palette-neutral-100;
+    }
   }
 }
 

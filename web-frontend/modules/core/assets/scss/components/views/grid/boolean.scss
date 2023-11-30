@@ -7,9 +7,13 @@
   margin: auto;
   color: $color-success-600;
   cursor: pointer;
+  width: 20px;
+  height: 20px;
+  font-size: 18px;
+  justify-content: center;
 
-  @include center-text(20px, 18px);
   @include rounded($rounded);
+  @include flex-align-items();
 
   &.grid-field-boolean__checkbox--read-only {
     cursor: initial;

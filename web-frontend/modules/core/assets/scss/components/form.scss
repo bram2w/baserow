@@ -432,13 +432,15 @@
   }
 
   &.active {
-    &::before {
-      background-color: $palette-green-500;
-    }
-
-    &:hover {
+    &:not(.switch--disabled) {
       &::before {
-        background-color: $palette-green-800;
+        background-color: $palette-green-500;
+      }
+
+      &:hover {
+        &::before {
+          background-color: $palette-green-800;
+        }
       }
     }
 
@@ -494,7 +496,7 @@
     color: $palette-neutral-700;
   }
 
-  .switch.active & {
+  .switch.active:not(.switch--disabled) & {
     color: $palette-neutral-1200;
   }
 }
