@@ -107,7 +107,10 @@ class DatabaseApplicationType(ApplicationType):
 
             model = table.get_model(fields=fields, add_dependencies=False)
             serialized_rows = []
-            for row in model.objects.all().select_related("last_modified_by"):
+            row_queryset = model.objects.all()
+            if table.last_modified_by_column_added:
+                row_queryset = row_queryset.select_related("last_modified_by")
+            for row in row_queryset:
                 serialized_row = DatabaseExportSerializedStructure.row(
                     id=row.id,
                     order=str(row.order),
