@@ -101,7 +101,7 @@ export default {
         'button--icon-only': hasIcon && !this.$slots.default,
         'button--loading': this.loading,
         disabled: this.disabled,
-        active: this.active,
+        active: this.active && !this.loading && !this.disabled,
         'button--overflow': this.overflow,
       }
       return classObj

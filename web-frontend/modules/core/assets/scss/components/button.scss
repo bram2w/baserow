@@ -153,8 +153,8 @@
 
   border: 1px solid $palette-neutral-400;
 
-  &:hover,
   &:focus,
+  &:hover,
   &:active,
   &.button-loading {
     box-shadow: none;
@@ -204,12 +204,21 @@
   padding-left: 24px;
   position: relative;
 
+  @include button-style(
+    transparent,
+    transparent,
+    transparent,
+    $palette-neutral-1200,
+    $palette-neutral-1200,
+    transparent
+  );
+
   &:hover,
   &:focus,
   &:active,
   &.button--loading {
     box-shadow: none;
-    background: none;
+    background: transparent !important;
   }
 
   &:hover,
