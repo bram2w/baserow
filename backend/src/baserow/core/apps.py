@@ -339,6 +339,26 @@ class CoreConfig(AppConfig):
         operation_type_registry.register(ReadIntegrationOperationType())
         operation_type_registry.register(OrderIntegrationsOperationType())
 
+        from baserow.core.user_sources.object_scopes import UserSourceObjectScopeType
+
+        object_scope_type_registry.register(UserSourceObjectScopeType())
+
+        from baserow.core.user_sources.operations import (
+            CreateUserSourceOperationType,
+            DeleteUserSourceOperationType,
+            ListUserSourcesApplicationOperationType,
+            OrderUserSourcesOperationType,
+            ReadUserSourceOperationType,
+            UpdateUserSourceOperationType,
+        )
+
+        operation_type_registry.register(CreateUserSourceOperationType())
+        operation_type_registry.register(DeleteUserSourceOperationType())
+        operation_type_registry.register(ListUserSourcesApplicationOperationType())
+        operation_type_registry.register(OrderUserSourcesOperationType())
+        operation_type_registry.register(ReadUserSourceOperationType())
+        operation_type_registry.register(UpdateUserSourceOperationType())
+
         plugin_dir.register(DebugModeHealthCheck)
         if getattr(settings, "HEROKU_ENABLED", False):
             plugin_dir.register(HerokuExternalFileStorageConfiguredHealthCheck)

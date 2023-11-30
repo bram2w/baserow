@@ -195,6 +195,14 @@ from baserow.core.trash.operations import (
     ReadApplicationTrashOperationType,
     ReadWorkspaceTrashOperationType,
 )
+from baserow.core.user_sources.operations import (
+    CreateUserSourceOperationType,
+    DeleteUserSourceOperationType,
+    ListUserSourcesApplicationOperationType,
+    OrderUserSourcesOperationType,
+    ReadUserSourceOperationType,
+    UpdateUserSourceOperationType,
+)
 from baserow_enterprise.audit_log.operations import (
     ListWorkspaceAuditLogEntriesOperationType,
 )
@@ -409,6 +417,12 @@ default_roles[BUILDER_ROLE_UID].extend(
         DispatchDataSourceOperationType,
         DeleteBuilderWorkflowActionOperationType,
         CreateBuilderWorkflowActionOperationType,
+        CreateUserSourceOperationType,
+        DeleteUserSourceOperationType,
+        ListUserSourcesApplicationOperationType,
+        ReadUserSourceOperationType,
+        UpdateUserSourceOperationType,
+        OrderUserSourcesOperationType,
     ]
 )
 default_roles[ADMIN_ROLE_UID].extend(

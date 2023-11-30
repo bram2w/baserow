@@ -3,6 +3,7 @@ from typing import List, Optional, TypedDict
 from baserow.contrib.builder.pages.types import PagePathParams
 from baserow.core.integrations.types import IntegrationDictSubClass
 from baserow.core.services.types import ServiceDictSubClass
+from baserow.core.user_sources.types import UserSourceDictSubClass
 from baserow.core.workflow_actions.models import WorkflowAction
 
 
@@ -48,4 +49,5 @@ class BuilderDict(TypedDict):
     type: str
     pages: List[PageDict]
     integrations: List[IntegrationDictSubClass]
+    user_sources: List[UserSourceDictSubClass]
     theme: object
