@@ -364,7 +364,6 @@ class ElementHandler:
 
         # We are just creating new elements here so other data id should remain
         id_mapping = defaultdict(lambda: MirrorDict())
-        id_mapping["builder_page_elements"] = {}
 
         return self._duplicate_element_recursive(element, id_mapping)
 
@@ -479,5 +478,16 @@ class ElementHandler:
         :return: the newly created instance.
         """
 
+        if "builder_page_elements" not in id_mapping:
+            id_mapping["builder_page_elements"] = {}
+
         element_type = element_type_registry.get(serialized_element["type"])
-        return element_type.import_serialized(page, serialized_element, id_mapping)
+        created_instance = element_type.import_serialized(
+            page, serialized_element, id_mapping
+        )
+
+        id_mapping["builder_page_elements"][
+            serialized_element["id"]
+        ] = created_instance.id
+
+        return created_instance

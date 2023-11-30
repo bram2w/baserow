@@ -36,6 +36,9 @@ from baserow.contrib.builder.api.domains.serializers import (
     UpdateDomainSerializer,
 )
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
+from baserow.contrib.builder.api.workflow_actions.serializers import (
+    BuilderWorkflowActionSerializer,
+)
 from baserow.contrib.builder.data_sources.service import DataSourceService
 from baserow.contrib.builder.domains.exceptions import (
     DomainDoesNotExist,
@@ -55,13 +58,16 @@ from baserow.contrib.builder.handler import BuilderHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.service import BuilderService
+from baserow.contrib.builder.workflow_actions.registries import (
+    builder_workflow_action_type_registry,
+)
+from baserow.contrib.builder.workflow_actions.service import (
+    BuilderWorkflowActionService,
+)
 from baserow.core.exceptions import ApplicationDoesNotExist
 from baserow.core.jobs.registries import job_type_registry
 from baserow.core.services.registries import service_type_registry
 
-from ...workflow_actions.registries import builder_workflow_action_type_registry
-from ...workflow_actions.service import BuilderWorkflowActionService
-from ..workflow_actions.serializers import BuilderWorkflowActionSerializer
 from .serializers import PublicDataSourceSerializer, PublicElementSerializer
 
 

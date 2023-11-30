@@ -159,21 +159,6 @@ class BuilderApplicationType(ApplicationType):
         if "import_workspace_id" not in id_mapping and workspace is not None:
             id_mapping["import_workspace_id"] = workspace.id
 
-        if "builder_pages" not in id_mapping:
-            id_mapping["builder_pages"] = {}
-
-        if "builder_page_elements" not in id_mapping:
-            id_mapping["builder_page_elements"] = {}
-
-        if "builder_data_sources" not in id_mapping:
-            id_mapping["builder_data_sources"] = {}
-
-        if "integrations" not in id_mapping:
-            id_mapping["integrations"] = {}
-
-        if "builder_workflow_actions" not in id_mapping:
-            id_mapping["builder_workflow_actions"] = {}
-
         if "workspace_id" not in id_mapping and workspace is not None:
             id_mapping["workspace_id"] = workspace.id
 

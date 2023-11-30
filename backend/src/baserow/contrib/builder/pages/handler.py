@@ -595,11 +595,11 @@ class PageHandler:
                 parent_element_id = serialized_element["parent_element_id"]
                 # check that the element has not already been imported in a
                 # previous pass or if the parent doesn't exit yet.
-                if serialized_element["id"] not in id_mapping[
-                    "builder_page_elements"
-                ] and (
+                if serialized_element["id"] not in id_mapping.get(
+                    "builder_page_elements", {}
+                ) and (
                     parent_element_id is None
-                    or parent_element_id in id_mapping["builder_page_elements"]
+                    or parent_element_id in id_mapping.get("builder_page_elements", {})
                 ):
                     imported_elements.append(
                         ElementHandler().import_element(
