@@ -170,6 +170,19 @@ def mutable_builder_data_provider_registry():
 
 
 @pytest.fixture()
+def mutable_builder_workflow_action_registry():
+    from baserow.contrib.builder.workflow_actions.registries import (
+        builder_workflow_action_type_registry,
+    )
+
+    before = builder_workflow_action_type_registry.registry.copy()
+    builder_workflow_action_type_registry.get_for_class.cache_clear()
+    yield builder_workflow_action_type_registry
+    builder_workflow_action_type_registry.get_for_class.cache_clear()
+    builder_workflow_action_type_registry.registry = before
+
+
+@pytest.fixture()
 def patch_filefield_storage(tmpdir):
     """
     Patches all filefield storages from all models with the one given in parameter

@@ -148,6 +148,7 @@ class CustomFieldsInstanceMixin:
         request_serializer: bool = False,
         meta_ref_name=None,
         base_class: Serializer = None,
+        extra_params=None,
         **kwargs,
     ) -> serializers.ModelSerializer:
         """
@@ -157,21 +158,17 @@ class CustomFieldsInstanceMixin:
         :return: The generated model serializer class.
         """
 
-        if request_serializer and self.request_serializer_field_overrides is not None:
-            field_overrides = self.request_serializer_field_overrides
-        else:
-            field_overrides = self.serializer_field_overrides
+        if extra_params is None:
+            extra_params = {}
 
-        if request_serializer and self.request_serializer_field_names is not None:
-            field_names = self.request_serializer_field_names
-        else:
-            field_names = self.serializer_field_names
+        field_overrides = self.get_field_overrides(
+            request_serializer, extra_params, **kwargs
+        )
+        field_names = self.get_field_names(request_serializer, extra_params, **kwargs)
 
-        # Prepend the word "Request" to the ref name, so that when this serializer is
-        # generated for the request and response, it doesn't result in a name conflict.
-        if request_serializer and meta_ref_name is None:
-            meta_ref_name = "Request" + generate_meta_ref_name_based_on_model(
-                self.model_class, base_class=kwargs.get("base_class")
+        if meta_ref_name is None:
+            meta_ref_name = self.get_meta_ref_name(
+                request_serializer, extra_params, **kwargs
             )
 
         return get_serializer_class(
@@ -192,6 +189,7 @@ class CustomFieldsInstanceMixin:
         base_class: Optional[serializers.ModelSerializer] = None,
         context: Optional[Dict[str, Any]] = None,
         request: bool = False,
+        extra_params=None,
         **kwargs: Dict[str, Any],
     ) -> serializers.ModelSerializer:
         """
@@ -204,6 +202,7 @@ class CustomFieldsInstanceMixin:
             common fields could be stored here.
         :param context: Extra context arguments to pass to the serializers context.
         :param request: True if you want the request serializer.
+        :param extra_params: Any additional params that should be passed to the method.
         :param kwargs: The kwargs are used to initialize the serializer class.
         :return: The instantiated generated model serializer.
         """
@@ -219,10 +218,38 @@ class CustomFieldsInstanceMixin:
             model_instance_or_instances = model_instance_or_instances.specific
 
         serializer_class = self.get_serializer_class(
-            base_class=base_class, request_serializer=request
+            base_class=base_class,
+            request_serializer=request,
+            extra_params=extra_params,
         )
 
         return serializer_class(model_instance_or_instances, context=context, **kwargs)
+
+    def get_field_overrides(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> Dict:
+        if request_serializer and self.request_serializer_field_overrides is not None:
+            return self.request_serializer_field_overrides
+        else:
+            return self.serializer_field_overrides
+
+    def get_field_names(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> List[str]:
+        if request_serializer and self.request_serializer_field_names is not None:
+            return self.request_serializer_field_names
+        else:
+            return self.serializer_field_names
+
+    def get_meta_ref_name(
+        self, request_serializer: bool, extra_params: Dict, **kwargs
+    ) -> Optional[str]:
+        if request_serializer is None:
+            return "Request" + generate_meta_ref_name_based_on_model(
+                self.model_class, base_class=kwargs.get("base_class")
+            )
+
+        return None
 
 
 class APIUrlsInstanceMixin:
@@ -673,6 +700,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
         model_instance_or_instances: Union[DjangoModel, List[DjangoModel]],
         base_class: Optional[Type[serializers.ModelSerializer]] = None,
         context: Optional[Dict[str, any]] = None,
+        extra_params=None,
         **kwargs,
     ):
         """
@@ -687,6 +715,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
         :type base_class: ModelSerializer
         :param context: Extra context arguments to pass to the serializers context.
         :type kwargs: dict
+        :param extra_params: Any additional params that should be passed to the method.
         :param kwargs: The kwargs are used to initialize the serializer class.
         :type kwargs: dict
         :raises ValueError: When the `get_by_model` method was not found, which could
@@ -714,6 +743,7 @@ class CustomFieldsRegistryMixin(Generic[DjangoModel]):
             model_instance_or_instances,
             base_class=base_class,
             context=context,
+            extra_params=extra_params,
             **kwargs,
         )
 
