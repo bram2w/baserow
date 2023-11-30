@@ -8,9 +8,13 @@ from rest_framework.status import (
     HTTP_404_NOT_FOUND,
 )
 
+from baserow.contrib.builder.workflow_actions.handler import (
+    BuilderWorkflowActionHandler,
+)
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     NotificationWorkflowActionType,
 )
+from baserow.core.formula.serializers import FormulaSerializerField
 
 
 @pytest.mark.django_db
@@ -144,3 +148,58 @@ def test_patch_workflow_actions(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["description"] == "'hello'"
+
+
+class PublicTestWorkflowActionType(NotificationWorkflowActionType):
+    type = "test_workflow_action"
+
+    public_serializer_field_names = ["test"]
+    public_serializer_field_overrides = {
+        "test": FormulaSerializerField(
+            required=False,
+            allow_blank=True,
+            default="",
+        ),
+    }
+
+
+@pytest.mark.django_db
+def test_public_workflow_actions_view(
+    api_client, data_fixture, mutable_builder_workflow_action_registry
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    mutable_builder_workflow_action_registry.unregister(
+        NotificationWorkflowActionType().type
+    )
+    mutable_builder_workflow_action_registry.register(PublicTestWorkflowActionType())
+
+    workflow_action = BuilderWorkflowActionHandler().create_workflow_action(
+        PublicTestWorkflowActionType(), test="hello", page=page
+    )
+
+    url = reverse(
+        "api:builder:workflow_action:item",
+        kwargs={"workflow_action_id": workflow_action.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert "test" not in response.json()
+
+    url = reverse(
+        "api:builder:domains:list_workflow_actions",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.get(
+        url,
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    [workflow_action_in_response] = response.json()
+    assert "test" in workflow_action_in_response

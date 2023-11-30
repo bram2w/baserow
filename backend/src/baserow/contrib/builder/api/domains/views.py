@@ -581,6 +581,8 @@ class PublicBuilderWorkflowActionsView(APIView):
                 builder_workflow_action_type_registry,
                 BuilderWorkflowActionSerializer,
                 many=True,
+                name_prefix="public_",
+                extra_params={"public": True},
             ),
             404: get_error_schema(["ERROR_PAGE_DOES_NOT_EXIST"]),
         },
@@ -599,7 +601,9 @@ class PublicBuilderWorkflowActionsView(APIView):
 
         data = [
             builder_workflow_action_type_registry.get_serializer(
-                workflow_action, BuilderWorkflowActionSerializer
+                workflow_action,
+                BuilderWorkflowActionSerializer,
+                extra_params={"public": True},
             ).data
             for workflow_action in workflow_actions
         ]

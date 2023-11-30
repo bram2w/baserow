@@ -1,5 +1,6 @@
 from typing import Any, Dict
 
+from baserow.contrib.builder.registries import PublicCustomFieldsInstanceMixin
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.registry import (
     CustomFieldsRegistryMixin,
@@ -9,7 +10,7 @@ from baserow.core.registry import (
 from baserow.core.workflow_actions.registries import WorkflowActionType
 
 
-class BuilderWorkflowActionType(WorkflowActionType):
+class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMixin):
     allowed_fields = ["page", "page_id", "element", "element_id", "event"]
 
     parent_property_name = "page"

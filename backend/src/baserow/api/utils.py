@@ -418,7 +418,13 @@ class CustomFieldRegistryMappingSerializer:
     extension class.
     """
 
-    def __init__(self, registry, base_class, many=False, request=False):
+    def __init__(
+        self,
+        registry,
+        base_class,
+        many=False,
+        request=False,
+    ):
         self.read_only = False
         self.registry = registry
         self.base_class = base_class
@@ -442,6 +448,8 @@ class DiscriminatorCustomFieldsMappingSerializer:
         help_text=None,
         request=False,
         context=None,
+        name_prefix=None,
+        extra_params=None,
     ):
         self.read_only = False
         self.registry = registry
@@ -451,7 +459,9 @@ class DiscriminatorCustomFieldsMappingSerializer:
         self.help_text = help_text
         self.partial = False
         self.request = request
+        self.name_prefix = name_prefix
         self.context = {} if context is None else context
+        self.extra_params = extra_params
 
     # Trick spectacular into thinking we are not a customized list serializer so it
     # doesn't attempt to use its own customized list serializer extension code which

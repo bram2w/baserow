@@ -1,19 +1,12 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Type
 
-from baserow.core.registry import (
-    CustomFieldsInstanceMixin,
-    EasyImportExportMixin,
-    Instance,
-    ModelInstanceMixin,
-)
+from baserow.core.registry import EasyImportExportMixin, Instance, ModelInstanceMixin
 from baserow.core.workflow_actions.models import WorkflowAction
 from baserow.core.workflow_actions.types import WorkflowActionDictSubClass
 
 
-class WorkflowActionType(
-    Instance, ModelInstanceMixin, EasyImportExportMixin, CustomFieldsInstanceMixin, ABC
-):
+class WorkflowActionType(Instance, ModelInstanceMixin, EasyImportExportMixin, ABC):
     SerializedDict: Type[WorkflowActionDictSubClass]
 
     def serialize_property(self, workflow_action: WorkflowAction, prop_name: str):
