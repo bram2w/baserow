@@ -1,40 +1,201 @@
-.toast__top-right {
+.toasts__container-top {
   position: fixed;
-  top: 0;
-  right: 30px;
+  top: 15px;
+  right: 15px;
   width: 320px;
   z-index: $z-index-toasts;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.toast__bottom-right {
+.toasts__container-bottom {
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-end;
   position: fixed;
-  bottom: 0;
-  right: 30px;
+  bottom: 15px;
+  right: 15px;
+  gap: 15px;
   z-index: $z-index-toasts;
 }
 
-.toast__undo-delete {
-  margin: 5px;
-  box-shadow: $color-primary-200;
+.toast {
+  display: flex;
+  padding: 16px;
+  align-items: flex-start;
+  gap: 16px;
+  background: $white;
+  border: 1px solid $palette-neutral-400;
+  box-shadow: 0 6px 12px 0 rgba(7, 8, 16, 0.08);
+  z-index: $z-index-toasts;
 
-  &.toast__undo-delete--pulsing {
-    animation: pulse 1s 2;
+  @include rounded($rounded-md);
+}
+
+.toast__content {
+  margin: 0;
+  padding: 0;
+  flex: 1 1 auto;
+  font-size: 12px;
+
+  p {
+    margin: 0;
   }
 }
 
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 $color-primary-400;
-  }
+.toast__title {
+  font-weight: 500;
+  line-height: 20px;
+  font-size: 13px;
+  color: $palette-neutral-1200;
+}
 
-  70% {
-    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
-  }
+.toast__message {
+  color: $palette-neutral-900;
+  line-height: 20px;
+}
 
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+.toast__icon {
+  width: 40px;
+  height: 40px;
+  flex: 0 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  @include rounded($rounded-3xl);
+}
+
+.toast__close {
+  background: none;
+  width: 16px;
+  height: 16px;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  flex: 0 1 auto;
+  color: $palette-neutral-700;
+  cursor: pointer;
+
+  &:hover {
+    color: $palette-neutral-800;
   }
+}
+
+.toast__loading {
+  cursor: wait;
+  user-select: none;
+  width: 14px;
+  height: 14px;
+  position: relative;
+
+  &::after {
+    content: ' ';
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 0.15em solid;
+    border-color: $palette-neutral-700 transparent $palette-neutral-700
+      transparent;
+    animation: spin infinite 1800ms;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
+  }
+}
+
+.toast__icon--success {
+  background: $palette-green-50;
+  color: $palette-green-800;
+
+  .toast__loading {
+    &::after {
+      border-color: $palette-green-800 transparent $palette-green-800
+        transparent;
+    }
+  }
+}
+
+.toast__icon--warning {
+  background: $palette-yellow-50;
+  color: $palette-yellow-800;
+
+  .toast__loading {
+    &::after {
+      border-color: $palette-yellow-800 transparent $palette-yellow-800
+        transparent;
+    }
+  }
+}
+
+.toast__icon--error {
+  background: $palette-red-50;
+  color: $palette-red-800;
+
+  .toast__loading {
+    &::after {
+      border-color: $palette-red-800 transparent $palette-red-800 transparent;
+    }
+  }
+}
+
+.toast__icon--info-neutral {
+  background: $palette-neutral-25;
+  color: $palette-neutral-700;
+}
+
+.toast__icon--info-primary {
+  background: $palette-blue-50;
+  color: $palette-blue-800;
+
+  .toast__loading {
+    &::after {
+      border-color: $palette-blue-800 transparent $palette-blue-800 transparent;
+    }
+  }
+}
+
+.toast__icon--loading {
+  background: $palette-neutral-50;
+}
+
+.toast__actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  color: $palette-neutral-900;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.toast__actions-button {
+  color: $palette-neutral-900;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+
+  @include flex-align-items(5px);
+
+  &:hover {
+    color: $palette-neutral-1000;
+  }
+}
+
+.toast__actions-button--primary {
+  color: $palette-blue-500;
+
+  &:hover {
+    color: $palette-blue-600;
+  }
+}
+
+.toast__actions-button--loading {
+  cursor: wait;
+  user-select: none;
+
+  @include loading-spinner($palette-blue-500, 11px);
 }

@@ -12,17 +12,15 @@
       <LangPicker />
     </div>
     <template v-if="shouldShowAdminSignupPage">
-      <Alert :title="$t('signup.requireFirstUser')">{{
-        $t('signup.requireFirstUserMessage')
-      }}</Alert>
+      <Alert>
+        <template #title>{{ $t('signup.requireFirstUser') }}</template>
+        <p>{{ $t('signup.requireFirstUserMessage') }}</p></Alert
+      >
     </template>
     <template v-if="!isSignupEnabled">
-      <Alert
-        simple
-        type="error"
-        icon="iconoir-warning-triangle"
-        :title="$t('signup.disabled')"
-        ><p>{{ $t('signup.disabledMessage') }}</p></Alert
+      <Alert type="error">
+        <template #title>{{ $t('signup.disabled') }}</template>
+        <p>{{ $t('signup.disabledMessage') }}</p></Alert
       >
       <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
         {{ $t('action.backToLogin') }}

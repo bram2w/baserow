@@ -1,28 +1,33 @@
 <template>
-  <button
-    class="button toast__undo-delete"
-    :disabled="loading"
+  <Button
+    class="toast-button toast-button--bottom"
     :class="{
-      'button--loading': loading,
-      'toast__undo-delete--pulsing': pulsing,
+      'toast-button--pulsing': pulsing,
     }"
-    @click="restore"
+    type="primary"
+    :disabled="loading"
+    :loading="loading"
+    @click="restore()"
   >
     <i class="button__icon iconoir-undo"></i>
     {{
       $t('restoreToast.restore', {
         type: $t('trashType.' + toast.data.trash_item_type),
       })
-    }}
-  </button>
+    }}</Button
+  >
 </template>
 
 <script>
+import Button from '@baserow/modules/core/components/Button'
 import TrashService from '@baserow/modules/core/services/trash'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
   name: 'RestoreToast',
+  components: {
+    Button,
+  },
   props: {
     toast: {
       type: Object,

@@ -82,21 +82,18 @@
       </TableForm>
 
       <Error :error="error"></Error>
-      <Alert
-        v-if="errorReport.length > 0 && error.visible"
-        :title="$t('importFileModal.reportTitleFailure')"
-        type="warning"
-        icon="iconoir-warning-triangle"
-      >
-        {{ $t('importFileModal.reportMessage') }}
-        {{ errorReport.join(', ') }}
+      <Alert v-if="errorReport.length > 0 && error.visible" type="warning">
+        <template #title>{{
+          $t('importFileModal.reportTitleFailure')
+        }}</template>
+
+        {{ $t('importFileModal.reportMessage') }} {{ errorReport.join(', ') }}
       </Alert>
-      <Alert
-        v-if="errorReport.length > 0 && !error.visible"
-        :title="$t('importFileModal.reportTitleSuccess')"
-        type="warning"
-        icon="iconoir-warning-triangle"
-      >
+      <Alert v-if="errorReport.length > 0 && !error.visible" type="warning">
+        <template #title>
+          {{ $t('importFileModal.reportTitleSuccess') }}</template
+        >
+
         {{ $t('importFileModal.reportMessage') }}
         {{ errorReport.join(', ') }}
       </Alert>

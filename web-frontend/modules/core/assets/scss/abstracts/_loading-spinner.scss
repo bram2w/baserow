@@ -1,0 +1,18 @@
+@mixin loading-spinner(
+  $spinner-color: $palette-blue-500,
+  $spinner-size: 14px,
+  $spiner-border-width: 0.2em,
+  $position: after
+) {
+  &::#{$position} {
+    content: ' ';
+    display: block;
+    width: $spinner-size;
+    height: $spinner-size;
+    border-radius: 50%;
+    border: $spiner-border-width solid;
+    border-color: $spinner-color transparent $spinner-color transparent;
+    animation: spin infinite 1800ms;
+    animation-timing-function: cubic-bezier(0.785, 0.135, 0.15, 0.86);
+  }
+}

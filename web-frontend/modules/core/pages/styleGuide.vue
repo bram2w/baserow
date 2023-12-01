@@ -638,148 +638,107 @@
           </div>
         </div>
         <div class="margin-bottom-3">
-          <Alert
-            title="Toast message"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
+          <Alert type="success" close-button>
+            <template #title>Toast message</template>
             <p>
               Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
               elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
               ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
               viverra urna. Praesent.
             </p>
-          </Alert>
-          <Alert title="Toast message" close-button>
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent lobortis feugiat erat, nec volutpat nulla
-              tincidunt vel. In hac habitasse platea dictumst. Aenean fringilla
-              lacus nunc, non pharetra mauris pulvinar lacinia. Aenean ut sem
-              lacinia, sagittis quam sed, pellentesque orci. Aenean non
-              consequat mi. Nunc laoreet ligula a nunc eleifend, nec accumsan
-              felis euismod.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="success"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="warning"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="error"
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-
-          <Alert
-            title="Toast message"
-            simple
-            icon="iconoir-warning-triangle"
-            close-button
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert title="Toast message" simple>
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="success"
-            simple
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="warning"
-            simple
-            shadow
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-          <Alert
-            title="Toast message"
-            type="error"
-            simple
-            shadow
-            icon="iconoir-warning-triangle"
-          >
-            <p>
-              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
-              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
-              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
-              viverra urna. Praesent.
-            </p>
-          </Alert>
-
-          <Alert
-            simple
-            type="primary"
-            icon="iconoir-warning-triangle"
-            title="Workspace invitation"
-          >
-            <p>Lorem ipsum dolor sit amet bla</p>
-            <p>Hello Mat, please join this workspace</p>
-            <div class="margin-top-1">
-              <a class="button button--error dashboard__alert-button">Reject</a>
-              <a class="button button--success dashboard__alert-button"
-                >Accept</a
+            <template #actions>
+              <button
+                class="alert__actions-button alert__actions-button--normal"
               >
-            </div>
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button alert__actions-button--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="warning" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <button
+                class="alert__actions-button alert__actions-button--normal"
+              >
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button alert__actions-button--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="info-primary" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <button
+                class="alert__actions-button alert__actions-button--normal"
+              >
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button alert__actions-button--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="info-neutral" close-button>
+            <template #title>Toast message</template>
+            <p>
+              Lorem ipsum dolor sit amet, <a href="#">consectetur</a> adipiscing
+              elit. Sed quis gravida ante. Nulla nec elit dui. Nam nec dui
+              ligula. Pellentesque feugiat erat vel porttitor euismod. Duis nec
+              viverra urna. Praesent.
+            </p>
+            <template #actions>
+              <button
+                class="alert__actions-button alert__actions-button--normal"
+              >
+                Cancel
+              </button>
+              <button
+                class="alert__actions-button alert__actions-button--loading"
+              >
+                Accept
+              </button>
+            </template>
+          </Alert>
+
+          <Alert type="error" close-button>
+            <template #title>Alert title</template>
+            <template #actions>
+              <button
+                class="alert__actions-button alert__actions-button--normal alert__actions-button--loading"
+              >
+                Cancel
+              </button>
+            </template>
+          </Alert>
+
+          <Alert>
+            <template #title>Alert title</template>
           </Alert>
         </div>
         <div

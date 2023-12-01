@@ -1,18 +1,17 @@
 <template>
-  <Alert
-    simple
-    shadow
-    type="info"
-    icon="iconoir-warning-triangle"
-    :title="$t('userSessionExpiredToast.title')"
-  >
-    <p>{{ $t('userSessionExpiredToast.content') }}</p>
-  </Alert>
+  <Toast type="info-neutral" icon="iconoir-warning-triangle">
+    <template #title>{{ $t('userSessionExpiredToast.title') }}</template>
+    <span> {{ $t('userSessionExpiredToast.content') }}</span>
+  </Toast>
 </template>
 
 <script>
+import Toast from '@baserow/modules/core/components/toasts/Toast'
 export default {
   name: 'UserSessionExpiredToast',
+  components: {
+    Toast,
+  },
   mounted() {
     setTimeout(() => {
       this.acknowledge()

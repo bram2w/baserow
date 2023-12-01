@@ -1,36 +1,38 @@
 <template>
-  <Alert
-    simple
-    type="primary"
-    icon="iconoir-warning-triangle"
-    :title="$t('workspaceInvitation.title')"
-  >
-    <p>
+  <Alert type="info-primary">
+    <template #title>
       {{
         $t('workspaceInvitation.message', {
           by: invitation.invited_by,
           workspace: invitation.workspace,
         })
-      }}
-    </p>
+      }}</template
+    >
+
     <p v-if="invitation.message !== ''" class="quote">
       "{{ invitation.message }}"
     </p>
 
-    <a
-      class="button button--error dashboard__alert-button"
-      :class="{ 'button--loading': rejectLoading }"
-      :disabled="rejectLoading || acceptLoading"
-      @click="!rejectLoading && !acceptLoading && reject(invitation)"
-      >{{ $t('workspaceInvitation.reject') }}</a
-    >
-    <a
-      class="button button--success dashboard__alert-button"
-      :class="{ 'button--loading': acceptLoading }"
-      :disabled="rejectLoading || acceptLoading"
-      @click="!rejectLoading && !acceptLoading && accept(invitation)"
-      >{{ $t('workspaceInvitation.accept') }}</a
-    >
+    <template #actions>
+      <button
+        v-if="!acceptLoading"
+        class="alert__actions-button alert__actions-button--normal"
+        :class="{ 'alert__actions-button--loading': rejectLoading }"
+        :disabled="rejectLoading || acceptLoading"
+        @click="!rejectLoading && !acceptLoading && reject(invitation)"
+      >
+        {{ $t('workspaceInvitation.reject') }}
+      </button>
+      <button
+        v-if="!rejectLoading"
+        class="alert__actions-button"
+        :disabled="rejectLoading || acceptLoading"
+        :class="{ 'alert__actions-button--loading': acceptLoading }"
+        @click="!rejectLoading && !acceptLoading && accept(invitation)"
+      >
+        {{ $t('workspaceInvitation.accept') }}
+      </button>
+    </template>
   </Alert>
 </template>
 

@@ -1,18 +1,17 @@
 <template>
-  <Alert
-    simple
-    shadow
-    type="info"
-    icon="iconoir-warning-triangle"
-    :title="$t('userPasswordChangedToast.title')"
-  >
-    <p>{{ $t('userPasswordChangedToast.content') }}</p>
-  </Alert>
+  <Toast type="info-primary" icon="iconoir-warning-triangle">
+    <template #title>{{ $t('userPasswordChangedToast.title') }}</template>
+    <span>{{ $t('userPasswordChangedToast.content') }}</span>
+  </Toast>
 </template>
 
 <script>
+import Toast from './Toast.vue'
 export default {
   name: 'UserPasswordChangedToast',
+  components: {
+    Toast,
+  },
   mounted() {
     setTimeout(() => {
       this.acknowledge()

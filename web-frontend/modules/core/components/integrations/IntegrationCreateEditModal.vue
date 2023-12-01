@@ -8,13 +8,10 @@
       }}
     </h2>
     <div>
-      <Alert
-        v-if="actualIntegrationType.warning"
-        icon="iconoir-warning-triangle"
-        type="warning"
-        :title="$t('integrationCreateEditModal.warningTitle')"
-        simple
-      >
+      <Alert v-if="actualIntegrationType.warning" type="warning">
+        <template #title>{{
+          $t('integrationCreateEditModal.warningTitle')
+        }}</template>
         <p>{{ actualIntegrationType.warning }}</p>
       </Alert>
       <IntegrationEditForm

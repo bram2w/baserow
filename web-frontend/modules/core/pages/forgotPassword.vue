@@ -13,13 +13,10 @@
 
       <!-- Disabled info message -->
       <template v-if="!settings.allow_reset_password">
-        <Alert
-          simple
-          type="error"
-          icon="iconoir-warning-triangle"
-          :title="$t('forgotPassword.disabled')"
-          ><p>{{ $t('forgotPassword.disabledMessage') }}</p></Alert
-        >
+        <Alert type="error">
+          <template #title>{{ $t('forgotPassword.disabled') }}</template>
+          <p>{{ $t('forgotPassword.disabledMessage') }}</p>
+        </Alert>
         <nuxt-link :to="{ name: 'login' }" class="button button--full-width">
           <i class="iconoir-arrow-left"></i>
           {{ $t('action.backToLogin') }}

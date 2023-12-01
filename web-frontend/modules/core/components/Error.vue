@@ -1,11 +1,8 @@
 <template>
-  <Alert
-    v-if="error.visible"
-    type="error"
-    icon="iconoir-warning-triangle"
-    :title="error.title"
-    ><p>{{ error.message }}</p></Alert
-  >
+  <Alert v-if="error.visible" type="error">
+    <template #title>{{ error.title }}</template>
+    <p>{{ error.message }}</p>
+  </Alert>
 </template>
 
 <script>

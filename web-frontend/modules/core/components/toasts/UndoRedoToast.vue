@@ -1,20 +1,19 @@
 <template>
-  <Alert
-    simple
-    shadow
-    :icon="stateContent.icon"
-    :loading="stateContent.loading"
-    :title="stateContent.title"
-  >
-    <p>{{ stateContent.content }}</p>
-  </Alert>
+  <Toast :icon="stateContent.icon" :loading="stateContent.loading">
+    <template #title>{{ stateContent.title }} </template>
+    <span>{{ stateContent.content }} </span>
+  </Toast>
 </template>
 
 <script>
+import Toast from '@baserow/modules/core/components/toasts/Toast'
 import { UNDO_REDO_STATES } from '@baserow/modules/core/utils/undoRedoConstants'
 
 export default {
   name: 'UndoRedoToast',
+  components: {
+    Toast,
+  },
   props: {
     state: {
       type: String,
@@ -30,13 +29,13 @@ export default {
       switch (this.state) {
         case UNDO_REDO_STATES.UNDONE:
           return base({
-            icon: 'iconoir-check',
+            icon: 'check',
             title: this.$t('undoRedoToast.undoneTitle'),
             content: this.$t('undoRedoToast.undoneText'),
           })
         case UNDO_REDO_STATES.REDONE:
           return base({
-            icon: 'iconoir-check',
+            icon: 'check',
             title: this.$t('undoRedoToast.redoneTitle'),
             content: this.$t('undoRedoToast.redoneText'),
           })
@@ -54,25 +53,25 @@ export default {
           })
         case UNDO_REDO_STATES.NO_MORE_UNDO:
           return base({
-            icon: 'iconoir-cancel',
+            icon: 'times',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreUndo'),
           })
         case UNDO_REDO_STATES.NO_MORE_REDO:
           return base({
-            icon: 'iconoir-cancel',
+            icon: 'times',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.noMoreRedo'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_UNDO:
           return base({
-            icon: 'iconoir-warning-triangle',
+            icon: 'exclamation',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.skippingUndoDueToError'),
           })
         case UNDO_REDO_STATES.ERROR_WITH_REDO:
           return base({
-            icon: 'iconoir-warning-triangle',
+            icon: 'exclamation',
             title: this.$t('undoRedoToast.failed'),
             content: this.$t('undoRedoToast.skippingRedoDueToError'),
           })

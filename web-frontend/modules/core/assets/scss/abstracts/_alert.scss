@@ -1,0 +1,43 @@
+@mixin alert-style($background, $color, $accent-color, $border-color) {
+  background-color: $background;
+  border: 1px solid $border-color;
+
+  .alert__icon {
+    color: $accent-color;
+  }
+
+  .alert__actions-button {
+    color: $color;
+    cursor: pointer;
+
+    &:hover {
+      color: $accent-color;
+    }
+  }
+
+  .alert__title {
+    color: $accent-color;
+  }
+
+  .alert__content * {
+    color: $color;
+  }
+
+  .alert__close {
+    color: $color;
+
+    &:hover {
+      color: $accent-color;
+    }
+  }
+
+  .alert__loading {
+    &::after {
+      border-color: $accent-color transparent $accent-color transparent;
+    }
+  }
+
+  .alert__actions-button--loading {
+    @include loading-spinner($accent-color, 11px);
+  }
+}

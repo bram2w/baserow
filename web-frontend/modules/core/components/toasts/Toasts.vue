@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="toast__top-right">
+    <div class="toasts__container-top">
       <PermissionsUpdatedToast v-if="permissionsUpdated" />
       <ConnectingToast v-if="connecting"></ConnectingToast>
       <UserSessionExpiredToast
@@ -11,13 +11,15 @@
       ></UserPasswordChangedToast>
       <FailedConnectingToast v-if="failedConnecting"></FailedConnectingToast>
       <AuthorizationErrorToast v-if="unauthorized"></AuthorizationErrorToast>
-      <Toast
-        v-for="toast in normalToasts"
-        :key="toast.id"
-        :toast="toast"
-      ></Toast>
+      <Toast v-for="toast in normalToasts" :key="toast.id" :type="toast.type">
+        <template #title>{{ $t('toast.title') }}</template>
+        <span>{{ $t('toast.content') }}</span>
+      </Toast>
     </div>
-    <div class="toast__bottom-right">
+    <!-- Top toasts-->
+
+    <div class="toasts__container-bottom">
+      <!-- Bottom toasts-->
       <UndoRedoToast
         v-if="undoRedoIsNotHidden"
         :state="undoRedoState"
