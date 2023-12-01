@@ -70,7 +70,7 @@ export const actions = {
     })
   },
   info({ dispatch }, { title, message }) {
-    dispatch('add', { type: 'info', title, message })
+    dispatch('add', { type: 'info-neutral', title, message })
   },
   error({ dispatch }, { title, message }) {
     dispatch('add', { type: 'error', title, message })

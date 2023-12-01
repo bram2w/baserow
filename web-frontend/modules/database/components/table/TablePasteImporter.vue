@@ -28,12 +28,8 @@
         }}</Checkbox>
       </div>
     </div>
-    <Alert
-      v-if="error !== ''"
-      type="error"
-      icon="iconoir-warning-triangle"
-      :title="$t('common.wrong')"
-    >
+    <Alert v-if="error !== ''" type="error">
+      <template #title> {{ $t('common.wrong') }} </template>
       {{ error }}
     </Alert>
   </div>

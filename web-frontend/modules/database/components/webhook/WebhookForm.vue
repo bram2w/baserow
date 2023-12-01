@@ -1,19 +1,15 @@
 <template>
   <form @submit.prevent="submit" @input="$emit('formchange')">
     <div v-if="!isDeprecated">
-      <Alert
-        v-if="!values.active"
-        simple
-        type="primary"
-        icon="iconoir-warning-triangle"
-        :title="$t('webhookForm.deactivated.title')"
-      >
+      <Alert v-if="!values.active" type="info-primary">
+        <template #title> {{ $t('webhookForm.deactivated.title') }} </template>
         <p>{{ $t('webhookForm.deactivated.content') }}</p>
-        <a
-          class="button button--ghost margin-top-1"
-          @click="values.active = true"
-          >{{ $t('webhookForm.deactivated.activate') }}</a
-        >
+
+        <template #actions>
+          <button class="alert__actions-button" @click="values.active = true">
+            {{ $t('webhookForm.deactivated.activate') }}
+          </button>
+        </template>
       </Alert>
       <div class="row">
         <div class="col col-12">
@@ -222,23 +218,17 @@
       <TestWebhookModal ref="testModal" />
     </div>
     <div v-else>
-      <div class="alert alert--error alert--has-icon">
-        <div class="alert__icon">
-          <i class="iconoir-warning-triangle"></i>
-        </div>
-        <div class="alert__title">
-          {{ $t('webhookForm.deprecatedEventType.title') }}
-        </div>
-        <p class="alert__content">
-          {{ $t('webhookForm.deprecatedEventType.description') }}
-          <button
-            class="button webhook__convert"
-            @click="convertFromDeprecated"
-          >
+      <Alert type="error">
+        <template #title>
+          {{ $t('webhookForm.deprecatedEventType.title') }}</template
+        >
+        <p>{{ $t('webhookForm.deprecatedEventType.description') }}</p>
+        <template #actions>
+          <button class="alert__actions-button" @click="convertFromDeprecated">
             {{ $t('webhookForm.deprecatedEventType.convert') }}
           </button>
-        </p>
-      </div>
+        </template>
+      </Alert>
     </div>
   </form>
 </template>

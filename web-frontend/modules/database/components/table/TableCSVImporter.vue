@@ -104,12 +104,8 @@
         </div>
       </div>
     </div>
-    <Alert
-      v-if="error !== ''"
-      :title="$t('common.wrong')"
-      type="error"
-      icon="iconoir-warning-triangle"
-    >
+    <Alert v-if="error !== ''" type="error">
+      <template #title> {{ $t('common.wrong') }} </template>
       {{ error }}
     </Alert>
   </div>

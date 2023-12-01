@@ -1,0 +1,27 @@
+.toast-button {
+  position: fixed;
+  z-index: $z-index-toasts;
+}
+
+.toast-button--bottom {
+  bottom: 5px;
+  right: 5px;
+}
+
+.toast-button--pulsing {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 $color-primary-400;
+  }
+
+  70% {
+    box-shadow: 0 0 0 5px rgba(0, 0, 0, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+  }
+}

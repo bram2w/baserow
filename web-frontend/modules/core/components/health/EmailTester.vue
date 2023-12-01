@@ -11,15 +11,16 @@
     </h2>
     <Error :error="error" />
     <div v-if="testResult.succeeded != null">
-      <Alert
-        v-if="!testResult.succeeded"
-        type="error"
-        :title="testResult.error_type"
-      >
-        <p>{{ testResult.error }}</p>
-        <pre class="email-tester__full-stack">{{ trimmedFullStack }}</pre>
+      <Alert v-if="!testResult.succeeded" type="error">
+        <template #title>{{ testResult.error_type }}</template>
+        <div>
+          <p>{{ testResult.error }}</p>
+          <pre class="email-tester__full-stack">{{ trimmedFullStack }}</pre>
+        </div>
       </Alert>
-      <Alert v-else type="success" :title="$t('emailTester.success')"> </Alert>
+      <Alert v-else type="success">
+        <template #title>{{ $t('emailTester.success') }}</template>
+      </Alert>
     </div>
     <form @submit.prevent="submit">
       <FormElement :error="fieldHasErrors('targetEmail')" class="control">

@@ -49,12 +49,10 @@
       <p v-else>{{ $t('publishActionModal.noDomain') }}</p>
     </template>
 
-    <Alert
-      v-if="jobHasSucceeded"
-      type="success"
-      icon="iconoir-check"
-      :title="$t('publishActionModal.publishSucceedTitle')"
-    >
+    <Alert v-if="jobHasSucceeded" type="success">
+      <template #title>{{
+        $t('publishActionModal.publishSucceedTitle')
+      }}</template>
       <p>{{ $t('publishActionModal.publishSucceedDescription') }}</p>
     </Alert>
 

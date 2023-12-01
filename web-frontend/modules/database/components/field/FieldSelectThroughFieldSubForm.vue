@@ -1,7 +1,7 @@
 <template>
   <div>
-    <Alert v-if="linkRowFieldsInThisTable.length === 0" minimal type="error">
-      {{ $t('fieldSelectThroughFieldSubForm.noTable') }}
+    <Alert v-if="linkRowFieldsInThisTable.length === 0" type="error">
+      <p>{{ $t('fieldSelectThroughFieldSubForm.noTable') }}</p>
     </Alert>
     <div v-if="linkRowFieldsInThisTable.length > 0" class="control">
       <label class="control__label control__label--small">

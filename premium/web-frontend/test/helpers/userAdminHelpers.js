@@ -128,7 +128,7 @@ export default class UserAdminUserHelpers {
   }
 
   getErrorText(component) {
-    return component.findComponent(Error).find('.alert__content').text()
+    return component.findComponent(Error).find('.alert__message').text()
   }
 
   changeFullName(newFullName, options = {}) {

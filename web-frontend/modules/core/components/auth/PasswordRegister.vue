@@ -1,12 +1,7 @@
 <template>
   <div>
-    <Alert
-      v-if="invitation !== null"
-      simple
-      type="primary"
-      icon="iconoir-warning-triangle"
-      :title="$t('invitationTitle')"
-    >
+    <Alert v-if="invitation !== null" type="info-primary">
+      <template #title>{{ $t('invitationTitle') }}</template>
       <i18n path="invitationMessage" tag="p">
         <template #invitedBy>
           <strong>{{ invitation.invited_by }}</strong>

@@ -1,16 +1,13 @@
 <template>
-  <Alert v-if="isFormulaInvalid" type="error" minimal>
+  <Alert v-if="isFormulaInvalid" type="error">
     <p>
       {{ $t('formulaInputField.errorInvalidFormula') }}
     </p>
-    <Button
-      class="button formula-input-field__reset-button margin-top-1"
-      type="error"
-      size="tiny"
-      @click="reset"
-    >
-      {{ $t('action.reset') }}
-    </Button>
+    <template #actions>
+      <button class="alert__actions-button" @click.prevent="reset">
+        {{ $t('action.reset') }}
+      </button>
+    </template>
   </Alert>
   <div v-else>
     <EditorContent
