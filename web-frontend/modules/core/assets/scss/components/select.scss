@@ -94,10 +94,6 @@
   color: $color-neutral-600;
   margin: 10px 0 10px 10px;
   font-size: 14px;
-
-  li:first-child & {
-    margin-top: 0;
-  }
 }
 
 .select__item-active-icon {
@@ -196,6 +192,7 @@
   align-items: center;
   font-weight: 500;
   line-height: 15px;
+  gap: 6px;
 
   @extend %ellipsis;
 
@@ -209,7 +206,6 @@
 }
 
 .select__item-icon {
-  margin-right: 6px;
   font-size: 16px;
 
   .select__item.disabled &,
@@ -221,7 +217,6 @@
 .select__item-image {
   max-width: 15px;
   max-height: 15px;
-  margin-right: 6px;
 }
 
 .select__item-description {
