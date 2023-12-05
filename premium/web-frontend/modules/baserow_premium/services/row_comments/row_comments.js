@@ -18,5 +18,11 @@ export default (client) => {
     delete(tableId, commentId) {
       return client.delete(`/row_comments/${tableId}/comment/${commentId}/`)
     },
+    updateNotificationMode(tableId, rowId, mode) {
+      return client.put(
+        `/row_comments/${tableId}/${rowId}/notification-mode/`,
+        { mode }
+      )
+    },
   }
 }

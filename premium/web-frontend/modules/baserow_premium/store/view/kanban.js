@@ -4,6 +4,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import ViewService from '@baserow/modules/database/services/view'
 import KanbanService from '@baserow_premium/services/views/kanban'
 import {
+  extractRowMetadata,
   getRowSortFunction,
   matchSearchFilters,
   getFilters,
@@ -13,19 +14,21 @@ import FieldService from '@baserow/modules/database/services/field'
 import { SingleSelectFieldType } from '@baserow/modules/database/fieldTypes'
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 
-export function populateRow(row) {
+export function populateRow(row, metadata = {}) {
   row._ = {
+    metadata,
     dragging: false,
   }
   return row
 }
 
-export function populateStack(stack) {
+export function populateStack(stack, data) {
   Object.assign(stack, {
     loading: false,
   })
   stack.results.forEach((row) => {
-    populateRow(row)
+    const metadata = extractRowMetadata(data, row.id)
+    populateRow(row, metadata)
   })
   return stack
 }
@@ -156,6 +159,10 @@ export const mutations = {
       })
     })
   },
+  UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+    const currentValue = row._.metadata[rowMetadataType]
+    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
+  },
 }
 
 export const actions = {
@@ -185,7 +192,7 @@ export const actions = {
       filters: getFilters(rootGetters, kanbanId),
     })
     Object.keys(data.rows).forEach((key) => {
-      populateStack(data.rows[key])
+      populateStack(data.rows[key], data)
     })
     commit('SET_LAST_KANBAN_ID', kanbanId)
     commit('SET_SINGLE_SELECT_FIELD_ID', singleSelectFieldId)
@@ -940,6 +947,20 @@ export const actions = {
    */
   addField({ commit }, { field, value = null }) {
     commit('ADD_FIELD_TO_ALL_ROWS', { field, value })
+  },
+  /**
+   * Updates a single row's row._.metadata based on the provided rowMetadataType and
+   * updateFunction.
+   */
+  updateRowMetadata(
+    { commit, getters },
+    { rowId, rowMetadataType, updateFunction }
+  ) {
+    const target = getters.findStackIdAndIndex(rowId)
+    if (target !== undefined) {
+      const row = target[2]
+      commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
+    }
   },
 }
 

@@ -2,8 +2,8 @@ from baserow_premium.api.views.calendar.errors import (
     ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD,
 )
 from baserow_premium.api.views.calendar.serializers import (
-    CalendarViewExampleResponseSerializer,
     ListCalendarRowsQueryParamsSerializer,
+    get_calendar_view_example_response_serializer,
 )
 from baserow_premium.license.features import PREMIUM
 from baserow_premium.license.handler import LicenseHandler
@@ -33,6 +33,7 @@ from baserow.contrib.database.api.views.errors import (
     ERROR_VIEW_DOES_NOT_EXIST,
 )
 from baserow.contrib.database.api.views.utils import get_public_view_authorization_token
+from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
@@ -61,8 +62,14 @@ class CalendarViewView(APIView):
                 name="include",
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
-                description="Accepts `field_options` as value if the field options "
-                "must also be included in the response.",
+                description=(
+                    "A comma separated list allowing the values of `field_options` and "
+                    "`row_metadata` which will add the object/objects with the same "
+                    "name to the response if included. The `field_options` object "
+                    "contains user defined view settings for each field. For example "
+                    "the field's width is included in here. The `row_metadata` object"
+                    " includes extra row specific data on a per row basis."
+                ),
             ),
             OpenApiParameter(
                 name="limit",
@@ -121,7 +128,7 @@ class CalendarViewView(APIView):
             "\n\nThis is a **premium** feature."
         ),
         responses={
-            200: CalendarViewExampleResponseSerializer,
+            200: get_calendar_view_example_response_serializer(),
             400: get_error_schema(
                 [
                     "ERROR_USER_NOT_IN_GROUP",
@@ -139,11 +146,11 @@ class CalendarViewView(APIView):
             CalendarViewHasNoDateField: (ERROR_CALENDAR_VIEW_HAS_NO_DATE_FIELD),
         }
     )
-    @allowed_includes("field_options")
+    @allowed_includes("field_options", "row_metadata")
     @validate_query_parameters(
         ListCalendarRowsQueryParamsSerializer, return_validated=True
     )
-    def get(self, request, view_id, field_options, query_params):
+    def get(self, request, view_id, field_options, row_metadata, query_params):
         """
         Responds with the rows grouped by date.
         """
@@ -190,12 +197,14 @@ class CalendarViewView(APIView):
             model, RowSerializer, is_response=True
         )
 
+        grouped_rows_serialized = {}
         for key, value in grouped_rows.items():
-            grouped_rows[key]["results"] = serializer_class(
-                value["results"], many=True
-            ).data
+            grouped_rows_serialized[key] = {
+                "count": value["count"],
+                "results": serializer_class(value["results"], many=True).data,
+            }
 
-        response = {"rows": grouped_rows}
+        response = {"rows": grouped_rows_serialized}
 
         if field_options:
             view_type = view_type_registry.get_by_model(view)
@@ -204,6 +213,18 @@ class CalendarViewView(APIView):
                 create_if_missing=True
             )
             response.update(**serializer_class(view, context=context).data)
+
+        if row_metadata:
+            row_metadata = row_metadata_registry.generate_and_merge_metadata_for_rows(
+                request.user,
+                view.table,
+                (
+                    row.id
+                    for row_group in grouped_rows.values()
+                    for row in row_group["results"]
+                ),
+            )
+            response.update(row_metadata=row_metadata)
 
         view_loaded.send(
             sender=self,
@@ -276,7 +297,7 @@ class PublicCalendarViewView(APIView):
             "`offset` per select option. \n\nThis is a **premium** feature."
         ),
         responses={
-            200: CalendarViewExampleResponseSerializer,
+            200: get_calendar_view_example_response_serializer(),
             401: get_error_schema(["ERROR_NO_AUTHORIZATION_TO_PUBLICLY_SHARED_VIEW"]),
             400: get_error_schema(
                 [

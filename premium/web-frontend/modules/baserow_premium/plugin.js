@@ -38,7 +38,10 @@ import pl from '@baserow_premium/locales/pl.json'
 import { PremiumLicenseType } from '@baserow_premium/licenseTypes'
 import { PersonalViewOwnershipType } from '@baserow_premium/viewOwnershipTypes'
 import { ViewOwnershipPermissionManagerType } from '@baserow_premium/permissionManagerTypes'
-import { RowCommentMentionNotificationType } from '@baserow_premium/notificationTypes'
+import {
+  RowCommentMentionNotificationType,
+  RowCommentNotificationType,
+} from '@baserow_premium/notificationTypes'
 import { CommentsRowModalSidebarType } from '@baserow_premium/rowModalSidebarTypes'
 
 export default (context) => {
@@ -133,6 +136,10 @@ export default (context) => {
   app.$registry.register(
     'notification',
     new RowCommentMentionNotificationType(context)
+  )
+  app.$registry.register(
+    'notification',
+    new RowCommentNotificationType(context)
   )
 
   app.$registry.register(

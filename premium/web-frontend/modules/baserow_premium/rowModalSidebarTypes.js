@@ -1,5 +1,6 @@
 import { RowModalSidebarType } from '@baserow/modules/database/rowModalSidebarTypes'
 import RowCommentsSidebar from '@baserow_premium/components/row_comments/RowCommentsSidebar'
+import RowEditModalCommentNotificationMode from '@baserow_premium/components/row_comments/RowEditModalCommentNotificationMode'
 import PremiumFeatures from '@baserow_premium/features'
 
 export class CommentsRowModalSidebarType extends RowModalSidebarType {
@@ -31,5 +32,13 @@ export class CommentsRowModalSidebarType extends RowModalSidebarType {
 
   getOrder() {
     return 0
+  }
+
+  getActionComponent(row) {
+    // Return this component only if the row provides the metadata to show the
+    // notification mode context properly.
+    if (row._?.metadata) {
+      return RowEditModalCommentNotificationMode
+    }
   }
 }

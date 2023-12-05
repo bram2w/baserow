@@ -267,14 +267,26 @@ export class ViewType extends Registerable {
    * provided and should be used to calculate and store the new metadata value for the
    * specified metadata type and row.
    */
-  rowMetadataUpdated(
+  async rowMetadataUpdated(
     { store },
     tableId,
     rowId,
-    metadataType,
+    rowMetadataType,
     updateFunction,
     storePrefix = ''
-  ) {}
+  ) {
+    if (this.isCurrentView(store, tableId)) {
+      await store.dispatch(
+        storePrefix + 'view/' + this.getType() + '/updateRowMetadata',
+        {
+          tableId,
+          rowId,
+          rowMetadataType,
+          updateFunction,
+        }
+      )
+    }
+  }
 
   /**
    * @return object
@@ -563,24 +575,6 @@ export class GridViewType extends ViewType {
       })
       store.dispatch(storePrefix + 'view/grid/fetchAllFieldAggregationData', {
         view: store.getters['view/getSelected'],
-      })
-    }
-  }
-
-  async rowMetadataUpdated(
-    { store },
-    tableId,
-    rowId,
-    rowMetadataType,
-    updateFunction,
-    storePrefix = ''
-  ) {
-    if (this.isCurrentView(store, tableId)) {
-      await store.dispatch(storePrefix + 'view/grid/updateRowMetadata', {
-        tableId,
-        rowId,
-        rowMetadataType,
-        updateFunction,
       })
     }
   }

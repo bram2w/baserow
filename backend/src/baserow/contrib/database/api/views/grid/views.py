@@ -311,7 +311,7 @@ class GridViewView(APIView):
 
         if row_metadata:
             row_metadata = row_metadata_registry.generate_and_merge_metadata_for_rows(
-                view.table, (row.id for row in page)
+                request.user, view.table, (row.id for row in page)
             )
             response.data.update(row_metadata=row_metadata)
 

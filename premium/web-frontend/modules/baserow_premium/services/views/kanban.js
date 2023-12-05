@@ -8,6 +8,7 @@ export default (client) => {
       offset = null,
       signal = null,
       includeFieldOptions = false,
+      includeRowMetadata = true,
       selectOptions = [],
       publicUrl = false,
       publicAuthToken = null,
@@ -23,6 +24,10 @@ export default (client) => {
 
       if (includeFieldOptions) {
         include.push('field_options')
+      }
+
+      if (includeRowMetadata) {
+        include.push('row_metadata')
       }
 
       if (include.length > 0) {

@@ -12,6 +12,7 @@ class BaserowPremiumConfig(AppConfig):
         from baserow_premium.api.user.user_data_types import ActiveLicensesDataType
         from baserow_premium.row_comments.row_metadata_types import (
             RowCommentCountMetadataType,
+            RowCommentsNotificationModeMetadataType,
         )
 
         from baserow.api.user.registries import user_data_registry
@@ -46,6 +47,7 @@ class BaserowPremiumConfig(AppConfig):
         table_exporter_registry.register(XMLTableExporter())
 
         row_metadata_registry.register(RowCommentCountMetadataType())
+        row_metadata_registry.register(RowCommentsNotificationModeMetadataType())
 
         user_data_registry.register(ActiveLicensesDataType())
 
@@ -116,8 +118,10 @@ class BaserowPremiumConfig(AppConfig):
 
         from baserow_premium.row_comments.notification_types import (
             RowCommentMentionNotificationType,
+            RowCommentNotificationType,
         )
 
         from baserow.core.notifications.registries import notification_type_registry
 
         notification_type_registry.register(RowCommentMentionNotificationType())
+        notification_type_registry.register(RowCommentNotificationType())

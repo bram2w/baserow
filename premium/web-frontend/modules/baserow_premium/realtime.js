@@ -28,4 +28,14 @@ export const registerRealtimeEvents = (realtime) => {
       rowComment,
     })
   })
+  realtime.registerEvent(
+    'row_comments_notification_mode_updated',
+    async ({ store }, data) => {
+      await store.dispatch('row_comments/forceUpdateNotificationMode', {
+        tableId: data.table_id,
+        rowId: data.row_id,
+        mode: data.mode,
+      })
+    }
+  )
 }

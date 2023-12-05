@@ -34,6 +34,14 @@ export class RowModalSidebarType extends Registerable {
   getOrder() {
     return 50
   }
+
+  /**
+   * Returns a component to add to the actions (the top right of the sidebar).
+   * If null, no action will be added.
+   */
+  getActionComponent() {
+    return null
+  }
 }
 
 export class HistoryRowModalSidebarType extends RowModalSidebarType {

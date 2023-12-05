@@ -99,9 +99,15 @@
   }
 }
 
-.modal__close {
+.modal__actions {
   @include absolute(20px, 20px, auto, auto);
 
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: baseline;
+}
+
+.modal__close {
   font-size: 20px;
   color: $color-neutral-400;
 
@@ -112,7 +118,8 @@
 
 .sidebar__collapse {
   @extend .modal__close;
-  @include absolute(20px, 46px, auto, auto);
+
+  margin-right: 4px;
 }
 
 .modal__head {

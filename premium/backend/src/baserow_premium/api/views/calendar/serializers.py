@@ -5,6 +5,7 @@ from pytz import all_timezones
 from rest_framework import serializers
 
 from baserow.contrib.database.api.rows.serializers import (
+    get_example_row_metadata_field_serializer,
     get_example_row_serializer_class,
 )
 from baserow.contrib.database.search.handler import ALL_SEARCH_MODES
@@ -58,11 +59,19 @@ class CalendarViewExampleResponseStackSerializer(serializers.Serializer):
     )
 
 
-class CalendarViewExampleResponseSerializer(serializers.Serializer):
-    DATE = CalendarViewExampleResponseStackSerializer(
-        help_text="Every date bucket (e.g. '2023-01-01') related to the view's date field can "
-        "have its own entry like this."
-    )
-    field_options = serializers.ListSerializer(
-        child=CalendarViewFieldOptionsSerializer()
+def get_calendar_view_example_response_serializer():
+    return type(
+        "CalendarViewExampleResponseSerializer",
+        (serializers.Serializer,),
+        {
+            "rows": serializers.DictField(
+                child=CalendarViewExampleResponseStackSerializer(),
+                help_text="Every date bucket (e.g. '2023-01-01') related to the view's date field can "
+                "have its own entry like this.",
+            ),
+            "field_options": serializers.ListSerializer(
+                child=CalendarViewFieldOptionsSerializer()
+            ),
+            "row_metadata": get_example_row_metadata_field_serializer(),
+        },
     )

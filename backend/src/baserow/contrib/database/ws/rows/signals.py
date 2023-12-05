@@ -38,7 +38,7 @@ def rows_created(
                     model, RowSerializer, is_response=True
                 )(rows, many=True).data,
                 metadata=row_metadata_registry.generate_and_merge_metadata_for_rows(
-                    table, [row.id for row in rows]
+                    user, table, [row.id for row in rows]
                 ),
                 before=before,
             ),
@@ -70,7 +70,7 @@ def rows_updated(
                     model, RowSerializer, is_response=True
                 )(rows, many=True).data,
                 metadata=row_metadata_registry.generate_and_merge_metadata_for_rows(
-                    table, [row.id for row in rows]
+                    user, table, [row.id for row in rows]
                 ),
             ),
             getattr(user, "web_socket_id", None),

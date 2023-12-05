@@ -56,6 +56,9 @@
     "rowCommentMentionNotification": {
         "title": "{sender} mentioned you in row {row} in {table}"
     },
+    "rowCommentNotification": {
+        "title": "{sender} posted a comment in row {row} in {table}"
+    },
     "trashType": {
         "row_comment": "row comment"
     },
@@ -339,5 +342,11 @@
     "selectDateFieldModal": {
         "chooseDateField": "Choose date field",
         "save": "Save"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsTitle": "Only mentions",
+        "modeMentionsDesc": "You will only receive notifications when you are mentioned.",
+        "modeAllTitle": "All comments",
+        "modeAllDesc": "You will receive notifications for all comments in this row."
     }
 }

@@ -138,7 +138,11 @@ class PremiumFixtures:
 
     def create_row_comment(self, user, row, comment):
         return RowComment.objects.create(
-            user=user, table=row.get_parent(), row_id=row.id, comment=comment
+            user=user,
+            table=row.get_parent(),
+            row_id=row.id,
+            comment=comment,
+            message=prosemirror_doc_from_plain_text(comment),
         )
 
     def create_comment_message_from_plain_text(self, plain_text):

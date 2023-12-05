@@ -4,7 +4,10 @@ from django.test.utils import override_settings
 
 import pytest
 from baserow_premium.row_comments.actions import DeleteRowCommentActionType
-from baserow_premium.row_comments.handler import RowCommentHandler
+from baserow_premium.row_comments.handler import (
+    RowCommentHandler,
+    RowCommentsNotificationModes,
+)
 from freezegun import freeze_time
 
 from baserow.contrib.database.action.scopes import TableActionScopeType
@@ -191,3 +194,32 @@ def test_row_comment_restored(premium_data_fixture):
             "edited": False,
             "trashed": False,
         }
+
+
+@pytest.mark.django_db(transaction=True)
+@patch("baserow.ws.tasks.broadcast_to_users.apply")
+@override_settings(DEBUG=True)
+def test_row_comments_notification_mode_updated(
+    mocked_broadcast_to_users,
+    premium_data_fixture,
+):
+    user = premium_data_fixture.create_user(has_active_premium_license=True)
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    mode = RowCommentsNotificationModes.MODE_ALL_COMMENTS.value
+    RowCommentHandler.update_row_comments_notification_mode(
+        user, table.id, rows[0].id, mode=mode
+    )
+
+    mocked_broadcast_to_users.assert_called_once()
+    args = mocked_broadcast_to_users.call_args[0][0]
+    assert args[0] == [user.id]
+    assert args[1] == {
+        "type": "row_comments_notification_mode_updated",
+        "table_id": table.id,
+        "row_id": rows[0].id,
+        "mode": mode,
+    }
+    assert args[2] is None

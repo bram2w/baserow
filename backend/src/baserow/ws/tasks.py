@@ -188,7 +188,11 @@ def broadcast_to_users_individual_payloads(
 
 @app.task(bind=True)
 def broadcast_to_channel_group(
-    self, workspace, payload, ignore_web_socket_id=None, exclude_user_ids=None
+    self,
+    workspace,
+    payload,
+    ignore_web_socket_id=None,
+    exclude_user_ids=None,
 ):
     """
     Broadcasts a JSON payload all the users within the channel workspace having the
