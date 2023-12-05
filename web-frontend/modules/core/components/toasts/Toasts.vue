@@ -11,12 +11,18 @@
       ></UserPasswordChangedToast>
       <FailedConnectingToast v-if="failedConnecting"></FailedConnectingToast>
       <AuthorizationErrorToast v-if="unauthorized"></AuthorizationErrorToast>
-      <Toast v-for="toast in normalToasts" :key="toast.id" :type="toast.type">
-        <template #title>{{ $t('toast.title') }}</template>
-        <span>{{ $t('toast.content') }}</span>
+      <Toast
+        v-for="toast in normalToasts"
+        :key="toast.id"
+        :type="toast.type"
+        :icon="toastIcon(toast.type)"
+        close-button
+        @close="closeToast(toast)"
+      >
+        <template #title>{{ toast.title }}</template>
+        <span>{{ toast.message }}</span>
       </Toast>
     </div>
-    <!-- Top toasts-->
 
     <div class="toasts__container-bottom">
       <!-- Bottom toasts-->
@@ -99,6 +105,25 @@ export default {
       if (!value) {
         this.$store.dispatch('toast/userLoggedOut')
       }
+    },
+  },
+  methods: {
+    toastIcon(toastType) {
+      switch (toastType) {
+        case 'warning':
+          return 'iconoir-warning-circle'
+        case 'success':
+          return 'iconoir-check-circle'
+        case 'info-primary':
+          return 'iconoir-info-empty'
+        case 'error':
+          return 'iconoir-warning-triangle'
+        default:
+          return 'iconoir-info-empty'
+      }
+    },
+    closeToast(toast) {
+      this.$store.dispatch('toast/remove', toast)
     },
   },
 }
