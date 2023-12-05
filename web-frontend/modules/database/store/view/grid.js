@@ -10,6 +10,7 @@ import GridService from '@baserow/modules/database/services/view/grid'
 import RowService from '@baserow/modules/database/services/row'
 import {
   calculateSingleRowSearchMatches,
+  extractRowMetadata,
   getRowSortFunction,
   matchSearchFilters,
   getFilters,
@@ -44,12 +45,6 @@ export function populateRow(row, metadata = {}) {
     selectedFieldId: -1,
   }
   return row
-}
-
-function extractMetadataAndPopulateRow(data, rowIndex) {
-  const metadata = data.row_metadata || {}
-  const row = data.results[rowIndex]
-  populateRow(row, metadata[row.id])
 }
 
 const updatePositionFn = {
@@ -624,8 +619,9 @@ export const actions = {
           filters: getFilters(rootGetters, getters.getLastGridId),
         })
         .then(({ data }) => {
-          data.results.forEach((part, index) => {
-            extractMetadataAndPopulateRow(data, index)
+          data.results.forEach((row) => {
+            const metadata = extractRowMetadata(data, row.id)
+            populateRow(row, metadata)
           })
           commit('ADD_ROWS', {
             rows: data.results,
@@ -785,8 +781,9 @@ export const actions = {
       orderBy: getOrderBy(rootGetters, getters.getLastGridId),
       filters: getFilters(rootGetters, getters.getLastGridId),
     })
-    data.results.forEach((part, index) => {
-      extractMetadataAndPopulateRow(data, index)
+    data.results.forEach((row) => {
+      const metadata = extractRowMetadata(data, row.id)
+      populateRow(row, metadata)
     })
     commit('CLEAR_ROWS')
     commit('ADD_ROWS', {
@@ -868,8 +865,9 @@ export const actions = {
       .then(({ data, offset }) => {
         // If there are results we can replace the existing rows so that the user stays
         // at the same scroll offset.
-        data.results.forEach((part, index) => {
-          extractMetadataAndPopulateRow(data, index)
+        data.results.forEach((row) => {
+          const metadata = extractRowMetadata(data, row.id)
+          populateRow(row, metadata)
         })
         commit('ADD_ROWS', {
           rows: data.results,

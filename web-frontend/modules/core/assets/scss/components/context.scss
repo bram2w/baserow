@@ -184,6 +184,22 @@
   font-size: 16px;
 }
 
+.context__menu-deactivated-icon {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  font-size: 14px;
+  background-color: $color-primary-200;
+  color: $color-primary-500;
+  padding: 2px;
+  width: 17px;
+  height: 17px;
+  justify-content: center;
+
+  @include flex-align-items();
+  @include rounded($rounded);
+}
+
 .context__menu-item {
   margin-bottom: 4px;
   padding: 0 4px;

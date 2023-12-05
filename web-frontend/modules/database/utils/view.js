@@ -535,3 +535,11 @@ export function getDefaultView(app, store, workspaceId, showRowModal) {
     return showRowModal ? viewType.canShowRowModal() : true
   })
 }
+
+/*
+ * Extracts the metadata from the provided data to populate the row.
+ */
+export function extractRowMetadata(data, rowId) {
+  const metadata = data.row_metadata || {}
+  return metadata[rowId] || {}
+}

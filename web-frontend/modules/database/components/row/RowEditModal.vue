@@ -8,6 +8,17 @@
     :collapsible-right-sidebar="true"
     @hidden="hidden"
   >
+    <template #actions>
+      <component
+        :is="actionComponent"
+        v-for="(actionComponent, i) in rowModalActionComponents"
+        :key="i"
+        :database="database"
+        :table="table"
+        :row="row"
+      >
+      </component>
+    </template>
     <template #content>
       <div v-if="enableNavigation" class="row-edit-modal__navigation">
         <div v-if="navigationLoading" class="loading"></div>
@@ -226,14 +237,16 @@ export default {
         return null
       }
     },
-    hasRightSidebar() {
+    activeSidebarTypes() {
       const allSidebarTypes = this.$registry.getOrderedList('rowModalSidebar')
-      const activeSidebarTypes = allSidebarTypes.filter(
+      return allSidebarTypes.filter(
         (type) =>
           type.isDeactivated(this.database, this.table, this.readOnly) ===
             false && type.getComponent()
       )
-      return activeSidebarTypes.length > 0
+    },
+    hasRightSidebar() {
+      return this.activeSidebarTypes.length > 0
     },
     canSubscribeToRowUpdates() {
       return (
@@ -246,6 +259,11 @@ export default {
         // created in the backend yet.
         Number.isInteger(this.rowId)
       )
+    },
+    rowModalActionComponents() {
+      return this.activeSidebarTypes
+        .map((type) => type.getActionComponent(this.row))
+        .filter((actionComponent) => actionComponent !== null)
     },
   },
   watch: {

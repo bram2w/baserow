@@ -25,6 +25,7 @@ from baserow.contrib.database.api.fields.errors import (
 )
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
+    get_example_row_metadata_field_serializer,
     get_example_row_serializer_class,
     get_row_serializer_class,
 )
@@ -51,6 +52,7 @@ from baserow.contrib.database.fields.field_filters import (
     FILTER_TYPE_AND,
     FILTER_TYPE_OR,
 )
+from baserow.contrib.database.rows.registries import row_metadata_registry
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.exceptions import (
     NoAuthorizationToPubliclySharedView,
@@ -95,11 +97,12 @@ class GalleryViewView(APIView):
                 location=OpenApiParameter.QUERY,
                 type=OpenApiTypes.STR,
                 description=(
-                    "A comma separated list allowing the values of `field_options` "
-                    "which will add the object/objects with the same name to the "
-                    "response if included. The `field_options` object contains user "
-                    "defined view settings for each field. For example the field's "
-                    "order is included in here."
+                    "A comma separated list allowing the values of `field_options` and "
+                    "`row_metadata` which will add the object/objects with the same "
+                    "name to the response if included. The `field_options` object "
+                    "contains user defined view settings for each field. For example "
+                    "the field's width is included in here. The `row_metadata` object"
+                    " includes extra row specific data on a per row basis."
                 ),
             ),
             OpenApiParameter(
@@ -142,6 +145,7 @@ class GalleryViewView(APIView):
                         serializer_class=GalleryViewFieldOptionsSerializer,
                         required=False,
                     ),
+                    "row_metadata": get_example_row_metadata_field_serializer(),
                 },
                 serializer_name="PaginationSerializerWithGalleryViewFieldOptions",
             ),
@@ -155,9 +159,16 @@ class GalleryViewView(APIView):
             ViewDoesNotExist: ERROR_GALLERY_DOES_NOT_EXIST,
         }
     )
-    @allowed_includes("field_options")
+    @allowed_includes("field_options", "row_metadata")
     @validate_query_parameters(SearchQueryParamSerializer, return_validated=True)
-    def get(self, request: Request, view_id: int, field_options: bool, query_params):
+    def get(
+        self,
+        request: Request,
+        view_id: int,
+        field_options: bool,
+        row_metadata: bool,
+        query_params,
+    ):
         """Lists the rows for the gallery view."""
 
         view_handler = ViewHandler()
@@ -204,6 +215,12 @@ class GalleryViewView(APIView):
                 create_if_missing=True
             )
             response.data.update(**serializer_class(view, context=context).data)
+
+        if row_metadata:
+            row_metadata = row_metadata_registry.generate_and_merge_metadata_for_rows(
+                request.user, view.table, (row.id for row in page)
+            )
+            response.data.update(row_metadata=row_metadata)
 
         view_loaded.send(
             sender=self,

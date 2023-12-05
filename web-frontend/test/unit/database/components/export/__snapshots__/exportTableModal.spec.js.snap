@@ -1523,13 +1523,18 @@ exports[`Preview exportTableModal Modal with no view 1`] = `
       </div>
     </form>
       
-    <a
-      class="modal__close"
+    <div
+      class="modal__actions"
     >
-      <i
-        class="iconoir-cancel"
-      />
-    </a>
+      <a
+        class="modal__close"
+      >
+        <i
+          class="iconoir-cancel"
+        />
+      </a>
+       
+    </div>
   </div>
 </div>
 `;
@@ -3059,13 +3064,18 @@ exports[`Preview exportTableModal Modal with view 1`] = `
       </div>
     </form>
       
-    <a
-      class="modal__close"
+    <div
+      class="modal__actions"
     >
-      <i
-        class="iconoir-cancel"
-      />
-    </a>
+      <a
+        class="modal__close"
+      >
+        <i
+          class="iconoir-cancel"
+        />
+      </a>
+       
+    </div>
   </div>
 </div>
 `;

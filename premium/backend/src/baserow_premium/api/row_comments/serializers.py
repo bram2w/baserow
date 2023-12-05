@@ -1,4 +1,7 @@
-from baserow_premium.row_comments.models import RowComment
+from baserow_premium.row_comments.models import (
+    ALL_ROW_COMMENT_NOTIFICATION_MODES,
+    RowComment,
+)
 from drf_spectacular.utils import extend_schema_serializer
 from rest_framework import serializers
 
@@ -53,3 +56,10 @@ class RowCommentCreateSerializer(serializers.ModelSerializer):
                 "The message must be a valid ProseMirror JSON document."
             )
         return value
+
+
+class RowCommentsNotificationModeSerializer(serializers.Serializer):
+    mode = serializers.ChoiceField(
+        choices=ALL_ROW_COMMENT_NOTIFICATION_MODES,
+        help_text="The mode to use to receive notifications for new comments on a table row.",
+    )

@@ -4,6 +4,7 @@ import { RefreshCancelledError } from '@baserow/modules/core/errors'
 import { clone } from '@baserow/modules/core/utils/object'
 import {
   calculateSingleRowSearchMatches,
+  extractRowMetadata,
   getFilters,
   getOrderBy,
   getRowSortFunction,
@@ -47,12 +48,14 @@ import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/sea
 export default ({ service, customPopulateRow }) => {
   let lastRequestController = null
 
-  const populateRow = (row) => {
+  const populateRow = (row, metadata = {}) => {
     if (customPopulateRow) {
       customPopulateRow(row)
     }
     if (row._ == null) {
-      row._ = {}
+      row._ = {
+        metadata,
+      }
     }
     // Matching rows for front-end only search is not yet properly
     // supported and tested in this store mixin. Only server-side search
@@ -248,6 +251,10 @@ export default ({ service, customPopulateRow }) => {
       })
       row._.matchSearch = matchSearch
     },
+    UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+      const currentValue = row._.metadata[rowMetadataType]
+      Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
+    },
   }
 
   const actions = {
@@ -279,7 +286,8 @@ export default ({ service, customPopulateRow }) => {
       })
       const rows = Array(data.count).fill(null)
       data.results.forEach((row, index) => {
-        rows[index] = populateRow(row)
+        const metadata = extractRowMetadata(data, row.id)
+        rows[index] = populateRow(row, metadata)
       })
       commit('SET_ROWS', rows)
       return data
@@ -1003,6 +1011,19 @@ export default ({ service, customPopulateRow }) => {
         commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
       }
     },
+    /**
+     * Updates a single row's row._.metadata based on the provided rowMetadataType and
+     * updateFunction.
+     */
+    updateRowMetadata(
+      { commit, getters },
+      { rowId, rowMetadataType, updateFunction }
+    ) {
+      const row = getters.getRow(rowId)
+      if (row) {
+        commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
+      }
+    },
   }
 
   const getters = {
@@ -1020,6 +1041,9 @@ export default ({ service, customPopulateRow }) => {
     },
     getFetching(state) {
       return state.fetching
+    },
+    getRow: (state) => (id) => {
+      return state.rows.find((row) => row.id === id)
     },
     getRows(state) {
       return state.rows

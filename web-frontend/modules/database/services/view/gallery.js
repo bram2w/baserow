@@ -7,6 +7,7 @@ export default (client) => {
       limit = 100,
       offset = null,
       includeFieldOptions = false,
+      includeRowMetadata = true,
       search = '',
       searchMode = '',
       signal = null,
@@ -29,6 +30,10 @@ export default (client) => {
 
       if (includeFieldOptions) {
         include.push('field_options')
+      }
+
+      if (includeRowMetadata) {
+        include.push('row_metadata')
       }
 
       if (include.length > 0) {

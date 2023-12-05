@@ -5,6 +5,7 @@ import { clone } from '@baserow/modules/core/utils/object'
 import ViewService from '@baserow/modules/database/services/view'
 import CalendarService from '@baserow_premium/services/views/calendar'
 import {
+  extractRowMetadata,
   getRowSortFunction,
   matchSearchFilters,
   calculateSingleRowSearchMatches,
@@ -17,8 +18,9 @@ import {
 import { prepareRowForRequest } from '@baserow/modules/database/utils/row'
 import { getDefaultSearchModeFromEnv } from '@baserow/modules/database/utils/search'
 
-export function populateRow(row) {
+export function populateRow(row, metadata = {}) {
   row._ = {
+    metadata,
     // Whether the row should be displayed based on the current activeSearchTerm term.
     matchSearch: true,
     // Contains the specific field ids which match the activeSearchTerm term.
@@ -29,12 +31,13 @@ export function populateRow(row) {
   return row
 }
 
-export function populateDateStack(stack) {
+export function populateDateStack(stack, data) {
   Object.assign(stack, {
     loading: false,
   })
   stack.results.forEach((row) => {
-    populateRow(row)
+    const metadata = extractRowMetadata(data, row.id)
+    populateRow(row, metadata)
   })
   return stack
 }
@@ -187,6 +190,10 @@ export const mutations = {
   DECREASE_COUNT(state, { stackId }) {
     state.dateStacks[stackId].count--
   },
+  UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
+    const currentValue = row._.metadata[rowMetadataType]
+    Vue.set(row._.metadata, rowMetadataType, updateFunction(currentValue))
+  },
 }
 
 export const actions = {
@@ -288,7 +295,7 @@ export const actions = {
       const lastRequest = dateTime.isSame(getters.getSelectedDate(fields))
       if (lastRequest) {
         Object.keys(data.rows).forEach((key) => {
-          populateDateStack(data.rows[key])
+          populateDateStack(data.rows[key], data)
         })
         commit('REPLACE_ALL_DATE_STACKS', data.rows)
         if (includeFieldOptions) {
@@ -822,6 +829,20 @@ export const actions = {
         overrides
       )
       commit('SET_ROW_SEARCH_MATCHES', rowSearchMatches)
+    }
+  },
+  /**
+   * Updates a single row's row._.metadata based on the provided rowMetadataType and
+   * updateFunction.
+   */
+  updateRowMetadata(
+    { commit, getters },
+    { rowId, rowMetadataType, updateFunction }
+  ) {
+    const target = getters.findStackIdAndIndex(rowId)
+    if (target !== undefined) {
+      const row = target[2]
+      commit('UPDATE_ROW_METADATA', { row, rowMetadataType, updateFunction })
     }
   },
 }

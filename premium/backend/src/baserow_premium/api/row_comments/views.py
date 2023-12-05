@@ -35,7 +35,11 @@ from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.core.action.registries import action_type_registry
 from baserow.core.exceptions import UserNotInWorkspace
 
-from .serializers import RowCommentCreateSerializer, RowCommentSerializer
+from .serializers import (
+    RowCommentCreateSerializer,
+    RowCommentSerializer,
+    RowCommentsNotificationModeSerializer,
+)
 
 
 class RowCommentsView(APIView):
@@ -84,7 +88,10 @@ class RowCommentsView(APIView):
         ],
         tags=["Database table rows"],
         operation_id="get_row_comments",
-        description="Returns all row comments for the specified table and row.",
+        description=(
+            "Returns all row comments for the specified table and row."
+            "\n\nThis is a **premium** feature."
+        ),
         responses={
             200: get_example_pagination_serializer_class(RowCommentSerializer),
             400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
@@ -139,16 +146,15 @@ class RowCommentsView(APIView):
         ],
         tags=["Database table rows"],
         operation_id="create_row_comment",
-        description="Creates a comment on the specified row.",
+        description="Creates a comment on the specified row.\n\nThis is a **premium** feature.",
         request=RowCommentCreateSerializer,
         responses={
             200: RowCommentSerializer,
-            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            400: get_error_schema(
+                ["ERROR_USER_NOT_IN_GROUP", "ERROR_INVALID_COMMENT_MENTION"]
+            ),
             404: get_error_schema(
-                [
-                    "ERROR_TABLE_DOES_NOT_EXIST",
-                    "ERROR_ROW_DOES_NOT_EXIST",
-                ]
+                ["ERROR_TABLE_DOES_NOT_EXIST", "ERROR_ROW_DOES_NOT_EXIST"]
             ),
         },
     )
@@ -188,7 +194,7 @@ class RowCommentView(APIView):
         ],
         tags=["Database table rows"],
         operation_id="update_row_comment",
-        description="Update a row comment.",
+        description="Update a row comment.\n\nThis is a **premium** feature.",
         responses={
             200: RowCommentSerializer,
             400: get_error_schema(
@@ -241,7 +247,7 @@ class RowCommentView(APIView):
         ],
         tags=["Database table rows"],
         operation_id="delete_row_comment",
-        description="Delete a row comment.",
+        description="Delete a row comment.\n\nThis is a **premium** feature.",
         responses={
             200: RowCommentSerializer,
             400: get_error_schema(
@@ -268,3 +274,54 @@ class RowCommentView(APIView):
         )
         context = {"user": request.user}
         return Response(RowCommentSerializer(trashed_comment, context=context).data)
+
+
+class RowCommentsNotificationModeView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="table_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The table id where the row is in.",
+            ),
+            OpenApiParameter(
+                name="row_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The row on which to manage the comment subscription.",
+            ),
+        ],
+        tags=["Database table rows"],
+        operation_id="update_row_comment_notification_mode",
+        description=(
+            "Updates the user's notification preferences for comments made on a specified table row."
+            "\n\nThis is a **premium** feature."
+        ),
+        request=RowCommentsNotificationModeSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(["ERROR_USER_NOT_IN_GROUP"]),
+            404: get_error_schema(
+                [
+                    "ERROR_TABLE_DOES_NOT_EXIST",
+                    "ERROR_ROW_DOES_NOT_EXIST",
+                ]
+            ),
+        },
+    )
+    @map_exceptions(
+        {
+            TableDoesNotExist: ERROR_TABLE_DOES_NOT_EXIST,
+            RowDoesNotExist: ERROR_ROW_DOES_NOT_EXIST,
+            UserNotInWorkspace: ERROR_USER_NOT_IN_GROUP,
+        }
+    )
+    @validate_body(RowCommentsNotificationModeSerializer, return_validated=True)
+    @transaction.atomic
+    def put(self, request, table_id, row_id, data):
+        notification_mode = data["mode"]
+        RowCommentHandler.update_row_comments_notification_mode(
+            request.user, table_id, row_id, notification_mode
+        )
+        return Response(status=204)

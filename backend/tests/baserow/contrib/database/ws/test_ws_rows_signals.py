@@ -80,7 +80,7 @@ def test_populates_with_row_id_metadata():
         type = "row_id"
 
         def generate_metadata_for_rows(
-            self, table, row_ids: List[int]
+            self, user, table, row_ids: List[int]
         ) -> Dict[int, Any]:
             return {row_id: row_id for row_id in row_ids}
 

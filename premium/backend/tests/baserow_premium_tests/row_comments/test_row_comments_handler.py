@@ -9,8 +9,11 @@ from baserow_premium.row_comments.exceptions import (
     RowCommentDoesNotExist,
     UserNotRowCommentAuthorException,
 )
-from baserow_premium.row_comments.handler import RowCommentHandler
-from baserow_premium.row_comments.models import RowComment
+from baserow_premium.row_comments.handler import (
+    RowCommentHandler,
+    RowCommentsNotificationModes,
+)
+from baserow_premium.row_comments.models import RowComment, RowCommentsNotificationMode
 from freezegun import freeze_time
 
 from baserow.core.exceptions import UserNotInWorkspace
@@ -269,3 +272,33 @@ def test_row_comment_cant_mention_user_outside_workspace(premium_data_fixture):
 
     comment = RowCommentHandler.create_comment(user, table.id, rows[0].id, message)
     assert comment.mentions.count() == 0
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(DEBUG=True)
+def test_user_change_row_comments_notification_mode(premium_data_fixture):
+    user = premium_data_fixture.create_user(
+        first_name="test_user", has_active_premium_license=True
+    )
+    table, _, rows = premium_data_fixture.build_table(
+        columns=[("text", "text")], rows=["first row"], user=user
+    )
+
+    assert RowCommentsNotificationMode.objects.count() == 0
+
+    RowCommentHandler.update_row_comments_notification_mode(
+        user, table.id, rows[0].id, RowCommentsNotificationModes.MODE_ALL_COMMENTS
+    )
+
+    assert RowCommentsNotificationMode.objects.count() == 1
+
+    RowCommentHandler.update_row_comments_notification_mode(
+        user, table.id, rows[0].id, RowCommentsNotificationModes.MODE_ONLY_MENTIONS
+    )
+
+    assert (
+        RowCommentsNotificationMode.objects.filter(
+            mode=RowCommentsNotificationModes.MODE_ONLY_MENTIONS
+        ).count()
+        == 1
+    )

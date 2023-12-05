@@ -22,29 +22,45 @@ function populateComment(comment, loading) {
   return comment
 }
 
-async function updateCommentCountInViews(app, rowComment, updateCountFunc) {
-  // A new comment has been forcibly created/deleted so we need to let all views know that
-  // the row comment count metadata should be changed atomically.
-  for (const viewType of Object.values(app.$registry.getAll('view'))) {
+async function updateRowMetadataInViews(
+  store,
+  tableId,
+  rowId,
+  rowMetadataKey,
+  updateMetadataValueFunc
+) {
+  for (const viewType of Object.values(store.$registry.getAll('view'))) {
     await viewType.rowMetadataUpdated(
-      { store: app },
-      rowComment.table_id,
-      rowComment.row_id,
-      'row_comment_count',
-      updateCountFunc,
+      { store },
+      tableId,
+      rowId,
+      rowMetadataKey,
+      updateMetadataValueFunc,
       'page/'
     )
   }
 }
 
-async function increaseCommentCountInViews(app, rowComment) {
-  await updateCommentCountInViews(app, rowComment, (count) =>
+async function updateCommentCountInViews(store, rowComment, updateCountFunc) {
+  // A new comment has been forcibly created/deleted so we need to let all views know that
+  // the row comment count metadata should be changed atomically.
+  await updateRowMetadataInViews(
+    store,
+    rowComment.table_id,
+    rowComment.row_id,
+    'row_comment_count',
+    updateCountFunc
+  )
+}
+
+async function increaseCommentCountInViews(store, rowComment) {
+  await updateCommentCountInViews(store, rowComment, (count) =>
     count ? count + 1 : 1
   )
 }
 
-async function decreaseCommentCountInViews(app, rowComment) {
-  await updateCommentCountInViews(app, rowComment, (count) =>
+async function decreaseCommentCountInViews(store, rowComment) {
+  await updateCommentCountInViews(store, rowComment, (count) =>
     count > 1 ? count - 1 : null
   )
 }
@@ -280,6 +296,44 @@ export const actions = {
       commit('SET_ROW_COMMENT_DELETED', { commentId, deleted: false })
       throw e
     }
+  },
+  /**
+   * Update the notification mode for comments on a row.
+   */
+  async updateNotificationMode({ dispatch }, { table, row, mode }) {
+    const originalMode = row._.metadata.row_comments_notification_mode
+
+    try {
+      await dispatch('forceUpdateNotificationMode', {
+        tableId: table.id,
+        rowId: row.id,
+        mode,
+      })
+      await RowCommentService(this.$client).updateNotificationMode(
+        table.id,
+        row.id,
+        mode
+      )
+    } catch (e) {
+      await dispatch('forceUpdateNotificationMode', {
+        tableId: table.id,
+        rowId: row.id,
+        mode: originalMode,
+      })
+      throw e
+    }
+  },
+  /**
+   * Forcefully update the notification mode for a comments on a row.
+   */
+  async forceUpdateNotificationMode({ commit }, { tableId, rowId, mode }) {
+    await updateRowMetadataInViews(
+      this,
+      tableId,
+      rowId,
+      'row_comments_notification_mode',
+      () => mode
+    )
   },
 }
 

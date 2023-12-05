@@ -32,26 +32,29 @@
           }"
         >
           <slot name="content"></slot>
-          <a
-            v-if="closeButton && canClose"
-            class="modal__close"
-            @click="hide()"
-          >
-            <i class="iconoir-cancel"></i>
-          </a>
+          <div class="modal__actions">
+            <a
+              v-if="closeButton && canClose"
+              class="modal__close"
+              @click="hide()"
+            >
+              <i class="iconoir-cancel"></i>
+            </a>
 
-          <a
-            v-if="collapsibleRightSidebar"
-            class="sidebar__collapse"
-            @click="collapseSidebar"
-          >
-            <i
-              :class="{
-                'iconoir-fast-arrow-right': !sidebarCollapsed,
-                'iconoir-fast-arrow-left': sidebarCollapsed,
-              }"
-            ></i>
-          </a>
+            <a
+              v-if="collapsibleRightSidebar"
+              class="sidebar__collapse"
+              @click="collapseSidebar"
+            >
+              <i
+                :class="{
+                  'iconoir-fast-arrow-right': !sidebarCollapsed,
+                  'iconoir-fast-arrow-left': sidebarCollapsed,
+                }"
+              ></i>
+            </a>
+            <slot name="actions"></slot>
+          </div>
         </div>
 
         <div
@@ -68,9 +71,16 @@
       <template v-if="!sidebar">
         <slot></slot>
         <slot name="content"></slot>
-        <a v-if="closeButton && canClose" class="modal__close" @click="hide()">
-          <i class="iconoir-cancel"></i>
-        </a>
+        <div class="modal__actions">
+          <a
+            v-if="closeButton && canClose"
+            class="modal__close"
+            @click="hide()"
+          >
+            <i class="iconoir-cancel"></i>
+          </a>
+          <slot name="actions"></slot>
+        </div>
       </template>
     </div>
   </div>
