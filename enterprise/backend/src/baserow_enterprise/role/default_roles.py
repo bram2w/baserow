@@ -52,6 +52,7 @@ from baserow.contrib.builder.workflow_actions.operations import (
     CreateBuilderWorkflowActionOperationType,
     DeleteBuilderWorkflowActionOperationType,
     ListBuilderWorkflowActionsPageOperationType,
+    OrderBuilderWorkflowActionOperationType,
     ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
 )
@@ -323,6 +324,7 @@ default_roles[EDITOR_ROLE_UID].extend(
         ListTeamSubjectsOperationType,
         ReadTeamSubjectOperationType,
         UpdateBuilderWorkflowActionOperationType,
+        OrderBuilderWorkflowActionOperationType,
     ]
 )
 default_roles[BUILDER_ROLE_UID].extend(

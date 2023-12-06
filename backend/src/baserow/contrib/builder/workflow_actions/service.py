@@ -2,6 +2,7 @@ from typing import List
 
 from django.contrib.auth.models import AbstractUser
 
+from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
@@ -14,6 +15,7 @@ from baserow.contrib.builder.workflow_actions.operations import (
     CreateBuilderWorkflowActionOperationType,
     DeleteBuilderWorkflowActionOperationType,
     ListBuilderWorkflowActionsPageOperationType,
+    OrderBuilderWorkflowActionOperationType,
     ReadBuilderWorkflowActionOperationType,
     UpdateBuilderWorkflowActionOperationType,
 )
@@ -21,6 +23,7 @@ from baserow.contrib.builder.workflow_actions.signals import (
     workflow_action_created,
     workflow_action_deleted,
     workflow_action_updated,
+    workflow_actions_reordered,
 )
 from baserow.contrib.builder.workflow_actions.workflow_action_types import (
     BuilderWorkflowActionType,
@@ -172,3 +175,46 @@ class BuilderWorkflowActionService:
         workflow_action_deleted.send(
             self, workflow_action_id=workflow_action.id, page=page, user=user
         )
+
+    def order_workflow_actions(
+        self,
+        user: AbstractUser,
+        page: Page,
+        order: List[int],
+        element: Element = None,
+    ) -> List[int]:
+        """
+        Assigns a new order to the workflow actions in a builder application.
+
+        :param user: The user trying to order the domains
+        :param page: The page that the workflow actions belong to
+        :param order: The new order of the workflow actions
+        :param element: The element the page belongs to
+        :return: The new order of the workflow actions
+        """
+
+        CoreHandler().check_permissions(
+            user,
+            OrderBuilderWorkflowActionOperationType.type,
+            workspace=page.builder.workspace,
+            context=page,
+        )
+
+        all_workflow_actions = BuilderWorkflowAction.objects.filter(
+            page=page, element=element
+        )
+
+        user_workflow_actions = CoreHandler().filter_queryset(
+            user,
+            OrderBuilderWorkflowActionOperationType.type,
+            all_workflow_actions,
+            workspace=page.builder.workspace,
+        )
+
+        full_order = self.handler.order_workflow_actions(
+            page, order, base_qs=user_workflow_actions, element=element
+        )
+
+        workflow_actions_reordered.send(self, order=full_order, user=user)
+
+        return full_order

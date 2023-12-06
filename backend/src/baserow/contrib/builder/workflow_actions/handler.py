@@ -1,16 +1,23 @@
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, List, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
+from baserow.contrib.builder.elements.handler import ElementHandler
+from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
+from baserow.contrib.builder.workflow_actions.exceptions import (
+    WorkflowActionNotInElement,
+)
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
+from baserow.core.exceptions import IdDoesNotExist
 from baserow.core.workflow_actions.handler import WorkflowActionHandler
 from baserow.core.workflow_actions.models import WorkflowAction
+from baserow.core.workflow_actions.registries import WorkflowActionType
 
 
 class BuilderWorkflowActionHandler(WorkflowActionHandler):
@@ -44,6 +51,7 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
             kwargs["page_id"] = workflow_action.page_id
             kwargs["element_id"] = workflow_action.element_id
             kwargs["event"] = workflow_action.event
+            kwargs["order"] = workflow_action.order
 
         return super().update_workflow_action(workflow_action, **kwargs)
 
@@ -74,3 +82,45 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
         return workflow_action_type.import_serialized(
             page, serialized_workflow_action, id_mapping
         )
+
+    def order_workflow_actions(
+        self, page: Page, order: List[int], base_qs=None, element: Element = None
+    ):
+        """
+        Assigns a new order to the domains in a builder application.
+        You can provide a base_qs for pre-filter the domains affected by this change.
+
+        :param page: The page the workflow actions belong to
+        :param order: The new order of the workflow actions
+        :param base_qs: A QS that can have filters already applied
+        :param element: The element the workflow action belongs to
+        :raises WorkflowActionNotInElement: If the workflow action is not part of the
+            provided element
+        :return: The new order of the domains
+        """
+
+        if base_qs is None:
+            base_qs = BuilderWorkflowAction.objects.filter(page=page, element=element)
+
+        try:
+            full_order = BuilderWorkflowAction.order_objects(base_qs, order)
+        except IdDoesNotExist as error:
+            raise WorkflowActionNotInElement(error.not_existing_id)
+
+        return full_order
+
+    def create_workflow_action(
+        self, workflow_action_type: WorkflowActionType, **kwargs
+    ) -> BuilderWorkflowAction:
+        if "order" not in kwargs:
+            if "element_id" in kwargs:
+                element = ElementHandler().get_element(element_id=kwargs["element_id"])
+                kwargs["order"] = BuilderWorkflowAction.get_last_order_element_scope(
+                    element
+                )
+            else:
+                kwargs["order"] = BuilderWorkflowAction.get_last_order_page_scope(
+                    kwargs["page"]
+                )
+
+        return super().create_workflow_action(workflow_action_type, **kwargs).specific

@@ -24,7 +24,7 @@ class BuilderWorkflowActionSerializer(WorkflowActionSerializer):
 
     class Meta:
         model = BuilderWorkflowAction
-        fields = ("id", "element_id", "type", "event")
+        fields = ("id", "order", "element_id", "type", "event")
 
         extra_kwargs = {
             "id": {"read_only": True},
@@ -59,3 +59,14 @@ class UpdateBuilderWorkflowActionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = BuilderWorkflowAction
         fields = ("type",)
+
+
+class OrderWorkflowActionsSerializer(serializers.Serializer):
+    workflow_action_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        help_text="The ids of the workflow actions in the order they are supposed to be "
+        "set in",
+    )
+    element_id = serializers.IntegerField(
+        required=False, help_text="The element the workflow actions belong to"
+    )

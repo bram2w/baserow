@@ -13,6 +13,10 @@ class CreateBuilderWorkflowActionOperationType(BuilderPageOperationType):
     type = "builder.page.create_workflow_action"
 
 
+class OrderBuilderWorkflowActionOperationType(BuilderPageOperationType):
+    type = "builder.page.workflow_action.order"
+
+
 class BuilderWorkflowActionOperationType(OperationType, ABC):
     context_scope_name = "builder_workflow_action"
 

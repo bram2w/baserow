@@ -136,6 +136,7 @@ class BuilderConfig(AppConfig):
             CreateBuilderWorkflowActionOperationType,
             DeleteBuilderWorkflowActionOperationType,
             ListBuilderWorkflowActionsPageOperationType,
+            OrderBuilderWorkflowActionOperationType,
             ReadBuilderWorkflowActionOperationType,
             UpdateBuilderWorkflowActionOperationType,
         )
@@ -145,6 +146,7 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(DeleteBuilderWorkflowActionOperationType())
         operation_type_registry.register(UpdateBuilderWorkflowActionOperationType())
         operation_type_registry.register(ReadBuilderWorkflowActionOperationType())
+        operation_type_registry.register(OrderBuilderWorkflowActionOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 

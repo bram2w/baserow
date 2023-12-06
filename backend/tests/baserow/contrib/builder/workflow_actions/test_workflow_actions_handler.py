@@ -1,5 +1,8 @@
 import pytest
 
+from baserow.contrib.builder.workflow_actions.exceptions import (
+    WorkflowActionNotInElement,
+)
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
@@ -122,3 +125,65 @@ def test_get_workflow_actions(data_fixture):
 
     assert workflow_action_one_fetched.id == workflow_action_one.id
     assert workflow_action_two_fetched.id == workflow_action_two.id
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions(data_fixture):
+    element = data_fixture.create_builder_button_element()
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=element.page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=element.page, element=element, order=2
+    )
+
+    assert BuilderWorkflowActionHandler().order_workflow_actions(
+        element.page,
+        [workflow_action_two.id, workflow_action_one.id],
+        element=element,
+    ) == [
+        workflow_action_two.id,
+        workflow_action_one.id,
+    ]
+
+    workflow_action_one.refresh_from_db()
+    workflow_action_two.refresh_from_db()
+
+    assert workflow_action_one.order == 2
+    assert workflow_action_two.order == 1
+
+
+@pytest.mark.django_db
+def test_order_workflow_action_not_in_element(data_fixture):
+    element = data_fixture.create_builder_button_element()
+    element_unrelated = data_fixture.create_builder_button_element()
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=element.page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=element_unrelated.page, order=2
+    )
+
+    base_qs = BuilderWorkflowAction.objects.filter(id=workflow_action_two.id)
+
+    with pytest.raises(WorkflowActionNotInElement):
+        BuilderWorkflowActionHandler().order_workflow_actions(
+            element.page,
+            [workflow_action_two.id, workflow_action_one.id],
+            element=element,
+            base_qs=base_qs,
+        )
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_different_scopes(data_fixture):
+    page = data_fixture.create_builder_page()
+    element = data_fixture.create_builder_button_element(page=page)
+    page_workflow_action = BuilderWorkflowActionHandler().create_workflow_action(
+        NotificationWorkflowActionType(), page=page
+    )
+    element_workflow_action = BuilderWorkflowActionHandler().create_workflow_action(
+        NotificationWorkflowActionType(), page=page, element_id=element.id
+    )
+
+    assert page_workflow_action.order == element_workflow_action.order
