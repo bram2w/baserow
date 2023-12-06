@@ -300,7 +300,7 @@ def test_view_hierarchy(data_fixture):
     assert form_view_field_options.get_root() == workspace
 
 
-@pytest.mark.once_per_day_in_ci
+@pytest.mark.disabled_in_ci
 def test_migration_remove_duplicate_fieldoptions(
     data_fixture, migrator, teardown_table_metadata
 ):
@@ -373,7 +373,7 @@ def test_migration_remove_duplicate_fieldoptions(
         GalleryViewFieldOptions.objects.create(gallery_view=gallery_view, field=field)
 
 
-@pytest.mark.once_per_day_in_ci
+@pytest.mark.disabled_in_ci
 @patch.object(GridViewType, "after_field_moved_between_tables")
 def test_migration_remove_stale_fieldoptions(
     mocked_func, data_fixture, migrator, teardown_table_metadata

@@ -5,8 +5,6 @@ from django.test.utils import override_settings
 import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
-from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import UUIDField
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.search.handler import SearchHandler, SearchModes
 from baserow.test_utils.helpers import setup_interesting_test_table
@@ -246,7 +244,7 @@ def test_can_create_and_index_and_search_interesting_test_table(
 ):
     with transaction.atomic():
         user, jwt_token = data_fixture.create_user_and_token()
-        table, _, _, _, context = setup_interesting_test_table(
+        table, _, _, _, _ = setup_interesting_test_table(
             data_fixture,
             user,
         )
@@ -256,18 +254,13 @@ def test_can_create_and_index_and_search_interesting_test_table(
             table, update_tsvectors_for_changed_rows_only=False
         )
 
-    # We have to exclude the UUID field from the interesting table because the value is
-    # random, and we don't know what will be in there.
-    uuid_field = UUIDField.objects.all().first()
-    FieldHandler().delete_field(user=user, field=uuid_field)
-
     response = api_client.get(
         reverse(
             "api:database:views:grid:list",
             kwargs={"view_id": view.id},
         ),
         data={
-            "search": "a",
+            "search": "a.txt",
             "search_mode": SearchModes.MODE_FT_WITH_COUNT,
         },
         format="json",
