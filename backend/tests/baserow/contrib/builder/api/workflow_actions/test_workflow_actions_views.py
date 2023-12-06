@@ -203,3 +203,105 @@ def test_public_workflow_actions_view(
 
     [workflow_action_in_response] = response.json()
     assert "test" in workflow_action_in_response
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=2
+    )
+
+    order = [workflow_action_two.id, workflow_action_one.id]
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": order, "element_id": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_204_NO_CONTENT
+
+    workflow_action_one.refresh_from_db()
+    workflow_action_two.refresh_from_db()
+
+    assert workflow_action_one.order > workflow_action_two.order
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_page_does_not_exist(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": 99999},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": []},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_workflow_action_does_not_exist(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": [9999]},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_workflow_action_not_in_element(
+    api_client, data_fixture
+):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    element = data_fixture.create_builder_button_element(page=page)
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        page=page, element=element, order=1
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        page=page, order=2
+    )
+
+    order = [workflow_action_two.id, workflow_action_one.id]
+
+    url = reverse(
+        "api:builder:workflow_action:order",
+        kwargs={"page_id": page.id},
+    )
+    response = api_client.post(
+        url,
+        {"workflow_action_ids": order, "element_id": element.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_404_NOT_FOUND

@@ -19,15 +19,22 @@
       </div>
     </template>
     <template #default>
-      <WorkflowAction
-        v-for="workflowAction in workflowActions"
-        :key="workflowAction.id"
-        class="margin-top-2 event__workflow-action"
-        :available-workflow-action-types="availableWorkflowActionTypes"
-        :workflow-action="workflowAction"
-        @delete="deleteWorkflowAction(workflowAction)"
-        @update="updateWorkflowAction(workflowAction, $event)"
-      />
+      <div>
+        <WorkflowAction
+          v-for="(workflowAction, index) in workflowActions"
+          :key="workflowAction.id"
+          v-sortable="{
+            id: workflowAction.id,
+            handle: '[data-sortable-handle]',
+            update: orderWorkflowActions,
+          }"
+          class="event__workflow-action"
+          :class="{ 'event__workflow-action--first': index === 0 }"
+          :available-workflow-action-types="availableWorkflowActionTypes"
+          :workflow-action="workflowAction"
+          @delete="deleteWorkflowAction(workflowAction)"
+        />
+      </div>
       <Button
         size="tiny"
         type="link"
@@ -82,6 +89,7 @@ export default {
     ...mapActions({
       actionCreateWorkflowAction: 'workflowAction/create',
       actionDeleteWorkflowAction: 'workflowAction/delete',
+      actionOrderWorkflowActions: 'workflowAction/order',
     }),
     getIcon(expanded) {
       return expanded ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
@@ -107,6 +115,17 @@ export default {
         await this.actionDeleteWorkflowAction({
           page: this.page,
           workflowAction,
+        })
+      } catch (error) {
+        notifyIf(error)
+      }
+    },
+    async orderWorkflowActions(order) {
+      try {
+        await this.actionOrderWorkflowActions({
+          page: this.page,
+          element: this.element,
+          order,
         })
       } catch (error) {
         notifyIf(error)

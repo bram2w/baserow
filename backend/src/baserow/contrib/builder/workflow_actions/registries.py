@@ -11,7 +11,7 @@ from baserow.core.workflow_actions.registries import WorkflowActionType
 
 
 class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMixin):
-    allowed_fields = ["page", "page_id", "element", "element_id", "event"]
+    allowed_fields = ["order", "page", "page_id", "element", "element_id", "event"]
 
     parent_property_name = "page"
     id_mapping_name = "builder_workflow_actions"

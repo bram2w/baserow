@@ -1,11 +1,18 @@
 <template>
   <div>
-    <WorkflowActionSelector
-      :available-workflow-action-types="availableWorkflowActionTypes"
-      :workflow-action="workflowAction"
-      @change="updateWorkflowAction({ type: $event })"
-      @delete="$emit('delete')"
-    />
+    <div class="workflow-action__header">
+      <div
+        class="workflow-action__header-handle margin-right-1"
+        data-sortable-handle
+        @mousedown.prevent
+      ></div>
+      <WorkflowActionSelector
+        :available-workflow-action-types="availableWorkflowActionTypes"
+        :workflow-action="workflowAction"
+        @change="updateWorkflowAction({ type: $event })"
+        @delete="$emit('delete')"
+      />
+    </div>
     <component
       :is="workflowActionType.form"
       ref="actionForm"

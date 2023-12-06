@@ -12,7 +12,7 @@ class WorkflowActionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkflowAction
-        fields = ("id", "type")
+        fields = ("id", "order", "type")
 
         extra_kwargs = {
             "id": {"read_only": True},

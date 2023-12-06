@@ -184,3 +184,47 @@ def test_get_workflow_actions_no_permissions(data_fixture):
 
     with pytest.raises(UserNotInWorkspace):
         BuilderWorkflowActionService().get_workflow_actions(user, page)
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions(data_fixture):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_button_element(user=user)
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        element=element, order=0
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        element=element, order=1
+    )
+
+    BuilderWorkflowActionService().order_workflow_actions(
+        user,
+        element.page,
+        [workflow_action_two.id, workflow_action_one.id],
+        element=element,
+    )
+
+    workflow_action_one.refresh_from_db()
+    workflow_action_two.refresh_from_db()
+
+    assert workflow_action_one.order > workflow_action_two.order
+
+
+@pytest.mark.django_db
+def test_order_workflow_actions_user_not_in_workspace(data_fixture):
+    user = data_fixture.create_user()
+    element = data_fixture.create_builder_button_element()
+    workflow_action_one = data_fixture.create_notification_workflow_action(
+        element=element, order=0
+    )
+    workflow_action_two = data_fixture.create_notification_workflow_action(
+        element=element, order=1
+    )
+
+    with pytest.raises(UserNotInWorkspace):
+        BuilderWorkflowActionService().order_workflow_actions(
+            user,
+            element.page,
+            [workflow_action_two.id, workflow_action_one.id],
+            element=element,
+        )

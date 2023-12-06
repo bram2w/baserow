@@ -95,6 +95,7 @@ def test_builder_application_export(data_fixture):
                 "workflow_actions": [
                     {
                         "id": workflow_action_1.id,
+                        "order": 0,
                         "type": "notification",
                         "element_id": element1.id,
                         "event": EventTypes.CLICK.value,
@@ -329,6 +330,7 @@ IMPORT_REFERENCE = {
             "workflow_actions": [
                 {
                     "id": 123,
+                    "order": 1,
                     "page_id": 999,
                     "element_id": 998,
                     "type": "notification",

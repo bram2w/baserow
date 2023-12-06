@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from baserow.api.decorators import validate_body_custom_fields
+from baserow.api.decorators import validate_body, validate_body_custom_fields
 from baserow.api.schemas import CLIENT_SESSION_ID_SCHEMA_PARAMETER, get_error_schema
 from baserow.api.utils import (
     CustomFieldRegistryMappingSerializer,
@@ -21,15 +21,21 @@ from baserow.contrib.builder.api.elements.errors import ERROR_ELEMENT_DOES_NOT_E
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.api.workflow_actions.errors import (
     ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
+    ERROR_WORKFLOW_ACTION_NOT_IN_ELEMENT,
 )
 from baserow.contrib.builder.api.workflow_actions.serializers import (
     BuilderWorkflowActionSerializer,
     CreateBuilderWorkflowActionSerializer,
+    OrderWorkflowActionsSerializer,
     UpdateBuilderWorkflowActionsSerializer,
 )
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
+from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
+from baserow.contrib.builder.workflow_actions.exceptions import (
+    WorkflowActionNotInElement,
+)
 from baserow.contrib.builder.workflow_actions.handler import (
     BuilderWorkflowActionHandler,
 )
@@ -257,3 +263,58 @@ class BuilderWorkflowActionView(APIView):
             workflow_action_updated, BuilderWorkflowActionSerializer
         )
         return Response(serializer.data)
+
+
+class OrderBuilderWorkflowActionsView(APIView):
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="page_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The page the workflow actions belong to",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder workflow_actions"],
+        operation_id="order_builder_workflow_actions",
+        description="Apply a new order to the workflow actions of a page",
+        request=OrderWorkflowActionsSerializer,
+        responses={
+            204: None,
+            400: get_error_schema(
+                [
+                    "ERROR_USER_NOT_IN_GROUP",
+                    "ERROR_REQUEST_BODY_VALIDATION",
+                ]
+            ),
+            404: get_error_schema(
+                [
+                    "ERROR_PAGE_DOES_NOT_EXIST",
+                    "ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST",
+                    "ERROR_WORKFLOW_ACTION_NOT_IN_ELEMENT",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            PageDoesNotExist: ERROR_PAGE_DOES_NOT_EXIST,
+            WorkflowActionDoesNotExist: ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
+            WorkflowActionNotInElement: ERROR_WORKFLOW_ACTION_NOT_IN_ELEMENT,
+        }
+    )
+    @validate_body(OrderWorkflowActionsSerializer)
+    def post(self, request, data: Dict, page_id: int):
+        page = PageHandler().get_page(page_id)
+        element_id = data.get("element_id", None)
+        element = (
+            ElementHandler().get_element(element_id) if element_id is not None else None
+        )
+
+        BuilderWorkflowActionService().order_workflow_actions(
+            request.user, page, data["workflow_action_ids"], element=element
+        )
+
+        return Response(status=204)
