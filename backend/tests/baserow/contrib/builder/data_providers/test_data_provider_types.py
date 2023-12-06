@@ -239,6 +239,80 @@ def test_data_source_data_provider_get_data_chunk_with_formula_using_datasource(
 
 
 @pytest.mark.django_db
+def test_data_source_data_provider_get_data_chunk_with_formula_using_list_datasource(
+    data_fixture,
+):
+    user = data_fixture.create_user()
+    table, fields, rows = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Name", "text"),
+            ("My Color", "text"),
+        ],
+        rows=[
+            ["BMW", "Blue"],
+            ["Audi", "Orange"],
+            ["Volkswagen", "White"],
+            ["Volkswagen", "Green"],
+        ],
+    )
+    view = data_fixture.create_grid_view(user, table=table)
+    table2, fields2, rows2 = data_fixture.build_table(
+        user=user,
+        columns=[
+            ("Id", "text"),
+        ],
+        rows=[
+            ["1"],
+            ["2"],
+            ["3"],
+            ["3"],
+        ],
+    )
+    view2 = data_fixture.create_grid_view(user, table=table2)
+    builder = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(
+        user=user, application=builder
+    )
+    page = data_fixture.create_builder_page(user=user, builder=builder)
+    data_source2 = data_fixture.create_builder_local_baserow_list_rows_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view2,
+        table=table2,
+        name="List source",
+    )
+    data_source = data_fixture.create_builder_local_baserow_get_row_data_source(
+        user=user,
+        page=page,
+        integration=integration,
+        view=view,
+        table=table,
+        row_id=f"get('data_source.{data_source2.id}.2.{fields2[0].db_column}')",
+        name="Item",
+    )
+
+    data_source_provider = DataSourceDataProviderType()
+
+    fake_request = MagicMock()
+    fake_request.data = {
+        "data_source": {"page_id": page.id},
+        "page_parameter": {"id": 2},
+    }
+    fake_request.GET = {"count": 20}
+
+    dispatch_context = BuilderDispatchContext(fake_request, page)
+
+    assert (
+        data_source_provider.get_data_chunk(
+            dispatch_context, [data_source.id, fields[1].db_column]
+        )
+        == "White"
+    )
+
+
+@pytest.mark.django_db
 def test_data_source_data_provider_get_data_chunk_with_formula_to_missing_datasource(
     data_fixture,
 ):
