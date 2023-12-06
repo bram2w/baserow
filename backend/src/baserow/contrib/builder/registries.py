@@ -34,12 +34,9 @@ class PublicCustomFieldsInstanceMixin(CustomFieldsInstanceMixin):
         public = extra_params.get("public", False)
 
         if public:
-            if (
-                request_serializer
-                and self.public_request_serializer_field_overrides is not None
-            ):
+            if request_serializer and self.public_request_serializer_field_overrides:
                 return self.public_request_serializer_field_overrides
-            else:
+            if self.public_serializer_field_overrides:
                 return self.public_serializer_field_overrides
 
         return super().get_field_overrides(request_serializer, extra_params, **kwargs)
@@ -50,12 +47,9 @@ class PublicCustomFieldsInstanceMixin(CustomFieldsInstanceMixin):
         public = extra_params.get("public", False)
 
         if public:
-            if (
-                request_serializer
-                and self.public_request_serializer_field_names is not None
-            ):
+            if request_serializer and self.public_request_serializer_field_names:
                 return self.public_request_serializer_field_names
-            else:
+            if self.public_serializer_field_names:
                 return self.public_serializer_field_names
 
         return super().get_field_names(request_serializer, extra_params, **kwargs)
