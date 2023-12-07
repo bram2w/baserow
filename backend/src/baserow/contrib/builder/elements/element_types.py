@@ -761,15 +761,24 @@ class InputTextElementType(InputElementType):
 
     def import_serialized(self, page, serialized_values, id_mapping):
         serialized_copy = serialized_values.copy()
+        if serialized_copy["label"]:
+            serialized_copy["label"] = import_formula(
+                serialized_copy["label"], id_mapping
+            )
         if serialized_copy["default_value"]:
             serialized_copy["default_value"] = import_formula(
                 serialized_copy["default_value"], id_mapping
+            )
+        if serialized_copy["placeholder"]:
+            serialized_copy["placeholder"] = import_formula(
+                serialized_copy["placeholder"], id_mapping
             )
 
         return super().import_serialized(page, serialized_copy, id_mapping)
 
     def get_sample_params(self):
         return {
+            "label": "",
             "required": False,
             "placeholder": "",
             "default_value": "'Corporis perspiciatis'",

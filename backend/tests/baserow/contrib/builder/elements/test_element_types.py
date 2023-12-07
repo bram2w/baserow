@@ -3,8 +3,9 @@ from collections import defaultdict
 import pytest
 from rest_framework.exceptions import ValidationError
 
+from baserow.contrib.builder.elements.element_types import InputTextElementType
 from baserow.contrib.builder.elements.handler import ElementHandler
-from baserow.contrib.builder.elements.models import LinkElement
+from baserow.contrib.builder.elements.models import InputTextElement, LinkElement
 from baserow.contrib.builder.elements.registries import (
     ElementType,
     element_type_registry,
@@ -100,3 +101,29 @@ def test_link_element_path_parameter_does_not_exist_new_page(data_fixture):
             navigate_to_page_id=page_with_params.id,
             page_parameters=[{"name": "invalid", "value": "something"}],
         )
+
+
+@pytest.mark.django_db
+def test_input_text_element_import_export_formula(data_fixture):
+    page = data_fixture.create_builder_page()
+    data_source_1 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    data_source_2 = data_fixture.create_builder_local_baserow_get_row_data_source()
+    element_type = InputTextElementType()
+
+    exported_input_text_element = data_fixture.create_builder_element(
+        InputTextElement,
+        label=f"get('data_source.{data_source_1.id}.field_1')",
+        default_value=f"get('data_source.{data_source_1.id}.field_1')",
+        placeholder=f"get('data_source.{data_source_1.id}.field_1')",
+    )
+    serialized = element_type.export_serialized(exported_input_text_element)
+
+    # After applying the ID mapping the imported formula should have updated
+    # the data source IDs
+    id_mapping = {"builder_data_sources": {data_source_1.id: data_source_2.id}}
+    imported_element = element_type.import_serialized(page, serialized, id_mapping)
+
+    expected_formula = f"get('data_source.{data_source_2.id}.field_1')"
+    assert imported_element.label == expected_formula
+    assert imported_element.default_value == expected_formula
+    assert imported_element.placeholder == expected_formula
