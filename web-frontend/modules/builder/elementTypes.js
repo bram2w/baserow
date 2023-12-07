@@ -260,6 +260,14 @@ export class FormElementType extends ElementType {
    * @returns {string} - The name of the form element
    */
   getFormDataName(element, applicationContext) {
+    if (element.label) {
+      return this.resolveFormula(element.label, applicationContext)
+    }
+
+    return this.generateFromDataName(element, applicationContext)
+  }
+
+  generateFromDataName(element, applicationContext) {
     const elements = this.app.store.getters['element/getElementsOrdered'](
       applicationContext.page
     )
