@@ -137,10 +137,12 @@ export class DataProviderType extends Registerable {
   _toNode(applicationContext, pathParts, content, schema) {
     const identifier = pathParts.at(-1)
     const name = this.getPathTitle(applicationContext, pathParts)
+    const order = schema?.order || null
 
     if (schema === null) {
       return {
         name,
+        order,
         type: null,
         icon: this.UNKNOWN_DATA_TYPE_ICON,
         identifier,
@@ -167,6 +169,7 @@ export class DataProviderType extends Registerable {
       return {
         name,
         identifier,
+        order,
         icon: this.getIconForType(schema.type),
         nodes: Object.entries(schema.properties).map(
           ([identifier, subSchema]) =>
@@ -182,6 +185,7 @@ export class DataProviderType extends Registerable {
 
     return {
       name,
+      order,
       type: schema.type,
       icon: this.getIconForType(schema.type),
       value: content,
