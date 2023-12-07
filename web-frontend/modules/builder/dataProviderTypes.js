@@ -380,11 +380,16 @@ export class FormDataProviderType extends DataProviderType {
           )
           const elementType = this.app.$registry.get('element', element.type)
           const name = elementType.getFormDataName(element, applicationContext)
+          const order = elementType.getElementPosition(
+            element,
+            applicationContext
+          )
           return [
             elementId,
             {
               title: name,
               type,
+              order,
             },
           ]
         })

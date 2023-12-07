@@ -92,7 +92,7 @@ export default {
       )
     },
     sortNodes(nodes) {
-      return nodes.sort((a, b) => (a.name > b.name ? 1 : -1))
+      return nodes.sort((a, b) => a.order - b.order)
     },
   },
 }

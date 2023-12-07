@@ -89,7 +89,7 @@ export default {
       return isOpen ? 'iconoir-nav-arrow-down' : 'iconoir-nav-arrow-right'
     },
     sortNodes(nodes) {
-      return nodes.sort((a, b) => (a.name > b.name ? 1 : -1))
+      return nodes.sort((a, b) => a.order - b.order)
     },
   },
 }
