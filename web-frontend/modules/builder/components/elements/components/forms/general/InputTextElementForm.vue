@@ -4,7 +4,7 @@
       v-model="values.label"
       :label="$t('inputTextElementForm.labelTitle')"
       :placeholder="$t('inputTextElementForm.labelPlaceholder')"
-      :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
+      :data-providers-allowed="dataProvidersAllowed"
     ></ApplicationBuilderFormulaInputGroup>
     <ApplicationBuilderFormulaInputGroup
       v-model="values.default_value"

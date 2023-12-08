@@ -49,20 +49,23 @@ class CreateUserSourceSerializer(serializers.ModelSerializer):
         "the given id.",
     )
     integration_id = serializers.IntegerField(
-        required=False,
-        allow_null=True,
+        required=True,
+        allow_null=False,
         help_text="The related integration id.",
     )
 
     class Meta:
         model = UserSource
         fields = ("before_id", "type", "name", "integration_id")
+        extra_kwargs = {
+            "name": {"required": True},
+        }
 
 
 class UpdateUserSourceSerializer(serializers.ModelSerializer):
     integration_id = serializers.IntegerField(
         required=False,
-        allow_null=True,
+        allow_null=False,
         help_text="The related integration id.",
     )
 

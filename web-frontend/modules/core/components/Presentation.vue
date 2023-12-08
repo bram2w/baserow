@@ -2,7 +2,7 @@
   <div class="presentation">
     <div v-if="image || icon || initials" class="presentation__avatar">
       <Avatar
-        size="large"
+        :size="iconSize"
         :image="image"
         :icon="icon"
         :initials="initials"
@@ -29,6 +29,11 @@ export default {
       type: String,
       required: false,
       default: '',
+    },
+    iconSize: {
+      type: String,
+      required: false,
+      default: 'large',
     },
     image: {
       type: String,

@@ -25,6 +25,7 @@ import {
   EnterpriseLicenseType,
 } from '@baserow_enterprise/licenseTypes'
 import { EnterprisePlugin } from '@baserow_enterprise/plugins'
+import { LocalBaserowUserSourceType } from '@baserow_enterprise/integrations/userSourceTypes'
 
 export default (context) => {
   const { app, isDev, store } = context
@@ -86,4 +87,6 @@ export default (context) => {
   )
 
   app.$registry.register('license', new EnterpriseLicenseType(context))
+
+  app.$registry.register('userSource', new LocalBaserowUserSourceType(context))
 }

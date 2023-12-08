@@ -1,10 +1,10 @@
 <template>
-  <div class="local-baserow-table-selector">
-    <FormElement class="control local-baserow-table-selector__input">
-      <label class="control__label control__label--small">
-        {{ $t('localBaserowTableSelector.databaseFieldLabel') }}
-      </label>
-      <Dropdown v-model="databaseSelectedId" :show-search="false">
+  <FormRow>
+    <FormGroup
+      :label="$t('localBaserowTableSelector.databaseFieldLabel')"
+      small-label
+    >
+      <Dropdown v-model="databaseSelectedId" :show-search="false" fixed-items>
         <DropdownItem
           v-for="database in databases"
           :key="database.id"
@@ -14,15 +14,17 @@
           {{ database.name }}
         </DropdownItem>
       </Dropdown>
-    </FormElement>
-    <FormElement class="control local-baserow-table-selector__input">
-      <label class="control__label control__label--small">
-        {{ $t('localBaserowTableSelector.tableFieldLabel') }}
-      </label>
+    </FormGroup>
+
+    <FormGroup
+      :label="$t('localBaserowTableSelector.tableFieldLabel')"
+      small-label
+    >
       <Dropdown
         :value="value"
         :show-search="false"
         :disabled="databaseSelectedId === null"
+        fixed-items
         @input="$emit('input', $event)"
       >
         <DropdownItem
@@ -34,15 +36,17 @@
           {{ table.name }}
         </DropdownItem>
       </Dropdown>
-    </FormElement>
-    <FormElement class="control local-baserow-table-selector__input">
-      <label class="control__label control__label--small">
-        {{ $t('localBaserowTableSelector.viewFieldLabel') }}
-      </label>
+    </FormGroup>
+    <FormGroup
+      v-if="displayViewDropdown"
+      :label="$t('localBaserowTableSelector.viewFieldLabel')"
+      small-label
+    >
       <Dropdown
         :value="viewId"
         :show-search="false"
         :disabled="value === null"
+        fixed-items
         @input="$emit('update:view-id', $event)"
       >
         <DropdownItem
@@ -59,8 +63,8 @@
           {{ view.name }}
         </DropdownItem>
       </Dropdown>
-    </FormElement>
-  </div>
+    </FormGroup>
+  </FormRow>
 </template>
 
 <script>
@@ -80,6 +84,10 @@ export default {
     databases: {
       type: Array,
       required: true,
+    },
+    displayViewDropdown: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {

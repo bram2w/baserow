@@ -2,6 +2,11 @@
   <div v-if="!showForm">
     <h2 class="box__title">{{ $t('domainSettings.titleOverview') }}</h2>
     <Error :error="error"></Error>
+    <div class="actions actions--right">
+      <Button prepend-icon="baserow-icon-plus" @click="showForm = true">
+        {{ $t('domainSettings.addDomain') }}
+      </Button>
+    </div>
     <div
       v-if="$fetchState.pending && !error.visible"
       class="loading domains-settings__loading"
@@ -22,12 +27,6 @@
     >
       {{ $t('domainSettings.noDomainMessage') }}
     </p>
-    <div class="actions actions--right">
-      <button class="button button--primary" @click="showForm = true">
-        <i class="iconoir-plus margin-right-1"></i>
-        <span>{{ $t('domainSettings.addDomain') }}</span>
-      </button>
-    </div>
   </div>
   <DomainForm v-else :builder="builder" :hide-form="hideForm" />
 </template>

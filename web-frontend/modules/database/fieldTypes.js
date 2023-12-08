@@ -2768,7 +2768,11 @@ export class MultipleSelectFieldType extends FieldType {
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {
-    if (value === undefined || value === null || value === []) {
+    if (
+      value === undefined ||
+      value === null ||
+      (Array.isArray(value) && value.length === 0)
+    ) {
       return ''
     }
     return value.map((item) => item.value).join(delimiter)

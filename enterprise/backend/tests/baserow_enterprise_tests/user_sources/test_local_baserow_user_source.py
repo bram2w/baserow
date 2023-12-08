@@ -181,21 +181,6 @@ def test_create_user_source_table_from_other_workspace(api_client, data_fixture)
     assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
     assert response.json()["detail"]["table_id"][0]["code"] == "invalid_table"
 
-    response = api_client.post(
-        url,
-        {
-            "type": "local_baserow",
-            "name": "test",
-            "table_id": table_from_other_workspace.id,
-        },
-        format="json",
-        HTTP_AUTHORIZATION=f"JWT {token}",
-    )
-
-    assert response.status_code == HTTP_400_BAD_REQUEST
-    assert response.json()["error"] == "ERROR_REQUEST_BODY_VALIDATION"
-    assert response.json()["detail"]["table_id"][0]["code"] == "invalid_table"
-
 
 @pytest.mark.django_db
 def test_create_user_source_field_from_other_table(api_client, data_fixture):
