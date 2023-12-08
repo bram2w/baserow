@@ -23,6 +23,7 @@ const updateContext = {
   updateTimeout: null,
   promiseResolve: null,
   lastUpdatedValues: null,
+  valuesToUpdate: {},
 }
 
 const mutations = {
@@ -171,24 +172,33 @@ const actions = {
   async debouncedUpdateSelected({ dispatch, getters }, { page, values }) {
     const element = getters.getSelected
     const elementType = this.$registry.get('element', element.type)
+
     const oldValues = {}
-    const newValues = {}
     Object.keys(values).forEach((name) => {
       if (Object.prototype.hasOwnProperty.call(element, name)) {
         oldValues[name] = element[name]
-        newValues[name] = values[name]
+        // Accumulate the changed values to send all the ongoing changes with the
+        // final request
+        updateContext.valuesToUpdate[name] = values[name]
       }
     })
 
-    await dispatch('forceUpdate', { page, element, values: newValues })
+    await dispatch('forceUpdate', {
+      page,
+      element,
+      values: updateContext.valuesToUpdate,
+    })
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
+        const toUpdate = updateContext.valuesToUpdate
+        updateContext.valuesToUpdate = {}
         try {
           await ElementService(this.$client).update(
             element.id,
-            elementType.prepareValuesForRequest(values)
+            elementType.prepareValuesForRequest(toUpdate)
           )
+          updateContext.lastUpdatedValues = null
           resolve()
         } catch (error) {
           // Revert to old values on error
@@ -197,9 +207,9 @@ const actions = {
             element,
             values: updateContext.lastUpdatedValues,
           })
+          updateContext.lastUpdatedValues = null
           reject(error)
         }
-        updateContext.lastUpdatedValues = null
       }
 
       if (updateContext.promiseResolve) {

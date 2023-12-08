@@ -13,10 +13,9 @@
         v-for="alignment in alignmentValues"
         :key="alignment.value"
         :name="$t(alignment.name)"
+        :icon="alignment.icon"
         :value="alignment.value"
-      >
-        {{ $t(alignment.name) }}
-      </DropdownItem>
+      />
     </Dropdown>
   </div>
 </template>

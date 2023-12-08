@@ -1,6 +1,6 @@
 <template>
   <a class="element-preview__insert" @click="$emit('click')">
-    <i class="iconoir-plus"></i>
+    <i class="baserow-icon-plus"></i>
   </a>
 </template>
 
