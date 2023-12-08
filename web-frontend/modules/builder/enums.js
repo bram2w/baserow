@@ -46,15 +46,18 @@ export const HORIZONTAL_ALIGNMENTS = {
 export const VERTICAL_ALIGNMENTS = {
   TOP: {
     name: 'verticalAlignmentSelector.alignmentTop',
-    value: 'iconoir-align-top-box',
+    value: 'top',
+    icon: 'iconoir-align-top-box',
   },
   CENTER: {
     name: 'verticalAlignmentSelector.alignmentCenter',
-    value: 'iconoir-center-align',
+    value: 'center',
+    icon: 'iconoir-center-align',
   },
   BOTTOM: {
     name: 'verticalAlignmentSelector.alignmentBottom',
-    value: 'iconoir-align-bottom-box',
+    value: 'bottom',
+    icon: 'iconoir-align-bottom-box',
   },
 }
 
