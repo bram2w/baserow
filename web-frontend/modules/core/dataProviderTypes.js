@@ -1,18 +1,11 @@
 import { Registerable } from '@baserow/modules/core/registry'
+import { getIconForType } from '@baserow/modules/core/utils/icon'
 
 /**
  * A data provider gets data from the application context and populate the context for
  * the formula resolver.
  */
 export class DataProviderType extends Registerable {
-  DATA_TYPE_TO_ICON_MAP = {
-    string: 'iconoir-text',
-    number: 'baserow-icon-hashtag',
-    boolean: 'baserow-icon-circle-checked',
-  }
-
-  UNKNOWN_DATA_TYPE_ICON = 'iconoir-question-mark'
-
   get name() {
     throw new Error('`name` must be set on the dataProviderType.')
   }
@@ -144,7 +137,7 @@ export class DataProviderType extends Registerable {
         name,
         order,
         type: null,
-        icon: this.UNKNOWN_DATA_TYPE_ICON,
+        icon: this.getIconForNode(null),
         identifier,
       }
     }
@@ -153,7 +146,7 @@ export class DataProviderType extends Registerable {
       return {
         name,
         identifier,
-        icon: this.getIconForType(schema.type),
+        icon: this.getIconForNode(schema),
         nodes: (content || []).map((item, index) =>
           this._toNode(
             applicationContext,
@@ -170,7 +163,7 @@ export class DataProviderType extends Registerable {
         name,
         identifier,
         order,
-        icon: this.getIconForType(schema.type),
+        icon: this.getIconForNode(schema),
         nodes: Object.entries(schema.properties).map(
           ([identifier, subSchema]) =>
             this._toNode(
@@ -187,7 +180,7 @@ export class DataProviderType extends Registerable {
       name,
       order,
       type: schema.type,
-      icon: this.getIconForType(schema.type),
+      icon: this.getIconForNode(schema),
       value: content,
       identifier,
     }
@@ -195,12 +188,16 @@ export class DataProviderType extends Registerable {
 
   /**
    * This function gives you the icon that can be used by the data explorer given
-   * the type of the data.
+   * the type of the data. It allows to customize the way type icons are selected.
    * @param type - The type of the data
    * @returns {*|string} - The corresponding icon
    */
-  getIconForType(type) {
-    return this.DATA_TYPE_TO_ICON_MAP[type] || this.UNKNOWN_DATA_TYPE_ICON
+  getIconForNode(schema) {
+    if (schema) {
+      return getIconForType(schema.type)
+    } else {
+      return getIconForType(null)
+    }
   }
 
   /**

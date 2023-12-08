@@ -26,45 +26,14 @@
             </DropdownItem>
           </template>
         </Dropdown>
-        <Dropdown
+        <IntegrationDropdown
           v-model="values.integration_id"
-          fixed-items
           class="data-source-form__integration-dropdown"
+          :application="builder"
+          :integrations="integrations"
           :disabled="!values.type"
-          :placeholder="
-            !serviceType
-              ? $t('dataSourceForm.selectTypeFirst')
-              : $t('dataSourceForm.integrationPlaceholder')
-          "
-          show-footer
-        >
-          <DropdownItem
-            v-for="integrationItem in integrations"
-            :key="integrationItem.id"
-            :name="integrationItem.name"
-            :value="integrationItem.id"
-          />
-          <template #emptyState>
-            {{ $t('dataSourceForm.noIntegrations') }}
-          </template>
-          <template #footer>
-            <a
-              class="select__footer-button"
-              @click="$refs.IntegrationCreateEditModal.show()"
-            >
-              <i class="iconoir-plus"></i>
-              {{ $t('dataSourceForm.addIntegration') }}
-            </a>
-            <IntegrationCreateEditModal
-              v-if="serviceType"
-              ref="IntegrationCreateEditModal"
-              :application="builder"
-              :integration-type="serviceType.integrationType"
-              create
-              @created="values.integration_id = $event.id"
-            />
-          </template>
-        </Dropdown>
+          :integration-type="serviceType?.integrationType"
+        />
         <Button icon="iconoir-bin" type="light" @click="$emit('delete')" />
       </div>
       <div v-if="headerError" class="error">
@@ -87,13 +56,13 @@
 </template>
 
 <script>
-import IntegrationCreateEditModal from '@baserow/modules/core/components/integrations/IntegrationCreateEditModal'
+import IntegrationDropdown from '@baserow/modules/core/components/integrations/IntegrationDropdown'
 import form from '@baserow/modules/core/mixins/form'
 import { required, maxLength } from 'vuelidate/lib/validators'
 
 export default {
   name: 'DataSourceContext',
-  components: { IntegrationCreateEditModal },
+  components: { IntegrationDropdown },
   mixins: [form],
   props: {
     builder: {

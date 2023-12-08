@@ -1,7 +1,7 @@
 import { ServiceType } from '@baserow/modules/core/serviceTypes'
 import { LocalBaserowIntegrationType } from '@baserow/modules/integrations/integrationTypes'
-import LocalBaserowGetRowForm from '@baserow/modules/integrations/components/services/LocalBaserowGetRowForm'
-import LocalBaserowListRowsForm from '@baserow/modules/integrations/components/services/LocalBaserowListRowsForm'
+import LocalBaserowGetRowForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowGetRowForm'
+import LocalBaserowListRowsForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowListRowsForm'
 
 export class LocalBaserowGetRowServiceType extends ServiceType {
   static getType() {

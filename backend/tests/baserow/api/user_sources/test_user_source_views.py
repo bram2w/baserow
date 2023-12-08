@@ -53,13 +53,14 @@ def test_create_user_source(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     workspace = data_fixture.create_workspace(user=user)
     application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
     database = data_fixture.create_database_application(workspace=workspace)
     data_fixture.create_database_table(database=database)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
         url,
-        {"type": "local_baserow", "name": "test"},
+        {"type": "local_baserow", "name": "test", "integration_id": integration.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -67,6 +68,28 @@ def test_create_user_source(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["type"] == "local_baserow"
+
+
+@pytest.mark.django_db
+def test_create_user_source_missing_properties(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    workspace = data_fixture.create_workspace(user=user)
+    application = data_fixture.create_builder_application(workspace=workspace)
+    integration = data_fixture.create_local_baserow_integration(application=application)
+    database = data_fixture.create_database_application(workspace=workspace)
+    data_fixture.create_database_table(database=database)
+
+    url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
+    response = api_client.post(
+        url,
+        {"type": "local_baserow", "integration_id": integration.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    response_json = response.json()
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
     response = api_client.post(
         url,
@@ -79,7 +102,8 @@ def test_create_user_source(api_client, data_fixture):
     )
 
     response_json = response.json()
-    assert response.status_code == HTTP_200_OK
+    assert response.status_code == HTTP_400_BAD_REQUEST
+    assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
 
 @pytest.mark.django_db
@@ -88,12 +112,13 @@ def test_create_user_source_permission_denied(
 ):
     user, token = data_fixture.create_user_and_token()
     application = data_fixture.create_builder_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(application=application)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     with stub_check_permissions(raise_permission_denied=True):
         response = api_client.post(
             url,
-            {"type": "local_baserow", "name": "test"},
+            {"type": "local_baserow", "name": "test", "integration_id": integration.id},
             format="json",
             HTTP_AUTHORIZATION=f"JWT {token}",
         )
@@ -109,7 +134,7 @@ def test_create_user_source_application_does_not_exist(api_client, data_fixture)
     url = reverse("api:user_sources:list", kwargs={"application_id": 0})
     response = api_client.post(
         url,
-        {"type": "local_baserow", "name": "test"},
+        {"type": "local_baserow", "name": "test", "integration_id": 42},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -121,11 +146,12 @@ def test_create_user_source_application_does_not_exist(api_client, data_fixture)
 def test_create_user_source_bad_application_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     application = data_fixture.create_database_application(user=user)
+    integration = data_fixture.create_local_baserow_integration(application=application)
 
     url = reverse("api:user_sources:list", kwargs={"application_id": application.id})
     response = api_client.post(
         url,
-        {"type": "local_baserow", "name": "test"},
+        {"type": "local_baserow", "name": "test", "integration_id": integration.id},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )

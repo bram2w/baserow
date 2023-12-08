@@ -21,7 +21,8 @@
     "builderSettingTypes": {
         "integrationsName": "Integrations",
         "themeName": "Theme",
-        "domainsName": "Domains"
+        "domainsName": "Domains",
+        "userSourcesName": "Users"
     },
     "createPageModal": {
         "header": "Create page",
@@ -168,6 +169,13 @@
         "addDomain": "Add domain",
         "noDomainMessage": "You have not yet associated a domain with this application. You must add a domain to be able to publish your application. You can publish different versions of your application for each domain listed here."
     },
+    "userSourceSettings": {
+      "titleAddUserSource": "New user source",
+      "titleUpdateUserSource": "Edit user source",
+      "noUserSourceMessage": "You have not yet add a user source to this application. You must add a user source if you want users being able to authenticate your application.",
+      "titleOverview": "User sources",
+      "addUserSource": "Add user source"
+    },
     "dnsStatus": {
         "description": "Visit your domains' DNS settings and make the following changes",
         "typeHeader": "Type",
@@ -278,9 +286,6 @@
     },
     "dataSourceForm": {
         "namePlaceholder": "Source name",
-        "addIntegration": "Add new integration",
-        "noIntegrations": "No integrations found.",
-        "selectTypeFirst": "Select the service first",
         "servicePlaceholder": "Select a service",
         "integrationPlaceholder": "Select an integration",
         "errorUniqueName": "Data source name must be unique."
@@ -378,5 +383,15 @@
     },
     "linkField": {
       "details": "Details"
+    },
+    "createUserSourceForm": {
+      "userSourceType":"Type",
+      "userSourceIntegration": "Integration",
+      "userSourceName": "Name"
+    },
+    "updateUserSourceForm": {
+      "nameFieldLabel": "Name",
+      "nameFieldPlaceholder": "Enter a name...",
+      "integrationFieldLabel": "Integration"
     }
 }

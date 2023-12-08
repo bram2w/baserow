@@ -1,11 +1,13 @@
 .presentation {
   display: flex;
   align-items: center;
+  overflow: hidden;
 }
 
 .presentation__content {
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .presentation__avatar {

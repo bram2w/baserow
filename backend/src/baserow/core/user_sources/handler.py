@@ -157,15 +157,6 @@ class UserSourceHandler:
 
         return user_source
 
-    def delete_user_source(self, user_source: UserSource):
-        """
-        Deletes an user_source.
-
-        :param user_source: The to-be-deleted user_source.
-        """
-
-        user_source.delete()
-
     def update_user_source(
         self,
         user_source_type: UserSourceType,
@@ -191,6 +182,15 @@ class UserSourceHandler:
         user_source.save()
 
         return user_source
+
+    def delete_user_source(self, user_source: UserSource):
+        """
+        Deletes an user_source.
+
+        :param user_source: The to-be-deleted user_source.
+        """
+
+        user_source.delete()
 
     def move_user_source(
         self, user_source: UserSourceForUpdate, before: Optional[UserSource] = None

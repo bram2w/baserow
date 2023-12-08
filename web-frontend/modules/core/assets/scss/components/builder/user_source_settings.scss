@@ -1,17 +1,16 @@
-.integration_settings__integration {
+.user-source-settings__user-source {
   display: flex;
   padding: 10px 0;
-  overflow: hidden;
   gap: 10px;
 }
 
-.integration-settings__loader {
+.user-source-settings__loader {
   @include loading();
 
   margin: auto;
 }
 
-.integration_settings__integration-actions {
+.user-source_settings__user-source-actions {
   display: flex;
   align-items: center;
 }

@@ -1,0 +1,13 @@
+.form-row {
+  width: 100%;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: start;
+  gap: 10px;
+
+  & > .control {
+    flex: 1 0 0;
+    margin-bottom: 0;
+    overflow: hidden;
+  }
+}

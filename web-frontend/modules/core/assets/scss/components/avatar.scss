@@ -8,20 +8,20 @@
   background-color: $color-primary-500;
   border: 1px solid transparent;
 
-  @include center-text(36px, 15px);
+  @include center-text(36px, 17px);
   @include rounded($rounded-md);
 }
 
 .avatar--size-large {
   flex: 0 0 42px;
 
-  @include center-text(42px, 16px);
+  @include center-text(42px, 19px);
 }
 
 .avatar--size-tiny {
   flex: 0 0 32px;
 
-  @include center-text(32px, 14px);
+  @include center-text(32px, 15px);
 }
 
 .avatar--rounded {
@@ -29,8 +29,18 @@
 }
 
 .avatar__image {
-  max-width: calc(100% - 20px);
-  max-height: calc(100% - 20px);
+  max-width: calc(100% - 15px);
+  max-height: calc(100% - 15px);
+
+  .avatar--size-tiny & {
+    max-width: calc(100% - 12px);
+    max-height: calc(100% - 12px);
+  }
+
+  .avatar--size-large & {
+    max-width: calc(100% - 20px);
+    max-height: calc(100% - 20px);
+  }
 }
 
 .avatar--success {

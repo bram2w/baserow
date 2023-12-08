@@ -542,6 +542,12 @@
         "name": "Integration name",
         "namePlaceholder": "Enter integration name..."
     },
+    "integrationDropdown": {
+        "addIntegration": "Add new integration",
+        "noIntegrations": "No integrations found.",
+        "selectTypeFirst": "Choose the type first",
+        "integrationPlaceholder": "Select an integration"
+    },
     "dropdown": {
         "empty": "No items available"
     },

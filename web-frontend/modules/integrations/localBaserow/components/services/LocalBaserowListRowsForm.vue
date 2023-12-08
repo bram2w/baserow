@@ -62,9 +62,9 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import LocalBaserowTableSelector from '@baserow/modules/integrations/components/services/LocalBaserowTableSelector'
-import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/components/services/LocalBaserowTableServiceConditionalForm.vue'
-import LocalBaserowTableServiceSortForm from '@baserow/modules/integrations/components/services/LocalBaserowTableServiceSortForm'
+import LocalBaserowTableSelector from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableSelector'
+import LocalBaserowTableServiceConditionalForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceConditionalForm.vue'
+import LocalBaserowTableServiceSortForm from '@baserow/modules/integrations/localBaserow/components/services/LocalBaserowTableServiceSortForm'
 
 export default {
   components: {
