@@ -158,7 +158,7 @@ class UserFileHandler:
             elif size_copy[1] is None and size_copy[0] is not None:
                 size_copy[1] = round(image_height / image_width * size_copy[0])
 
-            thumbnail = ImageOps.fit(image.copy(), size_copy, Image.ANTIALIAS)
+            thumbnail = ImageOps.fit(image.copy(), size_copy, Image.LANCZOS)
             thumbnail_stream = BytesIO()
             thumbnail.save(thumbnail_stream, image.format)
             thumbnail_stream.seek(0)
