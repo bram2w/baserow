@@ -971,7 +971,7 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
     integration = data_fixture.create_local_baserow_integration(
         application=builder, user=user
     )
-    table, _, _, _, context = setup_interesting_test_table(
+    table, _, _, _, _ = setup_interesting_test_table(
         data_fixture,
         user,
     )
@@ -1378,6 +1378,21 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "properties": {
                 "url": {"title": "url", "type": "string"},
                 "label": {"title": "label", "type": "string"},
+            },
+        },
+        field_db_column_by_name["formula_multipleselect"]: {
+            "title": "formula_multipleselect",
+            "default": None,
+            "original_type": "formula",
+            "metadata": {},
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {"title": "id", "type": "number"},
+                    "value": {"title": "value", "type": "string"},
+                    "color": {"title": "color", "type": "string"},
+                },
             },
         },
         field_db_column_by_name["count"]: {

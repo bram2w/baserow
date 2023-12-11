@@ -51,6 +51,7 @@ describe('Formula Functions Test', () => {
       'encode_uri_component',
       'tonumber',
       'greatest',
+      'has_option',
       'least',
       'if',
       'equal',

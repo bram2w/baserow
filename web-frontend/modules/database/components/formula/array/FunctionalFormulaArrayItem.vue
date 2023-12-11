@@ -1,5 +1,5 @@
 <template functional>
-  <div class="array-field__item">
+  <div v-if="props.value" class="array-field__item">
     <span>
       {{ props.value }}
     </span>

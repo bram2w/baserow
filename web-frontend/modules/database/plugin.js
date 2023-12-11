@@ -125,6 +125,7 @@ import {
   BaserowEncodeUri,
   BaserowEncodeUriComponent,
   BaserowEqual,
+  BaserowHasOption,
   BaserowField,
   BaserowSearch,
   BaserowGreaterThan,
@@ -217,6 +218,7 @@ import {
   BaserowFormulaInvalidType,
   BaserowFormulaNumberType,
   BaserowFormulaSingleSelectType,
+  BaserowFormulaMultipleSelectType,
   BaserowFormulaSpecialType,
   BaserowFormulaTextType,
   BaserowFormulaFileType,
@@ -496,6 +498,7 @@ export default (context) => {
   // Boolean functions
   app.$registry.register('formula_function', new BaserowIf(context))
   app.$registry.register('formula_function', new BaserowEqual(context))
+  app.$registry.register('formula_function', new BaserowHasOption(context))
   app.$registry.register('formula_function', new BaserowIsBlank(context))
   app.$registry.register('formula_function', new BaserowIsNull(context))
   app.$registry.register('formula_function', new BaserowNot(context))
@@ -610,6 +613,10 @@ export default (context) => {
   app.$registry.register(
     'formula_type',
     new BaserowFormulaSingleSelectType(context)
+  )
+  app.$registry.register(
+    'formula_type',
+    new BaserowFormulaMultipleSelectType(context)
   )
   app.$registry.register('formula_type', new BaserowFormulaLinkType(context))
   app.$registry.register('formula_type', new BaserowFormulaFileType(context))

@@ -214,12 +214,11 @@ def test_get_example_row_serializer_class():
 def test_get_row_serializer_with_user_field_names(data_fixture):
     table, user, row, _, context = setup_interesting_test_table(data_fixture)
     model = table.get_model()
-    queryset = model.objects.all().enhance_by_fields()
     serializer_class = get_row_serializer_class(
         model, RowSerializer, is_response=True, user_field_names=True
     )
-    serializer_instance = serializer_class(queryset, many=True)
-    assert json.loads(json.dumps(serializer_instance.data[1])) == json.loads(
+    serializer_instance = serializer_class([row], many=True)
+    assert json.loads(json.dumps(serializer_instance.data[0])) == json.loads(
         json.dumps(
             {
                 "boolean": True,
@@ -248,26 +247,26 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 "email": "test@example.com",
                 "file": [
                     {
-                        "image_height": 0,
-                        "image_width": 0,
+                        "image_height": None,
+                        "image_width": None,
                         "is_image": False,
                         "mime_type": "text/plain",
                         "name": "hashed_name.txt",
-                        "size": 0,
+                        "size": 100,
                         "thumbnails": None,
-                        "uploaded_at": "2020-02-01 01:23",
+                        "uploaded_at": "2020-02-01T01:23:00+00:00",
                         "url": "http://localhost:8000/media/user_files/hashed_name.txt",
                         "visible_name": "a.txt",
                     },
                     {
-                        "image_height": 0,
-                        "image_width": 0,
+                        "image_height": None,
+                        "image_width": None,
                         "is_image": False,
                         "mime_type": "text/plain",
                         "name": "other_name.txt",
-                        "size": 0,
+                        "size": 100,
                         "thumbnails": None,
-                        "uploaded_at": "2020-02-01 01:23",
+                        "uploaded_at": "2020-02-01T01:23:00+00:00",
                         "url": "http://localhost:8000/media/user_files/other_name.txt",
                         "visible_name": "b.txt",
                     },
@@ -290,7 +289,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                 "long_text": "long_text",
                 "negative_decimal": "-1.2",
                 "negative_int": "-1",
-                "order": "1.00000000000000000000",
+                "order": "2.00000000000000000000",
                 "phone_number": "+4412345678",
                 "positive_decimal": "1.2",
                 "positive_int": "1",
@@ -334,6 +333,23 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "id": SelectOption.objects.get(value="A").id,
                     "value": "A",
                 },
+                "formula_multipleselect": [
+                    {
+                        "color": "yellow",
+                        "id": SelectOption.objects.get(value="D").id,
+                        "value": "D",
+                    },
+                    {
+                        "color": "orange",
+                        "id": SelectOption.objects.get(value="C").id,
+                        "value": "C",
+                    },
+                    {
+                        "color": "green",
+                        "id": SelectOption.objects.get(value="E").id,
+                        "value": "E",
+                    },
+                ],
                 "formula_text": "test FORMULA",
                 "count": "3",
                 "rollup": "-122.222",
@@ -347,7 +363,7 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     "label": "label",
                     "url": "https://google.com",
                 },
-                "uuid": "00000000-0000-0000-0000-000000000000",
+                "uuid": "00000000-0000-4000-8000-000000000002",
             }
         )
     )

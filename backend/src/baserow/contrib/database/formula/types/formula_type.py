@@ -495,6 +495,15 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
             func = formula_function_registry.get("array_agg_no_nesting")
         return func(expr)
 
+    def collapse_array_of_many(
+        self, expr: "tree.BaserowExpression[BaserowFormulaType]"
+    ):
+        from baserow.contrib.database.formula.registries import (
+            formula_function_registry,
+        )
+
+        return formula_function_registry.get("array_agg_unnesting")(expr)
+
     def raise_if_invalid(self):
         pass
 
@@ -552,6 +561,31 @@ class BaserowFormulaValidType(BaserowFormulaType, abc.ABC):
 
     def unwrap_at_field_level(self, expr: "tree.BaserowExpression[BaserowFormulaType]"):
         return expr.args[0].with_valid_type(expr.expression_type)
+
+    def count(
+        self,
+        to_text_func_call: "tree.BaserowFunctionCall[UnTyped]",
+        arg: "tree.BaserowExpression[BaserowFormulaValidType]",
+    ) -> "tree.BaserowExpression[BaserowFormulaType]":
+        """
+        Given a expression which is an untyped BaserowCount function call this function
+        should return an expression which results in this type being turned into a
+        BaserowFormulaNumberType.
+
+        :param to_text_func_call: A BaserowCount function call expression where the
+            argument is of this type and is required to be turned into a number type.
+        :param arg: The typed argument that needs to be turned into a number type.
+        :return: A typed BaserowExpression which results in arg turning into a number
+            type.
+        """
+
+        from baserow.contrib.database.formula.types.formula_types import (
+            BaserowFormulaNumberType,
+        )
+
+        return to_text_func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
 
 
 UnTyped = type(None)

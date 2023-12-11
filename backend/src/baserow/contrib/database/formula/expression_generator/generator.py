@@ -1,7 +1,9 @@
 from typing import Dict, List, Optional, Tuple, Type
 
+from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
     BooleanField,
+    Case,
     DecimalField,
     Expression,
     ExpressionWrapper,
@@ -13,9 +15,10 @@ from django.db.models import (
     Q,
     Subquery,
     Value,
+    When,
     fields,
 )
-from django.db.models.functions import Cast, JSONObject
+from django.db.models.functions import Cast, Coalesce, JSONObject
 
 from baserow.contrib.database.formula.ast.exceptions import UnknownFieldReference
 from baserow.contrib.database.formula.ast.tree import (
@@ -29,6 +32,9 @@ from baserow.contrib.database.formula.ast.tree import (
     BaserowStringLiteral,
 )
 from baserow.contrib.database.formula.ast.visitors import BaserowFormulaASTVisitor
+from baserow.contrib.database.formula.expression_generator.django_expressions import (
+    JSONArray,
+)
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaInvalidType,
     BaserowFormulaType,
@@ -191,7 +197,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
                     db_column, model_field, already_in_subquery=False
                 )
             )
-        elif not hasattr(self.model_instance, db_column):
+        elif self.model_instance.id and not hasattr(self.model_instance, db_column):
             raise UnknownFieldReference(db_column)
         else:
             return WrappedExpressionWithMetadata(
@@ -199,10 +205,38 @@ class BaserowExpressionToDjangoExpressionGenerator(
             )
 
     def _generate_insert_expression(self, db_column):
+        from baserow.contrib.database.fields.fields import (
+            MultipleSelectManyToManyField,
+            SingleSelectForeignKey,
+        )
+
         model_field = self.model._meta.get_field(db_column)
+
+        if isinstance(model_field, MultipleSelectManyToManyField):
+            m2m_values = getattr(self.model_instance, "_m2m_values", {})
+            instance_attr_value = m2m_values.get(db_column, None)
+            if instance_attr_value is None:
+                instance_attr_value = (
+                    getattr(self.model_instance, db_column).all()
+                    if self.model_instance.id
+                    else []
+                )
+
+            options = [
+                JSONObject(
+                    **{
+                        "id": Value(option.id),
+                        "value": Value(option.value),
+                        "color": Value(option.color),
+                    }
+                )
+                for option in instance_attr_value
+            ]
+
+            return Cast(JSONArray(options), output_field=JSONField())
+
         instance_attr_value = getattr(self.model_instance, db_column)
         value = Value(instance_attr_value, output_field=model_field)
-        from baserow.contrib.database.fields.fields import SingleSelectForeignKey
 
         if isinstance(model_field, SingleSelectForeignKey):
             model_field = JSONField()
@@ -214,6 +248,7 @@ class BaserowExpressionToDjangoExpressionGenerator(
                         "color": Value(instance_attr_value.color),
                     }
                 )
+
         # We need to cast and be super explicit what type this raw value is so
         # postgres does not get angry and claim this is an unknown type.
         return Cast(
@@ -336,10 +371,13 @@ class BaserowExpressionToDjangoExpressionGenerator(
     def _make_reference_to_model_field(
         self, db_column: str, model_field: fields.Field, already_in_subquery: bool
     ) -> Expression:
-        from baserow.contrib.database.fields.fields import SingleSelectForeignKey
+        from baserow.contrib.database.fields.fields import (
+            MultipleSelectManyToManyField,
+            SingleSelectForeignKey,
+        )
 
-        if isinstance(model_field, SingleSelectForeignKey):
-            single_select_extractor = ExpressionWrapper(
+        def get_select_option_extractor(db_column, model_field):
+            return ExpressionWrapper(
                 JSONObject(
                     **{
                         "value": f"{db_column}__value",
@@ -349,22 +387,50 @@ class BaserowExpressionToDjangoExpressionGenerator(
                 ),
                 output_field=model_field,
             )
+
+        if isinstance(model_field, SingleSelectForeignKey):
+            single_select_extractor = get_select_option_extractor(
+                db_column, model_field
+            )
             if already_in_subquery:
-                return single_select_extractor
+                return Case(
+                    When(**{f"{db_column}__isnull": True}, then=Value(None)),
+                    default=single_select_extractor,
+                    output_field=model_field,
+                )
             else:
-                return self._wrap_in_subquery(single_select_extractor)
+                return self._wrap_in_subquery(single_select_extractor, db_column)
+        elif isinstance(model_field, MultipleSelectManyToManyField):
+            if already_in_subquery:
+                return Coalesce(
+                    JSONBAgg(
+                        get_select_option_extractor(db_column, model_field),
+                        filter=Q(**{f"{db_column}__isnull": False}),
+                    ),
+                    Value([], output_field=JSONField()),
+                )
+            else:
+                return Coalesce(
+                    self._wrap_in_subquery(
+                        JSONBAgg(get_select_option_extractor(db_column, model_field)),
+                        db_column,
+                    ),
+                    Value([], output_field=JSONField()),
+                )
         else:
             return ExpressionWrapper(
                 F(db_column),
                 output_field=model_field,
             )
 
-    def _wrap_in_subquery(self, single_select_extractor):
+    def _wrap_in_subquery(self, select_option_extractor, db_column):
+        filters = {f"{db_column}__isnull": False}
+
         return ExpressionWrapper(
             Subquery(
-                self.model.objects.filter(id=OuterRef("id")).values(
-                    result=single_select_extractor
-                ),
+                self.model.objects.filter(id=OuterRef("id"), **filters).values(
+                    result=select_option_extractor
+                )
             ),
             output_field=JSONField(),
         )

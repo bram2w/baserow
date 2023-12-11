@@ -1,10 +1,12 @@
 import json
 import os
+import uuid
 from contextlib import contextmanager
 from decimal import Decimal
 from ipaddress import ip_network
 from socket import AF_INET, AF_INET6, IPPROTO_TCP, SOCK_STREAM
 from typing import Any, Dict, List, Optional, Type, Union
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
@@ -52,6 +54,20 @@ def is_dict_subset(subset: dict, superset: dict) -> bool:
         )
 
     return subset == superset
+
+
+def uuid4_generator():
+    """
+    A generator that will yield a new uuid4 each time it is called. This is used to
+    patch the uuid4 function so that we can predict the uuids that will be generated
+    in tests.
+    """
+
+    base_uuid = uuid.UUID("00000000-0000-4000-8000-000000000000")
+    counter = 1
+    while True:
+        yield uuid.UUID(int=base_uuid.int + counter)
+        counter += 1
 
 
 def setup_interesting_test_table(
@@ -109,7 +125,6 @@ def setup_interesting_test_table(
     file_link_table = data_fixture.create_database_table(
         database=database, user=user, name="file_link_table"
     )
-    handler = FieldHandler()
     all_possible_kwargs_per_type = construct_all_possible_field_kwargs(
         table, link_table, decimal_link_table, file_link_table
     )
@@ -127,6 +142,7 @@ def setup_interesting_test_table(
         name="file_field",
         primary=True,
     )
+    handler = FieldHandler()
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
         for kwargs in all_possible_kwargs:
             field = handler.create_field(
@@ -140,9 +156,15 @@ def setup_interesting_test_table(
             name_to_field_id[kwargs["name"]] = field.id
     row_handler = RowHandler()
 
-    model = table.get_model()
     datetime = _parse_datetime("2020-02-01 01:23")
     date = _parse_date("2020-02-01")
+    option_c, option_d, option_e = (
+        SelectOption.objects.filter(field_id=name_to_field_id["multiple_select"])
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+
+    file_suffix = file_suffix or ""
 
     values = {
         "text": "text",
@@ -180,43 +202,35 @@ def setup_interesting_test_table(
         "file_link_row": None,
         "file": [
             {
-                "name": "hashed_name.txt",
+                "name": f"hashed{file_suffix}_name.txt",
                 "visible_name": "a.txt",
                 "is_image": False,
                 "size": 0,
                 "mime_type": "text/plain",
-                "image_width": 0,
-                "image_height": 0,
+                "image_width": None,
+                "image_height": None,
                 "uploaded_at": "2020-02-01 01:23",
             },
             {
-                "name": "other_name.txt",
+                "name": f"other{file_suffix}_name.txt",
                 "visible_name": "b.txt",
                 "is_image": False,
                 "size": 0,
                 "mime_type": "text/plain",
-                "image_width": 0,
-                "image_height": 0,
+                "image_width": None,
+                "image_height": None,
                 "uploaded_at": "2020-02-01 01:23",
             },
         ],
         "single_select": SelectOption.objects.get(
             value="A", field_id=name_to_field_id["single_select"]
-        ),
-        "multiple_select": None,
-        "multiple_collaborators": None,
+        ).id,
+        "multiple_select": [option_d, option_c, option_e],
+        "multiple_collaborators": [
+            {"id": user2.id, "name": user2.first_name},
+            {"id": user3.id, "name": user3.first_name},
+        ],
         "phone_number": "+4412345678",
-        "formula_text": "test FORMULA",
-        "formula_int": "1",
-        "formula_bool": "true",
-        "formula_decimal": "1.23",
-        "formula_dateinterval": "",
-        "formula_date": "2020-01-01",
-        "formula_singleselect": "",
-        "formula_email": "test@example.com",
-        "formula_link_url_only": "",
-        "formula_link_with_label": "",
-        "uuid": "00000000-0000-0000-0000-000000000000",
     }
 
     with freeze_time("2020-02-01 01:23"):
@@ -234,7 +248,8 @@ def setup_interesting_test_table(
     missing_fields = (
         set(name_to_field_id.keys())
         - set(values.keys())
-        - {"lookup", "count", "rollup"}
+        - set([f["name"] for f in all_possible_kwargs_per_type["formula"]])
+        - {"lookup", "count", "rollup", "uuid"}
     )
     assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "
@@ -249,9 +264,10 @@ def setup_interesting_test_table(
     # We freeze time here so that we know what the values of the last_modified and
     # created_on field types are going to be. Freezing the datetime will also freeze
     # the current daylight savings time information.
-    with freeze_time("2021-01-02 12:00"):
-        blank_row = row_handler.create_row(user, table, {})
-        row = model.objects.create(**row_values)
+    with freeze_time("2021-01-02 12:00"), patch(
+        "uuid.uuid4", side_effect=uuid4_generator()
+    ):
+        blank_row, row = row_handler.create_rows(user, table, [{}, row_values])
 
     # Setup the link rows
     linked_row_1 = row_handler.create_row(
@@ -347,27 +363,6 @@ def setup_interesting_test_table(
                 f"field_{file_link_row_id}": [linked_row_7.id, linked_row_8.id],
             },
         )
-
-    # multiple select
-    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(
-            value="D", field_id=name_to_field_id["multiple_select"]
-        ).id
-    )
-    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(
-            value="C", field_id=name_to_field_id["multiple_select"]
-        ).id
-    )
-    getattr(row, f"field_{name_to_field_id['multiple_select']}").add(
-        SelectOption.objects.get(
-            value="E", field_id=name_to_field_id["multiple_select"]
-        ).id
-    )
-
-    # multiple collaborators
-    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user2.id)
-    getattr(row, f"field_{name_to_field_id['multiple_collaborators']}").add(user3.id)
 
     context = {"user2": user2, "user3": user3}
 

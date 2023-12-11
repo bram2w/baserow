@@ -9,6 +9,7 @@ from django.conf import settings
 from django.urls import reverse
 
 import pytest
+from pytest_unordered import unordered
 from rest_framework.status import HTTP_200_OK
 
 from baserow.contrib.database.fields.handler import FieldHandler
@@ -24,6 +25,9 @@ from baserow.contrib.database.formula.ast.function_defs import (
     Baserow2dArrayAgg,
     BaserowAggJoin,
     BaserowArrayAggNoNesting,
+    BaserowMultipleSelectCount,
+    BaserowMultipleSelectOptionsAgg,
+    BaserowStringAggMultipleSelectValues,
 )
 from baserow.contrib.database.formula.ast.tree import (
     BaserowFieldReference,
@@ -34,6 +38,9 @@ from baserow.contrib.database.formula.types.exceptions import InvalidFormulaType
 from baserow.contrib.database.formula.types.formula_type import (
     BaserowFormulaValidType,
     UnTyped,
+)
+from baserow.contrib.database.formula.types.formula_types import (
+    BaserowFormulaMultipleSelectType,
 )
 from baserow.contrib.database.formula.types.type_checker import MustBeManyExprChecker
 from baserow.contrib.database.management.commands.fill_table_rows import fill_table_rows
@@ -399,6 +406,7 @@ def assert_formula_results_are_case(
     given_field_has_rows: List[Any],
     when_created_formula_is: str,
     then_formula_values_are: List[Any],
+    formula_field_name: Optional[str] = None,
 ):
     assert_formula_results_with_multiple_fields_case(
         data_fixture,
@@ -406,6 +414,7 @@ def assert_formula_results_are_case(
         given_fields_have_rows=[[v] for v in given_field_has_rows],
         when_created_formula_is=when_created_formula_is,
         then_formula_values_are=then_formula_values_are,
+        formula_field_name=formula_field_name,
     )
 
 
@@ -415,6 +424,7 @@ def assert_formula_results_with_multiple_fields_case(
     then_formula_values_are: List[Any],
     given_fields_in_table: Optional[List[Field]] = None,
     given_fields_have_rows: Optional[List[List[Any]]] = None,
+    formula_field_name: Optional[str] = None,
 ):
     if given_fields_in_table is None:
         given_fields_in_table = []
@@ -423,7 +433,9 @@ def assert_formula_results_with_multiple_fields_case(
 
     data_fixture.create_rows(given_fields_in_table, given_fields_have_rows)
     formula_field = data_fixture.create_formula_field(
-        table=given_fields_in_table[0].table, formula=when_created_formula_is
+        name=formula_field_name or "formula_field",
+        table=given_fields_in_table[0].table,
+        formula=when_created_formula_is,
     )
     assert formula_field.cached_formula_type.is_valid
     rows = data_fixture.get_rows(fields=[formula_field])
@@ -592,6 +604,244 @@ def test_can_use_datediff_on_fields(data_fixture):
     )
 
 
+@pytest.mark.django_db
+def test_can_reference_a_multiple_select_field(data_fixture):
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        name="multiple_select"
+    )
+    option_a = data_fixture.create_select_option(field=multiple_select_field, value="a")
+    option_b = data_fixture.create_select_option(field=multiple_select_field, value="b")
+    expected_values = [
+        [
+            {
+                "id": option_a.id,
+                "value": "a",
+                "color": option_a.color,
+            },
+            {
+                "id": option_b.id,
+                "value": "b",
+                "color": option_b.color,
+            },
+        ],
+        [
+            {
+                "id": option_b.id,
+                "value": "b",
+                "color": option_b.color,
+            }
+        ],
+        [],
+    ]
+    assert_formula_results_are_case(
+        data_fixture,
+        given_field_in_table=multiple_select_field,
+        given_field_has_rows=[[option_a.id, option_b.id], [option_b.id], []],
+        when_created_formula_is="field('multiple_select')",
+        then_formula_values_are=expected_values,
+        formula_field_name="formula_ref_multiple_select",
+    )
+
+    # we can also reference the formula field from another formula
+    formula_field_referencing_other_formula = data_fixture.create_formula_field(
+        table=multiple_select_field.table,
+        formula="field('formula_ref_multiple_select')",
+    )
+    assert formula_field_referencing_other_formula.cached_formula_type.is_valid
+    rows = data_fixture.get_rows(fields=[formula_field_referencing_other_formula])
+    assert [item for sublist in rows for item in sublist] == expected_values
+
+
+@pytest.mark.django_db
+def test_can_use_has_option_on_multiple_select_fields(data_fixture):
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        name="multiple_select"
+    )
+    option_a = data_fixture.create_select_option(field=multiple_select_field, value="a")
+    option_b = data_fixture.create_select_option(field=multiple_select_field, value="b")
+
+    assert_formula_results_are_case(
+        data_fixture,
+        given_field_in_table=multiple_select_field,
+        given_field_has_rows=[
+            [option_a.id, option_b.id],
+            [option_b.id],
+            [],
+            [option_a.id],
+        ],
+        when_created_formula_is="has_option(field('multiple_select'), 'b')",
+        then_formula_values_are=[True, True, False, False],
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "formula,expected_value",
+    [
+        (
+            "has_option(field('%s'), 'b')",
+            [True, False, False, False, True, True],
+        ),
+        (
+            "count(field('%s'))",
+            [1, 0, 0, 1, 2, 2],
+        ),
+        (
+            "isblank(field('%s'))",
+            [False, True, True, False, False, False],
+        ),
+        (
+            'totext(field("%s"))',
+            ["b", "", "", "a", "a, b", "b, a"],
+        ),
+    ],
+)
+def test_can_use_formula_on_lookup_of_multiple_select_fields(
+    formula, expected_value, data_fixture
+):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        table=table_b, name="multiple_select"
+    )
+    option_a = data_fixture.create_select_option(field=multiple_select_field, value="a")
+    option_b = data_fixture.create_select_option(field=multiple_select_field, value="b")
+
+    lookup_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=f"lookup('{link_field.name}', 'multiple_select')",
+    )
+
+    data_fixture.create_rows(
+        [multiple_select_field],
+        [[[option_a.id, option_b.id]], [[option_b.id]], [[]], [[option_a.id]]],
+    )
+    table_b_rows = table_b.get_model().objects.all()
+
+    RowHandler().create_rows(
+        user,
+        table_a,
+        [
+            {link_field.db_column: [table_b_rows[1].id]},
+            {},
+            {link_field.db_column: [table_b_rows[2].id]},
+            {link_field.db_column: [table_b_rows[3].id]},
+            {link_field.db_column: [table_b_rows[0].id]},
+            {link_field.db_column: [table_b_rows[1].id, table_b_rows[3].id]},
+        ],
+    )
+
+    rows = data_fixture.get_rows(fields=[lookup_field])
+    opt_a_value = {"id": option_a.id, "value": "a", "color": option_a.color}
+    opt_b_value = {"id": option_b.id, "value": "b", "color": option_b.color}
+    expected_values = [
+        [{"id": table_b_rows[1].id, "value": [opt_b_value]}],
+        [],
+        [{"id": table_b_rows[2].id, "value": []}],
+        [{"id": table_b_rows[3].id, "value": [opt_a_value]}],
+        [{"id": table_b_rows[0].id, "value": [opt_a_value, opt_b_value]}],
+        unordered(
+            [
+                {"id": table_b_rows[1].id, "value": [opt_b_value]},
+                {"id": table_b_rows[3].id, "value": [opt_a_value]},
+            ]
+        ),
+    ]
+    assert [item for sublist in rows for item in sublist] == expected_values
+
+    formula_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=formula % lookup_field.name,
+    )
+    rows = data_fixture.get_rows(fields=[formula_field])
+    assert [item for sublist in rows for item in sublist] == expected_value
+
+    # can also reference the lookup field from another formula
+    ref_formula_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=f"field('{lookup_field.name}')",
+    )
+    rows = data_fixture.get_rows(fields=[ref_formula_field])
+    assert [item for sublist in rows for item in sublist] == expected_values
+
+    # and everything still works even if the lookup field is on a formula
+    # referencing the multiple select field
+    data_fixture.create_formula_field(
+        table=table_b, name="ref_multiple_select", formula="field('multiple_select')"
+    )
+
+    lookup_ref_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=f"lookup('{link_field.name}', 'ref_multiple_select')",
+    )
+
+    rows = data_fixture.get_rows(fields=[lookup_ref_field])
+    assert [item for sublist in rows for item in sublist] == expected_values
+
+
+@pytest.mark.django_db
+def test_can_use_has_option_on_lookup_of_single_select_fields(data_fixture):
+    user = data_fixture.create_user()
+    table_a, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    single_select_field = data_fixture.create_single_select_field(
+        table=table_b, name="single_select"
+    )
+    option_a = data_fixture.create_select_option(field=single_select_field, value="a")
+    option_b = data_fixture.create_select_option(field=single_select_field, value="b")
+
+    lookup_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=f"lookup('{link_field.name}', 'single_select')",
+    )
+
+    data_fixture.create_rows(
+        [single_select_field],
+        [[option_a], [option_b], [None]],
+    )
+    table_b_rows = table_b.get_model().objects.all()
+
+    RowHandler().create_rows(
+        user,
+        table_a,
+        [
+            {link_field.db_column: [table_b_rows[1].id]},
+            {},
+            {link_field.db_column: [table_b_rows[2].id]},
+            {link_field.db_column: [table_b_rows[0].id]},
+            {link_field.db_column: [table_b_rows[1].id, table_b_rows[0].id]},
+        ],
+    )
+    opt_a_value = {"id": option_a.id, "value": "a", "color": option_a.color}
+    opt_b_value = {"id": option_b.id, "value": "b", "color": option_b.color}
+    rows = data_fixture.get_rows(fields=[lookup_field])
+    expected_values = [
+        [{"id": table_b_rows[1].id, "value": opt_b_value}],
+        [],
+        [{"id": table_b_rows[2].id, "value": None}],
+        [{"id": table_b_rows[0].id, "value": opt_a_value}],
+        unordered(
+            [
+                {"id": table_b_rows[0].id, "value": opt_a_value},
+                {"id": table_b_rows[1].id, "value": opt_b_value},
+            ]
+        ),
+    ]
+    assert [item for sublist in rows for item in sublist] == expected_values
+
+    formula_field = data_fixture.create_formula_field(
+        table=table_a,
+        formula=f"has_option(field('{lookup_field.name}'), 'b')",
+    )
+    rows = data_fixture.get_rows(fields=[formula_field])
+    assert [item for sublist in rows for item in sublist] == [
+        True,
+        False,
+        False,
+        False,
+        True,
+    ]
+
+
 INVALID_FORMULA_TESTS = [
     (
         "test",
@@ -728,7 +978,7 @@ INVALID_FORMULA_TESTS = [
         (
             "Error with formula: argument number 1 given to function sum was of type "
             "number but the only usable type for this argument is a list of number "
-            "values obtained from a lookup or link row field reference."
+            "values obtained from a lookup."
         ),
     ),
     (
@@ -754,7 +1004,7 @@ INVALID_FORMULA_TESTS = [
             "Error with formula: argument number 1 given to function sum was of type "
             "link "
             "but the only usable type for this argument is a list of number values "
-            "obtained from a lookup or link row field reference."
+            "obtained from a lookup."
         ),
     ),
     (
@@ -828,9 +1078,17 @@ INVALID_FORMULA_TESTS = [
 @pytest.mark.django_db
 def test_aggregate_functions_never_allow_non_many_inputs(data_fixture, api_client):
     user = data_fixture.create_user()
-    table, table_b, link_field = data_fixture.create_two_linked_tables(user=user)
+    table, _, link_field = data_fixture.create_two_linked_tables(user=user)
 
-    function_exceptions = {Baserow2dArrayAgg.type}
+    function_exceptions = {
+        Baserow2dArrayAgg.type,
+        # Multiple select formulas that are aggregates but they accepts
+        # non-many multiple select fields. All these functions are not directly
+        # exposed to the user in the UI anyway.
+        BaserowMultipleSelectOptionsAgg.type,
+        BaserowMultipleSelectCount.type,
+        BaserowStringAggMultipleSelectValues.type,
+    }
     custom_cases = {
         BaserowAggJoin.type: [
             [literal("x"), literal("y")],
@@ -864,7 +1122,7 @@ def test_aggregate_functions_never_allow_non_many_inputs(data_fixture, api_clien
                 )
             except Exception as e:
                 assert isinstance(e, InvalidFormulaType) and search(
-                    "is a list of .*values obtained from a", str(e)
+                    "a list of .*values obtained from a", str(e)
                 ), (
                     f"Function {formula_func.type} crashed with formula: "
                     f"{formula or ''} because of: \n{traceback.format_exc()}"
@@ -879,7 +1137,7 @@ def construct_some_literal_args(formula_func):
         arg_checker = a[0]
         if isinstance(arg_checker, MustBeManyExprChecker):
             arg_checker = arg_checker.formula_types[0]
-        if arg_checker == BaserowFormulaValidType:
+        if arg_checker in (BaserowFormulaValidType, BaserowFormulaMultipleSelectType):
             r = ""
         elif arg_checker == BaserowFormulaBooleanType:
             r = True
@@ -892,7 +1150,8 @@ def construct_some_literal_args(formula_func):
         else:
             assert False, (
                 f"Please add a branch for {arg_checker} to "
-                f"the test function construct_some_literal_args"
+                f"the test function construct_some_literal_args "
+                f"for formula {formula_func.type}"
             )
         fake_args.append(literal(r))
     return fake_args
@@ -913,12 +1172,24 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
     bool_field = data_fixture.create_boolean_field(
         user, table=table_b, name="bool_field"
     )
+    multiple_select_field = data_fixture.create_multiple_select_field(
+        user, table=table_b, name="multiple_select_field"
+    )
 
     fill_table_rows(10, table_b)
 
     # These functions are not supposed to be directly used by the user, but only
     # internally from some formula types to manage aggregations correctly.
-    function_exceptions = {Baserow2dArrayAgg.type, BaserowArrayAggNoNesting.type}
+    function_exceptions = {
+        Baserow2dArrayAgg.type,
+        BaserowArrayAggNoNesting.type,
+        # Multiple select formulas that are aggregates but they accepts
+        # non-many multiple select fields. All these functions are not directly
+        # exposed to the user in the UI anyway.
+        BaserowMultipleSelectOptionsAgg.type,
+        BaserowMultipleSelectCount.type,
+        BaserowStringAggMultipleSelectValues.type,
+    }
 
     for formula_func in formula_function_registry.get_all():
         if not formula_func.aggregate or formula_func.type in function_exceptions:
@@ -931,6 +1202,7 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
                 text_field=text_field,
                 number_field=number_field,
                 bool_field=bool_field,
+                multiple_select_field=multiple_select_field,
             )
         ]
 
@@ -943,14 +1215,14 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
                 name=f"{formula_func.type}",
                 formula=formula,
             )
-            FieldHandler().create_field(
-                user,
-                table,
-                "formula",
-                name=f"{formula_func.type} ref",
-                formula=f"field('{f.name}')",
-            )
             try:
+                FieldHandler().create_field(
+                    user,
+                    table,
+                    "formula",
+                    name=f"{formula_func.type} ref",
+                    formula=f"field('{f.name}')",
+                )
                 RowHandler().create_row(user, table, {})
             except Exception as exc:
                 assert False, (
@@ -965,7 +1237,12 @@ def test_aggregate_functions_can_be_referenced_by_other_formulas(
 
 
 def get_field_name_from_arg_types(
-    formula_func, through_field, text_field, number_field, bool_field
+    formula_func,
+    through_field,
+    text_field,
+    number_field,
+    bool_field,
+    multiple_select_field,
 ):
     args = formula_func.arg_types
     field_refs = []
@@ -984,6 +1261,8 @@ def get_field_name_from_arg_types(
             r = number_field.name
         elif arg_checker == BaserowFormulaArrayType:
             r = through_field.link_row_related_field.name
+        elif arg_checker == BaserowFormulaMultipleSelectType:
+            r = multiple_select_field.name
         else:
             assert False, (
                 f"Please add a branch for {arg_checker} to "

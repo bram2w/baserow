@@ -443,7 +443,8 @@
         "getImageWidthDescription": "Returns the image width from a single file returned from the index function.",
         "getImageHeightDescription": "Returns the image height from a single file returned from the index function.",
         "getIsImageDescription": "Returns if the single file returned from the index function is an image or not.",
-        "indexDescription": "Returns the file from a file field at the position provided by the second argument."
+        "indexDescription": "Returns the file from a file field at the position provided by the second argument.",
+        "hasOptionDescription": "Returns true if the first argument is a multiple select field or a lookup to a single select field and the second argument is one of the options."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "unnamed row {value}"

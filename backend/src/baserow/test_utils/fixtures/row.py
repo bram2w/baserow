@@ -1,5 +1,7 @@
 from typing import Any, List, Optional
 
+from django.db.models import ManyToManyField
+
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
@@ -71,13 +73,20 @@ class RowFixture:
         if fields is None:
             fields = []
         model = table.get_model()
-        created_rows = []
+        created_rows: List[GeneratedTableModel] = []
         for row in rows:
-            values = {}
+            values, m2m_values = {}, {}
             for idx, field in enumerate(fields):
-                values[field.db_column] = row[idx]
-
-            created_rows.append(model.objects.create(**values))
+                model_field = model._meta.get_field(field.db_column)
+                if isinstance(model_field, ManyToManyField):
+                    m2m_values[field.db_column] = row[idx]
+                else:
+                    values[field.db_column] = row[idx]
+            created_row: GeneratedTableModel = model.objects.create(**values)
+            if m2m_values:
+                for field_name, values in m2m_values.items():
+                    getattr(created_row, field_name).set(values)
+            created_rows.append(created_row)
         return created_rows
 
     def get_rows(self, fields: List[Field]) -> List[List[Any]]:
