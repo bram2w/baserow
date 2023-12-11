@@ -108,6 +108,8 @@ class DatabaseApplicationType(ApplicationType):
             model = table.get_model(fields=fields, add_dependencies=False)
             serialized_rows = []
             row_queryset = model.objects.all()
+            if table.created_by_column_added:
+                row_queryset = row_queryset.select_related("created_by")
             if table.last_modified_by_column_added:
                 row_queryset = row_queryset.select_related("last_modified_by")
             for row in row_queryset:
@@ -116,6 +118,7 @@ class DatabaseApplicationType(ApplicationType):
                     order=str(row.order),
                     created_on=row.created_on.isoformat(),
                     updated_on=row.updated_on.isoformat(),
+                    created_by=getattr(row, "created_by", None),
                     last_modified_by=getattr(row, "last_modified_by", None),
                 )
                 for field_object in model._field_objects.values():
@@ -474,16 +477,27 @@ class DatabaseApplicationType(ApplicationType):
                 else:
                     updated_on = timezone.now()
 
-                modified_by_email = serialized_row.get("last_modified_by", None)
+                created_by_email = serialized_row.get("created_by", None)
+                created_by = (
+                    user_email_mapping.get(created_by_email, None)
+                    if created_by_email
+                    else None
+                )
+
+                last_modified_by_email = serialized_row.get("last_modified_by", None)
+                last_modified_by = (
+                    user_email_mapping.get(last_modified_by_email, None)
+                    if last_modified_by_email
+                    else None
+                )
 
                 row_instance = table_model(
                     id=serialized_row["id"],
                     order=serialized_row["order"],
                     created_on=created_on,
                     updated_on=updated_on,
-                    last_modified_by=user_email_mapping.get(modified_by_email, None)
-                    if modified_by_email
-                    else None,
+                    created_by=created_by,
+                    last_modified_by=last_modified_by,
                 )
 
                 for serialized_field in serialized_table["fields"]:

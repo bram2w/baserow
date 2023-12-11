@@ -200,6 +200,7 @@ class DatabaseConfig(AppConfig):
         from .fields.field_types import (
             BooleanFieldType,
             CountFieldType,
+            CreatedByFieldType,
             CreatedOnFieldType,
             DateFieldType,
             EmailFieldType,
@@ -233,6 +234,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LastModifiedFieldType())
         field_type_registry.register(LastModifiedByFieldType())
         field_type_registry.register(CreatedOnFieldType())
+        field_type_registry.register(CreatedByFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())

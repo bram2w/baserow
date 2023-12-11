@@ -2021,6 +2021,144 @@ export class LastModifiedByFieldType extends FieldType {
   }
 }
 
+export class CreatedByFieldType extends FieldType {
+  static getType() {
+    return 'created_by'
+  }
+
+  getIconClass() {
+    return 'iconoir-user'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.createdBy')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldLastModifiedBy
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldLastModifiedBy
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldLastModifiedBy
+  }
+
+  getCardComponent() {
+    return RowCardFieldLastModifiedBy
+  }
+
+  getCanSortInView(field) {
+    return true
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      let userNameA = a[name] === null ? '' : a[name].name
+      let userNameB = b[name] === null ? '' : b[name].name
+
+      const workspaces = this.app.store.getters['workspace/getAll']
+      const workspaceAvailable = workspaces.length > 0
+      if (workspaceAvailable) {
+        if (a[name] !== null) {
+          const workspaceUserA = this.app.store.getters[
+            'workspace/getUserById'
+          ](a[name].id)
+          userNameA = workspaceUserA ? workspaceUserA.name : userNameA
+        }
+
+        if (b[name] !== null) {
+          const workspaceUserB = this.app.store.getters[
+            'workspace/getUserById'
+          ](b[name].id)
+          userNameB = workspaceUserB ? workspaceUserB.name : userNameB
+        }
+      }
+
+      return collatedStringCompare(userNameA, userNameB, order)
+    }
+  }
+
+  canBeReferencedByFormulaField() {
+    return false
+  }
+
+  _getCurrentUserValue() {
+    return {
+      id: this.app.store.getters['auth/getUserId'],
+      name: this.app.store.getters['auth/getName'],
+    }
+  }
+
+  getNewRowValue() {
+    return this._getCurrentUserValue()
+  }
+
+  onRowChange(row, currentField, currentFieldValue) {
+    return currentFieldValue
+  }
+
+  prepareValueForCopy(field, value) {
+    if (value === undefined || value === null) {
+      return ''
+    }
+
+    const name = value.name
+
+    const workspaces = this.app.store.getters['workspace/getAll']
+    if (workspaces.length > 0) {
+      const workspaceUser = this.app.store.getters['workspace/getUserById'](
+        value.id
+      )
+      return workspaceUser ? workspaceUser.name : name
+    }
+
+    return name
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return this.prepareValueForCopy(field, value)
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return this.toHumanReadableString(field, value, delimiter)
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
+  }
+
+  getDocsDataType(field) {
+    return 'object'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.createdBy')
+  }
+
+  getDocsRequestExample() {
+    return {
+      id: 1,
+      name: 'John',
+    }
+  }
+}
+
 export class URLFieldType extends FieldType {
   static getType() {
     return 'url'

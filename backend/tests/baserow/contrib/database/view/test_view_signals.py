@@ -19,7 +19,7 @@ def test_view_loaded_creates_last_modified_by_column(indexing_handler, data_fixt
 
     # won't schedule column creation if already added
     with patch(
-        "baserow.contrib.database.table.tasks.setup_last_modified_by_column"
+        "baserow.contrib.database.table.tasks.setup_created_by_and_last_modified_by_column"
     ) as setup:
         view_loaded_create_indexes_and_columns(
             None, view, table_model, table=table, user=user
@@ -30,7 +30,7 @@ def test_view_loaded_creates_last_modified_by_column(indexing_handler, data_fixt
     table.last_modified_by_column_added = False
     table.save()
     with patch(
-        "baserow.contrib.database.table.tasks.setup_last_modified_by_column"
+        "baserow.contrib.database.table.tasks.setup_created_by_and_last_modified_by_column"
     ) as setup:
         view_loaded_create_indexes_and_columns(
             None, view, table_model, table=table, user=user

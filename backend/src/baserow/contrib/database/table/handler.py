@@ -39,6 +39,7 @@ from baserow.core.trash.handler import TrashHandler
 from baserow.core.utils import ChildProgressBuilder, Progress, find_unused_name
 
 from .constants import (
+    CREATED_BY_COLUMN_NAME,
     LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
     TABLE_CREATION,
@@ -738,22 +739,35 @@ class TableHandler(metaclass=baserow_trace_methods(tracer)):
 
         table.save(update_fields=("needs_background_update_column_added",))
 
-    def create_last_modified_by_field(self, table: "Table") -> None:
+    def create_created_by_and_last_modified_by_fields(self, table: "Table") -> None:
         """
-        Creates last_modified_by field for the provided table if
-        it has not yet been created.
+        Creates the created_by and last_modified_by fields for the provided
+        table if they have not yet been created.
 
-        :param table: Table that should have last_modified_by field.
+        :param table: Table that should have created_by and last_modified_by
+            fields.
         """
 
-        if table.last_modified_by_column_added:
+        last_modified_by_column_added = table.last_modified_by_column_added
+        created_by_column_added = table.created_by_column_added
+        if last_modified_by_column_added and created_by_column_added:
             return
 
         table.last_modified_by_column_added = True
-        model = table.get_model(use_cache=False)
+        table.created_by_column_added = True
+        model = table.get_model(use_cache=False, field_ids=[])
 
         with safe_django_schema_editor(atomic=False) as schema_editor:
-            last_modified_by_field = model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
-            schema_editor.add_field(model, last_modified_by_field)
+            if not last_modified_by_column_added:
+                last_modified_by_field = model._meta.get_field(
+                    LAST_MODIFIED_BY_COLUMN_NAME
+                )
+                schema_editor.add_field(model, last_modified_by_field)
 
-        table.save(update_fields=["last_modified_by_column_added"])
+            if not created_by_column_added:
+                created_by_field = model._meta.get_field(CREATED_BY_COLUMN_NAME)
+                schema_editor.add_field(model, created_by_field)
+
+        table.save(
+            update_fields=["created_by_column_added", "last_modified_by_column_added"]
+        )

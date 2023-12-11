@@ -342,6 +342,10 @@ class CreatedOnField(Field, BaseDateMixin):
     pass
 
 
+class CreatedByField(Field):
+    pass
+
+
 class LinkRowField(Field):
     THROUGH_DATABASE_TABLE_PREFIX = LINK_ROW_THROUGH_TABLE_PREFIX
     link_row_table = models.ForeignKey(

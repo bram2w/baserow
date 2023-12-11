@@ -41,6 +41,7 @@ from baserow.contrib.database.table.cache import (
     set_cached_model_field_attrs,
 )
 from baserow.contrib.database.table.constants import (
+    CREATED_BY_COLUMN_NAME,
     LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
     TSV_FIELD_PREFIX,
@@ -761,6 +762,11 @@ class Table(
         help_text="Indicates whether the table has had the last_modified_by "
         "column added.",
     )
+    created_by_column_added = models.BooleanField(
+        default=True,
+        null=True,
+        help_text="Indicates whether the table has had the created_by column added.",
+    )
 
     class Meta:
         ordering = ("order",)
@@ -977,6 +983,9 @@ class Table(
         if self.needs_background_update_column_added:
             self._add_needs_background_update_column(field_attrs, indexes)
 
+        if self.created_by_column_added:
+            self._add_created_by(field_attrs, indexes)
+
         if self.last_modified_by_column_added:
             self._add_last_modified_by(field_attrs, indexes)
 
@@ -1023,6 +1032,17 @@ class Table(
         )
 
         indexes.append(get_row_needs_background_update_index(self))
+
+    def _add_created_by(self, field_attrs, indexes):
+        field_attrs[CREATED_BY_COLUMN_NAME] = IgnoreMissingForeignKey(
+            User,
+            null=True,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            on_delete=models.SET_NULL,
+            help_text="Stores information about the user that created the row.",
+        )
 
     def _add_last_modified_by(self, field_attrs, indexes):
         field_attrs[LAST_MODIFIED_BY_COLUMN_NAME] = IgnoreMissingForeignKey(

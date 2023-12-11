@@ -754,7 +754,7 @@ def test_create_last_modified_by_field(data_fixture):
     with pytest.raises(FieldDoesNotExist):
         model._meta.get_field(LAST_MODIFIED_BY_COLUMN_NAME)
 
-    TableHandler().create_last_modified_by_field(table)
+    TableHandler().create_created_by_and_last_modified_by_fields(table)
 
     table.refresh_from_db()
     assert table.last_modified_by_column_added

@@ -65,8 +65,6 @@ from baserow.contrib.database.api.fields.serializers import (
 )
 from baserow.contrib.database.db.functions import RandomUUID
 from baserow.contrib.database.export_serialized import DatabaseExportSerializedStructure
-from baserow.contrib.database.fields.field_cache import FieldCache
-from baserow.contrib.database.fields.fields import SyncedLastModifiedByForeignKeyField
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_TYPE_ALLOWED_FIELDS,
     BaserowExpression,
@@ -131,6 +129,7 @@ from .exceptions import (
     SelfReferencingLinkRowCannotHaveRelatedField,
 )
 from .expressions import extract_jsonb_array_values_to_single_string
+from .field_cache import FieldCache
 from .field_filters import (
     AnnotatedQ,
     contains_filter,
@@ -143,12 +142,14 @@ from .fields import (
     BaserowLastModifiedField,
     MultipleSelectManyToManyField,
     SingleSelectForeignKey,
+    SyncedUserForeignKeyField,
 )
 from .handler import FieldHandler
 from .models import (
     AbstractSelectOption,
     BooleanField,
     CountField,
+    CreatedByField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -1246,7 +1247,7 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
         kwargs["null"] = True
         kwargs["blank"] = True
         kwargs.update(self.model_field_kwargs)
-        return SyncedLastModifiedByForeignKeyField(
+        return SyncedUserForeignKeyField(
             User,
             on_delete=models.SET_NULL,
             related_name="+",
@@ -1268,7 +1269,9 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
 
         if not table.last_modified_by_column_added:
             table_to_update = TableHandler().get_table_for_update(table.id)
-            TableHandler().create_last_modified_by_field(table_to_update)
+            TableHandler().create_created_by_and_last_modified_by_fields(
+                table_to_update
+            )
             table.refresh_from_db()
 
     def after_create(self, field, model, user, connection, before, field_kwargs):
@@ -1401,6 +1404,212 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         When converting to last modified by field type we won't preserve any
+        values.
+        """
+
+        # fmt: off
+        sql = (
+            f"""
+            p_in = NULL;
+            """  # nosec b608
+        )
+        # fmt: on
+        return sql, {}
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        """
+        When converting to another field type we won't preserve any values.
+        """
+
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type != self.type and connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                cursor.execute("SET CONSTRAINTS ALL IMMEDIATE")
+
+            # fmt: off
+            sql = (
+                f"""
+                p_in = NULL;
+                """  # nosec b608
+            )
+            # fmt: on
+            return sql, {}
+
+        return super().get_alter_column_prepare_old_value(
+            connection, from_field, to_field
+        )
+
+
+class CreatedByFieldType(ReadOnlyFieldType):
+    type = "created_by"
+    model_class = CreatedByField
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+
+    source_field_name = "created_by"
+    model_field_kwargs = {"sync_with_add": "created_by"}
+
+    def get_model_field(self, instance, **kwargs):
+        kwargs["null"] = True
+        kwargs["blank"] = True
+        kwargs.update(self.model_field_kwargs)
+        return SyncedUserForeignKeyField(
+            User,
+            on_delete=models.SET_NULL,
+            related_name="+",
+            related_query_name="+",
+            db_constraint=False,
+            **kwargs,
+        )
+
+    def get_serializer_field(self, instance, **kwargs):
+        return CollaboratorSerializer(required=False, **kwargs)
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        """
+        If created_by column is still not present on the table,
+        we need to create it first.
+        """
+
+        if not table.created_by_column_added:
+            table_to_update = TableHandler().get_table_for_update(table.id)
+            TableHandler().create_created_by_and_last_modified_by_fields(
+                table_to_update
+            )
+            table.refresh_from_db()
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        """
+        Immediately after the field has been created, we need to populate the values
+        with the already existing source_field_name column.
+        """
+
+        model.objects.all().update(
+            **{f"{field.db_column}": models.F(self.source_field_name)}
+        )
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        """
+        If the field type has changed, we need to update the values from
+        the source_field_name column.
+        """
+
+        if not isinstance(from_field, self.model_class):
+            to_model.objects.all().update(
+                **{f"{to_field.db_column}": models.F(self.source_field_name)}
+            )
+
+    def enhance_queryset(self, queryset, field, name):
+        return queryset.select_related(name)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        return False
+
+    def random_value(self, instance, fake, cache):
+        return None
+
+    def get_export_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = self.get_internal_value_from_db(row, field_name)
+        return user.email if user else None
+
+    def set_import_serialized_value(
+        self,
+        row: "GeneratedTableModel",
+        field_name: str,
+        value: Any,
+        id_mapping: Dict[str, Any],
+        cache: Dict[str, Any],
+        files_zip: Optional[ZipFile] = None,
+        storage: Optional[Storage] = None,
+    ):
+        """
+        Importing will use the value from source_field_name column.
+        """
+
+        value = getattr(row, self.source_field_name)
+        setattr(row, field_name, value)
+
+    def get_internal_value_from_db(
+        self, row: "GeneratedTableModel", field_name: str
+    ) -> Any:
+        return getattr(row, field_name)
+
+    def get_export_value(
+        self, value: Any, field_object: "FieldObject", rich_value: bool = False
+    ) -> Any:
+        """
+        Exported value will be the user's email address.
+        """
+
+        user = value
+        return user.email if user else None
+
+    def get_order(
+        self, field, field_name, order_direction
+    ) -> OptionallyAnnotatedOrderBy:
+        """
+        If the user wants to sort the results they expect them to be ordered
+        alphabetically based on the user's name.
+        """
+
+        name = f"{field_name}__first_name"
+        order = collate_expression(F(name))
+
+        if order_direction == "ASC":
+            order = order.asc(nulls_first=True)
+        else:
+            order = order.desc(nulls_last=True)
+        return OptionallyAnnotatedOrderBy(order=order)
+
+    def get_value_for_filter(self, row: "GeneratedTableModel", field: Field) -> any:
+        value = getattr(row, field.db_column)
+        return value
+
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        return Subquery(
+            queryset.filter(pk=OuterRef("pk")).values(f"{field.db_column}__first_name")[
+                :1
+            ]
+        )
+
+    def is_searchable(self, field: Field) -> bool:
+        return True
+
+    def contains_query(self, field_name, value, model_field, field):
+        value = value.strip()
+        if value == "":
+            return Q()
+        return Q(**{f"{field_name}__first_name__icontains": value})
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        """
+        When converting to created by field type we won't preserve any
         values.
         """
 

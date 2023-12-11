@@ -28,6 +28,7 @@ from baserow.contrib.database.fields.field_helpers import (
 from baserow.contrib.database.fields.field_types import (
     BooleanFieldType,
     CountFieldType,
+    CreatedByFieldType,
     CreatedOnFieldType,
     DateFieldType,
     EmailFieldType,
@@ -335,6 +336,13 @@ def test_field_conversion_multiple_collaborators(data_fixture):
 @pytest.mark.django_db
 def test_field_conversion_last_modified_by(data_fixture):
     _test_can_convert_between_fields(data_fixture, LastModifiedByFieldType.type)
+
+
+@pytest.mark.field_created_by
+@pytest.mark.disabled_in_ci
+@pytest.mark.django_db
+def test_field_conversion_created_by(data_fixture):
+    _test_can_convert_between_fields(data_fixture, CreatedByFieldType.type)
 
 
 @pytest.mark.django_db
