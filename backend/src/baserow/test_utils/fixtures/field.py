@@ -3,6 +3,7 @@ from baserow.contrib.database.fields.dependencies.handler import FieldDependency
 from baserow.contrib.database.fields.field_cache import FieldCache
 from baserow.contrib.database.fields.models import (
     BooleanField,
+    CreatedByField,
     CreatedOnField,
     DateField,
     EmailField,
@@ -254,6 +255,16 @@ class FieldFixtures:
         self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = LastModifiedByField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_created_by_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = CreatedByField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

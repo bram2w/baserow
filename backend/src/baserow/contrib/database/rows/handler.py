@@ -59,6 +59,7 @@ from baserow.core.utils import Progress, get_non_unique_values, grouper
 
 from ..search.handler import SearchHandler
 from ..table.constants import (
+    CREATED_BY_COLUMN_NAME,
     LAST_MODIFIED_BY_COLUMN_NAME,
     ROW_NEEDS_BACKGROUND_UPDATE_COLUMN_NAME,
 )
@@ -768,10 +769,15 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             prepared_values, model
         )
         row_values["order"] = self.get_unique_orders_before_row(before, model)[0]
+
+        if getattr(model, CREATED_BY_COLUMN_NAME, None):
+            row_values[CREATED_BY_COLUMN_NAME] = user if user and user.id else None
+
         if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
             row_values[LAST_MODIFIED_BY_COLUMN_NAME] = (
                 user if user and user.id else None
             )
+
         instance = model.objects.create(**row_values)
         rows_created_counter.add(1)
 
@@ -1100,8 +1106,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         ):
             row_values, manytomany_values = self.extract_manytomany_values(row, model)
             row_values["order"] = unique_orders[index]
+
+            if getattr(model, CREATED_BY_COLUMN_NAME, None):
+                row_values[CREATED_BY_COLUMN_NAME] = user if user.id else None
+
             if getattr(model, LAST_MODIFIED_BY_COLUMN_NAME, None):
                 row_values[LAST_MODIFIED_BY_COLUMN_NAME] = user if user.id else None
+
             instance = model(**row_values)
 
             relations = {

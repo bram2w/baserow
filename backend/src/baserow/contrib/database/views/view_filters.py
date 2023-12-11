@@ -21,6 +21,7 @@ from baserow.contrib.database.fields.field_filters import (
 )
 from baserow.contrib.database.fields.field_types import (
     BooleanFieldType,
+    CreatedByFieldType,
     CreatedOnFieldType,
     DateFieldType,
     EmailFieldType,
@@ -1305,7 +1306,7 @@ class UserIsViewFilterType(ViewFilterType):
     """
 
     type = "user_is"
-    compatible_field_types = [LastModifiedByFieldType.type]
+    compatible_field_types = [CreatedByFieldType.type, LastModifiedByFieldType.type]
 
     USER_KEY = f"users"
 

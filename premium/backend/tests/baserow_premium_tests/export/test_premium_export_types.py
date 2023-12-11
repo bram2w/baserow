@@ -65,6 +65,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_date_eu": "02/01/2021",
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "last_modified_by": "user@example.com",
+    "created_by": "user@example.com",
     "link_row": [],
     "self_link_row": [],
     "link_row_without_related": [],
@@ -125,6 +126,7 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_date_eu": "02/01/2021",
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "last_modified_by": "user@example.com",
+    "created_by": "user@example.com",
     "link_row": [
         "linked_row_1",
         "linked_row_2",
@@ -308,6 +310,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-date-eu>02/01/2021</created-on-date-eu>
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
       <last-modified-by>user@example.com</last-modified-by>
+      <created-by>user@example.com</created-by>
       <link-row/>
       <self-link-row/>
       <link-row-without-related/>
@@ -368,6 +371,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-date-eu>02/01/2021</created-on-date-eu>
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
       <last-modified-by>user@example.com</last-modified-by>
+      <created-by>user@example.com</created-by>
       <link-row>
          <item>linked_row_1</item>
          <item>linked_row_2</item>

@@ -4,13 +4,13 @@ import pytest
 from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from baserow.contrib.database.fields.handler import FieldHandler
-from baserow.contrib.database.fields.models import LastModifiedByField
+from baserow.contrib.database.fields.models import CreatedByField
 from baserow.test_utils.helpers import is_dict_subset
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.django_db
-def test_api_create_last_modified_by_field_type(api_client, data_fixture):
+def test_api_create_created_by_field_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
@@ -20,22 +20,22 @@ def test_api_create_last_modified_by_field_type(api_client, data_fixture):
     response = api_client.post(
         reverse("api:database:fields:list", kwargs={"table_id": table.id}),
         {
-            "name": "last modified by",
-            "type": "last_modified_by",
+            "name": "created by",
+            "type": "created_by",
         },
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json["name"] == "last modified by"
-    assert response_json["type"] == "last_modified_by"
-    assert LastModifiedByField.objects.all().count() == 1
+    assert response_json["name"] == "created by"
+    assert response_json["type"] == "created_by"
+    assert CreatedByField.objects.all().count() == 1
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.django_db
-def test_api_update_last_modified_by_field_type(api_client, data_fixture):
+def test_api_update_created_by_field_type(api_client, data_fixture):
     workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl",
@@ -47,35 +47,35 @@ def test_api_update_last_modified_by_field_type(api_client, data_fixture):
         user=user, name="Placeholder", workspace=workspace
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field = data_fixture.create_last_modified_by_field(
-        table=table, order=1, name="Last modified by", primary=True
+    field = data_fixture.create_created_by_field(
+        table=table, order=1, name="created by", primary=True
     )
 
     response = api_client.patch(
         reverse("api:database:fields:item", kwargs={"field_id": field.id}),
-        {"name": "Last modified by renamed"},
+        {"name": "created by renamed"},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
 
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
-    assert response_json["name"] == "Last modified by renamed"
-    assert response_json["type"] == "last_modified_by"
+    assert response_json["name"] == "created by renamed"
+    assert response_json["type"] == "created_by"
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.django_db
-def test_api_delete_last_modified_by_field_type(api_client, data_fixture):
+def test_api_delete_created_by_field_type(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl", password="password", first_name="Test1"
     )
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
-    field = data_fixture.create_last_modified_by_field(
+    field = data_fixture.create_created_by_field(
         table=table,
         order=1,
-        name="Last modified by",
+        name="created by",
     )
 
     response = api_client.delete(
@@ -89,10 +89,10 @@ def test_api_delete_last_modified_by_field_type(api_client, data_fixture):
     assert field.trashed is True
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.api_rows
 @pytest.mark.django_db
-def test_api_create_last_modified_by_field_type_row(api_client, data_fixture):
+def test_api_create_created_by_field_type_row(api_client, data_fixture):
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
@@ -101,8 +101,8 @@ def test_api_create_last_modified_by_field_type_row(api_client, data_fixture):
     field = field_handler.create_field(
         user=user,
         table=table,
-        type_name="last_modified_by",
-        name="modified by",
+        type_name="created_by",
+        name="created by",
     )
 
     # can't set the field value directly
@@ -131,10 +131,11 @@ def test_api_create_last_modified_by_field_type_row(api_client, data_fixture):
     }
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.api_rows
 @pytest.mark.django_db
-def test_update_last_modified_by_field_type_row(api_client, data_fixture):
+def test_update_row_dont_change_created_by_fields_values(api_client, data_fixture):
+    creator = data_fixture.create_user()
     user, token = data_fixture.create_user_and_token()
     database = data_fixture.create_database_application(user=user, name="Placeholder")
     table = data_fixture.create_database_table(name="Example", database=database)
@@ -143,12 +144,12 @@ def test_update_last_modified_by_field_type_row(api_client, data_fixture):
     field = field_handler.create_field(
         user=user,
         table=table,
-        type_name="last_modified_by",
-        name="modified by",
+        type_name="created_by",
+        name="created by",
     )
 
     model = table.get_model()
-    row = model.objects.create(**{f"field_{text_field.id}": "text"})
+    row = model.objects.create(**{f"field_{text_field.id}": "text"}, created_by=creator)
 
     # can't set the field value directly
     response = api_client.patch(
@@ -163,7 +164,7 @@ def test_update_last_modified_by_field_type_row(api_client, data_fixture):
     assert response.status_code == HTTP_400_BAD_REQUEST
     assert response_json["error"] == "ERROR_REQUEST_BODY_VALIDATION"
 
-    # value will be set when other field value is set
+    # value will not change updating the row
     response = api_client.patch(
         reverse(
             "api:database:rows:item", kwargs={"table_id": table.id, "row_id": row.id}
@@ -175,15 +176,15 @@ def test_update_last_modified_by_field_type_row(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json[f"field_{field.id}"] == {
-        "name": user.first_name,
-        "id": user.id,
+        "id": creator.id,
+        "name": creator.first_name,
     }
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.api_rows
 @pytest.mark.django_db
-def test_last_modified_by_field_type_batch_insert_rows(api_client, data_fixture):
+def test_created_by_field_type_batch_insert_rows(api_client, data_fixture):
     workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl",
@@ -191,14 +192,12 @@ def test_last_modified_by_field_type_batch_insert_rows(api_client, data_fixture)
         first_name="Test1",
         workspace=workspace,
     )
-    user2 = data_fixture.create_user(workspace=workspace)
-    user3 = data_fixture.create_user(workspace=workspace)
     database = data_fixture.create_database_application(
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field = data_fixture.create_last_modified_by_field(
-        table=table, order=1, name="Last modified by", primary=True
+    field = data_fixture.create_created_by_field(
+        table=table, order=1, name="created by", primary=True
     )
     text_field = data_fixture.create_text_field(table=table, order=2, name="Text")
 
@@ -236,10 +235,12 @@ def test_last_modified_by_field_type_batch_insert_rows(api_client, data_fixture)
     )
 
 
-@pytest.mark.field_last_modified_by
+@pytest.mark.field_created_by
 @pytest.mark.api_rows
 @pytest.mark.django_db
-def test_last_modified_by_field_type_batch_update_rows(api_client, data_fixture):
+def test_created_by_field_type_dont_change_when_batch_update_rows(
+    api_client, data_fixture
+):
     workspace = data_fixture.create_workspace()
     user, token = data_fixture.create_user_and_token(
         email="test@test.nl",
@@ -253,14 +254,14 @@ def test_last_modified_by_field_type_batch_update_rows(api_client, data_fixture)
         user=user, workspace=workspace, name="Placeholder"
     )
     table = data_fixture.create_database_table(name="Example", database=database)
-    field = data_fixture.create_last_modified_by_field(
-        table=table, order=1, name="Last modified by", primary=True
+    field = data_fixture.create_created_by_field(
+        table=table, order=1, name="created by", primary=True
     )
     text_field = data_fixture.create_text_field(table=table, order=2, name="Text")
     model = table.get_model()
-    row1 = model.objects.create(last_modified_by=user2)
-    row2 = model.objects.create(last_modified_by=user3)
-    row3 = model.objects.create(last_modified_by=user3)
+    row1 = model.objects.create(created_by=user2)
+    row2 = model.objects.create(created_by=user3)
+    row3 = model.objects.create(created_by=user3)
 
     # can't set the field value directly
     response = api_client.patch(
@@ -285,6 +286,7 @@ def test_last_modified_by_field_type_batch_update_rows(api_client, data_fixture)
             "items": [
                 {"id": row1.id, f"field_{text_field.id}": "new text"},
                 {"id": row2.id, f"field_{text_field.id}": "new text"},
+                {"id": row3.id, f"field_{text_field.id}": "new text"},
             ]
         },
         format="json",
@@ -294,7 +296,6 @@ def test_last_modified_by_field_type_batch_update_rows(api_client, data_fixture)
     assert response.status_code == HTTP_200_OK
     response_json = response.json()
 
-    # assert response_json == {}
-    assert response_json["items"][0][f"field_{field.id}"]["id"] == user.id
-    assert response_json["items"][1][f"field_{field.id}"]["id"] == user.id
-    assert getattr(row3, f"field_{field.id}") == user3
+    assert response_json["items"][0][f"field_{field.id}"]["id"] == user2.id
+    assert response_json["items"][1][f"field_{field.id}"]["id"] == user3.id
+    assert response_json["items"][2][f"field_{field.id}"]["id"] == user3.id

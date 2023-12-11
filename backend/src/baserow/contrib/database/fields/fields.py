@@ -318,10 +318,9 @@ class DurationFieldUsingPostgresFormatting(models.DurationField):
         return sql + "::text", params
 
 
-class SyncedLastModifiedByForeignKeyField(IgnoreMissingForeignKey):
-    requires_refresh_after_update = True
-
+class SyncedUserForeignKeyField(IgnoreMissingForeignKey):
     def __init__(self, to, sync_with=None, sync_with_add=None, *args, **kwargs):
+        self.requires_refresh_after_update = sync_with is not None
         self.sync_with = sync_with
         self.sync_with_add = sync_with_add
         if sync_with or sync_with_add:

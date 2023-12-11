@@ -385,6 +385,20 @@
               "primary": false,
               "number_decimal_places": 2,
               "number_negative": false
+            },
+            {
+              "id": 4698,
+              "type": "last_modified_by",
+              "name": "Last modified by",
+              "order": 27,
+              "primary": false
+            },
+            {
+              "id": 4699,
+              "type": "created_by",
+              "name": "Created by",
+              "order": 28,
+              "primary": false
             }
           ],
           "views": [

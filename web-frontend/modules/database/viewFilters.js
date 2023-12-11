@@ -1614,7 +1614,7 @@ export class UserIsFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['last_modified_by']
+    return ['created_by', 'last_modified_by']
   }
 
   isAllowedInPublicViews() {
@@ -1650,7 +1650,7 @@ export class UserIsNotFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['last_modified_by']
+    return ['created_by', 'last_modified_by']
   }
 
   isAllowedInPublicViews() {

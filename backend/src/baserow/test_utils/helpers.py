@@ -194,6 +194,7 @@ def setup_interesting_test_table(
         "created_on_date_eu": None,
         "created_on_datetime_eu_tzone": None,
         "last_modified_by": None,
+        "created_by": None,
         # We will setup link rows manually later
         "link_row": None,
         "self_link_row": None,

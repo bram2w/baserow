@@ -22,6 +22,7 @@ import {
   MultipleSelectFieldType,
   PhoneNumberFieldType,
   CreatedOnFieldType,
+  CreatedByFieldType,
   FormulaFieldType,
   CountFieldType,
   RollupFieldType,
@@ -443,6 +444,7 @@ export default (context) => {
   app.$registry.register('field', new LastModifiedFieldType(context))
   app.$registry.register('field', new LastModifiedByFieldType(context))
   app.$registry.register('field', new CreatedOnFieldType(context))
+  app.$registry.register('field', new CreatedByFieldType(context))
   app.$registry.register('field', new URLFieldType(context))
   app.$registry.register('field', new EmailFieldType(context))
   app.$registry.register('field', new FileFieldType(context))
