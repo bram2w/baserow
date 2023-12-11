@@ -6,7 +6,7 @@
     color: $accent-color;
   }
 
-  .alert__actions-button {
+  .alert__actions-button-text {
     color: $color;
     cursor: pointer;
 
@@ -19,7 +19,7 @@
     color: $accent-color;
   }
 
-  .alert__content * {
+  .alert__content *:not(.button) {
     color: $color;
   }
 
@@ -37,7 +37,7 @@
     }
   }
 
-  .alert__actions-button--loading {
+  .alert__actions-button-text--loading {
     @include loading-spinner($accent-color, 11px);
   }
 }

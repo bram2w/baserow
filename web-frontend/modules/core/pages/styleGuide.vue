@@ -648,12 +648,12 @@
             </p>
             <template #actions>
               <button
-                class="alert__actions-button alert__actions-button--normal"
+                class="alert__actions-button-text alert__actions-button-text--normal"
               >
                 Cancel
               </button>
               <button
-                class="alert__actions-button alert__actions-button--loading"
+                class="alert__actions-button-text alert__actions-button-text--loading"
               >
                 Accept
               </button>
@@ -670,12 +670,12 @@
             </p>
             <template #actions>
               <button
-                class="alert__actions-button alert__actions-button--normal"
+                class="alert__actions-button-text alert__actions-button-text--normal"
               >
                 Cancel
               </button>
               <button
-                class="alert__actions-button alert__actions-button--loading"
+                class="alert__actions-button-text alert__actions-button-text--loading"
               >
                 Accept
               </button>
@@ -691,15 +691,11 @@
               viverra urna. Praesent.
             </p>
             <template #actions>
+              <Button type="primary" size="small"> Accept </Button>
               <button
-                class="alert__actions-button alert__actions-button--normal"
+                class="alert__actions-button-text alert__actions-button-text--normal"
               >
                 Cancel
-              </button>
-              <button
-                class="alert__actions-button alert__actions-button--loading"
-              >
-                Accept
               </button>
             </template>
           </Alert>
@@ -714,12 +710,12 @@
             </p>
             <template #actions>
               <button
-                class="alert__actions-button alert__actions-button--normal"
+                class="alert__actions-button-text alert__actions-button-text--normal"
               >
                 Cancel
               </button>
               <button
-                class="alert__actions-button alert__actions-button--loading"
+                class="alert__actions-button-text alert__actions-button-text--loading"
               >
                 Accept
               </button>
@@ -730,7 +726,7 @@
             <template #title>Alert title</template>
             <template #actions>
               <button
-                class="alert__actions-button alert__actions-button--normal alert__actions-button--loading"
+                class="alert__actions-button-text alert__actions-button-text--normal alert__actions-button-text--loading"
               >
                 Cancel
               </button>
@@ -759,6 +755,28 @@
           <Button size="tiny" icon="iconoir-verified-user"></Button>
           <Button
             size="tiny"
+            icon="iconoir-verified-user"
+            type="ghost"
+          ></Button>
+        </div>
+        <div
+          class="margin-bottom-3 style-guide__buttons"
+          :style="{ backgroundColor: 'white', padding: '5px' }"
+        >
+          <h3>Small size</h3>
+          <Button size="small">button</Button>
+          <Button size="small" disabled>button[disabled]</Button>
+          <Button size="small" type="primary">button.button-success</Button>
+          <Button size="small" type="success">button.button-success</Button>
+          <Button size="small" type="warning">button.button-warning</Button>
+          <Button size="small" type="error">button.button-error</Button>
+          <Button size="small" append-icon="baserow-icon-lock-open"
+            >button</Button
+          >
+          <Button size="small" type="ghost">button.button-ghost</Button>
+          <Button size="small" icon="iconoir-verified-user"></Button>
+          <Button
+            size="small"
             icon="iconoir-verified-user"
             type="ghost"
           ></Button>

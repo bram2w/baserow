@@ -4,7 +4,7 @@
       {{ $t('formulaInputField.errorInvalidFormula') }}
     </p>
     <template #actions>
-      <button class="alert__actions-button" @click.prevent="reset">
+      <button class="alert__actions-button-text" @click.prevent="reset">
         {{ $t('action.reset') }}
       </button>
     </template>
