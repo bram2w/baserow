@@ -101,6 +101,7 @@ from baserow.core.utils import list_to_comma_separated_string
 
 from ..formula.types.formula_types import (
     BaserowFormulaArrayType,
+    BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 )
 from ..search.handler import SearchHandler
@@ -905,7 +906,7 @@ class DateFieldType(FieldType):
 
         utc = timezone("UTC")
 
-        if type(value) == str:
+        if isinstance(value, str):
             try:
                 # Try first to parse isodate
                 value = parser.isoparse(value)
@@ -923,10 +924,10 @@ class DateFieldType(FieldType):
                         code="invalid",
                     ) from exc
 
-        if type(value) == date:
+        if isinstance(value, date) and not isinstance(value, datetime):
             value = make_aware(datetime(value.year, value.month, value.day), utc)
 
-        if type(value) == datetime:
+        if isinstance(value, datetime):
             value = value.astimezone(utc)
             return value if instance.date_include_time else value.date()
 
@@ -3273,6 +3274,12 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
     is_many_to_many_field = True
     _can_group_by = True
 
+    def to_baserow_formula_type(self, field) -> BaserowFormulaType:
+        return BaserowFormulaMultipleSelectType(nullable=True)
+
+    def from_baserow_formula_type(self, formula_type) -> Field:
+        return self.model_class()
+
     def get_serializer_field(self, instance, **kwargs):
         required = kwargs.pop("required", False)
         field_serializer = IntegerOrStringField(
@@ -3334,6 +3341,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         id_map = defaultdict(list)
         name_map = defaultdict(list)
         invalid_values = []
+        options_from_ids, options_from_names = [], []
         for row_index, values in values_by_row.items():
             for value in values:
                 if isinstance(value, int):
@@ -3346,7 +3354,7 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                         break
                     else:
                         # Fail on first error
-                        raise AllProvidedValuesMustBeIntegersOrStrings(values)
+                        raise AllProvidedValuesMustBeIntegersOrStrings(value)
 
         if invalid_values:
             # Replace values by error for failing rows
@@ -3357,12 +3365,13 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
 
         if id_map:
             # Query database for existing options
-            option_from_ids = SelectOption.objects.filter(
+            options_from_ids = SelectOption.objects.filter(
                 field=instance, id__in=id_map.keys()
-            ).values_list("id", flat=True)
+            )
+            option_ids = [opt.id for opt in options_from_ids]
 
-            if len(option_from_ids) != len(id_map):
-                invalid_ids = sorted(list(set(id_map.keys()) - set(option_from_ids)))
+            if len(option_ids) != len(id_map):
+                invalid_ids = sorted(list(set(id_map.keys()) - set(option_ids)))
                 if continue_on_error:
                     # Replace values by error for failing rows
                     for invalid_name in invalid_ids:
@@ -3418,12 +3427,27 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
                         for val in value
                     ]
 
-        # Removes duplicate ids while keeping ordering
-        values_by_row = {
-            k: list(dict.fromkeys(v)) if isinstance(v, list) else v
-            for k, v in values_by_row.items()
+        options = {
+            **{opt.id: opt for opt in options_from_ids},
+            **{opt.id: opt for opt in options_from_names},
         }
-        return values_by_row
+
+        def are_invalid_options(value):
+            return isinstance(value, Exception)
+
+        # Removes duplicates while keeping ordering
+        final_values_by_row = {}
+        for row_id, value in values_by_row.items():
+            if are_invalid_options(value):
+                final_values_by_row[row_id] = value
+                continue
+
+            value_without_duplicates = list(dict.fromkeys(value))
+            final_values_by_row[row_id] = [
+                options[v_id] for v_id in value_without_duplicates
+            ]
+
+        return final_values_by_row
 
     def get_serializer_help_text(self, instance):
         return (

@@ -188,6 +188,7 @@ def construct_all_possible_field_kwargs(
                 "formula": "button('https://google.com', 'label')",
             },
             {"name": "formula_link_url_only", "formula": "link('https://google.com')"},
+            {"name": "formula_multipleselect", "formula": "field('multiple_select')"},
         ],
         "count": [
             {

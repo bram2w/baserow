@@ -7,6 +7,7 @@ from django.db.models import (
     ExpressionWrapper,
     Model,
     OuterRef,
+    QuerySet,
     Subquery,
     Value,
 )
@@ -240,33 +241,80 @@ def aggregate_wrapper(
     expr_with_metadata: WrappedExpressionWithMetadata,
     model: Type[Model],
 ) -> WrappedExpressionWithMetadata:
+    """
+    Returns a wrapped expression with metadata which wraps the given expression
+    in a subquery. This is useful for BaserowFunctionDefinitions which need to
+    aggregate the results over a model.
+    """
+
+    subquery = construct_aggregate_wrapper_queryset(expr_with_metadata, model)
+    expr: Expression = Subquery(subquery)
+
+    output_field = expr_with_metadata.expression.output_field
+
+    # if the output field type is a number, return 0 instead of null
+    if isinstance(output_field, DecimalField):
+        expr = Coalesce(expr, Value(0), output_field=output_field)
+
+    return WrappedExpressionWithMetadata(
+        ExpressionWrapper(expr, output_field=output_field)
+    )
+
+
+def aggregate_filters_on_expression(expr_with_metadata: WrappedExpressionWithMetadata):
+    """
+    Combines all the aggregate filters on the expression into a single filter.
+    This function is called before aggregating the expression.
+
+    :param expr_with_metadata: The wrapped expression with metadata to
+        aggregate.
+    """
+
     aggregate_filters = expr_with_metadata.aggregate_filters
-    pre_annotations = expr_with_metadata.pre_annotations
     if len(aggregate_filters) > 0:
         combined_filter: Expression = Value(True)
         for f in aggregate_filters:
             combined_filter = AndExpr(combined_filter, f)
         expr_with_metadata.expression.filter = combined_filter
 
+
+def construct_not_null_filters_for_inner_join(pre_annotations):
+    """
+    Constructs a dictionary of filters which enforce that each filtered relation
+    is not null so django generates us inner joins.
+
+    :param pre_annotations: The pre annotations to construct the filters from.
+    :return: A dictionary of filters.
+    """
+
+    return {key + "__isnull": False for key in pre_annotations}
+
+
+def construct_aggregate_wrapper_queryset(
+    expr_with_metadata: WrappedExpressionWithMetadata,
+    model: Type[Model],
+    result_key="result",
+) -> QuerySet:
+    """
+    Constructs a queryset which wraps the given expression. It's meant to be used
+    in conjunction with aggregate_wrapper, or to be used directly in a subquery.
+    """
+
     # We need to enforce that each filtered relation is not null so django generates us
     # inner joins.
-    not_null_filters_for_inner_join = {
-        key + "__isnull": False for key in pre_annotations
-    }
-    expr: Expression = Subquery(
+    pre_annotations = expr_with_metadata.pre_annotations
+    not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
+        pre_annotations
+    )
+
+    aggregate_filters_on_expression(expr_with_metadata)
+
+    return (
         model.objects_and_trash.annotate(**pre_annotations)
         .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
         .values("id")
-        .annotate(result=expr_with_metadata.expression)
-        .values("result"),
-    )
-
-    output_field = expr_with_metadata.expression.output_field
-    # if the output field type is a number, return 0 instead of null
-    if isinstance(output_field, DecimalField):
-        expr = Coalesce(expr, Value(0), output_field=output_field)
-    return WrappedExpressionWithMetadata(
-        ExpressionWrapper(expr, output_field=output_field)
+        .annotate(**{result_key: expr_with_metadata.expression})
+        .values(result_key)
     )
 
 

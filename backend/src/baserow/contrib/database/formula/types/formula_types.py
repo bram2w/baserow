@@ -6,7 +6,7 @@ from typing import Any, List, Optional, Type, Union
 from django.contrib.postgres.fields import ArrayField, JSONField
 from django.core.files.storage import default_storage
 from django.db import models
-from django.db.models import Expression, F, Func, Q, QuerySet, Value
+from django.db.models import Expression, F, Func, Q, QuerySet, TextField, Value
 from django.db.models.functions import Cast, Concat
 from django.utils import timezone
 
@@ -16,6 +16,7 @@ from rest_framework.fields import Field
 
 from baserow.contrib.database.fields.expressions import (
     extract_jsonb_array_values_to_single_string,
+    extract_jsonb_list_values_to_array,
     json_extract_path,
 )
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
@@ -837,8 +838,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         return self.__class__(new_sub_type)
 
     def collapse_many(self, expr: "BaserowExpression[BaserowFormulaType]"):
-        func = formula_function_registry.get("array_agg_unnesting")
-        return func(expr)
+        return expr.expression_type.sub_type.collapse_array_of_many(expr)
 
     def placeholder_empty_value(self):
         """
@@ -867,13 +867,23 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         # expression.
         single_unnest = formula_function_registry.get("array_agg")
         double_unnest = formula_function_registry.get("array_agg_unnesting")
+        multiple_select_agg = formula_function_registry.get(
+            "multiple_select_options_agg"
+        )
+        string_agg_array_of_multiple_select_values = formula_function_registry.get(
+            "string_agg_array_of_multiple_select_values"
+        )
 
         sub_type = expr.expression_type.sub_type
         if isinstance(arg, BaserowFunctionCall):
-            if arg.function_def.type == single_unnest.type:
+            if arg.function_def.type in (single_unnest.type, multiple_select_agg.type):
                 arg = arg.args[0]
             elif arg.function_def.type == double_unnest.type:
                 arg = arg.args[0]
+                sub_type = BaserowFormulaArrayType(sub_type)
+            elif (
+                arg.function_def.type == string_agg_array_of_multiple_select_values.type
+            ):
                 sub_type = BaserowFormulaArrayType(sub_type)
         elif isinstance(arg, BaserowFieldReference):
             sub_type = BaserowFormulaArrayType(sub_type)
@@ -1035,9 +1045,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
         return f"array({sub_type})"
 
 
-class BaserowFormulaSingleSelectType(
-    BaserowJSONBObjectBaseType, BaserowFormulaValidType
-):
+class BaserowFormulaSingleSelectType(BaserowJSONBObjectBaseType):
     type = "single_select"
     baserow_field_type = "single_select"
     can_order_by = True
@@ -1048,6 +1056,7 @@ class BaserowFormulaSingleSelectType(
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
         return [
             type(self),
+            BaserowFormulaTextType,
         ]
 
     @property
@@ -1147,6 +1156,108 @@ class BaserowFormulaSingleSelectType(
         )
 
 
+class BaserowFormulaMultipleSelectType(BaserowJSONBObjectBaseType):
+    type = "multiple_select"
+    baserow_field_type = "multiple_select"
+    can_order_by = False
+    can_order_by_in_array = False
+    can_group_by = False
+
+    @property
+    def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return [type(self)]
+
+    @property
+    def limit_comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
+        return []
+
+    def get_baserow_field_instance_and_type(self):
+        return self, self
+
+    def get_model_field(self, instance, **kwargs) -> models.Field:
+        return JSONField(default=list, **kwargs)
+
+    def get_response_serializer_field(self, instance, **kwargs) -> Optional[Field]:
+        instance, field_type = super().get_baserow_field_instance_and_type()
+        return field_type.get_response_serializer_field(instance, **kwargs)
+
+    def get_serializer_field(self, *args, **kwargs) -> Optional[Field]:
+        instance, field_type = super().get_baserow_field_instance_and_type()
+        return field_type.get_response_serializer_field(instance, **kwargs)
+
+    def get_export_value(self, value, field_object, rich_value=False):
+        if value is None:
+            return [] if rich_value else ""
+
+        result = [item["value"] for item in value]
+
+        if rich_value:
+            return result
+        else:
+            return list_to_comma_separated_string(result)
+
+    def get_human_readable_value(self, value, field_object):
+        export_value = self.get_export_value(value, field_object, rich_value=True)
+
+        return ", ".join(export_value)
+
+    def is_searchable(self, field):
+        return True
+
+    def get_search_expression(self, field, queryset):
+        return extract_jsonb_array_values_to_single_string(
+            field, queryset, [Value("value")]
+        )
+
+    def get_search_expression_in_array(self, field, queryset):
+        inner_expr = json_extract_path(
+            Func(
+                F(field.db_column),
+                function="jsonb_array_elements",
+                output_field=JSONField(),
+            ),
+            [Value("value")],
+            False,
+        )
+
+        return Func(
+            extract_jsonb_list_values_to_array(queryset, inner_expr, [Value("value")]),
+            Value(" "),
+            function="array_to_string",
+            output_field=TextField(),
+        )
+
+    def cast_to_text(
+        self,
+        to_text_func_call: "BaserowFunctionCall[UnTyped]",
+        arg: "BaserowExpression[BaserowFormulaValidType]",
+    ) -> "BaserowExpression[BaserowFormulaType]":
+        join_multiple_select_values = formula_function_registry.get(
+            "string_agg_multiple_select_values"
+        )
+        when_empty = formula_function_registry.get("when_empty")
+        return when_empty(join_multiple_select_values(arg), literal(""))
+
+    def is_blank(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaBooleanType]:
+        equal_expr = formula_function_registry.get("equal")
+        count_expr = formula_function_registry.get("multiple_select_count")
+        return equal_expr(count_expr(arg), literal(0))
+
+    def collapse_many(self, expr: BaserowExpression[BaserowFormulaType]):
+        return formula_function_registry.get("multiple_select_options_agg")(expr)
+
+    def count(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return formula_function_registry.get("multiple_select_count")(arg)
+
+
 BASEROW_FORMULA_TYPES = [
     BaserowFormulaInvalidType,
     BaserowFormulaTextType,
@@ -1158,6 +1269,7 @@ BASEROW_FORMULA_TYPES = [
     BaserowFormulaNumberType,
     BaserowFormulaArrayType,
     BaserowFormulaSingleSelectType,
+    BaserowFormulaMultipleSelectType,
     BaserowFormulaSingleFileType,
 ]
 

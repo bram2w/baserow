@@ -10,7 +10,6 @@ from baserow_premium.license.exceptions import FeaturesNotAvailableError
 
 from baserow.contrib.database.export.handler import ExportHandler
 from baserow.contrib.database.rows.handler import RowHandler
-from baserow.contrib.database.views.models import GridView
 from baserow.test_utils.helpers import setup_interesting_test_table
 
 
@@ -34,8 +33,6 @@ def test_can_export_every_interesting_different_field_to_json(
         {"exporter_type": "json"},
         user_kwargs={"has_active_premium_license": True, "email": "user@example.com"},
     )
-    model = GridView.objects.all().first().table.get_model(attribute_names=True)
-    uuid = model.objects.all().first().uuid
     assert (
         contents
         == """[
@@ -93,10 +90,11 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "formula_multipleselect": [],
     "count": 0,
     "rollup": "0.000",
     "lookup": [],
-    "uuid": "%(uuid)s"
+    "uuid": "00000000-0000-4000-8000-000000000001"
 },
 {
     "id": 2,
@@ -189,6 +187,11 @@ def test_can_export_every_interesting_different_field_to_json(
     "formula_link_url_only": {
         "url": "https://google.com"
     },
+    "formula_multipleselect": [
+        "D",
+        "C",
+        "E"
+    ],
     "count": 3,
     "rollup": "-122.222",
     "lookup": [
@@ -196,11 +199,10 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         ""
     ],
-    "uuid": "00000000-0000-0000-0000-000000000000"
+    "uuid": "00000000-0000-4000-8000-000000000002"
 }
 ]
 """
-        % {"uuid": uuid}
     )
 
 
@@ -275,9 +277,7 @@ def test_can_export_every_interesting_different_field_to_xml(
         {"exporter_type": "xml"},
         user_kwargs={"has_active_premium_license": True, "email": "user@example.com"},
     )
-    model = GridView.objects.all().first().table.get_model(attribute_names=True)
-    uuid = model.objects.all().first().uuid
-    expected_xml = f"""<?xml version="1.0" encoding="utf-8" ?>
+    expected_xml = """<?xml version="1.0" encoding="utf-8" ?>
 <rows>
    <row>
       <id>1</id>
@@ -333,10 +333,11 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <formula-multipleselect/>
       <count>0</count>
       <rollup>0.000</rollup>
       <lookup/>
-      <uuid>{uuid}</uuid>
+      <uuid>00000000-0000-4000-8000-000000000001</uuid>
    </row>
    <row>
       <id>2</id>
@@ -429,6 +430,11 @@ def test_can_export_every_interesting_different_field_to_xml(
       <formula-link-url-only>
          <url>https://google.com</url>
       </formula-link-url-only>
+      <formula-multipleselect>
+            <item>D</item>
+            <item>C</item>
+            <item>E</item>
+      </formula-multipleselect>
       <count>3</count>
       <rollup>-122.222</rollup>
       <lookup>
@@ -436,7 +442,7 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item>linked_row_2</item>
          <item/>
       </lookup>
-      <uuid>00000000-0000-0000-0000-000000000000</uuid>
+      <uuid>00000000-0000-4000-8000-000000000002</uuid>
    </row>
 </rows>
 """

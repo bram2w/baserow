@@ -14,6 +14,7 @@ from typing import (
     Set,
     Tuple,
     Type,
+    Union,
     cast,
 )
 
@@ -180,9 +181,14 @@ class RowM2MChangeTracker:
             )
 
     def track_m2m_created_for_new_row(
-        self, row: GeneratedTableModel, field: "Field", new_values: Iterable[int]
+        self,
+        row: GeneratedTableModel,
+        field: "Field",
+        new_values: Iterable[Union[int, Model]],
     ):
         field_type = field_type_registry.get_by_model(field)
+        if new_values and isinstance(new_values[0], Model):
+            new_values = [v.id for v in new_values]
         if field_type.is_many_to_many_field:
             self._created_m2m_rels[field_type.type][field][row] = set(new_values)
 
@@ -237,7 +243,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
     def prepare_rows_in_bulk(
         self,
         fields: Dict[int, Dict[str, Any]],
-        rows: List[Dict[str, Any]],
+        row_values: List[Dict[str, Any]],
         generate_error_report: bool = False,
     ) -> Tuple[List[Dict[str, Any]], Dict[int, Dict[str, Any]]]:
         """
@@ -258,12 +264,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         prepared_values_by_field = defaultdict(dict)
 
         # organize values by field name
-        for index, row in enumerate(rows):
+        for index, row_value in enumerate(row_values):
             for field_id, field in fields.items():
                 field_name = field["name"]
                 field_ids[field_name] = field_id
-                if field_name in row:
-                    prepared_values_by_field[field_name][index] = row[field_name]
+                if field_name in row_value:
+                    prepared_values_by_field[field_name][index] = row_value[field_name]
 
         # bulk-prepare values per field
         for field_name, batch_values in prepared_values_by_field.items():
@@ -278,12 +284,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         # replace original values to keep ordering
         prepared_rows = []
         failing_rows = {}
-        for index, row in enumerate(rows):
-            new_values = deepcopy(row)
+        for index, row_value in enumerate(row_values):
+            new_values = deepcopy(row_value)
             row_errors = {}
             for field_id, field in fields.items():
                 field_name = field["name"]
-                if field_name in row:
+                if field_name in row_value:
                     prepared_value = prepared_values_by_field[field_name][index]
                     if isinstance(prepared_value, Exception):
                         row_errors[field_name] = [prepared_value]
@@ -774,6 +780,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
             m2m_objects, _ = self._prepare_m2m_field_related_objects(
                 instance, field_name, value
             )
+            field_object = model.get_field_object(field_name)
+            m2m_change_tracker.track_m2m_created_for_new_row(
+                instance,
+                field_object["field"],
+                value,
+            )
             getattr(instance, field_name).through.objects.bulk_create(m2m_objects)
 
         fields = []
@@ -964,6 +976,7 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
 
         for name, value in manytomany_values.items():
             field = updated_fields_by_name[name]
+            value = [v if not hasattr(v, "id") else v.id for v in value]
             m2m_change_tracker.track_m2m_update_for_field_and_row(
                 field, name, row, value
             )
@@ -1097,6 +1110,12 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 if value and len(value) > 0
             }
             rows_relationships.append((instance, relations))
+            # This is a hack to make `BaserowExpressionField.pre_save` (called
+            # by bulk_create immediately below) being able to access the
+            # relationships values, so the formula can be correctly computed
+            # when saving the row, before the many to many relationships are
+            # saved.
+            instance._m2m_values = relations
 
         inserted_rows = model.objects.bulk_create(
             [row for (row, _) in rows_relationships]
@@ -1240,7 +1259,13 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 value_column = field.get_attname_column()[1]
 
         return [
-            through(**{row_column: row.id, value_column: v}) for v in value
+            through(
+                **{
+                    row_column: row.id,
+                    value_column: v.id if hasattr(v, "id") else v,
+                }
+            )
+            for v in value
         ], row_column
 
     def validate_rows(
@@ -1641,6 +1666,11 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
                 if value or isinstance(value, list)
             }
             rows_relationships.append(relations)
+            # This is a hack to make `BaserowExpressionField.pre_save` (called
+            # immediately below here) being able to access the relationships
+            # values, so the formula can be correctly computed when saving the
+            # row, before the many to many relationships are saved.
+            obj._m2m_values = relations
 
             fields_with_pre_save = model.fields_requiring_refresh_after_update()
             for field_name in fields_with_pre_save:

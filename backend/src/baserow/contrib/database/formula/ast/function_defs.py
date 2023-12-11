@@ -1,6 +1,6 @@
 from abc import ABC
 from decimal import Decimal
-from typing import List, Union
+from typing import List
 
 from django.contrib.postgres.aggregates import JSONBAgg
 from django.db.models import (
@@ -15,7 +15,9 @@ from django.db.models import (
     JSONField,
     Max,
     Min,
+    OuterRef,
     StdDev,
+    Subquery,
     Sum,
     Value,
     Variance,
@@ -59,7 +61,10 @@ from baserow.contrib.database.formula.ast.function import (
     ThreeArgumentBaserowFunction,
     TwoArgumentBaserowFunction,
     ZeroArgumentBaserowFunction,
+    aggregate_filters_on_expression,
     aggregate_wrapper,
+    construct_aggregate_wrapper_queryset,
+    construct_not_null_filters_for_inner_join,
 )
 from baserow.contrib.database.formula.ast.tree import (
     BaserowDecimalLiteral,
@@ -100,6 +105,7 @@ from baserow.contrib.database.formula.types.formula_types import (
     BaserowFormulaDateIntervalType,
     BaserowFormulaDateType,
     BaserowFormulaLinkType,
+    BaserowFormulaMultipleSelectType,
     BaserowFormulaNumberType,
     BaserowFormulaSingleFileType,
     BaserowFormulaSingleSelectType,
@@ -204,6 +210,7 @@ def register_formula_functions(registry):
     # Array functions
     registry.register(BaserowArrayAgg())
     registry.register(Baserow2dArrayAgg())
+    registry.register(BaserowMultipleSelectOptionsAgg())
     registry.register(BaserowAny())
     registry.register(BaserowEvery())
     registry.register(BaserowMax())
@@ -219,6 +226,11 @@ def register_formula_functions(registry):
     registry.register(BaserowSum())
     # Single Select functions
     registry.register(BaserowGetSingleSelectValue())
+    # Multiple Select functions
+    registry.register(BaserowHasOption())
+    registry.register(BaserowMultipleSelectCount())
+    registry.register(BaserowStringAggMultipleSelectValues())
+    registry.register(BaserowStringAggArrayOfMultipleSelectValues())
     # Link functions
     registry.register(BaserowLink())
     registry.register(BaserowButton())
@@ -1000,7 +1012,7 @@ class BaserowIsNaN(OneArgumentBaserowFunction):
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
-        arg: Union[BaserowExpression[BaserowFormulaNumberType]],
+        arg: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return func_call.with_valid_type(
             BaserowFormulaBooleanType(nullable=arg.expression_type.nullable)
@@ -1020,8 +1032,8 @@ class BaserowWhenNan(TwoArgumentBaserowFunction):
     def type_function(
         self,
         func_call: BaserowFunctionCall[UnTyped],
-        arg1: Union[BaserowExpression[BaserowFormulaNumberType]],
-        arg2: Union[BaserowExpression[BaserowFormulaNumberType]],
+        arg1: BaserowExpression[BaserowFormulaNumberType],
+        arg2: BaserowExpression[BaserowFormulaNumberType],
     ) -> BaserowExpression[BaserowFormulaType]:
         return func_call.with_valid_type(
             calculate_number_type([arg1.expression_type, arg2.expression_type]),
@@ -1108,6 +1120,68 @@ class BaserowDivide(TwoArgumentBaserowFunction):
                 output_field=max_dp_output,
             ),
             output_field=max_dp_output,
+        )
+
+
+class BaserowHasOption(TwoArgumentBaserowFunction):
+    type = "has_option"
+    arg1_type = [
+        BaserowFormulaMultipleSelectType,
+        BaserowFormulaArrayType,
+        MustBeManyExprChecker(BaserowFormulaSingleSelectType),
+    ]
+    arg2_type = [BaserowFormulaTextType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg1: BaserowExpression[BaserowFormulaValidType],
+        arg2: BaserowExpression[BaserowFormulaTextType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        arg1_type = arg1.expression_type
+        # Convert a lookup to a single select field to be a JSONArray of single
+        # selects to make the `to_django_expression` work.
+        if isinstance(arg1_type, BaserowFormulaSingleSelectType) and arg1.many:
+            return BaserowHasOption().call_and_type_with_args(
+                [BaserowArrayAggNoNesting().call_and_type_with_args([arg1]), arg2]
+            )
+        return func_call.with_valid_type(BaserowFormulaBooleanType())
+
+    def to_django_expression(self, arg1: Expression, arg2: Expression) -> Expression:
+        return EqualsExpr(
+            Func(
+                Func(arg1, function="jsonb_array_elements"),
+                Value("value"),
+                function="jsonb_extract_path_text",
+                output_field=fields.CharField(),
+            ),
+            arg2,
+            output_field=fields.BooleanField(),
+        )
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        expr_with_metadata = WrappedExpressionWithMetadata.from_args(
+            self.to_django_expression(args[0].expression, args[1].expression), args
+        )
+        subquery = construct_aggregate_wrapper_queryset(
+            expr_with_metadata, context.model
+        )
+
+        # This subquery would return more than one row, but we only care if
+        # there is at least one result that is true, so order by the result
+        # and take the first row.
+        expr: Expression = Subquery(subquery.order_by("-result")[:1])
+
+        return WrappedExpressionWithMetadata(
+            ExpressionWrapper(
+                Coalesce(expr, Value(False, output_field=fields.BooleanField())),
+                output_field=fields.BooleanField(),
+            )
         )
 
 
@@ -1850,6 +1924,159 @@ def array_agg_expression(
     )
 
 
+def string_agg_array_of_multiple_select_field(
+    expr_with_metadata: WrappedExpressionWithMetadata, model, delimiter=", "
+) -> WrappedExpressionWithMetadata:
+    """
+    This function aggregates an array of multiple select field values into a
+    single string. The array is a result of a lookup operation. For every linked
+    row, each select option value will be separated by the delimiter provided as
+    argument.
+
+    For example, consider a formula like `totext(lookup('link_row_field',
+    'multiple_select_field'))`. This formula would call this function to
+    aggregate the values. The result would be an array like:
+
+    [{"id": $linked_row_1, "value": "option1, option2"}, ...]
+
+    In this array of JSON objects, $linked_row_1 is the id of the linked row,
+    while "option1" and "option2" are the values of the selected options in the
+    multiple select field looked up.
+
+    :param expr_with_metadata: The expression to aggregate.
+    :param model: The model to aggregate on.
+    :param delimiter: The delimiter to use to separate the values.
+    :return: The wrapped expression with metadata needed to aggregate the get
+        the expected result.
+    """
+
+    # We need to enforce that each filtered relation is not null so django generates us
+    # inner joins.
+    pre_annotations = expr_with_metadata.pre_annotations
+    not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
+        pre_annotations
+    )
+    aggregate_filters_on_expression(expr_with_metadata)
+
+    # There is only one tuple of (field, database_table) in this case in the join_ids,
+    # the one needed to join the linked table.
+    join_field, _ = expr_with_metadata.join_ids[0]
+
+    extract_value_subquery = Subquery(
+        model.objects_and_trash.annotate(**pre_annotations)
+        .filter(
+            id=OuterRef("id"),
+            **{join_field: OuterRef(join_field)},
+            **not_null_filters_for_inner_join,
+        )
+        .values(
+            result=Func(
+                Func(expr_with_metadata.expression, function="jsonb_array_elements"),
+                Value("value"),
+                function="jsonb_extract_path_text",
+                output_field=fields.CharField(),
+            )
+        )
+    )
+
+    join_field_id = f"{join_field}__id"
+    json_builder_args = {"value": F("value"), "id": F(join_field_id)}
+    orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
+
+    string_agg_values_subquery = Subquery(
+        model.objects_and_trash.annotate(**pre_annotations)
+        .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+        .annotate(
+            value=Func(
+                Func(extract_value_subquery, function="array"),
+                Value(delimiter),
+                function="array_to_string",
+            )
+        )
+        .annotate(res=JSONObject(**json_builder_args))
+        .values(result=JSONBAgg(F("res"), ordering=orders))[:1],
+        output_field=JSONField(),
+    )
+
+    return WrappedExpressionWithMetadata(
+        ExpressionWrapper(string_agg_values_subquery, output_field=JSONField())
+    )
+
+
+def aggregate_multiple_selects_options(
+    expr_with_metadata: WrappedExpressionWithMetadata, model
+) -> WrappedExpressionWithMetadata:
+    """
+    This function aggregates an array of multiple select field options into a
+    JSON array. The array is a result of a lookup operation. Each select option
+    will be represented by a JSON object with an id, a color and a value.
+
+    For example, consider a formula like `lookup('link_row_field',
+    'multiple_select_field')`. This formula would call this function to
+    aggregate the select options. The result would be an array like:
+
+    [{
+        "id": $linked_row_1,
+        "value": [
+            {"id": 1, "color": "red", "value": "option1"},
+            {"id": 2, "color": "green", "value": "option2"},
+        ]
+    }, ...]
+
+    In this array of JSON objects, $linked_row_1 is the id of the linked row,
+    while the JSON objects inside the "value" array are the JSON serialized
+    version of the options selected in the multiple select field looked up.
+
+    :param expr_with_metadata: The expression to aggregate.
+    :param model: The model to aggregate on.
+    :param delimiter: The delimiter to use to separate the values.
+    :return: The wrapped expression with metadata needed to aggregate the get
+        the expected result.
+    """
+
+    # We need to enforce that each filtered relation is not null so django generates us
+    # inner joins.
+    pre_annotations = expr_with_metadata.pre_annotations
+    not_null_filters_for_inner_join = construct_not_null_filters_for_inner_join(
+        pre_annotations
+    )
+
+    aggregate_filters_on_expression(expr_with_metadata)
+
+    # There is only one tuple of (field, database_table) in this case in the join_ids,
+    # the one needed to join the linked table.
+    join_field, _ = expr_with_metadata.join_ids[0]
+
+    inner_subquery = Subquery(
+        model.objects_and_trash.annotate(**pre_annotations)
+        .filter(
+            id=OuterRef("id"),
+            **{join_field: OuterRef(join_field)},
+            **not_null_filters_for_inner_join,
+        )
+        .values(result=expr_with_metadata.expression)
+    )
+
+    join_field_id = f"{join_field}__id"
+    json_builder_args = {"value": inner_subquery, "id": F(join_field_id)}
+    orders = _calculate_aggregate_orders(expr_with_metadata.join_ids)
+
+    subquery = Subquery(
+        model.objects_and_trash.annotate(**pre_annotations)
+        .filter(id=OuterRef("id"), **not_null_filters_for_inner_join)
+        .annotate(res=JSONObject(**json_builder_args))
+        .values(result=JSONBAgg(F("res"), ordering=orders))[:1],
+        output_field=JSONField(),
+    )
+
+    return WrappedExpressionWithMetadata(
+        ExpressionWrapper(
+            Coalesce(subquery, Value([], output_field=JSONField())),
+            output_field=JSONField(),
+        )
+    )
+
+
 class BaserowArrayAgg(OneArgumentBaserowFunction):
     type = "array_agg"
     arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
@@ -1887,6 +2114,30 @@ class BaserowArrayAggNoNesting(BaserowArrayAgg):
         return array_agg_expression(args, context, nest_in_value=False)
 
 
+class BaserowMultipleSelectOptionsAgg(OneArgumentBaserowFunction):
+    type = "multiple_select_options_agg"
+    arg_type = [MustBeManyExprChecker(BaserowFormulaMultipleSelectType)]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall[UnTyped],
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaArrayType(arg.expression_type))
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return arg
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        expr = aggregate_multiple_selects_options(args[0], context.model)
+        return super().to_django_expression_given_args([expr], context)
+
+
 class Baserow2dArrayAgg(OneArgumentBaserowFunction):
     type = "array_agg_unnesting"
     arg_type = [MustBeManyExprChecker(BaserowFormulaArrayType)]
@@ -1917,9 +2168,113 @@ class Baserow2dArrayAgg(OneArgumentBaserowFunction):
         )
 
 
+class BaserowMultipleSelectCount(OneArgumentBaserowFunction):
+    type = "multiple_select_count"
+    arg_type = [BaserowFormulaMultipleSelectType]
+    aggregate = True
+
+    def can_accept_arg(self, arg):
+        return isinstance(arg.expression_type, BaserowFormulaMultipleSelectType)
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall,
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaNumberType(number_decimal_places=0)
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(arg, function="jsonb_array_elements")
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        subquery = super().to_django_expression_given_args(args, context)
+        return WrappedExpressionWithMetadata(
+            Coalesce(
+                Func(
+                    Func(subquery.expression, function="array"),
+                    Value(1),
+                    function="array_length",
+                    output_field=fields.IntegerField(),
+                ),
+                Value(0),
+                output_field=fields.IntegerField(),
+            )
+        )
+
+
+class BaserowStringAggMultipleSelectValues(OneArgumentBaserowFunction):
+    type = "string_agg_multiple_select_values"
+    arg_type = [BaserowFormulaMultipleSelectType]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall,
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(BaserowFormulaTextType())
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return Func(
+            Func(arg, function="jsonb_array_elements"),
+            Value("value"),
+            function="jsonb_extract_path_text",
+            output_field=fields.TextField(),
+        )
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        subquery = super().to_django_expression_given_args(args, context)
+        return WrappedExpressionWithMetadata(
+            Func(
+                Func(subquery.expression, function="array"),
+                Value(", "),
+                function="array_to_string",
+            )
+        )
+
+
+class BaserowStringAggArrayOfMultipleSelectValues(OneArgumentBaserowFunction):
+    type = "string_agg_array_of_multiple_select_values"
+    arg_type = [MustBeManyExprChecker(BaserowFormulaMultipleSelectType)]
+    aggregate = True
+
+    def type_function(
+        self,
+        func_call: BaserowFunctionCall,
+        arg: BaserowExpression[BaserowFormulaValidType],
+    ) -> BaserowExpression[BaserowFormulaType]:
+        return func_call.with_valid_type(
+            BaserowFormulaArrayType(BaserowFormulaTextType())
+        )
+
+    def to_django_expression(self, arg: Expression) -> Expression:
+        return arg
+
+    def to_django_expression_given_args(
+        self,
+        args: List["WrappedExpressionWithMetadata"],
+        context: BaserowExpressionContext,
+    ) -> "WrappedExpressionWithMetadata":
+        expr = string_agg_array_of_multiple_select_field(args[0], context.model)
+        return super().to_django_expression_given_args([expr], context)
+
+
 class BaserowCount(OneArgumentBaserowFunction):
     type = "count"
-    arg_type = [MustBeManyExprChecker(BaserowFormulaValidType)]
+    arg_type = [
+        MustBeManyExprChecker(BaserowFormulaValidType),
+        BaserowFormulaMultipleSelectType,
+    ]
     aggregate = True
 
     def type_function(
@@ -1930,7 +2285,7 @@ class BaserowCount(OneArgumentBaserowFunction):
         if BaserowGetFileCount().can_accept_arg(arg):
             return BaserowGetFileCount()(arg)
 
-        return func_call.with_valid_type(
+        return arg.expression_type.count(func_call, arg).with_valid_type(
             BaserowFormulaNumberType(number_decimal_places=0)
         )
 
@@ -2319,7 +2674,7 @@ class BaserowJsonbExtractPathText(BaserowFunctionDefinition):
     def __call__(
         self,
         arg: BaserowExpression[BaserowJSONBObjectBaseType],
-        *path: BaserowExpression[BaserowFormulaTextType]
+        *path: BaserowExpression[BaserowFormulaTextType],
     ) -> BaserowFunctionCall[BaserowFormulaTextType]:
         return self.call_and_type_with_args([arg, *path])
 

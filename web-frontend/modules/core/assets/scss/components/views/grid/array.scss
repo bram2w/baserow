@@ -31,6 +31,11 @@
     }
   }
 
+  .array-field__multiple-select-option {
+    margin-left: 4px;
+    margin-right: 4px;
+  }
+
   .grid-view__column--matches-search & {
     background-color: $color-primary-100;
 

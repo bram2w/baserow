@@ -38,7 +38,7 @@ class MustBeManyExprChecker(SingleArgumentTypeChecker):
     """
 
     def __init__(self, *formula_types: Type[BaserowFormulaType]):
-        self.formula_types = formula_types
+        self.formula_types = tuple(formula_types)
 
     def check(
         self,
@@ -51,10 +51,7 @@ class MustBeManyExprChecker(SingleArgumentTypeChecker):
         )
 
     def _expr_is_valid_type(self, typed_expression_to_check):
-        return any(
-            isinstance(typed_expression_to_check.expression_type, formula_type)
-            for formula_type in self.formula_types
-        )
+        return isinstance(typed_expression_to_check.expression_type, self.formula_types)
 
     def invalid_message(
         self,
@@ -66,10 +63,7 @@ class MustBeManyExprChecker(SingleArgumentTypeChecker):
         )
         if valid_types_str:
             valid_types_str += " "
-        return (
-            f"a list of {valid_types_str}values obtained from a lookup or link row "
-            f"field reference"
-        )
+        return f"a list of {valid_types_str}values obtained from a lookup"
 
 
 BaserowListOfValidTypes = List[Type[BaserowFormulaValidType]]
