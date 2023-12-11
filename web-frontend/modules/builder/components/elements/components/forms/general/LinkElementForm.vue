@@ -56,7 +56,7 @@
           </p>
           <template #actions>
             <button
-              class="alert__actions-button"
+              class="alert__actions-button-text"
               @click.prevent="updatePageParameters"
             >
               {{ $t('linkElementForm.paramsInErrorButton') }}

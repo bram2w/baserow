@@ -105,7 +105,7 @@
   gap: 12px;
 }
 
-.alert__actions-button {
+.alert__actions-button-text {
   background: none;
   margin: 0;
   padding: 0;
@@ -116,14 +116,14 @@
   @include flex-align-items(5px);
 }
 
-.alert__actions-button--loading {
+.alert__actions-button-text--loading {
   cursor: wait;
   user-select: none;
 
   @include loading-spinner();
 }
 
-.alert__actions-button--normal {
+.alert__actions-button-text--normal {
   font-weight: normal;
 }
 

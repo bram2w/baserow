@@ -6,7 +6,10 @@
         <p>{{ $t('webhookForm.deactivated.content') }}</p>
 
         <template #actions>
-          <button class="alert__actions-button" @click="values.active = true">
+          <button
+            class="alert__actions-button-text"
+            @click="values.active = true"
+          >
             {{ $t('webhookForm.deactivated.activate') }}
           </button>
         </template>
@@ -224,7 +227,10 @@
         >
         <p>{{ $t('webhookForm.deprecatedEventType.description') }}</p>
         <template #actions>
-          <button class="alert__actions-button" @click="convertFromDeprecated">
+          <button
+            class="alert__actions-button-text"
+            @click="convertFromDeprecated"
+          >
             {{ $t('webhookForm.deprecatedEventType.convert') }}
           </button>
         </template>

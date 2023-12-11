@@ -28,7 +28,7 @@ export default {
       default: 'button',
     },
     size: {
-      // tiny - normal - large
+      // tiny - small - normal - large
       required: false,
       type: String,
       default: '',

@@ -191,6 +191,10 @@
   }
 }
 
+.button--small {
+  @include button-size(13px, 32px, 12px);
+}
+
 .button--link {
   color: $palette-neutral-1200;
   font-weight: 500;

@@ -3,10 +3,11 @@ import { config, withDesign } from 'storybook-addon-designs'
 import { action } from '@storybook/addon-actions'
 
 import Alert from '@baserow/modules/core/components/Alert'
+import Button from '@baserow/modules/core/components/Button'
 
 <Meta
     title="Baserow/Toasts & Alerts/Alerts"
-    component={Alert}
+    component={(Alert, Button)}
     decorators={[withDesign]}
     argTypes={{
         default: {
@@ -84,8 +85,7 @@ export const designConfig = {
         args={{
             type: 'info-primary',
             title: 'We’ve just released a new feature',
-            actions:
-                '<button class="alert__actions-button">View</button><button class="alert__actions-button alert__actions-button--normal">Dismiss</button>',
+            actions: `<Button type="primary" size="small">View</Button> <button class="alert__actions-button-text alert__actions-button-text--normal">Dismiss</button>`,
         }}
         parameters={{
             design: config(designConfig),
@@ -99,7 +99,7 @@ export const designConfig = {
             type: 'info-neutral',
             title: 'We’ve just released a new feature',
             actions:
-                '<button class="alert__actions-button">View</button><button class="alert__actions-button alert__actions-button--normal">Dismiss</button>',
+                '<Button type="ghost" size="small">View</Button><button class="alert__actions-button-text alert__actions-button-text--normal">Dismiss</button>',
         }}
         parameters={{
             design: config(designConfig),
@@ -112,7 +112,8 @@ export const designConfig = {
         args={{
             type: 'warning',
             title: 'This action might cause problems',
-            actions: '<button class="alert__actions-button">Dismiss</button>',
+            actions:
+                '<Button type="warning" size="small">View</Button><button class="alert__actions-button-text">Dismiss</button>',
         }}
         parameters={{
             design: config(designConfig),
@@ -125,7 +126,8 @@ export const designConfig = {
         args={{
             type: 'error',
             title: 'There was a problem with this action',
-            actions: '<button class="alert__actions-button">Dismiss</button>',
+            actions:
+                '<Button type="error" size="small">View</Button><button class="alert__actions-button-text">Dismiss</button>',
         }}
         parameters={{
             design: config(designConfig),
@@ -139,7 +141,7 @@ export const designConfig = {
             type: 'success',
             title: 'Successfully updated profile',
             actions:
-                '<button class="alert__actions-button alert__actions-button--normal">Dismiss</button><button class="alert__actions-button alert__actions-button--loading">View changes</button>',
+                '<Button type="success" size="small">View</Button><button class="alert__actions-button-text alert__actions-button-text--loading">View changes</button>',
         }}
         parameters={{
             design: config(designConfig),
@@ -155,7 +157,7 @@ export const designConfig = {
 <Alert type="success" close-button loading>
     <template #title>Updates have been made to your profile</template>
     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquid pariatur, ipsum similique veniam</p>
-    <template #actions><button class="alert__actions-button alert__actions-button--normal" @click="close()">Dismiss</button><button class="alert__actions-button" @click="anyMethod()">View changes</button></template>
+    <template #actions><button class="alert__actions-button-text alert__actions-button-text--normal" @click="close()">Dismiss</button><button class="alert__actions-button-text" @click="anyMethod()">View changes</button></template>
 </Alert>
 ```
 

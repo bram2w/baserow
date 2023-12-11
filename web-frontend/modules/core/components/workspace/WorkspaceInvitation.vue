@@ -14,23 +14,24 @@
     </p>
 
     <template #actions>
+      <Button
+        v-if="!rejectLoading"
+        type="primary"
+        size="small"
+        :disabled="rejectLoading || acceptLoading"
+        :loading="acceptLoading"
+        @click="!rejectLoading && !acceptLoading && accept(invitation)"
+      >
+        {{ $t('workspaceInvitation.accept') }}
+      </Button>
       <button
         v-if="!acceptLoading"
-        class="alert__actions-button alert__actions-button--normal"
+        class="alert__actions-button-text"
         :class="{ 'alert__actions-button--loading': rejectLoading }"
         :disabled="rejectLoading || acceptLoading"
         @click="!rejectLoading && !acceptLoading && reject(invitation)"
       >
         {{ $t('workspaceInvitation.reject') }}
-      </button>
-      <button
-        v-if="!rejectLoading"
-        class="alert__actions-button"
-        :disabled="rejectLoading || acceptLoading"
-        :class="{ 'alert__actions-button--loading': acceptLoading }"
-        @click="!rejectLoading && !acceptLoading && accept(invitation)"
-      >
-        {{ $t('workspaceInvitation.accept') }}
       </button>
     </template>
   </Alert>
