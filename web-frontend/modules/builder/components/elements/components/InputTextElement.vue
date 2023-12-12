@@ -57,8 +57,11 @@ export default {
     },
   },
   watch: {
-    resolvedDefaultValue(value) {
-      this.setFormData(value)
+    resolvedDefaultValue: {
+      handler(value) {
+        this.setFormData(value)
+      },
+      immediate: true,
     },
   },
 }
