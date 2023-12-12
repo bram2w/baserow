@@ -442,3 +442,20 @@ def test_duplicate_element_does_not_exist(api_client, data_fixture):
     )
     assert response.status_code == HTTP_404_NOT_FOUND
     assert response.json()["error"] == "ERROR_ELEMENT_DOES_NOT_EXIST"
+
+
+@pytest.mark.django_db
+def test_child_type_not_allowed_validation(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token()
+    page = data_fixture.create_builder_page(user=user)
+    parent = data_fixture.create_builder_form_container_element(page=page)
+
+    url = reverse("api:builder:element:list", kwargs={"page_id": page.id})
+    response = api_client.post(
+        url,
+        {"type": "button", "parent_element_id": parent.id},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+
+    assert response.status_code == HTTP_400_BAD_REQUEST

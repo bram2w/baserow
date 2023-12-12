@@ -18,6 +18,7 @@ from baserow.contrib.builder.elements.models import (
     ColumnElement,
     ContainerElement,
     Element,
+    FormContainerElement,
     HeadingElement,
     HorizontalAlignments,
     ImageElement,
@@ -27,7 +28,10 @@ from baserow.contrib.builder.elements.models import (
     TableElement,
     VerticalAlignments,
 )
-from baserow.contrib.builder.elements.registries import ElementType
+from baserow.contrib.builder.elements.registries import (
+    ElementType,
+    element_type_registry,
+)
 from baserow.contrib.builder.elements.signals import elements_moved
 from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.builder.pages.handler import PageHandler
@@ -39,10 +43,19 @@ from .registries import collection_field_type_registry
 
 
 class ContainerElementType(ElementType, ABC):
-    @abc.abstractmethod
+    @property
+    def child_types_allowed(self) -> List[str]:
+        """
+        Lets you define which children types can be placed inside the container.
+
+        :return: All the allowed children types
+        """
+
+        return [element_type.type for element_type in element_type_registry.get_all()]
+
     def get_new_place_in_container(
         self, container_element: ContainerElement, places_removed: List[str]
-    ) -> str:
+    ) -> Optional[str]:
         """
         Provides an alternative place that elements can move to when places in the
         container are removed.
@@ -52,7 +65,8 @@ class ContainerElementType(ElementType, ABC):
         :return: The new place in the container the elements can be moved to
         """
 
-    @abc.abstractmethod
+        return None
+
     def get_places_in_container_removed(
         self, values: Dict, instance: ContainerElement
     ) -> List[str]:
@@ -64,6 +78,8 @@ class ContainerElementType(ElementType, ABC):
         :param instance: The current state of the element
         :return: The places in the container that have been removed
         """
+
+        return []
 
     def apply_order_by_children(self, queryset: QuerySet[Element]) -> QuerySet[Element]:
         """
@@ -280,6 +296,10 @@ class CollectionElementType(ElementType, ABC):
             data_source_id=actual_data_source_id,
             **kwargs,
         )
+
+
+class FormElementType(ElementType):
+    pass
 
 
 class ColumnElementType(ContainerElementType):
@@ -710,7 +730,7 @@ class ImageElementType(ElementType):
         return overrides
 
 
-class InputElementType(ElementType, abc.ABC):
+class InputElementType(FormElementType, abc.ABC):
     pass
 
 
@@ -840,3 +860,52 @@ class TableElementType(CollectionElementType):
 
     def get_sample_params(self) -> Dict[str, Any]:
         return {"data_source_id": None}
+
+
+class FormContainerElementType(ContainerElementType):
+    type = "form_container"
+    model_class = FormContainerElement
+    allowed_fields = ["submit_button_label"]
+    serializer_field_names = ["submit_button_label"]
+
+    class SerializedDict(ElementDict):
+        submit_button_label: BaserowFormula
+
+    @property
+    def serializer_field_overrides(self):
+        from baserow.core.formula.serializers import FormulaSerializerField
+
+        overrides = {
+            "submit_button_label": FormulaSerializerField(
+                help_text=FormContainerElement._meta.get_field(
+                    "submit_button_label"
+                ).help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            )
+        }
+
+        return overrides
+
+    @property
+    def child_types_allowed(self) -> List[str]:
+        child_types_allowed = []
+
+        for element_type in element_type_registry.get_all():
+            if isinstance(element_type, FormElementType):
+                child_types_allowed.append(element_type.type)
+
+        return child_types_allowed
+
+    def get_sample_params(self) -> Dict[str, Any]:
+        return {"submit_button_label": "'hello'"}
+
+    def import_serialized(self, page, serialized_values, id_mapping):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["submit_button_label"]:
+            serialized_copy["submit_button_label"] = import_formula(
+                serialized_copy["submit_button_label"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)

@@ -26,6 +26,8 @@ import ButtonElementForm from '@baserow/modules/builder/components/elements/comp
 import { ClickEvent } from '@baserow/modules/builder/eventTypes'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
+import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
+import FormContainerElementForm from '@baserow/modules/builder/components/elements/components/forms/general/FormContainerElementForm.vue'
 
 export class ElementType extends Registerable {
   get name() {
@@ -591,5 +593,35 @@ export class TableElementType extends ElementType {
         )
       }
     }
+  }
+}
+
+export class FormContainerElementType extends ContainerElementType {
+  static getType() {
+    return 'form_container'
+  }
+
+  get name() {
+    return this.app.i18n.t('elementType.formContainer')
+  }
+
+  get description() {
+    return this.app.i18n.t('elementType.formContainerDescription')
+  }
+
+  get iconClass() {
+    return 'iconoir-frame'
+  }
+
+  get component() {
+    return FormContainerElement
+  }
+
+  get generalFormComponent() {
+    return FormContainerElementForm
+  }
+
+  get childElementTypesForbidden() {
+    return this.elementTypesAll.filter((type) => !type.isFormElement)
   }
 }

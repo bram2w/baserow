@@ -59,7 +59,6 @@ import AddElementModal from '@baserow/modules/builder/components/elements/AddEle
 import containerElement from '@baserow/modules/builder/mixins/containerElement'
 import PageElement from '@baserow/modules/builder/components/page/PageElement'
 import ElementPreview from '@baserow/modules/builder/components/elements/ElementPreview'
-import { mapActions, mapGetters } from 'vuex'
 import { PLACEMENTS, VERTICAL_ALIGNMENTS } from '@baserow/modules/builder/enums'
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import _ from 'lodash'
@@ -88,10 +87,6 @@ export default {
     },
   },
   computed: {
-    PLACEMENTS: () => PLACEMENTS,
-    ...mapGetters({
-      elementSelected: 'element/getSelected',
-    }),
     flexAlignment() {
       const alignmentMapping = {
         [VERTICAL_ALIGNMENTS.TOP.value]: 'start',
@@ -108,9 +103,6 @@ export default {
       const extraPadding = 120
 
       return totalColumnWidth + totalColumnGap + extraPadding
-    },
-    elementSelectedId() {
-      return this.elementSelected?.id
     },
     columnAmount() {
       if (
@@ -143,9 +135,6 @@ export default {
     this.dimensions.targetElement = this.$el.parentElement
   },
   methods: {
-    ...mapActions({
-      actionMoveElement: 'element/move',
-    }),
     showAddElementModal(columnIndex) {
       this.$refs.addElementModal.show({
         placeInContainer: `${columnIndex}`,

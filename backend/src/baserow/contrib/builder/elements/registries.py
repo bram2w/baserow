@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Type, TypedDict, TypeVar, Union
 from django.db import models
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -51,12 +52,20 @@ class ElementType(
         )
         place_in_container = values.get("place_in_container", None)
 
-        if parent_element_id is not None and place_in_container is not None:
+        if parent_element_id is not None:
             parent_element = ElementHandler().get_element(parent_element_id)
             parent_element_type = element_type_registry.get_by_model(parent_element)
-            parent_element_type.validate_place_in_container(
-                place_in_container, parent_element
-            )
+
+            if self.type not in parent_element_type.child_types_allowed:
+                raise ValidationError(
+                    f"Container of type {parent_element_type.type} can't have child of "
+                    f"type {self.type}"
+                )
+
+            if place_in_container is not None:
+                parent_element_type.validate_place_in_container(
+                    place_in_container, parent_element
+                )
 
         return values
 

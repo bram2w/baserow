@@ -4,6 +4,7 @@ from baserow.contrib.builder.elements.models import (
     ButtonElement,
     CollectionField,
     ColumnElement,
+    FormContainerElement,
     HeadingElement,
     ImageElement,
     LinkElement,
@@ -77,6 +78,12 @@ class ElementFixtures:
 
     def create_builder_button_element(self, user=None, page=None, **kwargs):
         element = self.create_builder_element(ButtonElement, user, page, **kwargs)
+        return element
+
+    def create_builder_form_container_element(self, user=None, page=None, **kwargs):
+        element = self.create_builder_element(
+            FormContainerElement, user, page, **kwargs
+        )
         return element
 
     def create_builder_element(self, model_class, user=None, page=None, **kwargs):
