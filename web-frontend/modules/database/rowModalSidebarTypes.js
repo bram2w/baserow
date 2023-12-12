@@ -63,7 +63,7 @@ export class HistoryRowModalSidebarType extends RowModalSidebarType {
       table,
       database.workspace.id
     )
-    return !hasPermissions || readOnly
+    return !hasPermissions
   }
 
   isSelectedByDefault(database) {
