@@ -34,6 +34,7 @@ import {
   ColumnElementType,
   ButtonElementType,
   TableElementType,
+  FormContainerElementType,
 } from '@baserow/modules/builder/elementTypes'
 import {
   DesktopDeviceType,
@@ -157,6 +158,7 @@ export default (context) => {
   app.$registry.register('element', new ColumnElementType(context))
   app.$registry.register('element', new ButtonElementType(context))
   app.$registry.register('element', new TableElementType(context))
+  app.$registry.register('element', new FormContainerElementType(context))
 
   app.$registry.register('device', new DesktopDeviceType(context))
   app.$registry.register('device', new TabletDeviceType(context))

@@ -81,7 +81,9 @@
         "button": "Button",
         "buttonDescription": "A button element",
         "table": "Table",
-        "tableDescription": "A table element"
+        "tableDescription": "A table element",
+        "formContainer": "Form",
+        "formContainerDescription": "A form element"
     },
     "addElementButton": {
         "label": "Element"
@@ -393,5 +395,9 @@
       "nameFieldLabel": "Name",
       "nameFieldPlaceholder": "Enter a name...",
       "integrationFieldLabel": "Integration"
+    },
+    "formContainerElementForm": {
+        "submitButtonLabel": "Submit button",
+        "submitButtonPlaceholder": "Enter value..."
     }
 }
