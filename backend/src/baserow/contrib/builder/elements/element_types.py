@@ -682,7 +682,7 @@ class ImageElementType(ElementType):
     class SerializedDict(ElementDict):
         image_source_type: str
         image_file_id: int
-        image_url: str
+        image_url: BaserowFormula
         alt_text: BaserowFormula
         alignment: str
 
@@ -751,6 +751,10 @@ class ImageElementType(ElementType):
         if serialized_copy["alt_text"]:
             serialized_copy["alt_text"] = import_formula(
                 serialized_copy["alt_text"], id_mapping
+            )
+        if serialized_copy["image_url"]:
+            serialized_copy["image_url"] = import_formula(
+                serialized_copy["image_url"], id_mapping
             )
 
         return super().import_serialized(page, serialized_copy, id_mapping)

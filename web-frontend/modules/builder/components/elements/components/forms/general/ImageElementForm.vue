@@ -52,29 +52,12 @@
         <div class="control__description">
           {{ $t('imageElementForm.urlWarning') }}
         </div>
-        <input
+        <ApplicationBuilderFormulaInputGroup
           v-model="values.image_url"
           :class="{ 'input--error': fieldHasErrors('image_url') }"
-          class="input"
-          type="url"
           :placeholder="$t('elementForms.urlInputPlaceholder')"
-          @blur="$v.values.image_url.$touch()"
+          :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         />
-        <div
-          v-if="
-            fieldHasErrors('image_url') &&
-            !$v.values.image_url.isValidAbsoluteURL
-          "
-          class="error"
-        >
-          {{ $t('imageElementForm.invalidUrlError') }}
-        </div>
-        <div
-          v-if="fieldHasErrors('image_url') && !$v.values.image_url.maxLength"
-          class="error"
-        >
-          {{ $t('error.maxLength', { max: 1000 }) }}
-        </div>
       </div>
     </FormElement>
     <FormElement class="control">
@@ -85,11 +68,10 @@
         {{ $t('imageElementForm.altTextDescription') }}
       </div>
       <div class="control__elements">
-        <input
+        <ApplicationBuilderFormulaInputGroup
           v-model="values.alt_text"
           :placeholder="$t('elementForms.textInputPlaceholder')"
-          type="text"
-          class="input"
+          :data-providers-allowed="DATA_PROVIDERS_ALLOWED_ELEMENTS"
         />
       </div>
     </FormElement>
@@ -101,8 +83,8 @@
 
 <script>
 import form from '@baserow/modules/core/mixins/form'
-import { isValidAbsoluteURL } from '@baserow/modules/core/utils/string'
 import {
+  DATA_PROVIDERS_ALLOWED_ELEMENTS,
   HORIZONTAL_ALIGNMENTS,
   IMAGE_SOURCE_TYPES,
 } from '@baserow/modules/builder/enums'
@@ -110,11 +92,15 @@ import { IMAGE_FILE_TYPES } from '@baserow/modules/core/enums'
 import UserFilesModal from '@baserow/modules/core/components/files/UserFilesModal'
 import { UploadFileUserFileUploadType } from '@baserow/modules/core/userFileUploadTypes'
 import HorizontalAlignmentSelector from '@baserow/modules/builder/components/elements/components/forms/general/settings/HorizontalAlignmentsSelector'
-import { maxLength } from 'vuelidate/lib/validators'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup.vue'
 
 export default {
   name: 'ImageElementForm',
-  components: { HorizontalAlignmentSelector, UserFilesModal },
+  components: {
+    ApplicationBuilderFormulaInputGroup,
+    HorizontalAlignmentSelector,
+    UserFilesModal,
+  },
   mixins: [form],
   data() {
     return {
@@ -134,6 +120,7 @@ export default {
     IMAGE_FILE_TYPES() {
       return IMAGE_FILE_TYPES
     },
+    DATA_PROVIDERS_ALLOWED_ELEMENTS: () => DATA_PROVIDERS_ALLOWED_ELEMENTS,
   },
   methods: {
     openFileUploadModal() {
@@ -142,15 +129,6 @@ export default {
     fileUploaded([file]) {
       this.values.image_file = file
       this.$refs.userFilesModal.hide()
-    },
-  },
-  validations: {
-    values: {
-      image_url: {
-        isValidAbsoluteURL: (value) =>
-          isValidAbsoluteURL(value) || value === '',
-        maxLength: maxLength(1000),
-      },
     },
   },
 }
