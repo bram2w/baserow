@@ -12,9 +12,9 @@ from saml2.client import Saml2Client
 from saml2.config import Config as Saml2Config
 from saml2.response import AuthnResponse
 
+from baserow.core.auth_provider.types import UserInfo
 from baserow.core.registries import auth_provider_type_registry
 from baserow_enterprise.api.sso.utils import get_valid_frontend_url
-from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 from baserow_enterprise.sso.saml.models import SamlAuthProviderModel
 
 from .exceptions import (
@@ -242,8 +242,11 @@ class SamlAuthProviderHandler:
             logger.exception(exc)
             raise InvalidSamlResponse(str(exc))
 
-        user, _ = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-            idp_provided_user_info, saml_auth_provider
+        (
+            user,
+            _,
+        ) = saml_auth_provider.get_type().get_or_create_user_and_sign_in(
+            saml_auth_provider, idp_provided_user_info
         )
 
         # since we correctly sign in a user, we can set this IdP as verified

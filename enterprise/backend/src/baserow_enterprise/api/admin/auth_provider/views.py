@@ -9,6 +9,12 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from baserow.api.auth_provider.errors import (
+    ERROR_AUTH_PROVIDER_CANNOT_BE_CREATED,
+    ERROR_AUTH_PROVIDER_CANNOT_BE_DELETED,
+    ERROR_AUTH_PROVIDER_DOES_NOT_EXIST,
+    ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS,
+)
 from baserow.api.auth_provider.serializers import AuthProviderSerializer
 from baserow.api.decorators import map_exceptions, validate_body_custom_fields
 from baserow.api.schemas import get_error_schema
@@ -16,22 +22,17 @@ from baserow.api.utils import (
     DiscriminatorCustomFieldsMappingSerializer,
     validate_data_custom_fields,
 )
-from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
-from baserow.core.registries import auth_provider_type_registry
-from baserow_enterprise.auth_provider.exceptions import (
+from baserow.core.auth_provider.exceptions import (
+    AuthProviderModelNotFound,
     CannotCreateAuthProvider,
     CannotDeleteAuthProvider,
     CannotDisableLastAuthProvider,
 )
-from baserow_enterprise.auth_provider.handler import AuthProviderHandler
+from baserow.core.auth_provider.handler import AuthProviderHandler
+from baserow.core.auth_provider.models import AuthProviderModel
+from baserow.core.registries import auth_provider_type_registry
 from baserow_enterprise.sso.utils import check_sso_feature_is_active_or_raise
 
-from .errors import (
-    ERROR_AUTH_PROVIDER_CANNOT_BE_CREATED,
-    ERROR_AUTH_PROVIDER_CANNOT_BE_DELETED,
-    ERROR_AUTH_PROVIDER_DOES_NOT_EXIST,
-    ERROR_CANNOT_DISABLE_ALL_AUTH_PROVIDERS,
-)
 from .serializers import (
     CreateAuthProviderSerializer,
     NextAuthProviderIdSerializer,
@@ -74,8 +75,9 @@ class AdminAuthProvidersView(APIView):
 
         provider_type = data.pop("type")
         auth_provider_type = auth_provider_type_registry.get(provider_type)
+
         with auth_provider_type.map_api_exceptions():
-            provider = AuthProviderHandler().create_auth_provider(
+            provider = AuthProviderHandler.create_auth_provider(
                 request.user, auth_provider_type, **data
             )
 
@@ -103,6 +105,7 @@ class AdminAuthProvidersView(APIView):
         auth_providers = []
         for auth_provider_type in auth_provider_type_registry.get_all():
             auth_providers.append(auth_provider_type.export_serialized())
+
         return Response({"auth_provider_types": auth_providers})
 
 
@@ -145,9 +148,11 @@ class AdminAuthProviderView(APIView):
 
         check_sso_feature_is_active_or_raise()
 
-        handler = AuthProviderHandler()
-        provider = handler.get_auth_provider(auth_provider_id)
-        provider_type = auth_provider_type_registry.get_by_model(provider)
+        handler = AuthProviderHandler
+        provider = handler.get_auth_provider_by_id(auth_provider_id)
+
+        provider_type = provider.get_type()
+
         data = validate_data_custom_fields(
             provider_type.type,
             auth_provider_type_registry,
@@ -191,12 +196,11 @@ class AdminAuthProviderView(APIView):
 
         check_sso_feature_is_active_or_raise()
 
-        provider = AuthProviderHandler().get_auth_provider(auth_provider_id)
-        provider_type = auth_provider_type_registry.get_by_model(provider)
+        provider = AuthProviderHandler.get_auth_provider_by_id(auth_provider_id)
         return Response(
-            provider_type.get_serializer(
-                provider, base_class=AuthProviderSerializer
-            ).data
+            provider.get_type()
+            .get_serializer(provider, base_class=AuthProviderSerializer)
+            .data
         )
 
     @extend_schema(
@@ -229,9 +233,9 @@ class AdminAuthProviderView(APIView):
 
         check_sso_feature_is_active_or_raise()
 
-        handler = AuthProviderHandler()
-        provider = handler.get_auth_provider(auth_provider_id)
-        handler.delete_auth_provider(request.user, provider)
+        provider = AuthProviderHandler.get_auth_provider_by_id(auth_provider_id)
+        AuthProviderHandler.delete_auth_provider(request.user, provider)
+
         return Response(status=204)
 
 
@@ -252,6 +256,4 @@ class AdminNextAuthProviderIdView(APIView):
 
         check_sso_feature_is_active_or_raise()
 
-        return Response(
-            {"next_provider_id": AuthProviderHandler.get_next_provider_id()}
-        )
+        return Response({"next_provider_id": AuthProviderModel.get_next_provider_id()})
