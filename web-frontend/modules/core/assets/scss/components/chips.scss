@@ -1,0 +1,55 @@
+.chips {
+  display: inline-flex;
+  padding: 12px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  justify-content: center;
+  align-items: center;
+  height: 44px;
+  box-sizing: border-box;
+  gap: 8px;
+  margin: 0;
+  background: $white;
+  border: 1px solid $palette-neutral-400;
+  cursor: pointer;
+
+  @include rounded($rounded-md);
+  @include flex-align-items(8px);
+
+  &:hover:not(.chips--disabled) {
+    border: 1px solid $palette-blue-300;
+    background: rgba($palette-blue-1000, 0.06);
+
+    &.chips--active {
+      border-width: 1.5px;
+    }
+  }
+
+  &:active:not(.chips--disabled) {
+    border: 1px solid $palette-blue-500;
+    background: rgba($palette-blue-1000, 0.1);
+  }
+}
+
+.chips--active:not(.chips--disabled) {
+  border: 1.5px solid $palette-blue-600;
+  background: rgba($palette-blue-1000, 0.08);
+}
+
+.chips__icon {
+  color: $palette-neutral-600;
+  font-size: 18px;
+
+  .chips--active:not(.chips--disabled) & {
+    color: #4653e5;
+  }
+
+  .chips:hover:not(.chips--disabled) & {
+    color: #4653e5;
+  }
+}
+
+.chips--disabled {
+  border-color: $palette-neutral-200;
+  color: $palette-neutral-700;
+}
