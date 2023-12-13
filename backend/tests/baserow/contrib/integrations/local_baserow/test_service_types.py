@@ -1441,6 +1441,13 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "string",
         },
+        field_db_column_by_name["autonumber"]: {
+            "title": "autonumber",
+            "default": None,
+            "original_type": "autonumber",
+            "metadata": {},
+            "type": "number",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 

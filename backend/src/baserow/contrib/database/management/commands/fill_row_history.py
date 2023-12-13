@@ -133,7 +133,7 @@ def record_row_history(table, model, row, user, use_cache=False, skip_action=Fal
                 random_value = field_object["type"].random_value(
                     field_object["field"], fake, cache
                 )
-                serialized_random_value = field_object["type"].serialize_to_input_value(
+                serialized_random_value = field_object["type"].random_to_input_value(
                     field_object["field"], random_value
                 )
                 row_random_values[

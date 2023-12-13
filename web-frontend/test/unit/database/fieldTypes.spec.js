@@ -214,6 +214,14 @@ const mockedFields = {
     table_id: 42,
     type: 'created_by',
   },
+  autonumber: {
+    id: 22,
+    name: 'autonumber',
+    order: 22,
+    primary: false,
+    table_id: 42,
+    type: 'autonumber',
+  },
 }
 
 const valuesToCall = [null, undefined]

@@ -198,6 +198,7 @@ class DatabaseConfig(AppConfig):
         plugin_registry.register(DatabasePlugin())
 
         from .fields.field_types import (
+            AutonumberFieldType,
             BooleanFieldType,
             CountFieldType,
             CreatedByFieldType,
@@ -246,8 +247,10 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LookupFieldType())
         field_type_registry.register(MultipleCollaboratorsFieldType())
         field_type_registry.register(UUIDFieldType())
+        field_type_registry.register(AutonumberFieldType())
 
         from .fields.field_converters import (
+            AutonumberFieldConverter,
             FileFieldConverter,
             FormulaFieldConverter,
             LinkRowFieldConverter,
@@ -270,6 +273,7 @@ class DatabaseConfig(AppConfig):
             SingleSelectFieldToMultipleSelectFieldConverter()
         )
         field_converter_registry.register(FormulaFieldConverter())
+        field_converter_registry.register(AutonumberFieldConverter())
 
         from .fields.actions import (
             CreateFieldActionType,

@@ -250,7 +250,7 @@ def setup_interesting_test_table(
         set(name_to_field_id.keys())
         - set(values.keys())
         - set([f["name"] for f in all_possible_kwargs_per_type["formula"]])
-        - {"lookup", "count", "rollup", "uuid"}
+        - {"lookup", "count", "rollup", "uuid", "autonumber"}
     )
     assert missing_fields == set(), (
         "Please update the dictionary above with interesting test values for your new "

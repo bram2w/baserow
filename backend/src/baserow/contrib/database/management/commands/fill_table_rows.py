@@ -266,6 +266,8 @@ def generate_values_for_one_or_more_tables(models, fake, cache):
     for _, meta in grouped_fields_by_name_and_type.items():
         random_value = None
         for field_object in meta["field_objects"]:
+            if field_object["type"].read_only:
+                continue
             if random_value is None:
                 random_value = field_object["type"].random_value(
                     field_object["field"], fake, cache

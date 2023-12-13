@@ -702,6 +702,10 @@ class UUIDField(Field):
     pass
 
 
+class AutonumberField(Field):
+    pass
+
+
 class DuplicateFieldJob(
     JobWithUserIpAddress, JobWithWebsocketId, JobWithUndoRedoIds, Job
 ):
