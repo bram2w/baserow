@@ -11,9 +11,12 @@ from rest_framework.request import Request
 from rest_framework.views import APIView
 
 from baserow.api.decorators import validate_query_parameters
-from baserow.core.auth_provider.exceptions import AuthProviderModelNotFound
+from baserow.core.auth_provider.exceptions import (
+    AuthProviderModelNotFound,
+    DifferentAuthProvider,
+)
+from baserow.core.auth_provider.handler import AuthProviderHandler
 from baserow.core.exceptions import WorkspaceInvitationEmailMismatch
-from baserow.core.registries import auth_provider_type_registry
 from baserow.core.user.exceptions import DeactivatedUserException, DisabledSignupError
 from baserow_enterprise.api.sso.serializers import SsoLoginRequestSerializer
 from baserow_enterprise.api.sso.utils import (
@@ -22,8 +25,6 @@ from baserow_enterprise.api.sso.utils import (
     redirect_to_sign_in_error_page,
     redirect_user_on_success,
 )
-from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
-from baserow_enterprise.auth_provider.handler import AuthProviderHandler
 from baserow_enterprise.sso.exceptions import AuthFlowError
 from baserow_enterprise.sso.utils import is_sso_feature_active
 
@@ -91,10 +92,9 @@ class OAuth2LoginView(APIView):
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
-        provider = AuthProviderHandler.get_auth_provider(provider_id)
-        provider_type = auth_provider_type_registry.get_by_model(provider)
+        provider = AuthProviderHandler.get_auth_provider_by_id(provider_id)
 
-        redirect_url = provider_type.get_authorization_url(
+        redirect_url = provider.get_type().get_authorization_url(
             provider.specific_class.objects.get(id=provider_id),
             session=request.session,
             query_params=query_params,
@@ -154,14 +154,15 @@ class OAuth2CallbackView(APIView):
         if not is_sso_feature_active():
             return redirect_to_sign_in_error_page(SsoErrorCode.FEATURE_NOT_ACTIVE)
 
-        provider = AuthProviderHandler.get_auth_provider(provider_id)
-        provider_type = auth_provider_type_registry.get_by_model(provider)
+        provider = AuthProviderHandler.get_auth_provider_by_id(provider_id)
+
         code = request.query_params.get("code", None)
-        user_info, original_url = provider_type.get_user_info(
+        user_info, original_url = provider.get_type().get_user_info(
             provider, code, request.session
         )
-        user, _ = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-            user_info, provider
-        )
+        (
+            user,
+            _,
+        ) = provider.get_type().get_or_create_user_and_sign_in(provider, user_info)
 
         return redirect_user_on_success(user, original_url)

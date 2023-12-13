@@ -2,8 +2,8 @@ from django.test.utils import override_settings
 
 import pytest
 
+from baserow.core.auth_provider.handler import AuthProviderHandler
 from baserow.core.registries import auth_provider_type_registry
-from baserow_enterprise.auth_provider.handler import AuthProviderHandler
 from baserow_enterprise.sso.saml.exceptions import SamlProviderForDomainAlreadyExists
 
 

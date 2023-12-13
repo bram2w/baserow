@@ -3,10 +3,10 @@ from django.test.utils import override_settings
 
 import pytest
 
+from baserow.core.auth_provider.exceptions import DifferentAuthProvider
+from baserow.core.auth_provider.types import UserInfo
 from baserow.core.handler import CoreHandler
 from baserow.core.user.exceptions import DeactivatedUserException
-from baserow_enterprise.auth_provider.exceptions import DifferentAuthProvider
-from baserow_enterprise.auth_provider.handler import AuthProviderHandler, UserInfo
 
 
 @pytest.mark.django_db()
@@ -24,8 +24,8 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     (
         user,
         created,
-    ) = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-        user_info, auth_provider_1
+    ) = auth_provider_1.get_type().get_or_create_user_and_sign_in(
+        auth_provider_1, user_info
     )
 
     assert created is True
@@ -41,9 +41,10 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     (
         user,
         created,
-    ) = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-        user_info, auth_provider_1
+    ) = auth_provider_1.get_type().get_or_create_user_and_sign_in(
+        auth_provider_1, user_info
     )
+
     assert created is False
     assert user.email == user_info.email
 
@@ -56,16 +57,19 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
             (
                 user,
                 _,
-            ) = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-                user_info, auth_provider_2
+            ) = auth_provider_2.get_type().get_or_create_user_and_sign_in(
+                auth_provider_2, user_info
             )
 
     assert User.objects.count() == 1
     assert not user.auth_providers.filter(id=auth_provider_2.id).exists()
 
     with override_settings(BASEROW_ALLOW_MULTIPLE_SSO_PROVIDERS_FOR_SAME_ACCOUNT=True):
-        user, _ = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-            user_info, auth_provider_2
+        (
+            user,
+            _,
+        ) = auth_provider_2.get_type().get_or_create_user_and_sign_in(
+            auth_provider_2, user_info
         )
 
     assert user.auth_providers.filter(id=auth_provider_2.id).exists()
@@ -87,9 +91,10 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     (
         user2,
         created,
-    ) = AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-        user2_info, auth_provider_1
+    ) = auth_provider_1.get_type().get_or_create_user_and_sign_in(
+        auth_provider_1, user2_info
     )
+
     assert created is True
     assert user2 is not None
     assert user2.email == user2_info.email
@@ -106,6 +111,6 @@ def test_get_or_create_user_from_sso_user_info(enterprise_data_fixture):
     user.save()
 
     with pytest.raises(DeactivatedUserException):
-        AuthProviderHandler.get_or_create_user_and_sign_in_via_auth_provider(
-            user_info, auth_provider_2
+        auth_provider_2.get_type().get_or_create_user_and_sign_in(
+            auth_provider_2, user_info
         )
