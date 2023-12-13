@@ -48,7 +48,6 @@ export default {
       values: {
         value: '',
         level: 1,
-        font_color: 'default',
       },
       levels: [...Array(6).keys()].map((level) => ({
         name: this.$t('headingElementForm.headingName', { level: level + 1 }),

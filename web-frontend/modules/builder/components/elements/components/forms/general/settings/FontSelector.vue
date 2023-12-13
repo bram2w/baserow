@@ -39,7 +39,7 @@ export default {
     },
   },
   data() {
-    return { values: { font_color: 'primary' } }
+    return { values: { font_color: 'primary' }, allowedValues: ['font_color'] }
   },
   methods: { resolveColor },
 }
