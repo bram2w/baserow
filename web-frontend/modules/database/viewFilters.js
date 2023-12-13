@@ -170,6 +170,7 @@ export class EqualViewFilterType extends ViewFilterType {
       'rating',
       'phone_number',
       'uuid',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
@@ -213,6 +214,7 @@ export class NotEqualViewFilterType extends ViewFilterType {
       'rating',
       'phone_number',
       'uuid',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes('text', 'char', 'number'),
     ]
   }
@@ -358,6 +360,7 @@ export class ContainsViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -402,6 +405,7 @@ export class ContainsNotViewFilterType extends ViewFilterType {
       'single_select',
       'multiple_select',
       'number',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes(
         'text',
         'char',
@@ -1319,6 +1323,7 @@ export class HigherThanViewFilterType extends ViewFilterType {
     return [
       'number',
       'rating',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
@@ -1359,6 +1364,7 @@ export class LowerThanViewFilterType extends ViewFilterType {
     return [
       'number',
       'rating',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
@@ -1389,7 +1395,11 @@ export class IsEvenAndWholeViewFilterType extends ViewFilterType {
   }
 
   getCompatibleFieldTypes() {
-    return ['number', FormulaFieldType.compatibleWithFormulaTypes('number')]
+    return [
+      'number',
+      'autonumber',
+      FormulaFieldType.compatibleWithFormulaTypes('number'),
+    ]
   }
 
   matches(rowValue, filterValue, field, fieldType) {

@@ -312,7 +312,7 @@ def test_specific_iterator_with_list(data_fixture, django_assert_num_queries):
                 gallery_view_1.id,
                 gallery_view_2.id,
             ]
-        )
+        ).order_by("id")
     )
 
     with django_assert_num_queries(2):

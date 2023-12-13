@@ -14,6 +14,7 @@ import guessFormat from 'moment-guess'
 import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
+import FieldAutonumberSubForm from '@baserow/modules/database/components/field/FieldAutonumberSubForm'
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
@@ -37,6 +38,7 @@ import GridViewFieldMultipleSelect from '@baserow/modules/database/components/vi
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
 import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
 import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
+import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
 import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
@@ -53,6 +55,7 @@ import FunctionalGridViewFieldFormula from '@baserow/modules/database/components
 import FunctionalGridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldMultipleCollaborators'
 import FunctionalGridViewFieldURL from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldURL'
 import FunctionalGridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldUUID'
+import FunctionalGridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldAutonumber'
 import FunctionalGridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLastModifiedBy'
 
 import RowEditFieldText from '@baserow/modules/database/components/row/RowEditFieldText'
@@ -71,6 +74,7 @@ import RowEditFieldMultipleSelect from '@baserow/modules/database/components/row
 import RowEditFieldPhoneNumber from '@baserow/modules/database/components/row/RowEditFieldPhoneNumber'
 import RowEditFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowEditFieldMultipleCollaborators'
 import RowEditFieldUUID from '@baserow/modules/database/components/row/RowEditFieldUUID'
+import RowEditFieldAutonumber from '@baserow/modules/database/components/row/RowEditFieldAutonumber'
 import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row/RowEditFieldLastModifiedBy'
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
@@ -88,6 +92,7 @@ import RowCardFieldText from '@baserow/modules/database/components/card/RowCardF
 import RowCardFieldURL from '@baserow/modules/database/components/card/RowCardFieldURL'
 import RowCardFieldMultipleCollaborators from '@baserow/modules/database/components/card/RowCardFieldMultipleCollaborators'
 import RowCardFieldUUID from '@baserow/modules/database/components/card/RowCardFieldUUID'
+import RowCardFieldAutonumber from '@baserow/modules/database/components/card/RowCardFieldAutonumber'
 import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/card/RowCardFieldLastModifiedBy'
 
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
@@ -3634,6 +3639,109 @@ export class UUIDFieldType extends FieldType {
 
   getContainsWordFilterFunction(field) {
     return genericContainsWordFilter
+  }
+
+  canBeReferencedByFormulaField() {
+    return true
+  }
+}
+
+export class AutonumberFieldType extends FieldType {
+  static getType() {
+    return 'autonumber'
+  }
+
+  getIconClass() {
+    return 'iconoir-numbered-list-left'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.autonumber')
+  }
+
+  getFormViewFieldComponents(field) {
+    return {}
+  }
+
+  getIsReadOnly() {
+    return true
+  }
+
+  shouldFetchDataWhenAdded() {
+    return true
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldAutonumber
+  }
+
+  getFormComponent() {
+    return FieldAutonumberSubForm
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldAutonumber
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldAutonumber
+  }
+
+  getCardComponent() {
+    return RowCardFieldAutonumber
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      if (a[name] === b[name]) {
+        return 0
+      }
+
+      if (
+        (a[name] === null && order === 'ASC') ||
+        (b[name] === null && order === 'DESC')
+      ) {
+        return -1
+      }
+
+      if (
+        (b[name] === null && order === 'ASC') ||
+        (a[name] === null && order === 'DESC')
+      ) {
+        return 1
+      }
+
+      const numberA = new BigNumber(a[name])
+      const numberB = new BigNumber(b[name])
+
+      let result
+      // Add your code here
+
+      if (order === 'ASC') {
+        result = numberA.isLessThan(numberB) ? -1 : 1
+      } else {
+        result = numberB.isLessThan(numberA) ? -1 : 1
+      }
+
+      return result
+    }
+  }
+
+  getDocsDataType(field) {
+    return 'autonumber'
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.autonumber')
+  }
+
+  getDocsRequestExample(field) {
+    return '1'
+  }
+
+  getContainsFilterFunction() {
+    return genericContainsFilter
   }
 
   canBeReferencedByFormulaField() {

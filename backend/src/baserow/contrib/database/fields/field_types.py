@@ -16,8 +16,9 @@ from django.contrib.postgres.aggregates import StringAgg
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import Storage, default_storage
-from django.db import OperationalError, models
+from django.db import OperationalError, connection, models
 from django.db.models import (
+    Case,
     CharField,
     DateTimeField,
     Expression,
@@ -28,8 +29,10 @@ from django.db.models import (
     QuerySet,
     Subquery,
     Value,
+    When,
+    Window,
 )
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, RowNumber
 from django.utils.timezone import make_aware
 
 import pytz
@@ -140,6 +143,7 @@ from .field_sortings import OptionallyAnnotatedOrderBy
 from .fields import (
     BaserowExpressionField,
     BaserowLastModifiedField,
+    IntegerFieldWithSequence,
     MultipleSelectManyToManyField,
     SingleSelectForeignKey,
     SyncedUserForeignKeyField,
@@ -147,6 +151,7 @@ from .fields import (
 from .handler import FieldHandler
 from .models import (
     AbstractSelectOption,
+    AutonumberField,
     BooleanField,
     CountField,
     CreatedByField,
@@ -188,6 +193,7 @@ if TYPE_CHECKING:
         FieldUpdateCollector,
     )
     from baserow.contrib.database.table.models import FieldObject, GeneratedTableModel
+    from baserow.contrib.database.views.models import View
 
 
 class CollationSortMixin:
@@ -323,6 +329,14 @@ class CharFieldMatchingRegexFieldType(TextFieldMatchingRegexFieldType):
 
     def to_baserow_formula_type(self, field) -> BaserowFormulaType:
         return BaserowFormulaCharType(nullable=True)
+
+
+class ManyToManyFieldTypeSerializeToInputValueMixin:
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return [v.id for v in value.all()]
+
+    def random_to_input_value(self, field: Field, value: any) -> any:
+        return value
 
 
 class TextFieldType(CollationSortMixin, FieldType):
@@ -1646,7 +1660,7 @@ class CreatedByFieldType(ReadOnlyFieldType):
         )
 
 
-class LinkRowFieldType(FieldType):
+class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):
     """
     The link row field can be used to link a field to a row of another table. Because
     the user should also be able to see which rows are linked to the related table,
@@ -1972,9 +1986,6 @@ class LinkRowFieldType(FieldType):
                 field_object, value, map_to_human_readable_value
             )
         )
-
-    def serialize_to_input_value(self, field: Field, value: any) -> any:
-        return [v.id for v in value.all()]
 
     def _get_related_model_and_primary_field(self, instance):
         """
@@ -3476,7 +3487,9 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
         return self.model_class()
 
 
-class MultipleSelectFieldType(SelectOptionBaseFieldType):
+class MultipleSelectFieldType(
+    ManyToManyFieldTypeSerializeToInputValueMixin, SelectOptionBaseFieldType
+):
     type = "multiple_select"
     model_class = MultipleSelectField
     can_get_unique_values = False
@@ -3701,9 +3714,6 @@ class MultipleSelectFieldType(SelectOptionBaseFieldType):
         export_value = self.get_export_value(value, field_object, rich_value=True)
 
         return ", ".join(export_value)
-
-    def serialize_to_input_value(self, field: Field, value: any) -> any:
-        return [v.id for v in value.all()]
 
     def get_model_field(self, instance, **kwargs):
         return None
@@ -4967,7 +4977,9 @@ class LookupFieldType(FormulaFieldType):
         return field
 
 
-class MultipleCollaboratorsFieldType(FieldType):
+class MultipleCollaboratorsFieldType(
+    ManyToManyFieldTypeSerializeToInputValueMixin, FieldType
+):
     type = "multiple_collaborators"
     model_class = MultipleCollaboratorsField
     can_get_unique_values = False
@@ -5124,18 +5136,6 @@ class MultipleCollaboratorsFieldType(FieldType):
     def are_row_values_equal(self, value1: any, value2: any) -> bool:
         return {v["id"] for v in value1} == {v["id"] for v in value2}
 
-    def serialize_to_input_value(self, field: Field, value: any) -> any:
-        if value is None or len(value) == 0:
-            return []
-
-        serialized = [
-            {
-                "id": user_id,
-            }
-            for user_id in value
-        ]
-        return serialized
-
     def get_model_field(self, instance, **kwargs):
         return None
 
@@ -5291,6 +5291,9 @@ class MultipleCollaboratorsFieldType(FieldType):
 
         return sample(collaborators, randint(0, len(collaborators)))  # nosec
 
+    def random_to_input_value(self, field, value):
+        return [{"id": user_id} for user_id in value]
+
     def get_order(self, field, field_name, order_direction):
         """
         If the user wants to sort the results they expect them to be ordered
@@ -5400,3 +5403,227 @@ class UUIDFieldType(ReadOnlyFieldType):
         self, formula_type: BaserowFormulaTextType
     ) -> UUIDField:
         return UUIDField()
+
+
+class AutonumberFieldType(ReadOnlyFieldType):
+    """
+    Autonumber fields automatically generate unique and incremented numbers for
+    each record. Autonumbers can be helpful when you need a unique identifier
+    for each record or when using a formula in the primary field
+    """
+
+    type = "autonumber"
+    model_class = AutonumberField
+    can_be_in_form_view = False
+    keep_data_on_duplication = True
+    request_serializer_field_names = ["view_id"]
+    request_serializer_field_overrides = {
+        "view_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the view to use for the initial ordering.",
+        )
+    }
+
+    def get_serializer_field(self, instance, **kwargs):
+        return serializers.IntegerField(required=False, **kwargs)
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "Contains a unique and persistent incremental integer number for every row."
+        )
+
+    def get_model_field(self, instance, **kwargs):
+        return IntegerFieldWithSequence(null=True, **kwargs)
+
+    def after_rows_imported(
+        self,
+        field: FormulaField,
+        update_collector: "FieldUpdateCollector",
+        field_cache: "FieldCache",
+        via_path_to_starting_table: Optional[List[LinkRowField]],
+    ):
+        super().after_rows_imported(
+            field, update_collector, field_cache, via_path_to_starting_table
+        )
+
+        # Create the sequence so that rows can start being automatically numbered.
+        self.create_field_sequence(field, field.table.get_model(), connection)
+
+    def _extract_view_from_field_kwargs(self, user, field_kwargs):
+        view_id = field_kwargs.get("view_id", None)
+        if view_id is not None:
+            from baserow.contrib.database.views.handler import ViewHandler
+
+            field_kwargs["view"] = ViewHandler().get_view_as_user(user, view_id)
+
+    def before_create(
+        self, table, primary, allowed_field_values, order, user, field_kwargs
+    ):
+        self._extract_view_from_field_kwargs(user, field_kwargs)
+
+    def after_create(self, field, model, user, connection, before, field_kwargs):
+        self.create_field_sequence(field, model, connection)
+        self.update_rows_with_field_sequence(field, field_kwargs.get("view", None))
+
+    def before_update(self, from_field, to_field_values, user, field_kwargs):
+        self._extract_view_from_field_kwargs(user, field_kwargs)
+
+    def before_schema_change(
+        self,
+        from_field,
+        to_field,
+        to_model,
+        from_model,
+        from_model_field,
+        to_model_field,
+        user,
+        to_field_kwargs,
+    ):
+        from_autonumber = isinstance(from_field, self.model_class)
+        to_autonumber = isinstance(to_field, self.model_class)
+
+        if from_autonumber and not to_autonumber:
+            self.drop_field_sequence(from_field, to_model, connection)
+
+    def after_update(
+        self,
+        from_field,
+        to_field,
+        from_model,
+        to_model,
+        user,
+        connection,
+        altered_column,
+        before,
+        to_field_kwargs,
+    ):
+        if isinstance(to_field, self.model_class) and not isinstance(
+            from_field, self.model_class
+        ):
+            self.create_field_sequence(to_field, to_model, connection)
+            self.update_rows_with_field_sequence(
+                to_field, to_field_kwargs.get("view", None)
+            )
+
+    def prepare_value_for_db(self, instance: Field, value):
+        raise ValidationError(
+            f"Field of type {self.type} is read only and should not be set manually."
+        )
+
+    def contains_query(self, *args):
+        return contains_filter(*args)
+
+    def update_rows_with_field_sequence(
+        self, field: Field, view: Optional["View"] = None
+    ):
+        """
+        Renumber the row values for the given field, according to the view's
+        filters and sorting. If the view has filters, the rows matching the
+        filters will have lower row numbers than the rows that don't match the
+        filters. If the view has sorting, the rows will be numbered accordingly.
+        If the table have trashed rows, they will receive the highest row
+        numbers. If no view is provided, then all the rows in the table are
+        renumbered according to the default ordering of the table (order, id).
+
+        :param field: The field to initialize the values for.
+        :param view: The view to initialize the values according to.
+        """
+
+        from baserow.contrib.database.views.handler import ViewHandler
+
+        not_trashed_first = Case(When(Q(trashed=False), then=Value(0)), default=1).asc()
+        order_bys = (not_trashed_first, "order", "id")
+
+        if view is not None:
+            queryset = ViewHandler().get_queryset(view).values("id")
+
+            filters = queryset.query.where
+            filtered_first = Case(When(filters, then=Value(0)), default=1).asc()
+
+            # The last two order bys are the default order bys of the table
+            if custom_order_bys := queryset.query.order_by[:-2]:
+                order_bys = (*custom_order_bys, *order_bys)
+
+            order_bys = (filtered_first, *order_bys)
+
+        table_model = field.table.get_model()
+        qs = table_model.objects_and_trash.annotate(
+            row_nr=Window(expression=RowNumber(), order_by=order_bys),
+        ).values("id", "row_nr")
+        sql, params = qs.query.get_compiler(connection=connection).as_sql()
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""
+                WITH ordered AS ({sql})
+                UPDATE {table_model._meta.db_table} AS t
+                SET {field.db_column} = ordered.row_nr
+                FROM ordered
+                WHERE t.id = ordered.id;
+                """,  # nosec B608
+                params,
+            )
+
+    def create_field_sequence(
+        self, field: Field, model: "GeneratedTableModel", connection
+    ):
+        """
+        Create a sequence and set the default value to the next value in the
+        sequence for the given field. The sequence is needed to make sure that
+        the autonumber field is unique and incremented.
+
+        :param field: The field to create the sequence for.
+        :param model: The model of the table that the field belongs to.
+        :param connection: The connection to use for the queries.
+        """
+
+        db_table = model._meta.db_table
+        db_column = field.db_column
+
+        with connection.cursor() as cursor:
+            cursor.execute(f"CREATE SEQUENCE IF NOT EXISTS {db_column}_seq;")
+            cursor.execute(
+                f"ALTER TABLE {db_table} ALTER COLUMN {db_column} SET DEFAULT nextval('{db_column}_seq');"
+            )
+            cursor.execute(
+                f"ALTER SEQUENCE {db_column}_seq OWNED BY {db_table}.{db_column};"
+            )
+            # Set the sequence to the count of rows in the table, only if there
+            # is at least one row.
+            cursor.execute(
+                f"""
+                WITH count AS (SELECT COUNT(*) FROM {db_table})
+                SELECT setval('{db_column}_seq', count) FROM count WHERE count > 0;
+                """  # nosec B608
+            )
+
+    def drop_field_sequence(
+        self, field: Field, model: "GeneratedTableModel", connection
+    ):
+        """
+        Drop the sequence for the given autonumber field.
+
+        :param field: The field to drop the sequence for.
+        :param model: The model of the table that the field belongs to.
+        :param connection: The connection to use for the queries.
+        """
+
+        db_table = model._meta.db_table
+        db_column = field.db_column
+
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"ALTER TABLE {db_table} ALTER COLUMN {db_column} DROP DEFAULT;"
+            )
+            cursor.execute(f"DROP SEQUENCE IF EXISTS {db_column}_seq;")
+
+    def to_baserow_formula_type(self, field: NumberField) -> BaserowFormulaType:
+        return BaserowFormulaNumberType(
+            number_decimal_places=0, requires_refresh_after_insert=True
+        )
+
+    def from_baserow_formula_type(
+        self, formula_type: BaserowFormulaNumberType
+    ) -> NumberField:
+        return NumberField(number_decimal_places=0, number_negative=False)

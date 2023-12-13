@@ -20,6 +20,7 @@ from baserow.contrib.database.fields.field_filters import (
     filename_contains_filter,
 )
 from baserow.contrib.database.fields.field_types import (
+    AutonumberFieldType,
     BooleanFieldType,
     CreatedByFieldType,
     CreatedOnFieldType,
@@ -89,6 +90,7 @@ class EqualViewFilterType(ViewFilterType):
         EmailFieldType.type,
         PhoneNumberFieldType.type,
         UUIDFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -217,6 +219,7 @@ class ContainsViewFilterType(ViewFilterType):
         SingleSelectFieldType.type,
         MultipleSelectFieldType.type,
         NumberFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -313,6 +316,7 @@ class HigherThanViewFilterType(ViewFilterType):
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -348,6 +352,7 @@ class IsEvenAndWholeViewFilterType(ViewFilterType):
     type = "is_even_and_whole"
     compatible_field_types = [
         NumberFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -371,6 +376,7 @@ class LowerThanViewFilterType(ViewFilterType):
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),

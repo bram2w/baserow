@@ -1,6 +1,6 @@
 import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from django.db.models import BooleanField, Q
 from django.db.models.expressions import F, Value
@@ -59,7 +59,7 @@ class FilterBuilder:
     prior to filtering with the merged annotations from AnnotatedQ filters.
     """
 
-    def __init__(self, filter_type: str):
+    def __init__(self, filter_type: str = FILTER_TYPE_AND):
         """
 
         :param filter_type: Either field_filters.FILTER_TYPE_AND or
@@ -114,6 +114,16 @@ class FilterBuilder:
         """
 
         return queryset.annotate(**self._annotation).filter(self._q_filters)
+
+    def get_filters_and_annotations(self) -> Tuple[Q, Dict[str, Any]]:
+        """
+        Returns the filters which have been applied to this FilterBuilder and
+        the annotations which have been merged together from all AnnotatedQ's.
+
+        :return: A tuple containing the Q filters and the annotations.
+        """
+
+        return self._q_filters, self._annotation
 
     def _annotate(self, annotation_dict: Dict[str, Any]):
         self._annotation = {**self._annotation, **annotation_dict}

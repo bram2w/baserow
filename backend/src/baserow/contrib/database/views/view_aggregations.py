@@ -18,6 +18,7 @@ from django.db.models import (
 
 from baserow.contrib.database.db.aggregations import Percentile
 from baserow.contrib.database.fields.field_types import (
+    AutonumberFieldType,
     BooleanFieldType,
     CreatedOnFieldType,
     DateFieldType,
@@ -222,6 +223,7 @@ class MaxViewAggregationType(ViewAggregationType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        AutonumberFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
             BaserowFormulaDateType.type,

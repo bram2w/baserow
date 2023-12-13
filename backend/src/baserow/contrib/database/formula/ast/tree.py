@@ -246,6 +246,9 @@ class BaserowFieldReference(BaserowExpression[A]):
         # If set target_field is a field in another table to lookup via the
         # referenced_field_name.
         self.target_field = target_field
+        self.requires_refresh_after_insert = bool(
+            expression_type and expression_type.requires_refresh_after_insert
+        )
 
     def accept(self, visitor: "visitors.BaserowFormulaASTVisitor[A, T]") -> T:
         return visitor.visit_field_reference(self)

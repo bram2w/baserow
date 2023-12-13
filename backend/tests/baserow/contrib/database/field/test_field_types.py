@@ -577,6 +577,7 @@ def test_human_readable_values(data_fixture):
         "formula_link_with_label": "label (https://google.com)",
         "formula_multipleselect": "",
         "lookup": "",
+        "autonumber": "1",
     }
 
     for key, value in blank_expected.items():
@@ -631,6 +632,7 @@ def test_human_readable_values(data_fixture):
         "formula_link_with_label": "label (https://google.com)",
         "formula_multipleselect": "D, C, E",
         "lookup": "linked_row_1, linked_row_2, ",
+        "autonumber": "2",
     }
 
     for key, value in expected.items():

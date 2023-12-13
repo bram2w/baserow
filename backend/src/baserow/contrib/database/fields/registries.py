@@ -804,7 +804,7 @@ class FieldType(
     def serialize_to_input_value(self, field: Field, value: any) -> any:
         """
         Converts the field's value to input value. For example, we can use this method
-        to convert the result of random_value() to provide values to row actions
+        to convert the result of getattr(row, field) to provide values to row actions
         such as UpdateRowsActionType.
 
         :param field: The field instance for which the provided value is intended.
@@ -813,6 +813,20 @@ class FieldType(
         """
 
         return value
+
+    def random_to_input_value(self, field: Field, value: any) -> any:
+        """
+        Converts the result of the random_value function to be a valid input
+        value for row actions such as UpdateRowsActionType.
+
+        :param field: The field instance for which the provided value is
+            intended.
+        :param value: The field's value that we want to represent as input
+            value.
+        :return: Value represented as input value.
+        """
+
+        return self.serialize_to_input_value(field, value)
 
     def export_serialized(
         self, field: Field, include_allowed_fields: bool = True

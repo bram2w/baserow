@@ -283,7 +283,7 @@ class BaserowExpressionField(models.Field):
 class SerialField(models.Field):
     """
     The serial field works very similar compared to the `AutoField` (primary key field).
-    Everytime a new row is created and the value is not set, it will automatically
+    Every time a new row is created and the value is not set, it will automatically
     increment a sequence and that will be set as value. It's basically an auto
     increment column. The sequence is independent of a transaction to prevent race
     conditions.
@@ -299,6 +299,30 @@ class SerialField(models.Field):
             sequence_name = f"{model_instance._meta.db_table}_{self.name}_seq"
             return RawSQL(  # nosec
                 f"nextval('{sequence_name}'::regclass)",
+                (),
+            )
+        else:
+            return super().pre_save(model_instance, add)
+
+
+class IntegerFieldWithSequence(models.IntegerField):
+    """
+    This field is similar to the `SerialField` but it uses a `integer` db_type
+    instead of a `serial` one. This is needed in the autonumber field because
+    the `bulk_update` operation will try to cast the result to the field type,
+    but it's not possible to cast to `serial` because `serial` is not really a
+    type. For more info, look at Postgres data types docs,
+    connection.features.requires_casted_case_in_updates and
+    django.db.models.query.QuerySet.bulk_update.
+    Note that the sequence must be created manually.
+    """
+
+    db_returning = True
+
+    def pre_save(self, model_instance, add):
+        if add and not getattr(model_instance, self.name):
+            return RawSQL(  # nosec
+                f"nextval('{self.name}_seq'::regclass)",
                 (),
             )
         else:

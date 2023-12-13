@@ -95,7 +95,8 @@ def test_can_export_every_interesting_different_field_to_json(
     "count": 0,
     "rollup": "0.000",
     "lookup": [],
-    "uuid": "00000000-0000-4000-8000-000000000001"
+    "uuid": "00000000-0000-4000-8000-000000000001",
+    "autonumber": 1
 },
 {
     "id": 2,
@@ -201,7 +202,8 @@ def test_can_export_every_interesting_different_field_to_json(
         "linked_row_2",
         ""
     ],
-    "uuid": "00000000-0000-4000-8000-000000000002"
+    "uuid": "00000000-0000-4000-8000-000000000002",
+    "autonumber": 2
 }
 ]
 """
@@ -341,6 +343,7 @@ def test_can_export_every_interesting_different_field_to_xml(
       <rollup>0.000</rollup>
       <lookup/>
       <uuid>00000000-0000-4000-8000-000000000001</uuid>
+      <autonumber>1</autonumber>
    </row>
    <row>
       <id>2</id>
@@ -447,6 +450,7 @@ def test_can_export_every_interesting_different_field_to_xml(
          <item/>
       </lookup>
       <uuid>00000000-0000-4000-8000-000000000002</uuid>
+      <autonumber>2</autonumber>
    </row>
 </rows>
 """

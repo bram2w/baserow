@@ -418,8 +418,9 @@ class BaserowFormulaType(abc.ABC):
     def __str__(self) -> str:
         return self.type
 
-    def __init__(self, nullable=False):
+    def __init__(self, nullable=False, requires_refresh_after_insert=False):
         self.nullable = nullable
+        self.requires_refresh_after_insert = requires_refresh_after_insert
 
     def get_search_expression(self, field, queryset):
         (

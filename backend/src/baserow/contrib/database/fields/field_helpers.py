@@ -218,6 +218,7 @@ def construct_all_possible_field_kwargs(
             }
         ],
         "uuid": [{"name": "uuid"}],
+        "autonumber": [{"name": "autonumber"}],
     }
     # If you have added a new field please add an entry into the dict above with any
     # test worthy combinations of kwargs

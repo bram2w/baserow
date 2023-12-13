@@ -499,6 +499,7 @@ export class MaxViewAggregationType extends ViewAggregationType {
     return [
       'number',
       'rating',
+      'autonumber',
       FormulaFieldType.compatibleWithFormulaTypes('number'),
     ]
   }
