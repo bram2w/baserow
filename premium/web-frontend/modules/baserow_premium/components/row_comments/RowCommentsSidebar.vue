@@ -170,6 +170,11 @@ export default {
     async hasPremiumFeaturesEnabled() {
       await this.initialLoad()
     },
+    'row.id': {
+      handler() {
+        this.initialLoad()
+      },
+    },
   },
   async created() {
     await this.initialLoad()
