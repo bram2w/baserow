@@ -415,10 +415,10 @@ class ImageElement(Element):
         related_name="image_element_image_file",
         help_text="An image file uploaded by the user to be used by the element",
     )
-    image_url = models.URLField(
+    image_url = FormulaField(
         help_text="A link to the image file", blank=True, default="", max_length=1000
     )
-    alt_text = models.TextField(
+    alt_text = FormulaField(
         help_text="Text that is displayed when the image can't load",
         default="",
         blank=True,
