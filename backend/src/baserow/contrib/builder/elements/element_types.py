@@ -682,25 +682,38 @@ class ImageElementType(ElementType):
     class SerializedDict(ElementDict):
         image_source_type: str
         image_file_id: int
-        image_url: str
-        alt_text: str
+        image_url: BaserowFormula
+        alt_text: BaserowFormula
         alignment: str
 
     def get_pytest_params(self, pytest_data_fixture):
         return {
             "image_source_type": ImageElement.IMAGE_SOURCE_TYPES.UPLOAD,
             "image_file_id": None,
-            "image_url": "https://test.com/image.png",
-            "alt_text": "some alt text",
+            "image_url": "'https://test.com/image.png'",
+            "alt_text": "'some alt text'",
             "alignment": HorizontalAlignments.LEFT,
         }
 
     @property
     def serializer_field_overrides(self):
         from baserow.api.user_files.serializers import UserFileSerializer
+        from baserow.core.formula.serializers import FormulaSerializerField
 
         overrides = {
             "image_file": UserFileSerializer(required=False),
+            "image_url": FormulaSerializerField(
+                help_text=ImageElement._meta.get_field("image_url").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
+            "alt_text": FormulaSerializerField(
+                help_text=ImageElement._meta.get_field("alt_text").help_text,
+                required=False,
+                allow_blank=True,
+                default="",
+            ),
         }
 
         overrides.update(super().serializer_field_overrides)
@@ -728,6 +741,23 @@ class ImageElementType(ElementType):
         if super().request_serializer_field_overrides is not None:
             overrides.update(super().request_serializer_field_overrides)
         return overrides
+
+    def import_serialized(self, page, serialized_values, id_mapping, **kwargs):
+        serialized_copy = serialized_values.copy()
+        if serialized_copy["image_url"]:
+            serialized_copy["image_url"] = import_formula(
+                serialized_copy["image_url"], id_mapping
+            )
+        if serialized_copy["alt_text"]:
+            serialized_copy["alt_text"] = import_formula(
+                serialized_copy["alt_text"], id_mapping
+            )
+        if serialized_copy["image_url"]:
+            serialized_copy["image_url"] = import_formula(
+                serialized_copy["image_url"], id_mapping
+            )
+
+        return super().import_serialized(page, serialized_copy, id_mapping)
 
 
 class InputElementType(FormElementType, abc.ABC):
