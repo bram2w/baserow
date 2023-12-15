@@ -31,3 +31,7 @@ class UpdateBuilderWorkflowActionOperationType(BuilderWorkflowActionOperationTyp
 
 class ReadBuilderWorkflowActionOperationType(BuilderWorkflowActionOperationType):
     type = "builder.page.workflow_action.read"
+
+
+class DispatchBuilderWorkflowActionOperationType(BuilderWorkflowActionOperationType):
+    type = "builder.page.workflow_action.dispatch"

@@ -21,12 +21,18 @@ import PageHeader from '@baserow/modules/builder/components/page/header/PageHead
 import PagePreview from '@baserow/modules/builder/components/page/PagePreview'
 import PageSidePanels from '@baserow/modules/builder/components/page/PageSidePanels'
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   name: 'PageEditor',
   components: { PagePreview, PageHeader, PageSidePanels },
   provide() {
-    return { builder: this.builder, page: this.page, mode: 'editing' }
+    return {
+      builder: this.builder,
+      page: this.page,
+      mode: 'editing',
+      formulaComponent: ApplicationBuilderFormulaInputGroup,
+    }
   },
   /**
    * When the user leaves to another page we want to unselect the selected page. This

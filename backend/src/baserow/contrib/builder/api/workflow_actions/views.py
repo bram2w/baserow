@@ -4,7 +4,7 @@ from django.db import transaction
 
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,7 +20,10 @@ from baserow.api.utils import (
 from baserow.contrib.builder.api.elements.errors import ERROR_ELEMENT_DOES_NOT_EXIST
 from baserow.contrib.builder.api.pages.errors import ERROR_PAGE_DOES_NOT_EXIST
 from baserow.contrib.builder.api.workflow_actions.errors import (
+    ERROR_DATA_DOES_NOT_EXIST,
+    ERROR_WORKFLOW_ACTION_CANNOT_BE_DISPATCHED,
     ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
+    ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED,
     ERROR_WORKFLOW_ACTION_NOT_IN_ELEMENT,
 )
 from baserow.contrib.builder.api.workflow_actions.serializers import (
@@ -29,11 +32,16 @@ from baserow.contrib.builder.api.workflow_actions.serializers import (
     OrderWorkflowActionsSerializer,
     UpdateBuilderWorkflowActionsSerializer,
 )
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.elements.exceptions import ElementDoesNotExist
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.pages.exceptions import PageDoesNotExist
 from baserow.contrib.builder.pages.handler import PageHandler
 from baserow.contrib.builder.workflow_actions.exceptions import (
+    BuilderWorkflowActionCannotBeDispatched,
+    BuilderWorkflowActionImproperlyConfigured,
     WorkflowActionNotInElement,
 )
 from baserow.contrib.builder.workflow_actions.handler import (
@@ -45,6 +53,7 @@ from baserow.contrib.builder.workflow_actions.registries import (
 from baserow.contrib.builder.workflow_actions.service import (
     BuilderWorkflowActionService,
 )
+from baserow.core.services.exceptions import DoesNotExist, ServiceImproperlyConfigured
 from baserow.core.workflow_actions.exceptions import WorkflowActionDoesNotExist
 
 
@@ -318,3 +327,59 @@ class OrderBuilderWorkflowActionsView(APIView):
         )
 
         return Response(status=204)
+
+
+class DispatchBuilderWorkflowActionView(APIView):
+    permission_classes = (AllowAny,)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="workflow_action_id",
+                location=OpenApiParameter.PATH,
+                type=OpenApiTypes.INT,
+                description="The id of the workflow_action you want to "
+                "call the dispatch for.",
+            ),
+            CLIENT_SESSION_ID_SCHEMA_PARAMETER,
+        ],
+        tags=["Builder workflow actions"],
+        operation_id="dispatch_builder_page_workflow_action",
+        description=(
+            "Dispatches the service of the related workflow_action and returns "
+            "the result."
+        ),
+        responses={
+            400: get_error_schema(
+                [
+                    "ERROR_WORKFLOW_ACTION_CANNOT_BE_DISPATCHED",
+                ]
+            ),
+        },
+    )
+    @transaction.atomic
+    @map_exceptions(
+        {
+            DoesNotExist: ERROR_DATA_DOES_NOT_EXIST,
+            WorkflowActionDoesNotExist: ERROR_WORKFLOW_ACTION_DOES_NOT_EXIST,
+            ServiceImproperlyConfigured: ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED,
+            BuilderWorkflowActionCannotBeDispatched: ERROR_WORKFLOW_ACTION_CANNOT_BE_DISPATCHED,
+            BuilderWorkflowActionImproperlyConfigured: ERROR_WORKFLOW_ACTION_IMPROPERLY_CONFIGURED,
+        }
+    )
+    def post(self, request, workflow_action_id: int):
+        """
+        Call the given workflow_action related service dispatch method.
+        """
+
+        workflow_action = BuilderWorkflowActionHandler().get_workflow_action(
+            workflow_action_id
+        )
+
+        dispatch_context = BuilderDispatchContext(request, workflow_action.page)
+
+        response = BuilderWorkflowActionService().dispatch_action(
+            request.user, workflow_action, dispatch_context  # type: ignore
+        )
+
+        return Response(response)

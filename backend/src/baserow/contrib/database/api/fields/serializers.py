@@ -7,6 +7,10 @@ from rest_framework import serializers
 
 from baserow.api.user_files.serializers import UserFileURLAndThumbnailsSerializerMixin
 from baserow.api.user_files.validators import user_file_name_validator
+from baserow.contrib.database.fields.constants import (
+    BASEROW_BOOLEAN_FIELD_FALSE_VALUES,
+    BASEROW_BOOLEAN_FIELD_TRUE_VALUES,
+)
 from baserow.contrib.database.fields.models import Field
 from baserow.contrib.database.fields.registries import field_type_registry
 
@@ -251,3 +255,13 @@ class IntegerOrStringField(serializers.Field):
 
     def to_representation(self, value):
         return value
+
+
+class BaserowBooleanField(serializers.BooleanField):
+    """
+    A Baserow specific `BooleanField` that extends the `TRUE_VALUES` and
+    `FALSE_VALUES` in DRF so that we support "checked" and "unchecked".
+    """
+
+    TRUE_VALUES = BASEROW_BOOLEAN_FIELD_TRUE_VALUES
+    FALSE_VALUES = BASEROW_BOOLEAN_FIELD_FALSE_VALUES

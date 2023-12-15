@@ -24,9 +24,9 @@ def pytest_generate_tests(metafunc):
 @pytest.mark.django_db
 def test_export_element(data_fixture, element_type: ElementType):
     page = data_fixture.create_builder_page()
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
     element = data_fixture.create_builder_element(
-        element_type.model_class, page=page, order=17, **sample_params
+        element_type.model_class, page=page, order=17, **pytest_params
     )
 
     exported = element_type.export_serialized(element)
@@ -35,17 +35,17 @@ def test_export_element(data_fixture, element_type: ElementType):
     assert exported["type"] == element_type.type
     assert exported["order"] == str(element.order)
 
-    for key, value in sample_params.items():
+    for key, value in pytest_params.items():
         assert exported[key] == value
 
 
 @pytest.mark.django_db
 def test_import_element(data_fixture, element_type: ElementType):
     page = data_fixture.create_builder_page()
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
     serialized = {"id": 9999, "order": 42, "type": element_type.type}
-    serialized.update(element_type.get_sample_params())
+    serialized.update(element_type.get_pytest_params(data_fixture))
 
     id_mapping = defaultdict(lambda: MirrorDict())
     element = element_type.import_serialized(page, serialized, id_mapping)
@@ -54,7 +54,7 @@ def test_import_element(data_fixture, element_type: ElementType):
     assert element.order == element.order
     assert isinstance(element, element_type.model_class)
 
-    for key, value in sample_params.items():
+    for key, value in pytest_params.items():
         assert getattr(element, key) == value
 
 

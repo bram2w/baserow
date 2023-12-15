@@ -80,11 +80,10 @@ def test_update_workflow_action_type_switching(data_fixture):
     )
 
     workflow_action_changed = BuilderWorkflowActionHandler().update_workflow_action(
-        workflow_action, type=OpenPageWorkflowActionType.type, url="'hello'"
+        workflow_action, type=OpenPageWorkflowActionType.type
     )
 
     assert workflow_action_changed.get_type().type == OpenPageWorkflowActionType.type
-    assert workflow_action_changed.url == "'hello'"
     assert workflow_action_changed.event == event
     assert workflow_action_changed.page_id == page.id
     assert workflow_action_changed.element_id == element.id

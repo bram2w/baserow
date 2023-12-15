@@ -8,3 +8,14 @@ class WorkflowActionNotInElement(Exception):
             *args,
             **kwargs,
         )
+
+
+class BuilderWorkflowActionCannotBeDispatched(Exception):
+    """
+    Raised when a WorkflowAction is dispatched,
+    and it does not have a service related to it.
+    """
+
+
+class BuilderWorkflowActionImproperlyConfigured(Exception):
+    """Raised when trying to dispatch a workflow_action that is not fully configured."""

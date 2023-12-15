@@ -6,6 +6,7 @@ from baserow.contrib.builder.pages.models import Page
 from baserow.core.formula.field import FormulaField
 from baserow.core.mixins import OrderableMixin
 from baserow.core.registry import ModelRegistryMixin
+from baserow.core.services.models import Service
 from baserow.core.workflow_actions.models import WorkflowAction
 
 
@@ -63,3 +64,22 @@ class NotificationWorkflowAction(BuilderWorkflowAction):
 
 class OpenPageWorkflowAction(BuilderWorkflowAction):
     url = FormulaField(default="")
+
+
+class BuilderWorkflowServiceAction(BuilderWorkflowAction):
+    service = models.ForeignKey(
+        Service,
+        help_text="The service which this action is associated with.",
+        on_delete=models.CASCADE,
+    )
+
+    class Meta:
+        abstract = True
+
+
+class LocalBaserowCreateRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...
+
+
+class LocalBaserowUpdateRowWorkflowAction(BuilderWorkflowServiceAction):
+    ...

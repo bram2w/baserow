@@ -58,6 +58,7 @@ from baserow.contrib.database.api.fields.errors import (
     ERROR_WITH_FORMULA,
 )
 from baserow.contrib.database.api.fields.serializers import (
+    BaserowBooleanField,
     CollaboratorSerializer,
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
@@ -106,7 +107,7 @@ from ..formula.types.formula_types import (
     BaserowFormulaSingleFileType,
 )
 from ..search.handler import SearchHandler
-from .constants import UPSERT_OPTION_DICT_KEY
+from .constants import BASEROW_BOOLEAN_FIELD_TRUE_VALUES, UPSERT_OPTION_DICT_KEY
 from .deferred_field_fk_updater import DeferredFieldFkUpdater
 from .dependencies.exceptions import (
     CircularFieldDependencyError,
@@ -724,10 +725,6 @@ class BooleanFieldType(FieldType):
     model_class = BooleanField
     _can_group_by = True
 
-    # lowercase serializers.BooleanField.TRUE_VALUES + "checked" keyword
-    # WARNING: these values are prone to SQL injection
-    TRUE_VALUES = ["t", "true", "on", "y", "yes", 1, "checked"]
-
     def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
         """
         Prepare value for Boolean field.
@@ -735,7 +732,7 @@ class BooleanFieldType(FieldType):
         'checked' or to one of the serializers.BooleanField.TRUE_VALUES.
         """
 
-        true_values = ",".join(["'%s'" % v for v in self.TRUE_VALUES])
+        true_values = ",".join(["'%s'" % v for v in BASEROW_BOOLEAN_FIELD_TRUE_VALUES])
         return f"""
             IF lower(p_in::text) IN ({true_values}) THEN
                 p_in = TRUE;
@@ -745,9 +742,7 @@ class BooleanFieldType(FieldType):
         """
 
     def get_serializer_field(self, instance, **kwargs):
-        return serializers.BooleanField(
-            **{"required": False, "default": False, **kwargs}
-        )
+        return BaserowBooleanField(**{"required": False, "default": False, **kwargs})
 
     def get_model_field(self, instance, **kwargs):
         return models.BooleanField(default=False, **kwargs)

@@ -1,5 +1,7 @@
 from typing import Any, Dict
 
+from django.contrib.auth.models import AbstractUser
+
 from baserow.contrib.builder.registries import PublicCustomFieldsInstanceMixin
 from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
 from baserow.core.registry import (
@@ -16,15 +18,18 @@ class BuilderWorkflowActionType(WorkflowActionType, PublicCustomFieldsInstanceMi
     parent_property_name = "page"
     id_mapping_name = "builder_workflow_actions"
 
-    def prepare_value_for_db(
-        self, values: Dict, instance: BuilderWorkflowAction = None
+    def prepare_values(
+        self,
+        values: Dict[str, Any],
+        user: AbstractUser,
+        instance: BuilderWorkflowAction = None,
     ):
         from baserow.contrib.builder.elements.handler import ElementHandler
 
         if "element_id" in values:
             values["element"] = ElementHandler().get_element(values["element_id"])
 
-        return super().prepare_value_for_db(values, instance=instance)
+        return super().prepare_values(values, user, instance)
 
     def deserialize_property(
         self, prop_name: str, value: Any, id_mapping: Dict[str, Any]

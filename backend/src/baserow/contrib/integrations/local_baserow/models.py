@@ -87,6 +87,8 @@ class LocalBaserowUpsertRow(LocalBaserowTableService):
     A model for the local baserow upsert row service configuration data.
     """
 
+    row_id = FormulaField()
+
 
 class LocalBaserowTableServiceRefinementManager(models.Manager):
     """

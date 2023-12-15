@@ -20,20 +20,24 @@ from rest_framework.fields import (
 )
 from rest_framework.serializers import ListSerializer, Serializer
 
+from baserow.contrib.builder.formula_importer import import_formula
 from baserow.contrib.database.api.fields.serializers import FieldSerializer
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
 )
+from baserow.contrib.database.fields.exceptions import FieldDoesNotExist
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.contrib.database.rows.operations import ReadDatabaseRowOperationType
 from baserow.contrib.database.search.handler import SearchHandler
+from baserow.contrib.database.table.exceptions import TableDoesNotExist
 from baserow.contrib.database.table.handler import TableHandler
 from baserow.contrib.database.table.operations import ListRowsDatabaseTableOperationType
 from baserow.contrib.database.views.handler import ViewHandler
 from baserow.contrib.integrations.local_baserow.api.serializers import (
+    LocalBaserowTableServiceFieldMappingSerializer,
     LocalBaserowTableServiceFilterSerializer,
     LocalBaserowTableServiceSortSerializer,
 )
@@ -48,6 +52,7 @@ from baserow.contrib.integrations.local_baserow.mixins import (
 from baserow.contrib.integrations.local_baserow.models import (
     LocalBaserowGetRow,
     LocalBaserowListRows,
+    LocalBaserowTableServiceFieldMapping,
     LocalBaserowTableServiceFilter,
     LocalBaserowTableServiceSort,
     LocalBaserowUpsertRow,
@@ -152,11 +157,11 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     The `ServiceType` for `LocalBaserowTableService` subclasses.
     """
 
-    def before_dispatch(
+    def resolve_service_formulas(
         self,
         service: ServiceSubClass,
         dispatch_context: DispatchContext,
-    ):
+    ) -> Dict[str, Any]:
         """
         A hook called before the `LocalBaserowTableServiceType` subclass dispatch
         calls. It ensures we check the service has a `Table` before execution.
@@ -171,7 +176,9 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
         if service.table is None:
             raise ServiceImproperlyConfigured("The table property is missing.")
 
-    def serialize_property(self, service: LocalBaserowListRows, prop_name: str):
+        return super().resolve_service_formulas(service, dispatch_context)
+
+    def serialize_property(self, service: ServiceSubClass, prop_name: str):
         """
         Responsible for serializing the `filters` and `sortings` properties.
 
@@ -332,15 +339,22 @@ class LocalBaserowTableServiceType(LocalBaserowServiceType):
     ) -> Dict[str, Any]:
         """Load the table instance instead of the ID."""
 
-        if "table_id" in values:
+        # Check if we already have a table. We may have already
+        # added it in `LocalBaserowViewServiceType.prepare_values`.
+        if "table_id" in values and "table" not in values:
             table_id = values.pop("table_id")
             if table_id is not None:
-                table = TableHandler().get_table(table_id)
+                try:
+                    table = TableHandler().get_table(table_id)
+                except TableDoesNotExist:
+                    raise DRFValidationError(
+                        f"The table with ID {table_id} does not exist."
+                    )
                 values["table"] = table
             else:
                 values["table"] = None
 
-        return super().prepare_values(values, user)
+        return super().prepare_values(values, user, instance)
 
     def generate_schema(self, service: ServiceSubClass) -> Optional[Dict[str, Any]]:
         """
@@ -428,22 +442,18 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
     ) -> Dict[str, Any]:
         """Load the table & view instance instead of the ID."""
 
-        if "table_id" in values:
-            table_id = values.pop("table_id")
-            if table_id is not None:
-                table = TableHandler().get_table(table_id)
-                values["table"] = table
+        # Call the super first as it'll fetch the table for us.
+        values = super().prepare_values(values, user, instance)
 
-                # Reset the view if the table has changed
-                if (
-                    "view_id" not in values
-                    and instance
-                    and instance.view_id
-                    and instance.view.table_id != table_id
-                ):
-                    values["view"] = None
-            else:
-                values["table"] = None
+        if "table" in values:
+            # Reset the view if the table has changed
+            if (
+                "view_id" not in values
+                and instance
+                and instance.view_id
+                and instance.view.table_id != values["table"].id
+            ):
+                values["view"] = None
 
         if "view_id" in values:
             view_id = values.pop("view_id")
@@ -476,7 +486,7 @@ class LocalBaserowViewServiceType(LocalBaserowTableServiceType):
             else:
                 values["view"] = None
 
-        return super().prepare_values(values, user)
+        return super().prepare_values(values, user, instance)
 
 
 class LocalBaserowListRowsUserServiceType(
@@ -574,12 +584,15 @@ class LocalBaserowListRowsUserServiceType(
     def dispatch_data(
         self,
         service: LocalBaserowListRows,
+        resolved_values: Dict[str, Any],
         dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
         Returns a list of rows from the table stored in the service instance.
 
         :param service: the local baserow get row service.
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
         :param dispatch_context: The context used for the dispatch.
         :return: The list of rows.
         """
@@ -777,28 +790,23 @@ class LocalBaserowGetRowUserServiceType(
 
         return serialized_row
 
-    def dispatch_data(
+    def resolve_service_formulas(
         self,
-        service: LocalBaserowGetRow,
+        service: ServiceSubClass,
         dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
-        Returns the row targeted by the `row_id` formula from the table stored in the
-        service instance.
-
-        :param service: the local baserow get row service.
-        :param dispatch_context: The context used for the dispatch.
-        :raise ServiceImproperlyConfigured: if the table property is missing or if the
-            formula can't be resolved.
-        :raise DoesNotExist: if row id doesn't exist.
-        :return: The rows.
+        :param service: A `LocalBaserowTableService` instance.
+        :param dispatch_context: The dispatch_context instance used to
+            resolve formulas (if any).
+        :raises ServiceImproperlyConfigured: When we try and dispatch a service that
+            has no `Table` associated with it.
         """
 
-        table = service.table
-        integration = service.integration.specific
+        resolved_values = super().resolve_service_formulas(service, dispatch_context)
 
         try:
-            row_id = ensure_integer(
+            resolved_values["row_id"] = ensure_integer(
                 resolve_formula(
                     service.row_id,
                     formula_runtime_function_registry,
@@ -814,6 +822,28 @@ class LocalBaserowGetRowUserServiceType(
             raise ServiceImproperlyConfigured(
                 f"The `row_id` formula can't be resolved: {exc}"
             ) from exc
+
+        return resolved_values
+
+    def dispatch_data(
+        self,
+        service: LocalBaserowGetRow,
+        resolved_values: Dict[str, Any],
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        Returns the row targeted by the `row_id` formula from the table stored in the
+        service instance.
+
+        :param service: the local baserow get row service.
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
+        :param dispatch_context: The context used for the dispatch.
+        :return: The rows.
+        """
+
+        table = service.table
+        integration = service.integration.specific
 
         CoreHandler().check_permissions(
             integration.authorized_user,
@@ -835,7 +865,7 @@ class LocalBaserowGetRowUserServiceType(
         queryset = self.get_dispatch_filters(service, queryset, model)
 
         try:
-            row = queryset.get(pk=row_id)
+            row = queryset.get(pk=resolved_values["row_id"])
             return {"data": row, "baserow_table_model": model}
         except model.DoesNotExist:
             raise DoesNotExist()
@@ -853,21 +883,156 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
     model_class = LocalBaserowUpsertRow
     dispatch_type = DispatchTypes.DISPATCH_WORKFLOW_ACTION
 
-    allowed_fields = ["table"]
-    serializer_field_names = ["table_id"]
-    request_serializer_field_overrides = {
+    allowed_fields = ["table", "row_id", "integration"]
+    serializer_field_names = ["table_id", "row_id", "integration_id", "field_mappings"]
+
+    serializer_field_overrides = {
         "table_id": serializers.IntegerField(
             required=False,
             allow_null=True,
             help_text="The id of the Baserow table we want the data for.",
         ),
+        "integration_id": serializers.IntegerField(
+            required=False,
+            allow_null=True,
+            help_text="The id of the Baserow integration we want the data for.",
+        ),
+        "row_id": FormulaSerializerField(
+            required=False,
+            allow_blank=True,
+            help_text="A formula for defining the intended row.",
+        ),
+        "field_mappings": LocalBaserowTableServiceFieldMappingSerializer(
+            many=True,
+            required=False,
+            help_text="The field mapping associated with this service.",
+        ),
     }
 
     class SerializedDict(ServiceDict):
+        row_id: str
         table_id: int
+        field_mappings: List[Dict]
+
+    def after_update(
+        self,
+        instance: LocalBaserowUpsertRow,
+        values: Dict,
+        changes: Dict[str, Tuple],
+    ):
+        """
+        Responsible for managing the upsert row's field mappings following
+        a successful service update.
+
+        :param instance: The updated service instance.
+        :param values: The values that were passed when creating the service
+            metadata.
+        :param changes: A dictionary containing all changes which were made to the
+            service prior to `after_update` being called.
+        """
+
+        if "field_mappings" in values and instance.table_id:
+            bulk_field_mappings = []
+            # Bulk delete the existing field mappings on the service.
+            # We'll bulk create the mappings in the values `field_mappings`.
+            instance.field_mappings.all().delete()
+            # The queryset we'll use to narrow down the `get_field` query,
+            # this ensures we find the field within the service's table.
+            base_field_qs = instance.table.field_set.all()
+            field_mappings = values.get("field_mappings", [])
+            for field_mapping in field_mappings:
+                try:
+                    field = FieldHandler().get_field(
+                        field_mapping["field_id"], base_queryset=base_field_qs
+                    )
+                except KeyError:
+                    raise DRFValidationError("A field mapping must have a `field_id`.")
+                except FieldDoesNotExist as exc:
+                    raise DRFValidationError(str(exc))
+
+                bulk_field_mappings.append(
+                    LocalBaserowTableServiceFieldMapping(
+                        field=field, service=instance, value=field_mapping["value"]
+                    )
+                )
+            LocalBaserowTableServiceFieldMapping.objects.bulk_create(
+                bulk_field_mappings
+            )
+
+    def serialize_property(self, service: LocalBaserowUpsertRow, prop_name: str):
+        """
+        You can customize the behavior of the serialization of a property with this
+        hook.
+        """
+
+        if prop_name == "field_mappings":
+            return [
+                {
+                    "field_id": m.field_id,
+                    "value": m.value,
+                }
+                for m in service.field_mappings.all()
+            ]
+
+        return super().serialize_property(service, prop_name)
+
+    def deserialize_property(
+        self, prop_name: str, value: Any, id_mapping: Dict[str, Any], **kwargs
+    ):
+        """
+        Responsible for deserializing the `field_mappings`, if they're present.
+
+        :param prop_name: the name of the property being transformed.
+        :param value: the value of this property.
+        :param id_mapping: the id mapping dict.
+        :return: the deserialized version for this property.
+        """
+
+        # Migrate the row id formula
+        if prop_name == "row_id":
+            return import_formula(value, id_mapping)
+
+        if prop_name == "field_mappings":
+            return [
+                {
+                    "value": import_formula(item["value"], id_mapping),
+                    "field_id": id_mapping["database_fields"][item["field_id"]]
+                    if "database_fields" in id_mapping
+                    else item["field_id"],
+                }
+                for item in value
+            ]
+
+        return super().deserialize_property(prop_name, value, id_mapping, **kwargs)
+
+    def create_instance_from_serialized(self, serialized_values):
+        """
+        Responsible for creating the service, and then if `field_mappings`
+        are present, creating them in bulk.
+
+        :param serialized_values: The serialized service data.
+        :return: The newly created service instance.
+        """
+
+        field_mappings = serialized_values.pop("field_mappings", [])
+
+        service = super().create_instance_from_serialized(serialized_values)
+
+        # Create the field mappings
+        LocalBaserowTableServiceFieldMapping.objects.bulk_create(
+            [
+                LocalBaserowTableServiceFieldMapping(
+                    **field_mapping,
+                    service=service,
+                )
+                for field_mapping in field_mappings
+            ]
+        )
+
+        return service
 
     def enhance_queryset(self, queryset):
-        return queryset.select_related("table")
+        return queryset.select_related("table").prefetch_related("field_mappings")
 
     def dispatch_transform(
         self,
@@ -887,9 +1052,50 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
 
         return serialized_row
 
+    def resolve_service_formulas(
+        self,
+        service: ServiceSubClass,
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
+        """
+        :param service: A `LocalBaserowTableService` instance.
+        :param dispatch_context: The dispatch_context instance used to
+            resolve formulas (if any).
+        :raises ServiceImproperlyConfigured: When we try and dispatch a service that
+            has no `Table` associated with it.
+        """
+
+        resolved_values = super().resolve_service_formulas(service, dispatch_context)
+
+        if not service.row_id:
+            # We've received no `row_id` as we're creating a new row.
+            resolved_values["row_id"] = service.row_id
+            return resolved_values
+
+        try:
+            resolved_values["row_id"] = ensure_integer(
+                resolve_formula(
+                    service.row_id,
+                    formula_runtime_function_registry,
+                    dispatch_context,
+                )
+            )
+        except ValidationError:
+            raise ServiceImproperlyConfigured(
+                "The result of the `row_id` formula must be an integer or convertible "
+                "to an integer."
+            )
+        except Exception as e:
+            raise ServiceImproperlyConfigured(
+                f"The `row_id` formula can't be resolved: {e}"
+            )
+
+        return resolved_values
+
     def dispatch_data(
         self,
         service: LocalBaserowUpsertRow,
+        resolved_values: Dict[str, Any],
         dispatch_context: DispatchContext,
     ) -> Dict[str, Any]:
         """
@@ -897,6 +1103,8 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         been provided, in this `LocalBaserowUpsertRow` service's table.
 
         :param service: the local baserow upsert row service.
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
         :param dispatch_context: the context used for formula resolution.
         :return: The created or updated rows.
         """
@@ -905,18 +1113,44 @@ class LocalBaserowUpsertRowServiceType(LocalBaserowTableServiceType):
         integration = service.integration.specific
 
         field_values = {}
-        for field_mapping in service.field_mappings.all():
+        field_mappings = service.field_mappings.select_related("field").all()
+        for field_mapping in field_mappings:
             resolved_value = resolve_formula(
                 field_mapping.value,
                 formula_runtime_function_registry,
                 dispatch_context,
             )
-            field_values[field_mapping.field.db_column] = resolved_value
 
-        row = RowHandler().create_row(
-            user=integration.authorized_user,
-            table=table,
-            values=field_values,
-        )
+            field = field_mapping.field
+            field_type = field_type_registry.get_by_model(field.specific_class)
+
+            # Transform and validate the resolved value with the field type's DRF field.
+            serializer_field = field_type.get_serializer_field(field.specific)
+            resolved_value = serializer_field.run_validation(resolved_value)
+
+            # Then transform and validate the resolved value for prepare value for db.
+            try:
+                field_values[field.db_column] = field_type.prepare_value_for_db(
+                    field.specific, resolved_value
+                )
+            except ValidationError:
+                raise ServiceImproperlyConfigured(
+                    f"The result of the `{field.db_column}` formula must be "
+                    f"compatible for the {field_type.type} field type."
+                )
+
+        if resolved_values["row_id"]:
+            row = RowHandler().update_row_by_id(
+                integration.authorized_user,
+                table,
+                row_id=resolved_values["row_id"],
+                values=field_values,
+            )
+        else:
+            row = RowHandler().create_row(
+                user=integration.authorized_user,
+                table=table,
+                values=field_values,
+            )
 
         return {"data": row, "baserow_table_model": table.get_model()}
