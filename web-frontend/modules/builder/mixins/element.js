@@ -10,6 +10,11 @@ export default {
       required: true,
     },
   },
+  data() {
+    return {
+      workflowActionsInProgress: false,
+    }
+  },
   computed: {
     elementType() {
       return this.$registry.get('element', this.element.type)
@@ -57,13 +62,15 @@ export default {
         this.runtimeFormulaContext
       )
     },
-    fireEvent(EventType) {
+    async fireEvent(EventType) {
       if (this.mode !== 'editing') {
+        this.workflowActionsInProgress = true
+
         const workflowActions = this.$store.getters[
           'workflowAction/getElementWorkflowActions'
         ](this.page, this.element.id)
 
-        new EventType({
+        await new EventType({
           i18n: this.$i18n,
           store: this.$store,
           registry: this.$registry,
@@ -72,10 +79,12 @@ export default {
           resolveFormula: this.resolveFormula,
           applicationContext: this.applicationContext,
         })
+
+        this.workflowActionsInProgress = false
       }
     },
     fireClickEvent() {
-      this.fireEvent(ClickEvent)
+      return this.fireEvent(ClickEvent)
     },
     fireSubmitEvent() {
       this.fireEvent(SubmitEvent)
