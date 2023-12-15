@@ -32,13 +32,13 @@ def pytest_generate_tests(metafunc):
 def test_create_element(data_fixture, element_type):
     page = data_fixture.create_builder_page()
 
-    sample_params = element_type.get_sample_params()
+    pytest_params = element_type.get_pytest_params(data_fixture)
 
-    element = ElementHandler().create_element(element_type, page=page, **sample_params)
+    element = ElementHandler().create_element(element_type, page=page, **pytest_params)
 
     assert element.page.id == page.id
 
-    for key, value in sample_params.items():
+    for key, value in pytest_params.items():
         assert getattr(element, key) == value
 
     assert element.order == 1

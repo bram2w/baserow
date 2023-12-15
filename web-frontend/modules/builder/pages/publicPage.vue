@@ -16,11 +16,17 @@ import { resolveApplicationRoute } from '@baserow/modules/builder/utils/routing'
 
 import { DataProviderType } from '@baserow/modules/core/dataProviderTypes'
 import Toasts from '@baserow/modules/core/components/toasts/Toasts'
+import ApplicationBuilderFormulaInputGroup from '@baserow/modules/builder/components/ApplicationBuilderFormulaInputGroup'
 
 export default {
   components: { PageContent, Toasts },
   provide() {
-    return { builder: this.builder, page: this.page, mode: this.mode }
+    return {
+      builder: this.builder,
+      page: this.page,
+      mode: this.mode,
+      formulaComponent: ApplicationBuilderFormulaInputGroup,
+    }
   },
   async asyncData({ store, params, error, $registry, app, req }) {
     let mode = 'public'

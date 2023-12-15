@@ -7,14 +7,25 @@ const updateContext = {
   lastUpdatedValues: null,
 }
 
+export function populateWorkflowAction(workflowAction) {
+  return {
+    ...workflowAction,
+    _: {
+      loading: false,
+    },
+  }
+}
+
 const state = {}
 
 const mutations = {
   ADD_ITEM(state, { page, workflowAction }) {
-    page.workflowActions.push(workflowAction)
+    page.workflowActions.push(populateWorkflowAction(workflowAction))
   },
   SET_ITEMS(state, { page, workflowActions }) {
-    page.workflowActions = workflowActions
+    page.workflowActions = workflowActions.map((workflowAction) =>
+      populateWorkflowAction(workflowAction)
+    )
   },
   DELETE_ITEM(state, { page, workflowActionId }) {
     const index = page.workflowActions.findIndex(
@@ -25,10 +36,12 @@ const mutations = {
     }
   },
   UPDATE_ITEM(state, { page, workflowAction: workflowActionToUpdate, values }) {
-    page.workflowActions.forEach((workflowAction) => {
-      if (workflowAction.id === workflowActionToUpdate.id) {
-        Object.assign(workflowAction, values)
-      }
+    const index = page.workflowActions.findIndex(
+      (wa) => wa.id === workflowActionToUpdate.id
+    )
+    page.workflowActions.splice(index, 1, {
+      ...page.workflowActions[index],
+      ...values,
     })
   },
   SET_ITEM(state, { page, workflowAction: workflowActionToSet, values }) {
@@ -41,6 +54,9 @@ const mutations = {
       const index = order.findIndex((value) => value === workflowAction.id)
       workflowAction.order = index === -1 ? 0 : index + 1
     })
+  },
+  SET_LOADING(state, { workflowAction, value }) {
+    workflowAction._.loading = value
   },
 }
 
@@ -96,12 +112,16 @@ const actions = {
       throw error
     }
   },
-  async updateDebounced({ dispatch }, { page, workflowAction, values }) {
+  async updateDebounced(
+    { dispatch, commit },
+    { page, workflowAction, values }
+  ) {
     // These values should not be updated via a regular update request
     const excludeValues = ['order']
 
     const oldValues = {}
     const newValues = {}
+
     Object.keys(values).forEach((name) => {
       if (
         Object.prototype.hasOwnProperty.call(workflowAction, name) &&
@@ -116,6 +136,7 @@ const actions = {
 
     return new Promise((resolve, reject) => {
       const fire = async () => {
+        commit('SET_LOADING', { workflowAction, value: true })
         try {
           const { data } = await WorkflowActionService(this.$client).update(
             workflowAction.id,
@@ -141,6 +162,7 @@ const actions = {
           reject(error)
         }
         updateContext.lastUpdatedValues = null
+        commit('SET_LOADING', { workflowAction, value: false })
       }
 
       if (updateContext.promiseResolve) {
@@ -157,6 +179,9 @@ const actions = {
       updateContext.updateTimeout = setTimeout(fire, 500)
       updateContext.promiseResolve = resolve
     })
+  },
+  dispatchAction({ dispatch }, { workflowActionId, data }) {
+    return WorkflowActionService(this.$client).dispatch(workflowActionId, data)
   },
   async order({ commit, getters }, { page, order, element = null }) {
     const workflowActions =
@@ -189,6 +214,9 @@ const getters = {
     return page.workflowActions
       .filter((workflowAction) => workflowAction.element_id === elementId)
       .sort((a, b) => a.order - b.order)
+  },
+  getLoading: (state) => (workflowAction) => {
+    return workflowAction._.loading
   },
 }
 

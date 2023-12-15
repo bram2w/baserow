@@ -80,8 +80,10 @@ import {
 
 import { MainThemeConfigBlock } from '@baserow/modules/builder/themeConfigBlockTypes'
 import {
+  CreateRowWorkflowActionType,
   NotificationWorkflowActionType,
   OpenPageWorkflowActionType,
+  UpdateRowWorkflowActionType,
 } from '@baserow/modules/builder/workflowActionTypes'
 
 import {
@@ -224,6 +226,14 @@ export default (context) => {
   app.$registry.register(
     'workflowAction',
     new OpenPageWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new CreateRowWorkflowActionType(context)
+  )
+  app.$registry.register(
+    'workflowAction',
+    new UpdateRowWorkflowActionType(context)
   )
 
   app.$registry.register(

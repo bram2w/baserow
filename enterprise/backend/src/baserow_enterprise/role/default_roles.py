@@ -51,6 +51,7 @@ from baserow.contrib.builder.theme.operations import UpdateThemeOperationType
 from baserow.contrib.builder.workflow_actions.operations import (
     CreateBuilderWorkflowActionOperationType,
     DeleteBuilderWorkflowActionOperationType,
+    DispatchBuilderWorkflowActionOperationType,
     ListBuilderWorkflowActionsPageOperationType,
     OrderBuilderWorkflowActionOperationType,
     ReadBuilderWorkflowActionOperationType,
@@ -417,6 +418,7 @@ default_roles[BUILDER_ROLE_UID].extend(
         ReadDataSourceOperationType,
         UpdateDataSourceOperationType,
         DispatchDataSourceOperationType,
+        DispatchBuilderWorkflowActionOperationType,
         DeleteBuilderWorkflowActionOperationType,
         CreateBuilderWorkflowActionOperationType,
         CreateUserSourceOperationType,

@@ -126,10 +126,13 @@ class ElementType(
         return value
 
     @abstractmethod
-    def get_sample_params(self) -> Dict[str, Any]:
+    def get_pytest_params(self, pytest_data_fixture) -> Dict[str, Any]:
         """
         Returns a sample of params for this type. This can be used to tests the element
         for instance.
+
+        :param pytest_data_fixture: A Pytest data fixture which can be used to
+            create related objects when the import / export functionality is tested.
         """
 
 

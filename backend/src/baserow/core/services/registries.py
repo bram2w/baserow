@@ -4,6 +4,8 @@ from typing import Any, Dict, Optional, Tuple, Type, TypeVar
 
 from django.contrib.auth.models import AbstractUser
 
+from rest_framework.exceptions import ValidationError as DRFValidationError
+
 from baserow.core.integrations.handler import IntegrationHandler
 from baserow.core.registry import (
     CustomFieldsInstanceMixin,
@@ -16,6 +18,7 @@ from baserow.core.registry import (
 )
 from baserow.core.services.dispatch_context import DispatchContext
 
+from ..integrations.exceptions import IntegrationDoesNotExist
 from .models import Service
 from .types import ServiceDictSubClass, ServiceSubClass
 
@@ -84,7 +87,12 @@ class ServiceType(
         if "integration_id" in values:
             integration_id = values.pop("integration_id")
             if integration_id is not None:
-                integration = IntegrationHandler().get_integration(integration_id)
+                try:
+                    integration = IntegrationHandler().get_integration(integration_id)
+                except IntegrationDoesNotExist:
+                    raise DRFValidationError(
+                        f"The integration with ID {integration_id} does not exist."
+                    )
                 values["integration"] = integration
             else:
                 values["integration"] = None
@@ -123,18 +131,22 @@ class ServiceType(
         :param instance: The to be deleted service instance.
         """
 
-    def before_dispatch(
-        self, service: ServiceSubClass, dispatch_context: DispatchContext
-    ):
+    def resolve_service_formulas(
+        self,
+        service: ServiceSubClass,
+        dispatch_context: DispatchContext,
+    ) -> Dict[str, Any]:
         """
-        A hook called before a `ServiceType.dispatch` is executed. This allows
-        us to perform a validation step before the service type's task is executed.
+        Responsible for resolving any formulas in the service's fields, and then
+        performing a validation step prior to `ServiceType.dispatch_data` is executed.
 
-        :param service: The service instance we want to use in the hook.
+        :param service: The service instance we want to use.
         :param dispatch_context: The runtime_formula_context instance used to
             resolve formulas (if any).
         :return: Any
         """
+
+        return {}
 
     def dispatch_transform(
         self,
@@ -151,12 +163,15 @@ class ServiceType(
     def dispatch_data(
         self,
         service: ServiceSubClass,
+        resolved_values: Dict[str, Any],
         dispatch_context: DispatchContext,
     ) -> Any:
         """
         Responsible for executing the service's principle task.
 
         :param service: The service instance to dispatch with.
+        :param resolved_values: If the service has any formulas, this dictionary will
+            contain their resolved values.
         :param dispatch_context: The context used for the dispatch.
         :return: The service `dispatch_data` result if any.
         """
@@ -175,8 +190,8 @@ class ServiceType(
         :return: The service dispatch result if any.
         """
 
-        self.before_dispatch(service, dispatch_context)
-        data = self.dispatch_data(service, dispatch_context)
+        resolved_values = self.resolve_service_formulas(service, dispatch_context)
+        data = self.dispatch_data(service, resolved_values, dispatch_context)
         return self.dispatch_transform(data)
 
     def get_schema_name(self, service: Service) -> str:

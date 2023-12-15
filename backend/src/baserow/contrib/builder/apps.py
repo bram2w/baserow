@@ -135,6 +135,7 @@ class BuilderConfig(AppConfig):
         from baserow.contrib.builder.workflow_actions.operations import (
             CreateBuilderWorkflowActionOperationType,
             DeleteBuilderWorkflowActionOperationType,
+            DispatchBuilderWorkflowActionOperationType,
             ListBuilderWorkflowActionsPageOperationType,
             OrderBuilderWorkflowActionOperationType,
             ReadBuilderWorkflowActionOperationType,
@@ -147,6 +148,7 @@ class BuilderConfig(AppConfig):
         operation_type_registry.register(UpdateBuilderWorkflowActionOperationType())
         operation_type_registry.register(ReadBuilderWorkflowActionOperationType())
         operation_type_registry.register(OrderBuilderWorkflowActionOperationType())
+        operation_type_registry.register(DispatchBuilderWorkflowActionOperationType())
 
         from baserow.core.registries import permission_manager_type_registry
 
@@ -214,12 +216,16 @@ class BuilderConfig(AppConfig):
 
         from .workflow_actions.registries import builder_workflow_action_type_registry
         from .workflow_actions.workflow_action_types import (
+            CreateRowWorkflowActionType,
             NotificationWorkflowActionType,
             OpenPageWorkflowActionType,
+            UpdateRowWorkflowActionType,
         )
 
         builder_workflow_action_type_registry.register(NotificationWorkflowActionType())
         builder_workflow_action_type_registry.register(OpenPageWorkflowActionType())
+        builder_workflow_action_type_registry.register(CreateRowWorkflowActionType())
+        builder_workflow_action_type_registry.register(UpdateRowWorkflowActionType())
 
         from .elements.collection_field_types import (
             LinkCollectionFieldType,

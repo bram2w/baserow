@@ -63,7 +63,11 @@ export default {
           'workflowAction/getElementWorkflowActions'
         ](this.page, this.element.id)
 
-        new EventType(this).fire({
+        new EventType({
+          i18n: this.$i18n,
+          store: this.$store,
+          registry: this.$registry,
+        }).fire({
           workflowActions,
           resolveFormula: this.resolveFormula,
           applicationContext: this.applicationContext,

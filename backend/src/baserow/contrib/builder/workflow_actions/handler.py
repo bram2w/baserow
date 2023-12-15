@@ -1,20 +1,27 @@
-from typing import Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 from zipfile import ZipFile
 
 from django.core.files.storage import Storage
 from django.db.models import QuerySet
 
+from baserow.contrib.builder.data_sources.builder_dispatch_context import (
+    BuilderDispatchContext,
+)
 from baserow.contrib.builder.elements.handler import ElementHandler
 from baserow.contrib.builder.elements.models import Element
 from baserow.contrib.builder.pages.models import Page
 from baserow.contrib.builder.workflow_actions.exceptions import (
     WorkflowActionNotInElement,
 )
-from baserow.contrib.builder.workflow_actions.models import BuilderWorkflowAction
+from baserow.contrib.builder.workflow_actions.models import (
+    BuilderWorkflowAction,
+    BuilderWorkflowServiceAction,
+)
 from baserow.contrib.builder.workflow_actions.registries import (
     builder_workflow_action_type_registry,
 )
 from baserow.core.exceptions import IdDoesNotExist
+from baserow.core.services.handler import ServiceHandler
 from baserow.core.workflow_actions.handler import WorkflowActionHandler
 from baserow.core.workflow_actions.models import WorkflowAction
 from baserow.core.workflow_actions.registries import WorkflowActionType
@@ -52,7 +59,6 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
             kwargs["element_id"] = workflow_action.element_id
             kwargs["event"] = workflow_action.event
             kwargs["order"] = workflow_action.order
-
         return super().update_workflow_action(workflow_action, **kwargs)
 
     def import_workflow_action(
@@ -112,6 +118,16 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
     def create_workflow_action(
         self, workflow_action_type: WorkflowActionType, **kwargs
     ) -> BuilderWorkflowAction:
+        """
+        Overrides `create_workflow_action` so that we apply the workflow action `order`
+        if one isn't provided. If an `element_id` is provided, we use the last order
+        in the element's scope, and if one isn't provided, we get the last order from
+        the page's scope.
+
+        :param workflow_action_type: The action's type.
+        :return: The newly created workflow action instance.
+        """
+
         if "order" not in kwargs:
             if "element_id" in kwargs:
                 element = ElementHandler().get_element(element_id=kwargs["element_id"])
@@ -124,3 +140,22 @@ class BuilderWorkflowActionHandler(WorkflowActionHandler):
                 )
 
         return super().create_workflow_action(workflow_action_type, **kwargs).specific
+
+    def dispatch_workflow_action(
+        self,
+        workflow_action: BuilderWorkflowServiceAction,
+        dispatch_context: BuilderDispatchContext,
+    ) -> Any:
+        """
+        Dispatch the service related to the workflow_action.
+
+        :param workflow_action: The workflow action to be dispatched.
+        :param dispatch_context: The context used for the dispatch.
+        :raises BuilderWorkflowActionImproperlyConfigured: If the workflow action is
+          not properly configured.
+        :return: The result of dispatching the workflow action.
+        """
+
+        return ServiceHandler().dispatch_service(
+            workflow_action.service.specific, dispatch_context
+        )

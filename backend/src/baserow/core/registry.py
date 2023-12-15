@@ -518,7 +518,8 @@ class Registry(Generic[InstanceSubClass]):
         :rtype: InstanceModelInstance
         """
 
-        # If the `type_name` isn't in the registry, we may raise DoesNotExist.
+        # If the `type_name` isn't in the registry,
+        # we may raise `InstanceTypeDoesNotExist`.
         if type_name not in self.registry:
             # But first, we'll test to see if it matches an Instance's
             # `compat_name`. If it does, we'll use that Instance's `type`.

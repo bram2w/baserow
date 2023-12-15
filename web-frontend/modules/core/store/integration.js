@@ -234,6 +234,9 @@ const getters = {
   getIntegrations: (state) => {
     return state.integrations
   },
+  getIntegrationById: (state) => (id) => {
+    return state.integrations.find((integration) => integration.id === id)
+  },
 }
 
 export default {
