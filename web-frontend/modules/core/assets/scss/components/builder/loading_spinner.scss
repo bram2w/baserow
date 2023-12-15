@@ -1,0 +1,21 @@
+.loading-spinner {
+  position: relative;
+
+  &::before {
+    @include absolute(0, 0, 0, 0);
+
+    content: '';
+    inset: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+  }
+
+  &::after {
+    @include loading();
+    @include absolute(50%, 50%, auto, auto);
+
+    content: '';
+    visibility: visible;
+    margin-top: -6px;
+    margin-right: -6px;
+  }
+}

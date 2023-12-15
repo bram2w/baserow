@@ -5,6 +5,7 @@
       :class="{
         'link-button-element-button--full-width':
           element.width === WIDTHS.FULL.value,
+        'loading-spinner': workflowActionsInProgress,
       }"
       @click="fireClickEvent"
     >
