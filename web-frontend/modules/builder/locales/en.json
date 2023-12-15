@@ -325,7 +325,8 @@
         "noValue": "Unnamed..."
     },
     "eventTypes": {
-        "clickLabel": "On click"
+        "clickLabel": "On click",
+        "submitLabel": "On submit"
     },
     "getFormulaComponent": {
         "errorTooltip": "Invalid reference"

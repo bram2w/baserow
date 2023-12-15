@@ -23,7 +23,7 @@ import DefaultStyleForm from '@baserow/modules/builder/components/elements/compo
 import { compile } from 'path-to-regexp'
 import ButtonElement from '@baserow/modules/builder/components/elements/components/ButtonElement'
 import ButtonElementForm from '@baserow/modules/builder/components/elements/components/forms/general/ButtonElementForm'
-import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
 import FormContainerElement from '@baserow/modules/builder/components/elements/components/FormContainerElement.vue'
@@ -623,5 +623,9 @@ export class FormContainerElementType extends ContainerElementType {
 
   get childElementTypesForbidden() {
     return this.elementTypesAll.filter((type) => !type.isFormElement)
+  }
+
+  get events() {
+    return [SubmitEvent]
   }
 }

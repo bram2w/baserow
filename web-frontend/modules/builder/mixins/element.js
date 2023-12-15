@@ -1,6 +1,6 @@
 import RuntimeFormulaContext from '@baserow/modules/core/runtimeFormulaContext'
 import { resolveFormula } from '@baserow/modules/core/formula'
-import { ClickEvent } from '@baserow/modules/builder/eventTypes'
+import { ClickEvent, SubmitEvent } from '@baserow/modules/builder/eventTypes'
 
 export default {
   inject: ['builder', 'page', 'mode'],
@@ -72,6 +72,9 @@ export default {
     },
     fireClickEvent() {
       this.fireEvent(ClickEvent)
+    },
+    fireSubmitEvent() {
+      this.fireEvent(SubmitEvent)
     },
   },
 }
