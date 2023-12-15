@@ -50,3 +50,13 @@ export class ClickEvent extends Event {
     return this.$i18n.t('eventTypes.clickLabel')
   }
 }
+
+export class SubmitEvent extends Event {
+  static getType() {
+    return 'submit'
+  }
+
+  get label() {
+    return this.$i18n.t('eventTypes.submitLabel')
+  }
+}
