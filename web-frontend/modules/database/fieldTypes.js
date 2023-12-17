@@ -279,8 +279,10 @@ export class FieldType extends Registerable {
   }
 
   /**
-   * Should return true if both provided values are equal. This is used to determine
-   * whether they both belong in the same group for example.
+   * Should return true if both provided row values are equal. This is used to determine
+   * whether they both belong in the same group for example. It's not possible to
+   * compare a group value and row value, in that case the
+   * `getRowValueFromGroupValue` method be called first to convert to a row value.
    */
   isEqual(field, value1, value2) {
     return JSON.stringify(value1) === JSON.stringify(value2)
@@ -310,6 +312,33 @@ export class FieldType extends Registerable {
 
   getGroupByIndicator(field, registry) {
     return this.getSortIndicator(field, registry)
+  }
+
+  /**
+   * In some cases, the group by value can not be directly compared to a row value
+   * because the format is different for technical reasons in the backend. This
+   * method can be used to convert it to a row value that can be used in combination
+   * with the `isEqual` method.
+   *
+   * An example is with a ManyToMany field, where the backend group by value is
+   * `{id},{id2}` as a string, but in the frontend, this should be an array like
+   * `[1, 2]`.
+   */
+  getRowValueFromGroupValue(field, value) {
+    return value
+  }
+
+  /**
+   * In some cases, the new group entry must be created that doesn't yet exist. In
+   * that scenario, we do have the row value. This method should convert the row
+   * value to a group value so that it can be used there.
+   *
+   * An example is with a ManyToMany field, where the frontend value is an object
+   * containing ids, but the group by value is a string containing the ids joined by
+   * a comma.
+   */
+  getGroupValueFromRowValue(field, value) {
+    return value
   }
 
   /**
@@ -1734,9 +1763,8 @@ class BaseDateFieldType extends FieldType {
         ('' + value1).substring(0, 16) ===
         ('' + value2).toString().substring(0, 16)
       )
-    } else {
-      return super.isEqual(field, value1, value2)
     }
+    return super.isEqual(field, value1, value2)
   }
 }
 
@@ -2754,6 +2782,20 @@ export class SingleSelectFieldType extends FieldType {
   getCanGroupByInView(field) {
     return true
   }
+
+  getGroupValueFromRowValue(field, value) {
+    return value ? value.id : null
+  }
+
+  getRowValueFromGroupValue(field, value) {
+    return value ? { id: value } : null
+  }
+
+  isEqual(field, value1, value2) {
+    const value1Id = value1?.id || null
+    const value2Id = value2?.id || null
+    return value1Id === value2Id
+  }
 }
 
 export class MultipleSelectFieldType extends FieldType {
@@ -3011,12 +3053,29 @@ export class MultipleSelectFieldType extends FieldType {
     return true
   }
 
+  canBeReferencedByFormulaField() {
+    return true
+  }
+
   getCanGroupByInView(field) {
     return true
   }
 
-  canBeReferencedByFormulaField() {
-    return true
+  getRowValueFromGroupValue(field, value) {
+    return value.map((optId) => {
+      return { id: optId }
+    })
+  }
+
+  getGroupValueFromRowValue(field, value) {
+    return value.map((o) => o.id)
+  }
+
+  isEqual(field, value1, value2) {
+    const value1Ids = value1.map((v) => v.id)
+    const value2Ids = value2.map((v) => v.id)
+
+    return _.isEqual(value1Ids, value2Ids)
   }
 }
 

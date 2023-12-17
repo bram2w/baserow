@@ -148,7 +148,7 @@ class BaserowFormulaLinkType(BaserowJSONBObjectBaseType):
     type = "link"
     baserow_field_type = None
     can_order_by = False
-    can_group_by = True
+    can_group_by = False
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:
@@ -805,7 +805,7 @@ class BaserowFormulaArrayType(BaserowFormulaValidType):
     user_overridable_formatting_option_fields = [
         "array_formula_type",
     ]
-    can_group_by = True
+    can_group_by = False
 
     def __init__(self, sub_type: BaserowFormulaValidType, **kwargs):
         super().__init__(**kwargs)
@@ -1050,7 +1050,7 @@ class BaserowFormulaSingleSelectType(BaserowJSONBObjectBaseType):
     baserow_field_type = "single_select"
     can_order_by = True
     can_order_by_in_array = True
-    can_group_by = True
+    can_group_by = False
 
     @property
     def comparable_types(self) -> List[Type["BaserowFormulaValidType"]]:

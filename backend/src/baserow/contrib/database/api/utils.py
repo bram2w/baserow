@@ -1,6 +1,5 @@
-import re
-
 from baserow.contrib.database.fields.models import Field
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.core.utils import split_comma_separated_string
 
 
@@ -114,8 +113,5 @@ def extract_field_ids_from_string(value):
     if not value:
         return []
 
-    return [
-        int(re.sub("[^0-9]", "", str(v)))
-        for v in value.split(",")
-        if any(c.isdigit() for c in v)
-    ]
+    ids = [get_field_id_from_field_key(v, False) for v in value.split(",")]
+    return [_id for _id in ids if _id is not None]

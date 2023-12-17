@@ -2,7 +2,7 @@ import itertools
 import re
 from collections import defaultdict
 from types import MethodType
-from typing import Generator, Iterable, List, Optional, Type, TypedDict, Union
+from typing import Generator, Iterable, List, Optional, Type, TypedDict
 
 from django.apps import apps
 from django.conf import settings
@@ -35,6 +35,7 @@ from baserow.contrib.database.fields.models import (
     LastModifiedField,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.search.handler import SearchHandler, SearchModes
 from baserow.contrib.database.table.cache import (
     get_cached_model_field_attrs,
@@ -265,24 +266,6 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
         else:
             return field
 
-    def _get_field_id(self, field: str) -> Union[int, None]:
-        """
-        Helper method for parsing a field ID from a string.
-
-        :param field: The string from which the field id
-            should be parsed.
-        :type field: str
-        :return: The ID of the field or None
-        :rtype: int or None
-        """
-
-        try:
-            field_id = int(re.sub("[^0-9]", "", str(field)))
-        except ValueError:
-            field_id = None
-
-        return field_id
-
     def order_by_fields_string(
         self, order_string, user_field_names=False, only_order_by_field_ids=None
     ):
@@ -332,7 +315,7 @@ class TableModelQuerySet(MultiFieldPrefetchQuerysetMixin, models.QuerySet):
             if user_field_names:
                 field_name_or_id = self._get_field_name(order)
             else:
-                field_name_or_id = self._get_field_id(order)
+                field_name_or_id = get_field_id_from_field_key(order, False)
 
             if field_name_or_id not in field_object_dict or (
                 only_order_by_field_ids is not None
@@ -845,15 +828,6 @@ class Table(
         :rtype: Model
         """
 
-        logger.debug(
-            "Generating model for table {} with fields {}, manytomany_models {}, add_dependencies {}, use_cache {}",
-            str(self.pk),
-            fields,
-            manytomany_models,
-            add_dependencies,
-            use_cache,
-        )
-
         filtered = field_names is not None or field_ids is not None
         model_name = f"Table{self.pk}Model"
 
@@ -926,14 +900,12 @@ class Table(
         )
 
         if use_cache:
-            logger.debug("Using cached model for table {}", self.pk)
             self.refresh_from_db(fields=["version"])
             field_attrs = get_cached_model_field_attrs(self)
         else:
             field_attrs = None
 
         if field_attrs is None:
-            logger.debug("Generating model field attrs for table {}", self.pk)
             field_attrs = self._fetch_and_generate_field_attrs(
                 add_dependencies,
                 attribute_names,

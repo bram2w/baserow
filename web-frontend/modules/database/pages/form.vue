@@ -76,7 +76,7 @@ export default {
       }
     }
 
-    // After the form field meta data has been fetched, we need to make the values
+    // After the form field metadata has been fetched, we need to make the values
     // object with the empty field value as initial form value.
     const values = {}
     const prefills = getPrefills(route.query)

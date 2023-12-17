@@ -150,6 +150,7 @@ import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridV
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewFieldFooter from '@baserow/modules/database/components/view/grid/GridViewFieldFooter'
+import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
 export default {
   name: 'GridViewSection',
@@ -332,6 +333,7 @@ export default {
      */
     groupBySetsAndRowsAtEndOfGroups() {
       const groupBys = this.activeGroupBys
+      const metadata = this.groupByMetadata
       const rows = this.allRows
       const rowsAtEndOfGroups = new Set()
 
@@ -365,10 +367,33 @@ export default {
           }
 
           if (!checkIfInSameGroup(previousRow, row)) {
+            // The group by metadata is a dict where the key is equal to the group by,
+            // and the value an array containing the count for each unique value
+            // combination. Below we're looking through the entries to find the
+            // matching count for the row values.
+            const count =
+              (metadata[`field_${groupBy.field}`] || []).find((entry) => {
+                const groupByFields = groupBys
+                  .slice(0, groupByIndex + 1)
+                  .map((groupBy) => {
+                    return this.allFieldsInTable.find(
+                      (f) => f.id === groupBy.field
+                    )
+                  })
+                return fieldValuesAreEqualInObjects(
+                  groupByFields,
+                  this.$registry,
+                  entry,
+                  row,
+                  true
+                )
+              })?.count || -1
+
             // If the start of a group, then create a new span object in the last.
             lastGroup = {
               rowSpan: 1,
               value: row[`field_${groupBy.field}`],
+              count,
             }
           } else {
             // If the value hasn't changed, it means that this row falls within the
@@ -425,6 +450,8 @@ export default {
           'view/grid/isMultiSelectHolding',
         count: this.$options.propsData.storePrefix + 'view/grid/getCount',
         allRows: this.$options.propsData.storePrefix + 'view/grid/getAllRows',
+        groupByMetadata:
+          this.$options.propsData.storePrefix + 'view/grid/getGroupByMetadata',
       }),
     }
   },
