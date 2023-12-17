@@ -11,8 +11,8 @@
       :style="{ width: groupWidth + 'px' }"
     >
       <div
-        v-for="groupSpan in groupSpans"
-        :key="'group-by-span-' + groupSpan.id"
+        v-for="(groupSpan, groupSpanIndex) in groupSpans"
+        :key="'group-by-span-' + groupSpanIndex"
         class="grid-view__group-span"
         :style="{
           height: `${rowHeight * groupSpan.rowSpan}px`,
@@ -22,6 +22,7 @@
           :group-by="groupBy"
           :all-fields-in-table="allFieldsInTable"
           :value="groupSpan.value"
+          :count="groupSpan.count"
         ></GridViewGroup>
       </div>
     </div>

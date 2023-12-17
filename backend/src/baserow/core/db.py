@@ -489,6 +489,11 @@ class MultiFieldPrefetchQuerysetMixin(Generic[ModelInstance]):
         clone._multi_field_prefetch_related_funcs.append(custom_prefetch_function)
         return clone
 
+    def clear_multi_field_prefetch(self):
+        clone = self._chain()
+        clone._multi_field_prefetch_related_funcs = []
+        return clone
+
     def get_multi_field_prefetches(self):
         return self._multi_field_prefetch_related_funcs
 

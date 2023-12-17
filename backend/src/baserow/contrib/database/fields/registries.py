@@ -1,7 +1,8 @@
-from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, NoReturn, Optional, Tuple, Union
 from zipfile import ZipFile
 
 from django.contrib.auth.models import AbstractUser
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
 from django.contrib.postgres.fields import JSONField as PostgresJSONField
 from django.core.exceptions import ValidationError
@@ -12,13 +13,19 @@ from django.db.models import (
     CharField,
     DurationField,
     Expression,
+    IntegerField,
     JSONField,
     Model,
+    OuterRef,
     Q,
     QuerySet,
+    Subquery,
+    Value,
 )
 from django.db.models.fields.related import ForeignKey, ManyToManyField
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, Coalesce
+
+from rest_framework import serializers
 
 from baserow.contrib.database.fields.constants import UPSERT_OPTION_DICT_KEY
 from baserow.contrib.database.fields.field_sortings import OptionallyAnnotatedOrderBy
@@ -376,7 +383,7 @@ class FieldType(
         doesn't have to update the field each time another field in the same row
         changes.
 
-        :param instance: The field instance for which to get the model field for.
+        :param instance: The field instance for which to get the serializer field for.
         :type instance: Field
         :param kwargs: The kwargs that will be passed to the field.
         :type kwargs: dict
@@ -1491,6 +1498,56 @@ class FieldType(
 
         return self._can_group_by
 
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        """
+        Should return a unique hashable value that can be set as key of a dict. In
+        almost all cases, it's fine to just return the actual value, but for example
+        with a more complex structure like a ManyToOneDescription, something
+        compatible can be returned.
+
+        :param field: The field for which to generate the unique value.
+        :param field_name: The name of that field in the table.
+        :param value: The unique value that must be converted.
+        :return: The converted unique value.
+        """
+
+        return value
+
+    def get_group_by_field_filters_and_annotations(
+        self, field: Field, field_name: str, base_queryset: QuerySet, value: Any
+    ) -> Tuple[Dict, Dict]:
+        """
+        The filters that must be applied to match the provided value to the queryset
+        when grouping. By default, a `field_name=value` lookup will suffice for most
+        use cases, but for some other a more complicated lookup must be done.
+
+        :param field: The field that must be looked up.
+        :param field_name: The name of the field in the table that must be looked up.
+        :param base_queryset: The base queryset of the items the grouped rows.
+        :param value: The unique value that must be looked up.
+        :return: A tuple containing the filters and annotations as dict.
+        """
+
+        return {field_name: value}, {}
+
+    def get_group_by_serializer_field(self, instance: Field, **kwargs: dict):
+        """
+        Returns the serializer that is used in the `serialize_group_by_metadata`. By
+        default, we're returning the normal serializer, because that will be fine in
+        most casus, but if a different value is returned in the
+        `get_group_by_field_unique_value` method, then we might need a
+        different serializer field.
+
+        :param instance: The field instance for which to get the serializer field for.
+        :param kwargs: The kwargs that will be passed to the field.
+        :return: The serializer field that represents the field instance attributes.
+        :rtype: serializer.Field
+        """
+
+        return self.get_response_serializer_field(instance, **kwargs)
+
     def before_field_options_update(
         self,
         field: Field,
@@ -1686,6 +1743,50 @@ class ReadOnlyFieldType(FieldType):
             return super().set_import_serialized_value(
                 row, field_name, value, id_mapping, cache, files_zip, storage
             )
+
+
+class ManyToManyGroupByMixin:
+    """
+    Mixin that can be added to a field type that uses a ManyToMany relationship. It
+    introduces methods that make it compatible with the group by functionality. Note
+    that the field type must set the `_can_group_by` property to `True`.
+    """
+
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        return tuple([v.id for v in value.all()])
+
+    def get_group_by_field_filters_and_annotations(
+        self, field, field_name, base_queryset, value
+    ):
+        filters = {
+            field_name: value,
+        }
+        annotations = {
+            field_name: Subquery(
+                base_queryset.filter(id=OuterRef("id"))
+                .annotate(
+                    res=Coalesce(
+                        ArrayAgg(
+                            f"{field_name}__id",
+                            filter=Q(**{f"{field_name}__id__isnull": False}),
+                        ),
+                        Value([], output_field=ArrayField(IntegerField())),
+                    ),
+                )
+                .values("res")
+            )
+        }
+        return filters, annotations
+
+    def get_group_by_serializer_field(self, field, **kwargs):
+        return serializers.ListSerializer(
+            child=serializers.IntegerField(),
+            required=False,
+            allow_null=True,
+            **kwargs,
+        )
 
 
 class FieldTypeRegistry(

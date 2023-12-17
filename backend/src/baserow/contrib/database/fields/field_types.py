@@ -91,6 +91,7 @@ from baserow.core.db import (
     CombinedForeignKeyAndManyToManyMultipleFieldPrefetch,
     collate_expression,
 )
+from baserow.core.expressions import DateTrunc
 from baserow.core.fields import SyncedDateTimeField
 from baserow.core.formula import BaserowFormulaException
 from baserow.core.formula.parser.exceptions import FormulaFunctionTypeDoesNotExist
@@ -182,6 +183,7 @@ from .models import (
 from .operations import CreateFieldOperationType, DeleteRelatedLinkRowFieldOperationType
 from .registries import (
     FieldType,
+    ManyToManyGroupByMixin,
     ReadOnlyFieldType,
     StartingRowType,
     field_type_registry,
@@ -1147,6 +1149,28 @@ class DateFieldType(FieldType):
             "date_show_tzinfo": field.date_show_tzinfo,
             "date_force_timezone": field.date_force_timezone,
         }
+
+    def get_group_by_field_unique_value(
+        self, field: Field, field_name: str, value: Any
+    ) -> Any:
+        if value and isinstance(value, datetime):
+            # We want to ignore seconds and microseconds when grouping.
+            value = value.replace(second=0, microsecond=0)
+        return value
+
+    def get_group_by_field_filters_and_annotations(
+        self, field, field_name, base_queryset, value
+    ):
+        filters = {field_name: value}
+        annotations = {}
+
+        if value and isinstance(value, datetime):
+            # DateTrunc cuts of every after the minute, so we can do a comparison
+            # with the provided value that doesn't have the seconds and microseconds.
+            annotations[field_name] = DateTrunc(
+                "minute", field_name, output_field=models.DateTimeField(null=True)
+            )
+        return filters, annotations
 
 
 class CreatedOnLastModifiedBaseFieldType(ReadOnlyFieldType, DateFieldType):
@@ -3481,9 +3505,20 @@ class SingleSelectFieldType(SelectOptionBaseFieldType):
     def from_baserow_formula_type(self, formula_type) -> Field:
         return self.model_class()
 
+    def get_group_by_serializer_field(self, field, **kwargs):
+        return serializers.IntegerField(
+            **{
+                "required": False,
+                "allow_null": True,
+                **kwargs,
+            }
+        )
+
 
 class MultipleSelectFieldType(
-    ManyToManyFieldTypeSerializeToInputValueMixin, SelectOptionBaseFieldType
+    ManyToManyFieldTypeSerializeToInputValueMixin,
+    ManyToManyGroupByMixin,
+    SelectOptionBaseFieldType,
 ):
     type = "multiple_select"
     model_class = MultipleSelectField

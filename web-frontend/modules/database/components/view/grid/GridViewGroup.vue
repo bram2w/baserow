@@ -14,10 +14,13 @@
       </div>
       <div class="grid-view__group-value">
         <component
-          :is="$options.methods.getCardComponent(field, parent)"
+          :is="$options.methods.getGroupByComponent(field, parent)"
           :field="field"
           :value="props.value"
         />
+      </div>
+      <div class="grid-view__group-count">
+        {{ props.count }}
       </div>
     </div>
   </div>
@@ -39,13 +42,17 @@ export default {
       validator: () => true,
       required: true,
     },
+    count: {
+      type: Number,
+      required: true,
+    },
   },
   methods: {
     getField(allFieldsInTable, groupBy) {
       const field = allFieldsInTable.find((f) => f.id === groupBy.field)
       return field
     },
-    getCardComponent(field, parent) {
+    getGroupByComponent(field, parent) {
       const fieldType = parent.$registry.get('field', field.type)
       return fieldType.getGroupByComponent(field)
     },

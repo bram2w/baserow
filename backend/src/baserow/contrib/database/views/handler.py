@@ -3314,6 +3314,90 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         return queryset, field_ids, publicly_visible_field_options
 
+    def get_group_by_metadata_in_rows(
+        self,
+        fields: List[Field],
+        rows: List["GeneratedTableModel"],
+        base_queryset: QuerySet,
+    ) -> Dict[Field, QuerySet]:
+        """
+        This method calculates the count of each unique value within the provided rows,
+        grouped accordingly.
+
+        :param fields: A list of the fields of the group bys in the right order.
+        :param rows: The rows of the paginated query set. The unique values will be
+            extracted from here.
+        :param base_queryset: The base_queryset before the pagination was applied.
+            This is needed because the rows that must be counted can be outside of
+            the paginated range.
+        :return: A dictionary where the key is the grouped by field, and the value a
+            queryset containing the count per field.
+        :raises ValueError: if a field is provided that cannot be grouped by.
+        """
+
+        qs_per_level = defaultdict(lambda: Q())
+        unique_value_per_level = defaultdict(set)
+        annotations = {}
+
+        for row in rows:
+            all_values = tuple()
+            all_filters = {}
+
+            for level, field in enumerate(fields):
+                field_name = field.db_column
+                field_type = field_type_registry.get_by_model(field.specific_class)
+
+                if not field_type.check_can_group_by(field):
+                    raise ValueError(f"Can't group by {field_name}.")
+
+                value = getattr(row, field_name)
+
+                unique_value = field_type.get_group_by_field_unique_value(
+                    field, field_name, value
+                )
+                all_values += (unique_value,)
+
+                if all_values not in unique_value_per_level[level]:
+                    (
+                        filters,
+                        annotations,
+                    ) = field_type.get_group_by_field_filters_and_annotations(
+                        field, field_name, base_queryset, unique_value
+                    )
+
+                    all_filters.update(**filters)
+                    annotations.update(**annotations)
+                    qs_per_level[level] |= Q(**all_filters)
+                    unique_value_per_level[level].add(all_values)
+
+        by_level = {}
+        for level, q in qs_per_level.items():
+            field_names = []
+
+            for field in fields[: level + 1]:
+                field_name = field.db_column
+                field_names.append(field_name)
+
+            # Wrap the queryset to avoid conflicts with annotations, orders, joins,
+            # etc that can have an impact on the count.
+            queryset = base_queryset.model.objects.filter(
+                id__in=base_queryset.clear_multi_field_prefetch().values("id")
+            ).values()
+
+            if len(annotations) > 0:
+                queryset = queryset.annotate(**annotations)
+
+            queryset = (
+                queryset.filter(q)
+                .values(*field_names)
+                .annotate(count=Count("id"))
+                .order_by()
+            )
+
+            by_level[fields[level]] = queryset
+
+        return by_level
+
     def _get_prepared_values_for_data(
         self, view_type: ViewType, view: View, changed_allowed_keys: Iterable[str]
     ) -> Dict[str, Any]:

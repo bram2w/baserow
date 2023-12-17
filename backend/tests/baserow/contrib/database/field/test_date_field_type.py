@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import datetime, make_aware, utc
 
 import pytest
+from pytest_unordered import unordered
 from pytz import timezone
 
 from baserow.contrib.database.fields.deferred_field_fk_updater import (
@@ -14,6 +15,7 @@ from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DateField
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.registries import ImportExportConfig
 
 
@@ -673,3 +675,71 @@ def test_date_field_adjacent_row(data_fixture):
 
     assert previous_row.id == row_c.id
     assert next_row.id == row_a.id
+
+
+@pytest.mark.django_db
+def test_get_group_by_metadata_in_rows_with_date_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    date_field = data_fixture.create_date_field(table=table, date_include_time=True)
+    handler = RowHandler()
+    [row_empty, row_a, row_b, row_c, row_d] = handler.create_rows(
+        user=user,
+        table=table,
+        rows_values=[
+            {},
+            {
+                f"field_{date_field.id}": "2010-01-01 12:00:21",
+            },
+            {
+                f"field_{date_field.id}": "2010-01-01 12:00:10",
+            },
+            {
+                f"field_{date_field.id}": "2010-01-01 12:01:21",
+            },
+            {
+                f"field_{date_field.id}": "2010-01-02 12:01:21",
+            },
+        ],
+    )
+
+    model = table.get_model()
+
+    queryset = model.objects.all().enhance_by_fields()
+    rows = list(queryset)
+
+    handler = ViewHandler()
+    counts = handler.get_group_by_metadata_in_rows([date_field], rows, queryset)
+
+    # Resolve the queryset, so that we can do a comparison.
+    for c in counts.keys():
+        counts[c] = list(counts[c])
+
+    assert counts == {
+        date_field: unordered(
+            [
+                {
+                    "count": 2,
+                    f"field_{date_field.id}": datetime(
+                        2010, 1, 1, 12, 0, 0, tzinfo=utc
+                    ),
+                },
+                {
+                    "count": 1,
+                    f"field_{date_field.id}": datetime(
+                        2010, 1, 1, 12, 1, 0, tzinfo=utc
+                    ),
+                },
+                {
+                    "count": 1,
+                    f"field_{date_field.id}": datetime(
+                        2010, 1, 2, 12, 1, 0, tzinfo=utc
+                    ),
+                },
+                {"count": 1, f"field_{date_field.id}": None},
+            ]
+        )
+    }

@@ -47,6 +47,10 @@ describe('Table Component Tests', () => {
     const button = tableComponent.find('.grid-view__add-row')
     await button.trigger('click')
 
+    // Wait a moment until the row is added. This is needed because the store
+    // actions have an await.
+    await new Promise((resolve) => setTimeout(resolve, 100))
+
     expect(tableComponent.html()).toContain('gridView.rowCount - 2')
   })
 

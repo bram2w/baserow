@@ -65,7 +65,7 @@ class SubmitFormViewView(APIView):
         tags=["Database table form view"],
         operation_id="get_meta_database_table_form_view",
         description=(
-            "Returns the meta data related to the form view if the form is publicly "
+            "Returns the metadata related to the form view if the form is publicly "
             "shared or if the user has access to the related workspace. This data can "
             "be used to construct a form with the right fields."
         ),

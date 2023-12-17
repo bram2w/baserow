@@ -3,10 +3,12 @@ from io import BytesIO
 
 from django.apps.registry import apps
 from django.db import connection
+from django.shortcuts import reverse
 from django.test.utils import CaptureQueriesContext
 
 import pytest
 from faker import Faker
+from pytest_unordered import unordered
 
 from baserow.contrib.database.fields.deferred_field_fk_updater import (
     DeferredFieldFkUpdater,
@@ -2515,3 +2517,211 @@ def test_multiple_select_are_row_values_equal(data_fixture, django_assert_num_qu
             MultipleSelectFieldType().are_row_values_equal([option_a.id], [option_b.id])
             is False
         )
+
+
+@pytest.mark.django_db
+def test_get_group_by_metadata_in_rows_with_many_to_many_field(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(
+        table=table, order=0, name="Color", text_default="white"
+    )
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    select_option_1 = data_fixture.create_select_option(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    select_option_2 = data_fixture.create_select_option(
+        field=multiple_select_field,
+        order=2,
+        value="Option 2",
+        color="blue",
+    )
+
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 1",
+            f"field_{multiple_select_field.id}": [],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 2",
+            f"field_{multiple_select_field.id}": [],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 3",
+            f"field_{multiple_select_field.id}": [select_option_1.id],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 4",
+            f"field_{multiple_select_field.id}": [select_option_1.id],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 5",
+            f"field_{multiple_select_field.id}": [select_option_2.id],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 6",
+            f"field_{multiple_select_field.id}": [select_option_2.id],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 7",
+            f"field_{multiple_select_field.id}": [
+                select_option_1.id,
+                select_option_2.id,
+            ],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 8",
+            f"field_{multiple_select_field.id}": [
+                select_option_1.id,
+                select_option_2.id,
+            ],
+        },
+    )
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{text_field.id}": "Row 9",
+            f"field_{multiple_select_field.id}": [
+                select_option_2.id,
+                select_option_1.id,
+            ],
+        },
+    )
+
+    model = table.get_model()
+
+    queryset = model.objects.all().enhance_by_fields()
+    rows = list(queryset)
+
+    handler = ViewHandler()
+    counts = handler.get_group_by_metadata_in_rows(
+        [multiple_select_field], rows, queryset
+    )
+
+    # Resolve the queryset, so that we can do a comparison.
+    for c in counts.keys():
+        counts[c] = list(counts[c])
+
+    assert counts == {
+        multiple_select_field: unordered(
+            [
+                {"count": 2, f"field_{multiple_select_field.id}": []},
+                {
+                    "count": 2,
+                    f"field_{multiple_select_field.id}": [select_option_1.id],
+                },
+                {
+                    "count": 2,
+                    f"field_{multiple_select_field.id}": [
+                        select_option_1.id,
+                        select_option_2.id,
+                    ],
+                },
+                {
+                    "count": 2,
+                    f"field_{multiple_select_field.id}": [select_option_2.id],
+                },
+                {
+                    "count": 1,
+                    f"field_{multiple_select_field.id}": [
+                        select_option_2.id,
+                        select_option_1.id,
+                    ],
+                },
+            ]
+        )
+    }
+
+
+@pytest.mark.django_db
+def test_list_rows_with_group_by_and_many_to_many_field(api_client, data_fixture):
+    user, token = data_fixture.create_user_and_token(
+        email="test@test.nl", password="password", first_name="Test1"
+    )
+    table = data_fixture.create_database_table(user=user)
+    multiple_select_field = data_fixture.create_multiple_select_field(table=table)
+    select_option_1 = data_fixture.create_select_option(
+        field=multiple_select_field,
+        order=1,
+        value="Option 1",
+        color="blue",
+    )
+    select_option_2 = data_fixture.create_select_option(
+        field=multiple_select_field,
+        order=2,
+        value="Option 2",
+        color="blue",
+    )
+    select_option_3 = data_fixture.create_select_option(
+        field=multiple_select_field,
+        order=3,
+        value="Option 2",
+        color="blue",
+    )
+    grid = data_fixture.create_grid_view(table=table)
+    data_fixture.create_view_group_by(view=grid, field=multiple_select_field)
+
+    RowHandler().create_row(
+        user=user,
+        table=table,
+        values={
+            f"field_{multiple_select_field.id}": [
+                select_option_1.id,
+                select_option_2.id,
+                select_option_3.id,
+            ],
+        },
+    )
+
+    url = reverse("api:database:views:grid:list", kwargs={"view_id": grid.id})
+    response = api_client.get(url, **{"HTTP_AUTHORIZATION": f"JWT {token}"})
+    response_json = response.json()
+
+    assert response_json["group_by_metadata"] == {
+        f"field_{multiple_select_field.id}": unordered(
+            [
+                {
+                    f"field_{multiple_select_field.id}": [
+                        select_option_1.id,
+                        select_option_2.id,
+                        select_option_3.id,
+                    ],
+                    "count": 1,
+                },
+            ]
+        ),
+    }

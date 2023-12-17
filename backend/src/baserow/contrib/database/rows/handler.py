@@ -1,4 +1,3 @@
-import re
 from collections import defaultdict
 from copy import copy, deepcopy
 from decimal import Decimal
@@ -39,6 +38,7 @@ from baserow.contrib.database.fields.field_filters import (
     FilterBuilder,
 )
 from baserow.contrib.database.fields.registries import FieldType, field_type_registry
+from baserow.contrib.database.fields.utils import get_field_id_from_field_key
 from baserow.contrib.database.table.models import GeneratedTableModel, Table
 from baserow.contrib.database.table.operations import (
     CreateRowDatabaseTableOperationType,
@@ -312,13 +312,8 @@ class RowHandler(metaclass=baserow_trace_methods(tracer)):
         :return: A list containing the field ids as integers.
         """
 
-        field_pattern = re.compile("^field_([0-9]+)$")
-        # @TODO improve this function
-        return [
-            int(re.sub("[^0-9]", "", str(key)))
-            for key in keys
-            if str(key).isnumeric() or field_pattern.match(str(key))
-        ]
+        ids = [get_field_id_from_field_key(v) for v in keys]
+        return [_id for _id in ids if _id is not None]
 
     def extract_field_ids_from_dict(self, values: Dict[str, Any]) -> List[int]:
         """

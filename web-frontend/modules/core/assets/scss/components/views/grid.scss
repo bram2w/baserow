@@ -357,7 +357,7 @@
 .grid-view__group-name {
   @extend %ellipsis;
 
-  max-width: 50%;
+  max-width: 40%;
   line-height: 33px;
   font-size: 12px;
   font-weight: 600;
@@ -368,6 +368,18 @@
   min-width: 0;
   width: 100%;
   margin-left: 8px;
+  overflow: hidden;
+}
+
+.grid-view__group-count {
+  font-size: 11px;
+  line-height: 18px;
+  font-weight: 600;
+  padding: 0 5px;
+  background-color: $color-neutral-200;
+  margin-left: 8px;
+
+  @include rounded($rounded);
 }
 
 .grid-view__row-info {
