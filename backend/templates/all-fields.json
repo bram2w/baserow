@@ -399,6 +399,14 @@
               "name": "Created by",
               "order": 28,
               "primary": false
+            },
+            {
+              "id": 4700,
+              "type": "duration",
+              "name": "Duration",
+              "order": 29,
+              "primary": false,
+              "duration_format": "h:mm:ss"
             }
           ],
           "views": [
@@ -736,7 +744,8 @@
               "field_4696": [
                 "bram@baserow.io"
               ],
-              "field_4697": "100.00"
+              "field_4697": "100.00",
+              "field_4700": "1:23:45"
             }
           ]
         },

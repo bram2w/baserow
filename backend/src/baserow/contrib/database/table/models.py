@@ -707,12 +707,6 @@ def patch_meta_get_field(_meta):
                 raise exc
 
             field_type = field_object["type"]
-            logger.debug(
-                "Lazy load missing {} of type {} for table {}",
-                field_name,
-                field_type.type,
-                self.model.pk,
-            )
             field_type.after_model_generation(
                 field_object["field"], self.model, field_object["name"]
             )

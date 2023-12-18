@@ -92,6 +92,7 @@
         "lastModifiedBy": "Last modified by",
         "createdOn": "Created on",
         "createdBy": "Created by",
+        "duration": "Duration",
         "url": "URL",
         "email": "Email",
         "file": "File",
@@ -119,7 +120,9 @@
         "invalidUrl": "Invalid URL",
         "max254Chars": "Max 254 chars",
         "invalidEmail": "Invalid email",
-        "invalidPhoneNumber": "Invalid Phone Number"
+        "invalidPhoneNumber": "Invalid Phone Number",
+        "invalidDuration": "Invalid format ({durationFormat}).",
+        "overflowDuration": "Value is too large."
     },
     "fieldDocs": {
         "readOnly": "This is a read only field.",
@@ -140,6 +143,7 @@
         "lastModifiedBy": "The last modified by field is a read only field.",
         "createdOnReadOnly": "The created on field is a read only field.",
         "createdBy": "The created by field is a read only field showing the user that created the row.",
+        "duration": "Accepts a time-based duration as a string in the format {format} or as a number representing the total number of seconds.",
         "url": "Accepts a string that must be a URL.",
         "email": "Accepts a string that must be an email address.",
         "file": "Accepts an array of objects containing at least the name of the user file. You can use the \"File uploads\" endpoints to upload the file. The response of those calls can be provided directly as object here. The endpoints can be found in the left sidebar.",

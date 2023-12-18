@@ -5,12 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 
 from baserow.contrib.database.fields.mixins import (
     DATE_FORMAT_CHOICES,
     DATE_TIME_FORMAT_CHOICES,
     BaseDateMixin,
 )
+from baserow.contrib.database.fields.utils.duration import DURATION_FORMATS
 from baserow.contrib.database.formula import (
     BASEROW_FORMULA_ARRAY_TYPE_CHOICES,
     BASEROW_FORMULA_TYPE_CHOICES,
@@ -67,6 +69,8 @@ RATING_STYLE_CHOICES = [
     ("flag", "Flags"),
     ("smile", "Smile"),
 ]
+
+DURATION_FORMAT_CHOICES = [(k, v["name"]) for k, v in DURATION_FORMATS.items()]
 
 
 def get_default_field_content_type():
@@ -344,6 +348,15 @@ class CreatedOnField(Field, BaseDateMixin):
 
 class CreatedByField(Field):
     pass
+
+
+class DurationField(Field):
+    duration_format = models.CharField(
+        choices=DURATION_FORMAT_CHOICES,
+        default=DURATION_FORMAT_CHOICES[0][0],
+        max_length=32,
+        help_text=_("The format of the duration."),
+    )
 
 
 class LinkRowField(Field):

@@ -10,6 +10,7 @@ from baserow.contrib.database.fields.models import (
     CreatedByField,
     CreatedOnField,
     DateField,
+    DurationField,
     EmailField,
     FileField,
     FormulaField,
@@ -71,6 +72,16 @@ class FieldFixtures:
         self.set_test_field_kwarg_defaults(user, kwargs)
 
         field = TextField.objects.create(**kwargs)
+
+        if create_field:
+            self.create_model_field(kwargs["table"], field)
+
+        return field
+
+    def create_duration_field(self, user=None, create_field=True, **kwargs):
+        self.set_test_field_kwarg_defaults(user, kwargs)
+
+        field = DurationField.objects.create(**kwargs)
 
         if create_field:
             self.create_model_field(kwargs["table"], field)

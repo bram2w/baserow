@@ -1495,6 +1495,41 @@ def test_local_baserow_table_service_generate_schema_with_interesting_test_table
             "metadata": {},
             "type": "number",
         },
+        field_db_column_by_name["duration_hm"]: {
+            "title": "duration_hm",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_hms"]: {
+            "title": "duration_hms",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_hms_s"]: {
+            "title": "duration_hms_s",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_hms_ss"]: {
+            "title": "duration_hms_ss",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
+        field_db_column_by_name["duration_hms_sss"]: {
+            "title": "duration_hms_sss",
+            "default": None,
+            "original_type": "duration",
+            "metadata": {},
+            "type": "string",
+        },
         "id": {"metadata": {}, "type": "number", "title": "Id"},
     }
 

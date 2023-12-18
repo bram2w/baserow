@@ -226,21 +226,24 @@ def test_can_export_every_interesting_different_field_to_csv(
         "last_modified_datetime_us,last_modified_date_us,last_modified_datetime_eu,"
         "last_modified_date_eu,last_modified_datetime_eu_tzone,created_on_datetime_us,"
         "created_on_date_us,created_on_datetime_eu,created_on_date_eu,created_on_datetime_eu_tzone,"
-        "last_modified_by,created_by,link_row,self_link_row,link_row_without_related,decimal_link_row,"
+        "last_modified_by,created_by,duration_hm,duration_hms,duration_hms_s,duration_hms_ss,"
+        "duration_hms_sss,link_row,self_link_row,link_row_without_related,decimal_link_row,"
         "file_link_row,file,single_select,multiple_select,multiple_collaborators,"
         "phone_number,formula_text,formula_int,formula_bool,formula_decimal,formula_dateinterval,"
         "formula_date,formula_singleselect,formula_email,formula_link_with_label,"
         "formula_link_url_only,formula_multipleselect,count,rollup,lookup,uuid,autonumber\r\n"
         "1,,,,,,,,,0,False,,,,,,,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
-        "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
-        "02/01/2021 13:00,user@example.com,user@example.com,,,,,,,,,,,test FORMULA,1,True,33.3333333333,"
+        "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,02/01/2021 13:00,"
+        "user@example.com,user@example.com,,,,,,,,,,,,,,,,test FORMULA,1,True,33.3333333333,"
         "1 day,2020-01-01,,,label (https://google.com),https://google.com,,0,0.000,,"
         "00000000-0000-4000-8000-000000000001,1\r\n"
         "2,text,long_text,https://www.google.com,test@example.com,-1,1,-1.2,1.2,3,True,"
         "02/01/2020 01:23,02/01/2020,01/02/2020 01:23,01/02/2020,01/02/2020 02:23,"
         "01/02/2020 02:23,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
         "02/01/2021 13:00,01/02/2021 12:00,01/02/2021,02/01/2021 12:00,02/01/2021,"
-        '02/01/2021 13:00,user@example.com,user@example.com,"linked_row_1,linked_row_2,unnamed row 3",unnamed row 1,'
+        "02/01/2021 13:00,user@example.com,user@example.com,"
+        "1:01,1:01:06,1:01:06.6,1:01:06.66,1:01:06.666,"
+        '"linked_row_1,linked_row_2,unnamed row 3",unnamed row 1,'
         '"linked_row_1,linked_row_2","1.234,-123.456,unnamed row 3",'
         '"name.txt (http://localhost:8000/media/user_files/test_hash.txt),unnamed row 2",'
         '"a.txt (http://localhost:8000/media/user_files/hashed_name.txt),'
