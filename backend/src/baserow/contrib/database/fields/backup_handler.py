@@ -76,7 +76,7 @@ class FieldDataBackupHandler:
             cls._copy_not_null_column_data(
                 table_name,
                 source_column=original_model_field.column,
-                target_column=duplicated_model_field.db_column,
+                target_column=duplicated_model_field.column,
                 mapping_values=mapping_values,
             )
 

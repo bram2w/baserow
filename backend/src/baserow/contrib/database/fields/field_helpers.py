@@ -136,6 +136,13 @@ def construct_all_possible_field_kwargs(
                 "name": "created_by",
             }
         ],
+        "duration": [
+            {"name": "duration_hm", "duration_format": "h:mm"},
+            {"name": "duration_hms", "duration_format": "h:mm:ss"},
+            {"name": "duration_hms_s", "duration_format": "h:mm:ss.s"},
+            {"name": "duration_hms_ss", "duration_format": "h:mm:ss.ss"},
+            {"name": "duration_hms_sss", "duration_format": "h:mm:ss.sss"},
+        ],
         "link_row": [
             {"name": "link_row", "link_row_table": link_table},
             {

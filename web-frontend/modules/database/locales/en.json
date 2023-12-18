@@ -268,6 +268,9 @@
     "decimalPlacesLabel": "Decimal places",
     "allowNegative": "Allow negative"
   },
+  "fieldDurationSubForm": {
+    "durationFormatLabel": "Duration format"
+  },
   "fieldContext": {
     "editField": "Edit field",
     "deleteField": "Delete field",

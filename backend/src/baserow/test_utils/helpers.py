@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 from contextlib import contextmanager
+from datetime import timedelta
 from decimal import Decimal
 from ipaddress import ip_network
 from socket import AF_INET, AF_INET6, IPPROTO_TCP, SOCK_STREAM
@@ -195,6 +196,11 @@ def setup_interesting_test_table(
         "created_on_datetime_eu_tzone": None,
         "last_modified_by": None,
         "created_by": None,
+        "duration_hm": timedelta(seconds=3660),
+        "duration_hms": timedelta(seconds=3666),
+        "duration_hms_s": timedelta(seconds=3666.6),
+        "duration_hms_ss": timedelta(seconds=3666.66),
+        "duration_hms_sss": timedelta(seconds=3666.666),
         # We will setup link rows manually later
         "link_row": None,
         "self_link_row": None,

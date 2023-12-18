@@ -1,5 +1,12 @@
 import BigNumber from 'bignumber.js'
-
+import {
+  isValidDuration,
+  formatDuration,
+  parseDurationValue,
+  roundDurationValueToFormat,
+  DURATION_FORMATS,
+  MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS,
+} from '@baserow/modules/database/utils/duration'
 import {
   collatedStringCompare,
   getFilenameFromUrl,
@@ -15,6 +22,7 @@ import { Registerable } from '@baserow/modules/core/registry'
 
 import FieldNumberSubForm from '@baserow/modules/database/components/field/FieldNumberSubForm'
 import FieldAutonumberSubForm from '@baserow/modules/database/components/field/FieldAutonumberSubForm'
+import FieldDurationSubForm from '@baserow/modules/database/components/field/FieldDurationSubForm'
 import FieldRatingSubForm from '@baserow/modules/database/components/field/FieldRatingSubForm'
 import FieldTextSubForm from '@baserow/modules/database/components/field/FieldTextSubForm'
 import FieldDateSubForm from '@baserow/modules/database/components/field/FieldDateSubForm'
@@ -36,12 +44,14 @@ import GridViewFieldFile from '@baserow/modules/database/components/view/grid/fi
 import GridViewFieldSingleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldSingleSelect'
 import GridViewFieldMultipleSelect from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleSelect'
 import GridViewFieldPhoneNumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldPhoneNumber'
+import GridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/GridViewFieldDuration'
 import GridViewFieldMultipleCollaborators from '@baserow/modules/database/components/view/grid/fields/GridViewFieldMultipleCollaborators'
 import GridViewFieldUUID from '@baserow/modules/database/components/view/grid/fields/GridViewFieldUUID'
 import GridViewFieldAutonumber from '@baserow/modules/database/components/view/grid/fields/GridViewFieldAutonumber'
 import GridViewFieldLastModifiedBy from '@baserow/modules/database/components/view/grid/fields/GridViewFieldLastModifiedBy'
 
 import FunctionalGridViewFieldText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldText'
+import FunctionalGridViewFieldDuration from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldDuration'
 import FunctionalGridViewFieldLongText from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLongText'
 import FunctionalGridViewFieldLinkRow from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldLinkRow'
 import FunctionalGridViewFieldNumber from '@baserow/modules/database/components/view/grid/fields/FunctionalGridViewFieldNumber'
@@ -64,6 +74,7 @@ import RowEditFieldURL from '@baserow/modules/database/components/row/RowEditFie
 import RowEditFieldEmail from '@baserow/modules/database/components/row/RowEditFieldEmail'
 import RowEditFieldLinkRow from '@baserow/modules/database/components/row/RowEditFieldLinkRow'
 import RowEditFieldNumber from '@baserow/modules/database/components/row/RowEditFieldNumber'
+import RowEditFieldDuration from '@baserow/modules/database/components/row/RowEditFieldDuration'
 import RowEditFieldRating from '@baserow/modules/database/components/row/RowEditFieldRating'
 import RowEditFieldBoolean from '@baserow/modules/database/components/row/RowEditFieldBoolean'
 import RowEditFieldDate from '@baserow/modules/database/components/row/RowEditFieldDate'
@@ -79,6 +90,7 @@ import RowEditFieldLastModifiedBy from '@baserow/modules/database/components/row
 
 import RowCardFieldBoolean from '@baserow/modules/database/components/card/RowCardFieldBoolean'
 import RowCardFieldDate from '@baserow/modules/database/components/card/RowCardFieldDate'
+import RowCardFieldDuration from '@baserow/modules/database/components/card/RowCardFieldDuration'
 import RowCardFieldEmail from '@baserow/modules/database/components/card/RowCardFieldEmail'
 import RowCardFieldFile from '@baserow/modules/database/components/card/RowCardFieldFile'
 import RowCardFieldFormula from '@baserow/modules/database/components/card/RowCardFieldFormula'
@@ -98,6 +110,7 @@ import RowCardFieldLastModifiedBy from '@baserow/modules/database/components/car
 import RowHistoryFieldText from '@baserow/modules/database/components/row/RowHistoryFieldText'
 import RowHistoryFieldDate from '@baserow/modules/database/components/row/RowHistoryFieldDate'
 import RowHistoryFieldNumber from '@baserow/modules/database/components/row/RowHistoryFieldNumber'
+import RowHistoryFieldDuration from '@baserow/modules/database/components/row/RowHistoryFieldDuration'
 import RowHistoryFieldMultipleCollaborators from '@baserow/modules/database/components/row/RowHistoryFieldMultipleCollaborators'
 import RowHistoryFieldFile from '@baserow/modules/database/components/row/RowHistoryFieldFile'
 import RowHistoryFieldMultipleSelect from '@baserow/modules/database/components/row/RowHistoryFieldMultipleSelect'
@@ -2189,6 +2202,157 @@ export class CreatedByFieldType extends FieldType {
       id: 1,
       name: 'John',
     }
+  }
+}
+
+export class DurationFieldType extends FieldType {
+  static getType() {
+    return 'duration'
+  }
+
+  getCardComponent() {
+    return RowCardFieldDuration
+  }
+
+  getIconClass() {
+    return 'iconoir-clock-rotate-right'
+  }
+
+  getName() {
+    const { i18n } = this.app
+    return i18n.t('fieldType.duration')
+  }
+
+  getDocsDataType(field) {
+    return 'duration'
+  }
+
+  getDocsRequestExample(field) {
+    return DURATION_FORMATS.get(field.duration_format).example
+  }
+
+  getDocsDescription(field) {
+    return this.app.i18n.t('fieldDocs.duration', {
+      format: field.duration_format,
+    })
+  }
+
+  getFormComponent() {
+    return FieldDurationSubForm
+  }
+
+  canParseQueryParameter() {
+    return true
+  }
+
+  parseQueryParameter(field, value, options) {
+    return parseDurationValue(value, field.duration_format)
+  }
+
+  getSort(name, order) {
+    return (a, b) => {
+      const aValue = parseDurationValue(a[name])
+      const bValue = parseDurationValue(b[name])
+
+      if (aValue === bValue) {
+        return 0
+      }
+
+      if (
+        (aValue === null && order === 'ASC') ||
+        (bValue === null && order === 'DESC')
+      ) {
+        return -1
+      }
+
+      if (
+        (bValue === null && order === 'ASC') ||
+        (aValue === null && order === 'DESC')
+      ) {
+        return 1
+      }
+
+      if (order === 'ASC') {
+        return aValue < bValue ? -1 : 1
+      } else {
+        return bValue < aValue ? -1 : 1
+      }
+    }
+  }
+
+  getSortIndicator() {
+    return ['text', '1', '9']
+  }
+
+  getRowEditFieldComponent(field) {
+    return RowEditFieldDuration
+  }
+
+  getGridViewFieldComponent() {
+    return GridViewFieldDuration
+  }
+
+  getFunctionalGridViewFieldComponent() {
+    return FunctionalGridViewFieldDuration
+  }
+
+  getCanImport() {
+    return true
+  }
+
+  getValidationError(field, value) {
+    let totalSecs
+    try {
+      totalSecs = parseDurationValue(value, field.duration_format)
+    } catch (e) {
+      totalSecs = null
+    }
+
+    if (totalSecs === null) {
+      return this.app.i18n.t('fieldErrors.invalidDuration', {
+        durationFormat: field.duration_format,
+      })
+    } else if (totalSecs > MAX_BACKEND_DURATION_VALUE_NUMBER_OF_SECS) {
+      return this.app.i18n.t('fieldErrors.overflowDuration')
+    }
+    return null
+  }
+
+  getRowHistoryEntryComponent() {
+    return RowHistoryFieldDuration
+  }
+
+  static formatValue(field, value) {
+    return formatDuration(value, field.duration_format)
+  }
+
+  static parseInputValue(field, value) {
+    const format = field.duration_format
+    const preparedValue = parseDurationValue(value, format)
+    return roundDurationValueToFormat(preparedValue, format)
+  }
+
+  static isValidValue(field, value) {
+    return isValidDuration(value, field.duration_format)
+  }
+
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return DurationFieldType.formatValue(field, value)
+  }
+
+  prepareValueForCopy(field, value) {
+    return DurationFieldType.formatValue(field, value)
+  }
+
+  prepareRichValueForCopy(field, value) {
+    return value
+  }
+
+  prepareValueForPaste(field, clipboardData, richClipboardData) {
+    if (richClipboardData && isNumeric(richClipboardData)) {
+      return richClipboardData
+    }
+    return DurationFieldType.parseInputValue(field, clipboardData)
   }
 }
 

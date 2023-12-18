@@ -305,13 +305,22 @@ const mockedFields = {
     testing_row_data: [null, { id: 1, name: 'Test' }],
   },
   autonumber: {
-    id: 22,
+    id: 23,
     name: 'autonumber',
-    order: 22,
+    order: 23,
     primary: false,
     table_id: 42,
     type: 'autonumber',
-    testing_row_data: [null, 1],
+    testing_row_data: [1, 2],
+  },
+  duration: {
+    id: 24,
+    name: 'duration',
+    order: 24,
+    primary: false,
+    table_id: 42,
+    type: 'duration',
+    testingRowData: [null, 60],
   },
 }
 

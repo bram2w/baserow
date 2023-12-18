@@ -245,6 +245,11 @@ def test_get_row_serializer_with_user_field_names(data_fixture):
                     {"id": 2, "value": "-123.456"},
                     {"id": 3, "value": ""},
                 ],
+                "duration_hm": 3660,
+                "duration_hms": 3666,
+                "duration_hms_s": 3666.6,
+                "duration_hms_ss": 3666.66,
+                "duration_hms_sss": 3666.666,
                 "email": "test@example.com",
                 "file": [
                     {

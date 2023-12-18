@@ -1,6 +1,6 @@
 import dataclasses
 import json
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 
@@ -41,4 +41,6 @@ class JSONEncoderSupportingDataClasses(json.JSONEncoder):
             return dataclasses.asdict(o)
         if isinstance(o, (Decimal, datetime, date)):
             return str(o)
+        elif isinstance(o, timedelta):
+            return o.total_seconds()
         return super().default(o)

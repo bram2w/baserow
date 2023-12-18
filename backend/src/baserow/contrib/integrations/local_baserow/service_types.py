@@ -21,7 +21,10 @@ from rest_framework.fields import (
 from rest_framework.serializers import ListSerializer, Serializer
 
 from baserow.contrib.builder.formula_importer import import_formula
-from baserow.contrib.database.api.fields.serializers import FieldSerializer
+from baserow.contrib.database.api.fields.serializers import (
+    DurationFieldSerializer,
+    FieldSerializer,
+)
 from baserow.contrib.database.api.rows.serializers import (
     RowSerializer,
     get_row_serializer_class,
@@ -121,7 +124,10 @@ class LocalBaserowServiceType(ServiceType):
         ):
             # DecimalField/FloatField values are returned as strings from the API.
             base_type = "string"
-        elif isinstance(serializer_field, (DateTimeField, DateField, TimeField)):
+        elif isinstance(
+            serializer_field,
+            (DateTimeField, DateField, TimeField, DurationFieldSerializer),
+        ):
             base_type = "string"
         elif isinstance(serializer_field, ChoiceField):
             base_type = "string"

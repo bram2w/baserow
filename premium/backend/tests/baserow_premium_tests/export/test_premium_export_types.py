@@ -66,6 +66,11 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "last_modified_by": "user@example.com",
     "created_by": "user@example.com",
+    "duration_hm": "",
+    "duration_hms": "",
+    "duration_hms_s": "",
+    "duration_hms_ss": "",
+    "duration_hms_sss": "",
     "link_row": [],
     "self_link_row": [],
     "link_row_without_related": [],
@@ -128,6 +133,11 @@ def test_can_export_every_interesting_different_field_to_json(
     "created_on_datetime_eu_tzone": "02/01/2021 13:00",
     "last_modified_by": "user@example.com",
     "created_by": "user@example.com",
+    "duration_hm": "1:01",
+    "duration_hms": "1:01:06",
+    "duration_hms_s": "1:01:06.6",
+    "duration_hms_ss": "1:01:06.66",
+    "duration_hms_sss": "1:01:06.666",
     "link_row": [
         "linked_row_1",
         "linked_row_2",
@@ -313,6 +323,11 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
       <last-modified-by>user@example.com</last-modified-by>
       <created-by>user@example.com</created-by>
+      <duration-hm/>
+      <duration-hms/>
+      <duration-hms-s/>
+      <duration-hms-ss/>
+      <duration-hms-sss/>
       <link-row/>
       <self-link-row/>
       <link-row-without-related/>
@@ -375,6 +390,11 @@ def test_can_export_every_interesting_different_field_to_xml(
       <created-on-datetime-eu-tzone>02/01/2021 13:00</created-on-datetime-eu-tzone>
       <last-modified-by>user@example.com</last-modified-by>
       <created-by>user@example.com</created-by>
+      <duration-hm>1:01</duration-hm>
+      <duration-hms>1:01:06</duration-hms>
+      <duration-hms-s>1:01:06.6</duration-hms-s>
+      <duration-hms-ss>1:01:06.66</duration-hms-ss>
+      <duration-hms-sss>1:01:06.666</duration-hms-sss>
       <link-row>
          <item>linked_row_1</item>
          <item>linked_row_2</item>

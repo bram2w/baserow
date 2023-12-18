@@ -356,9 +356,12 @@ class UndoableActionTypeMixin:
             session=session,
             action_group=action_group,
         )
+        # Reload the serialize values so everything listening to the action_done signal
+        # can use/send the JSON serialized values.
+        action.refresh_from_db(fields=["params"])
 
         cls.send_action_done_signal(
-            user, dataclasses.asdict(params), scope, workspace, action.created_on
+            user, action.params, scope, workspace, action.created_on
         )
 
         return action

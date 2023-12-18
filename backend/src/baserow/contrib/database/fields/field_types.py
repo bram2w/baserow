@@ -60,6 +60,7 @@ from baserow.contrib.database.api.fields.errors import (
 from baserow.contrib.database.api.fields.serializers import (
     BaserowBooleanField,
     CollaboratorSerializer,
+    DurationFieldSerializer,
     FileFieldRequestSerializer,
     FileFieldResponseSerializer,
     IntegerOrStringField,
@@ -159,6 +160,7 @@ from .models import (
     CreatedByField,
     CreatedOnField,
     DateField,
+    DurationField,
     EmailField,
     Field,
     FileField,
@@ -187,6 +189,12 @@ from .registries import (
     ReadOnlyFieldType,
     StartingRowType,
     field_type_registry,
+)
+from .utils.duration import (
+    DURATION_FORMAT_TOKENS,
+    DURATION_FORMATS,
+    convert_duration_input_value_to_timedelta,
+    prepare_duration_value_for_db,
 )
 
 User = get_user_model()
@@ -591,7 +599,7 @@ class NumberFieldType(FieldType):
         field: Field,
         row: "GeneratedTableModel",
         metadata,
-    ) -> Dict[str, Any]:
+    ) -> SerializedRowHistoryFieldMetadata:
         base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
@@ -1137,9 +1145,12 @@ class DateFieldType(FieldType):
         return old_field.date_include_time and not new_date_include_time
 
     def serialize_metadata_for_row_history(
-        self, field: Field, new_value: Any, old_value: Any
-    ) -> Dict[str, Any]:
-        base = super().serialize_metadata_for_row_history(field, new_value, old_value)
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
 
         return {
             **base,
@@ -1677,6 +1688,148 @@ class CreatedByFieldType(ReadOnlyFieldType):
         return super().get_alter_column_prepare_old_value(
             connection, from_field, to_field
         )
+
+
+class DurationFieldType(FieldType):
+    type = "duration"
+    model_class = DurationField
+    allowed_fields = ["duration_format"]
+    serializer_field_names = ["duration_format"]
+
+    def get_model_field(self, instance, **kwargs):
+        return models.DurationField(null=True)
+
+    def get_serializer_field(self, instance, **kwargs):
+        return DurationFieldSerializer(
+            **{
+                "required": False,
+                "allow_null": True,
+                "duration_format": instance.duration_format,
+                **kwargs,
+            },
+        )
+
+    def get_serializer_help_text(self, instance):
+        return (
+            "The provided value can be a string in one of the available formats "
+            "or a number representing the duration in seconds. In any case, the "
+            "value will be rounded to match the field's duration format."
+        )
+
+    def prepare_value_for_db(self, instance, value):
+        return prepare_duration_value_for_db(value, instance.duration_format)
+
+    def is_searchable(self, field: Field) -> bool:
+        return False
+
+    def random_value(self, instance, fake, cache):
+        random_seconds = fake.random.random() * 60 * 60 * 2
+        return convert_duration_input_value_to_timedelta(
+            random_seconds, instance.duration_format
+        )
+
+    def get_alter_column_prepare_old_value(self, connection, from_field, to_field):
+        to_field_type = field_type_registry.get_by_model(to_field)
+        if to_field_type.type in (TextFieldType.type, LongTextFieldType.type):
+            format_func = " || ':' || ".join(
+                [
+                    DURATION_FORMAT_TOKENS[format_token]["sql_to_text"]
+                    for format_token in from_field.duration_format.split(":")
+                ]
+            )
+
+            return f"p_in = {format_func};"
+        elif to_field_type.type == NumberFieldType.type:
+            return "p_in = EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::NUMERIC;"
+
+    def get_alter_column_prepare_new_value(self, connection, from_field, to_field):
+        from_field_type = field_type_registry.get_by_model(from_field)
+
+        if from_field_type.type in (NumberFieldType.type, self.type):
+            duration_format = to_field.duration_format
+            sql_round_func = DURATION_FORMATS[duration_format]["sql_round_func"]
+
+            return f"p_in = {sql_round_func} * INTERVAL '1 second';"
+
+    def serialize_to_input_value(self, field: Field, value: any) -> any:
+        return value.total_seconds()
+
+    def format_duration(
+        self, value: Optional[timedelta], duration_format: str
+    ) -> Optional[str]:
+        """
+        Formats a timedelta object to a string based on the provided duration_format.
+
+        :param value: The timedelta object that needs to be formatted.
+        :param duration_format: The format that needs to be used.
+        :return: The formatted string.
+        """
+
+        if value is None:
+            return None
+
+        secs_in_a_min = 60
+        secs_in_an_hour = 60 * 60
+
+        total_seconds = value.total_seconds()
+        hours = int(total_seconds / secs_in_an_hour)
+        minutes = int(total_seconds % secs_in_an_hour / secs_in_a_min)
+        seconds = total_seconds % secs_in_a_min
+
+        format_func = DURATION_FORMATS[duration_format]["format_func"]
+        return format_func(hours, minutes, seconds)
+
+    def get_export_value(
+        self,
+        value: Optional[timedelta],
+        field_object: "FieldObject",
+        rich_value: bool = False,
+    ) -> str:
+        if value is None:
+            return None
+
+        secs_in_a_min = 60
+        secs_in_an_hour = 60 * 60
+
+        total_seconds = value.total_seconds()
+
+        hours = int(total_seconds / secs_in_an_hour)
+        mins = int(total_seconds % secs_in_an_hour / secs_in_a_min)
+        secs = total_seconds % secs_in_a_min
+
+        field = field_object["field"]
+        duration_format = field.duration_format
+        format_func = DURATION_FORMATS[duration_format]["format_func"]
+        return format_func(hours, mins, secs)
+
+    def should_backup_field_data_for_same_type_update(
+        self, old_field: DurationField, new_field_attrs: Dict[str, Any]
+    ) -> bool:
+        new_duration_format = new_field_attrs.get(
+            "duration_format", old_field.duration_format
+        )
+
+        formats_needing_a_backup = DURATION_FORMATS[old_field.duration_format][
+            "backup_field_if_changing_to"
+        ]
+        return new_duration_format in formats_needing_a_backup
+
+    def force_same_type_alter_column(self, from_field, to_field):
+        curr_format = from_field.duration_format
+        formats_needing_alter_column = DURATION_FORMATS[curr_format][
+            "backup_field_if_changing_to"
+        ]
+        return to_field.duration_format in formats_needing_alter_column
+
+    def serialize_metadata_for_row_history(
+        self,
+        field: Field,
+        row: "GeneratedTableModel",
+        metadata: Optional[SerializedRowHistoryFieldMetadata] = None,
+    ) -> SerializedRowHistoryFieldMetadata:
+        base = super().serialize_metadata_for_row_history(field, row, metadata)
+
+        return {**base, "duration_format": field.duration_format}
 
 
 class LinkRowFieldType(ManyToManyFieldTypeSerializeToInputValueMixin, FieldType):

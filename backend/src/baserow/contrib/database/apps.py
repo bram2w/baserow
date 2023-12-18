@@ -204,6 +204,7 @@ class DatabaseConfig(AppConfig):
             CreatedByFieldType,
             CreatedOnFieldType,
             DateFieldType,
+            DurationFieldType,
             EmailFieldType,
             FileFieldType,
             FormulaFieldType,
@@ -236,6 +237,7 @@ class DatabaseConfig(AppConfig):
         field_type_registry.register(LastModifiedByFieldType())
         field_type_registry.register(CreatedOnFieldType())
         field_type_registry.register(CreatedByFieldType())
+        field_type_registry.register(DurationFieldType())
         field_type_registry.register(LinkRowFieldType())
         field_type_registry.register(FileFieldType())
         field_type_registry.register(SingleSelectFieldType())
