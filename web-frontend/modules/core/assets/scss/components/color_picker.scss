@@ -63,9 +63,9 @@
     background-size: 12px 12px;
     background-image: conic-gradient(
       $white 90deg,
-      $color-neutral-300 90deg 180deg,
+      $color-neutral-400 90deg 180deg,
       $white 180deg 270deg,
-      $color-neutral-300 270deg
+      $color-neutral-400 270deg
     );
 
     &::before {
