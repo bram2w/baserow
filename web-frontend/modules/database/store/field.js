@@ -85,6 +85,7 @@ export const actions = {
 
       throw error
     }
+    return getters.getAll
   },
   forceSetFields({ commit }, { fields }) {
     fields.forEach((part, index) => {

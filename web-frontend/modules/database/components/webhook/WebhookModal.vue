@@ -18,14 +18,18 @@
       </div>
       <WebhookList
         v-if="state === 'list'"
+        :database="database"
         :table="table"
+        :fields="tableFields"
         :webhooks="webhooks"
         @updated="updated"
         @deleted="deleted"
       />
       <CreateWebhook
         v-else-if="state === 'create'"
+        :database="database"
         :table="table"
+        :fields="tableFields"
         @created="created"
       />
     </template>
@@ -38,6 +42,7 @@ import error from '@baserow/modules/core/mixins/error'
 import WebhookList from '@baserow/modules/database/components/webhook/WebhookList'
 import CreateWebhook from '@baserow/modules/database/components/webhook/CreateWebhook'
 import WebhookService from '@baserow/modules/database/services/webhook'
+import FieldService from '@baserow/modules/database/services/field'
 
 export default {
   name: 'WebhookModal',
@@ -47,9 +52,18 @@ export default {
   },
   mixins: [modal, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
       required: true,
+    },
+    fields: {
+      type: [Array, null],
+      required: false,
+      default: null,
     },
   },
   data() {
@@ -57,6 +71,7 @@ export default {
       loading: false,
       state: 'list',
       webhooks: [],
+      tableFields: [],
     }
   },
   methods: {
@@ -74,6 +89,23 @@ export default {
         this.webhooks = data
       } catch (e) {
         this.handleError(e)
+      }
+
+      // The parent component can provide the fields, but if it doesn't we need to
+      // fetch them ourselves. If the table is the selected one, we can use the
+      // store, otherwise we need to fetch them.
+      if (Array.isArray(this.fields)) {
+        this.tableFields = this.fields
+      } else {
+        const selectedTable = this.$store.getters['table/getSelected']
+        if (selectedTable && selectedTable.id === this.table.id) {
+          this.tableFields = this.$store.getters['field/getAll']
+        } else {
+          const { data: fields } = await FieldService(this.$client).fetchAll(
+            this.table.id
+          )
+          this.tableFields = fields
+        }
       }
 
       this.loading = false

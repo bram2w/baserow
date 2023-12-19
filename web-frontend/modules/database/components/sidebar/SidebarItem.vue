@@ -130,7 +130,7 @@
         :database="database"
         :table="table"
       />
-      <WebhookModal ref="webhookModal" :table="table" />
+      <WebhookModal ref="webhookModal" :database="database" :table="table" />
     </Context>
   </li>
 </template>

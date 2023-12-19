@@ -1,7 +1,13 @@
 <template>
   <div>
     <Error :error="error" />
-    <WebhookForm ref="form" :table="table" @submitted="submit">
+    <WebhookForm
+      ref="form"
+      :database="database"
+      :table="table"
+      :fields="fields"
+      @submitted="submit"
+    >
       <div class="actions">
         <div class="align-right">
           <button
@@ -28,8 +34,16 @@ export default {
   components: { WebhookForm },
   mixins: [error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
   },

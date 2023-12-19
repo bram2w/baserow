@@ -25,6 +25,8 @@ def test_rows_created_event_type(data_fixture):
     )
     assert payload == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": "1",
         "event_type": "rows.created",
         "items": [
@@ -43,6 +45,8 @@ def test_rows_created_event_type(data_fixture):
     )
     assert payload == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": "1",
         "event_type": "rows.created",
         "items": [
@@ -116,6 +120,8 @@ def test_rows_updated_event_type(data_fixture):
     )
     assert payload == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": "1",
         "event_type": "rows.updated",
         "items": [
@@ -149,6 +155,8 @@ def test_rows_updated_event_type(data_fixture):
     )
     assert payload == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": "1",
         "event_type": "rows.updated",
         "items": [
@@ -194,6 +202,8 @@ def test_rows_deleted_event_type(data_fixture):
 
     assert payload == {
         "table_id": table.id,
+        "database_id": table.database_id,
+        "workspace_id": table.database.workspace_id,
         "event_id": "1",
         "event_type": "rows.deleted",
         "row_ids": [row.id],
