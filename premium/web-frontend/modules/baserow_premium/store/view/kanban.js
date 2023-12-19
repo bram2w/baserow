@@ -114,14 +114,19 @@ export const mutations = {
     state.stacks[stackId].count--
   },
   UPDATE_ROW(state, { row, values }) {
+    let updated = false
     Object.keys(state.stacks).forEach((stack) => {
       const rows = state.stacks[stack].results
       const index = rows.findIndex((item) => item.id === row.id)
       if (index !== -1) {
         const existingRowState = rows[index]
         Object.assign(existingRowState, values)
+        updated = true
       }
     })
+    if (!updated) {
+      Object.assign(row, values)
+    }
   },
   UPDATE_VALUE_OF_ALL_ROWS_IN_STACK(state, { fieldId, stackId, values }) {
     const name = `field_${fieldId}`
@@ -158,6 +163,9 @@ export const mutations = {
         return row
       })
     })
+  },
+  UPDATE_ROW_VALUES(state, { row, values }) {
+    Object.assign(row, values)
   },
   UPDATE_ROW_METADATA(state, { row, rowMetadataType, updateFunction }) {
     const currentValue = row._.metadata[rowMetadataType]
@@ -796,6 +804,14 @@ export const actions = {
       values: newValues,
       fields,
     })
+    // There is a chance that the row is not in the buffer, but it does exist in
+    // the view. In that case, the `updatedExistingRow` action has not done
+    // anything. There is a possibility that the row is visible in the row edit
+    // modal, but then it won't be updated, so we have to update it forcefully.
+    commit('UPDATE_ROW_VALUES', {
+      row,
+      values: { ...newValues },
+    })
 
     try {
       const { data } = await RowService(this.$client).update(
@@ -810,6 +826,10 @@ export const actions = {
         row,
         values: oldValues,
         fields,
+      })
+      commit('UPDATE_ROW_VALUES', {
+        row,
+        values: { ...oldValues },
       })
       throw error
     }

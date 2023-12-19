@@ -2075,6 +2075,14 @@ export const actions = {
         // bring in into there. Dispatching the `updatedExistingRow` will make
         // sure that will happen in the right way.
         await dispatch('updatedExistingRow', { view, fields, row, values })
+        // There is a chance that the row is not in the buffer, but it does exist in
+        // the view. In that case, the `updatedExistingRow` action has not done
+        // anything. There is a possibility that the row is visible in the row edit
+        // modal, but then it won't be updated, so we have to update it forcefully.
+        commit('UPDATE_ROW_VALUES', {
+          row,
+          values: { ...values },
+        })
         await dispatch('fetchByScrollTopDelayed', {
           scrollTop: getters.getScrollTop,
           fields,

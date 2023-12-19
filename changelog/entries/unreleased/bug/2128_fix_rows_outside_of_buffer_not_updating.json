@@ -1,0 +1,7 @@
+{
+  "type": "bug",
+  "message": "Fix values not being updated in row edit modal if the row is not in the buffer.",
+  "issue_number": 2128,
+  "bullet_points": [],
+  "created_at": "2023-11-30"
+}
