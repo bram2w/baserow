@@ -213,7 +213,7 @@
 
 .context__menu-item-link--with-desc {
   flex-direction: column;
-  align-items: start;
+  align-items: flex-start;
 
   &.active {
     background: rgba($palette-neutral-1300, 0.04);

@@ -30,7 +30,7 @@
 }
 
 .element--alignment-vertical-top {
-  align-items: start;
+  align-items: flex-start;
 }
 
 .element--alignment-vertical-center {
@@ -38,11 +38,11 @@
 }
 
 .element--alignment-vertical-bottom {
-  align-items: end;
+  align-items: flex-end;
 }
 
 .element--alignment-horizontal-left {
-  justify-content: start;
+  justify-content: flex-start;
 }
 
 .element--alignment-horizontal-center {
@@ -50,5 +50,5 @@
 }
 
 .element--alignment-horizontal-right {
-  justify-content: end;
+  justify-content: flex-end;
 }
