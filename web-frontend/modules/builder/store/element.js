@@ -306,7 +306,7 @@ const actions = {
       throw error
     }
   },
-  async duplicate({ dispatch }, { page, elementId }) {
+  async duplicate({ dispatch, getters }, { page, elementId }) {
     const {
       data: { elements, workflow_actions: workflowActions },
     } = await ElementService(this.$client).duplicate(elementId)
@@ -323,6 +323,14 @@ const actions = {
     )
 
     await Promise.all(elementPromises.concat(workflowActionPromises))
+
+    const elementToDuplicate = getters.getElementById(page, elementId)
+    const elementToSelect = elements.find(
+      ({ parent_element_id: parentId }) =>
+        parentId === elementToDuplicate.parent_element_id
+    )
+
+    dispatch('select', { page, element: elementToSelect })
 
     return elements
   },

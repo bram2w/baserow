@@ -300,15 +300,15 @@ def test_builder_application_export(data_fixture):
             },
         ],
         "theme": {
-            "heading_1_color": "#000000ff",
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
-            "heading_2_color": "#000000ff",
+            "heading_1_color": "#070810ff",
             "heading_2_font_size": 20,
-            "heading_3_color": "#000000ff",
+            "heading_2_color": "#070810ff",
             "heading_3_font_size": 16,
-            "primary_color": "#000000ff",
-            "secondary_color": "#000000ff",
-            "border_color": "#d3d3d3ff",
+            "heading_3_color": "#070810ff",
         },
         "id": builder.id,
         "name": builder.name,
@@ -555,14 +555,15 @@ IMPORT_REFERENCE = {
         },
     ],
     "theme": {
-        "heading_1_color": "#f00000ff",
+        "primary_color": "#ccccccff",
+        "secondary_color": "#ccccccff",
+        "border_color": "#ccccccff",
         "heading_1_font_size": 25,
-        "heading_2_color": "#f00000ff",
+        "heading_1_color": "#ccccccff",
         "heading_2_font_size": 21,
-        "heading_3_color": "#f00000ff",
+        "heading_2_color": "#ccccccff",
         "heading_3_font_size": 17,
-        "primary_color": "#f00000ff",
-        "secondary_color": "#f00000ff",
+        "heading_3_color": "#ccccccff",
     },
     "id": 999,
     "name": "Holly Sherman",
@@ -603,14 +604,14 @@ def test_builder_application_import(data_fixture):
     assert first_data_source.service.integration.id == first_integration.id
 
     theme_config_block = builder.mainthemeconfigblock
-    assert theme_config_block.heading_1_color == "#f00000ff"
+    assert theme_config_block.heading_1_color == "#ccccccff"
     assert theme_config_block.heading_1_font_size == 25
-    assert theme_config_block.heading_2_color == "#f00000ff"
+    assert theme_config_block.heading_2_color == "#ccccccff"
     assert theme_config_block.heading_2_font_size == 21
-    assert theme_config_block.heading_3_color == "#f00000ff"
+    assert theme_config_block.heading_3_color == "#ccccccff"
     assert theme_config_block.heading_3_font_size == 17
-    assert theme_config_block.primary_color == "#f00000ff"
-    assert theme_config_block.secondary_color == "#f00000ff"
+    assert theme_config_block.primary_color == "#ccccccff"
+    assert theme_config_block.secondary_color == "#ccccccff"
 
     [
         element1,

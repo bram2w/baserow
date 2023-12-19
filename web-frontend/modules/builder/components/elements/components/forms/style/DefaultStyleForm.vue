@@ -73,7 +73,7 @@
 </template>
 
 <script>
-import StyleBoxForm from '@baserow/modules/builder/components/page/sidePanels/StyleBoxForm'
+import StyleBoxForm from '@baserow/modules/builder/components/elements/components/forms/style/StyleBoxForm'
 import styleForm from '@baserow/modules/builder/mixins/styleForm'
 import { BACKGROUND_TYPES, WIDTH_TYPES } from '@baserow/modules/builder/enums'
 import ColorPickerContext from '@baserow/modules/core/components/ColorPickerContext'

@@ -81,7 +81,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="mainthemeconfigblock",
             name="border_color",
-            field=models.CharField(default="#d3d3d3ff", max_length=9),
+            field=models.CharField(default="#d7d8d9ff", max_length=9),
         ),
         migrations.AlterField(
             model_name="element",

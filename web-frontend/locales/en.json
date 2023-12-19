@@ -4,7 +4,8 @@
         "no": "no",
         "wrong": "Something went wrong",
         "none": "None",
-        "free": "Free"
+        "free": "Free",
+        "comingSoon": "Coming soon..."
     },
     "action": {
         "upload": "Upload",

@@ -45,15 +45,15 @@ def test_get_public_builder_by_domain_name(api_client, data_fixture):
         ],
         "type": "builder",
         "theme": {
-            "primary_color": "#000000ff",
-            "secondary_color": "#000000ff",
-            "border_color": "#d3d3d3ff",
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
-            "heading_1_color": "#000000ff",
+            "heading_1_color": "#070810ff",
             "heading_2_font_size": 20,
-            "heading_2_color": "#000000ff",
+            "heading_2_color": "#070810ff",
             "heading_3_font_size": 16,
-            "heading_3_color": "#000000ff",
+            "heading_3_color": "#070810ff",
         },
     }
 
@@ -140,15 +140,15 @@ def test_get_public_builder_by_id(api_client, data_fixture):
         ],
         "type": "builder",
         "theme": {
-            "primary_color": "#000000ff",
-            "secondary_color": "#000000ff",
-            "border_color": "#d3d3d3ff",
+            "primary_color": "#5190efff",
+            "secondary_color": "#0eaa42ff",
+            "border_color": "#d7d8d9ff",
             "heading_1_font_size": 24,
-            "heading_1_color": "#000000ff",
+            "heading_1_color": "#070810ff",
             "heading_2_font_size": 20,
-            "heading_2_color": "#000000ff",
+            "heading_2_color": "#070810ff",
             "heading_3_font_size": 16,
-            "heading_3_color": "#000000ff",
+            "heading_3_color": "#070810ff",
         },
     }
 

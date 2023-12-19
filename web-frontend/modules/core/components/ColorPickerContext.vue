@@ -9,7 +9,6 @@
         v-model="type"
         class="dropdown--floating color-picker-context__color-type"
         :show-search="false"
-        small
       >
         <DropdownItem name="Hex" :value="COLOR_NOTATIONS.HEX"></DropdownItem>
         <DropdownItem name="RGB" :value="COLOR_NOTATIONS.RGB"></DropdownItem>

@@ -2,11 +2,6 @@ import path from 'path'
 
 export const routes = [
   {
-    name: 'tmp-app-builder-page',
-    path: '/tmp-app-builder-page',
-    component: path.resolve(__dirname, 'pages/tmpPageBuilder.vue'),
-  },
-  {
     name: 'builder-page',
     path: '/builder/:builderId/page/:pageId',
     component: path.resolve(__dirname, 'pages/pageEditor.vue'),

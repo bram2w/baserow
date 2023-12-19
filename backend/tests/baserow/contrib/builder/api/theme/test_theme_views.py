@@ -27,7 +27,7 @@ def test_update_theme(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["primary_color"] == "#f00000ff"
-    assert response_json["secondary_color"] == "#000000ff"
+    assert response_json["secondary_color"] == "#0eaa42ff"
 
 
 @pytest.mark.django_db
