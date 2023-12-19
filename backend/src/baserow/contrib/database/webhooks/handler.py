@@ -46,11 +46,15 @@ class WebhookHandler:
         if event_type_object.should_trigger_when_all_event_types_selected:
             q.add(Q(include_all_events=True), Q.OR)
 
-        return TableWebhook.objects.filter(
-            q,
-            table_id=table_id,
-            active=True,
-        ).prefetch_related("headers")
+        return (
+            TableWebhook.objects.filter(
+                q,
+                table_id=table_id,
+                active=True,
+            )
+            .prefetch_related("headers")
+            .select_related("table__database")
+        )
 
     def get_table_webhook(
         self, user: DjangoUser, webhook_id: int, base_queryset: QuerySet = None

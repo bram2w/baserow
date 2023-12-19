@@ -240,7 +240,6 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
 import { required, maxLength } from 'vuelidate/lib/validators'
 
 import form from '@baserow/modules/core/mixins/form'
@@ -259,8 +258,16 @@ export default {
   },
   mixins: [form, error],
   props: {
+    database: {
+      type: Object,
+      required: true,
+    },
     table: {
       type: Object,
+      required: true,
+    },
+    fields: {
+      type: Array,
       required: true,
     },
   },
@@ -322,11 +329,12 @@ export default {
         'webhookEvent',
         this.exampleWebhookEventType
       )
-      return webhookEvent.getExamplePayload(this.table, rowExample)
+      return webhookEvent.getExamplePayload(
+        this.database,
+        this.table,
+        rowExample
+      )
     },
-    ...mapGetters({
-      fields: 'field/getAll',
-    }),
   },
   created() {
     const keys = Object.keys(this.webhookEventTypes)

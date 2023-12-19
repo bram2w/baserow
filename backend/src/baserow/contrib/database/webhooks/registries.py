@@ -70,6 +70,8 @@ class WebhookEventType(Instance):
 
         return {
             "table_id": webhook.table_id,
+            "database_id": webhook.table.database_id,
+            "workspace_id": webhook.table.database.workspace_id,
             "event_id": event_id,
             "event_type": self.type,
         }
