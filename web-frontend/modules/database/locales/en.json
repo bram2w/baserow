@@ -804,7 +804,8 @@
     "notifyUserWhenAdded": "Notify user when added"
   },
   "collaboratorAddedToRowNotification": {
-    "title": "{sender} assigned you to {fieldName} in row {rowId} in {tableName}"
+    "title": "{sender} assigned you to {fieldName} in row {rowId} in {tableName}",
+    "deletedUser": "A deleted user"
   },
   "formSubmittedNotification": {
     "title": "{formName} has been submitted in table {tableName}:",

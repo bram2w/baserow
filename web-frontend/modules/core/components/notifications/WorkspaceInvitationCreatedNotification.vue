@@ -7,7 +7,12 @@
     <div class="notification-panel__notification-content-title">
       <i18n path="workspaceInvitationCreatedNotification.title" tag="span">
         <template #sender>
-          <strong>{{ notification.sender.first_name }}</strong>
+          <strong v-if="sender">{{ sender }}</strong>
+          <strong v-else
+            ><s>{{
+              $t('workspaceInvitationCreatedNotification.deletedUser')
+            }}</s></strong
+          >
         </template>
         <template #workspaceName>
           <strong>{{ notification.data.invited_to_workspace_name }}</strong>

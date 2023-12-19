@@ -139,19 +139,22 @@ export default {
     }),
   },
   watch: {
-    loaded(newVal, oldVal) {
+    loaded(isLoaded) {
       // On receiving many notifications, only the unread count is sent via web
-      // sockets. The store's 'loaded' state resets to false due to sync
-      // discrepancies. If the panel is closed, new notifications load on next
-      // open. If open, to preserve scroll position, a refresh hint displays
-      // instead of reloading.
+      // sockets and the 'loaded' state resets to false in the store. This
+      // watcher ensure to do the correct action if the panel is open and we
+      // receive new notifications.
 
-      if (this.open && oldVal && !newVal) {
-        if (this.totalCount === 0) {
-          this.initialLoad()
-        } else {
-          this.needRefresh = true
-        }
+      if (isLoaded || !this.open) {
+        return
+      }
+
+      // If we have no notifications, we can safely load the initial set.
+      // Otherwise, we show a hint that new notifications are available.
+      if (this.totalCount === 0) {
+        this.initialLoad()
+      } else {
+        this.needRefresh = true
       }
     },
   },
@@ -167,7 +170,7 @@ export default {
       }
     },
     show(target) {
-      if (!this.loaded) {
+      if (!this.loaded && !this.loading) {
         this.initialLoad()
       }
       this.open = true
@@ -184,10 +187,6 @@ export default {
         }
       })
       this.$once('hidden', removeOnClickOutsideHandler)
-
-      if (!this.loaded) {
-        this.initialLoad()
-      }
       this.$emit('shown')
     },
     hide() {
