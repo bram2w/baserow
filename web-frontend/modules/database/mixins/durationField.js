@@ -9,10 +9,21 @@ export default {
   data() {
     return {
       errorMsg: null,
-      formattedValue: this.formatValue(this.field, this.value),
+      formattedValue: '',
     }
   },
+  watch: {
+    value(value) {
+      this.updateFormattedValue(this.field, value)
+    },
+  },
+  created() {
+    this.updateFormattedValue(this.field, this.value)
+  },
   methods: {
+    getField() {
+      return this.field
+    },
     isValid() {
       return this.errorMsg === null
     },
@@ -33,6 +44,7 @@ export default {
       const newCopy = DurationFieldType.parseInputValue(field, value)
       if (newCopy !== this.copy) {
         this.copy = newCopy
+        return newCopy
       }
     },
     onKeyPress(field, event) {

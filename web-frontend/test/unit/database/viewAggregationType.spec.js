@@ -1,6 +1,7 @@
 import { TestApp } from '@baserow/test/helpers/testApp'
 import {
   DateFieldType,
+  DurationFieldType,
   NumberFieldType,
   RatingFieldType,
 } from '@baserow/modules/database/fieldTypes'
@@ -46,16 +47,46 @@ const testData = {
     expectedResult: '25%',
     context: { rowCount: 100 },
   },
-  min: {
-    inputValue: 25,
-    expectedResult: 25,
-    context: { rowCount: 100 },
-  },
-  max: {
-    inputValue: 25,
-    expectedResult: 25,
-    context: { rowCount: 100 },
-  },
+  min: [
+    {
+      inputValue: 25,
+      expectedResult: '25',
+      context: {
+        rowCount: 100,
+        field: { type: 'number' },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: 60,
+      expectedResult: '0:01:00',
+      context: {
+        rowCount: 100,
+        field: { type: 'duration', duration_format: 'h:mm:ss' },
+        fieldType: new DurationFieldType(),
+      },
+    },
+  ],
+  max: [
+    {
+      inputValue: 25,
+      expectedResult: '25',
+      context: {
+        rowCount: 100,
+        field: { type: 'number' },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: 60,
+      expectedResult: '0:01:00',
+      context: {
+        rowCount: 100,
+        field: { type: 'duration', duration_format: 'h:mm:ss' },
+        fieldType: new DurationFieldType(),
+      },
+    },
+  ],
   max_date: {
     inputValue: new Date(2018, 11, 24, 10, 33, 30, 0).toISOString(),
     expectedResult: '24/12/2018',
@@ -82,11 +113,26 @@ const testData = {
       fieldType: new DateFieldType(),
     },
   },
-  sum: {
-    inputValue: 25,
-    expectedResult: 25,
-    context: { rowCount: 100 },
-  },
+  sum: [
+    {
+      inputValue: 25,
+      expectedResult: '25.00',
+      context: {
+        rowCount: 100,
+        field: { type: 'number', number_decimal_places: 2 },
+        fieldType: new NumberFieldType(),
+      },
+    },
+    {
+      inputValue: 60,
+      expectedResult: '0:01',
+      context: {
+        rowCount: 100,
+        field: { type: 'duration', duration_format: 'h:mm' },
+        fieldType: new DurationFieldType(),
+      },
+    },
+  ],
   average: [
     {
       inputValue: 25.2193712987,

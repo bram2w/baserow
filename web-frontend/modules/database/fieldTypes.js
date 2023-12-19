@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js'
 import {
-  isValidDuration,
   formatDuration,
   parseDurationValue,
   roundDurationValueToFormat,
@@ -734,6 +733,17 @@ export class FieldType extends Registerable {
   getCanImport() {
     return false
   }
+
+  /**
+   * Parse a value given as input. This Can be used to convert values from
+   * different formats to the format that is used by the field type. For example
+   * a date field could accept a string like '2020-01-01' and convert it to a
+   * moment object, or a duration field can accept a string like '1:30' to
+   * convert it to a number of seconds.
+   */
+  static parseInputValue(field, value) {
+    return value
+  }
 }
 
 export class TextFieldType extends FieldType {
@@ -1272,6 +1282,10 @@ export class NumberFieldType extends FieldType {
     return number.toFixed(field.number_decimal_places)
   }
 
+  toHumanReadableString(field, value, delimiter = ', ') {
+    return NumberFieldType.formatNumber(field, value)
+  }
+
   static unlocalizeString(value) {
     return value.replace(/,/g, '.')
   }
@@ -1323,6 +1337,10 @@ export class NumberFieldType extends FieldType {
 
   getCanGroupByInView(field) {
     return true
+  }
+
+  static parseInputValue(field, value) {
+    return parseFloat(value)
   }
 }
 
@@ -1653,7 +1671,7 @@ class BaseDateFieldType extends FieldType {
    * correct format for the field. If it can't be parsed null is returned.
    */
   prepareValueForPaste(field, clipboardData, richClipboardData) {
-    const dateValue = DateFieldType.parseDate(field, clipboardData || '')
+    const dateValue = DateFieldType.parseInputValue(field, clipboardData || '')
     return DateFieldType.formatDate(field, dateValue)
   }
 
@@ -1694,7 +1712,7 @@ class BaseDateFieldType extends FieldType {
     return formats
   }
 
-  static parseDate(field, dateString) {
+  static parseInputValue(field, dateString) {
     const formats = DateFieldType.getDateFormatsOptionsForValue(
       field,
       dateString
@@ -1810,7 +1828,7 @@ export class DateFieldType extends BaseDateFieldType {
   parseQueryParameter(field, value) {
     return DateFieldType.formatDate(
       field.field,
-      DateFieldType.parseDate(field.field, value)
+      DateFieldType.parseInputValue(field.field, value)
     )
   }
 }
@@ -2246,7 +2264,11 @@ export class DurationFieldType extends FieldType {
   }
 
   parseQueryParameter(field, value, options) {
-    return parseDurationValue(value, field.duration_format)
+    return DurationFieldType.parseInputValue(field, value)
+  }
+
+  toSearchableString(field, value, delimiter = ', ') {
+    return DurationFieldType.formatValue(field, value)
   }
 
   getSort(name, order) {
@@ -2301,6 +2323,10 @@ export class DurationFieldType extends FieldType {
   }
 
   getValidationError(field, value) {
+    if (value === null || value === undefined || value === '') {
+      return null
+    }
+
     let totalSecs
     try {
       totalSecs = parseDurationValue(value, field.duration_format)
@@ -2330,10 +2356,6 @@ export class DurationFieldType extends FieldType {
     const format = field.duration_format
     const preparedValue = parseDurationValue(value, format)
     return roundDurationValueToFormat(preparedValue, format)
-  }
-
-  static isValidValue(field, value) {
-    return isValidDuration(value, field.duration_format)
   }
 
   toHumanReadableString(field, value, delimiter = ', ') {

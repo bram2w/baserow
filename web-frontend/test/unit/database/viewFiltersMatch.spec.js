@@ -28,7 +28,10 @@ import {
   DateEqualsCurrentMonthViewFilterType,
   DateEqualsCurrentYearViewFilterType,
   IsEvenAndWholeViewFilterType,
+  HigherThanViewFilterType,
+  LowerThanViewFilterType,
 } from '@baserow/modules/database/viewFilters'
+import { DurationFieldType } from '@baserow/modules/database/fieldTypes'
 
 const dateBeforeCases = [
   {
@@ -1045,6 +1048,84 @@ const numberIsEvenAndWholeCases = [
   },
 ]
 
+const durationHigherThanCases = [
+  {
+    rowValue: null,
+    filterValue: '1:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 60,
+    filterValue: '0:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 120,
+    filterValue: '0:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: true,
+  },
+  {
+    rowValue: 61, // will be rounded to 0:01
+    filterValue: 60,
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 61,
+    filterValue: 60,
+    context: { field: { duration_format: 'h:mm:ss' } },
+    expected: true,
+  },
+  {
+    rowValue: 864001,
+    filterValue: '24:00:00',
+    context: { field: { duration_format: 'h:mm:ss' } },
+    expected: true,
+  },
+]
+
+const durationLowerThanCases = [
+  {
+    rowValue: null,
+    filterValue: '1:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 20,
+    filterValue: '0:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: true,
+  },
+  {
+    rowValue: 120,
+    filterValue: '0:01',
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 61, // will be rounded to 0:01
+    filterValue: 60,
+    context: { field: { duration_format: 'h:mm' } },
+    expected: false,
+  },
+  {
+    rowValue: 59,
+    filterValue: 60,
+    context: { field: { duration_format: 'h:mm:ss' } },
+    expected: true,
+  },
+  {
+    rowValue: 86399,
+    filterValue: '24:00:00',
+    context: { field: { duration_format: 'h:mm:ss' } },
+    expected: true,
+  },
+]
+
 describe('All Tests', () => {
   let testApp = null
 
@@ -1322,5 +1403,29 @@ describe('All Tests', () => {
         3
       )
     ).toBe(true)
+  })
+
+  test.each(durationHigherThanCases)('HigherThanFilterType', (values) => {
+    const fieldType = new DurationFieldType()
+    const { field } = values.context
+    const result = new HigherThanViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      field,
+      fieldType
+    )
+    expect(result).toBe(values.expected)
+  })
+
+  test.each(durationLowerThanCases)('LowerThanFilterType', (values) => {
+    const fieldType = new DurationFieldType()
+    const { field } = values.context
+    const result = new LowerThanViewFilterType({ app: testApp }).matches(
+      values.rowValue,
+      values.filterValue,
+      field,
+      fieldType
+    )
+    expect(result).toBe(values.expected)
   })
 })

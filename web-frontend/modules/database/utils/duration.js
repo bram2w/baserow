@@ -164,7 +164,7 @@ export const parseDurationValue = (
  * It formats the given duration value using the given format.
  */
 export const formatDuration = (value, format) => {
-  if (value === null || value === undefined) {
+  if (value === null || value === undefined || value === '') {
     return ''
   }
 
