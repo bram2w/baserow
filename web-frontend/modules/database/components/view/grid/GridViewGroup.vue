@@ -9,9 +9,6 @@
         ))
       "
     >
-      <div class="grid-view__group-name">
-        {{ field.name }}
-      </div>
       <div class="grid-view__group-value">
         <component
           :is="$options.methods.getGroupByComponent(field, parent)"

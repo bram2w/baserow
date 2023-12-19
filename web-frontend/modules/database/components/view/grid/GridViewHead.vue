@@ -4,8 +4,15 @@
       v-for="groupBy in includeGroupBy ? activeGroupBys : []"
       :key="'field-group-' + groupBy.field"
       class="grid-view__head-group"
-      :style="{ width: groupWidth + 'px' }"
-    ></div>
+      :style="{ width: groupBy.width + 'px' }"
+      :set="(field = $options.methods.getField(allFieldsInTable, groupBy))"
+    >
+      <div class="grid-view__group-cell">
+        <div class="grid-view__group-name">
+          {{ field.name }}
+        </div>
+      </div>
+    </div>
     <div
       v-if="includeRowDetails"
       class="grid-view__column grid-view__column--no-border-right"
@@ -102,6 +109,10 @@ export default {
       type: Object,
       required: true,
     },
+    allFieldsInTable: {
+      type: Array,
+      required: true,
+    },
     includeFieldWidthHandles: {
       type: Boolean,
       required: false,
@@ -172,6 +183,10 @@ export default {
     },
     onShownCreateFieldContext() {
       this.$refs.createFieldContext.showFieldTypesDropdown(this.$el)
+    },
+    getField(allFieldsInTable, groupBy) {
+      const field = allFieldsInTable.find((f) => f.id === groupBy.field)
+      return field
     },
   },
 }

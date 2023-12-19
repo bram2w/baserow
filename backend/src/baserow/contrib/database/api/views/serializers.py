@@ -236,30 +236,53 @@ class UpdateViewSortSerializer(serializers.ModelSerializer):
     class Meta(CreateViewFilterSerializer.Meta):
         model = ViewSort
         fields = ("field", "order")
-        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+        extra_kwargs = {
+            "field": {"required": False},
+            "order": {"required": False},
+            "width": {"required": False},
+        }
 
 
 class ViewGroupBySerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewGroupBy
-        fields = ("id", "view", "field", "order")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 
 class CreateViewGroupBySerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewGroupBy
-        fields = ("field", "order")
+        fields = (
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {
             "order": {"default": ViewGroupBy._meta.get_field("order").default},
+            "width": {"default": ViewGroupBy._meta.get_field("width").default},
         }
 
 
 class UpdateViewGroupBySerializer(serializers.ModelSerializer):
     class Meta(CreateViewFilterSerializer.Meta):
         model = ViewGroupBy
-        fields = ("field", "order")
-        extra_kwargs = {"field": {"required": False}, "order": {"required": False}}
+        fields = (
+            "field",
+            "order",
+            "width",
+        )
+        extra_kwargs = {
+            "field": {"required": False},
+            "order": {"required": False},
+            "width": {"required": False},
+        }
 
 
 class ViewDecorationSerializer(serializers.ModelSerializer):
@@ -524,7 +547,13 @@ class PublicViewGroupBySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ViewGroupBy
-        fields = ("id", "view", "field", "order")
+        fields = (
+            "id",
+            "view",
+            "field",
+            "order",
+            "width",
+        )
         extra_kwargs = {"id": {"read_only": True}}
 
 

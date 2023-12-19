@@ -12,16 +12,26 @@
     }"
   >
     <div
-      v-for="(left, index) in groupByDividers"
+      v-for="({ left }, index) in groupByDividers"
       :key="'group-by-divider-' + index"
       class="grid-view__group-by-divider"
       :style="{ left: left + 'px' }"
     ></div>
+    <GridViewWidthHandle
+      v-for="({ groupBy, left }, index) in groupByDividers"
+      :key="'group-by-width-' + index"
+      class="grid-view__head-group-width-handle"
+      :style="{ left: left + 'px' }"
+      :width="groupBy.width"
+      @move="moveGroupWidth(groupBy, view, $event)"
+      @update="updateGroupWidth(groupBy, view, database, readOnly, $event)"
+    ></GridViewWidthHandle>
     <div class="grid-view__inner" :style="{ 'min-width': width + 'px' }">
       <GridViewHead
         :database="database"
         :table="table"
         :view="view"
+        :all-fields-in-table="allFieldsInTable"
         :visible-fields="visibleFields"
         :include-field-width-handles="includeFieldWidthHandles"
         :include-row-details="includeRowDetails"
@@ -150,6 +160,7 @@ import GridViewRowAdd from '@baserow/modules/database/components/view/grid/GridV
 import GridViewFieldDragging from '@baserow/modules/database/components/view/grid/GridViewFieldDragging'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 import GridViewFieldFooter from '@baserow/modules/database/components/view/grid/GridViewFieldFooter'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
 import { fieldValuesAreEqualInObjects } from '@baserow/modules/database/utils/groupBy'
 
 export default {
@@ -162,6 +173,7 @@ export default {
     GridViewRowAdd,
     GridViewFieldDragging,
     GridViewFieldFooter,
+    GridViewWidthHandle,
   },
   mixins: [gridViewHelpers],
   provide() {
@@ -287,14 +299,10 @@ export default {
       let last = 0
       const dividers = this.activeGroupBys
         .filter((groupBy, index) => index < this.activeGroupBys.length - 1)
-        .map(() => {
-          last += this.groupWidth
-          return last
+        .map((groupBy) => {
+          last += groupBy.width
+          return { groupBy, left: last }
         })
-
-      if (this.activeGroupBys.length > 0 && this.visibleFields.length > 0) {
-        dividers.push(last + this.groupWidth)
-      }
 
       return dividers
     },

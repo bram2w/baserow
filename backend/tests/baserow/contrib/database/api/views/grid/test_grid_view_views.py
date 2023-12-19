@@ -2105,6 +2105,7 @@ def test_get_public_grid_view(api_client, data_fixture):
                     "id": visible_group_by.id,
                     "order": "DESC",
                     "view": grid_view.slug,
+                    "width": 200,
                 }
             ],
             "table": {

@@ -52,6 +52,7 @@ def test_list_view_group_bys(api_client, data_fixture):
     assert response_json[0]["view"] == view_1.id
     assert response_json[0]["field"] == field_1.id
     assert response_json[0]["order"] == group_by_1.order
+    assert response_json[0]["width"] == group_by_1.width
     assert response_json[1]["id"] == group_by_2.id
 
     response = api_client.delete(
@@ -155,7 +156,7 @@ def test_create_view_group_by(api_client, data_fixture):
 
     response = api_client.post(
         reverse("api:database:views:list_group_bys", kwargs={"view_id": view_1.id}),
-        {"field": field_1.id, "order": "ASC"},
+        {"field": field_1.id, "order": "ASC", "width": 150},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -167,6 +168,7 @@ def test_create_view_group_by(api_client, data_fixture):
     assert response_json["view"] == view_1.id
     assert response_json["field"] == field_1.id
     assert response_json["order"] == "ASC"
+    assert response_json["width"] == 150
 
     response = api_client.post(
         reverse("api:database:views:list_group_bys", kwargs={"view_id": view_1.id}),
@@ -199,6 +201,7 @@ def test_create_view_group_by(api_client, data_fixture):
     response_json = response.json()
     assert response.status_code == HTTP_200_OK
     assert response_json["order"] == "ASC"
+    assert response_json["width"] == 200
 
     assert ViewGroupBy.objects.all().count() == 3
 
@@ -355,10 +358,7 @@ def test_update_view_group_by(api_client, data_fixture):
             "api:database:views:group_by_item",
             kwargs={"view_group_by_id": group_by_1.id},
         ),
-        {
-            "field": field_1.id,
-            "order": "ASC",
-        },
+        {"field": field_1.id, "order": "ASC", "width": 150},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
     )
@@ -372,6 +372,7 @@ def test_update_view_group_by(api_client, data_fixture):
     assert response_json["view"] == first.view_id
     assert response_json["field"] == field_1.id
     assert response_json["order"] == "ASC"
+    assert response_json["width"] == 150
 
     response = api_client.patch(
         reverse(
@@ -397,6 +398,26 @@ def test_update_view_group_by(api_client, data_fixture):
             "api:database:views:group_by_item",
             kwargs={"view_group_by_id": group_by_1.id},
         ),
+        {"width": 120},
+        format="json",
+        HTTP_AUTHORIZATION=f"JWT {token}",
+    )
+    response_json = response.json()
+    assert response.status_code == HTTP_200_OK
+    first = ViewGroupBy.objects.get(pk=group_by_1.id)
+    assert first.field_id == field_1.id
+    assert first.order == "DESC"
+    assert response_json["id"] == first.id
+    assert response_json["view"] == first.view_id
+    assert response_json["field"] == field_1.id
+    assert response_json["order"] == "DESC"
+    assert response_json["width"] == 120
+
+    response = api_client.patch(
+        reverse(
+            "api:database:views:group_by_item",
+            kwargs={"view_group_by_id": group_by_1.id},
+        ),
         {},
         format="json",
         HTTP_AUTHORIZATION=f"JWT {token}",
@@ -410,6 +431,7 @@ def test_update_view_group_by(api_client, data_fixture):
     assert response_json["view"] == first.view_id
     assert response_json["field"] == field_1.id
     assert response_json["order"] == "DESC"
+    assert response_json["width"] == 120
 
 
 @pytest.mark.django_db
@@ -488,6 +510,7 @@ def test_list_views_including_group_bys(api_client, data_fixture):
     assert response_json[0]["group_bys"][0]["view"] == view_1.id
     assert response_json[0]["group_bys"][0]["field"] == field_1.id
     assert response_json[0]["group_bys"][0]["order"] == group_by_1.order
+    assert response_json[0]["group_bys"][0]["width"] == group_by_1.width
     assert response_json[0]["group_bys"][1]["id"] == group_by_2.id
     assert len(response_json[1]["group_bys"]) == 1
     assert response_json[1]["group_bys"][0]["id"] == group_by_3.id
@@ -515,7 +538,7 @@ def test_cant_update_view_group_by_when_view_trashed(api_client, data_fixture):
     view = data_fixture.create_grid_view(table=table)
     field = data_fixture.create_number_field(user, table=table)
 
-    view_group_by = ViewHandler().create_group_by(user, view, field, "asc")
+    view_group_by = ViewHandler().create_group_by(user, view, field, "asc", 150)
     ViewHandler().delete_view(user, view)
 
     url = reverse(
@@ -540,7 +563,7 @@ def test_cant_delete_view_group_by_when_view_trashed(api_client, data_fixture):
     view = data_fixture.create_grid_view(table=table)
     field = data_fixture.create_number_field(user, table=table)
 
-    view_group_by = ViewHandler().create_group_by(user, view, field, "asc")
+    view_group_by = ViewHandler().create_group_by(user, view, field, "asc", 150)
     ViewHandler().delete_view(user, view)
 
     url = reverse(

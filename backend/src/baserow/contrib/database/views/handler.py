@@ -2121,6 +2121,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view: View,
         field: Field,
         order: str,
+        width: int,
         primary_key: Optional[int] = None,
     ) -> ViewGroupBy:
         """
@@ -2174,7 +2175,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
             )
 
         view_group_by = ViewGroupBy.objects.create(
-            pk=primary_key, view=view, field=field, order=order
+            pk=primary_key, view=view, field=field, order=order, width=width
         )
 
         view_group_by_created.send(self, view_group_by=view_group_by, user=user)
@@ -2187,6 +2188,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         view_group_by: ViewGroupBy,
         field: Optional[Field] = None,
         order: Optional[str] = None,
+        width: Optional[int] = None,
     ) -> ViewGroupBy:
         """
         Updates the values of an existing view group_by.
@@ -2195,6 +2197,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         :param view_group_by: The view group by that needs to be updated.
         :param field: The field that must be grouped on.
         :param order: Indicates the group by order direction.
+        :param width: The visual width of the group by.
         :raises ViewGroupByDoesNotExist: When the view used by the filter is trashed.
         :raises ViewGroupByFieldNotSupported: When the field does not support grouping.
         :raises FieldNotInTable:  When the provided field does not belong to the
@@ -2210,6 +2213,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
         workspace = view_group_by.view.table.database.workspace
         field = field if field is not None else view_group_by.field
         order = order if order is not None else view_group_by.order
+        width = width if width is not None else view_group_by.width
 
         CoreHandler().check_permissions(
             user, ReadFieldOperationType.type, workspace=workspace, context=field
@@ -2253,6 +2257,7 @@ class ViewHandler(metaclass=baserow_trace_methods(tracer)):
 
         view_group_by.field = field
         view_group_by.order = order
+        view_group_by.width = width
         view_group_by.save()
 
         view_group_by_updated.send(self, view_group_by=view_group_by, user=user)

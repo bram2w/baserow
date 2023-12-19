@@ -5,6 +5,7 @@ from baserow.contrib.database.api.views.serializers import (
     ViewDecorationSerializer,
     ViewFilterGroupSerializer,
     ViewFilterSerializer,
+    ViewGroupBySerializer,
     ViewSerializer,
     ViewSortSerializer,
 )
@@ -290,7 +291,7 @@ def view_sort_deleted(sender, view_sort_id, view_sort, user, **kwargs):
 def view_group_by_created(sender, view_group_by, user, **kwargs):
     payload = {
         "type": "view_group_by_created",
-        "view_group_by": ViewSortSerializer(view_group_by).data,
+        "view_group_by": ViewGroupBySerializer(view_group_by).data,
     }
 
     broadcast_to(user, view_group_by.view, payload)
@@ -301,7 +302,7 @@ def view_group_by_updated(sender, view_group_by, user, **kwargs):
     payload = {
         "type": "view_group_by_updated",
         "view_group_by_id": view_group_by.id,
-        "view_group_by": ViewSortSerializer(view_group_by).data,
+        "view_group_by": ViewGroupBySerializer(view_group_by).data,
     }
 
     broadcast_to(user, view_group_by.view, payload)

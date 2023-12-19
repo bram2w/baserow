@@ -2205,7 +2205,7 @@ class ViewGroupBysView(APIView):
 
         view_group_by = action_type_registry.get_by_type(
             CreateViewGroupByActionType
-        ).do(request.user, view, field, data["order"])
+        ).do(request.user, view, field, data["order"], data["width"])
 
         serializer = ViewGroupBySerializer(view_group_by)
         return Response(serializer.data)
@@ -2311,6 +2311,7 @@ class ViewGroupByView(APIView):
             view_group_by,
             data.get("field"),
             data.get("order"),
+            data.get("width"),
         )
 
         serializer = ViewGroupBySerializer(view_group_by)

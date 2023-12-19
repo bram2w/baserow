@@ -739,7 +739,7 @@ def test_can_use_formula_on_lookup_of_multiple_select_fields(
         [],
         [{"id": table_b_rows[2].id, "value": []}],
         [{"id": table_b_rows[3].id, "value": [opt_a_value]}],
-        [{"id": table_b_rows[0].id, "value": [opt_a_value, opt_b_value]}],
+        [{"id": table_b_rows[0].id, "value": unordered([opt_a_value, opt_b_value])}],
         unordered(
             [
                 {"id": table_b_rows[1].id, "value": [opt_b_value]},
