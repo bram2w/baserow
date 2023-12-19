@@ -7,8 +7,8 @@
       '--vacp-hsl-s': colors.hsl.s,
       '--vacp-hsl-l': colors.hsl.l,
       '--vacp-hsl-a': colors.hsl.a,
-      // Added this style via the style because scss doesn't this one, it fails because
-      // of a `hsl` function not found.
+      // Added this style via the style because scss doesn't support
+      // this one, it fails because of a `hsl` function not found.
       '--vacp-color':
         'hsl(calc(var(--vacp-hsl-h) * 360) calc(var(--vacp-hsl-s) * 100%) calc(var(--vacp-hsl-l) * 100%))',
     }"

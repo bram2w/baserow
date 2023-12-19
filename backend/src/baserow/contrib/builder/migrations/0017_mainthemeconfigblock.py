@@ -24,25 +24,25 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("primary_color", models.CharField(default="#000000ff", max_length=9)),
+                ("primary_color", models.CharField(default="#5190efff", max_length=9)),
                 (
                     "secondary_color",
-                    models.CharField(default="#000000ff", max_length=9),
+                    models.CharField(default="#0eaa42ff", max_length=9),
                 ),
                 ("heading_1_font_size", models.SmallIntegerField(default=24)),
                 (
                     "heading_1_color",
-                    models.CharField(default="#000000ff", max_length=9),
+                    models.CharField(default="#070810ff", max_length=9),
                 ),
                 ("heading_2_font_size", models.SmallIntegerField(default=20)),
                 (
                     "heading_2_color",
-                    models.CharField(default="#000000ff", max_length=9),
+                    models.CharField(default="#070810ff", max_length=9),
                 ),
                 ("heading_3_font_size", models.SmallIntegerField(default=16)),
                 (
                     "heading_3_color",
-                    models.CharField(default="#000000ff", max_length=9),
+                    models.CharField(default="#070810ff", max_length=9),
                 ),
                 (
                     "builder",

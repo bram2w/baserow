@@ -4,7 +4,7 @@
     :overflow-scroll="true"
     :max-height-if-outside-viewport="true"
   >
-    Variables
+    <div style="padding: 5px">{{ $t('common.comingSoon') }}</div>
   </Context>
 </template>
 

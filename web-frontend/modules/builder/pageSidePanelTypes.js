@@ -13,6 +13,14 @@ export class pageSidePanelType extends Registerable {
     return null
   }
 
+  getDeactivatedText(element) {
+    return ''
+  }
+
+  isDeactivated(element) {
+    return false
+  }
+
   getOrder() {
     return this.order
   }
@@ -83,6 +91,16 @@ export class EventsPageSidePanelType extends pageSidePanelType {
 
   get component() {
     return EventsSidePanel
+  }
+
+  getDeactivatedText(element) {
+    const { i18n } = this.app
+    return i18n.t('pageSidePanelType.eventsTabDeactivatedNoEvents')
+  }
+
+  isDeactivated(element) {
+    const elementType = this.app.$registry.get('element', element.type)
+    return elementType.getEvents().length === 0
   }
 
   getOrder() {

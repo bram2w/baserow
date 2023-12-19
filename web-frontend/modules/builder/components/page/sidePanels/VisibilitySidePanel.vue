@@ -1,5 +1,5 @@
 <template>
-  <div>Visibility panel</div>
+  <div>{{ $t('common.comingSoon') }}</div>
 </template>
 
 <script>

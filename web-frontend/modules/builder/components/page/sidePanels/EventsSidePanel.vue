@@ -17,7 +17,7 @@ import elementSidePanel from '@baserow/modules/builder/mixins/elementSidePanel'
 import Event from '@baserow/modules/builder/components/event/Event.vue'
 
 export default {
-  name: 'EventSidePanel',
+  name: 'EventsSidePanel',
   components: { Event },
   mixins: [elementSidePanel],
   computed: {

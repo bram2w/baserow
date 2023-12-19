@@ -38,7 +38,7 @@
       <label class="control__label">
         {{ $t('tableElementForm.fields') }}
       </label>
-      <div>
+      <div v-if="values.data_source_id">
         <Expandable
           v-for="(field, index) in values.fields"
           :key="field.id"
@@ -116,6 +116,7 @@
           </template>
         </Expandable>
       </div>
+      <p v-else>{{ $t('tableElementForm.selectSourceFirst') }}</p>
       <Button
         prepend-icon="baserow-icon-plus"
         type="link"
@@ -239,7 +240,6 @@ export default {
       })
     },
     updateField(fieldToUpdate, values) {
-      console.log('field values', values)
       this.values.fields = this.values.fields.map((field) => {
         if (field.id === fieldToUpdate.id) {
           return { ...field, ...values }
