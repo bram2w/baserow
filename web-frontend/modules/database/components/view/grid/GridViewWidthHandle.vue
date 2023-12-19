@@ -3,33 +3,11 @@
 </template>
 
 <script>
-import { notifyIf } from '@baserow/modules/core/utils/error'
-
 export default {
-  name: 'GridViewFieldWidthHandle',
+  name: 'GridViewWidthHandle',
   props: {
-    database: {
-      type: Object,
-      required: true,
-    },
-    grid: {
-      type: Object,
-      required: true,
-    },
-    field: {
-      type: Object,
-      required: true,
-    },
     width: {
       type: Number,
-      required: true,
-    },
-    readOnly: {
-      type: Boolean,
-      required: true,
-    },
-    storePrefix: {
-      type: String,
       required: true,
     },
   },
@@ -59,15 +37,9 @@ export default {
       const difference = event.clientX - this.mouseStart
       const newWidth = Math.max(this.startWidth + difference, 100)
 
-      this.$store.dispatch(
-        this.storePrefix + 'view/grid/setFieldOptionsOfField',
-        {
-          field: this.field,
-          values: { width: newWidth },
-        }
-      )
+      this.$emit('move', newWidth)
     },
-    async up(event) {
+    up(event) {
       event.preventDefault()
       this.dragging = false
       const difference = event.clientX - this.mouseStart
@@ -80,25 +52,7 @@ export default {
         return
       }
 
-      try {
-        await this.$store.dispatch(
-          `${this.storePrefix}view/grid/updateFieldOptionsOfField`,
-          {
-            field: this.field,
-            values: { width: newWidth },
-            oldValues: { width: this.startWidth },
-            readOnly:
-              this.readOnly ||
-              !this.$hasPermission(
-                'database.table.view.update_field_options',
-                this.grid,
-                this.database.workspace.id
-              ),
-          }
-        )
-      } catch (error) {
-        notifyIf(error, 'field')
-      }
+      this.$emit('update', { width: newWidth, oldWidth: this.startWidth })
     },
   },
 }

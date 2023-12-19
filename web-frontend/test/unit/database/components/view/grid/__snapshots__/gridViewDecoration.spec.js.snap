@@ -17,7 +17,7 @@ exports[`GridView component with decoration Default component with first_cell de
     class="grid-view__left"
     style="width: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -172,7 +172,7 @@ exports[`GridView component with decoration Default component with first_cell de
     class="grid-view__right"
     style="left: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"
@@ -488,7 +488,7 @@ exports[`GridView component with decoration Default component with row wrapper d
     class="grid-view__left"
     style="width: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -603,7 +603,7 @@ exports[`GridView component with decoration Default component with row wrapper d
     class="grid-view__right"
     style="left: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"
@@ -888,7 +888,7 @@ exports[`GridView component with decoration Default component with unavailable d
     class="grid-view__left"
     style="width: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 72px;"
@@ -1037,7 +1037,7 @@ exports[`GridView component with decoration Default component with unavailable d
     class="grid-view__right"
     style="left: 72px;"
   >
-     
+      
     <div
       class="grid-view__inner"
       style="min-width: 800px;"

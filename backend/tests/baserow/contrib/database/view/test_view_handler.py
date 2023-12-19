@@ -3240,29 +3240,49 @@ def test_create_group_by(send_mock, data_fixture):
 
     with pytest.raises(UserNotInWorkspace):
         handler.create_group_by(
-            user=user_2, view=grid_view, field=text_field, order="ASC"
+            user=user_2,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
 
     grid_view_type = view_type_registry.get("grid")
     grid_view_type.can_group_by = False
     with pytest.raises(ViewGroupByNotSupported):
         handler.create_group_by(
-            user=user, view=grid_view, field=text_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
     grid_view_type.can_group_by = True
 
     with pytest.raises(ViewGroupByFieldNotSupported):
         handler.create_group_by(
-            user=user, view=grid_view, field=link_row_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=link_row_field,
+            order="ASC",
+            width=150,
         )
 
     with pytest.raises(FieldNotInTable):
         handler.create_group_by(
-            user=user, view=grid_view, field=other_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=other_field,
+            order="ASC",
+            width=150,
         )
 
     view_group_by = handler.create_group_by(
-        user=user, view=grid_view, field=text_field, order="ASC"
+        user=user,
+        view=grid_view,
+        field=text_field,
+        order="ASC",
+        width=150,
     )
 
     send_mock.assert_called_once()
@@ -3276,18 +3296,24 @@ def test_create_group_by(send_mock, data_fixture):
     assert view_group_by.view_id == grid_view.id
     assert view_group_by.field_id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 150
 
     with pytest.raises(ViewGroupByFieldAlreadyExist):
         handler.create_group_by(
-            user=user, view=grid_view, field=text_field, order="ASC"
+            user=user,
+            view=grid_view,
+            field=text_field,
+            order="ASC",
+            width=150,
         )
 
     view_group_by_2 = handler.create_group_by(
-        user=user, view=grid_view, field=text_field_2, order="DESC"
+        user=user, view=grid_view, field=text_field_2, order="DESC", width=120
     )
     assert view_group_by_2.view_id == grid_view.id
     assert view_group_by_2.field_id == text_field_2.id
     assert view_group_by_2.order == "DESC"
+    assert view_group_by_2.width == 120
     assert ViewGroupBy.objects.all().count() == 2
 
 
@@ -3323,19 +3349,25 @@ def test_update_group_by(send_mock, data_fixture):
         )
 
     updated_group_by = handler.update_group_by(
-        user=user, view_group_by=view_group_by, order="DESC"
+        user=user, view_group_by=view_group_by, order="DESC", width=250
     )
     send_mock.assert_called_once()
     assert send_mock.call_args[1]["view_group_by"].id == updated_group_by.id
     assert send_mock.call_args[1]["user"].id == user.id
     assert updated_group_by.order == "DESC"
+    assert updated_group_by.width == 250
     assert updated_group_by.field_id == long_text_field.id
     assert updated_group_by.view_id == grid_view.id
 
     updated_group_by = handler.update_group_by(
-        user=user, view_group_by=updated_group_by, order="ASC", field=text_field
+        user=user,
+        view_group_by=updated_group_by,
+        order="ASC",
+        width=300,
+        field=text_field,
     )
     assert updated_group_by.order == "ASC"
+    assert updated_group_by.width == 300
     assert updated_group_by.field_id == text_field.id
     assert updated_group_by.view_id == grid_view.id
 

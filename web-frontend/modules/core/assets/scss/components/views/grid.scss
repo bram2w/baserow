@@ -14,6 +14,25 @@
   }
 }
 
+%grid-view__divider-width-handle {
+  width: 9px;
+  height: 26px;
+  cursor: col-resize;
+
+  &::before {
+    content: '';
+
+    @include absolute(0, 2px, 0, 2px);
+
+    border-radius: 2px;
+  }
+
+  &:hover::before,
+  &.dragging::before {
+    background-color: $color-primary-500;
+  }
+}
+
 .grid-view__left,
 .grid-view__right {
   @include absolute(0, auto);
@@ -70,26 +89,11 @@
 }
 
 .grid-view__divider-width {
+  @extend %grid-view__divider-width-handle;
   @include absolute(3px, auto, auto, auto);
 
   margin-left: -4.5px;
   z-index: 3;
-  width: 9px;
-  height: 26px;
-  cursor: col-resize;
-
-  &::before {
-    content: '';
-
-    @include absolute(0, 2px, 0, 2px);
-
-    border-radius: 2px;
-  }
-
-  &:hover::before,
-  &.dragging::before {
-    background-color: $color-primary-500;
-  }
 }
 
 .grid-view__head {
@@ -119,7 +123,16 @@
 }
 
 .grid-view__head-group {
+  position: relative;
   height: 33px;
+}
+
+.grid-view__head-group-width-handle {
+  @extend %grid-view__divider-width-handle;
+  @include absolute(3px, auto, auto, auto);
+
+  margin-left: -4.5px;
+  z-index: 3;
 }
 
 .grid-view__body {
@@ -357,17 +370,14 @@
 .grid-view__group-name {
   @extend %ellipsis;
 
-  max-width: 40%;
   line-height: 33px;
   font-size: 12px;
   font-weight: 600;
-  flex-shrink: 0;
 }
 
 .grid-view__group-value {
   min-width: 0;
   width: 100%;
-  margin-left: 8px;
   overflow: hidden;
 }
 
@@ -621,23 +631,10 @@
   }
 
   .grid-view__description-width {
+    @extend %grid-view__divider-width-handle;
     @include absolute(3px, -4.5px, 3px, auto);
 
     z-index: 2;
-    width: 9px;
-    cursor: col-resize;
-
-    &::before {
-      content: '';
-      border-radius: 2px;
-
-      @include absolute(0, 2px, 0, 2px);
-    }
-
-    &:hover::before,
-    &.dragging::before {
-      background-color: $color-primary-500;
-    }
   }
 
   .grid-view__description-name {

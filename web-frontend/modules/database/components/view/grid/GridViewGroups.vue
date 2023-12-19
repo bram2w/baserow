@@ -8,7 +8,7 @@
     <div
       v-for="({ groupBy, groupSpans }, index) in groupByValueSets"
       :key="'group-by-' + index"
-      :style="{ width: groupWidth + 'px' }"
+      :style="{ width: groupBy.width + 'px' }"
     >
       <div
         v-for="(groupSpan, groupSpanIndex) in groupSpans"

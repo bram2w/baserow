@@ -226,7 +226,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             class="grid-view__left"
             style="width: 72px;"
           >
-             
+              
             <div
               class="grid-view__inner"
               style="min-width: 72px;"
@@ -353,7 +353,7 @@ exports[`Public View Page Tests Can see a publicly shared grid view 1`] = `
             class="grid-view__right"
             style="left: 72px;"
           >
-             
+              
             <div
               class="grid-view__inner"
               style="min-width: 1000px;"

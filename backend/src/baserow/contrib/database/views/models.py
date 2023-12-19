@@ -529,6 +529,10 @@ class ViewGroupBy(HierarchicalModelMixin, models.Model):
         "and DESC (Descending) is from Z to A.",
         default=SORT_ORDER_ASC,
     )
+    width = models.PositiveIntegerField(
+        default=200,
+        help_text="The pixel width of the group by in the related view.",
+    )
 
     def get_parent(self):
         return self.view

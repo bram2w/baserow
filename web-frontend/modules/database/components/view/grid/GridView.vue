@@ -64,20 +64,34 @@
       class="grid-view__divider"
       :style="{ left: leftWidth + 'px' }"
     ></div>
-    <GridViewFieldWidthHandle
+    <GridViewWidthHandle
       v-if="primaryFieldIsSticky"
       class="grid-view__divider-width"
       :style="{ left: leftWidth + 'px' }"
-      :database="database"
-      :grid="view"
-      :field="leftFields[0]"
       :width="leftFieldsWidth"
-      :read-only="
-        readOnly ||
-        !$hasPermission('database.table.move_row', table, database.workspace.id)
+      @move="moveFieldWidth(leftFields[0], $event)"
+      @update="
+        updateFieldWidth(leftFields[0], view, database, readOnly, $event)
       "
-      :store-prefix="storePrefix"
-    ></GridViewFieldWidthHandle>
+    ></GridViewWidthHandle>
+    <GridViewWidthHandle
+      v-else-if="viewHasGroupBys && leftFields.length === 0"
+      class="grid-view__divider-width"
+      :style="{ left: leftWidth + 'px' }"
+      :width="activeGroupBys[activeGroupBys.length - 1].width"
+      @move="
+        moveGroupWidth(activeGroupBys[activeGroupBys.length - 1], view, $event)
+      "
+      @update="
+        updateGroupWidth(
+          activeGroupBys[activeGroupBys.length - 1],
+          view,
+          database,
+          readOnly,
+          $event
+        )
+      "
+    ></GridViewWidthHandle>
     <GridViewSection
       ref="right"
       class="grid-view__right"
@@ -131,7 +145,7 @@
       :view="view"
       :fields="allVisibleFields"
       :store-prefix="storePrefix"
-      :offset="activeGroupBys.length * groupWidth"
+      :offset="activeGroupByWidth"
       vertical="getVerticalScrollbarElement"
       @scroll="scroll($event.pixelY, $event.pixelX)"
     ></GridViewRowDragging>
@@ -327,7 +341,7 @@ import ResizeObserver from 'resize-observer-polyfill'
 
 import { notifyIf } from '@baserow/modules/core/utils/error'
 import GridViewSection from '@baserow/modules/database/components/view/grid/GridViewSection'
-import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
 import GridViewRowDragging from '@baserow/modules/database/components/view/grid/GridViewRowDragging'
 import RowEditModal from '@baserow/modules/database/components/row/RowEditModal'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
@@ -350,7 +364,7 @@ export default {
   components: {
     GridViewRowsAddContext,
     GridViewSection,
-    GridViewFieldWidthHandle,
+    GridViewWidthHandle,
     GridViewRowDragging,
     RowEditModal,
   },
@@ -456,7 +470,7 @@ export default {
         this.leftFieldsWidth +
         (this.viewHasGroupBys ? 0 : this.gridViewRowDetailsWidth) +
         // 100 must be replaced with the dynamic width
-        this.activeGroupBys.length * this.groupWidth
+        this.activeGroupByWidth
       )
     },
     activeSearchTerm() {

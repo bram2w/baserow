@@ -3,7 +3,7 @@
     class="grid-view__rows"
     :style="{
       transform: `translateY(${rowsTop}px) translateX(${leftOffset || 0}px)`,
-      left: (includeGroupBy ? activeGroupBys.length * groupWidth : 0) + 'px',
+      left: (includeGroupBy ? activeGroupByWidth : 0) + 'px',
     }"
   >
     <GridViewRow

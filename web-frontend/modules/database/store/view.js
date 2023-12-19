@@ -1206,6 +1206,10 @@ export const actions = {
       values.order = 'ASC'
     }
 
+    if (!Object.prototype.hasOwnProperty.call(values, 'width')) {
+      values.width = 200
+    }
+
     const groupBy = Object.assign({}, values)
     populateGroupBy(groupBy)
     groupBy.id = uuid()

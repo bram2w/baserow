@@ -1731,10 +1731,16 @@ class CreateViewGroupByActionType(UndoableActionType):
         database_name: str
         view_group_by_id: int
         group_by_order: str
+        group_by_width: int
 
     @classmethod
     def do(
-        cls, user: AbstractUser, view: View, field: Field, group_by_order: str
+        cls,
+        user: AbstractUser,
+        view: View,
+        field: Field,
+        group_by_order: str,
+        group_by_width: int,
     ) -> ViewGroupBy:
         """
         Creates a new view group_by.
@@ -1747,9 +1753,12 @@ class CreateViewGroupByActionType(UndoableActionType):
         :param field: The field that needs to be grouped.
         :param group_by_order: The desired order, can either be ascending (A to Z) or
             descending (Z to A).
+        :param group_by_width: The pixel width of the group by.
         """
 
-        view_group_by = ViewHandler().create_group_by(user, view, field, group_by_order)
+        view_group_by = ViewHandler().create_group_by(
+            user, view, field, group_by_order, group_by_width
+        )
 
         params = cls.Params(
             field.id,
@@ -1762,6 +1771,7 @@ class CreateViewGroupByActionType(UndoableActionType):
             view.table.database.name,
             view_group_by.id,
             group_by_order,
+            group_by_width,
         )
         workspace = view.table.database.workspace
         cls.register_action(user, params, cls.scope(view.id), workspace)
@@ -1784,7 +1794,12 @@ class CreateViewGroupByActionType(UndoableActionType):
         view = view_handler.get_view(params.view_id)
 
         view_handler.create_group_by(
-            user, view, field, params.group_by_order, params.view_group_by_id
+            user,
+            view,
+            field,
+            params.group_by_order,
+            params.group_by_width,
+            params.view_group_by_id,
         )
 
 
@@ -1808,9 +1823,11 @@ class UpdateViewGroupByActionType(UndoableActionType):
         database_name: str
         view_group_by_id: int
         group_by_order: str
+        group_by_width: int
         original_field_id: int
         original_field_name: str
         original_group_by_order: str
+        original_group_by_width: int
 
     @classmethod
     def do(
@@ -1819,6 +1836,7 @@ class UpdateViewGroupByActionType(UndoableActionType):
         view_group_by: ViewGroupBy,
         field: Optional[Field] = None,
         order: Optional[str] = None,
+        width: Optional[int] = None,
     ) -> ViewGroupBy:
         """
         Updates the values of an existing view group_by.
@@ -1827,9 +1845,10 @@ class UpdateViewGroupByActionType(UndoableActionType):
         and when redone it is updated to it's new state.
 
         :param user: The user on whose behalf the view group by is updated.
-        :param view_group: The view group by that needs to be updated.
+        :param view_group_by: The view group by that needs to be updated.
         :param field: The field that must be grouped on.
         :param order: Indicates the group by order direction.
+        :param width: The visual pixel width of the group by.
         """
 
         original_field_id = view_group_by.field.id
@@ -1837,10 +1856,11 @@ class UpdateViewGroupByActionType(UndoableActionType):
         view_id = view_group_by.view.id
         view_name = view_group_by.view.name
         original_group_by_order = view_group_by.order
+        original_group_by_width = view_group_by.width
 
         handler = ViewHandler()
         updated_view_group_by = handler.update_group_by(
-            user, view_group_by, field, order
+            user, view_group_by, field, order, width
         )
 
         cls.register_action(
@@ -1856,9 +1876,11 @@ class UpdateViewGroupByActionType(UndoableActionType):
                 updated_view_group_by.view.table.database.name,
                 updated_view_group_by.id,
                 updated_view_group_by.order,
+                updated_view_group_by.width,
                 original_field_id,
                 original_field_name,
                 original_group_by_order,
+                original_group_by_width,
             ),
             scope=cls.scope(view_group_by.view.id),
             workspace=view_group_by.view.table.database.workspace,
@@ -1878,7 +1900,11 @@ class UpdateViewGroupByActionType(UndoableActionType):
         view_group_by = view_handler.get_group_by(user, params.view_group_by_id)
 
         view_handler.update_group_by(
-            user, view_group_by, field, params.original_group_by_order
+            user,
+            view_group_by,
+            field,
+            params.original_group_by_order,
+            params.original_group_by_width,
         )
 
     @classmethod
@@ -1888,7 +1914,9 @@ class UpdateViewGroupByActionType(UndoableActionType):
         view_handler = ViewHandler()
         view_group_by = view_handler.get_group_by(user, params.view_group_by_id)
 
-        view_handler.update_group_by(user, view_group_by, field, params.group_by_order)
+        view_handler.update_group_by(
+            user, view_group_by, field, params.group_by_order, params.group_by_width
+        )
 
 
 class DeleteViewGroupByActionType(UndoableActionType):
@@ -1911,6 +1939,7 @@ class DeleteViewGroupByActionType(UndoableActionType):
         database_name: str
         view_group_by_id: int
         group_by_order: str
+        group_by_width: int
 
     @classmethod
     def do(cls, user: AbstractUser, view_group_by: ViewGroupBy):
@@ -1931,6 +1960,7 @@ class DeleteViewGroupByActionType(UndoableActionType):
         field_id = view_group_by.field.id
         field_name = view_group_by.field.name
         group_by_order = view_group_by.order
+        group_by_width = view_group_by.width
 
         ViewHandler().delete_group_by(user, view_group_by)
 
@@ -1945,6 +1975,7 @@ class DeleteViewGroupByActionType(UndoableActionType):
             view_group_by.view.table.database.name,
             view_group_by_id,
             group_by_order,
+            group_by_width,
         )
         workspace = view_group_by.view.table.database.workspace
         cls.register_action(user, params, cls.scope(view_group_by.view.id), workspace)
@@ -1960,7 +1991,12 @@ class DeleteViewGroupByActionType(UndoableActionType):
         field = FieldHandler().get_field(params.field_id)
 
         view_handler.create_group_by(
-            user, view, field, params.group_by_order, params.view_group_by_id
+            user,
+            view,
+            field,
+            params.group_by_order,
+            params.group_by_width,
+            params.view_group_by_id,
         )
 
     @classmethod

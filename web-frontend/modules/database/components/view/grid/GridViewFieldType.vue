@@ -231,23 +231,13 @@
           </a>
         </li>
       </FieldContext>
-      <GridViewFieldWidthHandle
+      <GridViewWidthHandle
         v-if="includeFieldWidthHandles"
         class="grid-view__description-width"
-        :database="database"
-        :grid="view"
-        :field="field"
         :width="width"
-        :read-only="
-          readOnly ||
-          !$hasPermission(
-            'database.table.view.update_field_options',
-            view,
-            database.workspace.id
-          )
-        "
-        :store-prefix="storePrefix"
-      ></GridViewFieldWidthHandle>
+        @move="moveFieldWidth(field, $event)"
+        @update="updateFieldWidth(field, view, database, readOnly, $event)"
+      ></GridViewWidthHandle>
     </div>
   </div>
 </template>
@@ -259,14 +249,14 @@ import { notifyIf } from '@baserow/modules/core/utils/error'
 import FieldContext from '@baserow/modules/database/components/field/FieldContext'
 import InsertFieldContext from '@baserow/modules/database/components/field/InsertFieldContext'
 import DuplicateFieldModal from '@baserow/modules/database/components/field/DuplicateFieldModal'
-import GridViewFieldWidthHandle from '@baserow/modules/database/components/view/grid/GridViewFieldWidthHandle'
+import GridViewWidthHandle from '@baserow/modules/database/components/view/grid/GridViewWidthHandle'
 import gridViewHelpers from '@baserow/modules/database/mixins/gridViewHelpers'
 
 export default {
   name: 'GridViewFieldType',
   components: {
     FieldContext,
-    GridViewFieldWidthHandle,
+    GridViewWidthHandle,
     InsertFieldContext,
     DuplicateFieldModal,
   },

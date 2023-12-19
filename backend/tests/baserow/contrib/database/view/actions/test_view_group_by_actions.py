@@ -25,13 +25,14 @@ def test_can_undo_creating_view_group_by(data_fixture):
     assert ViewGroupBy.objects.count() == 0
 
     view_group_by = action_type_registry.get_by_type(CreateViewGroupByActionType).do(
-        user, grid_view, number_field, "DESC"
+        user, grid_view, number_field, "DESC", 250
     )
 
     assert ViewGroupBy.objects.filter(pk=view_group_by.id).count() == 1
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == number_field.id
     assert view_group_by.order == "DESC"
+    assert view_group_by.width == 250
 
     ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
 
@@ -52,7 +53,7 @@ def test_can_undo_redo_creating_view_group_by(data_fixture):
     assert ViewGroupBy.objects.count() == 0
 
     view_group_by = action_type_registry.get_by_type(CreateViewGroupByActionType).do(
-        user, grid_view, number_field, "DESC"
+        user, grid_view, number_field, "DESC", 250
     )
     original_view_group_by_id = view_group_by.id
 
@@ -60,6 +61,7 @@ def test_can_undo_redo_creating_view_group_by(data_fixture):
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == number_field.id
     assert view_group_by.order == "DESC"
+    assert view_group_by.width == 250
 
     ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
 
@@ -73,6 +75,7 @@ def test_can_undo_redo_creating_view_group_by(data_fixture):
     assert updated_view_group_by.view.id == grid_view.id
     assert updated_view_group_by.field.id == number_field.id
     assert updated_view_group_by.order == "DESC"
+    assert updated_view_group_by.width == 250
 
 
 @pytest.mark.django_db
@@ -84,24 +87,27 @@ def test_can_undo_updating_view_group_by(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     view_group_by = data_fixture.create_view_group_by(
-        view=grid_view, field=text_field, order="ASC"
+        view=grid_view, field=text_field, order="ASC", width=250
     )
 
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 250
 
     action_type_registry.get_by_type(UpdateViewGroupByActionType).do(
-        user, view_group_by, order="DESC"
+        user, view_group_by, order="DESC", width=300
     )
 
     view_group_by.refresh_from_db()
     assert view_group_by.order == "DESC"
+    assert view_group_by.width == 300
 
     ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
 
     view_group_by.refresh_from_db()
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 250
 
 
 @pytest.mark.django_db
@@ -113,29 +119,33 @@ def test_can_undo_redo_updating_view_group_by(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     view_group_by = data_fixture.create_view_group_by(
-        view=grid_view, field=text_field, order="ASC"
+        view=grid_view, field=text_field, order="ASC", width=300
     )
 
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 300
 
     action_type_registry.get_by_type(UpdateViewGroupByActionType).do(
-        user, view_group_by, order="DESC"
+        user, view_group_by, order="DESC", width=250
     )
 
     view_group_by.refresh_from_db()
     assert view_group_by.order == "DESC"
+    assert view_group_by.width == 250
 
     ActionHandler.undo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
 
     view_group_by.refresh_from_db()
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 300
 
     ActionHandler.redo(user, [ViewActionScopeType.value(grid_view.id)], session_id)
 
     view_group_by.refresh_from_db()
     assert view_group_by.order == "DESC"
+    assert view_group_by.width == 250
 
 
 @pytest.mark.django_db
@@ -147,7 +157,7 @@ def test_can_undo_deleting_view_group_by(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     view_group_by = data_fixture.create_view_group_by(
-        view=grid_view, field=text_field, order="ASC"
+        view=grid_view, field=text_field, order="ASC", width=250
     )
     original_view_group_by_id = view_group_by.id
 
@@ -155,6 +165,7 @@ def test_can_undo_deleting_view_group_by(data_fixture):
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 250
 
     action_type_registry.get_by_type(DeleteViewGroupByActionType).do(
         user, view_group_by
@@ -170,6 +181,7 @@ def test_can_undo_deleting_view_group_by(data_fixture):
     assert updated_view_group_by.view.id == grid_view.id
     assert updated_view_group_by.field.id == text_field.id
     assert updated_view_group_by.order == "ASC"
+    assert updated_view_group_by.width == 250
 
 
 @pytest.mark.django_db
@@ -181,13 +193,14 @@ def test_can_undo_redo_deleting_view_group_by(data_fixture):
     grid_view = data_fixture.create_grid_view(table=table)
     text_field = data_fixture.create_text_field(table=table)
     view_group_by = data_fixture.create_view_group_by(
-        view=grid_view, field=text_field, order="ASC"
+        view=grid_view, field=text_field, order="ASC", width=350
     )
 
     assert ViewGroupBy.objects.count() == 1
     assert view_group_by.view.id == grid_view.id
     assert view_group_by.field.id == text_field.id
     assert view_group_by.order == "ASC"
+    assert view_group_by.width == 350
 
     action_type_registry.get_by_type(DeleteViewGroupByActionType).do(
         user, view_group_by

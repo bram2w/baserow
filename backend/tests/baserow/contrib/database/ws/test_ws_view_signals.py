@@ -271,7 +271,11 @@ def test_view_group_by_created(mock_broadcast_to_channel_group, data_fixture):
     field = data_fixture.create_text_field(table=table)
     view = data_fixture.create_grid_view(user=user, table=table)
     view_group_by = ViewHandler().create_group_by(
-        user=user, view=view, field=field, order="ASC"
+        user=user,
+        view=view,
+        field=field,
+        order="ASC",
+        width=150,
     )
 
     mock_broadcast_to_channel_group.delay.assert_called_once()
