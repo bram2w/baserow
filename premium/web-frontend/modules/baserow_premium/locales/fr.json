@@ -347,5 +347,14 @@
     },
     "rowCommentMentionNotification": {
         "title": "{sender} vous a mentionné dans la ligne {row} de la table {table}"
+    },
+    "rowCommentNotification": {
+        "title": "{sender} a posté un commentaire pour la ligne {row} de {table}"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsDesc": "Vous ne recevrez les notifications uniquement lorsque vous serez mentionné·e.",
+        "modeAllTitle": "Tous les commentaires",
+        "modeAllDesc": "Vous recevrez des notifications pour tous les commentaires de cette ligne.",
+        "modeMentionsTitle": "Seulement les mentions"
     }
 }

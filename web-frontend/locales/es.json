@@ -29,10 +29,11 @@
         "deactivate": "Desactivar",
         "paste": "Pegar",
         "duplicate": "Duplicar",
-        "remove": "Eliminar",
+        "remove": "Quitar",
         "login": "Iniciar sesión",
         "download": "Descargar",
-        "copyToClipboard": "Copiar al portapapeles"
+        "copyToClipboard": "Copiar al portapapeles",
+        "reset": "Restablecer"
     },
     "adminType": {
         "settings": "Ajustes",
@@ -52,7 +53,8 @@
         "account": "Cuenta",
         "password": "Contraseña",
         "tokens": "Fichas de la base de datos",
-        "deleteAccount": "Borrar cuenta"
+        "deleteAccount": "Borrar cuenta",
+        "emailNotifications": "Notificaciones por correo electrónico"
     },
     "userFileUploadType": {
         "file": "mi dispositivo",
@@ -67,7 +69,10 @@
         "minLength": "Se requiere un mínimo de {min} caracteres aquí.",
         "maxLength": "Aquí se permite un máximo de {max} caracteres.",
         "minMaxLength": "Aquí se permite un mínimo de {min} y un máximo de {max} caracteres.",
-        "requiredField": "Este campo es requerido."
+        "requiredField": "Este campo es requerido.",
+        "integerField": "El campo debe ser un número entero.",
+        "minValueField": "El campo debe ser mayor o igual que {mínimo}.",
+        "maxValueField": "El campo debe ser menor o igual que {máximo}."
     },
     "permission": {
         "admin": "Admin",
@@ -95,7 +100,18 @@
         "lookup": "Buscar",
         "multipleCollaborators": "Colaboradores",
         "count": "Cuenta",
-        "rollup": "Enrollable"
+        "rollup": "Enrollable",
+        "linkRowMultiple": "Múltiples",
+        "defaultFormViewComponent": "Por defecto",
+        "linkRowSingle": "Único",
+        "multipleSelectDropdown": "Desplegable",
+        "uuid": "UUID",
+        "singleSelectDropdown": "Desplegable",
+        "autonumber": "Autonúmero",
+        "createdBy": "Creado por",
+        "singleSelectRadios": "Radios",
+        "lastModifiedBy": "Última modificación por",
+        "multipleSelectCheckboxes": "Casillas"
     },
     "fieldErrors": {
         "invalidNumber": "Número invalido",
@@ -132,7 +148,11 @@
         "lookup": "Un campo de sólo lectura conectado a un campo de enlace a tabla que devuelve una matriz de valores e ids de fila del campo de búsqueda elegido en la tabla enlazada.",
         "multipleCollaborators": "Acepta una matriz de objetos donde cada objeto contiene el ID de un usuario.",
         "count": "Campo de sólo lectura conectado a un campo de enlace a tabla que devuelve el número de relaciones.",
-        "rollup": "Campo de sólo lectura conectado a un campo vinculado a una tabla que devuelve los valores del campo de búsqueda elegido en la tabla vinculada."
+        "rollup": "Campo de sólo lectura conectado a un campo vinculado a una tabla que devuelve los valores del campo de búsqueda elegido en la tabla vinculada.",
+        "lastModifiedBy": "El campo \"Última modificación por\" es un campo de sólo lectura.",
+        "autonumber": "Campo de sólo lectura que incrementa automáticamente un número por cada nueva fila.",
+        "uuid": "Un UUID único y persistente de sólo lectura.",
+        "createdBy": "El campo \"Creado por\" es un campo de sólo lectura que muestra el usuario que creó la fila."
     },
     "viewFilter": {
         "contains": "contiene",
@@ -168,7 +188,10 @@
         "isAfterOrEqualDate": "es después o la misma fecha",
         "isWithinDays": "está dentro de días",
         "isWithinWeeks": "es dentro de semanas",
-        "isWithinMonths": "es dentro de meses"
+        "isWithinMonths": "es dentro de meses",
+        "isEvenAndWhole": "es par y entero",
+        "filesLowerThan": "archivos inferiores a",
+        "isAfterDaysAgo": "es después de hace días"
     },
     "viewType": {
         "grid": "Cuadrícula",
@@ -277,7 +300,11 @@
         "maxLocksPerTransactionExceededTitle": "Problema detectado con PostgreSQL",
         "maxLocksPerTransactionExceededDescription": "Baserow intentó eliminar permanentemente los elementos de la papelera, pero excedió los bloqueos disponibles especificados en `max_locks_per_transaction`.",
         "notificationDoesNotExistTitle": "La notificación no existe.",
-        "notificationDoesNotExistDescription": "La acción no se ha podido completar porque lo relacionado ya no existe."
+        "notificationDoesNotExistDescription": "La acción no se ha podido completar porque lo relacionado ya no existe.",
+        "adminAlreadyExistsDescription": "Ese nombre de usuario no se puede utilizar porque ya existe.",
+        "adminAlreadyExistsTitle": "No se puede usar ese nombre de usuario",
+        "cannotCreateFieldTypeDescription": "El tipo de campo solicitado no puede crearse en este momento. Puede ser un problema temporal con tablas antiguas. Vuelve a intentarlo más tarde.",
+        "cannotCreateFieldTypeTitle": "No se puede crear el campo"
     },
     "importerType": {
         "csv": "Importar un archivo CSV",
@@ -413,7 +440,19 @@
         "todayDescription": "Devuelve la fecha actual en utc.",
         "whenNanDescription": "Devuelve el primer argumento si no es 'NaN'. Devuelve el segundo argumento si el primer argumento es 'NaN'",
         "toDateTzDescription": "Devuelve el primer argumento convertido en una fecha dada una cadena de formato de fecha como segundo argumento y la zona horaria proporcionada como tercer argumento.",
-        "datetimeFormatTzDescription": "Convierte la fecha en texto dada una forma de formatear la fecha en la zona horaria especificada."
+        "datetimeFormatTzDescription": "Convierte la fecha en texto dada una forma de formatear la fecha en la zona horaria especificada.",
+        "getFileVisibleNameDescription": "Devuelve el nombre de archivo visible de un único archivo devuelto por la función index.",
+        "indexDescription": "Devuelve el archivo de un campo de archivo en la posición proporcionada por el segundo argumento.",
+        "getFileSizeDescription": "Devuelve el tamaño del archivo de un único archivo devuelto por la función de índice.",
+        "encodeUriComponentDescription": "Devuelve un componente de cadena URL codificado a partir del argumento proporcionado.",
+        "getImageWidthDescription": "Devuelve el ancho de la imagen de un único archivo devuelto por la función index.",
+        "getImageHeightDescription": "Devuelve la altura de la imagen de un único archivo devuelto por la función index.",
+        "splitPartDescription": "Extrae un segmento de una cadena delimitada basándose en un delimitador y un índice (indicador numérico que indica qué elemento de la cadena debe devolverse)",
+        "getFileCountDescription": "Devuelve el número de archivos en el campo de archivo referenciado",
+        "encodeUriDescription": "Devuelve una cadena URL codificada a partir del argumento proporcionado.",
+        "getIsImageDescription": "Devuelve si el archivo único devuelto por la función de índice es una imagen o no.",
+        "getFileMimeTypeDescription": "Devuelve el tipo mime de un único archivo devuelto por la función index.",
+        "hasOptionDescription": "Devuelve verdadero si el primer argumento es un campo de selección múltiple o una búsqueda en un campo de selección simple y el segundo argumento es una de las opciones."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "fila sin nombre {value}"

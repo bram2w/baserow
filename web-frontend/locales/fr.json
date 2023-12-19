@@ -103,7 +103,15 @@
         "rollup": "Rollup",
         "linkRowMultiple": "Multiple",
         "defaultFormViewComponent": "Par défaut",
-        "linkRowSingle": "Simple"
+        "linkRowSingle": "Simple",
+        "multipleSelectDropdown": "Liste déroulante",
+        "uuid": "UUID",
+        "singleSelectDropdown": "Liste déroulante",
+        "autonumber": "Numérotation automatique",
+        "createdBy": "Créé par",
+        "singleSelectRadios": "Boutons radio",
+        "lastModifiedBy": "Dernière modification par",
+        "multipleSelectCheckboxes": "Cases à cocher"
     },
     "fieldErrors": {
         "invalidNumber": "Nombre invalide",
@@ -140,7 +148,11 @@
         "lookup": "Un champ en lecture seule relié à un champ de type « lien vers une table » qui retourne un tableau de valeurs et d'identifiants de ligne provenant du champ choisi dans la table liée.",
         "multipleCollaborators": "Accepte un tableau d'objets où chaque objet contient l'identifiant d'un utilisateur.",
         "count": "Un champ en lecture seule relié à un champ « lien vers une table » qui renvoie le nombre de relations dans ce champ pour la ligne.",
-        "rollup": "Champ en lecture seule relié à un champ « lien vers une table » qui renvoie le cumul choisi pour les valeurs d'un champ particulier de la table liée."
+        "rollup": "Champ en lecture seule relié à un champ « lien vers une table » qui renvoie le cumul choisi pour les valeurs d'un champ particulier de la table liée.",
+        "lastModifiedBy": "Le champ « Dernière modification par » est un champ en lecture seule.",
+        "autonumber": "Un champ en lecture seule qui dont la valeur s'incrémente automatiquement pour chaque nouvelle ligne.",
+        "uuid": "Un UUID unique et persistant en lecture seule.",
+        "createdBy": "Le champ « Créé par » est un champ en lecture seule qui indique l'utilisateur qui a créé la ligne."
     },
     "viewFilter": {
         "contains": "contient",
@@ -290,7 +302,9 @@
         "notificationDoesNotExistTitle": "La notification n’existe pas.",
         "notificationDoesNotExistDescription": "L’action n’a pas pu être terminée car le lien n’existe plus.",
         "adminAlreadyExistsDescription": "Ce nom d'utilisateur ne peut pas être utilisé car il existe déjà.",
-        "adminAlreadyExistsTitle": "Impossible d'utiliser ce nom d'utilisateur"
+        "adminAlreadyExistsTitle": "Impossible d'utiliser ce nom d'utilisateur",
+        "cannotCreateFieldTypeDescription": "Le type de champ demandé ne peut pas être créé pour le moment. Il peut s'agir d'un problème temporaire avec des tables plus anciennes. Veuillez réessayer plus tard.",
+        "cannotCreateFieldTypeTitle": "Impossible de créer le champ"
     },
     "importerType": {
         "csv": "Importer un fichier CSV",
@@ -437,7 +451,8 @@
         "getFileCountDescription": "Renvoie le nombre de fichiers dans le champ de fichier référencé",
         "encodeUriDescription": "Retourne une URI encodée à partir des paramètres fournis.",
         "getIsImageDescription": "Renvoie Vrai le fichier désigné par la fonction d'index est une image, Faux sinon.",
-        "getFileMimeTypeDescription": "Renvoie le type de mime du fichier sélectionné par la fonction index."
+        "getFileMimeTypeDescription": "Renvoie le type de mime du fichier sélectionné par la fonction index.",
+        "hasOptionDescription": "Retourne `true` si le premier argument est un champ de sélection multiple ou une référence à un champ de sélection unique et que le second argument est l'une de ses options."
     },
     "functionnalGridViewFieldLinkRow": {
         "unnamed": "Ligne sans nom {value}"

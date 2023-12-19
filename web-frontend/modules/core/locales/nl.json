@@ -384,7 +384,8 @@
                 "description": "Als u een veld dynamisch wilt verbergen, kunt u dat doen via query parameters die worden toegevoegd aan de public from url. Deze query parameters worden voorafgegaan door `hide_` om botsing met mogelijke toekomstige query parameters te voorkomen."
             }
         },
-        "prefillOrHideInfoLink": "Dynamisch invullen of verbergen"
+        "prefillOrHideInfoLink": "Dynamisch invullen of verbergen",
+        "notifyUserOnSubmit": "Notificatie ontvangen bij verzenden"
     },
     "deleteAccountSettings": {
         "orphanWorkspaces": "Zal ook permanent worden verwijderd na de respijtperiode",
@@ -649,5 +650,11 @@
     "userPasswordChangedToast": {
         "title": "Wachtwoord veranderd",
         "content": "Je wachtwoord is gewijzigd. Log alsjeblieft nogmaals in."
+    },
+    "integrationDropdown": {
+        "noIntegrations": "Geen integraties gevonden.",
+        "addIntegration": "Nieuwe integratie toevoegen",
+        "integrationPlaceholder": "Selecteer een integratie",
+        "selectTypeFirst": "Kies het type eerst"
     }
 }

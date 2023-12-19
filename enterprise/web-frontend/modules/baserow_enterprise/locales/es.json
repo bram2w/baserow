@@ -4,7 +4,7 @@
         "sidebarTooltip": "Su cuenta tiene acceso a las funciones de empresa a nivel mundial",
         "rbac": "RBAC",
         "sso": "SSO",
-        "deactivated": "Disponible en versión para empresas",
+        "deactivated": "Disponible en los planes Avanzado y Empresa",
         "overflowWarning": "Tienes demasiados usuarios no espectadores y has agotado todas tus plazas de pago. Cambia los usuarios a espectadores en la página de miembros de cada espacio de trabajo.",
         "licenseDescription": "Los visores son gratuitos con Baserow Enterprise. Si un usuario tiene cualquier otro rol, en cualquier otro espacio de trabajo, entonces utilizará un asiento de pago automáticamente."
     },
@@ -77,13 +77,16 @@
         "allWorkspaces": "Todos los grupos",
         "allActionTypes": "Todos los tipos de actos",
         "ip_address": "Dirección IP",
-        "exportToCsv": "Exportar a CSV"
+        "exportToCsv": "Exportar a CSV",
+        "workspaceTitle": "Registro de auditoría - {nombreDelEspacioDeTrabajo}",
+        "adminTitle": "Registro de auditoría"
     },
     "auditLogExportModal": {
         "title": "Exportar a CSV",
-        "exportFilename": "Exportación de registros de auditoría - {fecha}",
+        "exportFilename": "Exportación del registro de auditoría administrativa - {fecha}",
         "cancelledTitle": "Error de exportación",
-        "cancelledDescription": "Algo ha ido mal al exportar el registro de auditoría. Por favor, inténtalo de nuevo."
+        "cancelledDescription": "Algo ha ido mal al exportar el registro de auditoría. Por favor, inténtalo de nuevo.",
+        "exportWorkspaceFilename": " • Espacio de trabajo ({IdEspacioDeTrabajo}) Exportación de registros de auditoría - {fecha}"
     },
     "authProviders": {
         "addProvider": "Añadir proveedor",
@@ -275,5 +278,20 @@
     },
     "snapshotModalWarning": {
         "message": "Ten en cuenta que una instantánea incluirá todos los permisos establecidos en la aplicación y sus tablas."
+    },
+    "auditLogSidebarWorkspace": {
+        "title": "Registro de auditoría",
+        "deactivated": "Disponible en los planes Avanzado y Empresa"
+    },
+    "localBaserowUserSourceForm": {
+        "description": "Cada fila de la tabla es una cuenta de usuario. Seleccione los campos coincidentes en la tabla. El campo de correo electrónico se utilizará para identificar.",
+        "emailFieldLabel": "Selecciona el campo de correo electrónico",
+        "noFields": "No hay campos",
+        "nameFieldLabel": "Seleccionar campo de nombre",
+        "nameFieldPlaceholder": "Selecciona un campo...",
+        "emailFieldLabelPlaceholder": "Selecciona un campo..."
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "No configurado"
     }
 }

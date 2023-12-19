@@ -347,5 +347,14 @@
     },
     "trashType": {
         "row_comment": "rij opmerking"
+    },
+    "rowCommentNotification": {
+        "title": "{sender} heeft een reactie geplaatst in rij {row} in {table}"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsDesc": "Je ontvangt alleen meldingen wanneer je wordt genoemd.",
+        "modeAllTitle": "Alle opmerkingen",
+        "modeAllDesc": "Je ontvangt meldingen voor alle opmerkingen in deze rij.",
+        "modeMentionsTitle": "Alleen vermeldingen"
     }
 }
