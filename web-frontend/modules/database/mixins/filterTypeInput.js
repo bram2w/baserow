@@ -17,8 +17,12 @@ export default {
   },
   watch: {
     'filter.value'(value) {
+      const oldValue = this.copy
       this.copy = value
       clearTimeout(delayTimeout)
+      if (oldValue !== value) {
+        this.afterValueChanged(value, oldValue)
+      }
     },
   },
   created() {
@@ -31,6 +35,7 @@ export default {
     isInputValid() {
       return !this.$v.copy.$error
     },
+    afterValueChanged(value, oldValue) {},
     delayedUpdate(value, immediately = false) {
       if (this.disabled) {
         return

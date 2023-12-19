@@ -22,6 +22,7 @@ from baserow.contrib.database.fields.field_types import (
     BooleanFieldType,
     CreatedOnFieldType,
     DateFieldType,
+    DurationFieldType,
     EmailFieldType,
     FileFieldType,
     FormulaFieldType,
@@ -83,6 +84,7 @@ class EmptyCountViewAggregationType(ViewAggregationType):
         RatingFieldType.type,
         BooleanFieldType.type,
         DateFieldType.type,
+        DurationFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
         LinkRowFieldType.type,
@@ -170,6 +172,7 @@ class UniqueCountViewAggregationType(ViewAggregationType):
         EmailFieldType.type,
         PhoneNumberFieldType.type,
         SingleSelectFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -199,6 +202,7 @@ class MinViewAggregationType(ViewAggregationType):
         DateFieldType.type,
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
             BaserowFormulaDateType.type,
@@ -224,6 +228,7 @@ class MaxViewAggregationType(ViewAggregationType):
         LastModifiedFieldType.type,
         CreatedOnFieldType.type,
         AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
             BaserowFormulaDateType.type,
@@ -244,6 +249,7 @@ class SumViewAggregationType(ViewAggregationType):
     compatible_field_types = [
         NumberFieldType.type,
         RatingFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),

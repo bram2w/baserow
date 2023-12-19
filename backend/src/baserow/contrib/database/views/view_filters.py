@@ -25,6 +25,7 @@ from baserow.contrib.database.fields.field_types import (
     CreatedByFieldType,
     CreatedOnFieldType,
     DateFieldType,
+    DurationFieldType,
     EmailFieldType,
     FileFieldType,
     FormulaFieldType,
@@ -91,6 +92,7 @@ class EqualViewFilterType(ViewFilterType):
         PhoneNumberFieldType.type,
         UUIDFieldType.type,
         AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,
@@ -107,7 +109,7 @@ class EqualViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
             return self.default_filter_on_exception()
@@ -317,6 +319,7 @@ class HigherThanViewFilterType(ViewFilterType):
         NumberFieldType.type,
         RatingFieldType.type,
         AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -335,7 +338,7 @@ class HigherThanViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{f"{field_name}__gt": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -377,6 +380,7 @@ class LowerThanViewFilterType(ViewFilterType):
         NumberFieldType.type,
         RatingFieldType.type,
         AutonumberFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaNumberType.type,
         ),
@@ -395,7 +399,7 @@ class LowerThanViewFilterType(ViewFilterType):
 
         # Check if the model_field accepts the value.
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{f"{field_name}__lt": value})
         except Exception:
             return self.default_filter_on_exception()
@@ -1091,7 +1095,7 @@ class BooleanViewFilterType(ViewFilterType):
         # Check if the model_field accepts the value.
         # noinspection PyBroadException
         try:
-            model_field.get_prep_value(value)
+            value = model_field.get_prep_value(value)
             return Q(**{field_name: value})
         except Exception:
             return Q()
@@ -1391,6 +1395,7 @@ class EmptyViewFilterType(ViewFilterType):
         PhoneNumberFieldType.type,
         MultipleSelectFieldType.type,
         MultipleCollaboratorsFieldType.type,
+        DurationFieldType.type,
         FormulaFieldType.compatible_with_formula_types(
             BaserowFormulaTextType.type,
             BaserowFormulaCharType.type,

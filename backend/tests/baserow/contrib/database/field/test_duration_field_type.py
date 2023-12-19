@@ -6,6 +6,7 @@ from baserow.contrib.database.fields.actions import UpdateFieldActionType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import DurationField
 from baserow.contrib.database.rows.handler import RowHandler
+from baserow.contrib.database.views.handler import ViewHandler
 from baserow.core.action.handler import ActionHandler
 from baserow.core.action.registries import action_type_registry
 from baserow.test_utils.helpers import assert_undo_redo_actions_are_valid
@@ -314,10 +315,10 @@ def test_convert_text_field_to_duration_field(
     "expected,field_kwargs",
     [
         ([0, 0, 60, 120, 120], {"duration_format": "h:mm"}),
-        ([1, 10, 50, 100, 122], {"duration_format": "h:mm:ss"}),
-        ([1.2, 10.1, 50.1, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
-        ([1.20, 10.11, 50.11, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
-        ([1.199, 10.11, 50.111, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
+        ([1, 10, 51, 100, 122], {"duration_format": "h:mm:ss"}),
+        ([1.2, 10.1, 50.7, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
+        ([1.20, 10.11, 50.68, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
+        ([1.199, 10.11, 50.679, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
     ],
 )
 def test_alter_duration_format(expected, field_kwargs, data_fixture):
@@ -327,12 +328,13 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
         user=user, table=table, duration_format="h:mm:ss.sss"
     )
 
-    model = table.get_model()
-    model.objects.create(**{f"field_{field.id}": timedelta(seconds=1.199)})
-    model.objects.create(**{f"field_{field.id}": timedelta(seconds=10.11)})
-    model.objects.create(**{f"field_{field.id}": timedelta(seconds=50.111)})
-    model.objects.create(**{f"field_{field.id}": timedelta(seconds=100.1)})
-    model.objects.create(**{f"field_{field.id}": timedelta(seconds=122)})
+    original_values = [1.199, 10.11, 50.6789, 100.1, 122]
+
+    RowHandler().create_rows(
+        user,
+        table,
+        [{field.db_column: value} for value in original_values],
+    )
 
     # Change the format and test if the values have been changed.
     handler = FieldHandler()
@@ -351,10 +353,10 @@ def test_alter_duration_format(expected, field_kwargs, data_fixture):
     "expected,field_kwargs",
     [
         ([0, 0, 60, 120, 120], {"duration_format": "h:mm"}),
-        ([1, 10, 50, 100, 122], {"duration_format": "h:mm:ss"}),
-        ([1.2, 10.1, 50.1, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
-        ([1.20, 10.11, 50.11, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
-        ([1.199, 10.11, 50.111, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
+        ([1, 10, 51, 100, 122], {"duration_format": "h:mm:ss"}),
+        ([1.2, 10.1, 50.7, 100.1, 122], {"duration_format": "h:mm:ss.s"}),
+        ([1.20, 10.11, 50.68, 100.1, 122], {"duration_format": "h:mm:ss.ss"}),
+        ([1.199, 10.11, 50.679, 100.1, 122], {"duration_format": "h:mm:ss.sss"}),
     ],
 )
 def test_alter_duration_format_can_be_undone(expected, field_kwargs, data_fixture):
@@ -365,12 +367,12 @@ def test_alter_duration_format_can_be_undone(expected, field_kwargs, data_fixtur
         user=user, table=table, duration_format="h:mm:ss.sss"
     )
 
-    original_values = [1.199, 10.11, 50.111, 100.1, 122]
+    original_values = [1.199, 10.11, 50.679, 100.1, 122]
 
     RowHandler().create_rows(
         user,
         table,
-        [{field.db_column: timedelta(seconds=value)} for value in original_values],
+        [{field.db_column: value} for value in original_values],
     )
 
     # Change the format and test if the values have been changed.
@@ -392,3 +394,147 @@ def test_alter_duration_format_can_be_undone(expected, field_kwargs, data_fixtur
         assert (
             getattr(row, f"field_{field.id}").total_seconds() == original_values[index]
         )
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_view_filters(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_duration_field(
+        table=table, duration_format="h:mm:ss.sss"
+    )
+
+    model = table.get_model()
+    rows = RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {field.db_column: None},
+            {field.db_column: "0:1.123"},
+            {field.db_column: 1.123},
+            {field.db_column: 60},  # 1min
+            {field.db_column: "24:0:0"},  # 1day
+            {field.db_column: 86400},  # 1day
+            {field.db_column: 3601},  # 1hour 1sec
+            {field.db_column: "1:0:0"},  # 1 hour
+        ],
+        model=model,
+    )
+
+    #
+    view = data_fixture.create_grid_view(table=table)
+    view_filter = data_fixture.create_view_filter(
+        view=view, field=field, type="equal", value="0:0:1.123"
+    )
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [rows[1].id, rows[2].id]
+
+    view_filter.value = "1.123"  # it will be considered as a number of seconds
+    view_filter.save(update_fields=["value"])
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [rows[1].id, rows[2].id]
+
+    view_filter.type = "not_equal"
+    view_filter.save(update_fields=["type"])
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [
+        rows[0].id,
+        rows[3].id,
+        rows[4].id,
+        rows[5].id,
+        rows[6].id,
+        rows[7].id,
+    ]
+
+    view_filter.type = "empty"
+    view_filter.save(update_fields=["type"])
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [rows[0].id]
+
+    view_filter.type = "not_empty"
+    view_filter.save(update_fields=["type"])
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [
+        rows[1].id,
+        rows[2].id,
+        rows[3].id,
+        rows[4].id,
+        rows[5].id,
+        rows[6].id,
+        rows[7].id,
+    ]
+
+    view_filter.type = "higher_than"
+    view_filter.value = "3600"  # 1 hour
+    view_filter.save()
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [
+        rows[4].id,
+        rows[5].id,
+        rows[6].id,
+    ]
+
+    view_filter.type = "higher_than"
+    view_filter.value = "1:00:00"
+    view_filter.save()
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [
+        rows[4].id,
+        rows[5].id,
+        rows[6].id,
+    ]
+
+    view_filter.type = "lower_than"
+    view_filter.save(update_fields=["type"])
+
+    qs = ViewHandler().get_queryset(view, model=model)
+    assert list(qs.values_list("id", flat=True)) == [
+        rows[1].id,
+        rows[2].id,
+        rows[3].id,
+    ]
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db
+def test_duration_field_view_aggregations(data_fixture):
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    field = data_fixture.create_duration_field(table=table, duration_format="h:mm:ss")
+
+    RowHandler().create_rows(
+        user,
+        table,
+        rows_values=[
+            {field.db_column: 1},
+            {field.db_column: 60},
+            {field.db_column: 60},
+            {field.db_column: "1:0:0"},
+            {field.db_column: None},
+        ],
+    )
+
+    view = data_fixture.create_grid_view(table=table)
+
+    result = ViewHandler().get_field_aggregations(user, view, [(field, "max")])
+    assert result[field.db_column] == timedelta(seconds=3600)
+
+    result = ViewHandler().get_field_aggregations(user, view, [(field, "min")])
+    assert result[field.db_column] == timedelta(seconds=1)
+
+    result = ViewHandler().get_field_aggregations(user, view, [(field, "sum")])
+    assert result[field.db_column] == timedelta(seconds=3721)
+
+    result = ViewHandler().get_field_aggregations(user, view, [(field, "empty_count")])
+    assert result[field.db_column] == 1
+
+    result = ViewHandler().get_field_aggregations(user, view, [(field, "unique_count")])
+    assert result[field.db_column] == 3

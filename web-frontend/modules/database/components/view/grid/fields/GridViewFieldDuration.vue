@@ -39,6 +39,10 @@ export default {
       this.$super(gridFieldInput).cancel()
       this.updateFormattedValue(this.field, this.copy)
     },
+    beforeSave(value) {
+      this.updateFormattedValue(this.field, value)
+      return this.$super(gridFieldInput).beforeSave(value)
+    },
     afterEdit() {
       this.$nextTick(() => {
         this.$refs.input.focus()

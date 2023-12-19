@@ -654,3 +654,53 @@ def test_last_modified_by_field_get_search_expression(
     assert len(matching_rows) == 2
     assert matching_rows[0].id == row1.id
     assert matching_rows[1].id == row4.id
+
+
+@pytest.mark.field_duration
+@pytest.mark.django_db(transaction=True)
+def test_duration_field_get_search_expression(data_fixture, enable_singleton_testing):
+    with transaction.atomic():
+        user = data_fixture.create_user()
+        database = data_fixture.create_database_application(user=user)
+        table = TableHandler().create_table_and_fields(
+            user=user,
+            database=database,
+            name=data_fixture.fake.name(),
+            fields=[
+                ("Duration", "duration", {"duration_format": "h:mm:ss.sss"}),
+            ],
+        )
+        field = table.field_set.get(name="Duration")
+        row = RowHandler().create_row(
+            user=user, table=table, values={f"field_{field.id}": "1:53:46.789"}
+        )
+
+    model = table.get_model()
+    qs = model.objects.all().pg_search("53")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("1")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("46")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("789")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    qs = model.objects.all().pg_search("1:53:46.789")
+    assert qs.exists()
+    matching_row = qs.get()
+    assert matching_row.id == row.id
+
+    # Searching the number of seconds doesn't work
+    qs = model.objects.all().pg_search(f"{83 * 60}")
+    assert not qs.exists()

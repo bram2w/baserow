@@ -2,6 +2,7 @@ import { TestApp } from '@baserow/test/helpers/testApp'
 import {
   BooleanFieldType,
   DateFieldType,
+  DurationFieldType,
   EmailFieldType,
   LinkRowFieldType,
   LongTextFieldType,
@@ -598,6 +599,21 @@ const queryParametersForParsing = [
     fieldType: new PhoneNumberFieldType(),
     input: { value: '+1 (123) 456-7890', field: {} },
     output: '+1 (123) 456-7890',
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: '1:01', field: { duration_format: 'h:mm' } },
+    output: 3660,
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: '1:01:01', field: { duration_format: 'h:mm:ss' } },
+    output: 3661,
+  },
+  {
+    fieldType: new DurationFieldType(),
+    input: { value: 61, field: { duration_format: 'h:mm' } },
+    output: 60, // the value is rounded according to the duration format
   },
 ]
 

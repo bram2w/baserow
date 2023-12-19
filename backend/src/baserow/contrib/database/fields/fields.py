@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 
 from django.db import models
 from django.db.models import Field, Value
@@ -9,6 +9,9 @@ from django.db.models.fields.related_descriptors import (
 )
 from django.utils.functional import cached_property
 
+from baserow.contrib.database.fields.utils.duration import (
+    convert_duration_input_value_to_timedelta,
+)
 from baserow.contrib.database.formula import BaserowExpression, FormulaHandler
 from baserow.core.fields import SyncedDateTimeField
 
@@ -303,6 +306,20 @@ class SerialField(models.Field):
             )
         else:
             return super().pre_save(model_instance, add)
+
+
+class DurationField(models.DurationField):
+    """
+    Extend the default Django DurationField to allow for more flexible input values.
+    """
+
+    def __init__(self, duration_format, *args, **kwargs):
+        self.duration_format = duration_format
+        super().__init__(*args, **kwargs)
+
+    def get_prep_value(self, value: Any) -> Any:
+        value = convert_duration_input_value_to_timedelta(value, self.duration_format)
+        return super().get_prep_value(value)
 
 
 class IntegerFieldWithSequence(models.IntegerField):

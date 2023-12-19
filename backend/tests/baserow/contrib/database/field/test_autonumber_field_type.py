@@ -543,8 +543,8 @@ def test_autonumber_field_view_filters(data_fixture):
     autonumber_field = data_fixture.create_autonumber_field(table=table)
 
     model = table.get_model()
-    model.objects.create()
-    model.objects.create()
+    row_1 = model.objects.create()
+    row_2 = model.objects.create()
 
     # Add a filter and a sort to the view and number rows based on that
     view = data_fixture.create_grid_view(table=table)
@@ -553,13 +553,13 @@ def test_autonumber_field_view_filters(data_fixture):
     )
 
     qs = ViewHandler().get_queryset(view, model=model)
-    assert list(qs.values_list("id", flat=True)) == [1]
+    assert list(qs.values_list("id", flat=True)) == [row_1.id]
 
     view_filter.type = "not_equal"
     view_filter.save(update_fields=["type"])
 
     qs = ViewHandler().get_queryset(view, model=model)
-    assert list(qs.values_list("id", flat=True)) == [2]
+    assert list(qs.values_list("id", flat=True)) == [row_2.id]
 
     view_filter.type = "lower_than"
     view_filter.save(update_fields=["type"])
@@ -571,19 +571,19 @@ def test_autonumber_field_view_filters(data_fixture):
     view_filter.save(update_fields=["type"])
 
     qs = ViewHandler().get_queryset(view, model=model)
-    assert list(qs.values_list("id", flat=True)) == [2]
+    assert list(qs.values_list("id", flat=True)) == [row_2.id]
 
     view_filter.type = "contains"
     view_filter.save(update_fields=["type"])
 
     qs = ViewHandler().get_queryset(view, model=model)
-    assert list(qs.values_list("id", flat=True)) == [1]
+    assert list(qs.values_list("id", flat=True)) == [row_1.id]
 
     view_filter.type = "contains_not"
     view_filter.save(update_fields=["type"])
 
     qs = ViewHandler().get_queryset(view, model=model)
-    assert list(qs.values_list("id", flat=True)) == [2]
+    assert list(qs.values_list("id", flat=True)) == [row_2.id]
 
 
 @pytest.mark.field_autonumber

@@ -2,6 +2,15 @@ from datetime import timedelta
 from typing import Optional, Union
 
 from django.core.exceptions import ValidationError
+from django.db.models import (
+    DecimalField,
+    FloatField,
+    Func,
+    IntegerField,
+    TextField,
+    Value,
+)
+from django.db.models.functions import Cast, Extract
 
 DURATION_FORMATS = {
     "h:mm": {
@@ -51,32 +60,82 @@ DURATION_FORMAT_TOKENS = {
     "h": {
         "multiplier": 3600,
         "parse_func": int,
-        "sql_to_text": "EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::INTEGER / 3600",
+        "sql_to_text": "TRUNC(EXTRACT(EPOCH FROM CAST(p_in AS INTERVAL))::INTEGER / 3600)",
+        "search_expr": lambda field_name: Cast(
+            Func(
+                Extract(field_name, "epoch", output_field=IntegerField()) / Value(3600),
+                function="TRUNC",
+                output_field=IntegerField(),
+            ),
+            output_field=TextField(),
+        ),
     },
     "mm": {
         "multiplier": 60,
         "parse_func": int,
-        "sql_to_text": "TO_CHAR(EXTRACT(MINUTE FROM CAST(p_in AS INTERVAL)), 'FM00')",
+        "sql_to_text": "TO_CHAR(EXTRACT(MINUTE FROM CAST(p_in AS INTERVAL))::INTEGER, 'FM00')",
+        "search_expr": lambda field_name: Func(
+            Extract(field_name, "minutes", output_field=IntegerField()),
+            Value("FM00"),
+            function="TO_CHAR",
+            output_field=TextField(),
+        ),
     },
     "ss": {
         "multiplier": 1,
         "parse_func": lambda value: round(float(value), 0),
-        "sql_to_text": "TO_CHAR(TRUNC(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL))::NUMERIC, 0), 'FM00')",
+        "sql_to_text": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 0)), 'FM00')",
+        "search_expr": lambda field_name: Func(
+            Cast(
+                Extract(field_name, "seconds", output_field=FloatField()),
+                output_field=DecimalField(max_digits=15, decimal_places=0),
+            ),
+            Value("FM00"),
+            function="TO_CHAR",
+            output_field=TextField(),
+        ),
     },
     "ss.s": {
         "multiplier": 1,
         "parse_func": lambda value: round(float(value), 1),
-        "sql_to_text": "TO_CHAR(TRUNC(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL))::NUMERIC, 1), 'FM00.0')",
+        "sql_to_text": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 1)), 'FM00.0')",
+        "search_expr": lambda field_name: Func(
+            Cast(
+                Extract(field_name, "seconds", output_field=DecimalField()),
+                output_field=DecimalField(max_digits=15, decimal_places=1),
+            ),
+            Value("FM00.0"),
+            function="TO_CHAR",
+            output_field=TextField(),
+        ),
     },
     "ss.ss": {
         "multiplier": 1,
         "parse_func": lambda value: round(float(value), 2),
-        "sql_to_text": "TO_CHAR(TRUNC(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL))::NUMERIC, 2), 'FM00.00')",
+        "sql_to_text": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 2)), 'FM00.00')",
+        "search_expr": lambda field_name: Func(
+            Cast(
+                Extract(field_name, "seconds", output_field=DecimalField()),
+                output_field=DecimalField(max_digits=15, decimal_places=2),
+            ),
+            Value("FM00.00"),
+            function="TO_CHAR",
+            output_field=TextField(),
+        ),
     },
     "ss.sss": {
         "multiplier": 1,
         "parse_func": lambda value: round(float(value), 3),
-        "sql_to_text": "TO_CHAR(TRUNC(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL))::NUMERIC, 3), 'FM00.000')",
+        "sql_to_text": "TO_CHAR(CAST(EXTRACT(SECOND FROM CAST(p_in AS INTERVAL)) AS NUMERIC(15, 3)), 'FM00.000')",
+        "search_expr": lambda field_name: Func(
+            Cast(
+                Extract(field_name, "seconds", output_field=DecimalField()),
+                output_field=DecimalField(max_digits=15, decimal_places=3),
+            ),
+            Value("FM00.000"),
+            function="TO_CHAR",
+            output_field=TextField(),
+        ),
     },
 }
 MOST_ACCURATE_DURATION_FORMAT = "h:mm:ss.sss"
@@ -160,6 +219,15 @@ def convert_duration_input_value_to_timedelta(
         return None
     elif isinstance(value, timedelta):
         return value
+
+    # Since our view_filters are storing the number of seconds as string, let's try to
+    # convert it to a float first. Please note that this is different in the frontend
+    # where the input value is a string and immediately use the field format to parse
+    # it.
+    try:
+        value = float(value)
+    except ValueError:
+        pass
 
     if isinstance(value, (int, float)) and value >= 0:
         total_seconds = value

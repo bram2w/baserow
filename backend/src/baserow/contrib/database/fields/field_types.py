@@ -143,9 +143,9 @@ from .field_filters import (
     filename_contains_filter,
 )
 from .field_sortings import OptionallyAnnotatedOrderBy
+from .fields import BaserowExpressionField, BaserowLastModifiedField
+from .fields import DurationField as DurationModelField
 from .fields import (
-    BaserowExpressionField,
-    BaserowLastModifiedField,
     IntegerFieldWithSequence,
     MultipleSelectManyToManyField,
     SingleSelectForeignKey,
@@ -1436,9 +1436,6 @@ class LastModifiedByFieldType(ReadOnlyFieldType):
             ]
         )
 
-    def is_searchable(self, field: Field) -> bool:
-        return True
-
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
         if value == "":
@@ -1642,9 +1639,6 @@ class CreatedByFieldType(ReadOnlyFieldType):
             ]
         )
 
-    def is_searchable(self, field: Field) -> bool:
-        return True
-
     def contains_query(self, field_name, value, model_field, field):
         value = value.strip()
         if value == "":
@@ -1697,7 +1691,7 @@ class DurationFieldType(FieldType):
     serializer_field_names = ["duration_format"]
 
     def get_model_field(self, instance, **kwargs):
-        return models.DurationField(null=True)
+        return DurationModelField(instance.duration_format, null=True)
 
     def get_serializer_field(self, instance, **kwargs):
         return DurationFieldSerializer(
@@ -1719,8 +1713,15 @@ class DurationFieldType(FieldType):
     def prepare_value_for_db(self, instance, value):
         return prepare_duration_value_for_db(value, instance.duration_format)
 
-    def is_searchable(self, field: Field) -> bool:
-        return False
+    def get_search_expression(self, field: Field, queryset: QuerySet) -> Expression:
+        search_exprs = []
+        for token in field.duration_format.split(":"):
+            search_expr = DURATION_FORMAT_TOKENS[token]["search_expr"](field.db_column)
+            search_exprs.append(search_expr)
+        separators = [Value(" ")] * len(search_exprs)
+        # interleave a separator between each extract_expr
+        exprs = [expr for pair in zip(search_exprs, separators) for expr in pair][:-1]
+        return Func(*exprs, function="CONCAT")
 
     def random_value(self, instance, fake, cache):
         random_seconds = fake.random.random() * 60 * 60 * 2
@@ -1784,7 +1785,7 @@ class DurationFieldType(FieldType):
         value: Optional[timedelta],
         field_object: "FieldObject",
         rich_value: bool = False,
-    ) -> str:
+    ) -> Optional[str]:
         if value is None:
             return None
 
