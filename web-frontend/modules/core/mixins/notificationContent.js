@@ -1,6 +1,11 @@
 import { notifyIf } from '@baserow/modules/core/utils/error'
 
 export default {
+  computed: {
+    sender() {
+      return this.notification.sender?.first_name
+    },
+  },
   methods: {
     markAsReadAndHandleClick(evt) {
       this.$emit('click')

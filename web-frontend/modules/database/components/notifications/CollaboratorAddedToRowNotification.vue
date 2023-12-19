@@ -7,9 +7,12 @@
     <div class="notification-panel__notification-content-title">
       <i18n path="collaboratorAddedToRowNotification.title" tag="span">
         <template #sender>
-          <strong>{{
-            notification.sender?.first_name || $t('anonymous')
-          }}</strong>
+          <strong v-if="sender">{{ sender }}</strong>
+          <strong v-else
+            ><s>{{
+              $t('collaboratorAddedToRowNotification.deletedUser')
+            }}</s></strong
+          >
         </template>
         <template #fieldName>
           <strong>{{ notification.data.field_name }}</strong>

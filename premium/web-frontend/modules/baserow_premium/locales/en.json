@@ -54,10 +54,12 @@
         "delete": "Delete comment"
     },
     "rowCommentMentionNotification": {
-        "title": "{sender} mentioned you in row {row} in {table}"
+        "title": "{sender} mentioned you in row {row} in {table}",
+        "deletedUser": "A deleted user"
     },
     "rowCommentNotification": {
-        "title": "{sender} posted a comment in row {row} in {table}"
+        "title": "{sender} posted a comment in row {row} in {table}",
+        "deletedUser": "A deleted user"
     },
     "trashType": {
         "row_comment": "row comment"

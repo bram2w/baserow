@@ -7,7 +7,12 @@
     <div class="notification-panel__notification-content-title">
       <i18n path="rowCommentMentionNotification.title" tag="span">
         <template #sender>
-          <strong>{{ notification.sender.first_name }}</strong>
+          <strong v-if="sender">{{ sender }}</strong>
+          <strong v-else
+            ><s>{{
+              $t('rowCommentMentionNotification.deletedUser')
+            }}</s></strong
+          >
         </template>
         <template #row>
           <strong>{{ notification.data.row_id }}</strong>

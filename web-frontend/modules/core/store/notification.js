@@ -171,8 +171,8 @@ export const actions = {
     }
   },
   async fetchAll({ commit, state }, { workspaceId }) {
-    commit('SET_LOADING', true)
     commit('SET_LOADED', false)
+    commit('SET_LOADING', true)
     try {
       const { data } = await notificationService(this.$client).fetchAll(
         workspaceId,
