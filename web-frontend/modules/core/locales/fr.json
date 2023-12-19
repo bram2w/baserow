@@ -384,7 +384,8 @@
                 "description": "Si vous souhaitez masquer un champ dynamiquement, vous pouvez le faire via des paramètres de requête ajouté à l'URL publique du formulaire. Ces paramètres de requête doivent être préfixés par `hide_` pour éviter une collision avec d'autres paramètres."
             }
         },
-        "prefillOrHideInfoLink": "Pré-remplir ou masquer dynamiquement"
+        "prefillOrHideInfoLink": "Pré-remplir ou masquer dynamiquement",
+        "notifyUserOnSubmit": "Recevoir une notification lors de la soumission"
     },
     "deleteAccountSettings": {
         "workspaceNotice": "Les projets sans propriétaires seront être supprimés",
@@ -645,5 +646,15 @@
     },
     "formulaInputField": {
         "errorInvalidFormula": "La formule est invalide."
+    },
+    "userPasswordChangedToast": {
+        "title": "Mot de passe modifié",
+        "content": "Votre mot de passe a été modifié. Veuillez vous connecter de nouveau."
+    },
+    "integrationDropdown": {
+        "noIntegrations": "Aucune intégration trouvée.",
+        "addIntegration": "Ajouter une nouvelle intégration",
+        "integrationPlaceholder": "Sélectionnez une intégration",
+        "selectTypeFirst": "Choisir d'abord le type"
     }
 }

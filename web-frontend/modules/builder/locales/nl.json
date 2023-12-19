@@ -32,11 +32,14 @@
     "builderSettingTypes": {
         "themeName": "Thema",
         "integrationsName": "Integraties",
-        "domainsName": "Domeinen"
+        "domainsName": "Domeinen",
+        "userSourcesName": "Gebruikers"
     },
     "elementMenu": {
         "moveUp": "Verplaats omhoog",
-        "moveDown": "Verplaats omlaag"
+        "moveDown": "Verplaats omlaag",
+        "moveRight": "Naar rechts",
+        "moveLeft": "Naar links"
     },
     "pageHeaderItemTypes": {
         "labelElements": "Elementen",
@@ -59,7 +62,14 @@
         "imageDescription": "Afbeelding weergeven",
         "inputText": "Tekstinvoer",
         "inputTextDescription": "Een tekstinvoerveld",
-        "column": "Kolommen"
+        "column": "Kolommen",
+        "table": "Tabel",
+        "formContainer": "Formulier",
+        "tableDescription": "Een tabel element",
+        "columnDescription": "Kolommen container",
+        "button": "Knop",
+        "buttonDescription": "Een knop element",
+        "formContainerDescription": "Een formulier element"
     },
     "addElementButton": {
         "label": "Element"
@@ -147,7 +157,9 @@
         "detailLabel": "Toon details"
     },
     "domainTypes": {
-        "customName": "Aangepast domein"
+        "customName": "Aangepast domein",
+        "subDomain": "Subdomein van {domain}",
+        "subDomainName": "Subdomein"
     },
     "linkElement": {
         "noValue": "Naamloos..."
@@ -217,7 +229,8 @@
     },
     "elementForms": {
         "textInputPlaceholder": "Voer tekst in...",
-        "urlInputPlaceholder": "Voer url in..."
+        "urlInputPlaceholder": "Voer url in...",
+        "invalidFormula": "De formule is ongeldig"
     },
     "dnsStatus": {
         "hostHeader": "Host",
@@ -236,6 +249,189 @@
     "dataProviderType": {
         "currentRecord": "Gegevensbron",
         "pageParameter": "Parameter",
-        "dataSource": "Data"
+        "dataSource": "Data",
+        "formData": "Formuliergegevens"
+    },
+    "tableElementForm": {
+        "addField": "veld toevoegen",
+        "itemsPerPage": "Items per pagina",
+        "fieldType": "Type",
+        "fieldValueLabel": "Waarde",
+        "fieldDefaultName": "Kolom",
+        "dataSource": "Gegevensbron",
+        "fieldValuePlaceholder": "Waarde invoeren...",
+        "itemsPerPagePlaceholder": "Waarde invoeren...",
+        "fields": "Velden"
+    },
+    "linkFieldForm": {
+        "fieldLinkNamePlaceholder": "Waarde invoeren...",
+        "fieldValuePlaceholder": "Waarde invoeren...",
+        "fieldLinkNameLabel": "Link tekst",
+        "fieldValueLabel": "Url"
+    },
+    "verticalAlignmentSelector": {
+        "alignmentTop": "Boven",
+        "alignmentBottom": "Onderkant",
+        "alignmentCenter": "Midden",
+        "alignment": "Verticale uitlijning"
+    },
+    "horizontalAlignmentSelector": {
+        "alignmentLeft": "Link",
+        "alignmentRight": "Rechts",
+        "alignment": "Horizontaal uitlijnen",
+        "alignmentCenter": "Centreren"
+    },
+    "defaultStyleForm": {
+        "widthLabel": "Breedte",
+        "boxTop": "Bovenkant",
+        "backgroundLabel": "Achtergrond",
+        "backgroundColor": "Achtergrond kleur",
+        "boxBottom": "Onderkant"
+    },
+    "updateUserSourceForm": {
+        "nameFieldLabel": "Naam",
+        "nameFieldPlaceholder": "Voer een naam in...",
+        "integrationFieldLabel": "Integratie"
+    },
+    "mainThemeConfigBlock": {
+        "colorsLabel": "Kleuren",
+        "primaryColor": "Primair",
+        "headingValue": "Kop <h{i}>",
+        "typography": "Typografie",
+        "headingLabel": "Kop {i} (h{i})",
+        "secondaryColor": "Secundair"
+    },
+    "inputTextElementForm": {
+        "placeholderPlaceholder": "Voer een placeholder in (optioneel)",
+        "valueTitle": "Standaardwaarde",
+        "valuePlaceholder": "Voer een standaardwaarde in (optioneel)",
+        "placeholderTitle": "Placeholder",
+        "labelTitle": "Label",
+        "requiredTitle": "Vereist",
+        "labelPlaceholder": "Voer een label in (optioneel)"
+    },
+    "widthSelector": {
+        "widthFull": "Volledige breedte",
+        "widthAuto": "Auto",
+        "width": "Breedte"
+    },
+    "buttonElementForm": {
+        "valuePlaceholder": "Voer tekst in...",
+        "valueLabel": "Tekst"
+    },
+    "workflowActionTypes": {
+        "updateRowLabel": "Rij bijwerken",
+        "createRowLabel": "Rij maken",
+        "notificationLabel": "Melding tonen",
+        "openPageLabel": "Pagina openen"
+    },
+    "widthTypes": {
+        "full": "Volledige breedte",
+        "small": "Klein",
+        "medium": "Medium",
+        "normal": "Normaal"
+    },
+    "userSourceSettings": {
+        "titleOverview": "Gebruiker bronnen",
+        "titleUpdateUserSource": "Gebruikersbron bewerken",
+        "titleAddUserSource": "Nieuwe gebruikersbron",
+        "addUserSource": "Gebruikersbron toevoegen",
+        "noUserSourceMessage": "U hebt nog geen gebruikersbron toegevoegd aan deze applicatie. U moet een gebruikersbron toevoegen als u wilt dat gebruikers uw applicatie kunnen authenticeren."
+    },
+    "upsertRowWorkflowActionForm": {
+        "rowIdPlaceholder": "Selecteer een rij-ID",
+        "fieldMappingPlaceholder": "Kies een veldwaarde",
+        "integrationDropdownLabel": "Integratie",
+        "rowIdLabel": "Rij ID",
+        "noTableSelectedMessage": "Kies een tabel om te beginnen met het configureren van je velden."
+    },
+    "subDomainDetails": {
+        "text": "De DNS-instellingen van de domeinnaam zijn al geconfigureerd en gecontroleerd. Het werkt zonder extra wijzigingen."
+    },
+    "columnElementForm": {
+        "columnGapPlaceholder": "Voer ruimte in tussen kolommen...",
+        "columnGapTitle": "Ruimte tussen kolommen",
+        "columnAmountTitle": "Layout",
+        "columnAmountName": "geen kolommen | 1 kolom | {columnAmount} kolommen"
+    },
+    "notificationWorkflowActionForm": {
+        "descriptionLabel": "Beschrijving",
+        "descriptionPlaceholder": "Tekst invoeren...",
+        "titleLabel": "Titel",
+        "titlePlaceholder": "Tekst invoeren..."
+    },
+    "currentRecordDataProviderType": {
+        "index": "Index",
+        "firstPartName": "Gegevensbron: {name}"
+    },
+    "domainForm": {
+        "notUniqueDomain": "De opgegeven domeinnaam is al in gebruik",
+        "invalidDomain": "De opgegeven domeinnaam is ongeldig"
+    },
+    "dispatchWorkflowActionError": {
+        "defaultMessage": "Er is een fout opgetreden die deze gebeurtenis heeft veroorzaakt.",
+        "defaultTitle": "Gebeurtenis fout"
+    },
+    "openPageWorkflowActionForm": {
+        "urlLabel": "URL",
+        "urlPlaceholder": "Tekst invoeren..."
+    },
+    "collectionFieldType": {
+        "text": "Tekst",
+        "link": "Link"
+    },
+    "createUserSourceForm": {
+        "userSourceName": "Naam",
+        "userSourceIntegration": "Integratie",
+        "userSourceType": "Type"
+    },
+    "event": {
+        "addAction": "actie toevoegen"
+    },
+    "buttonElement": {
+        "noValue": "Naamloos..."
+    },
+    "formDataProviderType": {
+        "nodeMissing": "Ontbrekend"
+    },
+    "textFieldForm": {
+        "fieldValuePlaceholder": "Waarde invoeren...",
+        "fieldValueLabel": "Waarde"
+    },
+    "tableElement": {
+        "empty": "Er zijn geen items gevonden.",
+        "showMore": "Meer tonen"
+    },
+    "fontSidePanelForm": {
+        "label": "Lettertype"
+    },
+    "styleBoxForm": {
+        "borderLabel": "Grens",
+        "paddingLabel": "Opvulling",
+        "error": "De waarde moet een geheel getal zijn tussen 0 en 200."
+    },
+    "backgroundTypes": {
+        "color": "Kleur",
+        "none": "Geen"
+    },
+    "pagePreview": {
+        "emptyMessage": "Klik om het eerste element te maken"
+    },
+    "eventTypes": {
+        "submitLabel": "Op versturen",
+        "clickLabel": "Op klik"
+    },
+    "formContainerElementForm": {
+        "submitButtonLabel": "Verstuur knop",
+        "submitButtonPlaceholder": "Waarde invoeren..."
+    },
+    "subDomainForm": {
+        "domainNameLabel": "Domeinnaam"
+    },
+    "linkField": {
+        "details": "Details"
+    },
+    "getFormulaComponent": {
+        "errorTooltip": "Ongeldige referentie"
     }
 }

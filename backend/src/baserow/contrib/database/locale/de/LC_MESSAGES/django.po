@@ -8,8 +8,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-27 10:23+0000\n"
-"PO-Revision-Date: 2023-03-31 12:31+0000\n"
-"Last-Translator: Alexander Haller <alex@baserow.io>\n"
+"PO-Revision-Date: 2023-12-19 12:33+0000\n"
+"Last-Translator: SWEETGOOD <cs@sweetgood.de>\n"
 "Language-Team: German <https://hosted.weblate.org/projects/baserow/"
 "backend-database/de/>\n"
 "Language: de\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.17-dev\n"
+"X-Generator: Weblate 5.3\n"
 
 #: src/baserow/contrib/database/action/scopes.py:9
 #, python-format
@@ -433,7 +433,7 @@ msgstr "Optionen der Ansichtsfelder aktualisiert"
 
 #: src/baserow/contrib/database/views/actions.py:770
 msgid "View slug URL updated"
-msgstr "Ansicht Slug-URL aktualisiert"
+msgstr "Ansichts-Slug-URL aktualisiert"
 
 #: src/baserow/contrib/database/views/actions.py:771
 msgid "View changed public slug URL"
@@ -504,7 +504,7 @@ msgstr "Dekoration löschen"
 #: src/baserow/contrib/database/views/actions.py:1343
 #, python-format
 msgid "View decoration %(decorator_id)s deleted"
-msgstr "Ansicht Dekoration %(decorator_id)s gelöscht"
+msgstr "Ansichts-Dekoration %(decorator_id)s gelöscht"
 
 #: src/baserow/contrib/database/webhooks/actions.py:20
 msgid "Create Webhook"

@@ -28,7 +28,7 @@
         "noComment": "Noch keine Kommentare zu dieser Zeile. Verwenden Sie das Formular unten, um einen Kommentar hinzuzufügen.",
         "comment": "Kommentar",
         "more": "Weitere Informationen",
-        "name": "Zeilenkommentare"
+        "name": "Kommentare"
     },
     "rowComment": {
         "you": "Sie",
@@ -343,5 +343,8 @@
     "rowCommentContext": {
         "delete": "Kommentar löschen",
         "edit": "Kommentar bearbeiten"
+    },
+    "rowCommentNotification": {
+        "title": "{sender} hat einen Kommentar in Tabelle {table}, Zeile {row} geschrieben"
     }
 }

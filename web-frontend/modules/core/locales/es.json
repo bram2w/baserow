@@ -119,7 +119,8 @@
         "members": "Miembros",
         "viewTrash": "Ver papelera",
         "leaveWorkspace": "Dejar grupo",
-        "deleteWorkspace": "Eliminar grupo"
+        "deleteWorkspace": "Eliminar grupo",
+        "auditLog": "Registro de auditoría"
     },
     "createWorkspaceModal": {
         "createNew": "Crear grupo nuevo",
@@ -383,7 +384,8 @@
                 "description": "Si desea ocultar el campo dinámicamente, puede hacerlo a través de los parámetros de consulta agregados a la URL pública. Estos parámetros de consulta tienen el prefijo `hide_` para evitar errores con posibles parámetros de consulta futuros."
             }
         },
-        "prefillOrHideInfoLink": "Rellenar u ocultar dinámicamente"
+        "prefillOrHideInfoLink": "Rellenar u ocultar dinámicamente",
+        "notifyUserOnSubmit": "Recibir una notificación de envío"
     },
     "deleteAccountSettings": {
         "title": "Borrar cuenta",
@@ -593,7 +595,9 @@
         "noNotification": "Te notificaremos las actualizaciones importantes y cada vez que te mencionen en Baserow.",
         "title": "Notificaciones",
         "markAllAsRead": "Marcar todo como leído",
-        "noNotificationTitle": "No tienes notificaciones"
+        "noNotificationTitle": "No tienes notificaciones",
+        "newNotificationsAvailable": "Nuevas notificaciones disponibles",
+        "refresh": "Refrescar"
     },
     "clearAllNotificationsConfirmModal": {
         "title": "¿Estás seguro de que quieres borrar todas las notificaciones?",
@@ -626,5 +630,31 @@
     },
     "versionUpgradeNotification": {
         "title": "{versión} ¡ya está aquí! Descubre qué hay de nuevo."
+    },
+    "userPasswordChangedToast": {
+        "title": "Contraseña cambiada",
+        "content": "Tu contraseña ha cambiado. Por favor, inicia sesión de nuevo."
+    },
+    "emailNotifications": {
+        "submitButton": "Actualizar la frecuencia",
+        "label": "Menciones, comentarios, y otras notificaciones",
+        "daily": "A diario",
+        "title": "Notificaciones por correo electrónico",
+        "never": "Nunca",
+        "weekly": "Semanal",
+        "description": "Configure la frecuencia de envío de correos electrónicos a tu bandeja de entrada.",
+        "instant": "Al instante"
+    },
+    "dataExplorer": {
+        "emptyText": "No hay datos"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "La fórmula es inválida."
+    },
+    "integrationDropdown": {
+        "noIntegrations": "No se han encontrado integraciones.",
+        "addIntegration": "Añadir nueva integración",
+        "integrationPlaceholder": "Selecciona una integración",
+        "selectTypeFirst": "Primero elige el tipo"
     }
 }

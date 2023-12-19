@@ -282,5 +282,16 @@
     "auditLogSidebarWorkspace": {
         "title": "Audit log",
         "deactivated": "Beschikbaar in advanced/enterprise"
+    },
+    "localBaserowUserSourceForm": {
+        "description": "Elke rij in de tabel is een gebruikersaccount. Selecteer de overeenkomende velden in de tabel. Het veld e-mail wordt gebruikt om te identificeren.",
+        "emailFieldLabel": "Selecteer e-mailveld",
+        "noFields": "Geen velden",
+        "nameFieldLabel": "Selecteer naam veld",
+        "nameFieldPlaceholder": "Selecteer een veld...",
+        "emailFieldLabelPlaceholder": "Selecteer een veld..."
+    },
+    "localBaserowUserSourceType": {
+        "notConfigured": "Niet geconfigureerd"
     }
 }

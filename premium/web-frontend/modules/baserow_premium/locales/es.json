@@ -20,7 +20,7 @@
             "json": "Exportar a JSON",
             "xml": "Exportar a XML"
         },
-        "deactivated": "Disponible en la versión premium"
+        "deactivated": "Disponible en el plan Premium"
     },
     "rowCommentSidebar": {
         "onlyPremium": "Los comentarios de Fila están disponibles en la versión premium.",
@@ -28,7 +28,7 @@
         "noComment": "Aún no hay comentarios para esta fila. Utilice el siguiente formulario para añadir un comentario.",
         "comment": "Comentario",
         "more": "Más información",
-        "name": "Comentarios de la fila"
+        "name": "Comentarios"
     },
     "rowComment": {
         "you": "Tú",
@@ -79,7 +79,7 @@
         "seatsTaken": "Asientos ocupados",
         "storageUsage": "Almacenamiento utilizado (MB)",
         "usageHelpText": "Calculado por la noche cuando la configuración de uso grupal está habilitada",
-        "rowCount": "Número de filas",
+        "rowCount": "Recuento de filas",
         "freeUsers": "Usuarios gratuitos"
     },
     "editWorkspaceContext": {
@@ -247,13 +247,17 @@
         "supportFeatureName": "Soporte"
     },
     "conditionalColorValueProviderForm": {
-        "addCondition": "añadir condición",
-        "colorAlwaysApply": "Este color se aplica por defecto. Puede añadir condiciones haciendo clic en el botón \"Añadir condición\".",
-        "addColor": "añadir color"
+        "addCondition": "Añadir condición",
+        "colorAlwaysApply": "Puedes añadir condiciones haciendo clic en el botón \"Añadir condición\".",
+        "addColor": "Añadir color",
+        "title": "Colores",
+        "deleteColor": "Borrar color",
+        "colorAlwaysApplyTitle": "Este color se aplica por defecto.",
+        "addConditionGroup": "Añadir grupo de condiciones"
     },
     "viewDecoratorType": {
         "leftBorderColorDescription": "Colorear el borde izquierdo de una fila",
-        "onlyForPremium": "Disponible en la versión premium",
+        "onlyForPremium": "Disponible en el plan Premium",
         "leftBorderColor": "Borde izquierdo",
         "backgroundColor": "Color de fondo",
         "backgroundColorDescription": "Colorear el fondo de una fila",
@@ -297,7 +301,7 @@
     "formViewModeType": {
         "surveyDescription": "Un campo es visible al mismo tiempo.",
         "survey": "Encuesta",
-        "onlyForPremium": "Disponible en la versión premium"
+        "onlyForPremium": "Disponible en el plan Premium"
     },
     "formViewModePreviewSurvey": {
         "orderFields": "Campos de pedido",
@@ -344,5 +348,14 @@
     "selectDateFieldModal": {
         "chooseDateField": "Elegir campo de fecha",
         "save": "Guardar"
+    },
+    "rowCommentNotification": {
+        "title": "{enviador} ha publicado un comentario en la fila {fila} de {tabla}"
+    },
+    "RowEditModalCommentNotificationMode": {
+        "modeMentionsDesc": "Sólo recibirás notificaciones cuando te mencionen.",
+        "modeAllTitle": "Todos los comentarios",
+        "modeAllDesc": "Recibirás notificaciones de todos los comentarios de esta fila.",
+        "modeMentionsTitle": "Sólo menciones"
     }
 }

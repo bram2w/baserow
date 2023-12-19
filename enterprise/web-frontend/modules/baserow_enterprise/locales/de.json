@@ -4,7 +4,7 @@
         "overflowWarning": "Sie haben zu viele Nicht-Beobachter-Benutzer und haben alle Ihre bezahlten Plätze aufgebraucht. Ändern Sie die Benutzer auf der Mitgliederseite jeder Arbeitsbereich, damit sie zu Beobachtern werden.",
         "rbac": "RBAC",
         "sidebarTooltip": "Ihr Konto hat Zugriff auf die Enterprise-Funktionen",
-        "deactivated": "Verfügbar in der Enterprise-Version",
+        "deactivated": "Verfügbar in der Advanced/Enterprise-Version",
         "sso": "SSO",
         "licenseDescription": "Betrachter sind bei Baserow Enterprise kostenlos. Wenn ein Benutzer eine andere Rolle in einer Arbeitsbereich hat, wird er automatisch einen kostenpflichtigen Platz verwenden."
     },
@@ -64,11 +64,13 @@
         "ip_address": "IP-Adresse",
         "exportToCsv": "Exportieren in CSV",
         "exportModalTitle": "Exportieren in CSV",
-        "clearFilters": "Zurücksetzen",
+        "clearFilters": "Leeren",
         "allUsers": "Alle Nutzer",
         "allWorkspaces": "Alle Arbeitsbereiche",
         "allActionTypes": "Alle Ereignistypen",
-        "timestamp": "Zeitstempel"
+        "timestamp": "Zeitstempel",
+        "workspaceTitle": "Audit-Log - {workspaceName}",
+        "adminTitle": "Audit-Log"
     },
     "auditLogExportModal": {
         "exportFilename": "Audit Log Export - {date}",
@@ -115,7 +117,7 @@
         "errorSsoFeatureNotActive": "SSO Funktion ist nicht aktiv. Bitte kontaktieren Sie Ihren Administrator.",
         "errorInvalidSamlResponse": "SAML-Antwort ist ungültig.",
         "errorUserDeactivated": "Benutzer wurde deaktiviert.",
-        "errorWorkspaceInvitationEmailMismatch": "ihre e-mail-adresse stimmt nicht mit der einladung überein.",
+        "errorWorkspaceInvitationEmailMismatch": "ihre E-Mail-Adresse stimmt nicht mit der Einladung überein.",
         "errorSignupDisabled": "Die Registrierung wurde vom Administrator deaktiviert.",
         "errorDifferentProvider": "verwenden Sie bitte den Anbieter, bei dem Sie sich ursprünglich angemeldet haben.",
         "help": "Bitte kontaktieren Sie Ihren Administrator für Hilfe.",

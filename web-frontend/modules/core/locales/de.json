@@ -8,7 +8,7 @@
     },
     "sidebarApplication": {
         "renameApplication": "Umbenennen {type}",
-        "viewTrash": "Ansicht Papierkorb",
+        "viewTrash": "Papierkorb anzeigen",
         "deleteApplication": "Löschen {type}",
         "duplicateApplication": "duplizieren {type}",
         "snapshots": "Snapshots",
@@ -119,7 +119,8 @@
         "members": "Mitglieder",
         "viewTrash": "Papierkorb ansehen",
         "leaveWorkspace": "Arbeitsbereich verlassen",
-        "deleteWorkspace": "Arbeitsbereich löschen"
+        "deleteWorkspace": "Arbeitsbereich löschen",
+        "auditLog": "Audit-Log"
     },
     "createWorkspaceModal": {
         "createNew": "Neuen Arbeitsbereich erstellen",
@@ -218,9 +219,9 @@
     "dashboard": {
         "title": "Dashboard",
         "alertTitle": "Wir benötigen Ihre Hilfe!",
-        "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns einen Stern auf GitLab zu geben oder uns zu teilen. Indem Sie Baserow teilen helfen sie uns das Produkt zu verbessern und es nützlicher für Ihre Zwecke zu machen.",
+        "alertText": "Wenn Sie Baserow nützlich finden, dann sind Sie herzlich eingeladen, uns einen Stern auf GitLab zu geben oder von uns zu erzählen. Indem Sie Baserow teilen helfen Sie uns, das Produkt zu verbessern und es für Ihre Zwecke nützlicher zu machen.",
         "tweetContent": "Entdecken Sie @baserow, ein Open-Source-Datenbank-Tool ohne Code und eine Alternative zu Airtable!",
-        "redditTitle": "Baserow - Eine Open-Source no-code Datenbank",
+        "redditTitle": "Baserow - Eine Open-Source No-Code-Datenbank",
         "noWorkspaceTitle": "Keine Arbeitsbereiche gefunden",
         "noWorkspaceText": "Sie sind kein Mitglied eines Arbeitsbereichs. Anwendungen wie Datenbanken gehören zu einem Arbeitsbereich. Um sie zu erstellen, müssen Sie also einen Arbeitsbereich erstellen.",
         "createWorkspace": "Arbeitsbereich erstellen",
@@ -387,7 +388,8 @@
                 "title": "Wie man ein Feld ausblendet"
             }
         },
-        "prefillOrHideInfoLink": "Dynamisches Vorfüllen oder Ausblenden"
+        "prefillOrHideInfoLink": "Dynamisches Vorfüllen oder Ausblenden",
+        "notifyUserOnSubmit": "Benachrichtigung nach dem Absenden erhalten"
     },
     "deleteAccountSettings": {
         "workspaceNotice": "Verwaiste Arbeitsbereiche werden gelöscht",
@@ -533,11 +535,13 @@
         "markAllAsRead": "Alle als gelesen markieren",
         "title": "Mitteilungen",
         "noNotification": "Wir benachrichtigen Sie über wichtige Updates und jedes Mal, wenn Sie auf Baserow erwähnt werden.",
-        "clearAll": "Alle löschen",
-        "noNotificationTitle": "Sie haben keine Benachrichtigungen"
+        "clearAll": "Alle leeren",
+        "noNotificationTitle": "Sie haben keine Benachrichtigungen",
+        "newNotificationsAvailable": "Es gibt neue Benachrichtigungen",
+        "refresh": "Aktualisieren"
     },
     "clearAllNotificationsConfirmModal": {
-        "title": "Sind Sie sicher, dass Sie alle Benachrichtigungen löschen möchten?",
+        "title": "Sind Sie sicher, dass Sie alle Benachrichtigungen leeren möchten?",
         "message": "Alle Benachrichtigungen werden dauerhaft gelöscht und Sie können sie nicht mehr sehen."
     },
     "connectingToast": {
@@ -561,7 +565,7 @@
         "content": "Aufbereitung Ihrer Daten"
     },
     "undoRedoToast": {
-        "noMoreUndo": "Keine Aktionen zum rückgängig machen übrig",
+        "noMoreUndo": "Keine weiteren Aktionen zum Rückgängig machen",
         "redoneText": "Aktion ist wiederhergestellt",
         "skippingRedoDueToError": "Wieder ausführen hat aufgrund eines unbekannten Fehler nicht funktioniert, überspringen.",
         "failed": "Fehlgeschlagen",
@@ -569,11 +573,11 @@
         "undoingText": "Aktion rückgängig machen",
         "undoneTitle": "Rückgängig gemacht",
         "undoneText": "Aktion ist rückgängig gemacht",
-        "skippingUndoDueToError": "Rückgängig machen hat aufgrund eines unbekannten Fehlers nicht funktioniert, überspringen.",
-        "redoingText": "Deine Aktion wird wieder hergestellt",
+        "skippingUndoDueToError": "Rückgängig machen hat aufgrund eines unbekannten Fehlers nicht funktioniert, überspringe es daher.",
+        "redoingText": "Ihre Aktion wird wiederhergestellt",
         "redoingTitle": "Wiederherstellen...",
         "redoneTitle": "Wiederhergestellt",
-        "noMoreRedo": "Keine Aktionen zum wieder-ausführen übrig"
+        "noMoreRedo": "Keine weiteren Aktionen zum erneuten Ausführen"
     },
     "permissionsUpdatedToast": {
         "content": "Dies kann sich darauf auswirken, worauf Sie Zugriff haben, bitte laden Sie die Seite neu.",
@@ -604,8 +608,8 @@
         "action": "Seite aktualisieren"
     },
     "clearingToast": {
-        "title": "Löschen...",
-        "content": "Aufbereitung Ihrer Daten"
+        "title": "Leeren...",
+        "content": "Vorbereitung Ihrer Daten"
     },
     "PastingToast": {
         "title": "Einfügen...",
@@ -626,5 +630,31 @@
     },
     "versionUpgradeNotification": {
         "title": "{version} ist da! Sehen Sie sich an, was es Neues gibt."
+    },
+    "userPasswordChangedToast": {
+        "title": "Passwort geändert",
+        "content": "Ihr Passwort wurde geändert. Bitte melden Sie sich erneut an."
+    },
+    "emailNotifications": {
+        "submitButton": "Häufigkeit ändern",
+        "label": "Erwähnungen, Kommentare und andere Benachrichtigungen",
+        "daily": "Täglich",
+        "title": "E-Mailbenachrichtigungen",
+        "never": "Nie",
+        "weekly": "Wöchentlich",
+        "description": "Stelle die Häufigkeit ein, mit der E-Mails versendet werden sollen.",
+        "instant": "Sofort"
+    },
+    "dataExplorer": {
+        "emptyText": "Keine Daten gefunden"
+    },
+    "integrationDropdown": {
+        "noIntegrations": "Keine Integrationen gefunden.",
+        "addIntegration": "Neue Integration hinzufügen",
+        "integrationPlaceholder": "Wähle eine Integration aus",
+        "selectTypeFirst": "Wähle zuerst den Typ aus"
+    },
+    "formulaInputField": {
+        "errorInvalidFormula": "Die Formel ist ungültig."
     }
 }
