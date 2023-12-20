@@ -1,5 +1,6 @@
 import { Registerable } from '@baserow/modules/core/registry'
 
+import { compile } from 'path-to-regexp'
 import PublishActionModal from '@baserow/modules/builder/components/page/header/PublishActionModal'
 
 export class PageActionType extends Registerable {
@@ -67,13 +68,26 @@ export class PreviewPageActionType extends PageActionType {
     return this.app.i18n.t('pageActionTypes.preview')
   }
 
-  onClick({ builder }) {
-    const url = this.app.router.resolve({
-      name: 'application-builder-page',
-      params: { builderId: builder.id, pathMatch: '/' },
-    }).href
+  generatePreviewUrl(builderId, page) {
+    /**
+     * Responsible for generating the preview URL for a given
+     * page using the page's path parameters.
+     *
+     * @param builderId   The builder application ID.
+     * @param page        The Page object.
+     */
 
-    window.open(url, '_blank')
+    const toPath = compile(page.path, { encode: encodeURIComponent })
+    const pageParams = Object.fromEntries(
+      page.path_params.map(({ name, value }) => [name, page.parameters[name]])
+    )
+    const resolvedPagePath = toPath(pageParams)
+    return `/builder/${builderId}/preview${resolvedPagePath}`
+  }
+
+  onClick({ builder, page }) {
+    const pageUrl = this.generatePreviewUrl(builder.id, page)
+    window.open(pageUrl, '_blank')
   }
 
   getOrder() {
