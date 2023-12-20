@@ -1,3 +1,5 @@
+import os
+
 from django.db.models.signals import post_migrate
 
 import snoop
@@ -6,9 +8,10 @@ from .base import *  # noqa: F403, F401
 from .utils import setup_dev_e2e
 
 SECRET_KEY = os.getenv("SECRET_KEY", "dev_hardcoded_secret_key")  # noqa: F405
-SIMPLE_JWT["SIGNING_KEY"] = os.getenv(  # noqa: F405
-    "BASEROW_JWT_SIGNING_KEY", "test_hardcoded_jwt_signing_key"
+SIMPLE_JWT["SIGNING_KEY"] = (  # noqa: F405
+    os.getenv("BASEROW_JWT_SIGNING_KEY") or "dev_hardcoded_jwt_signing_key"
 )
+
 
 DEBUG = True
 BASEROW_WEBHOOKS_MAX_CONSECUTIVE_TRIGGER_FAILURES = 4

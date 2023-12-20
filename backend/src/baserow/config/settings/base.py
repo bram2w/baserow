@@ -457,6 +457,7 @@ REFRESH_TOKEN_LIFETIME = datetime.timedelta(
     hours=int(os.getenv("BASEROW_REFRESH_TOKEN_LIFETIME_HOURS", 24 * 7))  # 7 days
 )
 
+
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": ACCESS_TOKEN_LIFETIME,
     "REFRESH_TOKEN_LIFETIME": REFRESH_TOKEN_LIFETIME,
@@ -464,7 +465,7 @@ SIMPLE_JWT = {
     # It is recommended that you set BASEROW_JWT_SIGNING_KEY so it is independent
     # from the Django SECRET_KEY. This will make changing the signing key used for
     # tokens easier in the event that it is compromised.
-    "SIGNING_KEY": os.getenv("BASEROW_JWT_SIGNING_KEY", os.getenv("SECRET_KEY")),
+    "SIGNING_KEY": os.getenv("BASEROW_JWT_SIGNING_KEY") or os.getenv("SECRET_KEY"),
     "USER_AUTHENTICATION_RULE": lambda user: user is not None,
 }
 
